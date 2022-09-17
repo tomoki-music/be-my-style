@@ -1,2 +1,20 @@
+<ul class="list-style-none">
+<% if customer_signed_in? %>
+  <li>
+    <i class="fa-solid fa-right-from-bracket"></i>
+    <%= link_to "ログアウト", destroy_customer_session_path, method: :delete, class: "btn btn-secondary" %>
+  </li>
+<% else %>
+  <li>
+    <i class="fa-solid fa-user-plus"></i>
+    <%= link_to "新規登録", new_customer_registration_path, class: "btn btn-success" %>
+  </li>
+  <li>
+    <i class="fa-solid fa-right-to-bracket"></i>
+    <%= link_to "ログイン", new_customer_session_path, class: "btn btn-primary" %>
+  </li>
+<% end %>
+</ul>
+
 <h1>Public::Homes#top</h1>
 <p>Find me in app/views/public/homes/top.html.erb</p>

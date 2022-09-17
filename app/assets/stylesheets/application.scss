@@ -13,3 +13,17 @@
  *= require_tree .
  *= require_self
  */
+ @import "bootstrap";
+ $fa-font-path: '@fortawesome/fontawesome-free/webfonts';
+ @import '@fortawesome/fontawesome-free/scss/fontawesome';
+ @import '@fortawesome/fontawesome-free/scss/solid';
+ @import '@fortawesome/fontawesome-free/scss/regular';
+ @import '@fortawesome/fontawesome-free/scss/brands';
+ @import '@fortawesome/fontawesome-free/scss/v4-shims';
+
+ .list-style-none li{
+    list-style: none;
+    text-align: right;
+    margin-right: 20px;
+ }
+ 
