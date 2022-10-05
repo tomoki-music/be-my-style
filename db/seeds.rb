@@ -1,3 +1,16 @@
+Customer.create(
+    :name => 'tomoki',
+    :email => 'i.tomoki0218@gmail.com',
+    :password => 'tomoki'
+    )
+
+Admin.create(
+    :name => 'tomoki',
+    :email => 'i.tomoki0218@gmail.com',
+    :password => 'tomoki'
+    )
+
+
 Tag.create([
     { name: '音楽全般' },
     { name: 'ファッション' },
