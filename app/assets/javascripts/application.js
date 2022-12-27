@@ -14,6 +14,9 @@ $(document).on ("turbolinks:load", function(){
       autoplaySpeed: 4000, //再生スピード
       slidesToShow: 1, //表示するスライドの数
       slidesToScroll: 1, //スクロールで切り替わるスライドの数
+      pauseOnFocus: false,
+      pauseOnHover: false,
+      pauseOnDotsHover: false,
       prevArrow: '<i class="fas fa-arrow-alt-circle-left"></i>',
       nextArrow: '<i class="fas fa-arrow-alt-circle-right"></i>',
       responsive: [{
