@@ -11,9 +11,10 @@ Rails.application.routes.draw do
   end
 
 # 顧客用
-devise_for :customers, skip: [:passwords], controllers: {
+devise_for :customers, controllers: {
   registrations: "public/registrations",
-  sessions: 'public/sessions'
+  sessions: 'public/sessions',
+  passwords: 'public/passwords',
 }
 
 # 管理者用
