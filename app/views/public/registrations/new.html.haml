@@ -1,0 +1,26 @@
+.devise-container
+  %h2 新規登録
+  = form_with model: @customer, url: customer_registration_path, local: true do |f|
+    = render "public/shared/error_messages", resource: resource
+    .field
+      = f.label :name
+      %br/
+      = f.text_field :name, autofocus: true
+    .field
+      = f.label :email
+      %br/
+      = f.email_field :email, autofocus: true, autocomplete: "email"
+    .field
+      = f.label :password
+      - if @minimum_password_length
+        %em
+          (半角 #{@minimum_password_length} 文字以上で入力してください。)
+      %br/
+      = f.password_field :password, autocomplete: "new-password"
+    .field
+      = f.label :password_confirmation
+      %br/
+      = f.password_field :password_confirmation, autocomplete: "new-password"
+    .actions
+      = f.submit "新規登録する"
+  = render "public/shared/links"

@@ -1,0 +1,11 @@
+%ul.list-style-none
+  - if admin_signed_in?
+    %li
+      %i.fa-solid.fa-right-from-bracket
+      = link_to "管理者ログアウト", destroy_admin_session_path, method: :delete, class: "btn btn-secondary"
+  - else
+    %li
+      %i.fa-solid.fa-right-to-bracket
+      = link_to "管理者ログイン", new_admin_session_path, class: "btn btn-primary"
+%h1 Admin::Homes#top
+%p Find me in app/views/admin/homes/top.html.erb
