@@ -1,17 +1,20 @@
-Customer.create(
+Customer.create!([
+    { name: 'tomoki', email: 'i.tomoki0218@gmail.com', password: 'tomoki1969' },
+    { name: 'tomusic', email: 'example@gmail.com', password: 'tomusic' },
+    { name: 'teru', email: 'teru@gmail.com', password: 'teru1969' },
+    { name: 'takuro', email: 'takuro@gmail.com', password: 'takuro1969' },
+    { name: 'hisashi', email: 'hisashi@gmail.com', password: 'hisashi1969' },
+    { name: 'jiro', email: 'jiro@gmail.com', password: 'jiro1969' },
+    ])
+
+Admin.create!(
     :name => 'tomoki',
     :email => 'i.tomoki0218@gmail.com',
-    :password => 'tomoki'
-    )
-
-Admin.create(
-    :name => 'tomoki',
-    :email => 'i.tomoki0218@gmail.com',
-    :password => 'tomoki'
+    :password => 'tomoki1969'
     )
 
 
-Tag.create([
+Tag.create!([
     { name: '音楽全般' },
     { name: 'ファッション' },
     { name: 'プログラミング'},

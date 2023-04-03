@@ -1,2 +1,8 @@
-%h1 Public::Customers#index
-%p Find me in app/views/public/customers/index.html.erb
+= render 'layouts/header_menu'
+
+.customer-index
+  %h2 ユーザー一覧
+
+.customer-element
+  - @customers.each do |customer|
+    = customer.name

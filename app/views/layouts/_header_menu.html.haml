@@ -18,3 +18,10 @@
             %li.header-sign-in-element
               %i.fa-solid.fa-right-to-bracket
               = link_to "ログイン", new_customer_session_path, class: "btn btn-primary"
+
+.customer-menu
+  %ul.list-style-none
+    %li
+      = link_to "Topページ", public_homes_top_path, class: "btn btn-info"
+    %li
+      = link_to "User一覧", public_customers_path, class: "btn btn-info"

@@ -12,11 +12,26 @@
   }
   .header-sign-in-list{
     margin-top: 10px;
+    margin-right: 60px;
     .header-sign-in-element{
       margin-top:5px;
     }
     .customer-signed-in-list{
       display: flex;
     }
+  }
+}
+
+.customer-menu{
+  width: 90%;
+  height: 50px;
+  background-color: lightblue;
+  margin: 0 auto;
+  margin-top: 10px;
+  border-radius: 10px;
+  ul{
+    display: flex;
+    align-items: center;
+    height: inherit;
   }
 }
