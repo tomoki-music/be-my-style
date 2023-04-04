@@ -7,6 +7,10 @@
       %br/
       = f.text_field :name, autofocus: true
     .field
+      = f.label :profile_image
+      %br/
+      = f.file_field :profile_image, accept: "image/*"
+    .field
       = f.label :email
       %br/
       = f.email_field :email, autofocus: true, autocomplete: "email"
