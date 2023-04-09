@@ -11,14 +11,10 @@
     }
   }
   .header-sign-in-list{
-    margin-top: 10px;
-    margin-right: 60px;
-    .header-sign-in-element{
-      margin-top:5px;
-    }
-    .customer-signed-in-list{
-      display: flex;
-    }
+    margin: 10px;
+    display: flex;
+    height: 15px;
+    align-items: center;
   }
 }
 

@@ -1,8 +1,24 @@
 = render 'layouts/header_menu'
 
-.customer-index
+.customer-index-title
   %h2 ユーザー一覧
 
-.customer-element
+.customer-index-container
   - @customers.each do |customer|
-    = customer.name
+    .card
+      .img-container
+        - if customer.profile_image.present?
+          = image_tag customer.profile_image
+        - else
+          = image_tag 'no_image'
+      .card-body.text-container
+        %h5.card-title
+          = customer.name
+        %h6.card-subtitle
+          part:
+          = customer.part
+        %p.card-text
+          = customer.introduction
+        = link_to 'プロフィール画面へ', public_customer_path(customer.id), class: "customer-index-link"
+  .paginate-layout
+    = paginate @customers

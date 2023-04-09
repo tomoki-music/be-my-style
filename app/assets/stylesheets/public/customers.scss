@@ -1,3 +1,39 @@
 // Place all the styles related to the public/customers controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: https://sass-lang.com/
+.customer-index-title{
+  margin-left: 100px;
+}
+
+.customer-index-container{
+  display: flex;
+  flex-wrap: wrap;
+  width: 90%;
+  margin: 0 auto;
+  .img-container{
+    width: 322px;
+    height: 300px;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+  }
+  .text-container{
+    width: 322px;
+    position: relative;
+    margin-bottom: 5px;
+    .customer-index-link{
+      position: absolute;
+      left: 70px;
+      bottom: 5px;
+    }
+  }
+  .paginate-layout{
+    margin: 0 auto;
+    padding: 5px;
+    height: 100px;
+    text-align: center;
+  }
+}

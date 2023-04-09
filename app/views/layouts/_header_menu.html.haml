@@ -7,17 +7,16 @@
     .col-4
       %ul.list-style-none.header-sign-in-list
         - if customer_signed_in?
-          %li.header-sign-in-element
+          %li
             %i.fa-solid.fa-right-from-bracket
             = link_to "ログアウト", destroy_customer_session_path, method: :delete, class: "btn btn-secondary"
         - else
-          .customer-signed-in-list
-            %li.header-sign-in-element
-              %i.fa-solid.fa-user-plus
-              = link_to "新規登録", new_customer_registration_path, class: "btn btn-success"
-            %li.header-sign-in-element
-              %i.fa-solid.fa-right-to-bracket
-              = link_to "ログイン", new_customer_session_path, class: "btn btn-primary"
+          %li
+            %i.fa-solid.fa-user-plus
+            = link_to "新規登録", new_customer_registration_path, class: "btn btn-success"
+          %li
+            %i.fa-solid.fa-right-to-bracket
+            = link_to "ログイン", new_customer_session_path, class: "btn btn-primary"
 
 .customer-menu
   %ul.list-style-none
