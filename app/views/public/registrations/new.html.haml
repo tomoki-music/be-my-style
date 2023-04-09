@@ -11,6 +11,14 @@
       %br/
       = f.file_field :profile_image, accept: "image/*"
     .field
+      = f.label :part
+      %br/
+      = f.select :part, Customer.parts.map { |key, _| [t("customer.part.#{key}"), key] }, selected: @customer.part{}
+    .field
+      = f.label :introduction
+      %br/
+      = f.text_field :introduction, autofocus: true
+    .field
       = f.label :email
       %br/
       = f.email_field :email, autofocus: true, autocomplete: "email"

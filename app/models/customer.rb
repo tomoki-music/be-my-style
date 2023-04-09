@@ -9,4 +9,6 @@ class Customer < ApplicationRecord
   has_one_attached :profile_image
   has_many :addresses, dependent: :destroy
   has_many :carts, dependent: :destroy
+
+  validates :name, presence: true, length: {maximum: 20}
 end

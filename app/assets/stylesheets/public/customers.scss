@@ -23,10 +23,17 @@
   .text-container{
     width: 322px;
     position: relative;
+    margin-bottom: 5px;
     .customer-index-link{
       position: absolute;
       left: 70px;
       bottom: 5px;
     }
+  }
+  .paginate-layout{
+    margin: 0 auto;
+    padding: 5px;
+    height: 100px;
+    text-align: center;
   }
 }

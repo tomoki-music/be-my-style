@@ -20,3 +20,5 @@
         %p.card-text
           = customer.introduction
         = link_to 'プロフィール画面へ', public_customer_path(customer.id), class: "customer-index-link"
+  .paginate-layout
+    = paginate @customers

@@ -1,6 +1,6 @@
 tomoki = Customer.create!(
     name: 'tomoki',
-    email: 'tomoki@gmail.com',
+    email: 'i.tomoki0218@gmail.com',
     password: 'tomoki1969',
     part: :drums,
     introduction: '歌で皆んなに元気を届けます！',
@@ -47,6 +47,56 @@ hatsune = Customer.create!(
     )
 
 hatsune.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/hatsune.jpg')),filename: 'hatsune.jpg')
+
+john = Customer.create!(
+    name: 'john',
+    email: 'john@gmail.com',
+    password: 'john1969',
+    part: :guitar,
+    introduction: '音楽は皆んなにとって平等で、誰も否定したりしない。',
+    )
+
+john.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/john.jpg')),filename: 'john.jpg')
+
+paul = Customer.create!(
+    name: 'paul',
+    email: 'paul@gmail.com',
+    password: 'paul1969',
+    part: :bass,
+    introduction: 'いつまでも、おじさんになっても音楽やってたいな〜！',
+    )
+
+paul.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/paul.jpg')),filename: 'paul.jpg')
+
+george = Customer.create!(
+    name: 'george',
+    email: 'george@gmail.com',
+    password: 'george1969',
+    part: :guitar,
+    introduction: 'あの舞台は忘れられないな。またみんなでLIVEやりたいな。',
+    )
+
+george.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/george.jpg')),filename: 'george.jpg')
+
+ringo = Customer.create!(
+    name: 'ringo',
+    email: 'ringo@gmail.com',
+    password: 'ringo1969',
+    part: :drums,
+    introduction: 'リズムは人類の根源！さぁドラムに皆んな乗ってこい！',
+    )
+
+ringo.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/ringo.jpg')),filename: 'ringo.jpg')
+
+takuro = Customer.create!(
+    name: 'takuro',
+    email: 'takuro@gmail.com',
+    password: 'takuro1969',
+    part: :composer,
+    introduction: 'Love&PEACE。最高の音楽にはいつも愛と平和がある。',
+    )
+
+takuro.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/takuro.jpg')),filename: 'takuro.jpg')
 
 Admin.create!(
     :name => 'tomoki',

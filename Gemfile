@@ -46,6 +46,9 @@ end
 
 group :test do
   # Adds support for Capybara system testing and selenium driver
+  gem 'rspec-rails'
+  gem "factory_bot_rails"
+  gem 'faker'
   gem 'capybara', '>= 3.26'
   gem 'selenium-webdriver'
   # Easy installation and use of web drivers to run system tests with browsers
@@ -59,6 +62,7 @@ gem 'bootstrap', '~> 4.5'
 gem 'jquery-rails'
 gem 'uglifier'
 gem 'kaminari'
+gem 'bootstrap4-kaminari-views'
 gem 'mysql2'
 gem 'dotenv-rails'
 gem 'net-smtp'

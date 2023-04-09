@@ -1,6 +1,8 @@
 class Public::CustomersController < ApplicationController
+  before_action :authenticate_customer!
+  
   def index
-    @customers = Customer.all
+    @customers = Customer.page(params[:page]).per(8)
   end
 
   def show
