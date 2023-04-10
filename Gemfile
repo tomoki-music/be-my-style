@@ -53,6 +53,7 @@ group :test do
   gem 'selenium-webdriver'
   # Easy installation and use of web drivers to run system tests with browsers
   gem 'webdrivers'
+  gem 'launchy'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
@@ -69,3 +70,4 @@ gem 'net-smtp'
 gem 'devise-i18n'
 gem 'haml-rails'
 gem 'erb2haml'
+gem "aws-sdk-s3", require: false
