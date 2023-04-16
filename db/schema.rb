@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_04_04_100326) do
+ActiveRecord::Schema.define(version: 2023_04_12_092824) do
 
   create_table "active_storage_attachments", charset: "utf8mb3", force: :cascade do |t|
     t.string "name", null: false
@@ -64,6 +64,11 @@ ActiveRecord::Schema.define(version: 2023_04_04_100326) do
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
   end
 
+  create_table "areas", charset: "utf8mb3", force: :cascade do |t|
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
+
   create_table "carts", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "item_id", null: false
@@ -89,6 +94,10 @@ ActiveRecord::Schema.define(version: 2023_04_04_100326) do
     t.datetime "updated_at", precision: 6, null: false
     t.text "introduction"
     t.integer "part"
+    t.integer "sex"
+    t.date "birthday"
+    t.string "favorite_artist"
+    t.text "url"
     t.index ["email"], name: "index_customers_on_email", unique: true
     t.index ["reset_password_token"], name: "index_customers_on_reset_password_token", unique: true
   end

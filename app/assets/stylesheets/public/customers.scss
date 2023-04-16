@@ -37,3 +37,29 @@
     text-align: center;
   }
 }
+
+.customer-show-title{
+  margin-left: 100px;
+}
+
+.customer-show-container{
+  width: 90%;
+  margin: 0 auto;
+  .customer-show-card{
+    position: sticky;
+    border: thick double lightblue;
+    .img-container{
+      width: 100%;
+      height: 300px;
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 10px;
+      }
+    }
+  }
+  .customer-show-table{
+    border: thick double lightblue;
+  }
+}

@@ -1,6 +1,35 @@
 ---
 ja:
   activerecord:
+    models:
+      customer: アーティスト
+    attributes:
+      customer:
+        email: メールアドレス
+        password: パスワード
+        name: 名前
+        postal_code: 郵便番号
+        tell: 電話番号
+        is_deleted: 退会日
+        introduction: 自己紹介
+        part: パート
+        sex: 性別
+        birthday: 誕生日
+        favorite_artist: 好きなアーティスト
+        url: 作品HPのURL
+      customer/part:
+        vocal: ボーカル
+        guitar: ギター
+        bass: ベース
+        drums: ドラム
+        keybord: ピアノ・キーボード
+        composer: 作詞作曲アレンジャー
+        percussion: パーカッション
+        wind_instrument: 管楽器
+        stringed_instrument: 弦楽器
+        disc_jocke: DJ
+        dancer: ダンサー
+        others: その他
     errors:
       messages:
         record_invalid: 'バリデーションに失敗しました: %{errors}'

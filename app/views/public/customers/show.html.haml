@@ -1,2 +1,60 @@
-%h1 Public::Customers#show
-%p Find me in app/views/public/customers/show.html.erb
+= render 'layouts/header_menu'
+
+.customer-show-title
+  %h2 ユーザー詳細
+
+.customer-show-container.px-0.px-sm-0
+  .row
+    .col-md-3
+      .customer-show-card
+        .card
+          .img-container
+            - if @customer.profile_image.present?
+              = image_tag @customer.profile_image
+            - else
+              = image_tag 'no_image'
+          .card-body.text-container
+            %h5.card-title
+              = @customer.human_attribute_enum(:name)
+            %h6.card-subtitle
+              part:
+              = @customer.human_attribute_enum(:part)
+            %p.card-text
+              = @customer.human_attribute_enum(:introduction)
+            - if @customer.id == current_customer.id
+              = link_to 'プロフィール編集', edit_public_customer_path(@customer), class: "customer-edit-link"
+    .col-md-9
+      %table.table.table-striped.customer-show-table{:width=>"100%",:border=>"1"}
+        %colgroup
+          %col{width: "19%"}
+          %col{width: "81%"}
+            %tr
+              %th{scope:"row"} 名前
+              %td
+                = @customer.human_attribute_enum(:name)
+            %tr
+              %th{scope:"row"} 性別
+              %td 男
+            %tr
+              %th{scope:"row"} 誕生日
+              %td ２月１８日
+            %tr
+              %th{scope:"row"} 担当パート
+              %td
+                = @customer.human_attribute_enum(:part)
+            %tr
+              %th{scope:"row"} 活動場所
+              %td 埼玉
+            %tr
+              %th{scope:"row"} 活動ペース
+              %td 週１くらい
+            %tr
+              %th{scope:"row"} 好きなアーティスト
+              %td GLAY、Beatles
+            %tr
+              %th{scope:"row"} 作品URL
+              %td http//~...
+            %tr
+              %th{scope:"row"} 自己紹介
+              %td
+                = @customer.human_attribute_enum(:introduction)
