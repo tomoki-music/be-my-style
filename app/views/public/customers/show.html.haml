@@ -1,7 +1,7 @@
 = render 'layouts/header_menu'
 
 .customer-show-title
-  %h2 ユーザー詳細
+  %h2 アーティスト詳細
 
 .customer-show-container.px-0.px-sm-0
   .row
@@ -17,12 +17,12 @@
             %h5.card-title
               = @customer.human_attribute_enum(:name)
             %h6.card-subtitle
-              part:
+              パート:
               = @customer.human_attribute_enum(:part)
             %p.card-text
               = @customer.human_attribute_enum(:introduction)
             - if @customer.id == current_customer.id
-              = link_to 'プロフィール編集', edit_public_customer_path(@customer), class: "customer-edit-link"
+              = link_to 'プロフィール編集', edit_public_customer_path(@customer), class: "btn btn-info customer-edit-link"
     .col-md-9
       %table.table.table-striped.customer-show-table{:width=>"100%",:border=>"1"}
         %colgroup
@@ -34,14 +34,22 @@
                 = @customer.human_attribute_enum(:name)
             %tr
               %th{scope:"row"} 性別
-              %td 男
+              %td
+                = @customer.human_attribute_enum(:sex)
             %tr
               %th{scope:"row"} 誕生日
-              %td ２月１８日
+              %td
+                = @customer.birthday.strftime("%Y/%m/%d") unless @customer.birthday.nil?
             %tr
-              %th{scope:"row"} 担当パート
+              %th{scope:"row"} メインパート
               %td
                 = @customer.human_attribute_enum(:part)
+            %tr
+              %th{scope:"row"} サブパート
+              %td
+                - @customer.parts.each do |part|
+                  %i.fa-solid.fa-music
+                  = part.name
             %tr
               %th{scope:"row"} 活動場所
               %td 埼玉

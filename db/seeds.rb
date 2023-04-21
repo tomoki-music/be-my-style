@@ -25,7 +25,7 @@ tomoki = Customer.create!(
     name: 'tomoki',
     email: 'i.tomoki0218@gmail.com',
     password: 'tomoki1969',
-    part: :drums,
+    part: :vocal,
     introduction: '歌で皆んなに元気を届けます！',
     )
 
@@ -35,7 +35,7 @@ tomusic = Customer.create!(
     name: 'tomusic',
     email: 'tomusic@gmail.com',
     password: 'tomusic1969',
-    part: :bass,
+    part: :guitar,
     introduction: 'みんなで楽しめるイベントを企画します！',
     )
 
@@ -126,6 +126,20 @@ Admin.create!(
     :email => 'i.tomoki0218@gmail.com',
     :password => 'tomoki1969'
     )
+
+Part.create!([
+    { name: 'ボーカル' },
+    { name: 'ギター' },
+    { name: 'ベース'},
+    { name: 'ドラム'},
+    { name: 'ピアノ・キーボード'},
+    { name: '作詞・作曲・アレンジャー'},
+    { name: 'パーカッション'},
+    { name: '管楽器'},
+    { name: '弦楽器'},
+    { name: 'ダンサー'},
+    { name: 'その他'},
+])
 
 Tag.create!([
     { name: '音楽全般' },

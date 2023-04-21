@@ -1,7 +1,7 @@
 = render 'layouts/header_menu'
 
 .customer-index-title
-  %h2 ユーザー一覧
+  %h2 アーティスト一覧
 
 .customer-index-container
   - @customers.each do |customer|
@@ -15,7 +15,7 @@
         %h5.card-title
           = customer.human_attribute_enum(:name)
         %h6.card-subtitle
-          part:
+          メインパート:
           = customer.human_attribute_enum(:part)
         %p.card-text
           = customer.human_attribute_enum(:introduction)

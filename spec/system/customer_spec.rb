@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe 'Top画面からUser一覧への遷移テスト' do
+describe 'Top画面からアーティスト一覧への遷移テスト' do
   let(:customer) { create(:customer) }
   before do
     visit new_customer_session_path
@@ -14,13 +14,13 @@ describe 'Top画面からUser一覧への遷移テスト' do
       before do
         visit public_homes_top_path
       end
-      it 'User一覧ボタンが表示される' do
-        expect(page).to have_content 'User一覧'
+      it 'Artist一覧ボタンが表示される' do
+        expect(page).to have_content 'Artist一覧'
       end
     end
   end
-  describe 'User一覧への遷移テスト' do
-    context 'User一覧画面への遷移' do
+  describe 'Artist一覧への遷移テスト' do
+    context 'Artist一覧画面への遷移' do
       it '遷移できる' do
         visit public_customers_path
         expect(current_path).to eq('/public/customers')

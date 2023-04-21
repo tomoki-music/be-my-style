@@ -16,12 +16,21 @@ class Customer < ApplicationRecord
     stringed_instrument: 8,
     disc_jocke: 9,
     dancer: 10,
-    others: 11
+    others: 11,
+  }, _prefix: true
+
+  enum sex: {
+    gender_private: 0,
+    male: 1,
+    female: 2,
+    others: 3,
   }, _prefix: true
 
   has_one_attached :profile_image
   has_many :addresses, dependent: :destroy
   has_many :carts, dependent: :destroy
+  has_many :customer_parts, dependent: :destroy
+  has_many :parts, through: :customer_parts
 
   validates :name, presence: true, length: {maximum: 20}
 end

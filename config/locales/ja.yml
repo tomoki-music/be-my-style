@@ -30,6 +30,11 @@ ja:
         disc_jocke: DJ
         dancer: ダンサー
         others: その他
+      customer/sex:
+        gender_private: 非公開
+        male: 男性
+        female: 女性
+        others: その他
     errors:
       messages:
         record_invalid: 'バリデーションに失敗しました: %{errors}'

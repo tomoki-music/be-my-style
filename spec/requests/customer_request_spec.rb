@@ -14,7 +14,7 @@ RSpec.describe "customersコントローラーのテスト", type: :request do
         expect(response.status).to eq 200
       end
       it 'タイトルが正しく表示されていること' do
-        expect(response.body).to include("ユーザー一覧")
+        expect(response.body).to include("アーティスト一覧")
       end
     end
   end

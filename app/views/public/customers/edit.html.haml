@@ -1,30 +1,56 @@
-.container-fluid.px-5.px-sm-0
-  .row
-    .col-3
-      "テスト"
-    .col-3
-      "テスト"
-    .col-3
-      "テスト"
+.customer-edit-title
+  %h2 アーティスト編集画面
 
-%table.table
-  .thead
-    .tr
-      .th{scope:"col"}
-        %span #
-      .th{scope:"col"}
-        First
-      .th{scope:"col"}
-        Last
-      .th{scope:"col"}
-        Handle
-  .tbody
-    .tr
-      .th{scope:"row"}
-        1
-      .td
-        Mark
-      .td
-        Otto
-      .td@mdo
-    </tr>
+= form_with model: [:public, @customer], local: true do |f|
+  %table.table.table-striped.customer-edit-table{:width=>"100%",:border=>"1"}
+    %colgroup
+      %col{width: "19%"}
+      %col{width: "81%"}
+        %tr
+          %th{scope:"row"} 画像
+          %td
+            = f.file_field :profile_image, accept: 'image/*'
+            #edit-image
+        %tr
+          %th{scope:"row"} 名前
+          %td
+            = f.text_field :name
+        %tr
+          %th{scope:"row"} 性別
+          %td
+            = f.select :sex, Customer.enum_options_for_select(:sex)
+        %tr
+          %th{scope:"row"} 誕生日
+          %td
+            = f.date_field :birthday
+        %tr
+          %th{scope:"row"} メインパート
+          %td
+            = f.select :part, Customer.enum_options_for_select(:part)
+        %tr
+          %th{scope:"row"} サブパート
+          %td
+            = f.collection_check_boxes(:part_ids, Part.all, :id, :name) do |tag|
+              = tag.label do
+                = tag.check_box
+                = tag.text
+        %tr
+          %th{scope:"row"} 活動場所
+          %td 埼玉
+        %tr
+          %th{scope:"row"} 活動ペース
+          %td 週１くらい
+        %tr
+          %th{scope:"row"} 好きなアーティスト
+          %td GLAY、Beatles
+        %tr
+          %th{scope:"row"} 作品URL
+          %td http//~...
+        %tr
+          %th{scope:"row"} 自己紹介
+          %td
+            = f.text_area :introduction, size: "100x10"
+        = f.submit "プロフィールを更新", class: "btn btn-info customer-edit-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }
+
+%script
+  enable_select2();

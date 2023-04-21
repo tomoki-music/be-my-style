@@ -58,8 +58,44 @@
         border-radius: 10px;
       }
     }
+    .customer-edit-link{
+      text-align: center;
+      display: block;
+      width: 200px;
+      font-size: 20px;
+      color: white;
+      border-radius: 10px;
+    }
   }
   .customer-show-table{
     border: thick double lightblue;
   }
+}
+
+.customer-edit-title{
+  margin-left: 100px;
+}
+
+.customer-edit-table{
+  border: thick double lightblue;
+}
+
+.customer-edit-btn{
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  display: block;
+  width: 200px;
+  margin-left: auto;
+  text-align: center;
+  font-size: 20px;
+  color: white;
+  border-radius: 10px;
+}
+
+.edit-img{
+  width: 300px;
+  object-fit: cover;
+  border-radius: 10px;
+  padding: 5px;
 }
