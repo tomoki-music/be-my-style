@@ -18,7 +18,9 @@
               = @customer.human_attribute_enum(:name)
             %h6.card-subtitle
               パート:
-              = @customer.human_attribute_enum(:part)
+              - @customer.parts.each do |part|
+                %i.fa-solid.fa-music
+                = part.name
             %p.card-text
               = @customer.human_attribute_enum(:introduction)
             - if @customer.id == current_customer.id
@@ -48,7 +50,8 @@
                   = part.name
             %tr
               %th{scope:"row"} 活動場所
-              %td 埼玉
+              %td
+                = @customer.prefecture.name if @customer.prefecture.present?
             %tr
               %th{scope:"row"} 活動ペース
               %td 週１くらい

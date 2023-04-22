@@ -32,7 +32,8 @@
                 = tag.text
         %tr
           %th{scope:"row"} 活動場所
-          %td 埼玉
+          %td 
+            = f.collection_select :prefecture_id, Prefecture.all, :id, :name
         %tr
           %th{scope:"row"} 活動ペース
           %td 週１くらい

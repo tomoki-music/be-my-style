@@ -17,19 +17,6 @@ ja:
         birthday: 誕生日
         favorite_artist: 好きなアーティスト
         url: 作品HPのURL
-      customer/part:
-        vocal: ボーカル
-        guitar: ギター
-        bass: ベース
-        drums: ドラム
-        keybord: ピアノ・キーボード
-        composer: 作詞作曲アレンジャー
-        percussion: パーカッション
-        wind_instrument: 管楽器
-        stringed_instrument: 弦楽器
-        disc_jocke: DJ
-        dancer: ダンサー
-        others: その他
       customer/sex:
         gender_private: 非公開
         male: 男性
