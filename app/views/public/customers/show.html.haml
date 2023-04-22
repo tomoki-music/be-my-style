@@ -41,11 +41,7 @@
               %td
                 = @customer.birthday.strftime("%Y/%m/%d") unless @customer.birthday.nil?
             %tr
-              %th{scope:"row"} メインパート
-              %td
-                = @customer.human_attribute_enum(:part)
-            %tr
-              %th{scope:"row"} サブパート
+              %th{scope:"row"} パート
               %td
                 - @customer.parts.each do |part|
                   %i.fa-solid.fa-music

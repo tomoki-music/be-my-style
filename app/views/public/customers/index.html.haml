@@ -1,7 +1,12 @@
 = render 'layouts/header_menu'
 
 .customer-index-title
-  %h2 アーティスト一覧
+  .row
+    .col-md-9
+      %h2 アーティスト一覧
+    .col-mid-3
+      = form_tag public_customers_path, method: :get, class: 'customer-index-title__searchForm' do
+        = select_tag :part_id, options_from_collection_for_select(Part.all, :id, :name, params[:part_id]), {prompt: 'サブパートで絞り込み検索', onchange: 'submit(this.form);'}
 
 .customer-index-container
   - @customers.each do |customer|
@@ -15,8 +20,10 @@
         %h5.card-title
           = customer.human_attribute_enum(:name)
         %h6.card-subtitle
-          メインパート:
-          = customer.human_attribute_enum(:part)
+          Part:
+          - customer.parts.each do |part|
+            %i.fa-solid.fa-music
+            = part.name
         %p.card-text
           = customer.human_attribute_enum(:introduction)
         = link_to 'プロフィール画面へ', public_customer_path(customer.id), class: "customer-index-link"

@@ -1,21 +1,19 @@
 class Public::CustomersController < ApplicationController
   before_action :authenticate_customer!
   before_action :ensure_correct_customer, only: [:update, :edit]
+  before_action :set_customer, only: [:show, :edit, :update]
   
   def index
-    @customers = Customer.page(params[:page]).per(8)
+    @customers = params[:part_id].present? ? Part.find(params[:part_id]).customers.page(params[:page]).per(8) : Customer.page(params[:page]).per(8)
   end
 
   def show
-    @customer = Customer.find(params[:id])
   end
 
   def edit
-    @customer = Customer.find(params[:id])
   end
 
   def update
-    @customer = Customer.find(params[:id])
     if @customer.update(customer_params)
       redirect_to public_customer_path(@customer), notice: "プロフィールの更新が完了しました!"
     else
@@ -34,5 +32,9 @@ class Public::CustomersController < ApplicationController
     unless @customer == current_customer
       redirect_to public_customer_path(current_customer)
     end
+  end
+
+  def set_customer
+    @customer = Customer.find(params[:id])
   end
 end

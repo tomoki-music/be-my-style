@@ -2,7 +2,11 @@
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: https://sass-lang.com/
 .customer-index-title{
-  margin-left: 100px;
+  width: 90%;
+  margin: 0 auto;
+  .customer-index-title__searchForm{
+    font-size: 25px;
+  }
 }
 
 .customer-index-container{
