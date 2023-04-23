@@ -1,46 +1,3 @@
-# create_table "customers", charset: "utf8mb3", force: :cascade do |t|
-#     t.string "email", default: "", null: false
-#     t.string "encrypted_password", default: "", null: false
-#     t.string "reset_password_token"
-#     t.datetime "reset_password_sent_at"
-#     t.datetime "remember_created_at"
-#     t.string "name"
-#     t.integer "postal_code"
-#     t.string "address"
-#     t.string "tell"
-#     t.boolean "is_deleted", default: false, null: false
-#     t.datetime "created_at", precision: 6, null: false
-#     t.datetime "updated_at", precision: 6, null: false
-#     t.text "introduction"
-#     t.integer "part"
-#     t.integer "sex"
-#     t.date "birthday"
-#     t.string "favorite_artist"
-#     t.text "url"
-#     t.index ["email"], name: "index_customers_on_email", unique: true
-#     t.index ["reset_password_token"], name: "index_customers_on_reset_password_token", unique: true
-#   end
-
-# class Prefecture < ActiveHash::Base
-#     self.data = [
-#       { id: 1, name: '---' }, { id: 2, name: '北海道' }, { id: 3, name: '青森県' },
-#       { id: 4, name: '岩手県' }, { id: 5, name: '宮城県' }, { id: 6, name: '秋田県' }, 
-#       { id: 7, name: '山形県' }, { id: 8, name: '福島県' }, { id: 9, name: '茨城県' },
-#       { id: 10, name: '栃木県' }, { id: 11, name: '群馬県' }, { id: 12, name: '埼玉県' },
-#       { id: 13, name: '千葉県' }, { id: 14, name: '東京都' }, { id: 15, name: '神奈川県' },
-#       { id: 16, name: '新潟県' }, { id: 17, name: '富山県' }, { id: 18, name: '石川県' },
-#       { id: 19, name: '福井県' }, { id: 20, name: '山梨県' }, { id: 21, name: '長野県' },
-#       { id: 22, name: '岐阜県' }, { id: 23, name: '静岡県' }, { id: 24, name: '愛知県' }, 
-#       { id: 25, name: '三重県' }, { id: 26, name: '滋賀県' }, { id: 27, name: '京都府' }, 
-#       { id: 28, name: '大阪府' }, { id: 29, name: '兵庫県' }, { id: 30, name: '奈良県' }, 
-#       { id: 31, name: '和歌山県' }, { id: 32, name: '鳥取県' }, { id: 33, name: '島根県' }, 
-#       { id: 34, name: '岡山県' }, { id: 35, name: '広島県' }, { id: 36, name: '山口県' }, 
-#       { id: 37, name: '徳島県' }, { id: 38, name: '香川県' }, { id: 39, name: '愛媛県' }, 
-#       { id: 40, name: '高知県' }, { id: 41, name: '福岡県' }, { id: 42, name: '佐賀県' }, 
-#       { id: 43, name: '長崎県' }, { id: 44, name: '熊本県' }, { id: 45, name: '大分県' }, 
-#       { id: 46, name: '宮崎県' }, { id: 47, name: '鹿児島県' }, { id: 48, name: '沖縄県' }
-#   ]
-
 Part.create!([
     { name: 'ボーカル' },
     { name: 'ギター' },
@@ -67,6 +24,48 @@ winds = Part.find(9)
 dancer = Part.find(10)
 others = Part.find(11)
 
+Genre.create!([
+    { name: 'ポップス' },
+    { name: 'ロック' },
+    { name: 'ハードロック/ヘビメタ'},
+    { name: 'パンク/メロコア'},
+    { name: 'ハードコア'},
+    { name: 'メタル'},
+    { name: 'ヴィジュアル系'},
+    { name: 'ファンク/ブルース'},
+    { name: 'ジャズ/フュージョン'},
+    { name: 'カントリー/フォーク'},
+    { name: 'スカ/ロカビリー'},
+    { name: 'ソウル/R&B'},
+    { name: 'ゴスペル/アカペラ'},
+    { name: 'ボサノバ/ラテン'},
+    { name: 'クラシック'},
+    { name: 'ヒップホップ/レゲェ'},
+    { name: 'ハウス/テクノ'},
+    { name: 'アニソン/ボカロ'},
+    { name: 'その他'},
+])
+
+pops = Genre.find(1)
+rock = Genre.find(2)
+hard_rock = Genre.find(3)
+punk = Genre.find(4)
+hard_core = Genre.find(5)
+metal = Genre.find(6)
+visual = Genre.find(7)
+blues = Genre.find(8)
+jazz = Genre.find(9)
+folk = Genre.find(10)
+rockabilly = Genre.find(11)
+soul = Genre.find(12)
+gospel = Genre.find(13)
+bossa_nova = Genre.find(14)
+classic = Genre.find(15)
+hiphop = Genre.find(16)
+techno = Genre.find(17)
+anime_songs = Genre.find(18)
+genre_others = Genre.find(19)
+
 tomoki = Customer.create!(
     name: 'tomoki',
     email: 'i.tomoki0218@gmail.com',
@@ -77,9 +76,8 @@ tomoki = Customer.create!(
     )
 
 tomoki.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/tomoki.jpg')),filename: 'tomoki.jpg')
-tomoki.parts << vocal
-tomoki.parts << guitar
-tomoki.parts << composer
+tomoki.parts << [vocal, guitar, composer]
+tomoki.genres << [pops, rock, blues, jazz, anime_songs, visual]
 
 tomusic = Customer.create!(
     name: 'tomusic',
@@ -91,8 +89,8 @@ tomusic = Customer.create!(
     )
 
 tomusic.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/tomusic.jpg')),filename: 'tomusic.jpg')
-tomusic.parts << bass
-tomusic.parts << drums
+tomusic.parts << [bass, drums]
+tomusic.genres << [pops, rock, jazz, blues, folk, anime_songs]
 
 mayu = Customer.create!(
     name: 'mayu',
@@ -104,7 +102,8 @@ mayu = Customer.create!(
     )
 
 mayu.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/mayu.jpg')),filename: 'mayu.jpg')
-mayu.parts << vocal
+mayu.parts << [vocal, dancer, strings]
+mayu.genres << [pops, rock, classic, gospel, anime_songs]
 
 luka = Customer.create!(
     name: 'luka',
@@ -116,7 +115,8 @@ luka = Customer.create!(
     )
 
 luka.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/luka.jpg')),filename: 'luka.jpg')
-luka.parts << guitar
+luka.parts << [guitar, bass]
+luka.genres << [rock, blues, metal, jazz, soul, anime_songs,visual]
 
 hatsune = Customer.create!(
     name: 'hatsune',
@@ -128,9 +128,8 @@ hatsune = Customer.create!(
     )
 
 hatsune.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/hatsune.jpg')),filename: 'hatsune.jpg')
-hatsune.parts << composer
-hatsune.parts << guitar
-
+hatsune.parts << [composer, guitar, vocal]
+hatsune.genres << [rock, hard_rock, hard_core, metal, anime_songs, techno]
 
 john = Customer.create!(
     name: 'john',
@@ -142,8 +141,8 @@ john = Customer.create!(
     )
 
 john.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/john.jpg')),filename: 'john.jpg')
-john.parts << vocal
-john.parts << guitar
+john.parts << [vocal, guitar, composer, strings]
+john.genres << [rock, blues, classic, folk, rockabilly, jazz]
 
 paul = Customer.create!(
     name: 'paul',
@@ -155,8 +154,8 @@ paul = Customer.create!(
     )
 
 paul.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/paul.jpg')),filename: 'paul.jpg')
-paul.parts << bass
-paul.parts << vocal
+paul.parts << [bass, vocal, composer]
+paul.genres << [rock, blues, folk, rockabilly, hard_rock]
 
 george = Customer.create!(
     name: 'george',
@@ -168,7 +167,8 @@ george = Customer.create!(
     )
 
 george.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/george.jpg')),filename: 'george.jpg')
-george.parts << guitar
+george.parts << [guitar, winds]
+george.genres << [rock, blues, folk, rockabilly, hiphop]
 
 ringo = Customer.create!(
     name: 'ringo',
@@ -180,7 +180,8 @@ ringo = Customer.create!(
     )
 
 ringo.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/ringo.jpg')),filename: 'ringo.jpg')
-ringo.parts << drums
+ringo.parts << [drums, others]
+ringo.genres << [rock, blues, jazz, metal, classic, hard_core]
 
 takuro = Customer.create!(
     name: 'takuro',
@@ -192,8 +193,8 @@ takuro = Customer.create!(
     )
 
 takuro.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/takuro.jpg')),filename: 'takuro.jpg')
-takuro.parts << guitar
-takuro.parts << composer
+takuro.parts << [guitar, composer]
+takuro.genres << [pops, rock, hard_rock, blues, folk, rockabilly, classic]
 
 Admin.create!(
     :name => 'tomoki',

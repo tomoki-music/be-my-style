@@ -59,6 +59,12 @@
               %th{scope:"row"} 好きなアーティスト
               %td GLAY、Beatles
             %tr
+              %th{scope:"row"} 好きなジャンル
+              %td
+                - @customer.genres.each do |genre|
+                  %i.fa-solid.fa-music
+                  = genre.name
+            %tr
               %th{scope:"row"} 作品URL
               %td http//~...
             %tr

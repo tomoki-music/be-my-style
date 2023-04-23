@@ -41,6 +41,13 @@
           %th{scope:"row"} 好きなアーティスト
           %td GLAY、Beatles
         %tr
+          %th{scope:"row"} 好きなジャンル
+          %td
+            = f.collection_check_boxes(:genre_ids, Genre.all, :id, :name) do |genre|
+              = genre.label do
+                = genre.check_box
+                = genre.text
+        %tr
           %th{scope:"row"} 作品URL
           %td http//~...
         %tr

@@ -19,6 +19,8 @@ class Customer < ApplicationRecord
   has_many :carts, dependent: :destroy
   has_many :customer_parts, dependent: :destroy
   has_many :parts, through: :customer_parts
+  has_many :customer_genres, dependent: :destroy
+  has_many :genres, through: :customer_genres
 
   validates :name, presence: true, length: {maximum: 20}
 end

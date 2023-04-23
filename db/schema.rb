@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_04_21_030950) do
+ActiveRecord::Schema.define(version: 2023_04_23_082151) do
 
   create_table "active_storage_attachments", charset: "utf8mb3", force: :cascade do |t|
     t.string "name", null: false
@@ -74,6 +74,15 @@ ActiveRecord::Schema.define(version: 2023_04_21_030950) do
     t.index ["item_id"], name: "index_carts_on_item_id"
   end
 
+  create_table "customer_genres", charset: "utf8mb3", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "genre_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_customer_genres_on_customer_id"
+    t.index ["genre_id"], name: "index_customer_genres_on_genre_id"
+  end
+
   create_table "customer_parts", charset: "utf8mb3", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "part_id", null: false
@@ -104,6 +113,12 @@ ActiveRecord::Schema.define(version: 2023_04_21_030950) do
     t.integer "prefecture_id"
     t.index ["email"], name: "index_customers_on_email", unique: true
     t.index ["reset_password_token"], name: "index_customers_on_reset_password_token", unique: true
+  end
+
+  create_table "genres", charset: "utf8mb3", force: :cascade do |t|
+    t.string "name"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
   end
 
   create_table "item_tags", charset: "utf8mb3", force: :cascade do |t|
@@ -169,6 +184,8 @@ ActiveRecord::Schema.define(version: 2023_04_21_030950) do
   add_foreign_key "addresses", "customers"
   add_foreign_key "carts", "customers"
   add_foreign_key "carts", "items"
+  add_foreign_key "customer_genres", "customers"
+  add_foreign_key "customer_genres", "genres"
   add_foreign_key "customer_parts", "customers"
   add_foreign_key "customer_parts", "parts"
   add_foreign_key "item_tags", "items"

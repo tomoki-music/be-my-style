@@ -6,7 +6,7 @@
       %h2 アーティスト一覧
     .col-mid-3
       = form_tag public_customers_path, method: :get, class: 'customer-index-title__searchForm' do
-        = select_tag :part_id, options_from_collection_for_select(Part.all, :id, :name, params[:part_id]), {prompt: 'サブパートで絞り込み検索', onchange: 'submit(this.form);'}
+        = select_tag :part_id, options_from_collection_for_select(Part.all, :id, :name, params[:part_id]), {prompt: 'パートで絞り込み検索', onchange: 'submit(this.form);'}
 
 .customer-index-container
   - @customers.each do |customer|
