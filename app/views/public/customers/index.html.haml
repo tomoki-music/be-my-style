@@ -24,6 +24,7 @@
           - customer.parts.each do |part|
             %i.fa-solid.fa-music
             = part.name
+        %hr
         %p.card-text
           = customer.human_attribute_enum(:introduction)
         = link_to 'プロフィール画面へ', public_customer_path(customer.id), class: "customer-index-link"

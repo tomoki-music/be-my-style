@@ -4,14 +4,25 @@
 //= require rails-ujs
 //= require activestorage
 //= require turbolinks
-//= require select2
 //= require_tree .
 
-function enable_select2() {
-  $(document).ready(function() {
-    $( ".js_select2" ).select2({
-      width: 600,
-      allowClear: true,
+if (document.URL.match(/sign_up/)){
+  document.addEventListener('DOMContentLoaded', () => {
+    const createImageHTML = (blob) => {
+      const imageElement = document.getElementById('registration-image');
+      const blobImage = document.createElement('img');
+      blobImage.setAttribute('class', 'registration-img')
+      blobImage.setAttribute('src', blob);
+      imageElement.appendChild(blobImage);
+    };
+    document.getElementById('customer_profile_image').addEventListener('change', (e) =>{
+      const imageContent = document.querySelector('img'); 
+      if (imageContent){ 
+        imageContent.remove(); 
+      }
+      const file = e.target.files[0];
+      const blob = window.URL.createObjectURL(file);
+      createImageHTML(blob);
     });
   });
 }

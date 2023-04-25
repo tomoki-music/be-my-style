@@ -1,38 +1,89 @@
-.devise-container
+.devise-container.px-0.px-sm-0
   %h2 新規登録
   = form_with model: @customer, url: customer_registration_path, local: true do |f|
-    = render "public/shared/error_messages", resource: resource
-    .field
-      = f.label :name
-      %br/
-      = f.text_field :name, autofocus: true
-    .field
-      = f.label :profile_image
-      %br/
-      = f.file_field :profile_image, accept: "image/*"
-    .field
-      = f.label :part
-      %br/
-      = f.select :part, Customer.parts.map { |key, _| [t("customer.part.#{key}"), key] }, selected: @customer.part{}
-    .field
-      = f.label :introduction
-      %br/
-      = f.text_field :introduction, autofocus: true
-    .field
-      = f.label :email
-      %br/
-      = f.email_field :email, autofocus: true, autocomplete: "email"
-    .field
-      = f.label :password
-      - if @minimum_password_length
-        %em
-          (半角 #{@minimum_password_length} 文字以上で入力してください。)
-      %br/
-      = f.password_field :password, autocomplete: "new-password"
-    .field
-      = f.label :password_confirmation
-      %br/
-      = f.password_field :password_confirmation, autocomplete: "new-password"
-    .actions
-      = f.submit "新規登録する"
+    %table.table.table-striped.registration-table{:width=>"100%",:border=>"1"}
+      %colgroup
+        %col{width: "19%"}
+        %col{width: "81%"}
+          %tr
+            %th{scope:"row"} メールアドレス
+            %td
+              = f.email_field :email, autofocus: true, autocomplete: "email"
+          %tr
+            %th{scope:"row"} パスワード
+            %td
+              - if @minimum_password_length
+                %em
+                  (半角 #{@minimum_password_length} 文字以上で入力してください。)
+              %br/
+              = f.password_field :password, autocomplete: "new-password"
+          %tr
+            %th{scope:"row"} パスワード(確認)
+            %td
+              = f.password_field :password_confirmation, autocomplete: "new-password"
+          %tr
+            %th{scope:"row"} 画像
+            %td
+              = f.file_field :profile_image, accept: 'image/*'
+              #registration-image
+          %tr
+            %th{scope:"row"} ニックネーム
+            %td
+              = f.text_field :name
+          %tr
+            %th{scope:"row"} 性別
+            %td
+              = f.select :sex, Customer.enum_options_for_select(:sex)
+          %tr
+            %th{scope:"row"} 誕生日
+            %td
+              = f.date_field :birthday
+          %tr
+            %th{scope:"row"} パート
+            %td
+              = f.collection_check_boxes(:part_ids, Part.all, :id, :name) do |tag|
+                = tag.label do
+                  = tag.check_box
+                  = tag.text
+          %tr
+            %th{scope:"row"} 活動場所
+            %td 
+              = f.collection_select :prefecture_id, Prefecture.all, :id, :name
+          %tr
+            %th{scope:"row"} 活動ペース
+            %td
+              = f.select :activity_stance, Customer.enum_options_for_select(:activity_stance)
+          %tr
+            %th{scope:"row"} 好きなジャンル
+            %td
+              = f.collection_check_boxes(:genre_ids, Genre.all, :id, :name) do |genre|
+                = genre.label do
+                  = genre.check_box
+                  = genre.text
+          %tr
+            %th{:rowspan => 5} 好きなアーティスト
+            %td
+              = f.text_field :favorite_artist1
+          %tr
+            %td
+              = f.text_field :favorite_artist2
+          %tr
+            %td
+              = f.text_field :favorite_artist3
+          %tr
+            %td
+              = f.text_field :favorite_artist4
+          %tr
+            %td
+              = f.text_field :favorite_artist5
+          %tr
+            %th{scope:"row"} 作品URL
+            %td
+              = f.text_field :url
+          %tr
+            %th{scope:"row"} 自己紹介
+            %td
+              = f.text_area :introduction, style: "width:90%"
+          .actions
+            = f.submit "新規登録する", class: "btn btn-info registration-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }
   = render "public/shared/links"

@@ -62,6 +62,9 @@
         border-radius: 10px;
       }
     }
+    .card-text{
+      margin-top: 10px;
+    }
     .customer-edit-link{
       text-align: center;
       display: block;
@@ -77,29 +80,37 @@
 }
 
 .customer-edit-title{
+  width: 100%;
   margin-left: 100px;
 }
 
-.customer-edit-table{
-  border: thick double lightblue;
+.customer-edit-container{
+  width: 90%;
+  margin: 0 auto;
+  .customer-edit-table{
+    border: thick double lightblue;
+    .edit-img{
+      width: 300px;
+      object-fit: cover;
+      border-radius: 10px;
+      padding: 5px;
+    }
+  }
+  .customer-edit-btn{
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    display: block;
+    width: 200px;
+    margin-left: auto;
+    text-align: center;
+    font-size: 20px;
+    color: white;
+    border-radius: 10px;
+  }
 }
 
-.customer-edit-btn{
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  display: block;
-  width: 200px;
-  margin-left: auto;
-  text-align: center;
-  font-size: 20px;
-  color: white;
-  border-radius: 10px;
-}
-
-.edit-img{
-  width: 300px;
-  object-fit: cover;
-  border-radius: 10px;
-  padding: 5px;
+input[type="text"] {
+  width: 90%;
+  height: 40px;
 }

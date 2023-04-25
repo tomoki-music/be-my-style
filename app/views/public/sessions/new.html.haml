@@ -1,22 +1,28 @@
-.devise-container
+.devise-container.px-0.px-sm-0
   %h2 ログイン画面
   = form_with model: @customer, url: customer_session_path, local: true do |f|
-    .field
-      = f.label :name
-      %br/
-      = f.text_field :name, autofocus: true
-    .field
-      = f.label :email
-      %br/
-      = f.email_field :email, autofocus: true, autocomplete: "email"
-    .field
-      = f.label :password
-      %br/
-      = f.password_field :password, autocomplete: "current-password"
-    - if devise_mapping.rememberable?
-      .field
-        = f.check_box :remember_me
-        = f.label :remember_me
-    .actions
-      = f.submit "ログインする"
+    %table.table.table-striped.session-table{:width=>"100%",:border=>"1"}
+      %colgroup
+        %col{width: "19%"}
+        %col{width: "81%"}
+          %tr
+            %th{scope:"row"} ニックネーム
+            %td
+              = f.text_field :name, autofocus: true
+          %tr
+            %th{scope:"row"} メールアドレス
+            %td
+              = f.email_field :email, autofocus: true, autocomplete: "email", style: "width:90%"
+          %tr
+            %th{scope:"row"} パスワード
+            %td
+              = f.password_field :password, autocomplete: "current-password", style: "width:90%"
+          - if devise_mapping.rememberable?
+            %tr
+              %th{scope:"row"} ログインを保存する
+              %td
+                = f.check_box :remember_me
+                = f.label :remember_me
+          .actions
+      = f.submit "ログインする", class: "btn btn-info session-btn"
   = render "public/shared/links"

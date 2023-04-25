@@ -21,17 +21,18 @@
               - @customer.parts.each do |part|
                 %i.fa-solid.fa-music
                 = part.name
+            %hr
             %p.card-text
               = @customer.human_attribute_enum(:introduction)
             - if @customer.id == current_customer.id
-              = link_to 'プロフィール編集', edit_public_customer_path(@customer), class: "btn btn-info customer-edit-link"
+              = link_to 'プロフィール編集', edit_public_customer_path(@customer), data: { 'turbolinks': false }, class: "btn btn-info customer-edit-link"
     .col-md-9
       %table.table.table-striped.customer-show-table{:width=>"100%",:border=>"1"}
         %colgroup
           %col{width: "19%"}
           %col{width: "81%"}
             %tr
-              %th{scope:"row"} 名前
+              %th{scope:"row"} ニックネーム
               %td
                 = @customer.human_attribute_enum(:name)
             %tr
@@ -54,10 +55,8 @@
                 = @customer.prefecture.name if @customer.prefecture.present?
             %tr
               %th{scope:"row"} 活動ペース
-              %td 週１くらい
-            %tr
-              %th{scope:"row"} 好きなアーティスト
-              %td GLAY、Beatles
+              %td
+                = @customer.human_attribute_enum(:activity_stance)
             %tr
               %th{scope:"row"} 好きなジャンル
               %td
@@ -65,8 +64,23 @@
                   %i.fa-solid.fa-music
                   = genre.name
             %tr
-              %th{scope:"row"} 作品URL
-              %td http//~...
+              %th{scope:"row"} 好きなアーティスト
+              %td
+                %i.fa-solid.fa-music
+                = @customer.favorite_artist1
+                %i.fa-solid.fa-music
+                = @customer.favorite_artist2
+                %i.fa-solid.fa-music
+                = @customer.favorite_artist3
+                %i.fa-solid.fa-music
+                = @customer.favorite_artist4
+                %i.fa-solid.fa-music
+                = @customer.favorite_artist5
+            %tr
+              %th{scope:"row"} 「作品サイト/HP」
+              %td
+                - text = @customer.url
+                = link_to text, @customer.url if @customer.url.present?
             %tr
               %th{scope:"row"} 自己紹介
               %td

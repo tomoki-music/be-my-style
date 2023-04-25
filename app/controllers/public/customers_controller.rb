@@ -24,7 +24,24 @@ class Public::CustomersController < ApplicationController
   private
 
   def customer_params
-    params.require(:customer).permit(:name, :part, :sex, :birthday, :introduction, :profile_image, :prefecture_id, part_ids: [], genre_ids: [])
+    params.require(:customer).permit(
+      :name,
+      :part,
+      :sex,
+      :birthday,
+      :activity_stance,
+      :favorite_artist1,
+      :favorite_artist2,
+      :favorite_artist3,
+      :favorite_artist4,
+      :favorite_artist5,
+      :introduction,
+      :profile_image,
+      :prefecture_id,
+      :url,
+      part_ids: [],
+      genre_ids: [],
+    )
   end
 
   def ensure_correct_customer

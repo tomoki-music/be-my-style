@@ -14,6 +14,12 @@ class Customer < ApplicationRecord
     others: 3,
   }, _prefix: true
 
+  enum activity_stance: {
+    beginer: 0,
+    mypace: 1,
+    tightly: 2,
+  }, _prefix: true
+
   has_one_attached :profile_image
   has_many :addresses, dependent: :destroy
   has_many :carts, dependent: :destroy

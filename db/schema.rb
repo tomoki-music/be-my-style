@@ -108,7 +108,12 @@ ActiveRecord::Schema.define(version: 2023_04_23_082151) do
     t.text "introduction"
     t.integer "sex"
     t.date "birthday"
-    t.string "favorite_artist"
+    t.integer "activity_stance"
+    t.text "favorite_artist1"
+    t.text "favorite_artist2"
+    t.text "favorite_artist3"
+    t.text "favorite_artist4"
+    t.text "favorite_artist5"
     t.text "url"
     t.integer "prefecture_id"
     t.index ["email"], name: "index_customers_on_email", unique: true
