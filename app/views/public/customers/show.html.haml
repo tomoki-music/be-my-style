@@ -1,2 +1,87 @@
-%h1 Public::Customers#show
-%p Find me in app/views/public/customers/show.html.erb
+= render 'layouts/header_menu'
+
+.customer-show-title
+  %h2 アーティスト詳細
+
+.customer-show-container.px-0.px-sm-0
+  .row
+    .col-md-3
+      .customer-show-card
+        .card
+          .img-container
+            - if @customer.profile_image.present?
+              = image_tag @customer.profile_image
+            - else
+              = image_tag 'no_image'
+          .card-body.text-container
+            %h5.card-title
+              = @customer.human_attribute_enum(:name)
+            %h6.card-subtitle
+              Part:
+              - @customer.parts.each do |part|
+                %i.fa-solid.fa-music
+                = part.name
+            %hr
+            %p.card-text
+              = @customer.human_attribute_enum(:introduction)
+            - if @customer.id == current_customer.id
+              = link_to 'プロフィール編集', edit_public_customer_path(@customer), data: { 'turbolinks': false }, class: "btn btn-info customer-edit-link"
+    .col-md-9
+      %table.table.table-striped.customer-show-table{:width=>"100%",:border=>"1"}
+        %colgroup
+          %col{width: "19%"}
+          %col{width: "81%"}
+            %tr
+              %th{scope:"row"} ニックネーム
+              %td
+                = @customer.human_attribute_enum(:name)
+            %tr
+              %th{scope:"row"} 性別
+              %td
+                = @customer.human_attribute_enum(:sex)
+            %tr
+              %th{scope:"row"} 誕生日
+              %td
+                = @customer.birthday.strftime("%Y/%m/%d") unless @customer.birthday.nil?
+            %tr
+              %th{scope:"row"} パート
+              %td
+                - @customer.parts.each do |part|
+                  %i.fa-solid.fa-music
+                  = part.name
+            %tr
+              %th{scope:"row"} 活動場所
+              %td
+                = @customer.prefecture.name if @customer.prefecture.present?
+            %tr
+              %th{scope:"row"} 活動ペース
+              %td
+                = @customer.human_attribute_enum(:activity_stance)
+            %tr
+              %th{scope:"row"} 好きなジャンル
+              %td
+                - @customer.genres.each do |genre|
+                  %i.fa-solid.fa-music
+                  = genre.name
+            %tr
+              %th{scope:"row"} 好きなアーティスト
+              %td
+                %i.fa-solid.fa-music
+                = @customer.favorite_artist1
+                %i.fa-solid.fa-music
+                = @customer.favorite_artist2
+                %i.fa-solid.fa-music
+                = @customer.favorite_artist3
+                %i.fa-solid.fa-music
+                = @customer.favorite_artist4
+                %i.fa-solid.fa-music
+                = @customer.favorite_artist5
+            %tr
+              %th{scope:"row"} 「作品サイト/HP」
+              %td
+                - text = @customer.url
+                = link_to text, @customer.url if @customer.url.present?
+            %tr
+              %th{scope:"row"} 自己紹介
+              %td
+                = @customer.human_attribute_enum(:introduction)

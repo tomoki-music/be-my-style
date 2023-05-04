@@ -1,6 +1,31 @@
 ---
 ja:
   activerecord:
+    models:
+      customer: アーティスト
+    attributes:
+      customer:
+        email: メールアドレス
+        password: パスワード
+        name: 名前
+        postal_code: 郵便番号
+        tell: 電話番号
+        is_deleted: 退会日
+        introduction: 自己紹介
+        part: パート
+        sex: 性別
+        birthday: 誕生日
+        favorite_artist: 好きなアーティスト
+        url: 作品HPのURL
+      customer/sex:
+        gender_private: 非公開
+        male: 男性
+        female: 女性
+        others: その他
+      customer/activity_stance:
+        beginer: 初心者(月1回以内)
+        mypace: マイペース(週1回以内〜月1回以上)
+        tightly: ガッツリ(週1回以上)
     errors:
       messages:
         record_invalid: 'バリデーションに失敗しました: %{errors}'

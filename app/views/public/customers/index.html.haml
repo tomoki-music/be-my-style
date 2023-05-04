@@ -1,2 +1,32 @@
-%h1 Public::Customers#index
-%p Find me in app/views/public/customers/index.html.erb
+= render 'layouts/header_menu'
+
+.customer-index-title
+  .row
+    .col-md-9
+      %h2 アーティスト一覧
+    .col-mid-3
+      = form_tag public_customers_path, method: :get, class: 'customer-index-title__searchForm' do
+        = select_tag :part_id, options_from_collection_for_select(Part.all, :id, :name, params[:part_id]), {prompt: 'パートで絞り込み検索', onchange: 'submit(this.form);'}
+
+.customer-index-container
+  - @customers.each do |customer|
+    .card
+      .img-container
+        - if customer.profile_image.present?
+          = image_tag customer.profile_image
+        - else
+          = image_tag 'no_image'
+      .card-body.text-container
+        %h5.card-title
+          = customer.human_attribute_enum(:name)
+        %h6.card-subtitle
+          Part:
+          - customer.parts.each do |part|
+            %i.fa-solid.fa-music
+            = part.name
+        %hr
+        %p.card-text
+          = customer.human_attribute_enum(:introduction)
+        = link_to 'プロフィール画面へ', public_customer_path(customer.id), class: "customer-index-link"
+  .paginate-layout
+    = paginate @customers

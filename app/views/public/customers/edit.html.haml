@@ -1,2 +1,79 @@
-%h1 Public::Customers#edit
-%p Find me in app/views/public/customers/edit.html.erb
+.customer-edit-title
+  %h2 アーティスト編集画面
+  - if @customer.errors.any?
+    .alert
+    %ul
+      - @customer.errors.full_messages.each do |message|
+        %li
+          = message
+
+= form_with model: [:public, @customer], local: true do |f|
+  .customer-edit-container.px-0.px-sm-0
+    %table.table.table-striped.customer-edit-table{:width=>"100%",:border=>"1"}
+      %colgroup
+        %col{width: "19%"}
+        %col{width: "81%"}
+          %tr
+            %th{scope:"row"} 画像
+            %td
+              = f.file_field :profile_image, accept: 'image/*'
+              #edit-image
+          %tr
+            %th{scope:"row"} ニックネーム
+            %td
+              = f.text_field :name
+          %tr
+            %th{scope:"row"} 性別
+            %td
+              = f.select :sex, Customer.enum_options_for_select(:sex)
+          %tr
+            %th{scope:"row"} 誕生日
+            %td
+              = f.date_field :birthday
+          %tr
+            %th{scope:"row"} パート
+            %td
+              = f.collection_check_boxes(:part_ids, Part.all, :id, :name) do |tag|
+                = tag.label do
+                  = tag.check_box
+                  = tag.text
+          %tr
+            %th{scope:"row"} 活動場所
+            %td 
+              = f.collection_select :prefecture_id, Prefecture.all, :id, :name
+          %tr
+            %th{scope:"row"} 活動ペース
+            %td
+              = f.select :activity_stance, Customer.enum_options_for_select(:activity_stance)
+          %tr
+            %th{scope:"row"} 好きなジャンル
+            %td
+              = f.collection_check_boxes(:genre_ids, Genre.all, :id, :name) do |genre|
+                = genre.label do
+                  = genre.check_box
+                  = genre.text
+          %tr
+            %th{:rowspan => 5} 好きなアーティスト
+            %td
+              = f.text_field :favorite_artist1
+          %tr
+            %td
+              = f.text_field :favorite_artist2
+          %tr
+            %td
+              = f.text_field :favorite_artist3
+          %tr
+            %td
+              = f.text_field :favorite_artist4
+          %tr
+            %td
+              = f.text_field :favorite_artist5
+          %tr
+            %th{scope:"row"} 作品URL
+            %td
+              = f.text_field :url
+          %tr
+            %th{scope:"row"} 自己紹介
+            %td
+              = f.text_area :introduction, style: "width:90%"
+          = f.submit "プロフィールを更新", class: "btn btn-info customer-edit-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }

@@ -21,35 +21,126 @@
  @import '@fortawesome/fontawesome-free/scss/brands';
  @import '@fortawesome/fontawesome-free/scss/v4-shims';
 
- .list-style-none li{
-    list-style: none;
-    text-align: right;
-    margin-right: 10px;
- }
-
- .notice-and-alert{
-  height: 15px;
+.list-style-none li{
+  list-style: none;
   text-align: right;
   margin-right: 10px;
-  margin-bottom: -10px;
- }
+}
 
- //deviseのcss
- .devise-container {
+.notifications {
+  animation-name: smooth-fadein-out;
+  animation-duration: 10s;
+  animation-timing-function: ease;
+  animation-delay: 0s;
+  animation-iteration-count: 1;
+  animation-direction: alternate;
+  opacity: 0;
+  z-index: 10;
+  position: fixed;
+  top: 200px;
+  right: 10px;
+  color: $white;
+  font-size: 20px;
   text-align: center;
- }
+  width: 350px;
+  height: 200px;
+  border-radius: 10px;
+  margin: 0 auto;
+  .notice {
+    background-color: #17a2b8;
+    border-radius: 10px;
+  }
+  .alert {
+    background-color: alert_red;
+    border-radius: 10px;
+  }
+}
 
-//ページネーションCSS
- .pagination>li>a {          
-   border: none;     
-   color: #696969;   
- }
- 
- .pagination>.active>a {     
-   background: #93c9ff;     
-   border-radius: 15px;     
- }
- 
- .pagination>li>a:hover {        
-   border-radius: 15px;   
- }
+@keyframes smooth-fadein-out {
+  0% {opacity: 1;}
+  100% {opacity: 0;}
+}
+
+.paginate-layout{
+  margin: 0 auto;
+  text-align: center;
+}
+
+.devise-login-container{
+  width: 50%;
+  margin: 0 auto;
+  h2 {
+    display: block;
+    width: 100%;
+    margin-left: 100px;
+  }
+}
+
+.devise-container{
+  width: 90%;
+  margin: 0 auto;
+  h2 {
+    display: block;
+    width: 100%;
+    margin-left: 100px;
+  }
+}
+
+.devise-sign-up-header{
+  width: 90%;
+  .shared-link{
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    background-color: lightblue;
+    padding: 20px;
+    color: white;
+    border-radius: 10px;
+  }
+}
+
+.registration-table{
+  border: thick double lightblue;
+}
+
+.registration-btn{
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  display: block;
+  width: 200px;
+  margin-left: auto;
+  text-align: center;
+  font-size: 20px;
+  color: white;
+  border-radius: 10px;
+}
+
+.registration-img{
+  width: 300px;
+  object-fit: cover;
+  border-radius: 10px;
+  padding: 5px;
+}
+
+.session-table{
+  border: thick double lightblue;
+}
+
+.session-btn{
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  display: block;
+  width: 200px;
+  margin-left: auto;
+  text-align: center;
+  font-size: 20px;
+  color: white;
+  border-radius: 10px;
+}
+
+input[type="text"] {
+  width: 90%;
+  height: 40px;
+}

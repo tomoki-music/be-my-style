@@ -1,8 +1,15 @@
 .header-menu{
+  z-index: 100px;
+  width: 90%;
   height: 50px;
+  background-color: white;
   padding: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
   .top-message{
-    margin-left: 100px;
+    position: fixed;
+    top: 10px;
+    left: 70px;
     h1{
       font-size: 20px;
     }
@@ -11,12 +18,25 @@
     }
   }
   .header-sign-in-list{
-    margin-top: 10px;
-    .header-sign-in-element{
-      margin-top:5px;
-    }
-    .customer-signed-in-list{
-      display: flex;
-    }
+    position: fixed;
+    top: 10px;
+    right: 50px;
+    margin: 10px;
+    display: flex;
+    height: 15px;
+    align-items: center;
+  }
+}
+
+.customer-menu{
+  width: 90%;
+  height: 50px;
+  background-color: lightblue;
+  margin: 0 auto;
+  border-radius: 10px;
+  ul{
+    display: flex;
+    align-items: center;
+    height: inherit;
   }
 }
