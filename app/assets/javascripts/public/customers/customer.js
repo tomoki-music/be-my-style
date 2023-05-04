@@ -1,17 +1,9 @@
-//= require jquery3
-//= require popper
-//= require bootstrap-sprockets
-//= require rails-ujs
-//= require activestorage
-//= require turbolinks
-//= require_tree .
-
-if (document.URL.match(/sign_up/)){
+if (document.URL.match(/edit/)){
   document.addEventListener('DOMContentLoaded', () => {
     const createImageHTML = (blob) => {
-      const imageElement = document.getElementById('registration-image');
+      const imageElement = document.getElementById('edit-image');
       const blobImage = document.createElement('img');
-      blobImage.setAttribute('class', 'registration-img')
+      blobImage.setAttribute('class', 'edit-img')
       blobImage.setAttribute('src', blob);
       imageElement.appendChild(blobImage);
     };

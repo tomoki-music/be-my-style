@@ -70,4 +70,5 @@ gem 'net-smtp'
 gem 'devise-i18n'
 gem 'haml-rails'
 gem 'erb2haml'
+gem 'active_hash'
 gem "aws-sdk-s3", require: false
