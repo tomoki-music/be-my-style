@@ -17,7 +17,7 @@
             %h5.card-title
               = @customer.human_attribute_enum(:name)
             %h6.card-subtitle
-              パート:
+              Part:
               - @customer.parts.each do |part|
                 %i.fa-solid.fa-music
                 = part.name

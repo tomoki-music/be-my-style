@@ -29,4 +29,5 @@ class Customer < ApplicationRecord
   has_many :genres, through: :customer_genres
 
   validates :name, presence: true, length: {maximum: 20}
+  validates :email, uniqueness: true, presence: true
 end

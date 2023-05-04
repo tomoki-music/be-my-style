@@ -1,6 +1,11 @@
 .header-menu{
+  z-index: 100px;
+  width: 90%;
   height: 50px;
+  background-color: white;
   padding: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
   .top-message{
     position: fixed;
     top: 10px;
@@ -28,7 +33,6 @@
   height: 50px;
   background-color: lightblue;
   margin: 0 auto;
-  margin-top: 10px;
   border-radius: 10px;
   ul{
     display: flex;

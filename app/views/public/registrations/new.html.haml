@@ -1,6 +1,13 @@
 .devise-container.px-0.px-sm-0
-  %h2 新規登録
+  .devise-sign-up-header
+    .row
+      .col-5-md
+        %h2 新規登録
+      .col-7-md.shared-link
+        = render "public/shared/links"
+  
   = form_with model: @customer, url: customer_registration_path, local: true do |f|
+    = render 'public/shared/error_messages', model:f.object
     %table.table.table-striped.registration-table{:width=>"100%",:border=>"1"}
       %colgroup
         %col{width: "19%"}
@@ -86,4 +93,3 @@
               = f.text_area :introduction, style: "width:90%"
           .actions
             = f.submit "新規登録する", class: "btn btn-info registration-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }
-  = render "public/shared/links"

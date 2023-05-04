@@ -1,5 +1,11 @@
 .customer-edit-title
   %h2 アーティスト編集画面
+  - if @customer.errors.any?
+    .alert
+    %ul
+      - @customer.errors.full_messages.each do |message|
+        %li
+          = message
 
 = form_with model: [:public, @customer], local: true do |f|
   .customer-edit-container.px-0.px-sm-0

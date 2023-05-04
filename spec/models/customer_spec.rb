@@ -11,7 +11,7 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       end
       it '20文字以下であること' do
         customer.name = Faker::Lorem.characters(number:21)
-        expect(customer.valid?).to eq false;
+        expect(customer.valid?).to eq false
       end
     end
   end

@@ -10,7 +10,6 @@
  * files in this directory. Styles in this file should be added after the last require_* statement.
  * It is generally better to create a new file per style scope.
  *
- *= require select2
  *= require_tree .
  *= require_self
  */
@@ -29,13 +28,26 @@
 }
 
 .notifications {
+  animation-name: smooth-fadein-out;
+  animation-duration: 10s;
+  animation-timing-function: ease;
+  animation-delay: 0s;
+  animation-iteration-count: 1;
+  animation-direction: alternate;
+  opacity: 0;
+  z-index: 10;
+  position: fixed;
+  top: 200px;
+  right: 10px;
   color: $white;
+  font-size: 20px;
   text-align: center;
-  width: 90%;
+  width: 350px;
+  height: 200px;
   border-radius: 10px;
   margin: 0 auto;
   .notice {
-    background-color: lightBlue;
+    background-color: #17a2b8;
     border-radius: 10px;
   }
   .alert {
@@ -44,9 +56,24 @@
   }
 }
 
+@keyframes smooth-fadein-out {
+  0% {opacity: 1;}
+  100% {opacity: 0;}
+}
+
 .paginate-layout{
   margin: 0 auto;
   text-align: center;
+}
+
+.devise-login-container{
+  width: 50%;
+  margin: 0 auto;
+  h2 {
+    display: block;
+    width: 100%;
+    margin-left: 100px;
+  }
 }
 
 .devise-container{
@@ -56,6 +83,19 @@
     display: block;
     width: 100%;
     margin-left: 100px;
+  }
+}
+
+.devise-sign-up-header{
+  width: 90%;
+  .shared-link{
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    background-color: lightblue;
+    padding: 20px;
+    color: white;
+    border-radius: 10px;
   }
 }
 
