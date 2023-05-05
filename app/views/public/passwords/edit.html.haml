@@ -1,19 +1,24 @@
-%h2 パスワードを変更する
-= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f|
-  = render "public/shared/error_messages", resource: resource
-  = f.hidden_field :reset_password_token
-  .field
-    = f.label :password, "新しいパスワード"
-    %br/
-    - if @minimum_password_length
-      %em
-        (#{@minimum_password_length} characters minimum)
-      %br/
-    = f.password_field :password, autofocus: true, autocomplete: "new-password"
-  .field
-    = f.label :password_confirmation, "新しいパスワード（確認）"
-    %br/
-    = f.password_field :password_confirmation, autocomplete: "new-password"
-  .actions
-    = f.submit "パスワードを変更する"
-= render "public/shared/links"
+.devise-password-container.px-0.px-sm-0
+  %h2 パスワードを変更する
+  = form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f|
+    = render "public/shared/error_messages", resource: resource
+    = f.hidden_field :reset_password_token
+    %table.table.table-striped.password-table{:width=>"100%",:border=>"1"}
+      %colgroup
+        %col{width: "19%"}
+        %col{width: "81%"}
+          %tr
+            %th{scope:"row"} 新しいパスワード
+            %td
+              - if @minimum_password_length
+                %em
+                  (#{@minimum_password_length} 文字以上で入力して下さい)
+                %br/
+              = f.password_field :password, autofocus: true, autocomplete: "new-password"
+          %tr
+            %th{scope:"row"} 新しいパスワード（確認）
+            %td
+              = f.password_field :password_confirmation, autocomplete: "new-password"
+          .actions
+            = f.submit "パスワードを変更", class: "btn btn-info password-btn"
+  = render "public/shared/links"
