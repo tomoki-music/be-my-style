@@ -85,6 +85,9 @@ tomoki = Customer.create!(
 tomoki.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/tomoki.jpg')),filename: 'tomoki.jpg')
 tomoki.parts << [vocal, guitar, composer]
 tomoki.genres << [pops, rock, blues, jazz, anime_songs, visual]
+(1..10).each do |id|
+    tomoki.follow(id)
+end
 
 tomusic = Customer.create!(
     name: 'tomusic',
@@ -104,6 +107,9 @@ tomusic = Customer.create!(
 tomusic.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/tomusic.jpg')),filename: 'tomusic.jpg')
 tomusic.parts << [bass, drums]
 tomusic.genres << [pops, rock, jazz, blues, folk, anime_songs]
+(1..10).each do |id|
+    tomusic.follow(id)
+end
 
 mayu = Customer.create!(
     name: 'mayu',
@@ -123,6 +129,9 @@ mayu = Customer.create!(
 mayu.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/mayu.jpg')),filename: 'mayu.jpg')
 mayu.parts << [vocal, dancer, strings]
 mayu.genres << [pops, rock, classic, gospel, anime_songs]
+(1..10).each do |id|
+    mayu.follow(id)
+end
 
 luka = Customer.create!(
     name: 'luka',
@@ -142,6 +151,9 @@ luka = Customer.create!(
 luka.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/luka.jpg')),filename: 'luka.jpg')
 luka.parts << [guitar, bass]
 luka.genres << [rock, blues, metal, jazz, soul, anime_songs,visual]
+(1..10).each do |id|
+    luka.follow(id)
+end
 
 hatsune = Customer.create!(
     name: 'hatsune',
@@ -161,6 +173,9 @@ hatsune = Customer.create!(
 hatsune.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/hatsune.jpg')),filename: 'hatsune.jpg')
 hatsune.parts << [composer, guitar, vocal]
 hatsune.genres << [rock, hard_rock, hard_core, metal, anime_songs, techno]
+(1..10).each do |id|
+    hatsune.follow(id)
+end
 
 john = Customer.create!(
     name: 'john',
@@ -180,6 +195,9 @@ john = Customer.create!(
 john.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/john.jpg')),filename: 'john.jpg')
 john.parts << [vocal, guitar, composer, strings]
 john.genres << [rock, blues, classic, folk, rockabilly, jazz]
+(1..10).each do |id|
+    john.follow(id)
+end
 
 paul = Customer.create!(
     name: 'paul',
@@ -199,6 +217,9 @@ paul = Customer.create!(
 paul.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/paul.jpg')),filename: 'paul.jpg')
 paul.parts << [bass, vocal, composer]
 paul.genres << [rock, blues, folk, rockabilly, hard_rock]
+(1..10).each do |id|
+    paul.follow(id)
+end
 
 george = Customer.create!(
     name: 'george',
@@ -218,6 +239,9 @@ george = Customer.create!(
 george.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/george.jpg')),filename: 'george.jpg')
 george.parts << [guitar, winds]
 george.genres << [rock, blues, folk, rockabilly, hiphop]
+(1..10).each do |id|
+    george.follow(id)
+end
 
 ringo = Customer.create!(
     name: 'ringo',
@@ -237,6 +261,9 @@ ringo = Customer.create!(
 ringo.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/ringo.jpg')),filename: 'ringo.jpg')
 ringo.parts << [drums, others]
 ringo.genres << [rock, blues, jazz, metal, classic, hard_core]
+(1..10).each do |id|
+    ringo.follow(id)
+end
 
 takuro = Customer.create!(
     name: 'takuro',
@@ -256,6 +283,9 @@ takuro = Customer.create!(
 takuro.profile_image.attach(io: File.open(Rails.root.join('app/assets/images/takuro.jpg')),filename: 'takuro.jpg')
 takuro.parts << [guitar, composer]
 takuro.genres << [pops, rock, hard_rock, blues, folk, rockabilly, classic]
+(1..10).each do |id|
+    takuro.follow(id)
+end
 
 Admin.create!(
     :name => 'tomoki',

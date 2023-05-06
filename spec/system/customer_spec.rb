@@ -150,6 +150,25 @@ RSpec.describe Customer, type: :system do
           expect(find_all('a')[3].native.inner_text).to match('プロフィール編集')
         end
       end
+      context 'Artistのフォローができる' do
+        before do
+          visit public_customer_path(other_customer)
+        end
+        it '「フォローする」ボタンが表示される' do
+          expect(find_all('a')[3].native.inner_text).to match('フォローする')
+        end
+        it '「フォローする」ボタンを押すと「フォロワー数」が1つ増え「フォロー外す」ボタンに変わる' do
+          follow_link = find_all('a')[3]
+          expect{ follow_link.click }.to change{Relationship.count}.by(1)
+          expect(find_all('a')[3].native.inner_text).to match('フォロー外す')
+        end
+        it '「フォロー外す」ボタンを押すと「フォロワー数」が1つ減り「フォローする」ボタンに変わる' do
+          find_all('a')[3].click
+          unfollow_link = find_all('a')[3]
+          expect{ unfollow_link.click }.to change{Relationship.count}.from(1).to(0)
+          expect(find_all('a')[3].native.inner_text).to match('フォローする')
+        end
+      end
     end
     describe 'Artist編集のテスト' do
       context 'Artist編集画面への遷移' do

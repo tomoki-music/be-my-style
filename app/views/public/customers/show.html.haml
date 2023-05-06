@@ -25,7 +25,12 @@
             %p.card-text
               = @customer.human_attribute_enum(:introduction)
             - if @customer.id == current_customer.id
-              = link_to 'プロフィール編集', edit_public_customer_path(@customer), data: { 'turbolinks': false }, class: "btn btn-info customer-edit-link"
+              = link_to 'プロフィール編集', edit_public_customer_path(@customer), data: { 'turbolinks': false }, class: "btn btn-info customer-show-btn"
+            - else
+              - if current_customer.following?(@customer)
+                = link_to "フォロー外す", public_customer_relationships_path(@customer.id), method: :delete, class: "btn btn-info customer-show-btn"
+              - else
+                = link_to "フォローする", public_customer_relationships_path(@customer.id), method: :post, class: "btn btn-info customer-show-btn"
     .col-md-9
       %table.table.table-striped.customer-show-table{:width=>"100%",:border=>"1"}
         %colgroup
@@ -36,9 +41,13 @@
               %td
                 = @customer.human_attribute_enum(:name)
             %tr
-              %th{scope:"row"} 性別
+              %th{scope:"row"} フォロー数
               %td
-                = @customer.human_attribute_enum(:sex)
+                = @customer.followings.count
+            %tr
+              %th{scope:"row"} フォロワー数
+              %td
+                = @customer.followers.count
             %tr
               %th{scope:"row"} 誕生日
               %td

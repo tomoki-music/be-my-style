@@ -7,10 +7,14 @@ Rails.application.routes.draw do
   namespace :public do
     get 'homes/top'
     root to: 'homes#top'
-    resources :customers, only: [:index,:show,:edit,:update]
+    resources :customers, only: [:index,:show,:edit,:update] do
+      resource :relationships, only: [:create, :destroy]
+      get 'followings' => 'relationships#followings', as: 'followings'
+      get 'followers' => 'relationships#followers', as: 'followers'
+    end
   end
 
-# 顧客用
+# 顧客(アーティスト)用
 devise_for :customers, controllers: {
   registrations: "public/registrations",
   sessions: 'public/sessions',

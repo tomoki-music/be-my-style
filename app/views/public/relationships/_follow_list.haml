@@ -1,0 +1,15 @@
+- if customers.exists?
+  - customers.each do |customr|
+    %table
+      %thead
+        %tr
+          %th name
+          %th
+          %th
+      %tbody
+        %tr
+          %td = customer.name
+          %td フォロー数: = customer.followings.count
+          %td フォロワー数: = customer.followers.count
+- else
+  %pユーザーはいません
