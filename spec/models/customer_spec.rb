@@ -26,18 +26,14 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       end
     end
   end
-  # describe 'アソシエーションのテスト' do
-  #   context 'customerモデルとの関係' do
-  #     it 'N:1となっている' do
-  #       expect(Post.reflect_on_association(:user).macro).to eq :belongs_to
-  #     end
-  #   end
-
-  #   # has_manyの関係性で記述するのもありです。
-  #   # context 'PostCommentモデルとの関係' do
-  #     # it '1:Nとなっている' do
-  #       # expect(Post.reflect_on_association(:post_comments).macro).to eq :has_many
-  #     # end
-  #   # end
-  # end
+  describe 'アソシエーションのテスト' do
+    context 'Relationshipモデルとの関係' do
+      it 'followingsと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:followings).macro).to eq :has_many
+      end
+      it 'followersと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:followers).macro).to eq :has_many
+      end
+    end
+  end
 end
