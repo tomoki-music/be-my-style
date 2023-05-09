@@ -1,0 +1,29 @@
+.n-circle {
+  position: absolute;
+  padding-left: 1rem;
+  padding-top: 0rem;
+  color: red;
+}
+
+.count-circle{
+  position: absolute;
+  left: 23.5px;
+  top: 0px;
+  color: white;
+  z-index: 10px;
+  font-size: 3px;
+}
+
+.icon_mini{
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+}
+
+.notifications-index-container{
+  width: 90%;
+  margin: 0 auto;
+  h2{
+    text-align: center;
+  }
+}

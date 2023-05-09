@@ -8,6 +8,17 @@
       %ul.list-style-none.header-sign-in-list
         - if customer_signed_in?
           %li
+            = link_to(public_notifications_path) do
+              - if current_customer.present? && unchecked_notifications.any?
+                %span.fa-stack
+                  %i.far.fa-bell.fa-lg.fa-stack-2x
+                  %i.fas.fa-circle.n-circle.fa-stack-1x
+                  %i.count-circle
+                    - notifications = current_customer.passive_notifications
+                    = notifications.where.not(visitor_id: current_customer.id).count
+              - else 
+                %i.far.fa-bell.fa-lg
+          %li
             %i.fa-solid.fa-right-from-bracket
             = link_to "ログアウト", destroy_customer_session_path, method: :delete, class: "btn btn-secondary"
         - else
@@ -24,3 +35,5 @@
       = link_to "Topページ", public_homes_top_path, class: "btn btn-info"
     %li
       = link_to "Artist一覧", public_customers_path, class: "btn btn-info"
+    %li
+      = link_to "マイページ", public_customer_path(current_customer), class: "btn btn-info"
