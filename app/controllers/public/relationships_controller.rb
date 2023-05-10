@@ -4,7 +4,7 @@ class Public::RelationshipsController < ApplicationController
     @customer = Customer.find(params[:customer_id])
 
     current_customer.follow(follow_customer_id)
-    @customer.create_notification_follow!(current_customer)
+    @customer.create_notification_follow(current_customer)
     
     redirect_to request.referer
   end

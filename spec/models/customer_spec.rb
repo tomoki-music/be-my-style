@@ -60,7 +60,7 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
     end
     context 'フォローの通知メソッドのテスト' do
       it '通知のインスタンスが作成される' do
-        expect(other_customer.create_notification_follow!(customer)).to eq true
+        expect(other_customer.create_notification_follow(customer)).to eq true
       end
     end
   end

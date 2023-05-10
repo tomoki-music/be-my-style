@@ -36,4 +36,5 @@
     %li
       = link_to "Artist一覧", public_customers_path, class: "btn btn-info"
     %li
-      = link_to "マイページ", public_customer_path(current_customer), class: "btn btn-info"
+      - if current_customer.present?
+        = link_to "マイページ", public_customer_path(current_customer), class: "btn btn-info"

@@ -34,5 +34,5 @@
           = Comment.find_by(id: notification.comment_id)&.comment
 
   .small.text-muted.text-right
-    = time_ago_in_words(notification.created_at).upcase
+    = time_ago_in_words(notification.created_at).upcase + "前"
   %hr

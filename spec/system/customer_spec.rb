@@ -91,7 +91,7 @@ RSpec.describe Customer, type: :system do
     end
   end
 
-  describe 'Top画面、アーティスト一覧、詳細、編集への遷移、編集のテスト' do
+  describe 'アーティストの画面テスト' do
     before do
       login(customer)
     end
@@ -122,7 +122,7 @@ RSpec.describe Customer, type: :system do
       end
       context 'Artist一覧でプロフィール画面へのリンクが表示される' do
         it 'プロフィール画面へのリンクが表示される' do
-          show_link = find_all('a')[3]
+          show_link = find_all('a')[6]
           expect(show_link.native.inner_text).to match('プロフィール画面へ')
         end
       end
@@ -133,7 +133,7 @@ RSpec.describe Customer, type: :system do
           visit public_customers_path
         end
         it 'Artist詳細画面へ遷移できる' do
-          show_link = find_all('a')[3]
+          show_link = find_all('a')[6]
           show_link.click
           expect(current_path).to eq('/public/customers/' + customer.id.to_s)
         end
@@ -147,7 +147,7 @@ RSpec.describe Customer, type: :system do
           expect(page).to have_content 'Part'
         end
         it 'プロフィール編集ボタンが表示される' do
-          expect(find_all('a')[3].native.inner_text).to match('プロフィール編集')
+          expect(find_all('a')[5].native.inner_text).to match('プロフィール編集')
         end
       end
       context 'Artistのフォローができる' do
@@ -155,18 +155,18 @@ RSpec.describe Customer, type: :system do
           visit public_customer_path(other_customer)
         end
         it '「フォローする」ボタンが表示される' do
-          expect(find_all('a')[3].native.inner_text).to match('フォローする')
+          expect(find_all('a')[5].native.inner_text).to match('フォローする')
         end
         it '「フォローする」ボタンを押すと「フォロワー数」が1つ増え「フォロー外す」ボタンに変わる' do
-          follow_link = find_all('a')[3]
+          follow_link = find_all('a')[5]
           expect{ follow_link.click }.to change{Relationship.count}.by(1)
-          expect(find_all('a')[3].native.inner_text).to match('フォロー外す')
+          expect(find_all('a')[5].native.inner_text).to match('フォロー外す')
         end
         it '「フォロー外す」ボタンを押すと「フォロワー数」が1つ減り「フォローする」ボタンに変わる' do
-          find_all('a')[3].click
-          unfollow_link = find_all('a')[3]
+          find_all('a')[5].click
+          unfollow_link = find_all('a')[5]
           expect{ unfollow_link.click }.to change{Relationship.count}.from(1).to(0)
-          expect(find_all('a')[3].native.inner_text).to match('フォローする')
+          expect(find_all('a')[5].native.inner_text).to match('フォローする')
         end
       end
     end
@@ -176,7 +176,7 @@ RSpec.describe Customer, type: :system do
           visit public_customer_path(customer)
         end
         it 'Artist編集画面へ遷移できる' do
-          show_link = find_all('a')[3]
+          show_link = find_all('a')[5]
           show_link.click
           expect(current_path).to eq('/public/customers/' + customer.id.to_s + '/edit')
         end
@@ -213,6 +213,20 @@ RSpec.describe Customer, type: :system do
           fill_in 'customer_introduction', with: Faker::Lorem.characters(number:20)
           click_button 'プロフィールを更新'
           expect(page).to have_current_path public_customer_path(customer)
+        end
+      end
+    end
+    describe 'Artistへの通知テスト' do
+      context 'フォローに関する通知テスト' do
+        before do
+        visit public_customer_path(other_customer)
+        end
+        it 'customerがother_customerをフォローすると、other_customerへ通知が届く' do
+          find_all('a')[5].click
+          find_all('a')[1].click
+          login(other_customer)
+          visit public_notifications_path
+          expect(page).to have_content 'さんが あなたをフォローしました'
         end
       end
     end
