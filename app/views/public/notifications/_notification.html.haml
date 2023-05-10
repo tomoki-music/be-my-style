@@ -1,0 +1,38 @@
+- visitor = notification.visitor
+- visited = notification.visited
+.col-md-6.mx-auto
+  .form-inline
+    %span
+      = link_to public_customer_path(visitor) do
+        - if visitor.profile_image.present?
+          = image_tag visitor.profile_image, class: "icon_mini"
+        - else
+          = image_tag 'no_image', class: "icon_mini"
+        %strong
+          = visitor.name + 'さんが'
+
+      - case notification.action
+      - when 'follow' then
+        = "あなたをフォローしました"
+      - when 'like' then
+        = link_to 'あなたの投稿', notification.event, style: "font-weight: bold;"
+        = "にいいねしました"
+      - when 'comment' then
+        - if notification.event.customer_id == visited.id
+          = link_to "あなたのイベント", notification.event, style: "font-weight: bold;"
+        - else
+          %span
+            = link_to public_event_path(notification.event) do
+              - if notification.event.customer.profile_image.present?
+                = image_tag notification.event.customer.profile_image, class: "icon_mini"
+              - else
+                = image_tag 'no_image', class: "icon_mini"
+              %strong
+                = notification.event.customer.name + 'さんの投稿'
+        = "にコメントしました"
+        %p.text-muted.mb-0
+          = Comment.find_by(id: notification.comment_id)&.comment
+
+  .small.text-muted.text-right
+    = time_ago_in_words(notification.created_at).upcase + "前"
+  %hr

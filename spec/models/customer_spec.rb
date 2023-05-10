@@ -1,10 +1,10 @@
 require 'rails_helper'
 
 RSpec.describe 'Customerモデルのテスト', type: :model do
-  describe 'バリデーションのテスト' do
-    let(:customer) { FactoryBot.create(:customer) }
-    let(:other_customer) { FactoryBot.create(:customer) }
+  let(:customer) { FactoryBot.create(:customer) }
+  let(:other_customer) { FactoryBot.create(:customer) }
 
+  describe 'バリデーションのテスト' do
     context 'nameカラムが不正' do
       it '空欄でないこと' do
         customer.name = ''
@@ -33,6 +33,34 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       end
       it 'followersと1:Nとなっている' do
         expect(Customer.reflect_on_association(:followers).macro).to eq :has_many
+      end
+    end
+    context 'Notificationモデルとの関係' do
+      it 'active_notificationsと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:active_notifications).macro).to eq :has_many
+      end
+      it 'passive_notificationsと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:passive_notifications).macro).to eq :has_many
+      end
+    end
+  end
+  describe 'モデルのインスタンスメソッドのテスト' do
+    context 'フォロー、アンフォローのメソッドテスト' do
+      it 'フォローする' do
+        expect(customer.follow(other_customer.id)).to be_valid
+      end
+      it 'フォローを外す' do
+        customer.follow(other_customer.id)
+        expect(customer.unfollow(other_customer.id)).to be_valid
+      end
+      it 'フォローしているかチェックする' do
+        customer.follow(other_customer.id)
+        expect(customer.following?(other_customer)).to eq true
+      end
+    end
+    context 'フォローの通知メソッドのテスト' do
+      it '通知のインスタンスが作成される' do
+        expect(other_customer.create_notification_follow(customer)).to eq true
       end
     end
   end

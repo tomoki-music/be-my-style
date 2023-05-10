@@ -12,6 +12,7 @@ Rails.application.routes.draw do
       get 'followings' => 'relationships#followings', as: 'followings'
       get 'followers' => 'relationships#followers', as: 'followers'
     end
+    resources :notifications, only: :index
   end
 
 # 顧客(アーティスト)用
