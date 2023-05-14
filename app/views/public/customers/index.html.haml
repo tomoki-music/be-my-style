@@ -2,9 +2,11 @@
 
 .customer-index-title
   .row
-    .col-md-9
+    .col-md-4
       %h2 アーティスト一覧
-    .col-mid-3
+    .col-md-4.paginate-layout
+      = paginate @customers
+    .col-mid-4
       = form_tag public_customers_path, method: :get, class: 'customer-index-title__searchForm' do
         = select_tag :part_id, options_from_collection_for_select(Part.all, :id, :name, params[:part_id]), {prompt: 'パートで絞り込み検索', onchange: 'submit(this.form);'}
 
@@ -29,5 +31,3 @@
         %p.card-text
           = customer.human_attribute_enum(:introduction)
         = link_to 'プロフィール画面へ', public_customer_path(customer.id), class: "customer-index-link"
-  .paginate-layout
-    = paginate @customers

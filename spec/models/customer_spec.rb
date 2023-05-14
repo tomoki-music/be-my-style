@@ -43,6 +43,19 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(Customer.reflect_on_association(:passive_notifications).macro).to eq :has_many
       end
     end
+    context 'chat_roomモデルとの関係' do
+      it 'chat_roomとの中間テーブルと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:chat_room_customers).macro).to eq :has_many
+      end
+      it 'chat_roomと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:chat_rooms).macro).to eq :has_many
+      end
+    end
+    context 'chat_messageモデルとの関係' do
+      it 'chat_messageと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:chat_messages).macro).to eq :has_many
+      end
+    end
   end
   describe 'モデルのインスタンスメソッドのテスト' do
     context 'フォロー、アンフォローのメソッドテスト' do

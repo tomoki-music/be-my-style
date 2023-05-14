@@ -45,7 +45,7 @@ RSpec.describe "customersコントローラーのテスト", type: :request do
       before do
         get public_customers_path
       end
-      it 'リクエストは401 OKとなること' do
+      it 'リクエストは302 Foundとなること' do
         expect(response.status).to eq 302
       end
     end
@@ -53,7 +53,7 @@ RSpec.describe "customersコントローラーのテスト", type: :request do
       before do
         get public_customer_path(customer)
       end
-      it 'リクエストは401 OKとなること' do
+      it 'リクエストは302 Foundとなること' do
         expect(response.status).to eq 302
       end
     end
@@ -61,7 +61,7 @@ RSpec.describe "customersコントローラーのテスト", type: :request do
       before do
         get edit_public_customer_path(customer)
       end
-      it 'リクエストは401 OKとなること' do
+      it 'リクエストは302 Foundとなること' do
         expect(response.status).to eq 302
       end
     end

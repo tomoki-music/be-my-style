@@ -13,6 +13,11 @@ Rails.application.routes.draw do
       get 'followers' => 'relationships#followers', as: 'followers'
     end
     resources :notifications, only: :index
+
+    # マッチング〜チャット機能
+    resources :matchings, only: [:index]
+    resources :chat_rooms, only: [:create, :show]
+    resources :chat_messages, only: [:create]
   end
 
 # 顧客(アーティスト)用
