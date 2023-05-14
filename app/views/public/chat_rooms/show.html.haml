@@ -1,4 +1,40 @@
 = render 'layouts/header_menu'
 
-.chatromms-show-container
+.chat-romms-show-container
   %h2 チャットルームへようこそ!
+
+  .partner-container
+    %p お相手：
+    = link_to public_customer_path(@chat_room_customer), class: "chat-room-customer-link" do
+      .img-element
+        - if @chat_room_customer.profile_image.present?
+          = image_tag @chat_room_customer.profile_image
+        - else
+          = image_tag 'no_image'
+      .name-element
+        = @chat_room_customer.name + 'さん'
+  
+  .message-container
+    - @chat_messages.each do |chat_message|
+      %hr
+      %ul
+        %li 内容：
+        = chat_message.content
+        %li
+        = l chat_message.created_at
+        に送信済み
+        %li
+        = link_to public_customer_path(chat_message.customer), class: "chat-room-customer-link" do
+          .img-element
+            - if chat_message.customer.profile_image.present?
+              = image_tag chat_message.customer.profile_image
+            - else
+              = image_tag 'no_image'
+          .name-element
+            = chat_message.customer.name + 'さんのメッセージ'
+      %hr
+
+  = form_with model: [:public, @chat_message] do |f|
+    = f.hidden_field :chat_room_id, value: @chat_room.id
+    = f.text_area :content
+    = f.submit "メッセージを送信"

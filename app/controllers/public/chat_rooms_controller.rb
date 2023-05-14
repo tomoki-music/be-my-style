@@ -19,5 +19,9 @@ class Public::ChatRoomsController < ApplicationController
   end
 
   def show
+    @chat_message = ChatMessage.new
+    @chat_room = ChatRoom.find(params[:id])
+    @chat_messages = ChatMessage.where(chat_room_id: @chat_room.id)
+    @chat_room_customer = @chat_room.chat_room_customers.where.not(customer_id: current_customer.id)[0].customer
   end
 end

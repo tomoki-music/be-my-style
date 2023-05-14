@@ -1,4 +1,59 @@
-.chatromms-show-container{
+.chat-romms-show-container{
   width: 90%;
   margin: 0 auto;
+  .partner-container{
+    display: flex;
+    height: 40px;
+    width: 100%;
+    justify-content: flex-end;
+    p{
+      font-size: 20px;
+    }
+    .chat-room-customer-link{
+      text-decoration: none;
+      display: flex;
+      align-items: flex-end;
+      .img-element{
+        width: 50px;
+        height: 50px;
+        margin-right: 5px;
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 10px;
+        }
+      }
+      .name-element{
+        font-size: 20px;
+      }
+    }
+  }
+  .message-container{
+    ul{
+      padding-left: 0;
+      .chat-room-customer-link{
+        text-decoration: none;
+        display: flex;
+        align-items: flex-end;
+        .img-element{
+          width: 50px;
+          height: 50px;
+          margin-right: 5px;
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+          }
+        }
+        .name-element{
+          font-size: 20px;
+        }
+      }
+      li{
+        list-style: none;
+      }
+    }
+  }
 }
