@@ -38,3 +38,5 @@
     %li
       - if current_customer.present?
         = link_to "マイページ", public_customer_path(current_customer), class: "btn btn-info"
+    %li
+      = link_to "チャットする", public_matchings_path, class: "btn btn-info"

@@ -22,7 +22,6 @@
                 = part.name
             %hr
             %p.card-text
-              = @customer.human_attribute_enum(:introduction)
             - if @customer.id == current_customer.id
               = link_to 'プロフィール編集', edit_public_customer_path(@customer), data: { 'turbolinks': false }, class: "btn btn-info customer-show-btn"
             - else
@@ -30,6 +29,10 @@
                 = link_to "フォロー外す", public_customer_relationships_path(@customer.id), method: :delete, class: "btn btn-info customer-show-btn"
               - else
                 = link_to "フォローする", public_customer_relationships_path(@customer.id), method: :post, class: "btn btn-info customer-show-btn"
+            - if @mathing_customers.present? && current_customer.id != @customer.id && @mathing_customers.include?(@customer.id)
+              = link_to public_chat_rooms_path(customer_id: @customer.id), method: :post do
+                %i.fa-regular.fa-comments.chat-icon
+                このアーティストとチャットする🎵
     .col-md-9
       %table.table.table-striped.customer-show-table{:width=>"100%",:border=>"1"}
         %colgroup
