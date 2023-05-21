@@ -218,12 +218,7 @@ RSpec.describe Customer, type: :system do
     end
     describe 'Artistの相互フォロー（マッチング）のテスト' do
       before do
-        visit public_customer_path(other_customer)
-        find_all('a')[6].click
-        find_all('a')[1].click
-        login(other_customer)
-        visit public_customer_path(customer)
-        find_all('a')[6].click
+        matching(other_customer)
       end
         context '相互フォローの際のチャット一覧' do
           it 'チャット一覧にアーティストが表示' do
@@ -241,31 +236,57 @@ RSpec.describe Customer, type: :system do
           end
         end
     end
+    describe 'Artistのチャット機能のテスト' do
+      before do
+        matching(other_customer)
+      end
+        context 'チャット画面に遷移できる' do
+          it 'チャットボタンを押すとチャット画面へ遷移する' do
+            visit public_matchings_path
+            find_all('a')[6].click
+            expect(page).to have_content 'チャットルームへようこそ!'
+          end
+        end
+        context 'チャット入力のテスト' do
+          before do
+            visit public_matchings_path
+            find_all('a')[6].click
+          end
+          it '正常にメッセージが送信できる' do
+            fill_in 'chat_message_content', with: "初めまして！"
+            click_button 'メッセージを送信'
+            expect(page).to have_content 'メッセージを送信しました🎵'
+          end
+          it '空欄だとメッセージが送信できない' do
+            fill_in 'chat_message_content', with: ""
+            click_button 'メッセージを送信'
+            expect(page).to have_content 'メッセージを入力してください！'
+          end
+        end
+    end
     describe 'Artistへの通知テスト' do
       context 'フォローに関する通知テスト' do
         before do
-        visit public_customer_path(other_customer)
+          matching(other_customer)
         end
         it 'customerがother_customerをフォローすると、other_customerへ通知が届く' do
-          find_all('a')[6].click
-          find_all('a')[1].click
-          login(other_customer)
           visit public_notifications_path
-          expect(page).to have_content 'さんが あなたをフォローしました'
+          expect(page).to have_content 'customerさんが あなたをフォローしました'
         end
       end
-    end
-    describe 'Artistへの通知テスト' do
       context 'チャットに関する通知テスト' do
         before do
-        visit public_customer_path(other_customer)
-        end
-        it 'customerがother_customerをフォローすると、other_customerへ通知が届く' do
+          matching(other_customer)
+          visit public_matchings_path
           find_all('a')[6].click
+          fill_in 'chat_message_content', with: "初めまして！"
+          click_button 'メッセージを送信'
           find_all('a')[1].click
-          login(other_customer)
+          login(customer)
+        end
+        it 'メッセージを送信された通知が届いている' do
           visit public_notifications_path
-          expect(page).to have_content 'さんが あなたをフォローしました'
+          expect(page).to have_content 'customer2さんが あなたにメッセージを送信しました'
         end
       end
     end

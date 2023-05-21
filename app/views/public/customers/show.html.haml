@@ -22,7 +22,6 @@
                 = part.name
             %hr
             %p.card-text
-              = @customer.human_attribute_enum(:introduction)
             - if @customer.id == current_customer.id
               = link_to 'プロフィール編集', edit_public_customer_path(@customer), data: { 'turbolinks': false }, class: "btn btn-info customer-show-btn"
             - else
