@@ -14,6 +14,8 @@
       - case notification.action
       - when 'follow' then
         = "あなたをフォローしました"
+      - when 'chat' then
+        = "あなたにメッセージを送信しました"
       - when 'like' then
         = link_to 'あなたの投稿', notification.event, style: "font-weight: bold;"
         = "にいいねしました"

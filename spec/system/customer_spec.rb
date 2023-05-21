@@ -255,5 +255,19 @@ RSpec.describe Customer, type: :system do
         end
       end
     end
+    describe 'Artistへの通知テスト' do
+      context 'チャットに関する通知テスト' do
+        before do
+        visit public_customer_path(other_customer)
+        end
+        it 'customerがother_customerをフォローすると、other_customerへ通知が届く' do
+          find_all('a')[6].click
+          find_all('a')[1].click
+          login(other_customer)
+          visit public_notifications_path
+          expect(page).to have_content 'さんが あなたをフォローしました'
+        end
+      end
+    end
   end
 end

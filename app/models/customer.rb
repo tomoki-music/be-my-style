@@ -60,4 +60,12 @@ class Customer < ApplicationRecord
       notification.save if notification.valid?
     end
   end
+
+  def create_notification_chat(current_customer)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'chat'
+    )
+    notification.save if notification.valid?
+  end
 end

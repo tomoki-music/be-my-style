@@ -1,5 +1,7 @@
 class Public::ChatRoomsController < ApplicationController
   before_action :authenticate_customer!
+  include MatchingIndex
+  before_action :matching_index, only: [:show]
 
   def create
     current_customers_chat_rooms = ChatRoomCustomer.where(customer_id: current_customer.id).map do |chat_room_customer|
@@ -24,4 +26,7 @@ class Public::ChatRoomsController < ApplicationController
     @chat_messages = ChatMessage.where(chat_room_id: @chat_room.id)
     @chat_room_customer = @chat_room.chat_room_customers.where.not(customer_id: current_customer.id)[0].customer
   end
+
+  private
+
 end
