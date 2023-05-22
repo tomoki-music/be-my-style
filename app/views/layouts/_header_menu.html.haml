@@ -15,7 +15,7 @@
                   %i.fas.fa-circle.n-circle.fa-stack-1x
                   %i.count-circle
                     - notifications = current_customer.passive_notifications
-                    = notifications.where.not(visitor_id: current_customer.id).count
+                    = notifications.where(checked: false).count
               - else 
                 %i.far.fa-bell.fa-lg
           %li
