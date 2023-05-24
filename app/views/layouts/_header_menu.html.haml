@@ -1,42 +1,68 @@
-.header-menu
-  .row
-    .col-8
-      .top-message
-        %h1 be My Style
-        %p ようこそ！あなたの「やりたい！」を叶える場所へ！
-    .col-4
-      %ul.list-style-none.header-sign-in-list
-        - if customer_signed_in?
-          %li
-            = link_to(public_notifications_path) do
-              - if current_customer.present? && unchecked_notifications.any?
-                %span.fa-stack
-                  %i.far.fa-bell.fa-lg.fa-stack-2x
-                  %i.fas.fa-circle.n-circle.fa-stack-1x
-                  %i.count-circle
-                    - notifications = current_customer.passive_notifications
-                    = notifications.where(checked: false).count
-              - else 
-                %i.far.fa-bell.fa-lg
-          %li
-            %i.fa-solid.fa-right-from-bracket
-            = link_to "ログアウト", destroy_customer_session_path, method: :delete, class: "btn btn-secondary"
-        - else
-          %li
-            %i.fa-solid.fa-user-plus
-            = link_to "新規登録", new_customer_registration_path, data: { 'turbolinks': false }, class: "btn btn-success"
-          %li
-            %i.fa-solid.fa-right-to-bracket
-            = link_to "ログイン", new_customer_session_path, class: "btn btn-primary"
+.header_container.sticky-top
+  .header-menu
+    .row
+      .col-8
+        .top-message
+          %h1 be My Style
+          %p ようこそ！あなたの「やりたい！」を叶える場所へ！
+      .col-4
+        %ul.list-style-none.header-sign-in-list
+          - if customer_signed_in?
+            %li
+              %div{"data-turbolinks" => "false"}
+                = link_to(public_notifications_path) do
+                  - if current_customer.present? && unchecked_notifications.any?
+                    %span.fa-stack
+                      %i.far.fa-bell.fa-lg.fa-stack-2x
+                      %i.fas.fa-circle.n-circle.fa-stack-1x
+                      %i.count-circle
+                        - notifications = current_customer.passive_notifications
+                        = notifications.where(checked: false).count
+                  - else 
+                    %i.far.fa-bell.fa-lg
+          %li#open
+            %span
+              - if current_customer.present? && current_customer.profile_image.present?
+                = image_tag current_customer.profile_image, class: "icon_mini sp-menu-open"
+              - else
+                = image_tag 'no_image', class: "icon_mini sp-menu-open"
 
-.customer-menu
-  %ul.list-style-none
-    %li
-      = link_to "Topページ", public_homes_top_path, class: "btn btn-info"
-    %li
-      = link_to "Artist一覧", public_customers_path, class: "btn btn-info"
-    %li
-      - if current_customer.present?
-        = link_to "マイページ", public_customer_path(current_customer), class: "btn btn-info"
-    %li
-      = link_to "チャットする", public_matchings_path, class: "btn btn-info"
+  .customer-menu-sp
+    #close
+      %i.fa.fa-times.close-icon
+      閉じる
+    %ul.list-style-none
+      - if customer_signed_in?
+        %li
+          = link_to "Topページ", public_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+        %li
+          = link_to "Artist一覧", public_customers_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+        %li
+          - if current_customer.present?
+            = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+        %li
+          - if current_customer.present?
+            = link_to "チャットする", public_matchings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+        %li
+          %i.fa-solid.fa-right-from-bracket
+          = link_to "ログアウト", destroy_customer_session_path, data: { 'turbolinks': false }, method: :delete, class: "btn btn-secondary menu-sp-btn"
+      - else
+        %li
+          %i.fa-solid.fa-user-plus
+          = link_to "新規登録", new_customer_registration_path, data: { 'turbolinks': false }, class: "btn btn-success menu-sp-btn"
+        %li
+          %i.fa-solid.fa-right-to-bracket
+          = link_to "ログイン", new_customer_session_path, data: { 'turbolinks': false }, class: "btn btn-primary menu-sp-btn"
+
+  .customer-menu-pc
+    %ul.list-style-none
+      %li
+        = link_to "Topページ", public_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-info"
+      %li
+        = link_to "Artist一覧", public_customers_path, data: { 'turbolinks': false }, class: "btn btn-info"
+      %li
+        - if current_customer.present?
+          = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "btn btn-info"
+      %li
+        - if current_customer.present?
+          = link_to "チャットする", public_matchings_path, data: { 'turbolinks': false }, class: "btn btn-info"

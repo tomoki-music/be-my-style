@@ -4,7 +4,7 @@
   .row
     .col-md-4
       %h2 アーティスト一覧
-    .col-md-4.paginate-layout
+    .col-md-4
       = paginate @customers
     .col-mid-4
       = form_tag public_customers_path, method: :get, class: 'customer-index-title__searchForm' do
