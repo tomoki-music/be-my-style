@@ -11,7 +11,7 @@ default: &default
 
 development:
   adapter: mysql2
-  encoding: utf8
+  encoding: utf8mb4
   database: <%= ENV['DATABASE_DEV_NAME'] %>
   pool: 5
   username: <%= ENV['DATABASE_DEV_USER'] %>
