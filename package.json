@@ -15,5 +15,10 @@
   "version": "0.1.0",
   "devDependencies": {
     "webpack-dev-server": "^3"
-  }
+  },
+  "relative path": "./app/javascript/packs",
+  "relative path": "./app/javascript",
+  "relative path": "./app/javascript/jquery",
+  "relative path": "./node_modules",
+  "relative path": "./node_modules/jquery"
 }
