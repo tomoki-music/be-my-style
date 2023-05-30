@@ -7,18 +7,19 @@ Things you may want to cover:
 
 * Ruby version 3.1.2
 
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
 * How to run the test suite
+bundle exec rspec spec
 
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+### Required
+* ImageMagick(v7.1.1-5)
+sudo yum -y install libpng-devel libjpeg-devel libtiff-devel gcc-c++ git
+git clone -b 7.1.1-5 --depth 1 https://github.com/ImageMagick/ImageMagick.git ImageMagick-7.1.1-5
+cd ImageMagick-7.1.1-5
+./configure
+make
+sudo make install
+* ChromeDriver
+* MySQL
+* Node.js
+curl --silent --location https://rpm.nodesource.com/setup_16.x | sudo bash -
+sudo yum install -y nodejs
