@@ -1,12 +1,12 @@
 Rails.application.routes.draw do
 
+  root to: 'public/homes#top'
+
   namespace :admin do
     get 'homes/top'
-    root 'homes#top'
   end
   namespace :public do
     get 'homes/top'
-    root 'homes#top'
     resources :customers, only: [:index,:show,:edit,:update] do
       resource :relationships, only: [:create, :destroy]
       get 'followings' => 'relationships#followings', as: 'followings'
