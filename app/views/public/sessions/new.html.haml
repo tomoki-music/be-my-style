@@ -13,15 +13,15 @@
           %tr
             %th{scope:"row"} ニックネーム
             %td
-              = f.text_field :name, autofocus: true
+              = f.text_field :name, autofocus: true, style: "width:70%"
           %tr
             %th{scope:"row"} メールアドレス
             %td
-              = f.email_field :email, autofocus: true, autocomplete: "email", style: "width:90%"
+              = f.email_field :email, autofocus: true, autocomplete: "email", style: "width:70%"
           %tr
             %th{scope:"row"} パスワード
             %td
-              = f.password_field :password, autocomplete: "current-password", style: "width:90%"
+              = f.password_field :password, autocomplete: "current-password", style: "width:70%"
           - if devise_mapping.rememberable?
             %tr
               %th{scope:"row"} ログインを保存する
