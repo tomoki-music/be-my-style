@@ -1,9 +1,10 @@
 = render 'layouts/header_menu'
 
 .matchings-index-container
-  %h2 チャットができるアーティスト
+  %h3 チャットができるアーティスト
   %strong
     = @mathing_customers.size.to_s + '人'
+  %p 「相互フォロー」のアーティストとチャットができます🎵
   - @mathing_customers.each do |matching_customer|
     .col-md-6.mx-auto
       .form-inline

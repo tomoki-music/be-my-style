@@ -2,10 +2,18 @@
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: https://sass-lang.com/
 .customer-index-title{
+  text-align: center;
+  margin: 0 auto;
   width: 90%;
-  margin-left: 100px;
+  height: 60px;
+  .pc-kaminari{
+    margin-top: 10px;
+  }
+  .pc-serch{
+    line-height: 60px;
+  }
   .customer-index-title__searchForm{
-    font-size: 25px;
+    font-size: 20px;
   }
 }
 
@@ -35,6 +43,18 @@
   }
 }
 
+@media (max-width: 600px) {
+  .customer-index-title{
+    height: 180px;
+    .sp-display{
+      margin-left: 100px;
+    }
+  }
+  .customer-index-container{
+    justify-content: center;
+  }
+}
+
 .customer-show-title{
   margin-left: 100px;
 }
@@ -43,7 +63,6 @@
   width: 90%;
   margin: 0 auto;
   .customer-show-card{
-    position: sticky;
     border: thick double lightblue;
     .img-container{
       width: 100%;
