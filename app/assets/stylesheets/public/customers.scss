@@ -56,7 +56,26 @@
 }
 
 .customer-show-title{
-  margin-left: 100px;
+  height: 100px;
+  background-color: white;
+  h2{
+    margin-left: 100px;
+  }
+  .customer-show-follow{
+    position: sticky;
+    top: 0;
+    width: 90%;
+    height: 60px;
+    margin: 0 auto;
+    border: 1px solid;
+    border-radius: 10px;
+    text-align: center;
+    padding: 10px;
+    background-color: white;
+    .chat-icon{
+      margin-left: 10px;
+    }
+  }
 }
 
 .customer-show-container{
