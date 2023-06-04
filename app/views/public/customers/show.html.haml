@@ -14,7 +14,7 @@
     - if @mathing_customers.present? && current_customer.id != @customer.id && @mathing_customers.include?(@customer.id)
       = link_to public_chat_rooms_path(customer_id: @customer.id), method: :post do
         %i.fa-regular.fa-comments.chat-icon
-        【Matching!!】チャットする🎵
+        【Matching!!】チャットする
 
 .customer-show-container.px-0.px-sm-0
   .row
