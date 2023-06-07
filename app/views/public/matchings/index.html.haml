@@ -4,7 +4,7 @@
   %h5 チャットできるアーティスト
   %strong
     = @mathing_customers.size.to_s + '人'
-  %p 「相互フォロー」の人とチャットしよう🎵
+  %p 「相互フォロー」の方とチャットしよう🎵
   - @mathing_customers.each do |matching_customer|
     .col-md-6.mx-auto
       .form-inline
@@ -15,5 +15,5 @@
             - else
               = image_tag 'no_image', class: "icon_mini"
             %strong.do-chat
-              = matching_customer.name + 'さんと チャットする🎵'
+              = matching_customer.name + 'さんと チャット🎵'
       %hr
