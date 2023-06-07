@@ -14,7 +14,7 @@
     - if @mathing_customers.present? && current_customer.id != @customer.id && @mathing_customers.include?(@customer.id)
       = link_to public_chat_rooms_path(customer_id: @customer.id), method: :post, class: "btn btn-info" do
         %i.fa-regular.fa-comments.chat-icon
-        チャットする🎵
+        チャットする
 
 .customer-show-container.px-0.px-sm-0
   .row
@@ -47,7 +47,7 @@
             - if @mathing_customers.present? && current_customer.id != @customer.id && @mathing_customers.include?(@customer.id)
               = link_to public_chat_rooms_path(customer_id: @customer.id), method: :post, class: "btn btn-info customer-show-btn" do
                 %i.fa-regular.fa-comments.chat-icon
-                チャットする🎵
+                チャットする
     .col-md-9
       %table.table.table-striped.customer-show-table{:width=>"100%",:border=>"1"}
         %colgroup

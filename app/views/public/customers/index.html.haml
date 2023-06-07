@@ -13,7 +13,7 @@
 .customer-index-container
   - @customers.each do |customer|
     .card
-      = link_to public_customer_path(customer) do
+      = link_to public_customer_path(customer), data: { 'turbolinks': false } do
         .img-container
           - if customer.profile_image.present?
             = image_tag customer.profile_image
@@ -30,4 +30,4 @@
         %hr
         %p.card-text
           = customer.human_attribute_enum(:introduction)
-        = link_to 'プロフィール画面へ', public_customer_path(customer.id), class: "customer-index-link"
+        = link_to 'プロフィール画面へ', public_customer_path(customer.id), class: "customer-index-link", data: { 'turbolinks': false }
