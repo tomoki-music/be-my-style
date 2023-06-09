@@ -47,7 +47,10 @@
   .customer-index-title{
     height: 180px;
     .sp-display{
-      margin-left: 100px;
+      margin: 0 auto;
+    }
+    .sp-kaminari{
+      margin-left:100px;
     }
   }
   .customer-index-container{
@@ -56,12 +59,13 @@
 }
 
 .customer-show-title{
+  text-align: center;
+  margin: 0 auto;
+  width: 90%;
+  height: 60px;
   margin-bottom: 10px;
   height: 100px;
   background-color: white;
-  h2{
-    margin-left: 100px;
-  }
   .customer-show-follow{
     position: sticky;
     top: 0;
