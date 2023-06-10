@@ -25,9 +25,13 @@
   }
   .message-container{
     width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
     height: 400px;
     overflow: scroll;
     padding-right: 10px;
+    border: solid 1px;
+    border-radius: 10px;
     .partner-message{
       text-align: right;
       .chat-room-customer-link{
@@ -39,7 +43,7 @@
         width: fit-content;
         border: solid;
         border-radius: 10px;
-        padding: 30px;
+        padding: 10px;
       }
     }
     .self-message{
@@ -47,7 +51,7 @@
         width: fit-content;
         border: solid;
         border-radius: 10px;
-        padding: 30px;
+        padding: 10px;
         background-color: skyblue;
         margin-top: 10px;
       }
@@ -81,6 +85,7 @@
   .form-container{
     text-align: center;
     margin: 10px 10px 0 0;
+    width: 100%;
     .chat-form{
       width: 100%;
       height: 100px;
