@@ -29,7 +29,7 @@
     overflow-wrap: break-word;
     height: 400px;
     overflow: scroll;
-    padding-right: 10px;
+    padding: 20px;
     border: solid 1px;
     border-radius: 10px;
     .partner-message{
@@ -41,7 +41,7 @@
       .partner-content{
         margin: 0 0 0 auto;
         text-align: left;
-        width: 250px;
+        width: 270px;
         border: solid;
         border-radius: 10px;
         padding: 10px;
@@ -49,7 +49,7 @@
     }
     .self-message{
       .self-content{
-        width: 250px;
+        width: 270px;
         border: solid;
         border-radius: 10px;
         padding: 10px;
