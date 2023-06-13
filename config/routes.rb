@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   namespace :admin do
     get 'homes/top'
   end
+  
   namespace :public do
     get 'homes/top'
     resources :customers, only: [:index,:show,:edit,:update] do
@@ -12,12 +13,17 @@ Rails.application.routes.draw do
       get 'followings' => 'relationships#followings', as: 'followings'
       get 'followers' => 'relationships#followers', as: 'followers'
     end
+
+    # 通知機能
     resources :notifications, only: :index
 
     # マッチング〜チャット機能
     resources :matchings, only: [:index]
     resources :chat_rooms, only: [:create, :show]
     resources :chat_messages, only: [:create]
+
+    # コミュニティ機能
+    resources :communities
   end
 
 # 顧客(アーティスト)用

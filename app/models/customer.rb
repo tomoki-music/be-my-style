@@ -36,6 +36,8 @@ class Customer < ApplicationRecord
   has_many :chat_room_customers
   has_many :chat_rooms, through: :chat_room_customers
   has_many :chat_messages
+  has_many :community_customers, dependent: :destroy
+  has_many :communities, through: :community_customers, dependent: :destroy
 
   validates :name, presence: true, length: {maximum: 20}
   validates :email, uniqueness: true, presence: true

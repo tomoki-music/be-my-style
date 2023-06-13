@@ -56,6 +56,14 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(Customer.reflect_on_association(:chat_messages).macro).to eq :has_many
       end
     end
+    context 'communityモデルとの関係' do
+      it 'communityモデルと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:communities).macro).to eq :has_many
+      end
+      it '中間テーブルcommunity_customersと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:community_customers).macro).to eq :has_many
+      end
+    end
   end
   describe 'モデルのインスタンスメソッドのテスト' do
     context 'フォロー、アンフォローのメソッドテスト' do

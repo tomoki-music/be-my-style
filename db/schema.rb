@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_05_14_024922) do
+ActiveRecord::Schema.define(version: 2023_06_12_091834) do
 
   create_table "active_storage_attachments", charset: "utf8mb3", force: :cascade do |t|
     t.string "name", null: false
@@ -74,10 +74,10 @@ ActiveRecord::Schema.define(version: 2023_05_14_024922) do
     t.index ["item_id"], name: "index_carts_on_item_id"
   end
 
-  create_table "chat_messages", charset: "utf8mb3", force: :cascade do |t|
+  create_table "chat_messages", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
     t.bigint "chat_room_id", null: false
     t.bigint "customer_id", null: false
-    t.text "content"
+    t.text "content", size: :medium
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["chat_room_id"], name: "index_chat_messages_on_chat_room_id"
@@ -96,6 +96,23 @@ ActiveRecord::Schema.define(version: 2023_05_14_024922) do
   create_table "chat_rooms", charset: "utf8mb3", force: :cascade do |t|
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+  end
+
+  create_table "communities", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.string "name"
+    t.text "introduction"
+    t.integer "owner_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
+
+  create_table "community_customers", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.bigint "customer_id"
+    t.bigint "community_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["community_id"], name: "index_community_customers_on_community_id"
+    t.index ["customer_id"], name: "index_community_customers_on_customer_id"
   end
 
   create_table "customer_genres", charset: "utf8mb3", force: :cascade do |t|
@@ -239,6 +256,8 @@ ActiveRecord::Schema.define(version: 2023_05_14_024922) do
   add_foreign_key "chat_messages", "customers"
   add_foreign_key "chat_room_customers", "chat_rooms"
   add_foreign_key "chat_room_customers", "customers"
+  add_foreign_key "community_customers", "communities"
+  add_foreign_key "community_customers", "customers"
   add_foreign_key "customer_genres", "customers"
   add_foreign_key "customer_genres", "genres"
   add_foreign_key "customer_parts", "customers"
