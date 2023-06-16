@@ -92,4 +92,4 @@
             %hr
             %p.card-text
               = @chat_room_customer.human_attribute_enum(:introduction)
-            = link_to 'プロフィール画面へ', public_customer_path(@chat_room_customer.id), class: "btn btn-info chat-partner-link"
+            = link_to 'プロフィール画面へ', public_customer_path(@chat_room_customer.id), class: "btn btn-info chat-partner-link", data: { 'turbolinks': false }

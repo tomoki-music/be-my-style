@@ -10,17 +10,19 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
     context "ログイン済み" do
       before do
         sign_in customer
+        get public_chat_room_path(chat_room)
         @chat_room = chat_room
       end
       it "メッセージ作成が成功する" do
-        post "/public/chat_messages", params: {
+        expect do
+          post public_chat_messages_path, params: {
           chat_message: {
-            context: "お元気ですか？",
+            content: "お元気ですか？",
             chat_room_id: 1,
-            customer_id: 2,
+            customer_id: 1,
           }
-        }
-        expect(response).to redirect_to "/public/chat_rooms/1"
+          }
+        end.to change(ChatMessage, :count).by(1)
       end
     end
     context "非ログイン" do

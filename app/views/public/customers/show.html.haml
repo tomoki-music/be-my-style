@@ -7,9 +7,9 @@
       魅力をアピールしよう
     - else
       - if current_customer.following?(@customer)
-        = link_to "フォロー外す", public_customer_relationships_path(@customer.id), method: :delete, class: "btn btn-info customer-show-btn"
+        = link_to "フォロー外す", public_customer_relationships_path(@customer.id), method: :delete, data: { 'turbolinks': false }, class: "btn btn-info customer-show-btn"
       - else
-        = link_to "フォローする", public_customer_relationships_path(@customer.id), method: :post, class: "btn btn-info customer-show-btn"
+        = link_to "フォローする", public_customer_relationships_path(@customer.id), method: :post, data: { 'turbolinks': false }, class: "btn btn-info customer-show-btn"
         フォローしてみよう!
     - if @mathing_customers.present? && current_customer.id != @customer.id && @mathing_customers.include?(@customer.id)
       = link_to public_chat_rooms_path(customer_id: @customer.id), method: :post, class: "btn btn-info" do

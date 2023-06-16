@@ -1,1 +1,21 @@
 = render 'layouts/header_menu'
+
+.community-index-container
+  %h2 コミュニティリスト
+  - if @communities.present?
+    - @communities.each do |community|
+      %tr
+        %td
+          .img-container
+            - if community.community_image.present?
+              = image_tag community.community_image
+            - else
+              = image_tag 'no_image'
+        %td
+          = link_to community.name, public_community_path(community)
+        %td
+          = community.introduction
+        %td
+          = community.customers.count
+  - else
+    コミュニティはまだありません。

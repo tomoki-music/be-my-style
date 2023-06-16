@@ -23,7 +23,10 @@ Rails.application.routes.draw do
     resources :chat_messages, only: [:create]
 
     # コミュニティ機能
-    resources :communities
+    resources :communities do
+      get "join" => "communities#join"
+      delete "leave" => "communities#leave"
+    end
   end
 
 # 顧客(アーティスト)用

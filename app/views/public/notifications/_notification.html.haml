@@ -3,7 +3,7 @@
 .col-md-6.mx-auto
   .form-inline
     %span
-      = link_to public_customer_path(visitor) do
+      = link_to public_customer_path(visitor), data: { 'turbolinks': false } do
         - if visitor.profile_image.present?
           = image_tag visitor.profile_image, class: "icon_mini"
         - else

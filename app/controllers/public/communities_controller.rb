@@ -1,6 +1,6 @@
 class Public::CommunitiesController < ApplicationController
   before_action :authenticate_customer!
-  before_action :ensure_correct_customer, only: [:edit, :update]
+  before_action :ensure_correct_customer, only: [:edit, :update, :destroy]
 
   def index
     @communities = Community.all
@@ -10,6 +10,12 @@ class Public::CommunitiesController < ApplicationController
     @community = Community.find(params[:id])
   end
 
+  def join
+    @community = Community.find(params[:id])
+    @community.customers << current_customer
+    redirect_to  public_communities_path
+  end
+
   def new
     @community = Community.new
   end
@@ -17,6 +23,7 @@ class Public::CommunitiesController < ApplicationController
   def create
     @community = Community.new(community_params)
     @community.owner_id = current_customer.id
+    @community.customers << current_customer
     if @community.save
       redirect_to public_communities_path
     else
@@ -25,6 +32,7 @@ class Public::CommunitiesController < ApplicationController
   end
 
   def edit
+    @community = Community.find(params[:id])
   end
 
   def update
@@ -33,6 +41,18 @@ class Public::CommunitiesController < ApplicationController
     else
       render "edit"
     end
+  end
+
+  def destroy
+    @community = Community.find(params[:id])
+    @community.destroy
+    redirect_to public_communities_path
+  end
+
+  def leave
+    @community = Community.find(params[:id])
+    @community.customers.delete(current_customer)
+    redirect_to public_communities_path
   end
 
   private
