@@ -11,9 +11,9 @@ class Public::CommunitiesController < ApplicationController
   end
 
   def join
-    @community = Community.find(params[:id])
+    @community = Community.find(params[:community_id])
     @community.customers << current_customer
-    redirect_to  public_communities_path
+    redirect_to  public_communities_path, notice: "コミュニティへ参加しました!"
   end
 
   def new
@@ -25,7 +25,7 @@ class Public::CommunitiesController < ApplicationController
     @community.owner_id = current_customer.id
     @community.customers << current_customer
     if @community.save
-      redirect_to public_communities_path
+      redirect_to public_communities_path, notice: "コミュニティを作成しました!"
     else
       render 'new'
     end
@@ -37,7 +37,7 @@ class Public::CommunitiesController < ApplicationController
 
   def update
     if @community.update(community_params)
-      redirect_to public_communities_path
+      redirect_to public_communities_path, notice: "コミュニティの編集が完了しました!"
     else
       render "edit"
     end
@@ -46,13 +46,13 @@ class Public::CommunitiesController < ApplicationController
   def destroy
     @community = Community.find(params[:id])
     @community.destroy
-    redirect_to public_communities_path
+    redirect_to public_communities_path, notice: "コミュニティを削除しました!"
   end
 
   def leave
-    @community = Community.find(params[:id])
+    @community = Community.find(params[:community_id])
     @community.customers.delete(current_customer)
-    redirect_to public_communities_path
+    redirect_to public_communities_path, notice: "コミュニティを退会しました!"
   end
 
   private

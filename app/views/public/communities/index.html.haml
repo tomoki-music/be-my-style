@@ -12,7 +12,7 @@
             - else
               = image_tag 'no_image'
         %td
-          = link_to community.name, public_community_path(community)
+          = link_to community.name, public_community_path(community), data: { 'turbolinks': false }
         %td
           = community.introduction
         %td

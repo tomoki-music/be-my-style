@@ -25,12 +25,31 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
         expect(response.status).to eq 200
       end
     end
+    context "communityに参加(join)できる" do
+      it 'コミュニティ参加人数が増える' do
+        expect do
+          get public_community_join_path(community)
+        end.to change(community.customers, :count).by(1)
+      end
+    end
     context "community新規作成ページ(new)が正しく表示される" do
       before do
         get new_public_community_path
       end
       it 'リクエストは200 OKとなること' do
         expect(response.status).to eq 200
+      end
+    end
+    context "community新規作成(create)が正しく処理され登録される" do
+      it "コミュニティの作成が成功する" do
+        expect do
+          post public_communities_path, params: {
+            community: {
+              name: "MMM",
+              introduction: "楽しいコミュニティです！",
+            }
+          }
+        end.to change(Community, :count).by(1)
       end
     end
     context "community編集ページ(edit)が正しく表示される" do
@@ -44,6 +63,28 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
         expect(response.status).to eq 302
       end
     end
+    context "community編集(update)が正しく処理され登録される" do
+      it '記事を編集できること' do
+        put public_community_path(community), params: {
+          community: {
+            name: "MMM埼玉",
+            introduction: "自由なコミュニティです！",
+          }
+        }
+        expect(community.reload.name).to eq 'MMM埼玉'
+        expect(community.reload.introduction).to eq '自由なコミュニティです！'
+      end
+      it 'リクエストは302 Foundとなること（オーナーでない場合）' do
+        sign_in other_customer
+        put public_community_path(community), params: {
+          community: {
+            name: "MMM埼玉",
+            introduction: "自由なコミュニティです！",
+          }
+        }
+        expect(response.status).to eq 302
+      end
+    end
     context "communityページを正しく削除(destroy)できる" do
       it '正しく削除できる（オーナーである場合）' do
         expect do
@@ -54,6 +95,16 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
         sign_in other_customer
         delete public_community_path(community)
         expect(response.status).to eq 302
+      end
+    end
+    context "communityjから退会(leave)できる" do
+      before do
+        get public_community_join_path(community)
+      end
+      it 'コミュニティ参加人数が減る' do
+        expect do
+          delete public_community_leave_path(community)
+        end.to change(community.customers, :count).by(-1)
       end
     end
   end
@@ -74,6 +125,14 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
         expect(response.status).to eq 302
       end
     end
+    context "communityに参加(join)できない" do
+      before do
+        get public_community_join_path(community)
+      end
+      it 'リクエストは302 Foundとなること' do
+        expect(response.status).to eq 302
+      end
+    end
     context "community新規作成ページ(new)へ遷移されない" do
       before do
         get new_public_community_path
@@ -82,9 +141,33 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
         expect(response.status).to eq 302
       end
     end
+    context "community新規作成(create)ができない" do
+      it "コミュニティの作成はされずページ遷移する" do
+        post public_communities_path, params: {
+          community: {
+            name: "MMM",
+            introduction: "楽しいコミュニティです！",
+          }
+        }
+        expect(response.status).to eq 302
+      end
+    end
     context "communities編集ページ(edit)へ遷移されない" do
       before do
         get edit_public_community_path(community)
+      end
+      it 'リクエストは302 Foundとなること' do
+        expect(response.status).to eq 302
+      end
+    end
+    context "communities編集は更新(update)されない" do
+      before do
+        put public_community_path(community), params: {
+          community: {
+            name: "MMM埼玉",
+            introduction: "自由なコミュニティです！",
+          }
+        }
       end
       it 'リクエストは302 Foundとなること' do
         expect(response.status).to eq 302
