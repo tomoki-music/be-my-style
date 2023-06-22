@@ -1,37 +1,81 @@
 = render 'layouts/header_menu'
 
-.community-show-container
+.community-show-title
   %h2 コミュニティ詳細
-  %table.table.table-striped.community-table{:width=>"100%",:border=>"1"}
-    %thead
-      %tr
-        %th コミュニティ画像
-        %th コミュニテイ名
-        %th 紹介文
-        %th メンバー
-        %th{:colspan=>"3"}
-    %tbody
-      %tr
-        %td
+  .community-show-follow
+    - if @community.owner_id == current_customer.id
+      = link_to '編集する', edit_public_community_path(@community), class: "btn btn-sm btn-success"
+    - elsif @community.customers.include?(current_customer)
+      = link_to 'コミュニティを抜ける', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger", data: { confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
+    -else
+      = link_to 'コミュニティに参加する', public_community_join_path(@community), class: "btn btn-sm btn-success", data: { confirm: 'こちらのコミュニティに参加します。よろしいですか？' }
+
+.community-show-container.px-0.px-sm-0
+  .row
+    .col-md-3
+      .community-show-card
+        .card
           .img-container
             - if @community.community_image.present?
               = image_tag @community.community_image
             - else
               = image_tag 'no_image'
-        %td
-          = @community.name
-        %td
-          = @community.introduction
-        %td
-          - if @community.customers.exists?
-            - @community.customers.each do |member|
-              = member.name
-          - else
-            まだメンバーはいません。
-        %td
-          - if @community.owner_id == current_customer.id
-            = link_to '編集する', edit_public_community_path(@community), class: "btn btn-sm btn-success"
-          - elsif @community.customers.include?(current_customer)
-            = link_to 'コミュニティを抜ける', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger"
-          -else
-            = link_to 'コミュニティに参加する', public_community_join_path(@community), class: "btn btn-sm btn-success"
+          .card-body.text-container
+            %h5.card-title
+              = @community.human_attribute_enum(:name)
+            %h6.card-subtitle
+              紹介文:
+              = @community.human_attribute_enum(:introduction)
+            %hr
+            %p.card-text
+            - if @community.owner_id == current_customer.id
+              = link_to '編集する', edit_public_community_path(@community), class: "btn btn-sm btn-success"
+            - elsif @community.customers.include?(current_customer)
+              = link_to 'コミュニティを抜ける', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger", data: { confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
+            -else
+              = link_to 'コミュニティに参加する', public_community_join_path(@community), class: "btn btn-sm btn-success", data: { confirm: 'こちらのコミュニティに参加します。よろしいですか？' }
+    .col-md-9
+      %table.table.table-striped.community-show-table{:width=>"100%",:border=>"1"}
+        %colgroup
+          %col{width: "19%"}
+          %col{width: "81%"}
+            %tr
+              %th{scope:"row"} コミュニティ名
+              %td
+                = @community.human_attribute_enum(:name)
+            %tr
+              %th{scope:"row"} 活動場所
+              %td
+                = @community.prefecture.name if @community.prefecture.present?
+            %tr
+              %th{scope:"row"} 活動ペース
+              %td
+                = @community.human_attribute_enum(:activity_stance)
+            %tr
+              %th{scope:"row"} 好きなジャンル
+              %td
+                - @community.genres.each do |genre|
+                  %i.fa-solid.fa-music
+                  = genre.name
+            %tr
+              %th{scope:"row"} PickUpアーティスト
+              %td
+                %i.fa-solid.fa-music
+                = @community.favorite_artist1
+                %i.fa-solid.fa-music
+                = @community.favorite_artist2
+                %i.fa-solid.fa-music
+                = @community.favorite_artist3
+                %i.fa-solid.fa-music
+                = @community.favorite_artist4
+                %i.fa-solid.fa-music
+                = @community.favorite_artist5
+            %tr
+              %th{scope:"row"} 「コミュニティサイト」
+              %td
+                - text = @community.url
+                = link_to text, @community.url if @community.url.present?
+            %tr
+              %th{scope:"row"} コミュニティ紹介
+              %td
+                = @community.human_attribute_enum(:introduction)

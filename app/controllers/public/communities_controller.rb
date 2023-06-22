@@ -52,7 +52,7 @@ class Public::CommunitiesController < ApplicationController
   def leave
     @community = Community.find(params[:community_id])
     @community.customers.delete(current_customer)
-    redirect_to public_communities_path, notice: "コミュニティを退会しました!"
+    redirect_to public_communities_path, alert: "コミュニティを退会しました!"
   end
 
   private

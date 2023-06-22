@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_06_12_091834) do
+ActiveRecord::Schema.define(version: 2023_06_21_085638) do
 
   create_table "active_storage_attachments", charset: "utf8mb3", force: :cascade do |t|
     t.string "name", null: false
@@ -102,6 +102,14 @@ ActiveRecord::Schema.define(version: 2023_06_12_091834) do
     t.string "name"
     t.text "introduction"
     t.integer "owner_id"
+    t.integer "activity_stance"
+    t.text "favorite_artist1"
+    t.text "favorite_artist2"
+    t.text "favorite_artist3"
+    t.text "favorite_artist4"
+    t.text "favorite_artist5"
+    t.text "url"
+    t.integer "prefecture_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
@@ -113,6 +121,15 @@ ActiveRecord::Schema.define(version: 2023_06_12_091834) do
     t.datetime "updated_at", precision: 6, null: false
     t.index ["community_id"], name: "index_community_customers_on_community_id"
     t.index ["customer_id"], name: "index_community_customers_on_customer_id"
+  end
+
+  create_table "community_genres", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+    t.bigint "community_id", null: false
+    t.bigint "genre_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["community_id"], name: "index_community_genres_on_community_id"
+    t.index ["genre_id"], name: "index_community_genres_on_genre_id"
   end
 
   create_table "customer_genres", charset: "utf8mb3", force: :cascade do |t|
@@ -258,6 +275,8 @@ ActiveRecord::Schema.define(version: 2023_06_12_091834) do
   add_foreign_key "chat_room_customers", "customers"
   add_foreign_key "community_customers", "communities"
   add_foreign_key "community_customers", "customers"
+  add_foreign_key "community_genres", "communities"
+  add_foreign_key "community_genres", "genres"
   add_foreign_key "customer_genres", "customers"
   add_foreign_key "customer_genres", "genres"
   add_foreign_key "customer_parts", "customers"

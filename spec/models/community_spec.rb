@@ -26,5 +26,13 @@ RSpec.describe 'Communityモデルのテスト', type: :model do
         expect(Community.reflect_on_association(:community_customers).macro).to eq :has_many
       end
     end
+    context 'Genreモデルとの関係' do
+      it 'genresと1:Nとなっている' do
+        expect(Community.reflect_on_association(:genres).macro).to eq :has_many
+      end
+      it '中間テーブルcommunity_genresと1:Nとなっている' do
+        expect(Community.reflect_on_association(:community_genres).macro).to eq :has_many
+      end
+    end
   end
 end
