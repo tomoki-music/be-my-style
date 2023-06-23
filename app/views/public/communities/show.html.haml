@@ -4,11 +4,11 @@
   %h2 コミュニティ詳細
   .community-show-follow
     - if @community.owner_id == current_customer.id
-      = link_to '編集する', edit_public_community_path(@community), class: "btn btn-sm btn-success"
+      = link_to '編集する', edit_public_community_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-success community-show-btn"
     - elsif @community.customers.include?(current_customer)
-      = link_to 'コミュニティを抜ける', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger", data: { confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
+      = link_to 'コミュニティを抜ける', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
     -else
-      = link_to 'コミュニティに参加する', public_community_join_path(@community), class: "btn btn-sm btn-success", data: { confirm: 'こちらのコミュニティに参加します。よろしいですか？' }
+      = link_to 'コミュニティに参加する', public_community_join_path(@community), class: "btn btn-sm btn-success community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティに参加します。よろしいですか？' }
 
 .community-show-container.px-0.px-sm-0
   .row
@@ -22,18 +22,19 @@
               = image_tag 'no_image'
           .card-body.text-container
             %h5.card-title
-              = @community.human_attribute_enum(:name)
+              = @community.name
+            %hr
             %h6.card-subtitle
               紹介文:
-              = @community.human_attribute_enum(:introduction)
+              = @community.introduction
             %hr
             %p.card-text
             - if @community.owner_id == current_customer.id
-              = link_to '編集する', edit_public_community_path(@community), class: "btn btn-sm btn-success"
+              = link_to '編集する', edit_public_community_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-success community-show-btn"
             - elsif @community.customers.include?(current_customer)
-              = link_to 'コミュニティを抜ける', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger", data: { confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
+              = link_to 'コミュニティを抜ける', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
             -else
-              = link_to 'コミュニティに参加する', public_community_join_path(@community), class: "btn btn-sm btn-success", data: { confirm: 'こちらのコミュニティに参加します。よろしいですか？' }
+              = link_to 'コミュニティに参加する', public_community_join_path(@community), class: "btn btn-sm btn-success community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティに参加します。よろしいですか？' }
     .col-md-9
       %table.table.table-striped.community-show-table{:width=>"100%",:border=>"1"}
         %colgroup
@@ -42,7 +43,7 @@
             %tr
               %th{scope:"row"} コミュニティ名
               %td
-                = @community.human_attribute_enum(:name)
+                = @community.name
             %tr
               %th{scope:"row"} 活動場所
               %td
@@ -78,4 +79,16 @@
             %tr
               %th{scope:"row"} コミュニティ紹介
               %td
-                = @community.human_attribute_enum(:introduction)
+                = @community.introduction
+
+      .community-index-title
+        .row
+          .col-md-4
+            %h2 メンバー一覧
+          .col-md-4.sp-kaminari.pc-kaminari
+            = paginate @community_customers
+          .col-mid-4.sp-display.pc-serch
+            = form_tag public_community_path(@community), method: :get, class: 'community-index-title__searchForm' do
+              = select_tag :part_id, options_from_collection_for_select(Part.all, :id, :name, params[:part_id]), {prompt: '全パートを表示', onchange: 'submit(this.form);'}
+      .community-index-body
+        = render 'public/customers/index', customers: @community_customers

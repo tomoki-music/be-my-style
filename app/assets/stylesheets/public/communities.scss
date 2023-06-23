@@ -35,6 +35,16 @@
     text-align: center;
     padding: 10px 0px;
     background-color: white;
+    .community-show-btn{
+      margin: 0 auto;
+      margin-bottom: 5px;
+      text-align: center;
+      display: block;
+      width: 200px;
+      font-size: 20px;
+      color: white;
+      border-radius: 10px;
+    }
   }
 }
 
@@ -72,5 +82,38 @@
   }
   .community-show-table{
     border: thick double lightblue;
+  }
+  .community-index-title{
+    text-align: center;
+    margin: 0 auto;
+    width: 90%;
+    height: 60px;
+    .pc-kaminari{
+      margin-top: 10px;
+    }
+    .pc-serch{
+      line-height: 60px;
+    }
+    .community-index-title__searchForm{
+      font-size: 20px;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .community-index-title{
+    height: 180px;
+    .sp-display{
+      margin: 0 auto;
+    }
+    .sp-kaminari{
+      margin-left:100px;
+    }
+  }
+  .community-index-container{
+    justify-content: center;
+  }
+  .community-index-body{
+    margin-top: 100px;
   }
 }

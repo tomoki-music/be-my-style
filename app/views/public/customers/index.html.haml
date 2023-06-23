@@ -8,26 +8,6 @@
       = paginate @customers
     .col-mid-4.sp-display.pc-serch
       = form_tag public_customers_path, method: :get, class: 'customer-index-title__searchForm' do
-        = select_tag :part_id, options_from_collection_for_select(Part.all, :id, :name, params[:part_id]), {prompt: 'パートで絞り込み検索', onchange: 'submit(this.form);'}
+        = select_tag :part_id, options_from_collection_for_select(Part.all, :id, :name, params[:part_id]), {prompt: '全パートを表示', onchange: 'submit(this.form);'}
 
-.customer-index-container
-  - @customers.each do |customer|
-    .card
-      = link_to public_customer_path(customer), data: { 'turbolinks': false } do
-        .img-container
-          - if customer.profile_image.present?
-            = image_tag customer.profile_image
-          - else
-            = image_tag 'no_image'
-      .card-body.text-container
-        %h5.card-title
-          = customer.human_attribute_enum(:name)
-        %h6.card-subtitle
-          Part:
-          - customer.parts.each do |part|
-            %i.fa-solid.fa-music
-            = part.name
-        %hr
-        %p.card-text
-          = customer.human_attribute_enum(:introduction)
-        = link_to 'プロフィール画面へ', public_customer_path(customer.id), class: "customer-index-link", data: { 'turbolinks': false }
+= render 'index', customers: @customers
