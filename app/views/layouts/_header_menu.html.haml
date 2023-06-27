@@ -38,8 +38,6 @@
         %li
           = link_to "コミュニティ一覧", public_communities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
-          = link_to "Artist一覧", public_customers_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
-        %li
           - if current_customer.present?
             = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
@@ -62,8 +60,6 @@
         = link_to "Topページ", public_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-info"
       %li
         = link_to "コミュニティ一覧", public_communities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
-      %li
-        = link_to "Artist一覧", public_customers_path, data: { 'turbolinks': false }, class: "btn btn-info"
       %li
         - if current_customer.present?
           = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "btn btn-info"

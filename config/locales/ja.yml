@@ -3,6 +3,7 @@ ja:
   activerecord:
     models:
       customer: アーティスト
+      community: コミュニティ
     attributes:
       customer:
         email: メールアドレス
@@ -24,7 +25,11 @@ ja:
         others: その他
       customer/activity_stance:
         beginer: 初心者(月1回以内)
-        mypace: マイペース(週1回以内〜月1回以上)
+        mypace: マイペース(週1回〜月1回以内)
+        tightly: ガッツリ(週1回以上)
+      community/activity_stance:
+        beginer: 初心者(月1回以内)
+        mypace: マイペース(週1回〜月1回以内)
         tightly: ガッツリ(週1回以上)
     errors:
       messages:

@@ -1,13 +1,1 @@
 = render 'layouts/header_menu'
-
-.customer-index-title
-  .row
-    .col-md-4
-      %h2 アーティスト一覧
-    .col-md-4.sp-kaminari.pc-kaminari
-      = paginate @customers
-    .col-mid-4.sp-display.pc-serch
-      = form_tag public_customers_path, method: :get, class: 'customer-index-title__searchForm' do
-        = select_tag :part_id, options_from_collection_for_select(Part.all, :id, :name, params[:part_id]), {prompt: '全パートを表示', onchange: 'submit(this.form);'}
-
-= render 'index', customers: @customers

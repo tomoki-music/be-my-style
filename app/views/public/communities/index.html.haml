@@ -1,38 +1,39 @@
 = render 'layouts/header_menu'
 
+%h2 コミュニティ一覧
 .community-index-container
-  %h2 コミュニティ一覧
   - @communities.each do |community|
-    %table.table.table-striped.community-table{:width=>"100%",:border=>"1"}
-      %thead
-        %tr
-          %th コミュニティ画像
-          %th コミュニテイ名
-          %th コミュニティ紹介文
-          %th 人数
-          %th 詳細ページ
-          %th{:colspan=>"3"}
-      %tbody
-        %tr
-          %td
-            = link_to public_community_path(community), data: { 'turbolinks': false } do
-              .img-container
-                - if community.community_image.present?
-                  = image_tag community.community_image
-                - else
-                  = image_tag 'no_image'
-          %td
-            = link_to community.name, public_community_path(community), data: { 'turbolinks': false }
-          %td
-            = community.introduction
-          %td
-            = community.customers.count.to_s + "人"
-          %td
-            = link_to "詳細", public_community_path(community), data: { 'turbolinks': false }
-          %td
-            - if community.owner_id == current_customer.id
-              = link_to '編集する', edit_public_community_path(community), class: "btn btn-sm btn-success"
-            - elsif community.customers.include?(current_customer)
-              = link_to 'コミュニティを抜ける', public_community_leave_path(community), method: :delete, class: "btn btn-sm btn-danger", data: { confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
-            -else
-              = link_to 'コミュニティに参加する', public_community_join_path(community), class: "btn btn-sm btn-success", data: { confirm: 'こちらのコミュニティに参加します。よろしいですか？' }
+    .card
+      = link_to public_community_path(community), data: { 'turbolinks': false } do
+        .img-container
+          - if community.community_image.present?
+            = image_tag community.community_image
+          - else
+            = image_tag 'no_image'
+      .card-body.text-container
+        %h5.card-title
+          = link_to community.name, public_community_path(community), data: { 'turbolinks': false }
+        %h6.card-subtitle
+          参加人数
+          = community.customers.count.to_s + "人"
+        %hr
+        .community-show-link-area
+          = link_to "コミュニティ詳細へ", public_community_path(community), class: "btn-info community-show-link", data: { 'turbolinks': false }
+        %hr
+        .community-action-btn
+          - if community.owner_id == current_customer.id
+            = link_to '編集する', edit_public_community_path(community), class: "btn btn-sm btn-success"
+          - elsif community.customers.include?(current_customer)
+            = link_to 'コミュニティを抜ける', public_community_leave_path(community), method: :delete, class: "btn btn-sm btn-danger", data: { confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
+          -else
+            = link_to 'コミュニティに参加する', public_community_join_path(community), class: "btn btn-sm btn-success", data: { confirm: 'こちらのコミュニティに参加します。よろしいですか？' }
+        %hr
+        %p.card-text
+          [活動場所]
+          = community.prefecture.name if community.prefecture.present?
+          %hr
+          [活動ペース]
+          = community.human_attribute_enum(:activity_stance)
+          %hr
+          [紹介文]
+          = community.introduction

@@ -5,10 +5,13 @@
   .community-show-follow
     - if @community.owner_id == current_customer.id
       = link_to '編集する', edit_public_community_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-success community-show-btn"
+      魅力をアピールしよう
     - elsif @community.customers.include?(current_customer)
       = link_to 'コミュニティを抜ける', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
+      また参加してね!
     -else
       = link_to 'コミュニティに参加する', public_community_join_path(@community), class: "btn btn-sm btn-success community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティに参加します。よろしいですか？' }
+      参加してみよう!
 
 .community-show-container.px-0.px-sm-0
   .row
@@ -83,11 +86,13 @@
 
       .community-index-title
         .row
-          .col-md-4
-            %h2 メンバー一覧
+          .col-md-4.community-index-count
+            %h4 表示人数
+            .count
+              = @community_customers.count.to_s + " 人"
           .col-md-4.sp-kaminari.pc-kaminari
             = paginate @community_customers
-          .col-mid-4.sp-display.pc-serch
+          .col-mid-4.sp-serch.pc-serch
             = form_tag public_community_path(@community), method: :get, class: 'community-index-title__searchForm' do
               = select_tag :part_id, options_from_collection_for_select(Part.all, :id, :name, params[:part_id]), {prompt: '全パートを表示', onchange: 'submit(this.form);'}
       .community-index-body

@@ -4,7 +4,6 @@ class Public::CustomersController < ApplicationController
   before_action :set_customer, only: [:show, :edit, :update]
   
   def index
-    @customers = params[:part_id].present? ? Part.find(params[:part_id]).customers.page(params[:page]).per(8) : Customer.page(params[:page]).per(8)
   end
 
   def show

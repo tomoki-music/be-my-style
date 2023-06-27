@@ -1,16 +1,63 @@
+h2{
+  text-align: center;
+}
+
 .community-index-container{
-  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
   width: 90%;
-  .community-table{
-    border: thick double lightblue;
+  margin: 0 auto;
+  .img-container{
+    width: 255px;
+    height: 300px;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+  }
+  .text-container{
+    width: 255px;
+    margin-bottom: 5px;
+    .community-show-link-area{
+      text-align: center;
+      .community-show-link{
+        border-radius: 10px;
+        padding: 10px;
+        margin-top: 10px;
+      }
+    }
+    .community-action-btn{
+      text-align: center;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .community-index-container{
+    display: flex;
+    flex-wrap: wrap;
+    width: 90%;
+    margin: 0 auto;
+    justify-content: center;
     .img-container{
-      width: 50px;
-      height: 50px;
+      width: 350px;
+      height: 300px;
       img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         border-radius: 10px;
+      }
+    }
+    .text-container{
+      width: 350px;
+      margin-bottom: 5px;
+      .community-index-link{
+        position: absolute;
+        left: 70px;
+        bottom: 5px;
       }
     }
   }
@@ -39,7 +86,7 @@
       margin: 0 auto;
       margin-bottom: 5px;
       text-align: center;
-      display: block;
+      display: inline-block;
       width: 200px;
       font-size: 20px;
       color: white;
@@ -84,10 +131,21 @@
     border: thick double lightblue;
   }
   .community-index-title{
-    text-align: center;
-    margin: 0 auto;
-    width: 90%;
+    width: 100%;
     height: 60px;
+    border: 1px solid;
+    border-radius: 10px;
+    .community-index-count{
+      margin: 10px 10px 10px 30px;
+      display: flex;
+      h4{
+        margin-right: 10px;
+      }
+      .count{
+        font-size: 50px;
+        line-height: 40px;
+      }
+    }
     .pc-kaminari{
       margin-top: 10px;
     }
@@ -98,22 +156,22 @@
       font-size: 20px;
     }
   }
+  .community-index-body{
+    margin-top: 50px;
+  }
 }
 
 @media (max-width: 600px) {
   .community-index-title{
-    height: 180px;
-    .sp-display{
-      margin: 0 auto;
+    margin-bottom: 120px;
+    .community-index-count{
+      justify-content: center;
     }
     .sp-kaminari{
       margin-left:100px;
     }
-  }
-  .community-index-container{
-    justify-content: center;
-  }
-  .community-index-body{
-    margin-top: 100px;
+    .sp-serch{
+      margin: 0 auto;
+    }
   }
 }
