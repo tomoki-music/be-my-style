@@ -20,6 +20,18 @@ h2{
   .text-container{
     width: 255px;
     margin-bottom: 5px;
+    .community-owner-img{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-top: 5px;
+      img{
+        width: 50px;
+        height: 50px;
+        margin: 5px;
+        border-radius: 10px;
+      }
+    }
     .community-show-link-area{
       text-align: center;
       .community-show-link{
@@ -30,6 +42,11 @@ h2{
     }
     .community-action-btn{
       text-align: center;
+      .btn{
+        width: 165px;
+        border-radius: 10px;
+        font-size: 15px;
+      }
     }
   }
 }
@@ -112,6 +129,18 @@ h2{
     }
     .text-container{
       text-align: center;
+      .community-owner-img{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-top: 5px;
+        img{
+          width: 50px;
+          height: 50px;
+          margin: 5px;
+          border-radius: 10px;
+        }
+      }
       .card-text{
         margin-top: 10px;
       }
@@ -174,4 +203,40 @@ h2{
       margin: 0 auto;
     }
   }
+}
+
+.community-edit-title{
+  width: 90%;
+  text-align: center;
+}
+
+.community-edit-container{
+  width: 90%;
+  margin: 0 auto;
+  .community-edit-table{
+    border: thick double lightblue;
+    .edit-img{
+      width: 300px;
+      object-fit: cover;
+      border-radius: 10px;
+      padding: 5px;
+    }
+  }
+  .community-edit-btn{
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    display: block;
+    width: 200px;
+    margin-left: auto;
+    text-align: center;
+    font-size: 20px;
+    color: white;
+    border-radius: 10px;
+  }
+}
+
+input[type="text"] {
+  width: 90%;
+  height: 40px;
 }

@@ -8,6 +8,7 @@ class Public::CommunitiesController < ApplicationController
 
   def show
     @community = Community.find(params[:id])
+    @owner = Customer.find_by(id: @community.owner_id)
     @community_customers = params[:part_id].present? ? Kaminari.paginate_array(Part.find(params[:part_id]).customers.filter {|customer| customer.community_customers.where(community_id: @community.id).present? } ).page(params[:page]).per(6) : @community.customers.page(params[:page]).per(6)
   end
 

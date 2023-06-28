@@ -7,10 +7,10 @@
       = link_to '編集する', edit_public_community_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-success community-show-btn"
       魅力をアピールしよう
     - elsif @community.customers.include?(current_customer)
-      = link_to 'コミュニティを抜ける', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
+      = link_to 'コミュニティを退会', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
       また参加してね!
     -else
-      = link_to 'コミュニティに参加する', public_community_join_path(@community), class: "btn btn-sm btn-success community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティに参加します。よろしいですか？' }
+      = link_to 'コミュニティに参加', public_community_join_path(@community), class: "btn btn-sm btn-success community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティに参加します。よろしいですか？' }
       参加してみよう!
 
 .community-show-container.px-0.px-sm-0
@@ -28,16 +28,23 @@
               = @community.name
             %hr
             %h6.card-subtitle
-              紹介文:
-              = @community.introduction
+              [コミュニティオーナー]
+              %br
+              .community-owner-img
+                - if @owner.profile_image.present?
+                  = image_tag @owner.profile_image
+                - else
+                  = image_tag 'no_image'
+                .owner-name
+                  = @owner.name
             %hr
             %p.card-text
             - if @community.owner_id == current_customer.id
               = link_to '編集する', edit_public_community_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-success community-show-btn"
             - elsif @community.customers.include?(current_customer)
-              = link_to 'コミュニティを抜ける', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
+              = link_to 'コミュニティを退会', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
             -else
-              = link_to 'コミュニティに参加する', public_community_join_path(@community), class: "btn btn-sm btn-success community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティに参加します。よろしいですか？' }
+              = link_to 'コミュニティに参加', public_community_join_path(@community), class: "btn btn-sm btn-success community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティに参加します。よろしいですか？' }
     .col-md-9
       %table.table.table-striped.community-show-table{:width=>"100%",:border=>"1"}
         %colgroup
@@ -47,6 +54,10 @@
               %th{scope:"row"} コミュニティ名
               %td
                 = @community.name
+            %tr
+              %th{scope:"row"} 参加人数
+              %td
+                = @community.customers.count.to_s + "人"
             %tr
               %th{scope:"row"} 活動場所
               %td
