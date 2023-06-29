@@ -1,6 +1,7 @@
 class Public::CommunitiesController < ApplicationController
   before_action :authenticate_customer!
   before_action :ensure_correct_customer, only: [:edit, :update, :destroy]
+  before_action :authority_create_community, only: [:new, :create]
 
   def index
     @communities = Community.all
@@ -48,7 +49,7 @@ class Public::CommunitiesController < ApplicationController
   def destroy
     @community = Community.find(params[:id])
     @community.destroy
-    redirect_to public_communities_path, notice: "コミュニティを削除しました!"
+    redirect_to public_communities_path, alert: "コミュニティを削除しました!"
   end
 
   def leave
@@ -60,13 +61,32 @@ class Public::CommunitiesController < ApplicationController
   private
 
   def community_params
-    params.require(:community).permit(:name, :introduction, :community_image)
+    params.require(:community).permit(
+      :name,
+      :activity_stance,
+      :favorite_artist1,
+      :favorite_artist2,
+      :favorite_artist3,
+      :favorite_artist4,
+      :favorite_artist5,
+      :introduction,
+      :community_image,
+      :prefecture_id,
+      :url,
+      genre_ids: [],
+    )
   end
 
   def ensure_correct_customer
     @community = Community.find(params[:id])
     unless @community.owner_id == current_customer.id
-      redirect_to public_communities_path
+      redirect_to public_communities_path, alert: "編集・削除する権限がありません。"
+    end
+  end
+
+  def authority_create_community
+    unless current_customer.id == 1
+      redirect_to public_communities_path, alert: "コミュニティを作成する権限がありません。"
     end
   end
 end

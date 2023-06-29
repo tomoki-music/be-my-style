@@ -41,6 +41,7 @@
             %p.card-text
             - if @community.owner_id == current_customer.id
               = link_to '編集する', edit_public_community_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-success community-show-btn"
+              = link_to 'コミュニティ削除', public_community_path(@community), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのコミュニティを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger community-show-btn"
             - elsif @community.customers.include?(current_customer)
               = link_to 'コミュニティを退会', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
             -else

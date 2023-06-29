@@ -1,7 +1,7 @@
 = render 'layouts/header_menu'
 
-.community-edit-title
-  %h2 コミュニティ編集画面
+.community-new-title
+  %h2 コミュニティ作成画面
   - if @community.errors.any?
     .alert
     %ul
@@ -10,8 +10,8 @@
           = message
 
 = form_with model: [:public, @community], local: true do |f|
-  .community-edit-container.px-0.px-sm-0
-    %table.table.table-striped.community-edit-table{:width=>"100%",:border=>"1"}
+  .community-new-container.px-0.px-sm-0
+    %table.table.table-striped.community-new-table{:width=>"100%",:border=>"1"}
       %colgroup
         %col{width: "19%"}
         %col{width: "81%"}
@@ -19,7 +19,7 @@
             %th{scope:"row"} コミュニティ画像
             %td
               = f.file_field :community_image, accept: 'image/*'
-              #edit-community-image
+              #new-community-image
           %tr
             %th{scope:"row"} コミュニティ名前
             %td
@@ -63,4 +63,4 @@
             %th{scope:"row"} コミュニティ紹介文
             %td
               = f.text_area :introduction, style: "width:90%"
-          = f.submit "コミュニティを更新", class: "btn btn-info community-edit-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }
+          = f.submit "コミュニティを作成", class: "btn btn-info community-new-btn", data: { confirm: 'こちらの内容で作成します。よろしいですか？' }

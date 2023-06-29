@@ -1,6 +1,8 @@
 = render 'layouts/header_menu'
 
-%h2 コミュニティ一覧
+.community-index-head-title
+  %h2 コミュニティ一覧
+  = link_to "コミュニティ作成", new_public_community_path, data: { 'turbolinks': false }, class: "btn btn-info community-index-create-btn"
 .community-index-container
   - @communities.each do |community|
     - @owner = Customer.find_by(id: community.owner_id)
@@ -33,7 +35,7 @@
         %hr
         .community-action-btn
           - if community.owner_id == current_customer.id
-            = link_to '編集する', edit_public_community_path(community), class: "btn btn-success"
+            = link_to '編集する', edit_public_community_path(community), data: { 'turbolinks': false }, class: "btn btn-success"
           - elsif community.customers.include?(current_customer)
             = link_to 'コミュニティを退会', public_community_leave_path(community), method: :delete, class: "btn btn-danger", data: { confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
           -else
