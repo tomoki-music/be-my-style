@@ -219,6 +219,13 @@
 .community-new-title{
   width: 90%;
   text-align: center;
+  margin: 0 auto;
+  .alert{
+    text-align: center;
+    color: red;
+    border: solid 1px red;
+    border-radius: 10px;
+  }
 }
 
 .community-new-container{
@@ -256,6 +263,13 @@ input[type="text"] {
 .community-edit-title{
   width: 90%;
   text-align: center;
+  margin: 0 auto;
+  .alert{
+    text-align: center;
+    color: red;
+    border: solid 1px red;
+    border-radius: 10px;
+  }
 }
 
 .community-edit-container{

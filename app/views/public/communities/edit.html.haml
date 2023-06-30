@@ -4,10 +4,10 @@
   %h2 コミュニティ編集画面
   - if @community.errors.any?
     .alert
-    %ul
-      - @community.errors.full_messages.each do |message|
-        %li
-          = message
+      %ul.list-style-none
+        - @community.errors.full_messages.each do |message|
+          %li
+            = message
 
 = form_with model: [:public, @community], local: true do |f|
   .community-edit-container.px-0.px-sm-0

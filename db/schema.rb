@@ -12,7 +12,7 @@
 
 ActiveRecord::Schema.define(version: 2023_06_21_085638) do
 
-  create_table "active_storage_attachments", charset: "utf8mb3", force: :cascade do |t|
+  create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
     t.bigint "record_id", null: false
@@ -22,7 +22,7 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
   end
 
-  create_table "active_storage_blobs", charset: "utf8mb3", force: :cascade do |t|
+  create_table "active_storage_blobs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "key", null: false
     t.string "filename", null: false
     t.string "content_type"
@@ -34,13 +34,13 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
   end
 
-  create_table "active_storage_variant_records", charset: "utf8mb3", force: :cascade do |t|
+  create_table "active_storage_variant_records", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
-  create_table "addresses", charset: "utf8mb3", force: :cascade do |t|
+  create_table "addresses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.integer "postal_code", null: false
     t.string "address", null: false
@@ -51,7 +51,7 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.index ["customer_id"], name: "index_addresses_on_customer_id"
   end
 
-  create_table "admins", charset: "utf8mb3", force: :cascade do |t|
+  create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "reset_password_token"
@@ -64,7 +64,7 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
   end
 
-  create_table "carts", charset: "utf8mb3", force: :cascade do |t|
+  create_table "carts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "item_id", null: false
     t.integer "quantity", null: false
@@ -74,17 +74,17 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.index ["item_id"], name: "index_carts_on_item_id"
   end
 
-  create_table "chat_messages", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+  create_table "chat_messages", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "chat_room_id", null: false
     t.bigint "customer_id", null: false
-    t.text "content", size: :medium
+    t.text "content"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["chat_room_id"], name: "index_chat_messages_on_chat_room_id"
     t.index ["customer_id"], name: "index_chat_messages_on_customer_id"
   end
 
-  create_table "chat_room_customers", charset: "utf8mb3", force: :cascade do |t|
+  create_table "chat_room_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "chat_room_id", null: false
     t.bigint "customer_id", null: false
     t.datetime "created_at", precision: 6, null: false
@@ -93,12 +93,12 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.index ["customer_id"], name: "index_chat_room_customers_on_customer_id"
   end
 
-  create_table "chat_rooms", charset: "utf8mb3", force: :cascade do |t|
+  create_table "chat_rooms", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table "communities", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+  create_table "communities", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name"
     t.text "introduction"
     t.integer "owner_id"
@@ -114,7 +114,7 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table "community_customers", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+  create_table "community_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id"
     t.bigint "community_id"
     t.datetime "created_at", precision: 6, null: false
@@ -123,7 +123,7 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.index ["customer_id"], name: "index_community_customers_on_customer_id"
   end
 
-  create_table "community_genres", charset: "utf8mb4", collation: "utf8mb4_general_ci", force: :cascade do |t|
+  create_table "community_genres", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "community_id", null: false
     t.bigint "genre_id", null: false
     t.datetime "created_at", precision: 6, null: false
@@ -132,7 +132,7 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.index ["genre_id"], name: "index_community_genres_on_genre_id"
   end
 
-  create_table "customer_genres", charset: "utf8mb3", force: :cascade do |t|
+  create_table "customer_genres", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "genre_id", null: false
     t.datetime "created_at", precision: 6, null: false
@@ -141,7 +141,7 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.index ["genre_id"], name: "index_customer_genres_on_genre_id"
   end
 
-  create_table "customer_parts", charset: "utf8mb3", force: :cascade do |t|
+  create_table "customer_parts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "part_id", null: false
     t.datetime "created_at", precision: 6, null: false
@@ -150,7 +150,7 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.index ["part_id"], name: "index_customer_parts_on_part_id"
   end
 
-  create_table "customers", charset: "utf8mb3", force: :cascade do |t|
+  create_table "customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "reset_password_token"
@@ -178,13 +178,13 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.index ["reset_password_token"], name: "index_customers_on_reset_password_token", unique: true
   end
 
-  create_table "genres", charset: "utf8mb3", force: :cascade do |t|
+  create_table "genres", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table "item_tags", charset: "utf8mb3", force: :cascade do |t|
+  create_table "item_tags", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "item_id", null: false
     t.bigint "tag_id", null: false
     t.datetime "created_at", precision: 6, null: false
@@ -193,7 +193,7 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.index ["tag_id"], name: "index_item_tags_on_tag_id"
   end
 
-  create_table "items", charset: "utf8mb3", force: :cascade do |t|
+  create_table "items", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.text "body", null: false
     t.integer "price", null: false
@@ -203,7 +203,7 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table "notifications", charset: "utf8mb3", force: :cascade do |t|
+  create_table "notifications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.integer "visitor_id", null: false
     t.integer "visited_id", null: false
     t.integer "event_id"
@@ -218,7 +218,7 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.index ["visitor_id"], name: "index_notifications_on_visitor_id"
   end
 
-  create_table "order_items", charset: "utf8mb3", force: :cascade do |t|
+  create_table "order_items", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "order_id", null: false
     t.bigint "item_id", null: false
     t.integer "order_price", null: false
@@ -230,7 +230,7 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.index ["order_id"], name: "index_order_items_on_order_id"
   end
 
-  create_table "orders", charset: "utf8mb3", force: :cascade do |t|
+  create_table "orders", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.integer "postal_code", null: false
     t.string "address", null: false
@@ -245,20 +245,20 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.index ["customer_id"], name: "index_orders_on_customer_id"
   end
 
-  create_table "parts", charset: "utf8mb3", force: :cascade do |t|
+  create_table "parts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table "relationships", charset: "utf8mb3", force: :cascade do |t|
+  create_table "relationships", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.integer "follower_id"
     t.integer "followed_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table "tags", charset: "utf8mb3", force: :cascade do |t|
+  create_table "tags", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
