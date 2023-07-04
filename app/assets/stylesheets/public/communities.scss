@@ -302,3 +302,50 @@ input[type="text"] {
   width: 90%;
   height: 40px;
 }
+
+.community-new-mail-container{
+  width: 90%;
+  margin: 0 auto;
+  .community-new-mail-title{
+    margin-top: 10px;
+    text-align: center;
+  }
+  .community-new-mail-table{
+    border: thick double lightblue;
+    .community-new-mail-btn{
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      display: block;
+      width: 200px;
+      margin-left: auto;
+      text-align: center;
+      font-size: 20px;
+      color: white;
+      border-radius: 10px;
+    }
+  } 
+}
+
+.community-send-mail-container{
+  width: 90%;
+  margin: 0 auto;
+  .community-send-mail-title{
+    margin-top: 10px;
+    text-align: center;
+  }
+  .community-send-mail-table{
+    border: thick double lightblue;
+    .community-send-mail-link{
+      margin: 0 auto;
+      margin-bottom: 5px;
+      text-align: center;
+      display: inline-block;
+      width: 200px;
+      font-size: 20px;
+      color: white;
+      border-radius: 10px;
+      text-decoration: none;
+    }
+  } 
+}

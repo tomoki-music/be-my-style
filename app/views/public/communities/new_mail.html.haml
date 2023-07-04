@@ -1,0 +1,22 @@
+= render 'layouts/header_menu'
+
+.community-new-mail-container
+  .community-new-mail-title
+    %h5
+      = @community.name
+      メンバーへのメール
+
+  = form_with url: public_community_send_mail_path(@community),method: :get, local: true do |f|
+    %table.table.table-striped.community-new-mail-table{:width=>"100%",:border=>"1"}
+      %colgroup
+        %col{width: "19%"}
+        %col{width: "81%"}
+          %tr
+            %th{scope:"row"} メールタイトル
+            %td
+              = f.text_field :mail_title
+          %tr
+            %th{scope:"row"} メール本文
+            %td
+              = f.text_area :mail_content, style: "width:90%"
+          = f.submit "メールを送信", class: "btn btn-info community-new-mail-btn", data: { confirm: 'こちらの内容で送信します。よろしいですか？' }

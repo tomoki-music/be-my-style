@@ -58,6 +58,18 @@ class Public::CommunitiesController < ApplicationController
     redirect_to public_communities_path, alert: "コミュニティを退会しました!"
   end
 
+  def new_mail
+    @community = Community.find(params[:community_id])
+  end
+
+  def send_mail
+    @community = Community.find(params[:community_id])
+    community_customers = @community.customers
+    @mail_title = params[:mail_title]
+    @mail_content = params[:mail_content]
+    ContactMailer.send_mail(@mail_title, @mail_content,community_customers).deliver
+  end
+
   private
 
   def community_params

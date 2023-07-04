@@ -26,6 +26,8 @@ Rails.application.routes.draw do
     resources :communities do
       get "join" => "communities#join"
       delete "leave" => "communities#leave"
+      get "new/mail" => "communities#new_mail"
+      get "send/mail" => "communities#send_mail"
     end
   end
 

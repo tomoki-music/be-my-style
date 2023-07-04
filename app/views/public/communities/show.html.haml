@@ -40,6 +40,7 @@
             %hr
             %p.card-text
             - if @community.owner_id == current_customer.id
+              = link_to 'メールする', public_community_new_mail_path(@community), class: "btn btn-info community-show-btn fas fa-paper-plane"
               = link_to '編集する', edit_public_community_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-success community-show-btn"
               = link_to 'コミュニティ削除', public_community_path(@community), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのコミュニティを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger community-show-btn"
             - elsif @community.customers.include?(current_customer)
