@@ -107,6 +107,34 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
         end.to change(community.customers, :count).by(-1)
       end
     end
+    context "communityからメール(new_mail)できる" do
+      before do
+        get public_community_new_mail_path(community)
+      end
+      it 'リクエストは200 OKとなること' do
+        expect(response.status).to eq 200
+      end
+    end
+    context "communityからメール送信(send_mail)のテスト" do
+      before do
+        community.customers << other_customer
+        community_customers = community.customers
+      end
+      it "メールの作成と送信が成功する" do
+        get public_community_send_mail_path(community), params: {
+          mail_title: "メンバーの皆さんへ",
+          mail_content: "どうぞ宜しくお願い致します！",
+        }
+        expect(response.body).to include("メンバーへの送信が完了しました!")
+      end
+      it "空欄があるとメールの作成と送信が失敗する（メールのバリデーション）" do
+        get public_community_send_mail_path(community), params: {
+          mail_title: "",
+          mail_content: "",
+        }
+        expect(flash[:alert]).to eq("タイトル、本文は必須です。")
+      end
+    end
   end
   describe '非ログイン' do
     context "communities一覧ページ(index)へ遷移されない" do
@@ -178,6 +206,27 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
         delete public_community_path(community)
       end
       it 'リクエストは302 Foundとなること' do
+        expect(response.status).to eq 302
+      end
+    end
+    context "communityからメール(new_mail)できない" do
+      before do
+        get public_community_new_mail_path(community)
+      end
+      it 'リクエストは302 Foundとなること' do
+        expect(response.status).to eq 302
+      end
+    end
+    context "communityからメール送信(send_mail)できない" do
+      before do
+        community.customers << other_customer
+        community_customers = community.customers
+      end
+      it "リクエストは302 Foundとなること" do
+        get public_community_send_mail_path(community), params: {
+          mail_title: "メンバーの皆さんへ",
+          mail_content: "どうぞ宜しくお願い致します！",
+        }
         expect(response.status).to eq 302
       end
     end

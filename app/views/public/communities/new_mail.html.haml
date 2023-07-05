@@ -6,7 +6,7 @@
       = @community.name
       メンバーへのメール
 
-  = form_with url: public_community_send_mail_path(@community),method: :get, local: true do |f|
+  = form_with url: public_community_send_mail_path(@community), method: :get, local: true do |f|
     %table.table.table-striped.community-new-mail-table{:width=>"100%",:border=>"1"}
       %colgroup
         %col{width: "19%"}

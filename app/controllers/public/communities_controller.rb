@@ -2,6 +2,7 @@ class Public::CommunitiesController < ApplicationController
   before_action :authenticate_customer!
   before_action :ensure_correct_customer, only: [:edit, :update, :destroy]
   before_action :authority_create_community, only: [:new, :create]
+  before_action :check_mail, only: [:send_mail]
 
   def index
     @communities = Community.all
@@ -99,6 +100,13 @@ class Public::CommunitiesController < ApplicationController
   def authority_create_community
     unless current_customer.id == 1
       redirect_to public_communities_path, alert: "コミュニティを作成する権限がありません。"
+    end
+  end
+
+  def check_mail
+    if params[:mail_title] == "" || params[:mail_content] == ""
+      flash[:alert] = "タイトル、本文は必須です。"
+      redirect_back(fallback_location: root_path)
     end
   end
 end

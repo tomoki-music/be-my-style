@@ -312,19 +312,19 @@ input[type="text"] {
   }
   .community-new-mail-table{
     border: thick double lightblue;
-    .community-new-mail-btn{
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      display: block;
-      width: 200px;
-      margin-left: auto;
-      text-align: center;
-      font-size: 20px;
-      color: white;
-      border-radius: 10px;
-    }
-  } 
+  }
+  .community-new-mail-btn{
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    display: block;
+    width: 200px;
+    margin-left: auto;
+    text-align: center;
+    font-size: 20px;
+    color: white;
+    border-radius: 10px;
+  }
 }
 
 .community-send-mail-container{
