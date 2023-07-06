@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_06_21_085638) do
+ActiveRecord::Schema.define(version: 2023_07_05_094729) do
 
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
@@ -251,6 +251,15 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
+  create_table "permits", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "community_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["community_id"], name: "index_permits_on_community_id"
+    t.index ["customer_id"], name: "index_permits_on_customer_id"
+  end
+
   create_table "relationships", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.integer "follower_id"
     t.integer "followed_id"
@@ -286,4 +295,6 @@ ActiveRecord::Schema.define(version: 2023_06_21_085638) do
   add_foreign_key "order_items", "items"
   add_foreign_key "order_items", "orders"
   add_foreign_key "orders", "customers"
+  add_foreign_key "permits", "communities"
+  add_foreign_key "permits", "customers"
 end

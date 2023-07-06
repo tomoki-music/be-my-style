@@ -28,7 +28,10 @@ Rails.application.routes.draw do
       delete "leave" => "communities#leave"
       get "new/mail" => "communities#new_mail"
       get "send/mail" => "communities#send_mail"
+      resource :permits, only: [:create, :destroy]
+      resource :community_customers, only: [:create, :destroy]
     end
+    get "communities/:id/permits" => "communities#permits", as: :permits
   end
 
 # 顧客(アーティスト)用

@@ -103,9 +103,9 @@
             %h4 表示人数
             .count
               = @community_customers.count.to_s + " 人"
-          .col-md-4.sp-kaminari.pc-kaminari
+          .col-md-3.sp-kaminari.pc-kaminari
             = paginate @community_customers
-          .col-mid-4.sp-serch.pc-serch
+          .col-mid-5.sp-serch.pc-serch
             = form_tag public_community_path(@community), method: :get, class: 'community-index-title__searchForm' do
               = select_tag :part_id, options_from_collection_for_select(Part.all, :id, :name, params[:part_id]), {prompt: '全パートを表示', onchange: 'submit(this.form);'}
       .community-index-body

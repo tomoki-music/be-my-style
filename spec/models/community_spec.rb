@@ -34,5 +34,10 @@ RSpec.describe 'Communityモデルのテスト', type: :model do
         expect(Community.reflect_on_association(:community_genres).macro).to eq :has_many
       end
     end
+    context 'Permitモデルとの関係' do
+      it 'permitと1:Nとなっている' do
+        expect(Community.reflect_on_association(:permits).macro).to eq :has_many
+      end
+    end
   end
 end
