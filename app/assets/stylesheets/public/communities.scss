@@ -116,9 +116,22 @@
       text-align: center;
       display: inline-block;
       width: 200px;
+      height: 40px;
+      line-height: 30px;
       font-size: 20px;
       color: white;
       border-radius: 10px;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .community-show-title{
+    .community-show-follow{
+      .community-show-btn{
+        width: 100px;
+        font-size: 10px;
+      }
     }
   }
 }

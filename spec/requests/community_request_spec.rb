@@ -135,6 +135,19 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
         expect(flash[:alert]).to eq("タイトル、本文は必須です。")
       end
     end
+    context "加入申請一覧ページ(permits)のテスト" do
+      before do
+        get public_permits_path(community)
+      end
+      it 'コミュニティオーナーの場合：リクエストは200 OKとなること' do
+        expect(response.status).to eq 200
+      end
+      it 'コミュニティオーナーでない場合：リクエストは302 FOUNDとなること' do
+        sign_in other_customer
+        get public_permits_path(community)
+        expect(response.status).to eq 302
+      end
+    end
   end
   describe '非ログイン' do
     context "communities一覧ページ(index)へ遷移されない" do
@@ -227,6 +240,14 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
           mail_title: "メンバーの皆さんへ",
           mail_content: "どうぞ宜しくお願い致します！",
         }
+        expect(response.status).to eq 302
+      end
+    end
+    context "加入申請一覧ページ(permits)表示に失敗" do
+      before do
+        get public_permits_path(community)
+      end
+      it 'リクエストは302 FOUNDとなること' do
         expect(response.status).to eq 302
       end
     end

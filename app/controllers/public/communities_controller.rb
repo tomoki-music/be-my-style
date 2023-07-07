@@ -1,6 +1,6 @@
 class Public::CommunitiesController < ApplicationController
   before_action :authenticate_customer!
-  before_action :ensure_correct_customer, only: [:edit, :update, :destroy]
+  before_action :ensure_correct_customer, only: [:edit, :update, :destroy, :permits]
   before_action :authority_create_community, only: [:new, :create]
   before_action :check_mail, only: [:send_mail]
 
@@ -41,7 +41,7 @@ class Public::CommunitiesController < ApplicationController
 
   def update
     if @community.update(community_params)
-      redirect_to public_communities_path, notice: "コミュニティの編集が完了しました!"
+      redirect_to public_community_path(@community), notice: "コミュニティの編集が完了しました!"
     else
       render "edit"
     end
@@ -69,6 +69,11 @@ class Public::CommunitiesController < ApplicationController
     @mail_title = params[:mail_title]
     @mail_content = params[:mail_content]
     ContactMailer.send_mail(@mail_title, @mail_content,community_customers).deliver
+  end
+
+  def permits
+    @community = Community.find(params[:id])
+    @permits = @community.permits.page(params[:page])
   end
 
   private
