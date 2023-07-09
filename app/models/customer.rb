@@ -71,4 +71,36 @@ class Customer < ApplicationRecord
     )
     notification.save if notification.valid?
   end
+
+  def create_notification_request(current_customer)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'request'
+    )
+    notification.save if notification.valid?
+  end
+
+  def create_notification_request_cancel(current_customer)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'request_cancel'
+    )
+    notification.save if notification.valid?
+  end
+
+  def create_notification_accept(current_customer)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'accept'
+    )
+    notification.save if notification.valid?
+  end
+
+  def create_notification_leave(current_customer)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'leave'
+    )
+    notification.save if notification.valid?
+  end
 end

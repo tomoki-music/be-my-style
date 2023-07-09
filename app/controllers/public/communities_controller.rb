@@ -55,6 +55,8 @@ class Public::CommunitiesController < ApplicationController
 
   def leave
     @community = Community.find(params[:community_id])
+    owner = Customer.find_by(id: @community.owner_id)
+    owner.create_notification_leave(current_customer)
     @community.customers.delete(current_customer)
     redirect_to public_communities_path, alert: "コミュニティを退会しました!"
   end

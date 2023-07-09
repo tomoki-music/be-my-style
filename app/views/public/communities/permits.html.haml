@@ -1,0 +1,30 @@
+= render 'layouts/header_menu'
+
+.community-permits-container
+  %h4
+    = @community.name.to_s + "承認待ち一覧"
+
+  - if @permits.present?
+    %table.table.table-striped.community-permits-table{:width=>"100%",:border=>"1"}
+      %thead
+        %tr
+          %th{scope: "col"} No
+          %th{scope: "col"} 画像
+          %th{scope: "col"} ニックネーム
+          %th{scope: "col"} 許可する？
+      %tbody.permit-table-body
+        - @permits.each.with_index(1) do |permit, i|
+          %tr
+            %th{scope: "row"} #{i}
+            %td
+              .img-container
+                - if permit.customer.profile_image.present?
+                  = image_tag permit.customer.profile_image
+                - else
+                  = image_tag 'no_image'
+            %td
+              = permit.customer.name
+            %td
+              = link_to '加入許可', public_community_community_customers_path(@community, permit_id: permit.id), method: :post, data: { 'turbolinks': false }, class: "btn btn-sm btn-success customer-permit-btn"
+  - else
+    %p 承認待ちユーザーはいません。

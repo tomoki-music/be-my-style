@@ -16,6 +16,14 @@
         = "あなたをフォローしました"
       - when 'chat' then
         = "あなたにメッセージを送信しました"
+      - when 'request' then
+        = "あなたのコミュニティへ参加申請しました"
+      - when 'request_cancel' then
+        = "あなたのコミュニティへの参加申請を取消しました"
+      - when 'accept' then
+        = "コミュニティへの参加を許可しました"
+      - when 'leave' then
+        = "あなたのコミュニティから退出しました"
       - when 'like' then
         = link_to 'あなたの投稿', notification.event, style: "font-weight: bold;"
         = "にいいねしました"
