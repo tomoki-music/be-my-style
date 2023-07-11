@@ -38,8 +38,10 @@
             = link_to '編集する', edit_public_community_path(community), data: { 'turbolinks': false }, class: "btn btn-success"
           - elsif community.customers.include?(current_customer)
             = link_to 'コミュニティを退会', public_community_leave_path(community), method: :delete, class: "btn btn-danger", data: { confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
-          -else
-            = link_to 'コミュニティに参加', public_community_join_path(community), class: "btn btn-success", data: { confirm: 'こちらのコミュニティに参加します。よろしいですか？' }
+          - elsif community.permits.exists?(customer_id: current_customer.id)
+            = link_to '参加申請の取消', public_community_permits_path(community), method: :delete, class: "btn btn-danger", data: { 'turbolinks': false, confirm: 'こちらのコミュニティの参加申請を取消します。よろしいですか？' }
+          - else
+            = link_to '参加を申請する', public_community_permits_path(community), method: :post, class: "btn btn-success", data: { 'turbolinks': false, confirm: 'こちらのコミュニティに参加申請をします。よろしいですか？' }
         %hr
         %p.card-text
           [活動場所]
