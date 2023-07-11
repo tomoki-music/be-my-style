@@ -6,7 +6,7 @@ class Community < ApplicationRecord
   has_many :customers, through: :community_customers, dependent: :destroy
   has_many :permits, dependent: :destroy
   has_many :community_genres, dependent: :destroy
-  has_many :genres, through: :community_genres
+  has_many :genres, through: :community_genres, dependent: :destroy
 
   has_one_attached :community_image
 
