@@ -6,8 +6,8 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
   let(:chat_room) { create(:chat_room) }
   let!(:chat_room_customer) { create(:chat_room_customer, customer: other_customer, chat_room: chat_room) }
 
-  describe "createアクションのテスト" do
-    context "ログイン済み" do
+  describe "ログイン済み" do
+    context "createアクションのテスト" do
       before do
         sign_in customer
         get public_chat_room_path(chat_room)
@@ -16,6 +16,23 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
       it "メッセージ作成が成功する" do
         expect do
           post public_chat_messages_path, params: {
+          chat_message: {
+            content: "お元気ですか？",
+            chat_room_id: 1,
+            customer_id: 1,
+          }
+          }
+        end.to change(ChatMessage, :count).by(1)
+      end
+    end
+    context "community_createアクションのテスト" do
+      before do
+        sign_in customer
+        @chat_room = chat_room
+      end
+      it "コミュニティへメッセージ作成が成功する" do
+        expect do
+          post community_create_public_chat_messages_path, params: {
           chat_message: {
             content: "お元気ですか？",
             chat_room_id: 1,

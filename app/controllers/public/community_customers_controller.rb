@@ -8,6 +8,10 @@ class Public::CommunityCustomersController < ApplicationController
     if @community_customer.valid?
       owner = Customer.find_by(id: @community.owner_id)
       @community_customer.customer.create_notification_accept(owner)
+
+      chat_room = ChatRoomCustomer.where(customer_id: owner.id, community_id: @community.id)[0].chat_room
+      ChatRoomCustomer.create(customer_id: @permit.customer_id, chat_room_id: chat_room.id, community_id: @community.id)
+
       @permit.destroy
       flash[:notice] = "コミュニティへ参加を許可しました"
       redirect_back(fallback_location: root_path)

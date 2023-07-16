@@ -1,9 +1,12 @@
 require 'rails_helper'
 
 RSpec.describe "communitiesコントローラーのテスト", type: :request do
-  let(:customer) { create(:customer) }
-  let(:other_customer) { create(:customer) }
-  let!(:community) { create(:community) }
+  let!(:customer) { create(:customer) }
+  let!(:other_customer) { create(:customer) }
+  let(:community) { create(:community) }
+  let(:chat_room) { create(:chat_room) }
+  let!(:permit) { create(:permit, customer_id: other_customer.id, community_id: community.id) }
+  let!(:chat_room_customer) { create(:chat_room_customer, customer_id: other_customer.id, chat_room_id: chat_room.id, community_id: community.id) }
 
   describe 'ログイン済み' do
     before do
@@ -25,13 +28,6 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
         expect(response.status).to eq 200
       end
     end
-    context "communityに参加(join)できる" do
-      it 'コミュニティ参加人数が増える' do
-        expect do
-          get public_community_join_path(community)
-        end.to change(community.customers, :count).by(1)
-      end
-    end
     context "community新規作成ページ(new)が正しく表示される" do
       before do
         get new_public_community_path
@@ -50,6 +46,16 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
             }
           }
         end.to change(Community, :count).by(1)
+      end
+      it "チャットルームの作成が成功する" do
+        expect do
+          post public_communities_path, params: {
+            community: {
+              name: "MMM",
+              introduction: "楽しいコミュニティです！",
+            }
+          }
+        end.to change(ChatRoom, :count).by(1)
       end
     end
     context "community編集ページ(edit)が正しく表示される" do
@@ -97,14 +103,19 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
         expect(response.status).to eq 302
       end
     end
-    context "communityjから退会(leave)できる" do
+    context "communityから退会(leave)できる" do
       before do
-        get public_community_join_path(community)
+        sign_in other_customer
       end
       it 'コミュニティ参加人数が減る' do
         expect do
           delete public_community_leave_path(community)
         end.to change(community.customers, :count).by(-1)
+      end
+      it 'チャットルームの参加人数が減る' do
+        expect do
+          delete public_community_leave_path(community)
+        end.to change(ChatRoomCustomer, :count).by(-1)
       end
     end
     context "communityからメール(new_mail)できる" do
@@ -139,10 +150,10 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
       before do
         get public_permits_path(community)
       end
-      it 'コミュニティオーナーの場合：リクエストは200 OKとなること' do
+      it 'コミュニティオーナーの場合、リクエストは200 OKとなること' do
         expect(response.status).to eq 200
       end
-      it 'コミュニティオーナーでない場合：リクエストは302 FOUNDとなること' do
+      it 'コミュニティオーナーでない場合、リクエストは302 FOUNDとなること' do
         sign_in other_customer
         get public_permits_path(community)
         expect(response.status).to eq 302
@@ -161,14 +172,6 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
     context "communities詳細ページ(show)へ遷移されない" do
       before do
         get public_community_path(community)
-      end
-      it 'リクエストは302 Foundとなること' do
-        expect(response.status).to eq 302
-      end
-    end
-    context "communityに参加(join)できない" do
-      before do
-        get public_community_join_path(community)
       end
       it 'リクエストは302 Foundとなること' do
         expect(response.status).to eq 302

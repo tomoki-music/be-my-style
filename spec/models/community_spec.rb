@@ -26,6 +26,20 @@ RSpec.describe 'Communityモデルのテスト', type: :model do
         expect(Community.reflect_on_association(:community_customers).macro).to eq :has_many
       end
     end
+    context 'ChatRoomCustomerモデルとの関係' do
+      it 'chat_room_customersと1:Nとなっている' do
+        expect(Community.reflect_on_association(:chat_room_customers).macro).to eq :has_many
+      end
+      it 'customersと1:Nとなっている' do
+        expect(Community.reflect_on_association(:customers).macro).to eq :has_many
+      end
+      it 'chat_roomsと1:Nとなっている' do
+        expect(Community.reflect_on_association(:chat_rooms).macro).to eq :has_many
+      end
+      it 'chat_messagesと1:Nとなっている' do
+        expect(Community.reflect_on_association(:chat_messages).macro).to eq :has_many
+      end
+    end
     context 'Genreモデルとの関係' do
       it 'genresと1:Nとなっている' do
         expect(Community.reflect_on_association(:genres).macro).to eq :has_many

@@ -19,12 +19,17 @@ Rails.application.routes.draw do
 
     # マッチング〜チャット機能
     resources :matchings, only: [:index]
-    resources :chat_rooms, only: [:create, :show]
-    resources :chat_messages, only: [:create]
+    resources :chat_rooms, only: [:create, :show] do
+      get "community_show/:id" => "chat_rooms#community_show", on: :collection, as: :community_show
+      post "community_create" => "chat_rooms#community_create", on: :collection
+    end
+    # get "chat_rooms/community_show/:id" => "chat_rooms#community_show", as: :community_show
+    resources :chat_messages, only: [:create] do
+      post "community_create" => "chat_messages#community_create", on: :collection
+    end
 
     # コミュニティ機能
     resources :communities do
-      get "join" => "communities#join"
       delete "leave" => "communities#leave"
       get "new/mail" => "communities#new_mail"
       get "send/mail" => "communities#send_mail"

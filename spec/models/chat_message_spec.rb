@@ -14,6 +14,9 @@ RSpec.describe 'ChatMessageモデルのテスト', type: :model do
       it 'chat_roomsとN:1となっている' do
         expect(ChatMessage.reflect_on_association(:chat_room).macro).to eq :belongs_to
       end
+      it 'communitiesとN:1となっている' do
+        expect(ChatMessage.reflect_on_association(:community).macro).to eq :belongs_to
+      end
     end
   end
   describe 'バリデーションのテスト' do

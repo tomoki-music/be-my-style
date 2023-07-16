@@ -4,7 +4,9 @@ RSpec.describe "community_customersコントローラーのテスト", type: :re
   let(:customer) { create(:customer) }
   let(:other_customer) { create(:customer) }
   let!(:community) { create(:community) }
+  let!(:chat_room) { create(:chat_room) }
   let!(:permit) { create(:permit, customer_id: other_customer.id, community_id: community.id) }
+  let!(:chat_room_customer) { create(:chat_room_customer, customer_id: community.owner_id, chat_room_id: chat_room.id, community_id: community.id) }
 
   describe 'ログイン済み' do
     before do
@@ -18,6 +20,11 @@ RSpec.describe "community_customersコントローラーのテスト", type: :re
         expect do
           post public_community_community_customers_path(community, permit_id: permit.id)
         end.to change(CommunityCustomer, :count).by(1)
+      end
+      it "加入申請の許可が成功すると、チャットルームにメンバーが１名追加される" do
+        expect do
+          post public_community_community_customers_path(community, permit_id: permit.id)
+        end.to change(ChatRoomCustomer, :count).by(1)
       end
     end
   end

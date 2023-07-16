@@ -35,6 +35,7 @@ class Customer < ApplicationRecord
   has_many :passive_notifications, class_name: 'Notification', foreign_key: 'visited_id', dependent: :destroy
   has_many :chat_room_customers, dependent: :destroy
   has_many :chat_rooms, through: :chat_room_customers, dependent: :destroy
+  has_many :communities, through: :chat_room_customers, dependent: :destroy
   has_many :chat_messages, dependent: :destroy
   has_many :community_customers, dependent: :destroy
   has_many :communities, through: :community_customers, dependent: :destroy

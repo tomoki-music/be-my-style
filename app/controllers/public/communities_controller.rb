@@ -14,12 +14,6 @@ class Public::CommunitiesController < ApplicationController
     @community_customers = params[:part_id].present? ? Kaminari.paginate_array(Part.find(params[:part_id]).customers.filter {|customer| customer.community_customers.where(community_id: @community.id).present? } ).page(params[:page]).per(6) : @community.customers.page(params[:page]).per(6)
   end
 
-  def join
-    @community = Community.find(params[:community_id])
-    @community.customers << current_customer
-    redirect_to  public_communities_path, notice: "コミュニティへ参加しました!"
-  end
-
   def new
     @community = Community.new
   end
@@ -28,7 +22,11 @@ class Public::CommunitiesController < ApplicationController
     @community = Community.new(community_params)
     @community.owner_id = current_customer.id
     @community.customers << current_customer
-    if @community.save
+
+    chat_room = ChatRoom.create
+    ChatRoomCustomer.create(customer_id: current_customer.id, chat_room_id: chat_room.id, community_id: @community.id)
+    
+    if @community.save!
       redirect_to public_communities_path, notice: "コミュニティを作成しました!"
     else
       render 'new'
@@ -57,6 +55,10 @@ class Public::CommunitiesController < ApplicationController
     @community = Community.find(params[:community_id])
     owner = Customer.find_by(id: @community.owner_id)
     owner.create_notification_leave(current_customer)
+
+    chat_room_customer = ChatRoomCustomer.where(customer_id: current_customer.id, community_id: @community.id)[0]
+    chat_room_customer.delete
+
     @community.customers.delete(current_customer)
     redirect_to public_communities_path, alert: "コミュニティを退会しました!"
   end

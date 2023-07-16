@@ -27,6 +27,29 @@ class Public::ChatRoomsController < ApplicationController
     @chat_room_customer = @chat_room.chat_room_customers.where.not(customer_id: current_customer.id)[0].customer
   end
 
+  def community_create
+    current_customers_chat_rooms = ChatRoomCustomer.where(customer_id: current_customer.id).map do |chat_room_customer|
+      chat_room_customer.chat_room
+    end
+
+    community_chat_room = ChatRoomCustomer.where(chat_room_id: current_customers_chat_rooms, community_id: params[:community_id])[0]
+
+    if community_chat_room.present?
+      chat_room = community_chat_room.chat_room
+    else
+      chat_room = ChatRoom.create
+      ChatRoomCustomer.create(customer_id: current_customer.id, chat_room_id: chat_room.id, community_id: params[:community_id])
+    end
+    redirect_to public_chat_room_path(chat_room)
+  end
+
+  def community_show
+    @chat_message = ChatMessage.new
+    @chat_room = ChatRoom.find(params[:id])
+    @chat_messages = ChatMessage.where(chat_room_id: @chat_room.id)
+    @chat_room_customer = @chat_room.chat_room_customers.where.not(customer_id: current_customer.id)[0].customer
+  end
+
   private
 
 end
