@@ -318,9 +318,10 @@ mmm = Community.create!(
   owner_id: 1,
   )
 
+chat_room1 = ChatRoom.create!
+ChatRoomCustomer.create!(customer_id: tomoki.id, chat_room_id: chat_room1.id, community_id: mmm.id)
 mmm.genres << [pops, rock, blues, anime_songs, visual]
 mmm.community_image.attach(io: File.open(Rails.root.join('app/assets/images/mmm.jpg')),filename: 'mmm.jpg')
-mmm.customers << [tomoki, tomusic, mayu, luka, hatsune, takuro, john, paul, george, ringo]
 
 enjoy_music = Community.create!(
   name: '【MMM】邦楽コピーセッション',
@@ -336,9 +337,10 @@ enjoy_music = Community.create!(
   owner_id: 1,
   )
 
+chat_room2 = ChatRoom.create!
+ChatRoomCustomer.create!(customer_id: tomoki.id, chat_room_id: chat_room2.id, community_id: enjoy_music.id)
 enjoy_music.genres << [pops, rock, blues, anime_songs, visual]
 enjoy_music.community_image.attach(io: File.open(Rails.root.join('app/assets/images/enjoy_music.jpg')),filename: 'enjoy_music.jpg')
-enjoy_music.customers << [tomoki, tomusic, mayu, luka, hatsune, takuro]
 
 western_music = Community.create!(
   name: '【MMM】洋楽コピーセッション',
@@ -354,9 +356,10 @@ western_music = Community.create!(
   owner_id: 1,
   )
 
+chat_room3 = ChatRoom.create!
+ChatRoomCustomer.create!(customer_id: tomoki.id, chat_room_id: chat_room3.id, community_id: western_music.id)
 western_music.genres << [pops, rock, blues, hard_rock, metal]
 western_music.community_image.attach(io: File.open(Rails.root.join('app/assets/images/western_music.jpg')),filename: 'western_music.jpg')
-western_music.customers << [tomoki, john, paul, george, ringo]
 
 free_music = Community.create!(
   name: '【MMM】フリーセッション',
@@ -372,9 +375,10 @@ free_music = Community.create!(
   owner_id: 1,
   )
 
+chat_room4 = ChatRoom.create!
+ChatRoomCustomer.create!(customer_id: tomoki.id, chat_room_id: chat_room4.id, community_id: free_music.id)
 free_music.genres << [pops, rock, blues, hard_rock, jazz]
 free_music.community_image.attach(io: File.open(Rails.root.join('app/assets/images/free_music.jpg')),filename: 'free_music.jpg')
-free_music.customers << [tomoki, tomusic, john, paul, george, ringo]
 
 beginner = Community.create!(
   name: '【MMM】初心者セッション',
@@ -390,9 +394,10 @@ beginner = Community.create!(
   owner_id: 1,
   )
 
+chat_room5 = ChatRoom.create!
+ChatRoomCustomer.create!(customer_id: tomoki.id, chat_room_id: chat_room5.id, community_id: beginner.id)
 beginner.genres << [pops, rock]
 beginner.community_image.attach(io: File.open(Rails.root.join('app/assets/images/beginner.jpg')),filename: 'beginner.jpg')
-beginner.customers << [tomoki, tomusic, mayu, luka]
 
 study_music = Community.create!(
   name: '【MMM】作詞作曲勉強会',
@@ -408,9 +413,10 @@ study_music = Community.create!(
   owner_id: 1,
   )
 
+chat_room6 = ChatRoom.create!
+ChatRoomCustomer.create!(customer_id: tomoki.id, chat_room_id: chat_room6.id, community_id: study_music.id)
 study_music.genres << [pops, rock]
 study_music.community_image.attach(io: File.open(Rails.root.join('app/assets/images/study_music.jpg')),filename: 'study_music.jpg')
-study_music.customers << [tomoki, tomusic, mayu, luka, hatsune, takuro, john, paul]
 
 acoustic_music = Community.create!(
   name: '【MMM】アコースティックセッション',
@@ -426,6 +432,7 @@ acoustic_music = Community.create!(
   owner_id: 1,
   )
 
+chat_room7 = ChatRoom.create!
+ChatRoomCustomer.create!(customer_id: tomoki.id, chat_room_id: chat_room7.id, community_id: acoustic_music.id)
 acoustic_music.genres << [pops, rock]
 acoustic_music.community_image.attach(io: File.open(Rails.root.join('app/assets/images/sherry.jpg')),filename: 'sherry.jpg')
-acoustic_music.customers << [tomoki, tomusic, mayu, luka, takuro]

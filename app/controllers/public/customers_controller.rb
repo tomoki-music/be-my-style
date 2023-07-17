@@ -62,9 +62,9 @@ class Public::CustomersController < ApplicationController
   def check_same_community
     @visited_customer = Customer.find(params[:id])
     return if current_customer == @visited_customer
-    visited_customer_community_ids = CommunityCustomer.where(customer_id: @visited_customer.id).pluck(:community_id)
+    visited_customer_community_ids = ChatRoomCustomer.where(customer_id: @visited_customer.id).pluck(:community_id)
 
-    check_same_community_ids = CommunityCustomer.where(customer_id: current_customer.id, community_id: visited_customer_community_ids).map do |check|
+    check_same_community_ids = ChatRoomCustomer.where(customer_id: current_customer.id, community_id: visited_customer_community_ids).map do |check|
       check.id
     end
     unless check_same_community_ids.present?
