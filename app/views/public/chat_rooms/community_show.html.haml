@@ -6,19 +6,19 @@
   .row
     .col-md-3
       .partner-index-container
-        %p チャットができるアーティスト
+        %p コミュニティにいるアーティスト
         %strong
-          = @mathing_customers.size.to_s + '人'
-        - @mathing_customers.each do |matching_customer|
+          = @customers.size.to_s + '人'
+        - @customers.each do |customer|
           .form-inline
             %span
-              = link_to public_chat_rooms_path(customer_id: matching_customer.id), method: :post do
-                - if matching_customer.profile_image.present?
-                  = image_tag matching_customer.profile_image, class: "icon_mini"
+              = link_to public_customer_path(customer), method: :get do
+                - if customer.profile_image.present?
+                  = image_tag customer.profile_image, class: "icon_mini"
                 - else
                   = image_tag 'no_image', class: "icon_mini"
                 %strong.do-chat
-                  = matching_customer.name + 'さんと チャットする🎵'
+                  = customer.name + 'さんの詳細ページ🎵'
             %hr
 
 
@@ -73,23 +73,19 @@
 
     .col-md-3
       .partner-container
-        %p 今、チャットしているお相手
+        %p 今、チャットしているコミュニティ
         .card
-          = link_to public_customer_path(@chat_room_customer) do
+          = link_to public_community_path(@community) do
             .img-container
-              - if @chat_room_customer.profile_image.present?
-                = image_tag @chat_room_customer.profile_image
+              - if @community.community_image.present?
+                = image_tag @community.community_image
               - else
                 = image_tag 'no_image'
           .card-body.text-container
             %h5.card-title
-              = @chat_room_customer.human_attribute_enum(:name)
+              = @community.name
             %h6.card-subtitle
-              Part:
-              - @chat_room_customer.parts.each do |part|
-                %i.fa-solid.fa-music
-                = part.name
+              参加人数:
+              = @community.customers.count.to_s + "人"
             %hr
-            %p.card-text
-              = @chat_room_customer.human_attribute_enum(:introduction)
-            = link_to 'プロフィール画面へ', public_customer_path(@chat_room_customer.id), class: "btn btn-info chat-partner-link", data: { 'turbolinks': false }
+            = link_to 'コミュニティ詳細へ', public_community_path(@community), class: "btn btn-info chat-partner-link", data: { 'turbolinks': false }

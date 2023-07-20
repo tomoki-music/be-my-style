@@ -76,6 +76,10 @@
               %td
                 = @community.customers.count.to_s + "人"
             %tr
+              %th{scope:"row"} チャットする
+              %td
+                = link_to 'コミュニティのチャットルームへ', community_create_public_chat_rooms_path(community_id: @community.id), method: :post, class: "btn btn-sm btn-info community-show-btn", data: { 'turbolinks': false }
+            %tr
               %th{scope:"row"} 活動場所
               %td
                 = @community.prefecture.name if @community.prefecture.present?
