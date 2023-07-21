@@ -78,7 +78,10 @@
             %tr
               %th{scope:"row"} チャットする
               %td
-                = link_to 'コミュニティのチャットルームへ', community_create_public_chat_rooms_path(community_id: @community.id), method: :post, class: "btn btn-sm btn-info community-show-btn", data: { 'turbolinks': false }
+                - if ChatRoomCustomer.where(customer_id: current_customer.id, community_id: @community.id).present?
+                  = link_to 'コミュニティのチャットルームへ', community_create_public_chat_rooms_path(community_id: @community.id), method: :post, class: "btn btn-sm btn-info community-show-btn", data: { 'turbolinks': false }
+                - else
+                  コミュニティに参加するとチャットできます。
             %tr
               %th{scope:"row"} 活動場所
               %td

@@ -6,7 +6,7 @@
   .row
     .col-md-3
       .partner-index-container
-        %p コミュニティにいるアーティスト
+        %p コミュニティ参加人数
         %strong
           = @customers.size.to_s + '人'
         - @customers.each do |customer|
@@ -66,7 +66,7 @@
                 に送信済み
               %hr
       .form-container
-        = form_with model: [:public, @chat_message] do |f|
+        = form_with model: [:public, @chat_message], url: community_create_public_chat_messages_path do |f|
           = f.hidden_field :chat_room_id, value: @chat_room.id
           = f.text_area :content, autofocus: true, class: 'chat-form'
           = f.submit "メッセージを送信", class: 'btn btn-info chat-form-btn'

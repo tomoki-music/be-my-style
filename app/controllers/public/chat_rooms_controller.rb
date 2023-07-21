@@ -46,12 +46,11 @@ class Public::ChatRoomsController < ApplicationController
   def community_show
     @chat_message = ChatMessage.new
     @chat_room = ChatRoom.find(params[:id])
-    @customers = @chat_room.chat_room_customers.where(chat_room_id: @chat_room.id).map do |chat_room_customer|
+    @customers = ChatRoomCustomer.where(chat_room_id: @chat_room.id).map do |chat_room_customer|
       chat_room_customer.customer
     end
-    @community = @chat_room.chat_room_customers.where(chat_room_id: @chat_room.id)[0].community
+    @community = ChatRoomCustomer.where(chat_room_id: @chat_room.id)[0].community
     @chat_messages = ChatMessage.where(chat_room_id: @chat_room.id)
-    @chat_room_customer = @chat_room.chat_room_customers.where.not(customer_id: current_customer.id)[0].customer
   end
 
   private
