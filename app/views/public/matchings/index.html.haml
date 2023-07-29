@@ -6,7 +6,7 @@
     = @mathing_customers.size.to_s + '人'
   %p 「相互フォロー」の方とチャットしよう🎵
   - @mathing_customers.each do |matching_customer|
-    .col-md-6.mx-auto
+    .col-md-6.mx-auto.matching-index
       .form-inline
         %span
           = link_to public_chat_rooms_path(customer_id: matching_customer.id), method: :post do

@@ -304,10 +304,135 @@ Tag.create!([
     { name: '初心者セッション'},
     ])
 
-# This file should contain all the record creation needed to seed the database with its default values.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Examples:
-#
-#   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
-#   Character.create(name: 'Luke', movie: movies.first)
+mmm = Community.create!(
+  name: '埼玉音楽人サークルMMM',
+  activity_stance: :mypace,
+  prefecture_id: 12,
+  favorite_artist1: '相川七瀬',
+  favorite_artist2: '中島美嘉',
+  favorite_artist3: 'L\'Arc〜en〜Ciel',
+  favorite_artist4: '菅田将暉',
+  favorite_artist5: 'ONE OK ROCK',
+  url: 'https://be-artist-singer-creater.jimdo.com/',
+  introduction: '埼玉地域密着型の社会人音楽サークルです🎵初心者から上級者まで、和気藹々をモットーに楽しくセッションしてます♪───Ｏ（≧∇≦）Ｏ────♪',
+  owner_id: 1,
+  )
+
+chat_room1 = ChatRoom.create!
+ChatRoomCustomer.create!(customer_id: tomoki.id, chat_room_id: chat_room1.id, community_id: mmm.id)
+mmm.genres << [pops, rock, blues, anime_songs, visual]
+mmm.community_image.attach(io: File.open(Rails.root.join('app/assets/images/mmm.jpg')),filename: 'mmm.jpg')
+
+enjoy_music = Community.create!(
+  name: '【MMM】邦楽コピーセッション',
+  activity_stance: :mypace,
+  prefecture_id: 12,
+  favorite_artist1: '相川七瀬',
+  favorite_artist2: '中島美嘉',
+  favorite_artist3: 'L\'Arc〜en〜Ciel',
+  favorite_artist4: '菅田将暉',
+  favorite_artist5: 'ONE OK ROCK',
+  url: 'https://be-artist-singer-creater.jimdo.com/',
+  introduction: '邦楽曲を中心に、メジャーな曲を皆んなでワイワイ演奏しています🎵',
+  owner_id: 1,
+  )
+
+chat_room2 = ChatRoom.create!
+ChatRoomCustomer.create!(customer_id: tomoki.id, chat_room_id: chat_room2.id, community_id: enjoy_music.id)
+enjoy_music.genres << [pops, rock, blues, anime_songs, visual]
+enjoy_music.community_image.attach(io: File.open(Rails.root.join('app/assets/images/enjoy_music.jpg')),filename: 'enjoy_music.jpg')
+
+western_music = Community.create!(
+  name: '【MMM】洋楽コピーセッション',
+  activity_stance: :mypace,
+  prefecture_id: 12,
+  favorite_artist1: 'Bon Jovi',
+  favorite_artist2: 'BLACK SABBATH',
+  favorite_artist3: 'JET',
+  favorite_artist4: 'IRON MAIDEN',
+  favorite_artist5: 'Ozzy Osbourne',
+  url: 'https://be-artist-singer-creater.jimdo.com/',
+  introduction: 'こちらは洋楽曲を中心に、主にハードロックやメタルを選曲してガシガシ演奏しています🎵',
+  owner_id: 1,
+  )
+
+chat_room3 = ChatRoom.create!
+ChatRoomCustomer.create!(customer_id: tomoki.id, chat_room_id: chat_room3.id, community_id: western_music.id)
+western_music.genres << [pops, rock, blues, hard_rock, metal]
+western_music.community_image.attach(io: File.open(Rails.root.join('app/assets/images/western_music.jpg')),filename: 'western_music.jpg')
+
+free_music = Community.create!(
+  name: '【MMM】フリーセッション',
+  activity_stance: :mypace,
+  prefecture_id: 12,
+  favorite_artist1: 'Autumn Leaves',
+  favorite_artist2: 'The Chicken',
+  favorite_artist3: 'ルパン三世のテーマ',
+  favorite_artist4: '丸の内サディスティック',
+  favorite_artist5: 'STAYTUNE',
+  url: 'https://be-artist-singer-creater.jimdo.com/',
+  introduction: 'コード進行やテーマを簡単に決めて、自由に演奏します。音楽は自由🎵',
+  owner_id: 1,
+  )
+
+chat_room4 = ChatRoom.create!
+ChatRoomCustomer.create!(customer_id: tomoki.id, chat_room_id: chat_room4.id, community_id: free_music.id)
+free_music.genres << [pops, rock, blues, hard_rock, jazz]
+free_music.community_image.attach(io: File.open(Rails.root.join('app/assets/images/free_music.jpg')),filename: 'free_music.jpg')
+
+beginner = Community.create!(
+  name: '【MMM】初心者セッション',
+  activity_stance: :mypace,
+  prefecture_id: 12,
+  favorite_artist1: 'あいみょん',
+  favorite_artist2: '菅田将暉',
+  favorite_artist3: '家入レオ',
+  favorite_artist4: 'ELLEGARDEN',
+  favorite_artist5: 'ONE OK ROCK',
+  url: 'https://be-artist-singer-creater.jimdo.com/',
+  introduction: '楽器を始めたばかり...サークルには参加したて...そんな方の為に優しく楽しくセッション🎵',
+  owner_id: 1,
+  )
+
+chat_room5 = ChatRoom.create!
+ChatRoomCustomer.create!(customer_id: tomoki.id, chat_room_id: chat_room5.id, community_id: beginner.id)
+beginner.genres << [pops, rock]
+beginner.community_image.attach(io: File.open(Rails.root.join('app/assets/images/beginner.jpg')),filename: 'beginner.jpg')
+
+study_music = Community.create!(
+  name: '【MMM】作詞作曲勉強会',
+  activity_stance: :mypace,
+  prefecture_id: 12,
+  favorite_artist1: '作詞について',
+  favorite_artist2: '作曲について',
+  favorite_artist3: 'コード進行作曲術',
+  favorite_artist4: 'メロディとコード',
+  favorite_artist5: 'リズムの遊び方',
+  url: 'https://be-artist-singer-creater.jimdo.com/',
+  introduction: '世界に一つだけの、自分だけの１曲を作ろう！その為の作曲方法を学びます🎵',
+  owner_id: 1,
+  )
+
+chat_room6 = ChatRoom.create!
+ChatRoomCustomer.create!(customer_id: tomoki.id, chat_room_id: chat_room6.id, community_id: study_music.id)
+study_music.genres << [pops, rock]
+study_music.community_image.attach(io: File.open(Rails.root.join('app/assets/images/study_music.jpg')),filename: 'study_music.jpg')
+
+acoustic_music = Community.create!(
+  name: '【MMM】アコースティックセッション',
+  activity_stance: :mypace,
+  prefecture_id: 12,
+  favorite_artist1: 'あいみょん',
+  favorite_artist2: 'Voundy',
+  favorite_artist3: '斉藤和義',
+  favorite_artist4: 'スピッツ',
+  favorite_artist5: 'レミオロメン',
+  url: 'https://be-artist-singer-creater.jimdo.com/',
+  introduction: 'しっとりと、じっくりと、ゆっくりと🎵音楽を自分のペース味わうアコースティックなセッションです🎵',
+  owner_id: 1,
+  )
+
+chat_room7 = ChatRoom.create!
+ChatRoomCustomer.create!(customer_id: tomoki.id, chat_room_id: chat_room7.id, community_id: acoustic_music.id)
+acoustic_music.genres << [pops, rock]
+acoustic_music.community_image.attach(io: File.open(Rails.root.join('app/assets/images/sherry.jpg')),filename: 'sherry.jpg')

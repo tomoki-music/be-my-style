@@ -1,0 +1,91 @@
+= render 'layouts/header_menu'
+
+.chat-rooms-show-container
+  %h6 コミュニティチャットルームへようこそ!
+
+  .row
+    .col-md-3
+      .partner-index-container
+        %p コミュニティ参加人数
+        %strong
+          = @customers.size.to_s + '人'
+        - @customers.each do |customer|
+          .form-inline
+            %span
+              = link_to public_customer_path(customer), method: :get do
+                - if customer.profile_image.present?
+                  = image_tag customer.profile_image, class: "icon_mini"
+                - else
+                  = image_tag 'no_image', class: "icon_mini"
+                %strong.do-chat
+                  = customer.name + 'さんの詳細ページ🎵'
+            %hr
+
+
+    .col-md-6
+      .message-container#chat-area
+        - @chat_messages.each do |chat_message|
+          - if chat_message.customer.id != current_customer.id
+            .partner-message
+              %hr
+              %ul
+                %li
+                = link_to public_customer_path(chat_message.customer), class: "chat-room-customer-link" do
+                  .img-element
+                    - if chat_message.customer.profile_image.present?
+                      = image_tag chat_message.customer.profile_image
+                    - else
+                      = image_tag 'no_image'
+                  .name-element
+                    = chat_message.customer.name + 'さんのメッセージ'
+                %li
+                .partner-content
+                  = simple_format(chat_message.content)
+                %li
+                = l chat_message.created_at
+                に送信済み
+              %hr
+          - else
+            .self-message
+              %hr
+              %ul
+                %li
+                = link_to public_customer_path(chat_message.customer), class: "chat-room-customer-link" do
+                  .img-element
+                    - if chat_message.customer.profile_image.present?
+                      = image_tag chat_message.customer.profile_image
+                    - else
+                      = image_tag 'no_image'
+                  .name-element
+                    = chat_message.customer.name + 'さんのメッセージ'
+                %li
+                .self-content
+                  = simple_format(chat_message.content)
+                %li
+                = l chat_message.created_at
+                に送信済み
+              %hr
+      .form-container
+        = form_with model: [:public, @chat_message], url: community_create_public_chat_messages_path do |f|
+          = f.hidden_field :chat_room_id, value: @chat_room.id
+          = f.text_area :content, autofocus: true, class: 'chat-form'
+          = f.submit "メッセージを送信", class: 'btn btn-info chat-form-btn'
+
+    .col-md-3
+      .partner-container
+        %p 今、チャットしているコミュニティ
+        .card
+          = link_to public_community_path(@community) do
+            .img-container
+              - if @community.community_image.present?
+                = image_tag @community.community_image
+              - else
+                = image_tag 'no_image'
+          .card-body.text-container
+            %h5.card-title
+              = @community.name
+            %h6.card-subtitle
+              参加人数:
+              = @community.customers.count.to_s + "人"
+            %hr
+            = link_to 'コミュニティ詳細へ', public_community_path(@community), class: "btn btn-info chat-partner-link", data: { 'turbolinks': false }

@@ -1,16 +1,21 @@
 .matchings-index-container{
   width: 90%;
   text-align: center;
+  margin: 0 auto;
   h3{
     display: inline;
   }
   strong{
     font-size: 30px;
   }
-  .form-inline{
-    margin-top: 10px;
-  }
-  .do-chat{
-    font-size: 20px;
+  .matching-index{
+    border: 1px solid;
+    border-radius: 10px;
+    .form-inline{
+      margin-top: 10px;
+      .do-chat{
+        font-size: 20px;
+      }
+    }
   }
 }

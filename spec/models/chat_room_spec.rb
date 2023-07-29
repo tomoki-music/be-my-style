@@ -9,6 +9,9 @@ RSpec.describe 'ChatRoomモデルのテスト', type: :model do
       it 'customerと1:Nとなっている' do
         expect(ChatRoom.reflect_on_association(:customers).macro).to eq :has_many
       end
+      it 'communityと1:Nとなっている' do
+        expect(ChatRoom.reflect_on_association(:communities).macro).to eq :has_many
+      end
     end
     context 'チャットメッセージ機能について' do
       it 'chat_messageと1:Nとなっている' do

@@ -1,0 +1,66 @@
+= render 'layouts/header_menu'
+
+.community-new-title
+  %h2 コミュニティ作成画面
+  - if @community.errors.any?
+    .alert
+      %ul.list-style-none
+        - @community.errors.full_messages.each do |message|
+          %li
+            = message
+
+= form_with model: [:public, @community], local: true do |f|
+  .community-new-container.px-0.px-sm-0
+    %table.table.table-striped.community-new-table{:width=>"100%",:border=>"1"}
+      %colgroup
+        %col{width: "19%"}
+        %col{width: "81%"}
+          %tr
+            %th{scope:"row"} コミュニティ画像
+            %td
+              = f.file_field :community_image, accept: 'image/*'
+              #new-community-image
+          %tr
+            %th{scope:"row"} コミュニティ名前
+            %td
+              = f.text_field :name
+          %tr
+            %th{scope:"row"} 活動場所
+            %td 
+              = f.collection_select :prefecture_id, Prefecture.all, :id, :name
+          %tr
+            %th{scope:"row"} 活動ペース
+            %td
+              = f.select :activity_stance, Community.enum_options_for_select(:activity_stance)
+          %tr
+            %th{scope:"row"} 好きなジャンル
+            %td
+              = f.collection_check_boxes(:genre_ids, Genre.all, :id, :name) do |genre|
+                = genre.label do
+                  = genre.check_box
+                  = genre.text
+          %tr
+            %th{:rowspan => 5} PickUpアーティスト
+            %td
+              = f.text_field :favorite_artist1
+          %tr
+            %td
+              = f.text_field :favorite_artist2
+          %tr
+            %td
+              = f.text_field :favorite_artist3
+          %tr
+            %td
+              = f.text_field :favorite_artist4
+          %tr
+            %td
+              = f.text_field :favorite_artist5
+          %tr
+            %th{scope:"row"} コミュニティURL
+            %td
+              = f.text_field :url
+          %tr
+            %th{scope:"row"} コミュニティ紹介文
+            %td
+              = f.text_area :introduction, style: "width:90%"
+          = f.submit "コミュニティを作成", class: "btn btn-info community-new-btn", data: { confirm: 'こちらの内容で作成します。よろしいですか？' }

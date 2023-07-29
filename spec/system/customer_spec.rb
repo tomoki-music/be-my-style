@@ -105,33 +105,6 @@ RSpec.describe Customer, type: :system do
         end
       end
     end
-    describe 'Artist一覧のテスト' do
-      before do
-        visit public_customers_path
-      end
-      context 'Artist一覧画面への遷移' do
-        it 'Artist一覧画面へ遷移できる' do
-          expect(current_path).to eq('/public/customers')
-        end
-      end
-      context 'Artist一覧画面の確認' do
-        it 'アーティスト一覧の標示名が標示される' do
-          expect(page).to have_content 'アーティスト一覧'
-        end
-      end
-      context 'Artist一覧で名前が表示される' do
-        it 'Artist一覧で必要な項目が表示される' do
-          expect(page).to have_content "Customer"
-          expect(page).to have_content 'Part'
-        end
-      end
-      context 'Artist一覧でプロフィール画面へのリンクが表示される' do
-        it 'プロフィール画面へのリンクが表示される' do
-          show_link = find_all('a')[11]
-          expect(show_link.native.inner_text).to match('プロフィール画面へ')
-        end
-      end
-    end
     describe 'Artist詳細のテスト' do
       context 'Artist詳細画面への遷移' do
         before do

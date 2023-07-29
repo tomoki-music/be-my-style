@@ -2,9 +2,9 @@ class Public::CustomersController < ApplicationController
   before_action :authenticate_customer!
   before_action :ensure_correct_customer, only: [:update, :edit]
   before_action :set_customer, only: [:show, :edit, :update]
+  before_action :check_same_community, only: [:show]
   
   def index
-    @customers = params[:part_id].present? ? Part.find(params[:part_id]).customers.page(params[:page]).per(8) : Customer.page(params[:page]).per(8)
   end
 
   def show
@@ -57,5 +57,18 @@ class Public::CustomersController < ApplicationController
 
   def set_customer
     @customer = Customer.find(params[:id])
+  end
+
+  def check_same_community
+    @visited_customer = Customer.find(params[:id])
+    return if current_customer == @visited_customer
+    visited_customer_community_ids = ChatRoomCustomer.where(customer_id: @visited_customer.id).pluck(:community_id)
+
+    check_same_community_ids = ChatRoomCustomer.where(customer_id: current_customer.id, community_id: visited_customer_community_ids).map do |check|
+      check.id
+    end
+    unless check_same_community_ids.present?
+      redirect_to public_communities_path, alert: "メンバー詳細は同じコミュニティメンバーのみ閲覧できます。"
+    end
   end
 end

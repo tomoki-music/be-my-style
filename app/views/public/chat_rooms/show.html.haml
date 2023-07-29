@@ -68,6 +68,7 @@
       .form-container
         = form_with model: [:public, @chat_message] do |f|
           = f.hidden_field :chat_room_id, value: @chat_room.id
+          = f.hidden_field :customer_id, value: @chat_room_customer.id
           = f.text_area :content, autofocus: true, class: 'chat-form'
           = f.submit "メッセージを送信", class: 'btn btn-info chat-form-btn'
 
@@ -92,4 +93,4 @@
             %hr
             %p.card-text
               = @chat_room_customer.human_attribute_enum(:introduction)
-            = link_to 'プロフィール画面へ', public_customer_path(@chat_room_customer.id), class: "btn btn-info chat-partner-link"
+            = link_to 'プロフィール画面へ', public_customer_path(@chat_room_customer.id), class: "btn btn-info chat-partner-link", data: { 'turbolinks': false }

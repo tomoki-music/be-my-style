@@ -50,10 +50,26 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       it 'chat_roomと1:Nとなっている' do
         expect(Customer.reflect_on_association(:chat_rooms).macro).to eq :has_many
       end
+      it 'communityと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:communities).macro).to eq :has_many
+      end
     end
     context 'chat_messageモデルとの関係' do
       it 'chat_messageと1:Nとなっている' do
         expect(Customer.reflect_on_association(:chat_messages).macro).to eq :has_many
+      end
+    end
+    context 'communityモデルとの関係' do
+      it 'communityモデルと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:communities).macro).to eq :has_many
+      end
+      it '中間テーブルcommunity_customersと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:community_customers).macro).to eq :has_many
+      end
+    end
+    context 'Permitモデルとの関係' do
+      it 'permitと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:permits).macro).to eq :has_many
       end
     end
   end
@@ -73,12 +89,32 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
     end
     context 'フォローの通知メソッドのテスト' do
       it '通知のインスタンスが作成される' do
-        expect(other_customer.create_notification_follow(customer)).to eq true
+        expect { other_customer.create_notification_follow(customer) }.to change(Notification, :count).by(1)
       end
     end
     context 'チャットの通知メソッドのテスト' do
       it '通知のインスタンスが作成される' do
-        expect(other_customer.create_notification_chat(customer)).to eq true
+        expect { other_customer.create_notification_chat(customer) }.to change(Notification, :count).by(1)
+      end
+    end
+    context 'コミュニティ参加申請の通知メソッドのテスト' do
+      it '通知のインスタンスが作成される' do
+        expect { other_customer.create_notification_request(customer) }.to change(Notification, :count).by(1)
+      end
+    end
+    context 'コミュニティ参加申請のキャンセル通知メソッドのテスト' do
+      it '通知のインスタンスが作成される' do
+        expect { other_customer.create_notification_request_cancel(customer) }.to change(Notification, :count).by(1)
+      end
+    end
+    context 'コミュニティ参加申請の許可の通知メソッドのテスト' do
+      it '通知のインスタンスが作成される' do
+        expect { other_customer.create_notification_accept(customer) }.to change(Notification, :count).by(1)
+      end
+    end
+    context 'コミュニティ退会の通知メソッドのテスト' do
+      it '通知のインスタンスが作成される' do
+        expect { other_customer.create_notification_leave(customer) }.to change(Notification, :count).by(1)
       end
     end
   end

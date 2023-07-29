@@ -1,0 +1,54 @@
+= render 'layouts/header_menu'
+
+.community-index-head-title
+  %h2 コミュニティ一覧
+  = link_to "コミュニティ作成", new_public_community_path, data: { 'turbolinks': false }, class: "btn btn-info community-index-create-btn"
+.community-index-container
+  - @communities.each do |community|
+    - @owner = Customer.find_by(id: community.owner_id)
+    .card.mb-5
+      = link_to public_community_path(community), data: { 'turbolinks': false } do
+        .img-container
+          - if community.community_image.present?
+            = image_tag community.community_image
+          - else
+            = image_tag 'no_image'
+      .card-body.text-container
+        %h5.card-title
+          = link_to community.name, public_community_path(community), data: { 'turbolinks': false }
+        %h6.card-subtitle
+          参加人数
+          = community.customers.count.to_s + "人"
+          %hr
+          [コミュニティオーナー]
+          %br
+          .community-owner-img
+            - if @owner.profile_image.present?
+              = image_tag @owner.profile_image
+            - else
+              = image_tag 'no_image'
+            .owner-name
+              = @owner.name
+        %hr
+        .community-show-link-area
+          = link_to "コミュニティ詳細へ", public_community_path(community), class: "btn-info community-show-link", data: { 'turbolinks': false }
+        %hr
+        .community-action-btn
+          - if community.owner_id == current_customer.id
+            = link_to '編集する', edit_public_community_path(community), data: { 'turbolinks': false }, class: "btn btn-success"
+          - elsif community.customers.include?(current_customer)
+            = link_to 'コミュニティを退会', public_community_leave_path(community), method: :delete, class: "btn btn-danger", data: { confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
+          - elsif community.permits.exists?(customer_id: current_customer.id)
+            = link_to '参加申請の取消', public_community_permits_path(community), method: :delete, class: "btn btn-danger", data: { 'turbolinks': false, confirm: 'こちらのコミュニティの参加申請を取消します。よろしいですか？' }
+          - else
+            = link_to '参加を申請する', public_community_permits_path(community), method: :post, class: "btn btn-success", data: { 'turbolinks': false, confirm: 'こちらのコミュニティに参加申請をします。よろしいですか？' }
+        %hr
+        %p.card-text
+          [活動場所]
+          = community.prefecture.name if community.prefecture.present?
+          %hr
+          [活動ペース]
+          = community.human_attribute_enum(:activity_stance)
+          %hr
+          [紹介文]
+          = community.introduction

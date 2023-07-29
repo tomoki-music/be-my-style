@@ -24,18 +24,22 @@ class Customer < ApplicationRecord
   has_many :addresses, dependent: :destroy
   has_many :carts, dependent: :destroy
   has_many :customer_parts, dependent: :destroy
-  has_many :parts, through: :customer_parts
+  has_many :parts, through: :customer_parts, dependent: :destroy
   has_many :customer_genres, dependent: :destroy
-  has_many :genres, through: :customer_genres
+  has_many :genres, through: :customer_genres, dependent: :destroy
   has_many :relationships, class_name: "Relationship", foreign_key: "follower_id", dependent: :destroy
   has_many :reverse_of_relationships, class_name: "Relationship", foreign_key: "followed_id", dependent: :destroy
-  has_many :followings, through: :relationships, source: :followed
-  has_many :followers, through: :reverse_of_relationships, source: :follower
+  has_many :followings, through: :relationships, source: :followed, dependent: :destroy
+  has_many :followers, through: :reverse_of_relationships, source: :follower, dependent: :destroy
   has_many :active_notifications, class_name: 'Notification', foreign_key: 'visitor_id', dependent: :destroy
   has_many :passive_notifications, class_name: 'Notification', foreign_key: 'visited_id', dependent: :destroy
-  has_many :chat_room_customers
-  has_many :chat_rooms, through: :chat_room_customers
-  has_many :chat_messages
+  has_many :chat_room_customers, dependent: :destroy
+  has_many :chat_rooms, through: :chat_room_customers, dependent: :destroy
+  has_many :communities, through: :chat_room_customers, dependent: :destroy
+  has_many :chat_messages, dependent: :destroy
+  has_many :community_customers, dependent: :destroy
+  has_many :communities, through: :community_customers, dependent: :destroy
+  has_many :permits, dependent: :destroy
 
   validates :name, presence: true, length: {maximum: 20}
   validates :email, uniqueness: true, presence: true
@@ -65,6 +69,38 @@ class Customer < ApplicationRecord
     notification = current_customer.active_notifications.new(
       visited_id: id,
       action: 'chat'
+    )
+    notification.save if notification.valid?
+  end
+
+  def create_notification_request(current_customer)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'request'
+    )
+    notification.save if notification.valid?
+  end
+
+  def create_notification_request_cancel(current_customer)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'request_cancel'
+    )
+    notification.save if notification.valid?
+  end
+
+  def create_notification_accept(current_customer)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'accept'
+    )
+    notification.save if notification.valid?
+  end
+
+  def create_notification_leave(current_customer)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'leave'
     )
     notification.save if notification.valid?
   end

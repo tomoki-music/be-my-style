@@ -1,0 +1,134 @@
+= render 'layouts/header_menu'
+
+.community-show-title
+  %h2 コミュニティ詳細
+  .community-show-follow
+    - if @community.owner_id == current_customer.id
+      = link_to "承認待ち一覧", public_permits_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-info community-show-btn"
+      = link_to 'メールする', public_community_new_mail_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-info fas fa-paper-plane community-show-btn"
+      = link_to '編集する', edit_public_community_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-success community-show-btn"
+      = link_to 'コミュニティ削除', public_community_path(@community), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのコミュニティを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger community-show-btn"
+    - elsif @community.customers.include?(current_customer)
+      = link_to 'コミュニティを退会', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
+      また参加してね!
+    - elsif @community.permits.exists?(customer_id: current_customer.id)
+      = link_to '参加申請の取消', public_community_permits_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティの参加申請を取消します。よろしいですか？' }
+      参加前の段階です
+    - else
+      = link_to '参加を申請する', public_community_permits_path(@community), method: :post, class: "btn btn-sm btn-success community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティに参加申請をします。よろしいですか？' }
+      参加してみよう!
+
+.community-show-container.px-0.px-sm-0
+  .row
+    .col-md-3
+      .community-show-card
+        .card
+          .img-container
+            - if @community.community_image.present?
+              = image_tag @community.community_image
+            - else
+              = image_tag 'no_image'
+          .card-body.text-container
+            %h5.card-title
+              = @community.name
+            %hr
+            %h6.card-subtitle
+              [コミュニティオーナー]
+              %br
+              .community-owner-img
+                - if @owner.profile_image.present?
+                  = image_tag @owner.profile_image
+                - else
+                  = image_tag 'no_image'
+                .owner-name
+                  = @owner.name
+            %hr
+            %p.card-text
+            - if @community.owner_id == current_customer.id
+              .dropdown
+                %button#dropdownMenuButton.btn.btn-secondary.dropdown-toggle{"aria-expanded" => "false", "aria-haspopup" => "true", "data-toggle" => "dropdown", type: "button"}
+                  コミュニティオーナー専用
+                .dropdown-menu{"aria-labelledby" => "dropdownMenuButton"}
+                  = link_to "承認待ち一覧確認", public_permits_path(@community), data: { 'turbolinks': false }, class: "dropdown-item btn btn-sm btn-info community-show-btn dropdown-item text-secondary bg-transparent"
+                  = link_to 'メンバーへメール', public_community_new_mail_path(@community), data: { 'turbolinks': false }, class: "dropdown-item btn btn-info community-show-btn text-secondary bg-transparent"
+                  = link_to 'コミュニティ編集', edit_public_community_path(@community), data: { 'turbolinks': false }, class: "dropdown-item btn btn-sm btn-success community-show-btn dropdown-item text-secondary bg-transparent"
+                  = link_to 'コミュニティ削除', public_community_path(@community), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのコミュニティを削除します。よろしいですか？' }, class: "dropdown-item btn btn-sm btn-danger community-show-btn dropdown-item text-secondary bg-transparent"
+            - elsif @community.customers.include?(current_customer)
+              = link_to 'コミュニティを退会', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
+              また参加してね!
+            - elsif @community.permits.exists?(customer_id: current_customer.id)
+              = link_to '参加申請の取消', public_community_permits_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティの参加申請を取消します。よろしいですか？' }
+              参加前の段階です
+            - else
+              = link_to '参加を申請する', public_community_permits_path(@community), method: :post, class: "btn btn-sm btn-success community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティに参加申請をします。よろしいですか？' }
+              参加してみよう!
+    .col-md-9
+      %table.table.table-striped.community-show-table{:width=>"100%",:border=>"1"}
+        %colgroup
+          %col{width: "19%"}
+          %col{width: "81%"}
+            %tr
+              %th{scope:"row"} コミュニティ名
+              %td
+                = @community.name
+            %tr
+              %th{scope:"row"} 参加人数
+              %td
+                = @community.customers.count.to_s + "人"
+            %tr
+              %th{scope:"row"} チャットする
+              %td
+                - if ChatRoomCustomer.where(customer_id: current_customer.id, community_id: @community.id).present?
+                  = link_to 'コミュニティのチャットルームへ', community_create_public_chat_rooms_path(community_id: @community.id), method: :post, class: "btn btn-sm btn-info community-show-btn", data: { 'turbolinks': false }
+                - else
+                  コミュニティに参加するとチャットできます。
+            %tr
+              %th{scope:"row"} 活動場所
+              %td
+                = @community.prefecture.name if @community.prefecture.present?
+            %tr
+              %th{scope:"row"} 活動ペース
+              %td
+                = @community.human_attribute_enum(:activity_stance)
+            %tr
+              %th{scope:"row"} 好きなジャンル
+              %td
+                - @community.genres.each do |genre|
+                  %i.fa-solid.fa-music
+                  = genre.name
+            %tr
+              %th{scope:"row"} PickUpアーティスト
+              %td
+                %i.fa-solid.fa-music
+                = @community.favorite_artist1
+                %i.fa-solid.fa-music
+                = @community.favorite_artist2
+                %i.fa-solid.fa-music
+                = @community.favorite_artist3
+                %i.fa-solid.fa-music
+                = @community.favorite_artist4
+                %i.fa-solid.fa-music
+                = @community.favorite_artist5
+            %tr
+              %th{scope:"row"} 「コミュニティサイト」
+              %td
+                - text = @community.url
+                = link_to text, @community.url if @community.url.present?
+            %tr
+              %th{scope:"row"} コミュニティ紹介
+              %td
+                = @community.introduction
+
+      .community-index-title
+        .row
+          .col-md-4.community-index-count
+            %h4 表示人数
+            .count
+              = @community_customers.count.to_s + " 人"
+          .col-md-3.sp-kaminari.pc-kaminari
+            = paginate @community_customers
+          .col-mid-5.sp-serch.pc-serch
+            = form_tag public_community_path(@community), method: :get, class: 'community-index-title__searchForm' do
+              = select_tag :part_id, options_from_collection_for_select(Part.all, :id, :name, params[:part_id]), {prompt: '全パートを表示', onchange: 'submit(this.form);'}
+      .community-index-body
+        = render 'public/customers/index', customers: @community_customers
