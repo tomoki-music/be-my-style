@@ -57,10 +57,9 @@ class Public::ChatRoomsController < ApplicationController
   private
 
   def check_community_member
-    chat_room = ChatRoomCustomer.where(customer_id: current_customer.id, community_id: params[:community_id])[0].chat_room
-      unless ChatRoomCustomer.where(chat_room_id: chat_room.id, community_id: params[:community_id]).present?
-        flash[:alert] = "コミュニティに参加していない為、チャットルームへ参加できません。"
-        redirect_back(fallback_location: root_path)
-      end
+    unless ChatRoomCustomer.where(customer_id: current_customer.id, community_id: params[:community_id])[0].present?
+      flash[:alert] = "コミュニティに参加していない為、チャットルームへ参加できません。"
+      redirect_back(fallback_location: root_path)
+    end
   end
 end

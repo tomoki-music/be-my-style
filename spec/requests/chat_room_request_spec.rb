@@ -3,6 +3,7 @@ require 'rails_helper'
 RSpec.describe "chat_roomsコントローラーのテスト", type: :request do
   let(:customer) { create(:customer) }
   let(:other_customer) { create(:customer) }
+  let(:third_customer) { create(:customer) }
   let(:chat_room) { create(:chat_room) }
   let!(:chat_room_customer) { create(:chat_room_customer, customer: other_customer, chat_room: chat_room) }
   let(:community) { create(:community) }
@@ -34,6 +35,15 @@ RSpec.describe "chat_roomsコントローラーのテスト", type: :request do
         expect do
           post community_create_public_chat_rooms_path(community_id: community.id)
         end.to change(ChatRoom, :count).by(1)
+      end
+    end
+    context "同じコミュニティメンバーでなければチャットルームは作成(community_create)されない" do
+      before do
+        sign_in third_customer
+      end
+      it 'チャットルームに入れずページリダイレクトされること' do
+        post community_create_public_chat_rooms_path(community_id: community.id)
+        expect(response.status).to eq 302
       end
     end
     context "コミュニティのチャットルームが正しく表示(show)される" do
