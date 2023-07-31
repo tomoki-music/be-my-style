@@ -2,6 +2,7 @@ class Public::ChatRoomsController < ApplicationController
   before_action :authenticate_customer!
   include MatchingIndex
   before_action :matching_index, only: [:show]
+  before_action :check_community_member, only: [:community_create]
 
   def create
     current_customers_chat_rooms = ChatRoomCustomer.where(customer_id: current_customer.id).map do |chat_room_customer|
@@ -55,4 +56,10 @@ class Public::ChatRoomsController < ApplicationController
 
   private
 
+  def check_community_member
+    unless ChatRoomCustomer.where(customer_id: current_customer.id, community_id: params[:community_id])[0].present?
+      flash[:alert] = "コミュニティに参加していない為、チャットルームへ参加できません。"
+      redirect_back(fallback_location: root_path)
+    end
+  end
 end
