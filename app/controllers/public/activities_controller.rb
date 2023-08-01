@@ -50,7 +50,7 @@ class Public::ActivitiesController < ApplicationController
   def ensure_correct_customer
     @activity = Activity.find(params[:id])
     unless @activity.customer == current_customer
-      redirect_to public_customer_activities_path, alert: "編集権限がありません。"
+      redirect_to public_customer_activities_path, alert: "編集権限がありません。community_customers_controller"
     end
   end
 
