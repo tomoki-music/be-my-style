@@ -6,6 +6,7 @@ class Public::ActivitiesController < ApplicationController
   def index
     activities = Activity.all.page(params[:page]).per(8)
   end
+  
   def new
     activity = Activity.new
   end

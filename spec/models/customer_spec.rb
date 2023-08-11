@@ -72,6 +72,11 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(Customer.reflect_on_association(:permits).macro).to eq :has_many
       end
     end
+    context 'Activityモデルとの関係' do
+      it 'activityと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:activities).macro).to eq :has_many
+      end
+    end
   end
   describe 'モデルのインスタンスメソッドのテスト' do
     context 'フォロー、アンフォローのメソッドテスト' do

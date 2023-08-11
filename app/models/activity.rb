@@ -7,8 +7,9 @@ class Activity < ApplicationRecord
   validate :activity_video_size
 
   def activity_video_size
-    if activity_video.blob.byte_size > 10.megabytes
-      errors.add(:activity_video, "は1つのファイル10MB以内にしてください")
+    return unless activity_video.attached?
+    if activity_video.byte_size > 10.megabytes
+      errors.add(:activity_video, "は1ファイル10MB以内にしてください")
     end
   end
 end
