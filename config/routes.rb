@@ -12,8 +12,9 @@ Rails.application.routes.draw do
       resource :relationships, only: [:create, :destroy]
       get 'followings' => 'relationships#followings', as: 'followings'
       get 'followers' => 'relationships#followers', as: 'followers'
-      resources :activities
     end
+
+    resources :activities
 
     # 通知機能
     resources :notifications, only: :index

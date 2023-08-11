@@ -6,15 +6,16 @@ class Public::ActivitiesController < ApplicationController
   def index
     activities = Activity.all.page(params[:page]).per(8)
   end
-  
+
   def new
     activity = Activity.new
   end
 
   def create
     @activity = Activity.new(activity_params)
-    if @activity.save
-      redirect_to public_customer_activities_path, notice: "活動報告の投稿が完了しました!"
+    @activity.customer_id = current_customer.id
+    if @activity.save!
+      redirect_to public_activities_path, notice: "活動報告の投稿が完了しました!"
     else
       render "new", alert: "もう一度お試しください。"
     end
@@ -30,7 +31,7 @@ class Public::ActivitiesController < ApplicationController
 
   def update
     if @activity.update(activity_params)
-      redirect_to public_customer_activity_path(@activity), notice: "活動報告の編集が完了しました!"
+      redirect_to public_activity_path(@activity), notice: "活動報告の編集が完了しました!"
     else
       render "edit", alert: "もう一度お試しください。"
     end
@@ -39,7 +40,7 @@ class Public::ActivitiesController < ApplicationController
   def destroy
     @activity = Activity.find(params[:id])
     @activity.destroy
-    redirect_to public_customer_activities_path, alert: "活動報告を削除しました!"
+    redirect_to public_activities_path, alert: "活動報告を削除しました!"
   end
 
   private

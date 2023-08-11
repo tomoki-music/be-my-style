@@ -181,7 +181,7 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
       before do
         get new_public_community_path
       end
-      it 'リクエストは200 OKとなること' do
+      it 'リクエストは302 OKとなること' do
         expect(response.status).to eq 302
       end
     end
