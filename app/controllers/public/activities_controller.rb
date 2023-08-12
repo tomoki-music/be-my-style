@@ -4,7 +4,7 @@ class Public::ActivitiesController < ApplicationController
   before_action :set_activity, only: [:show, :edit, :update, :destroy]
 
   def index
-    activities = Activity.all.page(params[:page]).per(8)
+    @activities = Activity.all.page(params[:page]).per(8)
   end
 
   def new
