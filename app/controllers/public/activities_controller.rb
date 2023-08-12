@@ -1,7 +1,7 @@
 class Public::ActivitiesController < ApplicationController
   before_action :authenticate_customer!
-  before_action :ensure_correct_customer, only: [:update, :edit]
-  before_action :set_activity, only: [:show, :edit, :update]
+  before_action :ensure_correct_customer, only: [:update, :edit, :destroy]
+  before_action :set_activity, only: [:show, :edit, :update, :destroy]
 
   def index
     activities = Activity.all.page(params[:page]).per(8)
@@ -38,7 +38,6 @@ class Public::ActivitiesController < ApplicationController
   end
 
   def destroy
-    @activity = Activity.find(params[:id])
     @activity.destroy
     redirect_to public_activities_path, alert: "活動報告を削除しました!"
   end
@@ -52,7 +51,7 @@ class Public::ActivitiesController < ApplicationController
   def ensure_correct_customer
     @activity = Activity.find(params[:id])
     unless @activity.customer == current_customer
-      redirect_to public_customer_activities_path, alert: "編集権限がありません。community_customers_controller"
+      redirect_to public_activities_path, alert: "編集権限がありません。"
     end
   end
 
