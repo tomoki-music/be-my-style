@@ -8,13 +8,13 @@ class Public::ActivitiesController < ApplicationController
   end
 
   def new
-    activity = Activity.new
+    @activity = Activity.new
   end
 
   def create
     @activity = Activity.new(activity_params)
     @activity.customer_id = current_customer.id
-    if @activity.save!
+    if @activity.save
       redirect_to public_activities_path, notice: "活動報告の投稿が完了しました!"
     else
       render "new", alert: "もう一度お試しください。"

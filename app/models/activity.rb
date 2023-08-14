@@ -4,6 +4,10 @@ class Activity < ApplicationRecord
 
   belongs_to :customer
 
+  validates :title, presence: true
+  validates :keep, presence: true
+  validates :problem, presence: true
+  validates :try, presence: true
   validate :activity_video_size
 
   def activity_video_size

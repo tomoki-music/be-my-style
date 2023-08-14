@@ -1,11 +1,11 @@
 = render 'layouts/header_menu'
 
 .activity-index-head-title
-  %h2 皆んなの活動報告一覧
+  %h2 みんなの活動報告一覧
   = link_to "活動報告をする！", new_public_activity_path, data: { 'turbolinks': false }, class: "btn btn-info activity-index-create-btn"
 .activity-index-container
   - if @activities.present?
-    - @activities.each do |community|
+    - @activities.each do |activity|
       .card.mb-5
         = link_to public_activity_path(activity), data: { 'turbolinks': false } do
           .img-container
