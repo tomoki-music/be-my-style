@@ -14,18 +14,49 @@
             - else
               = image_tag 'no_image'
         .card-body.text-container
-          %h5.card-title
-            = link_to activity.title, public_activity_path(activity), data: { 'turbolinks': false }
-          %h6.card-subtitle
-            やって良かった事
-            = activity.keep
-            %hr
-            反省&改善点
-            = activity.problem
-            %hr
-            次回挑戦したい事
-            = activity.try
-            %hr
+          %h5.card-title#title-js
+            - if activity.title.length > 20
+              .title-truncated
+                = link_to activity.title.truncate(20), public_activity_path(activity), data: { 'turbolinks': false }
+                %p.text-red.title-see-more もっと見る
+              .title-untruncated.hide
+                = link_to activity.title, public_activity_path(activity), data: { 'turbolinks': false }
+            - else
+              = link_to activity.title, public_activity_path(activity), data: { 'turbolinks': false }
+          %h6.card-subtitle#kpt
+            %span.kpt-keep Keep
+            - if activity.keep.length > 27
+              .keep-truncated
+                = activity.keep.truncate(27)
+                %p.text-red.keep-right.cursor-pointer.keep-see-more もっと見る
+              .keep-untruncated.hide
+                = activity.keep
+            - else
+              = activity.keep
+              %br
+              %br
+            %span.kpt-problem Problem
+            - if activity.problem.length > 27
+              .problem-truncated
+                = activity.problem.truncate(27)
+                %p.text-red.keep-right.cursor-pointer.problem-see-more もっと見る
+              .problem-untruncated.hide
+                = activity.problem
+            - else
+              = activity.problem
+              %br
+              %br
+            %span.kpt-try Try
+            - if activity.try.length > 27
+              .try-truncated
+                = activity.try.truncate(27)
+                %p.text-red.keep-right.cursor-pointer.try-see-more もっと見る
+              .try-untruncated.hide
+                = activity.try
+            - else
+              = activity.try
+              %br
+              %br
           %hr
           .activity-show-link-area
             = link_to "活動報告詳細へ", public_activity_path(activity), class: "btn-info activity-show-link", data: { 'turbolinks': false }
@@ -36,7 +67,17 @@
               = link_to '削除する', public_activity_path(activity), method: :delete, data: { 'turbolinks': false }, class: "btn btn-danger"
           %hr
           %p.card-text
-            [紹介文]
-            = activity.introduction
+            [投稿者]
+            = activity.customer.name
+            %hr
+            [所属コミュニティ]
+            %br
+            - if activity.customer.communities.present?
+              - activity.customer.communities.each do |community|
+                %span 🎵
+                = community.name
+                %br
+            - else
+              所属コミュニティはありません。
   - else
     まだ投稿記事はありません。

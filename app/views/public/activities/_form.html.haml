@@ -8,7 +8,7 @@
             %th{scope:"row"} 活動報告「画像」
             %td
               = f.file_field :activity_image, accept: 'image/*'
-              %span.text-red ※TOPのイメージ画像になります。
+              %span ※TOPのイメージ画像になります。
               #new-activity-image
               #edit-activity-image
           %tr
@@ -40,4 +40,4 @@
             %th{scope:"row"} 活動報告「詳細」
             %td
               = f.text_area :introduction, style: "width:90%"
-          = f.submit "活動報告を作成", class: "btn btn-info activity-new-edit-btn", data: { confirm: 'こちらの内容で登録します。よろしいですか？' }
+          = f.submit "活動報告を登録", class: "btn btn-info activity-new-edit-btn", data: { confirm: 'こちらの内容で登録します。よろしいですか？' }
