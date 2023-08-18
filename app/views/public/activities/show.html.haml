@@ -1,1 +1,79 @@
 = render 'layouts/header_menu'
+
+.activity-show-title
+  %h2 活動報告詳細ページ
+  .activity-show-follow
+    - if @activity.customer_id == current_customer.id
+      = link_to '編集する', edit_public_activity_path(@activity), data: { 'turbolinks': false }, class: "btn btn-success"
+      = link_to '削除する', public_activity_path(@activity), method: :delete, data: { 'turbolinks': false, confirm: 'こちらの活動報告を削除します。よろしいですか？' }, class: "btn btn-danger"
+
+.activity-show-container.px-0.px-sm-0
+  .row
+    .col-md-3
+      .activity-show-card
+        .card
+          .img-container
+            - if @activity.activity_image.present?
+              = image_tag @activity.activity_image
+            - else
+              = image_tag 'no_image'
+          .card-body.text-container
+            %h5.card-title
+              = @activity.title
+            %hr
+            %h6.card-subtitle
+              [報告投稿者]
+              %br
+              .activity-owner-img
+                - if @activity.customer.profile_image.present?
+                  = image_tag @activity.customer.profile_image
+                - else
+                  = image_tag 'no_image'
+                .activity-name
+                  = @activity.customer.name
+            %hr
+            %p.card-text
+              - if @activity.customer_id == current_customer.id
+                = link_to '編集する', edit_public_activity_path(@activity), data: { 'turbolinks': false }, class: "btn btn-success"
+                = link_to '削除する', public_activity_path(@activity), method: :delete, data: { 'turbolinks': false, confirm: 'こちらの活動報告を削除します。よろしいですか？' }, class: "btn btn-danger"
+
+    .col-md-9
+      %table.table.table-striped.activity-show-table{:width=>"100%",:border=>"1"}
+        %colgroup
+          %col{width: "19%"}
+          %col{width: "81%"}
+            %tr
+              %th{scope:"row"} 活動報告タイトル
+              %td
+                = @activity.title
+            %tr
+              %th{scope:"row"} 活動報告動画
+              %td
+                - if @activity.activity_video.attached?
+                  = video_tag(rails_blob_path(@activity.activity_video),type: "video/mp4", autoplay: true, loop: true, muted: true, class: 'content__box__video')
+            %tr
+              %th{scope:"row"} やって良かった事(Keep)
+              %td
+                = @activity.keep
+            %tr
+              %th{scope:"row"} 失敗した事(Problem)
+              %td
+                = @activity.problem
+            %tr
+              %th{scope:"row"} 次挑戦したい事(Try)
+              %td
+                = @activity.try
+            %tr
+              %th{scope:"row"} 活動報告詳細紹介
+              %td
+                = @activity.introduction
+            %tr
+              %th{scope:"row"} 所属コミュニティ
+              %td
+                - if @activity.customer.communities.present?
+                  - @activity.customer.communities.each do |community|
+                    %span 🎵
+                    = community.name
+                    %br
+                - else
+                  所属コミュニティはありません。
