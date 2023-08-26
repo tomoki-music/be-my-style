@@ -1,0 +1,310 @@
+.activity-index-head-title{
+  text-align: center;
+  padding: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .activity-index-create-btn{
+    margin-left: 20px;
+  }
+}
+
+.activity-index-container{
+  display: flex;
+  flex-wrap: wrap;
+  width: 90%;
+  margin: 0 auto;
+  .img-container{
+    width: 255px;
+    height: 300px;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+  }
+  .text-container{
+    width: 255px;
+    margin-bottom: 5px;
+    .card-title{
+      min-height: 60px;
+      text-align: center;
+      .title-see-more{
+        font-size: 15px;
+        text-align: right;
+        cursor: pointer;
+      }
+    }
+    .card-subtitle{
+      .keep-truncated > p{
+        margin: 0 0 7px 0;
+        font-size: 15px;
+        color: red;
+        text-align: right;
+        cursor: pointer;
+      }
+      .problem-truncated > p{
+        margin: 0 0 7px 0;
+        font-size: 15px;
+        color: red;
+        text-align: right;
+        cursor: pointer;
+      }
+      .try-truncated > p{
+        margin: 0 0 7px 0;
+        font-size: 15px;
+        color: red;
+        text-align: right;
+        cursor: pointer;
+      }
+      .kpt-keep{
+        text-align: center;
+        display: block;
+        margin: 5px;
+        color: blue;
+        border: 1px solid blue;
+        border-radius: 5px;
+      }
+      .kpt-problem{
+        text-align: center;
+        display: block;
+        margin: 5px;
+        color: red;
+        border: 1px solid red;
+        border-radius: 5px;
+      }
+      .kpt-try{
+        text-align: center;
+        display: block;
+        margin: 5px;
+        color: orange;
+        border: 1px solid orange;
+        border-radius: 5px;
+      }
+    }
+    .activity-show-link-area{
+      text-align: center;
+      .activity-show-link{
+        border-radius: 10px;
+        padding: 10px;
+        margin-top: 10px;
+        text-decoration: none;
+      }
+    }
+    .activity-action-btn{
+      text-align: center;
+      .btn{
+        width: 165px;
+        border-radius: 10px;
+        font-size: 15px;
+        margin-top: 5px;
+      }
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .activity-index-head-title{
+    text-align: center;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    .activity-index-create-btn{
+      margin-left: 20px;
+    }
+  }
+  .activity-index-container{
+    display: flex;
+    flex-wrap: wrap;
+    width: 90%;
+    margin: 0 auto;
+    justify-content: center;
+    .img-container{
+      width: 300px;
+      height: 300px;
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 10px;
+      }
+    }
+    .text-container{
+      width: 350px;
+      margin-bottom: 5px;
+      .activity-index-link{
+        position: absolute;
+        left: 70px;
+        bottom: 5px;
+      }
+    }
+  }
+}
+
+.activity-show-title{
+  text-align: center;
+  margin: 0 auto;
+  width: 90%;
+  height: 60px;
+  margin-bottom: 10px;
+  height: 100px;
+  background-color: white;
+  .activity-show-follow{
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    margin: 0 auto;
+    border: 1px solid;
+    border-radius: 10px;
+    text-align: center;
+    padding: 10px 0px;
+    background-color: white;
+    .activity-show-btn{
+      margin: 0 auto;
+      margin-bottom: 5px;
+      text-align: center;
+      display: inline-block;
+      width: 200px;
+      height: 40px;
+      line-height: 30px;
+      font-size: 20px;
+      color: white;
+      border-radius: 10px;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .activiy-show-title{
+    .activity-show-follow{
+      .activity-show-btn{
+        width: 100px;
+        font-size: 10px;
+      }
+    }
+  }
+}
+
+.activity-show-container{
+  width: 90%;
+  margin: 0 auto;
+  .activity-show-card{
+    border: thick double lightblue;
+    .img-container{
+      width: 100%;
+      height: 300px;
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 10px;
+      }
+    }
+    .text-container{
+      text-align: center;
+      .activity-owner-img{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-top: 5px;
+        img{
+          width: 50px;
+          height: 50px;
+          object-fit: cover;
+          margin: 5px;
+          border-radius: 10px;
+        }
+      }
+      .card-text{
+        margin-top: 10px;
+      }
+      .activity-show-btn{
+        margin: 0 auto;
+        margin-bottom: 5px;
+        text-align: center;
+        display: block;
+        width: 200px;
+        font-size: 20px;
+        color: white;
+        border-radius: 10px;
+      }
+    }
+  }
+  .activity-show-table{
+    border: thick double lightblue;
+    .kpt-keep{
+      width: 70px;
+      text-align: center;
+      display: inline-block;
+      margin: 5px;
+      color: blue;
+      border: 1px solid blue;
+      border-radius: 5px;
+    }
+    .kpt-problem{
+      width: 70px;
+      text-align: center;
+      display: inline-block;
+      margin: 5px;
+      color: red;
+      border: 1px solid red;
+      border-radius: 5px;
+    }
+    .kpt-try{
+      width: 70px;
+      text-align: center;
+      display: inline-block;
+      margin: 5px;
+      color: orange;
+      border: 1px solid orange;
+      border-radius: 5px;
+    }
+  }
+}
+
+.activity-new-edit-title{
+  width: 90%;
+  text-align: center;
+  margin: 0 auto;
+  .alert{
+    text-align: center;
+    color: red;
+    border: solid 1px red;
+    border-radius: 10px;
+  }
+}
+
+.activity-new-edit-container{
+  width: 90%;
+  margin: 0 auto;
+  .activity-new-edit-table{
+    border: thick double lightblue;
+    .new-img{
+      width: 300px;
+      object-fit: cover;
+      border-radius: 10px;
+      padding: 5px;
+    }
+  }
+  .activity-new-edit-btn{
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    display: block;
+    width: 200px;
+    margin-left: auto;
+    text-align: center;
+    font-size: 20px;
+    color: white;
+    border-radius: 10px;
+  }
+}
+
+input[type="text"] {
+  width: 90%;
+  height: 40px;
+}

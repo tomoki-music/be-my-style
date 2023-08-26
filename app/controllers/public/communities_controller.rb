@@ -22,7 +22,7 @@ class Public::CommunitiesController < ApplicationController
     @community = Community.new(community_params)
     @community.owner_id = current_customer.id
 
-    if @community.save!
+    if @community.save
       chat_room = ChatRoom.create
       chat_room_customer = ChatRoomCustomer.create({ community_id: @community.id, customer_id: current_customer.id, chat_room_id: chat_room.id})
       redirect_to public_communities_path, notice: "コミュニティを作成しました!"

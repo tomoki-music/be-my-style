@@ -1,0 +1,74 @@
+= render 'layouts/header_menu'
+
+.activity-index-head-title
+  %h2 みんなの活動報告一覧
+  = link_to "活動報告をする！", new_public_activity_path, data: { 'turbolinks': false }, class: "btn btn-info activity-index-create-btn"
+.activity-index-container
+  - if @activities.present?
+    - @activities.each do |activity|
+      .card.mb-5
+        = link_to public_activity_path(activity), data: { 'turbolinks': false } do
+          .img-container
+            - if activity.activity_image.present?
+              = image_tag activity.activity_image
+            - else
+              = image_tag 'no_image'
+        .card-body.text-container
+          %h5.card-title#title-js
+            - if activity.title.length > 13
+              .title-truncated
+                = link_to activity.title.truncate(13), public_activity_path(activity), data: { 'turbolinks': false }
+                %p.text-red.title-see-more もっと見る
+              .title-untruncated.hide
+                = link_to activity.title, public_activity_path(activity), data: { 'turbolinks': false }
+            - else
+              = link_to activity.title, public_activity_path(activity), data: { 'turbolinks': false }
+          %h6.card-subtitle#kpt
+            %span.kpt-keep Keep
+            - if activity.keep.length > 13
+              .keep-truncated
+                = activity.keep.truncate(13)
+                %p.keep-see-more もっと見る
+              .keep-untruncated.hide
+                = activity.keep
+            - else
+              = activity.keep
+              %br
+              %br
+            %span.kpt-problem Problem
+            - if activity.problem.length > 13
+              .problem-truncated
+                = activity.problem.truncate(13)
+                %p.problem-see-more もっと見る
+              .problem-untruncated.hide
+                = activity.problem
+            - else
+              = activity.problem
+              %br
+              %br
+            %span.kpt-try Try
+            - if activity.try.length > 13
+              .try-truncated
+                = activity.try.truncate(13)
+                %p.try-see-more もっと見る
+              .try-untruncated.hide
+                = activity.try
+            - else
+              = activity.try
+              %br
+              %br
+          %hr
+          .activity-show-link-area
+            = link_to "活動報告詳細へ", public_activity_path(activity), class: "btn-info activity-show-link", data: { 'turbolinks': false }
+          %hr
+          %p.card-text
+            [投稿者]
+            = activity.customer.name
+            %hr
+            - if activity.customer_id == current_customer.id
+              .activity-action-btn
+                = link_to '編集する', edit_public_activity_path(activity), data: { 'turbolinks': false }, class: "btn btn-success activity-edit-btn"
+                = link_to '削除する', public_activity_path(activity), method: :delete, data: { 'turbolinks': false, confirm: 'こちらの活動報告を削除します。よろしいですか？' }, class: "btn btn-danger activity-delete-btn"
+
+  - else
+    まだ投稿記事はありません。

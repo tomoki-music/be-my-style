@@ -1,0 +1,52 @@
+= form_with model: [:public, activity], local: true do |f|
+  .activity-new-edit-container.px-0.px-sm-0
+    %table.table.table-striped.activity-new-edit-table{:width=>"100%",:border=>"1"}
+      %colgroup
+        %col{width: "19%"}
+        %col{width: "81%"}
+          %tr
+            %th{scope:"row"} 活動報告「画像」
+            %td
+              = f.file_field :activity_image, accept: 'image/*'
+              %span ※TOPのイメージ画像になります。
+              #new-activity-image
+              #edit-activity-image
+          %tr
+            %th{scope:"row"} 活動報告「Youtube動画」
+            %td
+              = f.text_field :youtube_url, placeholder: 'youtubeの動画URLを記載してください'
+          %tr
+            %th{scope:"row"} 活動報告「タイトル」
+            %td
+              = f.text_field :title
+              %span.text-red (必須)
+          %tr
+            %th{scope:"row"} やって良かった事
+            %td
+              = f.text_field :keep
+              %span.text-red (必須)
+          %tr
+            %th{scope:"row"} 失敗した事
+            %td
+              = f.text_field :problem
+              %span.text-red (必須)
+          %tr
+            %th{scope:"row"} 次回挑戦したい事
+            %td
+              = f.text_field :try
+              %span.text-red (必須)
+          %tr
+            %th{scope:"row"} 活動報告「詳細」
+            %td
+              :ruby
+                text = <<'EOS'
+                （記述例）
+                活動場所＝東京都渋谷区
+                活動内容＝スタジオで「○○」の曲をセッション演奏
+                活動時間＝19:00~21:00
+                活動してみての感想
+                みんなが知っている課題曲だったので、気軽に参加できた！
+                次は、私からも１曲リクエストしてみようと思います。
+                EOS
+              = f.text_area :introduction, placeholder: text, rows: "10", style: "width:90%"
+          = f.submit "活動報告を登録", class: "btn btn-info activity-new-edit-btn", data: { confirm: 'こちらの内容で登録します。よろしいですか？' }

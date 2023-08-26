@@ -5,7 +5,6 @@
   .community-show-follow
     - if @community.owner_id == current_customer.id
       = link_to "承認待ち一覧", public_permits_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-info community-show-btn"
-      = link_to 'メールする', public_community_new_mail_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-info fas fa-paper-plane community-show-btn"
       = link_to '編集する', edit_public_community_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-success community-show-btn"
       = link_to 'コミュニティ削除', public_community_path(@community), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのコミュニティを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger community-show-btn"
     - elsif @community.customers.include?(current_customer)
@@ -82,6 +81,11 @@
                   = link_to 'コミュニティのチャットルームへ', community_create_public_chat_rooms_path(community_id: @community.id), method: :post, class: "btn btn-sm btn-info community-show-btn", data: { 'turbolinks': false }
                 - else
                   コミュニティに参加するとチャットできます。
+            - if @community.owner_id == current_customer.id
+              %tr
+                %th{scope:"row"} メンバーへメール
+                %td
+                  = link_to 'メールする', public_community_new_mail_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-info fas fa-paper-plane community-show-btn"
             %tr
               %th{scope:"row"} 活動場所
               %td

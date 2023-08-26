@@ -41,8 +41,9 @@
           - if current_customer.present?
             = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
-          - if current_customer.present?
-            = link_to "個別チャット", public_matchings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+          = link_to "個別チャット", public_matchings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+        %li
+          = link_to "みんなの活動報告", public_activities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
           %i.fa-solid.fa-right-from-bracket
           = link_to "ログアウト", destroy_customer_session_path, data: { 'turbolinks': false }, method: :delete, class: "btn btn-secondary menu-sp-btn"
@@ -59,10 +60,11 @@
       %li
         = link_to "Topページ", public_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-info"
       %li
-        = link_to "コミュニティ一覧", public_communities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+        = link_to "コミュニティ一覧", public_communities_path, data: { 'turbolinks': false }, class: "btn btn-info"
       %li
         - if current_customer.present?
           = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "btn btn-info"
       %li
-        - if current_customer.present?
-          = link_to "個別チャット", public_matchings_path, data: { 'turbolinks': false }, class: "btn btn-info"
+        = link_to "個別チャット", public_matchings_path, data: { 'turbolinks': false }, class: "btn btn-info"
+      %li
+        = link_to "みんなの活動報告", public_activities_path, data: { 'turbolinks': false }, class: "btn btn-info"

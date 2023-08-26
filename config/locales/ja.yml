@@ -4,6 +4,7 @@ ja:
     models:
       customer: アーティスト
       community: コミュニティ
+      activity: 活動報告
     attributes:
       customer:
         email: メールアドレス
@@ -34,6 +35,12 @@ ja:
         beginer: 初心者(月1回以内)
         mypace: マイペース(週1回〜月1回以内)
         tightly: ガッツリ(週1回以上)
+      activity:
+        title: 活動報告タイトル
+        keep: やって良かった事
+        problem: 失敗した事
+        try: 次挑戦したい事
+        introduction: 活動報告の詳細紹介
     errors:
       messages:
         record_invalid: 'バリデーションに失敗しました: %{errors}'

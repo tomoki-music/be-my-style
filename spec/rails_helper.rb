@@ -72,3 +72,6 @@ RSpec.configure do |config|
   config.include LoginModule
   config.include MatchingModule
 end
+# FactoryBot::SyntaxRunner.class_eval do
+#   include ActionDispatch::TestProcess
+# end
