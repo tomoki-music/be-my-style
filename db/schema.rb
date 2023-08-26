@@ -47,6 +47,7 @@ ActiveRecord::Schema.define(version: 2023_07_31_094017) do
     t.text "keep"
     t.text "problem"
     t.text "try"
+    t.string "youtube_url"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["customer_id"], name: "index_activities_on_customer_id"

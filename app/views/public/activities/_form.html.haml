@@ -12,10 +12,9 @@
               #new-activity-image
               #edit-activity-image
           %tr
-            %th{scope:"row"} 活動報告「動画」
+            %th{scope:"row"} 活動報告「Youtube動画」
             %td
-              = f.file_field :activity_video
-              %span.text-red ※動画は「10MB」までとなります。
+              = f.text_field :youtube_url, placeholder: 'youtubeの動画URLを記載してください'
           %tr
             %th{scope:"row"} 活動報告「タイトル」
             %td
@@ -39,5 +38,15 @@
           %tr
             %th{scope:"row"} 活動報告「詳細」
             %td
-              = f.text_area :introduction, style: "width:90%"
+              :ruby
+                text = <<'EOS'
+                （記述例）
+                活動場所＝東京都渋谷区
+                活動内容＝スタジオで「○○」の曲をセッション演奏
+                活動時間＝19:00~21:00
+                活動してみての感想
+                みんなが知っている課題曲だったので、気軽に参加できた！
+                次は、私からも１曲リクエストしてみようと思います。
+                EOS
+              = f.text_area :introduction, placeholder: text, rows: "10", style: "width:90%"
           = f.submit "活動報告を登録", class: "btn btn-info activity-new-edit-btn", data: { confirm: 'こちらの内容で登録します。よろしいですか？' }

@@ -7,6 +7,7 @@ class CreateActivities < ActiveRecord::Migration[6.1]
       t.text :keep
       t.text :problem
       t.text :try
+      t.string :youtube_url
       t.timestamps
     end
   end

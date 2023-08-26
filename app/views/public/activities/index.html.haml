@@ -25,9 +25,9 @@
               = link_to activity.title, public_activity_path(activity), data: { 'turbolinks': false }
           %h6.card-subtitle#kpt
             %span.kpt-keep Keep
-            - if activity.keep.length > 27
+            - if activity.keep.length > 13
               .keep-truncated
-                = activity.keep.truncate(27)
+                = activity.keep.truncate(13)
                 %p.keep-see-more もっと見る
               .keep-untruncated.hide
                 = activity.keep
@@ -36,9 +36,9 @@
               %br
               %br
             %span.kpt-problem Problem
-            - if activity.problem.length > 27
+            - if activity.problem.length > 13
               .problem-truncated
-                = activity.problem.truncate(27)
+                = activity.problem.truncate(13)
                 %p.problem-see-more もっと見る
               .problem-untruncated.hide
                 = activity.problem
@@ -47,9 +47,9 @@
               %br
               %br
             %span.kpt-try Try
-            - if activity.try.length > 27
+            - if activity.try.length > 13
               .try-truncated
-                = activity.try.truncate(27)
+                = activity.try.truncate(13)
                 %p.try-see-more もっと見る
               .try-untruncated.hide
                 = activity.try

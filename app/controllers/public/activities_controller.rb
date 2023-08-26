@@ -45,7 +45,7 @@ class Public::ActivitiesController < ApplicationController
   private
 
   def activity_params
-    params.require(:activity).permit(:title, :introduction, :activity_image, :activity_video, :keep, :problem, :try)
+    params.require(:activity).permit(:title, :introduction, :activity_image, :activity_video, :keep, :problem, :try, :youtube_url)
   end
 
   def ensure_correct_customer

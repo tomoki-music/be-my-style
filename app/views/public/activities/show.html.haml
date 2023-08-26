@@ -22,7 +22,7 @@
               = @activity.title
             %hr
             %h6.card-subtitle
-              [報告投稿者]
+              [投稿者]
               %br
               .activity-owner-img
                 - if @activity.customer.profile_image.present?
@@ -49,19 +49,31 @@
             %tr
               %th{scope:"row"} 活動報告動画
               %td
-                - if @activity.activity_video.attached?
-                  = video_tag(rails_blob_path(@activity.activity_video),type: "video/mp4", autoplay: true, loop: true, muted: true, class: 'content__box__video')
+                - if @activity.youtube_url.present?
+                  %iframe{
+                    src: "https://www.youtube.com/embed/#{@activity.youtube_url[32..42]}",
+                    allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",
+                    allowfullscreen: "",
+                    frameborder: "0",
+                    height: "315",
+                    width: "560"
+                  }
+                - else
+                  投稿された動画はありません。
             %tr
-              %th{scope:"row"} やって良かった事(Keep)
+              %th{scope:"row"} やって良かった事
               %td
+                %span.kpt-keep Keep
                 = @activity.keep
             %tr
-              %th{scope:"row"} 失敗した事(Problem)
+              %th{scope:"row"} 失敗した事
               %td
+                %span.kpt-problem Problem
                 = @activity.problem
             %tr
-              %th{scope:"row"} 次挑戦したい事(Try)
+              %th{scope:"row"} 次挑戦したい事
               %td
+                %span.kpt-try Try
                 = @activity.try
             %tr
               %th{scope:"row"} 活動報告詳細紹介
