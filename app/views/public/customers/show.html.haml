@@ -110,4 +110,4 @@
             %tr
               %th{scope:"row"} 自己紹介
               %td
-                = @customer.human_attribute_enum(:introduction)
+                = html_safe_newline(@customer.human_attribute_enum(:introduction))
