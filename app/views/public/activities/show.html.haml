@@ -78,7 +78,7 @@
             %tr
               %th{scope:"row"} 活動報告詳細紹介
               %td
-                = html_safe_newline(@activity.introduction)
+                = simple_format(@activity.introduction)
             %tr
               %th{scope:"row"} 所属コミュニティ
               %td

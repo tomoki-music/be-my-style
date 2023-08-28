@@ -121,7 +121,7 @@
             %tr
               %th{scope:"row"} コミュニティ紹介
               %td
-                = html_safe_newline(@community.introduction)
+                = simple_format(@community.introduction)
 
       .community-index-title
         .row
