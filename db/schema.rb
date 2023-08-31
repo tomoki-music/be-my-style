@@ -53,17 +53,6 @@ ActiveRecord::Schema.define(version: 2023_07_31_094017) do
     t.index ["customer_id"], name: "index_activities_on_customer_id"
   end
 
-  create_table "addresses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.integer "postal_code", null: false
-    t.string "address", null: false
-    t.string "address_name", null: false
-    t.string "tell"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["customer_id"], name: "index_addresses_on_customer_id"
-  end
-
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -75,16 +64,6 @@ ActiveRecord::Schema.define(version: 2023_07_31_094017) do
     t.datetime "updated_at", precision: 6, null: false
     t.index ["email"], name: "index_admins_on_email", unique: true
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
-  end
-
-  create_table "carts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "item_id", null: false
-    t.integer "quantity", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["customer_id"], name: "index_carts_on_customer_id"
-    t.index ["item_id"], name: "index_carts_on_item_id"
   end
 
   create_table "chat_messages", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -201,25 +180,6 @@ ActiveRecord::Schema.define(version: 2023_07_31_094017) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table "item_tags", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "item_id", null: false
-    t.bigint "tag_id", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["item_id"], name: "index_item_tags_on_item_id"
-    t.index ["tag_id"], name: "index_item_tags_on_tag_id"
-  end
-
-  create_table "items", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.string "name", null: false
-    t.text "body", null: false
-    t.integer "price", null: false
-    t.boolean "status", default: true, null: false
-    t.integer "stock", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-  end
-
   create_table "notifications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.integer "visitor_id", null: false
     t.integer "visited_id", null: false
@@ -233,33 +193,6 @@ ActiveRecord::Schema.define(version: 2023_07_31_094017) do
     t.index ["event_id"], name: "index_notifications_on_event_id"
     t.index ["visited_id"], name: "index_notifications_on_visited_id"
     t.index ["visitor_id"], name: "index_notifications_on_visitor_id"
-  end
-
-  create_table "order_items", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "order_id", null: false
-    t.bigint "item_id", null: false
-    t.integer "order_price", null: false
-    t.integer "order_quantity", null: false
-    t.integer "status", default: 0, null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["item_id"], name: "index_order_items_on_item_id"
-    t.index ["order_id"], name: "index_order_items_on_order_id"
-  end
-
-  create_table "orders", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.integer "postal_code", null: false
-    t.string "address", null: false
-    t.string "address_name", null: false
-    t.string "tell", null: false
-    t.integer "postage", null: false
-    t.integer "billing", null: false
-    t.integer "payment", default: 0, null: false
-    t.integer "status", default: 0, null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["customer_id"], name: "index_orders_on_customer_id"
   end
 
   create_table "parts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -284,18 +217,9 @@ ActiveRecord::Schema.define(version: 2023_07_31_094017) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table "tags", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.string "name", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-  end
-
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "activities", "customers"
-  add_foreign_key "addresses", "customers"
-  add_foreign_key "carts", "customers"
-  add_foreign_key "carts", "items"
   add_foreign_key "chat_messages", "chat_rooms"
   add_foreign_key "chat_messages", "communities"
   add_foreign_key "chat_messages", "customers"
@@ -310,11 +234,6 @@ ActiveRecord::Schema.define(version: 2023_07_31_094017) do
   add_foreign_key "customer_genres", "genres"
   add_foreign_key "customer_parts", "customers"
   add_foreign_key "customer_parts", "parts"
-  add_foreign_key "item_tags", "items"
-  add_foreign_key "item_tags", "tags"
-  add_foreign_key "order_items", "items"
-  add_foreign_key "order_items", "orders"
-  add_foreign_key "orders", "customers"
   add_foreign_key "permits", "communities"
   add_foreign_key "permits", "customers"
 end
