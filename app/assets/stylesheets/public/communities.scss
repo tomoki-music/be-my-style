@@ -71,9 +71,9 @@
     margin: 0 auto;
     justify-content: center;
     .img-container{
-      width: 350px;
+      width: 300px;
       height: 300px;
-      margin: 0 auto;
+      margin: 15px auto 0px auto;
       img {
         width: 100%;
         height: 100%;
@@ -123,17 +123,6 @@
       font-size: 20px;
       color: white;
       border-radius: 10px;
-    }
-  }
-}
-
-@media (max-width: 600px) {
-  .community-show-title{
-    .community-show-follow{
-      .community-show-btn{
-        width: 100px;
-        font-size: 10px;
-      }
     }
   }
 }
@@ -217,6 +206,14 @@
 }
 
 @media (max-width: 600px) {
+  .community-show-title{
+    .community-show-follow{
+      .community-show-btn{
+        width: 100px;
+        font-size: 10px;
+      }
+    }
+  }
   .community-index-title{
     margin-bottom: 120px;
     .community-index-count{
