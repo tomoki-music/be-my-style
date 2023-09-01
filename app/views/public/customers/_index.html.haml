@@ -1,6 +1,6 @@
 .customer-index-container
   - customers.each do |customer|
-    .card.w100.center
+    .card.center
       = link_to public_customer_path(customer), data: { 'turbolinks': false } do
         .img-container
           - if customer.profile_image.present?
