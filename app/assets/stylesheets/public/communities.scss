@@ -214,20 +214,24 @@
       }
     }
   }
-  .community-index-title{
-    margin-bottom: 120px;
-    .community-index-count{
-      justify-content: center;
-    }
-    .sp-kaminari{
-      margin-left:100px;
-    }
-    .sp-serch{
-      margin: 0 auto;
-    }
-  }
-  .community-index-body{
+  .community-show-container{
     width: 90%;
+    margin: 0 auto;
+    .community-index-title{
+      margin-bottom: 120px;
+      .community-index-count{
+        justify-content: center;
+      }
+      .sp-kaminari{
+        margin-left:100px;
+      }
+      .sp-serch{
+        margin: 0 auto;
+      }
+    }
+    .community-index-body{
+      width: 100%;
+    }
   }
 }
 

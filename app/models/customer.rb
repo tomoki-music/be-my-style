@@ -60,7 +60,7 @@ class Customer < ApplicationRecord
     if temp.blank?
       notification = current_customer.active_notifications.new(
         visited_id: id,
-        action: 'follow'
+        action: 'follow',
       )
       notification.save if notification.valid?
     end
@@ -69,39 +69,52 @@ class Customer < ApplicationRecord
   def create_notification_chat(current_customer)
     notification = current_customer.active_notifications.new(
       visited_id: id,
-      action: 'chat'
+      action: 'chat',
     )
     notification.save if notification.valid?
   end
 
-  def create_notification_request(current_customer)
+  def create_notification_group_chat(current_customer, community_id)
     notification = current_customer.active_notifications.new(
       visited_id: id,
-      action: 'request'
+      action: 'group_chat',
+      community_id: community_id,
     )
     notification.save if notification.valid?
   end
 
-  def create_notification_request_cancel(current_customer)
+  def create_notification_request(current_customer, community_id)
     notification = current_customer.active_notifications.new(
       visited_id: id,
-      action: 'request_cancel'
+      action: 'request',
+      community_id: community_id,
     )
     notification.save if notification.valid?
   end
 
-  def create_notification_accept(current_customer)
+  def create_notification_request_cancel(current_customer, community_id)
     notification = current_customer.active_notifications.new(
       visited_id: id,
-      action: 'accept'
+      action: 'request_cancel',
+      community_id: community_id,
     )
     notification.save if notification.valid?
   end
 
-  def create_notification_leave(current_customer)
+  def create_notification_accept(current_customer, community_id)
     notification = current_customer.active_notifications.new(
       visited_id: id,
-      action: 'leave'
+      action: 'accept',
+      community_id: community_id,
+    )
+    notification.save if notification.valid?
+  end
+
+  def create_notification_leave(current_customer, community_id)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'leave',
+      community_id: community_id,
     )
     notification.save if notification.valid?
   end

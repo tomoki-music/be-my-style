@@ -52,7 +52,7 @@ class Public::CommunitiesController < ApplicationController
   def leave
     @community = Community.find(params[:community_id])
     owner = Customer.find_by(id: @community.owner_id)
-    owner.create_notification_leave(current_customer)
+    owner.create_notification_leave(current_customer, @community.id)
 
     chat_room_customer = ChatRoomCustomer.where(customer_id: current_customer.id, community_id: @community.id)[0]
     chat_room_customer.delete

@@ -7,7 +7,7 @@ class Public::CommunityCustomersController < ApplicationController
     @community_customer = CommunityCustomer.create(customer_id: @permit.customer_id, community_id: params[:community_id])
     if @community_customer.valid?
       owner = Customer.find_by(id: @community.owner_id)
-      @community_customer.customer.create_notification_accept(owner)
+      @community_customer.customer.create_notification_accept(owner, @community.id)
 
       chat_room = ChatRoomCustomer.where(customer_id: owner.id, community_id: @community.id)[0].chat_room
       ChatRoomCustomer.create(customer_id: @permit.customer_id, chat_room_id: chat_room.id, community_id: @community.id)

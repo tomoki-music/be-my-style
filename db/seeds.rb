@@ -293,17 +293,6 @@ Admin.create!(
     :password => 'tomoki1969'
     )
 
-Tag.create!([
-    { name: '音楽全般' },
-    { name: 'ファッション' },
-    { name: 'プログラミング'},
-    { name: '動画制作'},
-    { name: '作詞作曲'},
-    { name: 'コピーセッション'},
-    { name: 'フリーセッション'},
-    { name: '初心者セッション'},
-    ])
-
 mmm = Community.create!(
   name: '埼玉音楽人サークルMMM',
   activity_stance: :mypace,

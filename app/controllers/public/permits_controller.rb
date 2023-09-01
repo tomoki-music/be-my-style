@@ -6,7 +6,7 @@ class Public::PermitsController < ApplicationController
     permit = current_customer.permits.new(community_id: params[:community_id])
     if permit.save
       owner = Customer.find_by(id: @community.owner_id)
-      owner.create_notification_request(current_customer)
+      owner.create_notification_request(current_customer, @community.id)
       flash[:notice] = "コミュニティへ参加申請をしました"
       redirect_back(fallback_location: root_path)
     else
@@ -18,7 +18,7 @@ class Public::PermitsController < ApplicationController
   def destroy
     @community = Community.find(params[:community_id])
     owner = Customer.find_by(id: @community.owner_id)
-    owner.create_notification_request_cancel(current_customer)
+    owner.create_notification_request_cancel(current_customer, @community.id)
     permit = current_customer.permits.find_by(community_id: params[:community_id])
     permit.destroy
     flash[:alert] = "このコミュニティへの参加申請を取消しました"

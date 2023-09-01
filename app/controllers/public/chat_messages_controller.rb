@@ -24,7 +24,7 @@ class Public::ChatMessagesController < ApplicationController
     @chat_message = ChatMessage.new(customer_id: current_customer.id, chat_room_id: @chat_room.id, content: params[:chat_message][:content])
     if @chat_message.save
       @chat_room_customers.each do |chat_room_customer|
-        chat_room_customer.create_notification_chat(current_customer)
+        chat_room_customer.create_notification_group_chat(current_customer, @community.id)
       end
       flash[:notice] = "メッセージを送信しました！"
       redirect_back(fallback_location: root_path)
