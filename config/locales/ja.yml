@@ -19,6 +19,7 @@ ja:
         birthday: 誕生日
         favorite_artist: 好きなアーティスト
         url: 作品HPのURL
+        customer_parts: パート
       customer/sex:
         gender_private: 非公開
         male: 男性

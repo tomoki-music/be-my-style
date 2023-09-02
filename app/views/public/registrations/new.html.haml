@@ -16,7 +16,7 @@
             %th{scope:"row"} メールアドレス
             %td
               = f.email_field :email, autofocus: true, autocomplete: "email"
-              %i.text-red (必須)
+              %i.text-red.block (必須)
           %tr
             %th{scope:"row"} パスワード
             %td
@@ -25,12 +25,12 @@
                   (半角 #{@minimum_password_length} 文字以上で入力してください。)
               %br/
               = f.password_field :password, autocomplete: "new-password"
-              %i.text-red (必須)
+              %i.text-red.block (必須)
           %tr
             %th{scope:"row"} パスワード(確認)
             %td
               = f.password_field :password_confirmation, autocomplete: "new-password"
-              %i.text-red (必須)
+              %i.text-red.block (必須)
           %tr
             %th{scope:"row"} 画像
             %td
@@ -40,7 +40,7 @@
             %th{scope:"row"} ニックネーム
             %td
               = f.text_field :name
-              %i.text-red (必須)
+              %i.text-red.block (必須)
           %tr
             %th{scope:"row"} 性別
             %td
@@ -56,6 +56,7 @@
                 = tag.label do
                   = tag.check_box
                   = tag.text
+              %i.text-red.block ※パートの入力(チェック)必須
           %tr
             %th{scope:"row"} 活動場所
             %td 
@@ -74,23 +75,24 @@
           %tr
             %th{:rowspan => 5} 好きなアーティスト
             %td
-              = f.text_field :favorite_artist1
+              = f.text_field :favorite_artist1, style: "width:90%"
           %tr
             %td
-              = f.text_field :favorite_artist2
+              = f.text_field :favorite_artist2, style: "width:90%"
           %tr
             %td
-              = f.text_field :favorite_artist3
+              = f.text_field :favorite_artist3, style: "width:90%"
           %tr
             %td
-              = f.text_field :favorite_artist4
+              = f.text_field :favorite_artist4, style: "width:90%"
           %tr
             %td
-              = f.text_field :favorite_artist5
+              = f.text_field :favorite_artist5, style: "width:90%"
           %tr
             %th{scope:"row"} 作品URL
             %td
-              = f.text_field :url
+              = f.text_field :url, style: "width:90%"
+              %i.block ※「youtube」や「HP」「SNS」のURLを記入する事ができます。
           %tr
             %th{scope:"row"} 自己紹介
             %td

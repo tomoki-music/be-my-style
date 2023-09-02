@@ -1,8 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe 'Customerモデルのテスト', type: :model do
-  let(:customer) { FactoryBot.create(:customer) }
-  let(:other_customer) { FactoryBot.create(:customer) }
+  let(:customer) { FactoryBot.create(:customer, :customer_with_parts) }
+  let(:other_customer) { FactoryBot.create(:customer, :customer_with_parts) }
+  let(:community) { FactoryBot.create(:community) }
 
   describe 'バリデーションのテスト' do
     context 'nameカラムが不正' do
@@ -104,22 +105,22 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
     end
     context 'コミュニティ参加申請の通知メソッドのテスト' do
       it '通知のインスタンスが作成される' do
-        expect { other_customer.create_notification_request(customer) }.to change(Notification, :count).by(1)
+        expect { other_customer.create_notification_request(customer, community) }.to change(Notification, :count).by(1)
       end
     end
     context 'コミュニティ参加申請のキャンセル通知メソッドのテスト' do
       it '通知のインスタンスが作成される' do
-        expect { other_customer.create_notification_request_cancel(customer) }.to change(Notification, :count).by(1)
+        expect { other_customer.create_notification_request_cancel(customer, community) }.to change(Notification, :count).by(1)
       end
     end
     context 'コミュニティ参加申請の許可の通知メソッドのテスト' do
       it '通知のインスタンスが作成される' do
-        expect { other_customer.create_notification_accept(customer) }.to change(Notification, :count).by(1)
+        expect { other_customer.create_notification_accept(customer, community) }.to change(Notification, :count).by(1)
       end
     end
     context 'コミュニティ退会の通知メソッドのテスト' do
       it '通知のインスタンスが作成される' do
-        expect { other_customer.create_notification_leave(customer) }.to change(Notification, :count).by(1)
+        expect { other_customer.create_notification_leave(customer, community) }.to change(Notification, :count).by(1)
       end
     end
   end

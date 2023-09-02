@@ -21,8 +21,6 @@ class Customer < ApplicationRecord
   }, _prefix: true
 
   has_one_attached :profile_image
-  has_many :addresses, dependent: :destroy
-  has_many :carts, dependent: :destroy
   has_many :customer_parts, dependent: :destroy
   has_many :parts, through: :customer_parts, dependent: :destroy
   has_many :customer_genres, dependent: :destroy
@@ -44,6 +42,7 @@ class Customer < ApplicationRecord
 
   validates :name, presence: true, length: {maximum: 20}
   validates :email, uniqueness: true, presence: true
+  validates :customer_parts, presence: true
 
   def follow(customer_id)
     relationships.create(followed_id: customer_id)
