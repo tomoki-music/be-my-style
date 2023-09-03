@@ -3,6 +3,7 @@ class Activity < ApplicationRecord
   has_one_attached :activity_image
 
   belongs_to :customer
+  has_many :favorites, dependent: :destroy
 
   validates :title, presence: true
   validates :keep, presence: true
@@ -15,5 +16,9 @@ class Activity < ApplicationRecord
     if activity_video.byte_size > 10.megabytes
       errors.add(:activity_video, "は1ファイル10MB以内にしてください")
     end
+  end
+
+  def favorited?(customer)
+    favorites.where(customer_id: customer.id).exists?
   end
 end

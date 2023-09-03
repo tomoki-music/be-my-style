@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_09_01_115031) do
+ActiveRecord::Schema.define(version: 2023_09_03_095223) do
 
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
@@ -174,6 +174,15 @@ ActiveRecord::Schema.define(version: 2023_09_01_115031) do
     t.index ["reset_password_token"], name: "index_customers_on_reset_password_token", unique: true
   end
 
+  create_table "favorites", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "activity_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["activity_id"], name: "index_favorites_on_activity_id"
+    t.index ["customer_id"], name: "index_favorites_on_customer_id"
+  end
+
   create_table "genres", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", precision: 6, null: false
@@ -235,6 +244,8 @@ ActiveRecord::Schema.define(version: 2023_09_01_115031) do
   add_foreign_key "customer_genres", "genres"
   add_foreign_key "customer_parts", "customers"
   add_foreign_key "customer_parts", "parts"
+  add_foreign_key "favorites", "activities"
+  add_foreign_key "favorites", "customers"
   add_foreign_key "permits", "communities"
   add_foreign_key "permits", "customers"
 end
