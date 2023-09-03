@@ -1,6 +1,7 @@
 - visitor = notification.visitor
 - visited = notification.visited
 - community_id = notification.community_id
+- community = Community.find(community_id)
 
 .col-md-6.mx-auto
   .form-inline
@@ -11,7 +12,8 @@
         - else
           = image_tag 'no_image', class: "icon_mini"
         %strong
-          = visitor.name + 'さんが'
+          = visitor.name + 'さん'
+      が
 
       - case notification.action
       - when 'follow' then
@@ -22,24 +24,20 @@
           メッセージ
         = "を送信しました"
       - when 'group_chat' then
-        = "あなたの所属するコミュニティに"
         - if ChatRoomCustomer.where(customer_id: visited.id, community_id: community_id).present?
-          = link_to 'メッセージ', community_create_public_chat_rooms_path(community_id: community_id), method: :post, data: { 'turbolinks': false }
-        = "を送信しました"
+          = link_to community.name, community_create_public_chat_rooms_path(community_id: community_id), method: :post, data: { 'turbolinks': false }
+        = "へメッセージを送信しました"
       - when 'request' then
-        = "あなたの"
-        = link_to "コミュニティ", public_community_path(community_id), data: { 'turbolinks': false }
+        = link_to community.name, public_community_path(community_id), data: { 'turbolinks': false }
         = "へ参加申請しました"
       - when 'request_cancel' then
-        = "あなたの"
-        = link_to "コミュニティ", public_community_path(community_id), data: { 'turbolinks': false }
+        = link_to community.name, public_community_path(community_id), data: { 'turbolinks': false }
         = "への参加申請を取消しました"
       - when 'accept' then
-        = link_to "参加申請したコミュニティ", public_community_path(community_id), data: { 'turbolinks': false }
+        = link_to community.name, public_community_path(community_id), data: { 'turbolinks': false }
         = "への参加を許可しました"
       - when 'leave' then
-        = "あなたの"
-        = link_to "コミュニティ", public_community_path(community_id), data: { 'turbolinks': false }
+        = link_to community.name, public_community_path(community_id), data: { 'turbolinks': false }
         = "から退出しました"
       - when 'like' then
         = link_to 'あなたの投稿', notification.event, style: "font-weight: bold;"
