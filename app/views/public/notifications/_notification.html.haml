@@ -1,7 +1,8 @@
 - visitor = notification.visitor
 - visited = notification.visited
-- community_id = notification.community_id
-- community = Community.find(community_id)
+- if notification.community_id.present?
+  - community_id = notification.community_id
+  - community = Community.find(community_id)
 
 .col-md-6.mx-auto
   .form-inline
