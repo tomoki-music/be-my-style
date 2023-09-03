@@ -21,7 +21,7 @@
         = "あなたをフォローしました"
       - when 'chat' then
         = "あなたに"
-        = link_to public_chat_rooms_path(customer_id: visited.id), method: :post, data: { 'turbolinks': false } do
+        = link_to public_chat_rooms_path(customer_id: visitor.id), method: :post, data: { 'turbolinks': false } do
           メッセージ
         = "を送信しました"
       - when 'group_chat' then
