@@ -1,0 +1,17 @@
+.activity-action-btn
+  - if activity.customer_id == current_customer.id
+    = link_to '編集する', edit_public_activity_path(activity), data: { 'turbolinks': false }, class: "btn btn-success activity-edit-btn"
+    = link_to '削除する', public_activity_path(activity), method: :delete, data: { 'turbolinks': false, confirm: 'こちらの活動報告を削除します。よろしいですか？' }, class: "btn btn-danger activity-delete-btn"
+  - elsif activity.favorited?(current_customer)
+    = link_to public_activity_favorites_path(activity), method: :delete, remote: true, class: "favorite-btn" do
+      %i.fa-solid.fa-heart
+      .favorite-count
+        = activity.favorites.count
+      .favorite-message
+        いいね!ありがとう❤️
+  - else
+    = link_to public_activity_favorites_path(activity), method: :post, remote: true, class: "favorite-btn" do
+      いいね
+      %i.fa-regular.fa-heart
+      .favorite-count
+        = activity.favorites.count

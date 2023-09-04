@@ -6,6 +6,7 @@
 .activity-index-container
   - if @activities.present?
     - @activities.each do |activity|
+      - activity_id = activity.id
       .card.mb-5
         = link_to public_activity_path(activity), data: { 'turbolinks': false } do
           .img-container
@@ -65,20 +66,7 @@
             [投稿者]
             = activity.customer.name
             %hr
-            .activity-action-btn
-              - if activity.customer_id == current_customer.id
-                = link_to '編集する', edit_public_activity_path(activity), data: { 'turbolinks': false }, class: "btn btn-success activity-edit-btn"
-                = link_to '削除する', public_activity_path(activity), method: :delete, data: { 'turbolinks': false, confirm: 'こちらの活動報告を削除します。よろしいですか？' }, class: "btn btn-danger activity-delete-btn"
-              - elsif activity.favorited?(current_customer)
-                = link_to public_activity_favorites_path(activity.id), method: :delete, class: "favorite-btn" do
-                  %i.fa-solid.fa-heart
-                  .favorite-count
-                    = activity.favorites.count
-              - else
-                = link_to public_activity_favorites_path(activity.id), method: :post, class: "favorite-btn" do
-                  いいね
-                  %i.fa-regular.fa-heart
-                  .favorite-count
-                    = activity.favorites.count
+            %div{id: "favorite_buttons_#{activity_id}"}
+              = render "public/favorites/favorite", activity: activity
   - else
     まだ投稿記事はありません。

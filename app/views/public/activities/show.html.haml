@@ -7,12 +7,14 @@
       = link_to '編集する', edit_public_activity_path(@activity), data: { 'turbolinks': false }, class: "btn btn-success"
       = link_to '削除する', public_activity_path(@activity), method: :delete, data: { 'turbolinks': false, confirm: 'こちらの活動報告を削除します。よろしいですか？' }, class: "btn btn-danger"
     - elsif @activity.favorited?(current_customer)
-      = link_to public_activity_favorites_path(@activity.id), method: :delete, class: "favorite-btn" do
+      = link_to public_activity_favorites_path(@activity.id), method: :delete, remote: true, class: "favorite-btn" do
         %i.fa-solid.fa-heart
         .favorite-count
           = @activity.favorites.count
+        .favorite-message
+          いいね!ありがとう❤️
     - else
-      = link_to public_activity_favorites_path(@activity.id), method: :post, class: "favorite-btn" do
+      = link_to public_activity_favorites_path(@activity.id), method: :post, remote: true, class: "favorite-btn" do
         いいね
         %i.fa-regular.fa-heart
         .favorite-count
@@ -48,11 +50,13 @@
                 = link_to '編集する', edit_public_activity_path(@activity), data: { 'turbolinks': false }, class: "btn btn-success"
                 = link_to '削除する', public_activity_path(@activity), method: :delete, data: { 'turbolinks': false, confirm: 'こちらの活動報告を削除します。よろしいですか？' }, class: "btn btn-danger"
               - elsif @activity.favorited?(current_customer)
-                = link_to public_activity_favorites_path(@activity.id), method: :delete, class: "favorite-btn" do
+                = link_to public_activity_favorites_path(@activity.id), method: :delete, remote: true, class: "favorite-btn" do
                   %i.fa-solid.fa-heart
                   = @activity.favorites.count
+                  %br
+                  いいね!ありがとう❤️
               - else
-                = link_to public_activity_favorites_path(@activity.id), method: :post, class: "favorite-btn" do
+                = link_to public_activity_favorites_path(@activity.id), method: :post, remote: true, class: "favorite-btn" do
                   いいね
                   %i.fa-regular.fa-heart
                   = @activity.favorites.count

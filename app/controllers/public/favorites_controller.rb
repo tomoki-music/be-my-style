@@ -1,14 +1,14 @@
 class Public::FavoritesController < ApplicationController
   
   def create
+    @activity = Activity.find_by(id: params[:activity_id])
     @activity_favorite = Favorite.new(customer_id: current_customer.id, activity_id: params[:activity_id])
     @activity_favorite.save
-    redirect_back(fallback_location: root_path)
   end
 
   def destroy
+    @activity = Activity.find_by(id: params[:activity_id])
     @activity_favorite = Favorite.find_by(customer_id: current_customer.id, activity_id: params[:activity_id])
     @activity_favorite.destroy
-    redirect_back(fallback_location: root_path)
   end
 end
