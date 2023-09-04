@@ -1,9 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe "customersコントローラーのテスト", type: :request do
-  let(:customer) { create(:customer) }
-  let(:customer2) { create(:customer) }
-  let(:customer3) { create(:customer) }
+  let(:customer) { create(:customer, :customer_with_parts) }
+  let(:customer2) { create(:customer, :customer_with_parts) }
+  let(:customer3) { create(:customer, :customer_with_parts) }
   let(:community) { create(:community) }
   describe 'ログイン済み' do
     before do
