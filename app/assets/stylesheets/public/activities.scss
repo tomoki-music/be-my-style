@@ -95,6 +95,7 @@
     }
     .activity-action-btn{
       text-decoration: none;
+      align-items: center;
       .btn{
         width: 165px;
         border-radius: 10px;
@@ -262,6 +263,7 @@
   }
   .activity-show-table{
     border: thick double lightblue;
+    width: 100%;
     .kpt-keep{
       width: 70px;
       text-align: center;

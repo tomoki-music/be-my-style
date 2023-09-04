@@ -3,22 +3,8 @@
 .activity-show-title
   %h2 活動報告詳細ページ
   .activity-show-follow
-    - if @activity.customer_id == current_customer.id
-      = link_to '編集する', edit_public_activity_path(@activity), data: { 'turbolinks': false }, class: "btn btn-success"
-      = link_to '削除する', public_activity_path(@activity), method: :delete, data: { 'turbolinks': false, confirm: 'こちらの活動報告を削除します。よろしいですか？' }, class: "btn btn-danger"
-    - elsif @activity.favorited?(current_customer)
-      = link_to public_activity_favorites_path(@activity.id), method: :delete, remote: true, class: "favorite-btn" do
-        %i.fa-solid.fa-heart
-        .favorite-count
-          = @activity.favorites.count
-        .favorite-message
-          いいね!ありがとう❤️
-    - else
-      = link_to public_activity_favorites_path(@activity.id), method: :post, remote: true, class: "favorite-btn" do
-        いいね
-        %i.fa-regular.fa-heart
-        .favorite-count
-          = @activity.favorites.count
+    %div{id: "favorite_buttons_#{@activity.id}"}
+      = render "public/favorites/favorite", activity: @activity
 
 .activity-show-container.px-0.px-sm-0
   .row
@@ -45,21 +31,6 @@
                 .activity-name
                   = @activity.customer.name
             %hr
-            %p.card-text
-              - if @activity.customer_id == current_customer.id
-                = link_to '編集する', edit_public_activity_path(@activity), data: { 'turbolinks': false }, class: "btn btn-success"
-                = link_to '削除する', public_activity_path(@activity), method: :delete, data: { 'turbolinks': false, confirm: 'こちらの活動報告を削除します。よろしいですか？' }, class: "btn btn-danger"
-              - elsif @activity.favorited?(current_customer)
-                = link_to public_activity_favorites_path(@activity.id), method: :delete, remote: true, class: "favorite-btn" do
-                  %i.fa-solid.fa-heart
-                  = @activity.favorites.count
-                  %br
-                  いいね!ありがとう❤️
-              - else
-                = link_to public_activity_favorites_path(@activity.id), method: :post, remote: true, class: "favorite-btn" do
-                  いいね
-                  %i.fa-regular.fa-heart
-                  = @activity.favorites.count
 
     .col-md-9
       %table.table.table-striped.activity-show-table{:width=>"100%",:border=>"1"}
