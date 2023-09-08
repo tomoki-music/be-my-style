@@ -4,6 +4,7 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
   let(:customer) { FactoryBot.create(:customer, :customer_with_parts) }
   let(:other_customer) { FactoryBot.create(:customer, :customer_with_parts) }
   let(:community) { FactoryBot.create(:community) }
+  let(:activity) { FactoryBot.create(:activity, customer: customer) }
 
   describe 'バリデーションのテスト' do
     context 'nameカラムが不正' do
@@ -101,6 +102,11 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
     context 'フォローの通知メソッドのテスト' do
       it '通知のインスタンスが作成される' do
         expect { other_customer.create_notification_follow(customer) }.to change(Notification, :count).by(1)
+      end
+    end
+    context 'いいねの通知メソッドのテスト' do
+      it 'いいねのインスタンスが作成される' do
+        expect { other_customer.create_notification_favorite(customer, activity.id) }.to change(Notification, :count).by(1)
       end
     end
     context 'チャットの通知メソッドのテスト' do
