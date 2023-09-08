@@ -67,7 +67,7 @@ class Customer < ApplicationRecord
   end
 
   def create_notification_favorite(current_customer, activity_id)
-    temp = Notification.where(["visitor_id = ? and visited_id = ? and action = ? ",current_customer.id, id, 'favorite'])
+    temp = Notification.where(["visitor_id = ? and visited_id = ? and action = ? and activity_id = ?",current_customer.id, id, 'favorite', activity_id])
     if temp.blank?
       notification = current_customer.active_notifications.new(
         visited_id: id,
