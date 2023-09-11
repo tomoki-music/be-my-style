@@ -130,4 +130,13 @@ class Customer < ApplicationRecord
     )
     notification.save if notification.valid?
   end
+
+  def create_notification_activity(current_customer, activity_id)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'activity',
+      activity_id: activity_id,
+    )
+    notification.save if notification.valid?
+  end
 end

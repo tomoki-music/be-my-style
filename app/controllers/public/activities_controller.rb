@@ -4,7 +4,7 @@ class Public::ActivitiesController < ApplicationController
   before_action :set_activity, only: [:show, :edit, :update, :destroy]
 
   def index
-    @activities = Activity.all.page(params[:page]).per(8)
+    @activities = Activity.all.order(created_at: :desc).page(params[:page]).per(10)
   end
 
   def new
@@ -15,6 +15,24 @@ class Public::ActivitiesController < ApplicationController
     @activity = Activity.new(activity_params)
     @activity.customer_id = current_customer.id
     if @activity.save
+      if current_customer.chat_room_customers.present?
+        community_ids = current_customer.chat_room_customers.pluck(:community_id)
+        community_ids.each do |community_id|
+          Community.where(id: community_id).each do |community|
+            community.customers.each do |customer|
+              if customer.id != current_customer.id
+                customer.create_notification_activity(current_customer, @activity.id)
+              end
+            end
+          end
+        end
+      else
+        if current_customer.followers.present?
+          current_customer.followers.each do |customer|
+            customer.create_notification_activity(current_customer, @activity.id)
+          end
+        end     
+      end   
       redirect_to public_activities_path, notice: "活動報告の投稿が完了しました!"
     else
       render "new", alert: "もう一度お試しください。"

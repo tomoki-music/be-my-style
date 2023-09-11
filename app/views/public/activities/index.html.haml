@@ -8,6 +8,9 @@
     - @activities.each do |activity|
       - activity_id = activity.id
       .card.mb-5
+        - if time_ago_in_words(activity.created_at) =~ /分|時間/
+          .new_activity
+            NEW!!
         = link_to public_activity_path(activity), data: { 'turbolinks': false } do
           .img-container
             - if activity.activity_image.present?
@@ -65,8 +68,11 @@
           %p.card-text
             [投稿者]
             = activity.customer.name
-            %hr
-            %div{id: "favorite_buttons_#{activity_id}"}
-              = render "public/favorites/favorite", activity: activity
+          %hr
+          [投稿日]
+          = l activity.created_at, format: :short
+          %hr
+          %div{id: "favorite_buttons_#{activity_id}"}
+            = render "public/favorites/favorite", activity: activity
   - else
     まだ投稿記事はありません。

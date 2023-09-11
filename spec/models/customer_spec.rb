@@ -134,5 +134,10 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect { other_customer.create_notification_leave(customer, community) }.to change(Notification, :count).by(1)
       end
     end
+    context '活動報告投稿の通知メソッドのテスト' do
+      it '通知のインスタンスが作成される' do
+        expect { other_customer.create_notification_activity(customer, activity.id) }.to change(Notification, :count).by(1)
+      end
+    end
   end
 end

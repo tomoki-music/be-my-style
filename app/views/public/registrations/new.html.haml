@@ -16,7 +16,7 @@
             %th{scope:"row"} メールアドレス
             %td
               = f.email_field :email, autofocus: true, autocomplete: "email"
-              %i.text-red.block (必須)
+              %i.text-red (必須)
           %tr
             %th{scope:"row"} パスワード
             %td
@@ -25,12 +25,12 @@
                   (半角 #{@minimum_password_length} 文字以上で入力してください。)
               %br/
               = f.password_field :password, autocomplete: "new-password"
-              %i.text-red.block (必須)
+              %i.text-red (必須)
           %tr
             %th{scope:"row"} パスワード(確認)
             %td
               = f.password_field :password_confirmation, autocomplete: "new-password"
-              %i.text-red.block (必須)
+              %i.text-red (必須)
           %tr
             %th{scope:"row"} 画像
             %td
@@ -40,7 +40,7 @@
             %th{scope:"row"} ニックネーム
             %td
               = f.text_field :name
-              %i.text-red.block (必須)
+              %i.text-red (必須)
           %tr
             %th{scope:"row"} 性別
             %td

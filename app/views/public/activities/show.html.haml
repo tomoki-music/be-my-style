@@ -30,6 +30,15 @@
                   = image_tag 'no_image'
                 .activity-name
                   = @activity.customer.name
+              %hr
+              [パート]
+              %br
+              - @activity.customer.parts.each do |part|
+                🎵
+                = part.name
+              %hr
+              [投稿日]
+              = l @activity.created_at, format: :short
             %hr
             .got-favorite-count
               いいね数

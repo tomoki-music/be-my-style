@@ -10,10 +10,23 @@
 }
 
 .activity-index-container{
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   width: 90%;
   margin: 0 auto;
+  .new_activity{
+    text-align: center;
+    background-color: red;
+    color: white;
+    width: 100px;
+    z-index: 100px;
+    border: solid 2px white;
+    border-radius: 10px;
+    position: absolute;
+    top: 5px;
+    left: 5px;
+  }
   .img-container{
     width: 255px;
     height: 300px;
