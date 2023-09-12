@@ -16,6 +16,7 @@ Rails.application.routes.draw do
 
     resources :activities do
       resource :favorites, only: [:create, :destroy]
+      resources :comments, only: [:create, :destroy]
    end
 
     # 通知機能

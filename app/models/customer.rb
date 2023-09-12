@@ -40,6 +40,7 @@ class Customer < ApplicationRecord
   has_many :permits, dependent: :destroy
   has_many :activities, dependent: :destroy
   has_many :favorites, dependent: :destroy
+  has_many :comments, dependent: :destroy
 
   validates :name, presence: true, length: {maximum: 20}
   validates :email, uniqueness: true, presence: true

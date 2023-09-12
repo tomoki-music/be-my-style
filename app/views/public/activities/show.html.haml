@@ -5,6 +5,9 @@
   .activity-show-follow
     %div{id: "favorite_buttons_#{@activity.id}"}
       = render "public/favorites/favorite", activity: @activity
+    = form_with model: [:public, @activity, @comment], local: true do |f|
+      = f.text_field :comment, placeholder: '素敵な活動ですね！', style: "width:200px"
+      = f.submit 'コメントする'
 
 .activity-show-container.px-0.px-sm-0
   .row
@@ -97,3 +100,6 @@
                     %br
                 - else
                   所属コミュニティはありません。
+
+    - @comments.each do |comment|
+      = comment.comment

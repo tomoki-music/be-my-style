@@ -84,6 +84,11 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(Customer.reflect_on_association(:favorites).macro).to eq :has_many
       end
     end
+    context 'Commentモデルとの関係' do
+      it 'commentと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:comments).macro).to eq :has_many
+      end
+    end
   end
   describe 'モデルのインスタンスメソッドのテスト' do
     context 'フォロー、アンフォローのメソッドテスト' do
