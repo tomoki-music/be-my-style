@@ -41,7 +41,6 @@ class Public::ActivitiesController < ApplicationController
 
   def show
     @comment = Comment.new
-    @comments = Comment.all.order(created_at: :desc)
   end
 
   def edit

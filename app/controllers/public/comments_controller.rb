@@ -8,7 +8,7 @@ class Public::CommentsController < ApplicationController
     @comment.customer_id = current_customer.id
     @comment.activity_id = @activity.id
     if @comment.save
-      redirect_back(fallback_location: root_path)
+      flash.now[:notice] = 'コメントを投稿しました'
     else
       redirect_back(fallback_location: root_path)
     end
@@ -17,7 +17,8 @@ class Public::CommentsController < ApplicationController
   def destroy
     @comment = Comment.find_by(id: params[:id], activity_id: params[:activity_id])
     if @comment.destroy
-      redirect_back(fallback_location: root_path)
+      @activity = Activity.find(params[:activity_id])
+      flash.now[:alert] = '投稿を削除しました'
     else
       redirect_back(fallback_location: root_path)
     end

@@ -6,8 +6,8 @@
     %div{id: "favorite_buttons_#{@activity.id}"}
       = render "public/favorites/favorite", activity: @activity
     .activity-comment-icon
-      = link_to '#activity-comment' do
-        %i.fa-regular.fa-comments
+      = link_to '#activity-comment', class: "comment-icon-text", data: { 'turbolinks': false } do
+        %i.fa-regular.fa-comments.comment-icon
         コメントする
 
 .activity-show-container.px-0.px-sm-0
@@ -48,7 +48,13 @@
             .got-favorite-count
               いいね数
               %i.fa-solid.fa-heart
-              = @activity.favorites.count
+              #got-favorite-count.count
+                = @activity.favorites.count
+            .got-comment-count
+              コメント数
+              %i.fa-regular.fa-comments
+              #got-comment-count.count
+                = @activity.comments.count
 
     .col-md-9
       %table.table.table-striped.activity-show-table{:width=>"100%",:border=>"1"}
@@ -103,29 +109,6 @@
                 - else
                   所属コミュニティはありません。
       #activity-comment.activity-comment
-        %h2 みんなのコメント
-        = form_with model: [:public, @activity, @comment], local: true do |f|
-          = f.text_field :comment, placeholder: '素敵な活動ですね！', style: "width:100%"
-          = f.submit 'コメントする', class: "activity-comment-btn"
-        .comment-part
-          - @comments.each do |comment|
-            .comment-content
-              .commenter-image
-                - if comment.customer.profile_image.present?
-                  = image_tag comment.customer.profile_image, class: "icon_mini"
-                - else
-                  = image_tag 'no_image', class: "icon_mini"
-              .comment-info
-                .comment-upper
-                  .comment-name
-                    = comment.customer.name
-                  .comment-time
-                    = time_ago_in_words(comment.created_at) + "前"
-                  .comment-delete
-                    - if comment.customer == current_customer
-                      = link_to '削除', public_activity_comment_path(comment.activity, comment), method: :delete, class: "btn btn-danger", data: { 'turbolinks': false }
-                .comment-beneath
-                  = comment.comment
-                  %br
-
-
+        = render 'public/comments/form', activity: @activity, comment: @comment
+        #activity-comment-asy.comment-part
+          = render 'public/comments/comments', activity: @activity

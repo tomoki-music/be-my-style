@@ -1,1 +1,2 @@
 $('#favorite_buttons_<%= @activity.id %>').html("<%= j(render 'public/favorites/favorite', activity: @activity) %>");
+$("#got-favorite-count").html("<%= @activity.favorites.count %>")
