@@ -5,9 +5,10 @@
   .activity-show-follow
     %div{id: "favorite_buttons_#{@activity.id}"}
       = render "public/favorites/favorite", activity: @activity
-    = form_with model: [:public, @activity, @comment], local: true do |f|
-      = f.text_field :comment, placeholder: '素敵な活動ですね！', style: "width:200px"
-      = f.submit 'コメントする'
+    .activity-comment-icon
+      = link_to '#activity-comment' do
+        %i.fa-regular.fa-comments
+        コメントする
 
 .activity-show-container.px-0.px-sm-0
   .row
@@ -26,13 +27,14 @@
             %h6.card-subtitle
               [投稿者]
               %br
-              .activity-owner-img
-                - if @activity.customer.profile_image.present?
-                  = image_tag @activity.customer.profile_image
-                - else
-                  = image_tag 'no_image'
-                .activity-name
-                  = @activity.customer.name
+              = link_to public_customer_path(@activity.customer), data: { 'turbolinks': false } do
+                .activity-owner-img
+                  - if @activity.customer.profile_image.present?
+                    = image_tag @activity.customer.profile_image
+                  - else
+                    = image_tag 'no_image'
+                  .activity-name
+                    = @activity.customer.name
               %hr
               [パート]
               %br
@@ -41,7 +43,7 @@
                 = part.name
               %hr
               [投稿日]
-              = l @activity.created_at, format: :short
+              = time_ago_in_words(@activity.created_at) + "前"
             %hr
             .got-favorite-count
               いいね数
@@ -100,6 +102,30 @@
                     %br
                 - else
                   所属コミュニティはありません。
+      #activity-comment.activity-comment
+        %h2 みんなのコメント
+        = form_with model: [:public, @activity, @comment], local: true do |f|
+          = f.text_field :comment, placeholder: '素敵な活動ですね！', style: "width:100%"
+          = f.submit 'コメントする', class: "activity-comment-btn"
+        .comment-part
+          - @comments.each do |comment|
+            .comment-content
+              .commenter-image
+                - if comment.customer.profile_image.present?
+                  = image_tag comment.customer.profile_image, class: "icon_mini"
+                - else
+                  = image_tag 'no_image', class: "icon_mini"
+              .comment-info
+                .comment-upper
+                  .comment-name
+                    = comment.customer.name
+                  .comment-time
+                    = time_ago_in_words(comment.created_at) + "前"
+                  .comment-delete
+                    - if comment.customer == current_customer
+                      = link_to '削除', public_activity_comment_path(comment.activity, comment), method: :delete, class: "btn btn-danger", data: { 'turbolinks': false }
+                .comment-beneath
+                  = comment.comment
+                  %br
 
-    - @comments.each do |comment|
-      = comment.comment
+

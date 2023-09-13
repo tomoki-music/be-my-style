@@ -67,10 +67,10 @@
           %hr
           %p.card-text
             [投稿者]
-            = activity.customer.name
+            = link_to activity.customer.name, public_customer_path(activity.customer), data: { 'turbolinks': false }
           %hr
           [投稿日]
-          = l activity.created_at, format: :short
+          = time_ago_in_words(activity.created_at) + "前"
           %hr
           %div{id: "favorite_buttons_#{activity_id}"}
             = render "public/favorites/favorite", activity: activity

@@ -185,7 +185,7 @@
   background-color: white;
   .activity-show-follow{
     display: flex;
-    -ms-flex-align: center;
+    justify-content: center;
     position: sticky;
     top: 0;
     width: 100%;
@@ -210,6 +210,10 @@
     .favorite-message{
       display: inline-block;
       font-size: 10px;
+    }
+    .activity-comment-icon{
+      margin-left: 50px;
+      line-height: 60px;
     }
   }
 }
@@ -302,6 +306,49 @@
       color: orange;
       border: 1px solid orange;
       border-radius: 5px;
+    }
+  }
+  .activity-comment{
+    width: 100%;
+    position: relative;
+    .activity-comment-btn{
+      position: absolute;
+      top: 100px;
+      right: 0px;
+    }
+    .comment-part{
+      margin-top: 70px;
+      width: 100%;
+      .comment-content{
+        display: flex;
+        width: 100%;
+        padding: 10px;
+        border: solid 1px;
+        border-radius: 10px;
+        .comment-info{
+          flex-direction: column;
+          width: 100%;
+          font-size: 10px;
+          .comment-upper{
+            display: flex;
+            .comment-name{
+              margin: 5px 10px;
+            }
+            .comment-time{
+              margin: 5px 10px;
+            }
+            .comment-delete > .btn{
+              font-size: 10px;
+              padding: 5px;
+              margin: 0 10px;
+            }
+          }
+          .comment-beneath{
+            margin-left: 10px;
+            font-size: 15px;
+          }
+        }
+      }
     }
   }
 }
