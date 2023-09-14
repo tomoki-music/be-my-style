@@ -8,6 +8,7 @@ class Public::CommentsController < ApplicationController
     @comment.customer_id = current_customer.id
     @comment.activity_id = @activity.id
     if @comment.save
+      @activity.customer.create_notification_comment(current_customer, @activity.id)
       flash.now[:notice] = 'コメントを投稿しました'
     else
       redirect_back(fallback_location: root_path)
