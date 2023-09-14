@@ -4,7 +4,7 @@ RSpec.describe Activity, type: :model do
   let(:customer) { create(:customer, :customer_with_parts) }
   let(:other_customer) { FactoryBot.create(:customer, :customer_with_parts) }
   let(:activity) { create(:activity, customer: customer) }
-  let!(:favorite) { FactoryBot.create(:favorite, customer_id: other_customer.id, activity_id: activity.id) }
+  let!(:favorite) { FactoryBot.create(:favorite, customer: other_customer, activity: activity) }
 
   describe 'アソシエーションのテスト' do
     context 'customerモデルとの関係' do
@@ -15,6 +15,11 @@ RSpec.describe Activity, type: :model do
     context 'Favoriteモデルとの関係' do
       it 'favoriteと1:Nとなっている' do
         expect(Activity.reflect_on_association(:favorites).macro).to eq :has_many
+      end
+    end
+    context 'Commentモデルとの関係' do
+      it 'Commentと1:Nとなっている' do
+        expect(Activity.reflect_on_association(:comments).macro).to eq :has_many
       end
     end
   end

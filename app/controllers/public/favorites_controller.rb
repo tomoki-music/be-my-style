@@ -1,4 +1,5 @@
 class Public::FavoritesController < ApplicationController
+  before_action :authenticate_customer!
   
   def create
     @activity = Activity.find_by(id: params[:activity_id])

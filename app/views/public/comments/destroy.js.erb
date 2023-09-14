@@ -1,0 +1,2 @@
+$("#activity-comment-asy").html("<%= j(render 'public/comments/comments', activity: @activity, comment: @comment) %>");
+$("#got-comment-count").html("<%= @activity.comments.count %>")

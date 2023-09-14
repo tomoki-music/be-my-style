@@ -5,6 +5,10 @@
   .activity-show-follow
     %div{id: "favorite_buttons_#{@activity.id}"}
       = render "public/favorites/favorite", activity: @activity
+    .activity-comment-icon
+      = link_to '#activity-comment', class: "comment-icon-text", data: { 'turbolinks': false } do
+        %i.fa-regular.fa-comments.comment-icon
+        コメントする
 
 .activity-show-container.px-0.px-sm-0
   .row
@@ -23,13 +27,14 @@
             %h6.card-subtitle
               [投稿者]
               %br
-              .activity-owner-img
-                - if @activity.customer.profile_image.present?
-                  = image_tag @activity.customer.profile_image
-                - else
-                  = image_tag 'no_image'
-                .activity-name
-                  = @activity.customer.name
+              = link_to public_customer_path(@activity.customer), data: { 'turbolinks': false } do
+                .activity-owner-img
+                  - if @activity.customer.profile_image.present?
+                    = image_tag @activity.customer.profile_image
+                  - else
+                    = image_tag 'no_image'
+                  .activity-name
+                    = @activity.customer.name
               %hr
               [パート]
               %br
@@ -38,12 +43,18 @@
                 = part.name
               %hr
               [投稿日]
-              = l @activity.created_at, format: :short
+              = time_ago_in_words(@activity.created_at) + "前"
             %hr
             .got-favorite-count
               いいね数
               %i.fa-solid.fa-heart
-              = @activity.favorites.count
+              #got-favorite-count.count
+                = @activity.favorites.count
+            .got-comment-count
+              コメント数
+              %i.fa-regular.fa-comments
+              #got-comment-count.count
+                = @activity.comments.count
 
     .col-md-9
       %table.table.table-striped.activity-show-table{:width=>"100%",:border=>"1"}
@@ -97,3 +108,7 @@
                     %br
                 - else
                   所属コミュニティはありません。
+      #activity-comment.activity-comment
+        = render 'public/comments/form', activity: @activity, comment: @comment
+        #activity-comment-asy.comment-part
+          = render 'public/comments/comments', activity: @activity

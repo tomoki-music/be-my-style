@@ -1,0 +1,22 @@
+- comments = activity.comments.order(created_at: :desc)
+
+- comments.each do |comment|
+  .comment-content
+    .commenter-image
+      = link_to public_customer_path(comment.customer), data: { 'turbolinks': false } do
+        - if comment.customer.profile_image.present?
+          = image_tag comment.customer.profile_image, class: "icon_mini"
+        - else
+          = image_tag 'no_image', class: "icon_mini"
+    .comment-info
+      .comment-upper
+        .comment-name
+          = link_to comment.customer.name, public_customer_path(comment.customer), data: { 'turbolinks': false }
+        .comment-time
+          = time_ago_in_words(comment.created_at) + "前"
+        .comment-delete
+          - if comment.customer == current_customer
+            = link_to '削除', public_activity_comment_path(comment.activity, comment), method: :delete, remote: true, class: "btn btn-danger", data: { 'turbolinks': false, confirm: "本当に削除しますか？" }
+      .comment-beneath
+        = comment.comment
+        %br

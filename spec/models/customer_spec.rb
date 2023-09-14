@@ -5,6 +5,7 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
   let(:other_customer) { FactoryBot.create(:customer, :customer_with_parts) }
   let(:community) { FactoryBot.create(:community) }
   let(:activity) { FactoryBot.create(:activity, customer: customer) }
+  let(:comment) { FactoryBot.create(:comment, customer: other_customer, activity: activity) }
 
   describe 'バリデーションのテスト' do
     context 'nameカラムが不正' do
@@ -84,6 +85,11 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(Customer.reflect_on_association(:favorites).macro).to eq :has_many
       end
     end
+    context 'Commentモデルとの関係' do
+      it 'commentと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:comments).macro).to eq :has_many
+      end
+    end
   end
   describe 'モデルのインスタンスメソッドのテスト' do
     context 'フォロー、アンフォローのメソッドテスト' do
@@ -107,6 +113,11 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
     context 'いいねの通知メソッドのテスト' do
       it 'いいねのインスタンスが作成される' do
         expect { other_customer.create_notification_favorite(customer, activity.id) }.to change(Notification, :count).by(1)
+      end
+    end
+    context 'コメントの通知メソッドのテスト' do
+      it 'コメントのインスタンスが作成される' do
+        expect { other_customer.create_notification_favorite(customer, comment.id) }.to change(Notification, :count).by(1)
       end
     end
     context 'チャットの通知メソッドのテスト' do

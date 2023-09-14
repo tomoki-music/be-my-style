@@ -49,20 +49,8 @@
         = link_to '活動報告', public_activity_path(activity_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
         = "を投稿しました"
       - when 'comment' then
-        - if notification.event.customer_id == visited.id
-          = link_to "あなたのイベント", notification.event, style: "font-weight: bold;"
-        - else
-          %span
-            = link_to public_event_path(notification.event) do
-              - if notification.event.customer.profile_image.present?
-                = image_tag notification.event.customer.profile_image, class: "icon_mini"
-              - else
-                = image_tag 'no_image', class: "icon_mini"
-              %strong
-                = notification.event.customer.name + 'さんの投稿'
+        = link_to 'あなたの投稿', public_activity_path(activity_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
         = "にコメントしました"
-        %p.text-muted.mb-0
-          = Comment.find_by(id: notification.comment_id)&.comment
 
   .small.text-muted.text-right
     = time_ago_in_words(notification.created_at).upcase + "前"

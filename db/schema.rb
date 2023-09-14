@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_09_08_110221) do
+ActiveRecord::Schema.define(version: 2023_09_12_094347) do
 
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
@@ -92,6 +92,16 @@ ActiveRecord::Schema.define(version: 2023_09_08_110221) do
   create_table "chat_rooms", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+  end
+
+  create_table "comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "comment"
+    t.bigint "customer_id", null: false
+    t.bigint "activity_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["activity_id"], name: "index_comments_on_activity_id"
+    t.index ["customer_id"], name: "index_comments_on_customer_id"
   end
 
   create_table "communities", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -237,6 +247,8 @@ ActiveRecord::Schema.define(version: 2023_09_08_110221) do
   add_foreign_key "chat_room_customers", "chat_rooms"
   add_foreign_key "chat_room_customers", "communities"
   add_foreign_key "chat_room_customers", "customers"
+  add_foreign_key "comments", "activities"
+  add_foreign_key "comments", "customers"
   add_foreign_key "community_customers", "communities"
   add_foreign_key "community_customers", "customers"
   add_foreign_key "community_genres", "communities"
