@@ -21,17 +21,15 @@ class Public::ActivitiesController < ApplicationController
           Community.where(id: community_id).each do |community|
             community.customers.each do |customer|
               if customer.id != current_customer.id
-                customer.create_notification_activity(current_customer, @activity.id)
+                customer.create_notification_activity_for_community(current_customer, @activity.id, community.id)
               end
             end
           end
         end
-      else
-        if current_customer.followers.present?
-          current_customer.followers.each do |customer|
-            customer.create_notification_activity(current_customer, @activity.id)
-          end
-        end     
+      elsif current_customer.followers.present?
+        current_customer.followers.each do |customer|
+          customer.create_notification_activity_for_follow(current_customer, @activity.id)
+        end
       end   
       redirect_to public_activities_path, notice: "活動報告の投稿が完了しました!"
     else
