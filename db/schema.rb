@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_09_12_094347) do
+ActiveRecord::Schema.define(version: 2023_09_18_110304) do
 
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
@@ -184,6 +184,22 @@ ActiveRecord::Schema.define(version: 2023_09_12_094347) do
     t.index ["reset_password_token"], name: "index_customers_on_reset_password_token", unique: true
   end
 
+  create_table "events", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "community_id", null: false
+    t.string "event_name", null: false
+    t.datetime "event_date", null: false
+    t.integer "entrance_fee", null: false
+    t.text "introduction"
+    t.string "address", null: false
+    t.float "latitude"
+    t.float "longitude"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["community_id"], name: "index_events_on_community_id"
+    t.index ["customer_id"], name: "index_events_on_customer_id"
+  end
+
   create_table "favorites", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "activity_id", null: false
@@ -238,6 +254,16 @@ ActiveRecord::Schema.define(version: 2023_09_12_094347) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
+  create_table "songs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.string "song_name", null: false
+    t.string "youtube_url"
+    t.text "introduction"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["event_id"], name: "index_songs_on_event_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "activities", "customers"
@@ -257,8 +283,11 @@ ActiveRecord::Schema.define(version: 2023_09_12_094347) do
   add_foreign_key "customer_genres", "genres"
   add_foreign_key "customer_parts", "customers"
   add_foreign_key "customer_parts", "parts"
+  add_foreign_key "events", "communities"
+  add_foreign_key "events", "customers"
   add_foreign_key "favorites", "activities"
   add_foreign_key "favorites", "customers"
   add_foreign_key "permits", "communities"
   add_foreign_key "permits", "customers"
+  add_foreign_key "songs", "events"
 end

@@ -77,3 +77,5 @@ gem "aws-sdk-s3", require: false
 gem "net-smtp"
 gem "net-pop"
 gem "net-imap"
+gem 'gmaps4rails'
+gem 'geocoder'

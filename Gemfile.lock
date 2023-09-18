@@ -137,8 +137,10 @@ GEM
     faker (3.2.0)
       i18n (>= 1.8.11, < 2)
     ffi (1.15.5)
+    geocoder (1.8.2)
     globalid (1.1.0)
       activesupport (>= 5.0)
+    gmaps4rails (2.1.2)
     haml (6.1.1)
       temple (>= 0.8.2)
       thor
@@ -366,6 +368,8 @@ DEPENDENCIES
   erb2haml
   factory_bot_rails
   faker
+  geocoder
+  gmaps4rails
   haml-rails
   image_processing (~> 1.2)
   jbuilder (~> 2.7)
