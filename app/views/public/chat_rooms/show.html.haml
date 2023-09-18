@@ -41,6 +41,10 @@
                 %li
                 .partner-content
                   = simple_format(chat_message.content)
+                - if chat_message.chat_image.present?
+                  %li
+                  .partner-chat-image
+                    = image_tag chat_message.chat_image.variant(resize:'300x300'), class: 'message-image'
                 %li
                 = l chat_message.created_at
                 に送信済み
@@ -61,6 +65,10 @@
                 %li
                 .self-content
                   = simple_format(chat_message.content)
+                - if chat_message.chat_image.present?
+                  %li
+                  .self-chat-image
+                    = image_tag chat_message.chat_image.variant(resize:'300x300'), class: 'message-image'
                 %li
                 = l chat_message.created_at
                 に送信済み
@@ -70,6 +78,7 @@
           = f.hidden_field :chat_room_id, value: @chat_room.id
           = f.hidden_field :customer_id, value: @chat_room_customer.id
           = f.text_area :content, autofocus: true, class: 'chat-form'
+          = f.file_field :chat_image, accept: 'image/*'
           = f.submit "メッセージを送信", class: 'btn btn-info chat-form-btn'
 
     .col-md-3

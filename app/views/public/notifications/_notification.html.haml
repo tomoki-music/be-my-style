@@ -54,7 +54,7 @@
       - when 'activity_for_community' then
         = link_to '活動報告', public_activity_path(activity_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
         = "を投稿しました"
-        = link_to "#{community.name}で同チーム", public_community_path(community_id), data: { 'turbolinks': false }
+        = link_to "【#{community.name}で同チーム】", public_community_path(community_id), data: { 'turbolinks': false }
 
 
   .small.text-muted.text-right
