@@ -8,15 +8,22 @@ Rails.application.routes.draw do
   
   namespace :public do
     get 'homes/top'
+
+    # アーティスト関連
     resources :customers, only: [:index,:show,:edit,:update] do
       resource :relationships, only: [:create, :destroy]
       get 'followings' => 'relationships#followings', as: 'followings'
       get 'followers' => 'relationships#followers', as: 'followers'
     end
 
+    # 活動報告機能
     resources :activities do
       resource :favorites, only: [:create, :destroy]
       resources :comments, only: [:create, :destroy]
+   end
+
+   resources :events do
+    resources :songs, only: [:create, :destroy]
    end
 
     # 通知機能

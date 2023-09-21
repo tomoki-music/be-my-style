@@ -1,0 +1,74 @@
+class Public::EventsController < ApplicationController
+  before_action :authenticate_customer!
+  before_action :set_event, only: [:show, :edit, :update, :destroy]
+  before_action :ensure_correct_customer, only: [:update, :edit, :destroy]
+
+  def index
+    @events = Event.all.order(created_at: :desc).page(params[:page]).per(10)
+  end
+
+  def show
+  end
+
+  def new
+    @event = Event.new
+  end
+
+  def create
+    @event = Event.new(event_params)
+    @event.customer_id = current_customer.id
+    @event.community_id = 1
+    @event.songs << Song.new(song_name: "test")
+    if @event.save!
+      redirect_to public_event_path(@event), notice: "イベントを投稿しました！"
+    else
+      render :new, alert: "登録できませんでした。お手数ですが、入力内容をご確認のうえ再度お試しください"
+    end
+  end
+
+  def edit
+    
+  end
+
+  def update
+    if @event.update(event_params)
+      redirect_to public_event_path(@event), notice: "イベントの編集が完了しました!"
+    else
+      render "edit", alert: "もう一度お試しください。"
+    end
+  end
+
+  def destroy
+    @event.destroy
+    redirect_to public_events_path, alert: "イベントを削除しました!"
+  end
+
+  private
+
+  def event_params
+    params.require(:event).permit(
+      :customer_id,
+      :community_id,
+      :event_name,
+      :event_date,
+      :entrance_fee,
+      :introduction,
+      :address,
+      :latitude,
+      :longitude,
+      songs_attributes: [:song_name, :_destroy],
+    )
+  end
+
+  def set_event
+    @event = Event.find(params[:id])
+  end
+
+  def ensure_correct_customer
+    @event = Event.find(params[:id])
+    unless @event.customer == current_customer
+      redirect_to public_events_path, alert: "編集権限がありません。"
+    end
+  end
+
+end

@@ -1,8 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe "Public::Activities", type: :request do
-  let!(:customer) { create(:customer) }
-  let!(:other_customer) { create(:customer) }
+  let!(:customer) { create(:customer, :customer_with_parts) }
+  let!(:other_customer) { create(:customer, :customer_with_parts) }
   let!(:activity) { create(:activity, customer_id: customer.id) }
 
   describe 'ログイン済み' do
@@ -40,6 +40,9 @@ RSpec.describe "Public::Activities", type: :request do
             activity: {
               title: "MMM最高！",
               introduction: "楽しいコミュニティです！",
+              keep: "コミュニティの大切さを実感！",
+              problem: "メンバーとのコミュニケーションをもっと工夫せねば！",
+              try: "コミュニティアプリを活用して交流をスムーズに！",
             }
           }
         end.to change(Activity, :count).by(1)
