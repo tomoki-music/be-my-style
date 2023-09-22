@@ -56,7 +56,8 @@ class Public::EventsController < ApplicationController
       :address,
       :latitude,
       :longitude,
-      songs_attributes: [:song_name, :_destroy],
+      :event_image,
+      songs_attributes: [:song_name, :youtube_url, :introduction, :_destroy],
     )
   end
 

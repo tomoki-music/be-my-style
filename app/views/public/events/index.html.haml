@@ -1,1 +1,55 @@
 = render 'layouts/header_menu'
+
+.event-index-head-title
+  %h2 イベント一覧
+  = link_to "イベント作成", new_public_event_path, data: { 'turbolinks': false }, class: "btn btn-info event-index-create-btn"
+.event-index-container
+  - if @events.present?
+    - @events.each do |event|
+      - @owner = Customer.find(event.customer)
+      .card.mb-5
+        = link_to public_event_path(event), data: { 'turbolinks': false } do
+          .img-container
+            - if event.event_image.present?
+              = image_tag event.event_image
+            - else
+              = image_tag 'no_image'
+        .card-body.text-container
+          %h5.card-title
+            = link_to event.event_name, public_event_path(event), data: { 'turbolinks': false }
+          %h6.card-subtitle
+            開催日
+            = l event.event_start_time
+            %i ~
+            = l event.event_end_time
+            %hr
+            参加費用
+            = event.entrance_fee.to_s + "円"
+            %hr
+            開催場所
+            = event.place
+            %hr
+            現在参加人数
+            未定
+          %hr
+          .event-show-link-area
+            = link_to "イベント詳細へ", public_event_path(event), class: "btn-info event-show-link", data: { 'turbolinks': false }
+          %hr
+          .event-action-btn
+            - if @owner == current_customer
+              = link_to '編集する', edit_public_event_path(event), data: { 'turbolinks': false }, class: "btn btn-success"
+          %hr
+          %p.card-text
+            %hr
+            [イベント作成者]
+            %br
+            .event-owner-img
+              = link_to public_customer_path(@owner), data: { 'turbolinks': false } do
+                - if @owner.profile_image.present?
+                  = image_tag @owner.profile_image
+                - else
+                  = image_tag 'no_image'
+                .owner-name
+                  = @owner.name
+  - else
+    まだ投稿記事はありません。

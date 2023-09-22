@@ -1,4 +1,5 @@
 class Event < ApplicationRecord
+  has_one_attached :event_image
   has_many :songs, dependent: :destroy
   belongs_to :customer
   belongs_to :community

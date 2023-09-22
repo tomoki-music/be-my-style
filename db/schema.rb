@@ -188,9 +188,11 @@ ActiveRecord::Schema.define(version: 2023_09_18_110304) do
     t.bigint "customer_id", null: false
     t.bigint "community_id", null: false
     t.string "event_name", null: false
-    t.datetime "event_date", null: false
+    t.datetime "event_start_time", null: false
+    t.datetime "event_end_time", null: false
     t.integer "entrance_fee", null: false
     t.text "introduction"
+    t.string "place", null: false
     t.string "address", null: false
     t.float "latitude"
     t.float "longitude"

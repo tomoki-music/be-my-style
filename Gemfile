@@ -79,3 +79,4 @@ gem "net-pop"
 gem "net-imap"
 gem 'gmaps4rails'
 gem 'geocoder'
+gem 'cocoon'
