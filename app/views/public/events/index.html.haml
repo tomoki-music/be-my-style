@@ -34,11 +34,11 @@
             未定
           %hr
           .event-show-link-area
-            = link_to "イベント詳細へ", public_event_path(event), class: "btn-info event-show-link", data: { 'turbolinks': false }
-          %hr
+            = link_to "イベント詳細へ", public_event_path(event), class: "btn btn-info event-show-link", data: { 'turbolinks': false }
           .event-action-btn
             - if @owner == current_customer
-              = link_to '編集する', edit_public_event_path(event), data: { 'turbolinks': false }, class: "btn btn-success"
+              %hr
+              = link_to '編集する', edit_public_event_path(event), data: { 'turbolinks': false }, class: "btn btn-success event-show-link"
           %p.card-text
             %hr
             [イベント作成者]

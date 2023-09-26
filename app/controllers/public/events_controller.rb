@@ -1,6 +1,6 @@
 class Public::EventsController < ApplicationController
   before_action :authenticate_customer!
-  before_action :set_event, only: [:show, :edit, :update, :destroy]
+  before_action :set_event, only: [:show, :edit, :update, :destroy, :join]
   before_action :ensure_correct_customer, only: [:update, :edit, :destroy]
 
   def index
@@ -8,6 +8,8 @@ class Public::EventsController < ApplicationController
   end
 
   def show
+    @owner = Customer.find(@event.customer.id)
+    @community = Community.find(@event.community_id)
   end
 
   def new
@@ -19,7 +21,7 @@ class Public::EventsController < ApplicationController
     @event = Event.new(event_params)
     @event.customer_id = current_customer.id
     @event.community_id = params[:event][:community_id].to_i
-    if @event.save
+    if @event.save!
       redirect_to public_event_path(@event), notice: "イベントを投稿しました！"
     else
       render :new, alert: "登録できませんでした。お手数ですが、入力内容をご確認のうえ再度お試しください"
@@ -42,6 +44,10 @@ class Public::EventsController < ApplicationController
     @event.songs.destroy_all
     @event.destroy
     redirect_to public_events_path, alert: "イベントを削除しました!"
+  end
+
+  def join
+    
   end
 
   private

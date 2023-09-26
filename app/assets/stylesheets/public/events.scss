@@ -46,6 +46,7 @@
     .event-show-link-area{
       text-align: center;
       .event-show-link{
+        width: 200px;
         border-radius: 10px;
         padding: 10px;
         margin-top: 10px;
@@ -54,10 +55,12 @@
     }
     .event-action-btn{
       text-align: center;
-      .btn{
-        width: 165px;
+      .event-show-link{
+        width: 200px;
         border-radius: 10px;
-        font-size: 15px;
+        padding: 10px;
+        margin-top: 10px;
+        text-decoration: none;
       }
     }
   }
@@ -247,10 +250,10 @@
   }
 }
 
-.event-new-container{
+.event-container{
   width: 90%;
   margin: 0 auto 100px auto;
-  .event-new-table{
+  .event-table{
     border: thick double lightblue;
     .new-img{
       width: 300px;
@@ -259,7 +262,7 @@
       padding: 5px;
     }
   }
-  .event-new-btn{
+  .event-btn{
     position: fixed;
     bottom: 30px;
     right: 30px;
@@ -289,35 +292,4 @@ input[type="text"] {
     border: solid 1px red;
     border-radius: 10px;
   }
-}
-
-.event-edit-container{
-  width: 90%;
-  margin: 0 auto 100px auto;
-  .event-edit-table{
-    border: thick double lightblue;
-    .edit-img{
-      width: 300px;
-      object-fit: cover;
-      border-radius: 10px;
-      padding: 5px;
-    }
-  }
-  .event-edit-btn{
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    display: block;
-    width: 200px;
-    margin-left: auto;
-    text-align: center;
-    font-size: 20px;
-    color: white;
-    border-radius: 10px;
-  }
-}
-
-input[type="text"] {
-  width: 90%;
-  height: 40px;
 }

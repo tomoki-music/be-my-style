@@ -22,7 +22,9 @@ Rails.application.routes.draw do
       resources :comments, only: [:create, :destroy]
    end
 
+   # イベント機能
    resources :events do
+    post "join" => "events#join"
     resources :songs, only: [:create, :destroy]
    end
 
@@ -35,7 +37,6 @@ Rails.application.routes.draw do
       get "community_show/:id" => "chat_rooms#community_show", on: :collection, as: :community_show
       post "community_create" => "chat_rooms#community_create", on: :collection
     end
-    # get "chat_rooms/community_show/:id" => "chat_rooms#community_show", as: :community_show
     resources :chat_messages, only: [:create] do
       post "community_create" => "chat_messages#community_create", on: :collection
     end

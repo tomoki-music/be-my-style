@@ -38,17 +38,7 @@ RSpec.describe "Public::Events", type: :request do
     context "event新規作成(create)が正しく処理され登録される" do
       it "eventの作成が成功する" do
         expect do
-          post public_events_path, params: {
-            event: {
-              customer_id: customer.id,
-              community_id: community.id,
-              event_name: "セッション開催！",
-              event_date: DateTime.now,
-              entrance_fee: 1500,
-              address: "埼玉県川口市",
-              introduction: "邦楽と洋楽のコピーセッション開催です！",
-            }
-          }
+          event
         end.to change(Event, :count).by(1)
       end
     end

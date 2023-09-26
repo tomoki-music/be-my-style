@@ -1,1 +1,91 @@
 = render 'layouts/header_menu'
+
+.event-show-title
+  %h2 イベント詳細
+  .event-show-follow
+    - if @owner == current_customer
+      = link_to '編集する', edit_public_event_path(@event), data: { 'turbolinks': false }, class: "btn btn-sm btn-success event-show-btn"
+      = link_to 'イベント削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger event-show-btn"
+      = link_to '参加する🎵', public_event_join_path(@event), method: :post, class: "btn btn-sm btn-info event-show-btn", data: { 'turbolinks': false, confirm: 'こちらのイベントに参加をします。よろしいですか？' }
+    - else
+      = link_to '参加する🎵', public_event_join_path(@event), method: :post, class: "btn btn-sm btn-info event-show-btn", data: { 'turbolinks': false, confirm: 'こちらのイベントに参加をします。よろしいですか？' }
+
+.event-show-container.px-0.px-sm-0
+  .row
+    .col-md-3
+      .event-show-card
+        .card
+          .img-container
+            - if @event.event_image.present?
+              = image_tag @event.event_image
+            - else
+              = image_tag 'no_image'
+          .card-body.text-container
+            %h5.card-title
+              = @event.event_name
+            %hr
+            %h6.card-subtitle
+              [イベント作成者]
+              %br
+              .event-owner-img
+                - if @owner.profile_image.present?
+                  = image_tag @owner.profile_image
+                - else
+                  = image_tag 'no_image'
+                .owner-name
+                  = @owner.name
+            %hr
+            %p.card-text
+            - if @owner == current_customer
+              .dropdown
+                %button#dropdownMenuButton.btn.btn-secondary.dropdown-toggle{"aria-expanded" => "false", "aria-haspopup" => "true", "data-toggle" => "dropdown", type: "button"}
+                  イベント作成者専用
+                .dropdown-menu{"aria-labelledby" => "dropdownMenuButton"}
+                  = link_to '編集する', edit_public_event_path(@event), data: { 'turbolinks': false }, class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent"
+                  = link_to 'イベント削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "dropdown-item btn btn-sm btn-danger community-show-btn text-secondary bg-transparent"
+                  = link_to '参加する🎵', public_event_join_path(@event), method: :post, class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent", data: { 'turbolinks': false, confirm: 'こちらのイベントに参加をします。よろしいですか？' }
+            - else
+              = link_to '参加する🎵', public_event_join_path(@event), method: :post, class: "btn btn-sm btn-success event-show-btn", data: { 'turbolinks': false, confirm: 'こちらのイベントに参加をします。よろしいですか？' }
+
+    .col-md-9
+      %table.table.table-striped.event-show-table{:width=>"100%",:border=>"1"}
+        %colgroup
+          %col{width: "19%"}
+          %col{width: "81%"}
+            %tr
+              %th{scope:"row"} 所属コミュニティ
+              %td
+                = @community.name
+            %tr
+              %th{scope:"row"} イベント名
+              %td
+                = @event.event_name
+            %tr
+              %th{scope:"row"} 参加人数
+              %td
+                = "未定"
+            %tr
+              %th{scope:"row"} 開始時間
+              %td
+                = l @event.event_start_time
+            %tr
+              %th{scope:"row"} 終了時間
+              %td
+                = l @event.event_end_time
+            %tr
+              %th{scope:"row"} 参加費用
+              %td
+                = @event.entrance_fee.to_s(:delimited) + "円"
+            %tr
+              %th{scope:"row"} 開催場所
+              %td
+                = @event.place
+            %tr
+              %th{scope:"row"} 開催場所（地図）
+              %td
+                = @event.address
+            %tr
+              %th{scope:"row"} イベント補足
+              %td
+                = simple_format(@event.introduction)
+
