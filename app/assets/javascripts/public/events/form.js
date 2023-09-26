@@ -1,4 +1,4 @@
-if (document.URL.match(/new/)){
+if (document.URL.match(/events\/new/)){
   document.addEventListener('DOMContentLoaded', () => {
     const createImageHTML = (blob) => {
       const imageElement = document.getElementById('new-event-image');
@@ -19,7 +19,7 @@ if (document.URL.match(/new/)){
   });
 }
 
-if (document.URL.match(/edit/)){
+if (document.URL.match(/events\/edit/)){
   document.addEventListener('DOMContentLoaded', () => {
     const createImageHTML = (blob) => {
       const imageElement = document.getElementById('edit-event-image');

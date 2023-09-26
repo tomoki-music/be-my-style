@@ -6,7 +6,7 @@
 .event-index-container
   - if @events.present?
     - @events.each do |event|
-      - @owner = Customer.find(event.customer)
+      - @owner = Customer.find(event.customer.id)
       .card.mb-5
         = link_to public_event_path(event), data: { 'turbolinks': false } do
           .img-container
@@ -19,9 +19,10 @@
             = link_to event.event_name, public_event_path(event), data: { 'turbolinks': false }
           %h6.card-subtitle
             開催日
-            = l event.event_start_time
+            %br
+            = l event.event_start_time, format: :short
             %i ~
-            = l event.event_end_time
+            = l event.event_end_time, format: :short
             %hr
             参加費用
             = event.entrance_fee.to_s + "円"
@@ -38,7 +39,6 @@
           .event-action-btn
             - if @owner == current_customer
               = link_to '編集する', edit_public_event_path(event), data: { 'turbolinks': false }, class: "btn btn-success"
-          %hr
           %p.card-text
             %hr
             [イベント作成者]

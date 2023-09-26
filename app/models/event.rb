@@ -4,13 +4,13 @@ class Event < ApplicationRecord
   belongs_to :customer
   belongs_to :community
 
-  accepts_nested_attributes_for :songs, allow_destroy: true
+  accepts_nested_attributes_for :songs, allow_destroy: true, reject_if: :all_blank
 
   with_options presence: true do
     validates :event_name
-    validates :event_date
+    validates :event_start_time
+    validates :event_end_time
     validates :entrance_fee
-    validates :introduction
     validates :address
     validates :songs
   end

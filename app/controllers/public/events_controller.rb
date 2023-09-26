@@ -12,14 +12,14 @@ class Public::EventsController < ApplicationController
 
   def new
     @event = Event.new
+    @song = @event.songs.build
   end
 
   def create
     @event = Event.new(event_params)
     @event.customer_id = current_customer.id
-    @event.community_id = 1
-    @event.songs << Song.new(song_name: "test")
-    if @event.save!
+    @event.community_id = params[:event][:community_id].to_i
+    if @event.save
       redirect_to public_event_path(@event), notice: "イベントを投稿しました！"
     else
       render :new, alert: "登録できませんでした。お手数ですが、入力内容をご確認のうえ再度お試しください"
@@ -39,6 +39,7 @@ class Public::EventsController < ApplicationController
   end
 
   def destroy
+    @event.songs.destroy_all
     @event.destroy
     redirect_to public_events_path, alert: "イベントを削除しました!"
   end
@@ -50,14 +51,16 @@ class Public::EventsController < ApplicationController
       :customer_id,
       :community_id,
       :event_name,
-      :event_date,
+      :event_start_time,
+      :event_end_time,
       :entrance_fee,
+      :place,
       :introduction,
       :address,
       :latitude,
       :longitude,
       :event_image,
-      songs_attributes: [:song_name, :youtube_url, :introduction, :_destroy],
+      songs_attributes: [:id, :song_name, :youtube_url, :introduction, :_destroy],
     )
   end
 
