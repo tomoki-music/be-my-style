@@ -10,6 +10,9 @@ class Public::EventsController < ApplicationController
   def show
     @owner = Customer.find(@event.customer.id)
     @community = Community.find(@event.community_id)
+    @latitude = @event.latitude
+    @longitude = @event.longitude
+    @address = @event.address
   end
 
   def new

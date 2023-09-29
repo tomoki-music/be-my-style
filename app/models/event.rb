@@ -6,6 +6,9 @@ class Event < ApplicationRecord
 
   accepts_nested_attributes_for :songs, allow_destroy: true, reject_if: :all_blank
 
+  geocoded_by :address
+  after_validation :geocode, if: :address_changed?
+
   with_options presence: true do
     validates :event_name
     validates :event_start_time

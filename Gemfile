@@ -80,3 +80,4 @@ gem "net-imap"
 gem 'gmaps4rails'
 gem 'geocoder'
 gem 'cocoon'
+gem "gon"

@@ -176,6 +176,10 @@
   }
   .event-show-table{
     border: thick double lightblue;
+    #map {
+      height: 300px;
+      width: 700px;
+    }
   }
   .event-index-title{
     width: 100%;
@@ -220,6 +224,12 @@
   .event-show-container{
     width: 90%;
     margin: 0 auto;
+    .event-show-table{
+      #map {
+        height: 300px;
+        width: 300px;
+      }
+    }
     .event-index-title{
       margin-bottom: 120px;
       .event-index-count{

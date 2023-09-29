@@ -46,7 +46,7 @@
                   .partner-chat-image
                     = image_tag chat_message.chat_image.variant(resize:'300x300'), class: 'message-image'
                 %li
-                = l chat_message.created_at
+                = l chat_message.created_at, format: :short
                 に送信済み
               %hr
           - else
@@ -70,7 +70,7 @@
                   .self-chat-image
                     = image_tag chat_message.chat_image.variant(resize:'300x300'), class: 'message-image'
                 %li
-                = l chat_message.created_at
+                = l chat_message.created_at, format: :short
                 に送信済み
               %hr
       .form-container
