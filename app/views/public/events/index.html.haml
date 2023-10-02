@@ -18,10 +18,12 @@
           %h5.card-title
             = link_to event.event_name, public_event_path(event), data: { 'turbolinks': false }
           %h6.card-subtitle
-            開催日
+            開催日(開始時間)
             %br
             = l event.event_start_time, format: :short
-            %i ~
+            %hr
+            開催日(終了時間)
+            %br
             = l event.event_end_time, format: :short
             %hr
             参加費用

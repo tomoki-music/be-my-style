@@ -291,6 +291,13 @@ input[type="text"] {
   height: 40px;
 }
 
+@media (max-width: 600px) {
+  .event-container{
+    .event-table{
+      width: 90%;
+    }
+  }
+}
 
 .event-edit-title{
   width: 90%;
@@ -303,3 +310,6 @@ input[type="text"] {
     border-radius: 10px;
   }
 }
+
+
+

@@ -32,7 +32,9 @@ class Public::EventsController < ApplicationController
   end
 
   def edit
-    
+    @latitude = @event.latitude
+    @longitude = @event.longitude
+    @address = @event.address
   end
 
   def update

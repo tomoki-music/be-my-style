@@ -62,5 +62,5 @@
           %tr
             %th{scope:"row"} コミュニティ紹介文
             %td
-              = f.text_area :introduction, style: "width:90%"
+              = f.text_area :introduction, style: "width:90%", rows: "10"
           = f.submit "コミュニティを更新", class: "btn btn-info community-edit-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }
