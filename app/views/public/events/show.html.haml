@@ -6,9 +6,9 @@
     - if @owner == current_customer
       = link_to '編集する', edit_public_event_path(@event), data: { 'turbolinks': false }, class: "btn btn-sm btn-success event-show-btn"
       = link_to 'イベント削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger event-show-btn"
-      = link_to '参加する🎵', public_event_join_path(@event), method: :post, class: "btn btn-sm btn-info event-show-btn", data: { 'turbolinks': false, confirm: 'こちらのイベントに参加をします。よろしいですか？' }
+      = link_to '参加する🎵', '#event-songs', class: "btn btn-sm btn-info event-show-btn"
     - else
-      = link_to '参加する🎵', public_event_join_path(@event), method: :post, class: "btn btn-sm btn-info event-show-btn", data: { 'turbolinks': false, confirm: 'こちらのイベントに参加をします。よろしいですか？' }
+      = link_to '参加する🎵', '#event-songs', class: "btn btn-sm btn-info event-show-btn"
 
 .event-show-container.px-0.px-sm-0
   .row
@@ -44,9 +44,9 @@
                 .dropdown-menu{"aria-labelledby" => "dropdownMenuButton"}
                   = link_to '編集する', edit_public_event_path(@event), data: { 'turbolinks': false }, class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent"
                   = link_to 'イベント削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "dropdown-item btn btn-sm btn-danger community-show-btn text-secondary bg-transparent"
-                  = link_to '参加する🎵', public_event_join_path(@event), method: :post, class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent", data: { 'turbolinks': false, confirm: 'こちらのイベントに参加をします。よろしいですか？' }
+                  = link_to '参加する🎵', '#event-songs', class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent"
             - else
-              = link_to '参加する🎵', public_event_join_path(@event), method: :post, class: "btn btn-sm btn-success event-show-btn", data: { 'turbolinks': false, confirm: 'こちらのイベントに参加をします。よろしいですか？' }
+              = link_to '参加する🎵', '#event-songs', class: "btn btn-sm btn-success event-show-btn"
 
     .col-md-9
       %table.table.table-striped.event-show-table{:width=>"100%",:border=>"1"}
@@ -85,6 +85,41 @@
               %th{scope:"row"} 開催場所（地図）
               %td
                 #map
+            %tr
+              %th{scope:"row"} 楽曲
+              %td
+                - @event.songs.each do |song|
+                  .song-name
+                    = song.song_name
+                    %br
+                  - if song.youtube_url.present?
+                    %iframe{
+                      src: "https://www.youtube.com/embed/#{song.youtube_url[32..42]}",
+                      allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",
+                      allowfullscreen: "",
+                      frameborder: "0",
+                      height: "315",
+                      width: "90%"
+                    }
+                  - else
+                    投稿された動画はありません。
+                  %hr
+            %tr
+              %th{scope:"row"} 参加フォーム
+              %td
+                #event-songs
+                  = form_tag(public_event_join_path(@event), method: :get,  onSubmit: "return CheckJoin()") do
+                    = collection_check_boxes(:event, :song_ids, @event.songs, :id, :song_name) do |event|
+                      = event.label do
+                        = event.check_box
+                        参加したい曲にチェック🎵
+                        .song-name
+                          = event.text
+                        %hr
+                      %br
+                    %input{type: "submit", value: "参加する", confirm: "こちらのイベントに参加をします。よろしいですか？"}
+                    %br
+                    ※参加したい曲にチェックを入れたら「参加する」を押して下さい。
             %tr
               %th{scope:"row"} イベント補足
               %td

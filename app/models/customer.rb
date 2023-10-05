@@ -42,6 +42,8 @@ class Customer < ApplicationRecord
   has_many :favorites, dependent: :destroy
   has_many :comments, dependent: :destroy
   has_many :events, dependent: :destroy
+  has_many :song_customers, dependent: :destroy
+  has_many :songs, through: :song_customers, dependent: :destroy
 
   validates :name, presence: true, length: {maximum: 20}
   validates :email, uniqueness: true, presence: true

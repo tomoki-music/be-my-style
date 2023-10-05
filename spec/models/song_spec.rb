@@ -17,8 +17,16 @@ RSpec.describe Song, type: :model do
   end
   describe 'アソシエーションのテスト' do
     context 'Eventモデルとの関係' do
-      it 'eventと1:Nとなっている' do
+      it 'eventとN:1となっている' do
         expect(Song.reflect_on_association(:event).macro).to eq :belongs_to
+      end
+    end
+    context 'customerモデルとの関係' do
+      it 'customerモデルと1:Nとなっている' do
+        expect(Song.reflect_on_association(:customers).macro).to eq :has_many
+      end
+      it '中間テーブルsong_customersと1:Nとなっている' do
+        expect(Song.reflect_on_association(:song_customers).macro).to eq :has_many
       end
     end
   end

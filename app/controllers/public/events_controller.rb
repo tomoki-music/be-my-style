@@ -1,6 +1,6 @@
 class Public::EventsController < ApplicationController
   before_action :authenticate_customer!
-  before_action :set_event, only: [:show, :edit, :update, :destroy, :join]
+  before_action :set_event, only: [:show, :edit, :update, :destroy]
   before_action :ensure_correct_customer, only: [:update, :edit, :destroy]
 
   def index
@@ -52,7 +52,13 @@ class Public::EventsController < ApplicationController
   end
 
   def join
-    
+    @event = Event.find(params[:event_id])
+    song_ids = params[:event][:song_ids].reject {|i| i == "" }
+    customer = current_customer
+    song_ids.each do |song_id|
+      Song.find(song_id).customers << customer
+    end
+    redirect_to public_event_path(@event), notice: "イベントへの参加が完了しました!"
   end
 
   private
@@ -71,6 +77,7 @@ class Public::EventsController < ApplicationController
       :latitude,
       :longitude,
       :event_image,
+      song_ids:[],
       songs_attributes: [:id, :song_name, :youtube_url, :introduction, :_destroy],
     )
   end

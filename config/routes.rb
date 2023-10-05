@@ -24,7 +24,7 @@ Rails.application.routes.draw do
 
    # イベント機能
    resources :events do
-    post "join" => "events#join"
+    get "join" => "events#join"
     resources :songs, only: [:create, :destroy]
    end
 

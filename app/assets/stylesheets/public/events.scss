@@ -180,6 +180,32 @@
       height: 300px;
       width: 700px;
     }
+    .song-name{
+      font-weight: bold;
+      font-size: 20px;
+    }
+    input[type="submit"] {
+      width: 20%;
+      font-size: 15px;
+      color: #fff;
+      display: inline-block;
+      padding: 15px 0px;
+      text-align: center;
+      background-color: #5c87a6;
+      border: 1px solid #5c87a6;
+      border-radius: 5px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color 1s;
+    }
+    input[type="submit"]:hover {
+      color: #5c87a6;
+      background-color: #ffffff;
+      border: 1px solid #5c87a6;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 1s;
+  }
   }
   .event-index-title{
     width: 100%;

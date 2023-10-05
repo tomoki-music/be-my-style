@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_09_18_110304) do
+ActiveRecord::Schema.define(version: 2023_10_02_100716) do
 
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
@@ -256,6 +256,15 @@ ActiveRecord::Schema.define(version: 2023_09_18_110304) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
+  create_table "song_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "song_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_song_customers_on_customer_id"
+    t.index ["song_id"], name: "index_song_customers_on_song_id"
+  end
+
   create_table "songs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "event_id", null: false
     t.string "song_name", null: false
@@ -291,5 +300,7 @@ ActiveRecord::Schema.define(version: 2023_09_18_110304) do
   add_foreign_key "favorites", "customers"
   add_foreign_key "permits", "communities"
   add_foreign_key "permits", "customers"
+  add_foreign_key "song_customers", "customers"
+  add_foreign_key "song_customers", "songs"
   add_foreign_key "songs", "events"
 end
