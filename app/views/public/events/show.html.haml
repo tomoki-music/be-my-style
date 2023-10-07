@@ -103,6 +103,15 @@
                     }
                   - else
                     投稿された動画はありません。
+                  %br
+                  .join-member
+                    【参加者（part）】
+                    %br
+                    - song.customers.distinct.each do |customer|
+                      %i 🎵
+                      = customer.name
+                      = customer.parts.pluck(:name).first
+                      %br
                   %hr
             %tr
               %th{scope:"row"} 参加フォーム
@@ -117,7 +126,7 @@
                           = event.text
                         %hr
                       %br
-                    %input{type: "submit", value: "参加する", confirm: "こちらのイベントに参加をします。よろしいですか？"}
+                    %input{type: "submit", value: "参加する", confirm: "こちらのイベントに参加をします。よろしいですか？", data: {disable_with: '送信中...'}}
                     %br
                     ※参加したい曲にチェックを入れたら「参加する」を押して下さい。
             %tr
