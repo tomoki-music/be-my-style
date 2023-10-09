@@ -17,4 +17,5 @@ class Event < ApplicationRecord
     validates :address
     validates :songs
   end
+
 end

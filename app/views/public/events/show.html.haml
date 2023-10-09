@@ -88,8 +88,9 @@
             %tr
               %th{scope:"row"} 楽曲
               %td
-                - @event.songs.each do |song|
+                - @event.songs.each.with_index(1) do |song, i|
                   .song-name
+                    【#{i}曲目】
                     = song.song_name
                     %br
                   - if song.youtube_url.present?
@@ -105,14 +106,93 @@
                     投稿された動画はありません。
                   %br
                   .join-member
-                    【参加者（part）】
+                    【参加者】
                     %br
-                    - song.customers.distinct.each do |customer|
-                      %i 🎵
-                      = customer.name
-                      = customer.parts.pluck(:name).first
-                      %br
+                    🎤ボーカル🎤
+                    %br
+                    .member
+                      - song.customers.distinct.each do |customer|
+                        -if customer.parts.pluck(:name).include?("ボーカル")
+                          = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
+                            .image_container
+                              - if customer.profile_image.present?
+                                = image_tag customer.profile_image, class: "icon_mini"
+                              - else
+                                = image_tag 'no_image', class: "icon_mini"
+                            = customer.name
+                    %br
+                    %br
+                    🎸ギター🎸
+                    %br
+                    .member
+                      - song.customers.distinct.each do |customer|
+                        - if customer.parts.pluck(:name).include?("ギター")
+                          = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
+                            .image_container
+                              - if customer.profile_image.present?
+                                = image_tag customer.profile_image, class: "icon_mini"
+                              - else
+                                = image_tag 'no_image', class: "icon_mini"
+                            = customer.name
+                    %br
+                    %br
+                    🎸ベース🎸
+                    %br
+                    .member
+                      - song.customers.distinct.each do |customer|
+                        - if customer.parts.pluck(:name).include?("ベース")
+                          = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
+                            .image_container
+                              - if customer.profile_image.present?
+                                = image_tag customer.profile_image, class: "icon_mini"
+                              - else
+                                = image_tag 'no_image', class: "icon_mini"
+                            = customer.name
+                    %br
+                    %br
+                    🎹キーボード🎹
+                    %br
+                    .member
+                      - song.customers.distinct.each do |customer|
+                        - if customer.parts.pluck(:name).include?("キーボード")
+                          = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
+                            .image_container
+                              - if customer.profile_image.present?
+                                = image_tag customer.profile_image, class: "icon_mini"
+                              - else
+                                = image_tag 'no_image', class: "icon_mini"
+                            = customer.name
+                    %br
+                    %br
+                    🥁ドラム🥁
+                    %br
+                    .member
+                      - song.customers.distinct.each do |customer|
+                        - if customer.parts.pluck(:name).include?("ドラム")
+                          = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
+                            .image_container
+                              - if customer.profile_image.present?
+                                = image_tag customer.profile_image, class: "icon_mini"
+                              - else
+                                = image_tag 'no_image', class: "icon_mini"
+                            = customer.name
+                    %br
+                    %br
+                    🎷その他🎷
+                    %br
+                    .member
+                      - song.customers.distinct.each do |customer|
+                        - part = customer.parts.pluck(:name)
+                        - unless part.include?("ボーカル") || part.include?("ギター") || part.include?("ベース") || part.include?("キーボード")  || part.include?("ドラム")
+                          = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
+                            .image_container
+                              - if customer.profile_image.present?
+                                = image_tag customer.profile_image, class: "icon_mini"
+                              - else
+                                = image_tag 'no_image', class: "icon_mini"
+                            = customer.name
                   %hr
+              %br
             %tr
               %th{scope:"row"} 参加フォーム
               %td

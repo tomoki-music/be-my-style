@@ -78,6 +78,7 @@ class Public::EventsController < ApplicationController
       :longitude,
       :event_image,
       song_ids:[],
+      part_ids:[],
       songs_attributes: [:id, :song_name, :youtube_url, :introduction, :_destroy],
     )
   end
