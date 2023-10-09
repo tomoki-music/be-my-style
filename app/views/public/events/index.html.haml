@@ -18,22 +18,26 @@
           %h5.card-title
             = link_to event.event_name, public_event_path(event), data: { 'turbolinks': false }
           %h6.card-subtitle
-            開催日(開始時間)
+            %b 開催日(開始時間)
             %br
             = l event.event_start_time, format: :short
             %hr
-            開催日(終了時間)
+            %b 開催日(終了時間)
             %br
             = l event.event_end_time, format: :short
             %hr
-            参加費用
+            %b 参加費用
             = event.entrance_fee.to_s + "円"
             %hr
-            開催場所
+            %b 開催場所
             = event.place
             %hr
-            現在参加人数
-            未定
+            %b 参加人数
+            - joined_member_ids = []
+            - event.songs.each do |song|
+              - joined_member_ids += song.customers.distinct.pluck(:id)
+            - joined_member_counts = joined_member_ids.uniq.length
+            #{joined_member_counts}人
           %hr
           .event-show-link-area
             = link_to "イベント詳細へ", public_event_path(event), class: "btn btn-info event-show-link", data: { 'turbolinks': false }

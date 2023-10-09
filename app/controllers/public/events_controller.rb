@@ -13,6 +13,12 @@ class Public::EventsController < ApplicationController
     @latitude = @event.latitude
     @longitude = @event.longitude
     @address = @event.address
+
+    joined_member_ids = []
+    @event.songs.each do |song|
+      joined_member_ids += song.customers.distinct.pluck(:id)
+    end
+    @joined_member_counts = joined_member_ids.uniq.length
   end
 
   def new

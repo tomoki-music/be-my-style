@@ -64,7 +64,7 @@
             %tr
               %th{scope:"row"} 参加人数
               %td
-                = "未定"
+                #{@joined_member_counts}人
             %tr
               %th{scope:"row"} 開始時間
               %td
@@ -106,9 +106,7 @@
                     投稿された動画はありません。
                   %br
                   .join-member
-                    【参加者】
-                    %br
-                    🎤ボーカル🎤
+                    #{song.song_name} 🎤ボーカル🎤
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -120,9 +118,8 @@
                               - else
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
-                    %br
-                    %br
-                    🎸ギター🎸
+                    %hr
+                    #{song.song_name} 🎸ギター🎸
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -134,9 +131,8 @@
                               - else
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
-                    %br
-                    %br
-                    🎸ベース🎸
+                    %hr
+                    #{song.song_name} 🎸ベース🎸
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -148,9 +144,8 @@
                               - else
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
-                    %br
-                    %br
-                    🎹キーボード🎹
+                    %hr
+                    #{song.song_name} 🎹キーボード🎹
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -162,9 +157,8 @@
                               - else
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
-                    %br
-                    %br
-                    🥁ドラム🥁
+                    %hr
+                    #{song.song_name} 🥁ドラム🥁
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -176,9 +170,8 @@
                               - else
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
-                    %br
-                    %br
-                    🎷その他🎷
+                    %hr
+                    #{song.song_name} 🎷特別枠🎷
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
