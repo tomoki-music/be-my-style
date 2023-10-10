@@ -1,4 +1,10 @@
 = render 'layouts/header_menu'
+- vocal = 0
+- guitar = 0
+- bass = 0
+- keyboard = 0
+- drums = 0
+- others = 0
 
 .event-show-title
   %h2 イベント詳細
@@ -106,7 +112,7 @@
                     投稿された動画はありません。
                   %br
                   .join-member
-                    #{song.song_name} 🎤ボーカル🎤
+                    🎤ボーカル🎤
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -119,7 +125,7 @@
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
                     %hr
-                    #{song.song_name} 🎸ギター🎸
+                    🎸ギター🎸
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -132,7 +138,7 @@
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
                     %hr
-                    #{song.song_name} 🎸ベース🎸
+                    🎸ベース🎸
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -145,7 +151,7 @@
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
                     %hr
-                    #{song.song_name} 🎹キーボード🎹
+                    🎹キーボード🎹
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -158,7 +164,7 @@
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
                     %hr
-                    #{song.song_name} 🥁ドラム🥁
+                    🥁ドラム🥁
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -171,7 +177,7 @@
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
                     %hr
-                    #{song.song_name} 🎷特別枠🎷
+                    🎷特別枠🎷
                     %br
                     .member
                       - song.customers.distinct.each do |customer|

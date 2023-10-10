@@ -190,6 +190,10 @@
       margin-bottom: 50px;
       .member{
         display: flex;
+        flex-wrap: wrap;
+        margin-top: 5px;
+        min-height: 70px;
+        width: 90%;
       }
       .image-style{
         text-decoration: none;
