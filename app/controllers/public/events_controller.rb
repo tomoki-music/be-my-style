@@ -19,6 +19,13 @@ class Public::EventsController < ApplicationController
       joined_member_ids += song.customers.distinct.pluck(:id)
     end
     @joined_member_counts = joined_member_ids.uniq.length
+
+    @vocal = []
+    @guitar = []
+    @bass = []
+    @keyboard = []
+    @drums = []
+    @others = []
   end
 
   def new

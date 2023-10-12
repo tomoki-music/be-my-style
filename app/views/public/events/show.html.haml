@@ -1,10 +1,4 @@
 = render 'layouts/header_menu'
-- vocal = 0
-- guitar = 0
-- bass = 0
-- keyboard = 0
-- drums = 0
-- others = 0
 
 .event-show-title
   %h2 イベント詳細
@@ -124,6 +118,10 @@
                               - else
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
+                          - @vocal << customer.id
+                      %hr
+                      【ボーカル#{@vocal.length}人】
+                      - @vocal = []
                     %hr
                     🎸ギター🎸
                     %br
@@ -137,6 +135,10 @@
                               - else
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
+                          - @guitar << customer.id
+                      %hr
+                      【ギター#{@guitar.length}人】
+                      - @guitar = []
                     %hr
                     🎸ベース🎸
                     %br
@@ -150,6 +152,10 @@
                               - else
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
+                          - @bass << customer.id
+                      %hr
+                      【ベース#{@bass.length}人】
+                      - @bass = []
                     %hr
                     🎹キーボード🎹
                     %br
@@ -163,6 +169,10 @@
                               - else
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
+                          - @keyboard << customer.id
+                      %hr
+                      【キーボード#{@keyboard.length}人】
+                      - @keyboard = []
                     %hr
                     🥁ドラム🥁
                     %br
@@ -176,6 +186,10 @@
                               - else
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
+                          - @drums << customer.id
+                      %hr
+                      【ドラム#{@drums.length}人】
+                      - @drums = []
                     %hr
                     🎷特別枠🎷
                     %br
@@ -190,24 +204,28 @@
                               - else
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
+                          - @others << customer.id
+                    %hr
+                      【特別枠#{@others.length}人】
+                      - @others = []
                   %hr
               %br
             %tr
               %th{scope:"row"} 参加フォーム
               %td
                 #event-songs
+                  📢参加したい曲にチェックを入れて「参加する」ボタンを押して下さい📢
+                  %hr
                   = form_tag(public_event_join_path(@event), method: :get,  onSubmit: "return CheckJoin()") do
                     = collection_check_boxes(:event, :song_ids, @event.songs, :id, :song_name) do |event|
                       = event.label do
                         = event.check_box
-                        参加したい曲にチェック🎵
+                        ◀️参加したい曲にチェック🎵
                         .song-name
                           = event.text
                         %hr
                       %br
                     %input{type: "submit", value: "参加する", confirm: "こちらのイベントに参加をします。よろしいですか？", data: {disable_with: '送信中...'}}
-                    %br
-                    ※参加したい曲にチェックを入れたら「参加する」を押して下さい。
             %tr
               %th{scope:"row"} イベント補足
               %td

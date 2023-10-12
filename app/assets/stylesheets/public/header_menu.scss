@@ -2,7 +2,7 @@
   .header-menu{
     margin: 0 auto;
     width: 90%;
-    height: 60px;
+    height: 80px;
     background-color: white;
     padding: 10px;
     .top-message{
@@ -13,11 +13,12 @@
       }
       p{
         font-size: 10px;
+        margin: 0 0 5px 0;
       }
     }
     .header-sign-in-list{
       float: right;
-      margin: 10px;
+      margin: 30px 10px 10px 10px ;
       display: flex;
       height: 15px;
       align-items: center;
@@ -64,7 +65,7 @@
       width: 90%;
       height: 50px;
       background-color: lightblue;
-      margin: 0 auto;
+      margin: 0 auto 0 auto;
       border-radius: 10px;
       ul{
         display: flex;
