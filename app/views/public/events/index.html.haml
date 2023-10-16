@@ -8,6 +8,9 @@
     - @events.each do |event|
       - @owner = Customer.find(event.customer.id)
       .card.mb-5
+        -if event.event_end_time < Time.now
+          .end-event
+            イベント終了
         = link_to public_event_path(event), data: { 'turbolinks': false } do
           .img-container
             - if event.event_image.present?

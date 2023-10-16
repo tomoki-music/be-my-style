@@ -106,7 +106,7 @@
                     投稿された動画はありません。
                   %br
                   .join-member
-                    🎤ボーカル🎤
+                    #{song.song_name} 🎤ボーカル🎤
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -124,7 +124,7 @@
                         ボーカル#{@vocal.length}人
                       - @vocal = []
                     %hr
-                    🎸ギター🎸
+                    #{song.song_name} 🎸ギター🎸
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -142,7 +142,7 @@
                         ギター#{@guitar.length}人
                       - @guitar = []
                     %hr
-                    🎸ベース🎸
+                    #{song.song_name} 🎸ベース🎸
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -160,7 +160,7 @@
                         ベース#{@bass.length}人
                       - @bass = []
                     %hr
-                    🎹キーボード🎹
+                    #{song.song_name} 🎹キーボード🎹
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -178,7 +178,7 @@
                         キーボード#{@keyboard.length}人
                       - @keyboard = []
                     %hr
-                    🥁ドラム🥁
+                    #{song.song_name} 🥁ドラム🥁
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -196,7 +196,7 @@
                         ドラム#{@drums.length}人
                       - @drums = []
                     %hr
-                    🎷特別枠🎷
+                    #{song.song_name} 🎷特別枠🎷
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
@@ -220,20 +220,23 @@
               %th{scope:"row"} 参加フォーム
               %td
                 #event-songs
-                  📢参加したい曲にチェックを入れて「参加する」ボタンを押して下さい📢
-                  %br
-                  📢参加ボタンを押すと、チェックを入れた楽曲にアイコンが表示されます📢
-                  %hr
-                  = form_tag(public_event_join_path(@event), method: :get,  onSubmit: "return CheckJoin()") do
-                    = collection_check_boxes(:event, :song_ids, @event.songs, :id, :song_name, checked:false) do |event|
-                      = event.label do
-                        = event.check_box
-                        ◀️参加したい曲にチェック🎵
-                        .song-name
-                          = event.text
-                        %hr
-                      %br
-                    %input{type: "submit", value: "参加する", confirm: "こちらのイベントに参加をします。よろしいですか？", data: {disable_with: '送信中...'}}
+                  -if @event.event_end_time > Time.now
+                    📢参加したい曲にチェックを入れて「参加する」ボタンを押して下さい📢
+                    %br
+                    📢参加ボタンを押すと、チェックを入れた楽曲にアイコンが表示されます📢
+                    %hr
+                    = form_tag(public_event_join_path(@event), method: :get,  onSubmit: "return CheckJoin()") do
+                      = collection_check_boxes(:event, :song_ids, @event.songs, :id, :song_name, checked:false) do |event|
+                        = event.label do
+                          = event.check_box
+                          ◀️参加したい曲にチェック🎵
+                          .song-name
+                            = event.text
+                          %hr
+                        %br
+                      %input{type: "submit", value: "参加する", confirm: "こちらのイベントに参加をします。よろしいですか？", data: {disable_with: '送信中...'}}
+                  - else
+                    こちらのイベントは終了致しました。
             %tr
               %th{scope:"row"} イベント補足
               %td
