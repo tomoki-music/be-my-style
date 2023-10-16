@@ -120,7 +120,8 @@
                             = customer.name
                           - @vocal << customer.id
                       %hr
-                      【ボーカル#{@vocal.length}人】
+                      .part-join-member
+                        ボーカル#{@vocal.length}人
                       - @vocal = []
                     %hr
                     🎸ギター🎸
@@ -137,7 +138,8 @@
                             = customer.name
                           - @guitar << customer.id
                       %hr
-                      【ギター#{@guitar.length}人】
+                      .part-join-member
+                        ギター#{@guitar.length}人
                       - @guitar = []
                     %hr
                     🎸ベース🎸
@@ -154,7 +156,8 @@
                             = customer.name
                           - @bass << customer.id
                       %hr
-                      【ベース#{@bass.length}人】
+                      .part-join-member
+                        ベース#{@bass.length}人
                       - @bass = []
                     %hr
                     🎹キーボード🎹
@@ -171,7 +174,8 @@
                             = customer.name
                           - @keyboard << customer.id
                       %hr
-                      【キーボード#{@keyboard.length}人】
+                      .part-join-member
+                        キーボード#{@keyboard.length}人
                       - @keyboard = []
                     %hr
                     🥁ドラム🥁
@@ -188,7 +192,8 @@
                             = customer.name
                           - @drums << customer.id
                       %hr
-                      【ドラム#{@drums.length}人】
+                      .part-join-member
+                        ドラム#{@drums.length}人
                       - @drums = []
                     %hr
                     🎷特別枠🎷
@@ -205,8 +210,9 @@
                                 = image_tag 'no_image', class: "icon_mini"
                             = customer.name
                           - @others << customer.id
-                    %hr
-                      【特別枠#{@others.length}人】
+                      %hr
+                      .part-join-member
+                        特別枠#{@others.length}人
                       - @others = []
                   %hr
               %br
@@ -215,9 +221,11 @@
               %td
                 #event-songs
                   📢参加したい曲にチェックを入れて「参加する」ボタンを押して下さい📢
+                  %br
+                  📢参加ボタンを押すと、チェックを入れた楽曲にアイコンが表示されます📢
                   %hr
                   = form_tag(public_event_join_path(@event), method: :get,  onSubmit: "return CheckJoin()") do
-                    = collection_check_boxes(:event, :song_ids, @event.songs, :id, :song_name) do |event|
+                    = collection_check_boxes(:event, :song_ids, @event.songs, :id, :song_name, checked:false) do |event|
                       = event.label do
                         = event.check_box
                         ◀️参加したい曲にチェック🎵

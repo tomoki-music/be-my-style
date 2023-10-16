@@ -37,7 +37,23 @@ class Public::EventsController < ApplicationController
     @event = Event.new(event_params)
     @event.customer_id = current_customer.id
     @event.community_id = params[:event][:community_id].to_i
-    if @event.save!
+    if @event.save
+      if current_customer.chat_room_customers.present?
+        community_ids = current_customer.chat_room_customers.pluck(:community_id)
+        community_ids.each do |community_id|
+          Community.where(id: community_id).each do |community|
+            community.customers.each do |customer|
+              if customer.id != current_customer.id
+                customer.create_notification_event_for_community(current_customer, @event.id, community.id)
+              end
+            end
+          end
+        end
+      elsif current_customer.followers.present?
+        current_customer.followers.each do |customer|
+          customer.create_notification_event_for_follow(current_customer, @event.id)
+        end
+      end
       redirect_to public_event_path(@event), notice: "イベントを投稿しました！"
     else
       render :new, alert: "登録できませんでした。お手数ですが、入力内容をご確認のうえ再度お試しください"
@@ -66,12 +82,16 @@ class Public::EventsController < ApplicationController
 
   def join
     @event = Event.find(params[:event_id])
-    song_ids = params[:event][:song_ids].reject {|i| i == "" }
-    customer = current_customer
-    song_ids.each do |song_id|
-      Song.find(song_id).customers << customer
+    if params[:event][:song_ids] == [""] 
+      redirect_to public_event_path(@event), alert: "参加する曲にチェックを入れて下さい。"
+    else
+      song_ids = params[:event][:song_ids].reject {|i| i == "" }
+      customer = current_customer
+      song_ids.each do |song_id|
+        Song.find(song_id).customers << customer
+      end
+      redirect_to public_event_path(@event), notice: "イベントへの参加が完了しました!"
     end
-    redirect_to public_event_path(@event), notice: "イベントへの参加が完了しました!"
   end
 
   private

@@ -176,9 +176,13 @@
   }
   .event-show-table{
     border: thick double lightblue;
+    margin-top: -25px;
     #map {
       height: 300px;
       width: 700px;
+    }
+    .song-check-box{
+      font-size: 20px;
     }
     .song-name{
       font-weight: bold;
@@ -205,6 +209,12 @@
           border-radius: 10px;
           cursor: pointer;
         }
+      }
+      .part-join-member{
+        border: solid 1px;
+        border-radius: 5px;
+        padding: 8px 5px 5px 5px ;
+        height: 40px;
       }
     }
     input[type="submit"] {

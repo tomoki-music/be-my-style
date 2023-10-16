@@ -59,17 +59,17 @@
           = link_to "ログイン", new_customer_session_path, data: { 'turbolinks': false }, class: "btn btn-primary menu-sp-btn"
 
   .customer-menu-pc
-    %ul.list-style-none
+    %ul.list-style-none.list
       %li
-        = link_to "Topページ", public_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-info"
+        = link_to "Topページ", public_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-info flex-item"
       %li
-        = link_to "コミュニティ一覧", public_communities_path, data: { 'turbolinks': false }, class: "btn btn-info"
+        = link_to "コミュニティ一覧", public_communities_path, data: { 'turbolinks': false }, class: "btn btn-info flex-item"
       %li
         - if current_customer.present?
-          = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "btn btn-info"
+          = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "btn btn-info flex-item"
       %li
-        = link_to "個別チャット", public_matchings_path, data: { 'turbolinks': false }, class: "btn btn-info"
+        = link_to "個別チャット", public_matchings_path, data: { 'turbolinks': false }, class: "btn btn-info flex-item"
       %li
-        = link_to "みんなの活動報告", public_activities_path, data: { 'turbolinks': false }, class: "btn btn-info"
+        = link_to "みんなの活動報告", public_activities_path, data: { 'turbolinks': false }, class: "btn btn-info flex-item"
       %li
-        = link_to "イベント参加", public_events_path, data: { 'turbolinks': false }, class: "btn btn-info"
+        = link_to "イベント参加", public_events_path, data: { 'turbolinks': false }, class: "btn btn-info flex-item"
