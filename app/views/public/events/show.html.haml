@@ -54,9 +54,11 @@
           %col{width: "19%"}
           %col{width: "81%"}
             %tr
-              %th{scope:"row"} 所属コミュニティ
+              %th{scope:"row"} 開催コミュニティ
               %td
                 = @community.name
+                .text-red
+                  ※このイベントは【#{@community.name}】に参加する必要があります。
             %tr
               %th{scope:"row"} イベント名
               %td
@@ -234,6 +236,7 @@
                             = event.text
                           %hr
                         %br
+                        = hidden_field_tag :event_id, @event.id
                       %input{type: "submit", value: "参加する", confirm: "こちらのイベントに参加をします。よろしいですか？", data: {disable_with: '送信中...'}}
                   - else
                     こちらのイベントは終了致しました。

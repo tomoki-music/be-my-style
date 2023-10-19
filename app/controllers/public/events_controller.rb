@@ -81,16 +81,22 @@ class Public::EventsController < ApplicationController
   end
 
   def join
-    @event = Event.find(params[:event_id])
-    if params[:event][:song_ids] == [""] 
-      redirect_to public_event_path(@event), alert: "参加する曲にチェックを入れて下さい。"
-    else
-      song_ids = params[:event][:song_ids].reject {|i| i == "" }
-      customer = current_customer
-      song_ids.each do |song_id|
-        Song.find(song_id).customers << customer
+    event = Event.find(params[:event_id])
+    community = Community.find(event.community_id)
+    customer_ids = community.customers.pluck(:id)
+    if customer_ids.include?(current_customer.id)
+      if params[:event][:song_ids] == [""] 
+        redirect_to public_event_path(event), alert: "参加する曲にチェックを入れて下さい。"
+      else
+        song_ids = params[:event][:song_ids].reject {|i| i == "" }
+        customer = current_customer
+        song_ids.each do |song_id|
+          Song.find(song_id).customers << customer
+        end
+        redirect_to public_event_path(event), notice: "イベントへの参加が完了しました!"
       end
-      redirect_to public_event_path(@event), notice: "イベントへの参加が完了しました!"
+    else
+      redirect_to public_community_path(community), alert: "まずこちらのコミュニティに参加してください"
     end
   end
 
