@@ -239,7 +239,7 @@
                           %hr
                         %br
                         = hidden_field_tag :event_id, @event.id
-                      %input{type: "submit", value: "参加する", confirm: "こちらのイベントに参加をします。よろしいですか？", data: {disable_with: '送信中...'}}
+                      %input{type: "submit", value: "参加する", confirm: "こちらのイベントに参加をします。よろしいですか？", data: {'disable_with': '送信中...', 'turbolinks': false}}
                   - else
                     こちらのイベントは終了致しました。
             %tr
