@@ -179,5 +179,10 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect { other_customer.create_notification_event_for_community(customer, event.id, community.id) }.to change(Notification, :count).by(1)
       end
     end
+    context 'イベント参加の通知メソッドのテスト' do
+      it '通知のインスタンスが作成される' do
+        expect { other_customer.create_notification_join_event(customer, event.id) }.to change(Notification, :count).by(1)
+      end
+    end
   end
 end

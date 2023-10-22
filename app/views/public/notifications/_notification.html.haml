@@ -64,6 +64,9 @@
         = link_to 'イベント', public_event_path(event_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
         = "を投稿しました"
         = link_to "【#{community.name}で同チーム】", public_community_path(community_id), data: { 'turbolinks': false }
+      - when 'join_event' then
+        = link_to 'イベント', public_event_path(event_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
+        = "に参加しました"
 
 
   .small.text-muted.text-right

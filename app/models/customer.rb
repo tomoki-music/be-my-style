@@ -184,4 +184,16 @@ class Customer < ApplicationRecord
     )
     notification.save if notification.valid?
   end
+
+  def create_notification_join_event(current_customer, event_id)
+    temp = Notification.where(["visitor_id = ? and visited_id = ? and action = ? and event_id = ?",current_customer.id, id, 'join_event', event_id])
+    if temp.blank?
+      notification = current_customer.active_notifications.new(
+        visited_id: id,
+        action: 'join_event',
+        event_id: event_id,
+      )
+      notification.save if notification.valid?
+    end
+  end
 end

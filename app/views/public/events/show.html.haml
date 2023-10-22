@@ -58,7 +58,7 @@
               %td
                 = @community.name
                 .text-red
-                  ※このイベントは【#{@community.name}】に参加する必要があります。
+                  ※このイベントは【#{@community.name}】に参加している必要があります。
             %tr
               %th{scope:"row"} イベント名
               %td
@@ -226,6 +226,8 @@
                     📢参加したい曲にチェックを入れて「参加する」ボタンを押して下さい📢
                     %br
                     📢参加ボタンを押すと、チェックを入れた楽曲にアイコンが表示されます📢
+                    .text-red
+                      ※このイベントは【#{@community.name}】に参加している必要があります。
                     %hr
                     = form_tag(public_event_join_path(@event), method: :get,  onSubmit: "return CheckJoin()") do
                       = collection_check_boxes(:event, :song_ids, @event.songs, :id, :song_name, checked:false) do |event|

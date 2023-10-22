@@ -93,6 +93,7 @@ class Public::EventsController < ApplicationController
         song_ids.each do |song_id|
           Song.find(song_id).customers << customer
         end
+        event.customer.create_notification_join_event(current_customer, event.id)
         redirect_to public_event_path(event), notice: "イベントへの参加が完了しました!"
       end
     else
