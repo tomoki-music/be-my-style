@@ -1,0 +1,55 @@
+= form_with model: [:public, event], local: true do |f|
+  .event-container.px-0.px-sm-0
+    %table.table.table-striped.event-table{:width=>"100%",:border=>"1"}
+      %colgroup
+        %col{width: "19%"}
+        %col{width: "81%"}
+          %tr
+            %th{scope:"row"} イベント画像
+            %td
+              = f.file_field :event_image, accept: 'image/*'
+              #new-event-image
+              #edit-event-image
+          %tr
+            %th{scope:"row"} イベント名
+            %td
+              = f.text_field :event_name, class: 'form-control'
+          %tr
+            %th{scope:"row"} 所属コミュニティ
+            %td 
+              = f.collection_select :community_id, current_customer.communities, :id, :name
+          %tr
+            %th{scope:"row"} 開催日(開始時間)
+            %td
+              = f.datetime_field :event_start_time, style: "width:260px"
+          %tr
+            %th{scope:"row"} 開催日(終了時間)
+            %td
+              = f.datetime_field :event_end_time, style: "width:260px"
+          %tr
+            %th{scope:"row"} 参加費用
+            %td
+              = f.number_field :entrance_fee, style: "width:260px"
+          %tr
+            %th{scope:"row"} 開催場所
+            %td
+              = f.text_field :place, class: 'form-control'
+          %tr
+            %th{scope:"row"} 開催場所住所
+            %td
+              = f.text_field :address, class: 'form-control'
+              %i.block ※開催場所の地図を表示する事ができます。
+          %tr
+            %th{scope:"row"} 楽曲
+            %td
+              #songs
+                = f.fields_for :songs, id: 'js-song-field' do |song|
+                  .field
+                    = render 'public/events/song_fields', f: song
+                .links{data: {count: @event.songs.count}}
+                  = link_to_add_association '曲を追加',f ,:songs ,{ class: 'btn btn-success js-add-song-field-btn' }
+          %tr
+            %th{scope:"row"} イベント補足
+            %td
+              = f.text_area :introduction, style: "width:90%"
+          = f.submit "イベントを登録", class: "btn btn-info event-btn", data: { confirm: 'こちらの内容で登録します。よろしいですか？' }

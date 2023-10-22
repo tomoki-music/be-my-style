@@ -6,6 +6,7 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
   let(:community) { FactoryBot.create(:community) }
   let(:activity) { FactoryBot.create(:activity, customer: customer) }
   let(:comment) { FactoryBot.create(:comment, customer: other_customer, activity: activity) }
+  let(:event) { FactoryBot.create(:event, :event_with_songs, customer: customer) }
 
   describe 'バリデーションのテスト' do
     context 'nameカラムが不正' do
@@ -90,6 +91,19 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(Customer.reflect_on_association(:comments).macro).to eq :has_many
       end
     end
+    context 'Eventモデルとの関係' do
+      it 'eventと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:events).macro).to eq :has_many
+      end
+    end
+    context 'songモデルとの関係' do
+      it 'songモデルと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:songs).macro).to eq :has_many
+      end
+      it '中間テーブルsong_customersと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:song_customers).macro).to eq :has_many
+      end
+    end
   end
   describe 'モデルのインスタンスメソッドのテスト' do
     context 'フォロー、アンフォローのメソッドテスト' do
@@ -145,7 +159,7 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect { other_customer.create_notification_leave(customer, community) }.to change(Notification, :count).by(1)
       end
     end
-    context '活動報告投稿の通知メソッドのテスト' do
+    context '活動報告投稿の通知メソッドのテスト（フォローワー向け）' do
       it '通知のインスタンスが作成される' do
         expect { other_customer.create_notification_activity_for_follow(customer, activity.id) }.to change(Notification, :count).by(1)
       end
@@ -153,6 +167,21 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
     context '活動報告投稿の通知メソッドのテスト（コミュニティ向け）' do
       it '通知のインスタンスが作成される' do
         expect { other_customer.create_notification_activity_for_community(customer, activity.id, community.id) }.to change(Notification, :count).by(1)
+      end
+    end
+    context 'イベント開催の通知メソッドのテスト（フォローワー向け）' do
+      it '通知のインスタンスが作成される' do
+        expect { other_customer.create_notification_event_for_follow(customer, event.id) }.to change(Notification, :count).by(1)
+      end
+    end
+    context 'イベント開催の通知メソッドのテスト（コミュニティ向け）' do
+      it '通知のインスタンスが作成される' do
+        expect { other_customer.create_notification_event_for_community(customer, event.id, community.id) }.to change(Notification, :count).by(1)
+      end
+    end
+    context 'イベント参加の通知メソッドのテスト' do
+      it '通知のインスタンスが作成される' do
+        expect { other_customer.create_notification_join_event(customer, event.id) }.to change(Notification, :count).by(1)
       end
     end
   end

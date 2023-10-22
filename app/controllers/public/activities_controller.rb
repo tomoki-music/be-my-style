@@ -30,7 +30,7 @@ class Public::ActivitiesController < ApplicationController
         current_customer.followers.each do |customer|
           customer.create_notification_activity_for_follow(current_customer, @activity.id)
         end
-      end   
+      end
       redirect_to public_activities_path, notice: "活動報告の投稿が完了しました!"
     else
       render "new", alert: "もう一度お試しください。"

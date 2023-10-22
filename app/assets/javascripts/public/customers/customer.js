@@ -1,4 +1,4 @@
-if (document.URL.match(/edit/)){
+if (document.URL.match(/customers\/edit/)){
   document.addEventListener('DOMContentLoaded', () => {
     const createImageHTML = (blob) => {
       const imageElement = document.getElementById('edit-image');

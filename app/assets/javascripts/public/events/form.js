@@ -1,13 +1,13 @@
-if (document.URL.match(/activities\/new/)){
+if (document.URL.match(/events\/new/)){
   document.addEventListener('DOMContentLoaded', () => {
     const createImageHTML = (blob) => {
-      const imageElement = document.getElementById('new-activity-image');
+      const imageElement = document.getElementById('new-event-image');
       const blobImage = document.createElement('img');
       blobImage.setAttribute('class', 'new-img')
       blobImage.setAttribute('src', blob);
       imageElement.appendChild(blobImage);
     };
-    document.getElementById('activity_activity_image').addEventListener('change', (e) =>{
+    document.getElementById('event_event_image').addEventListener('change', (e) =>{
       const imageContent = document.querySelector('img'); 
       if (imageContent){ 
         imageContent.remove(); 
@@ -19,16 +19,16 @@ if (document.URL.match(/activities\/new/)){
   });
 }
 
-if (document.URL.match(/activities\/edit/)){
+if (document.URL.match(/events\/edit/)){
   document.addEventListener('DOMContentLoaded', () => {
     const createImageHTML = (blob) => {
-      const imageElement = document.getElementById('edit-activity-image');
+      const imageElement = document.getElementById('edit-event-image');
       const blobImage = document.createElement('img');
       blobImage.setAttribute('class', 'new-img')
       blobImage.setAttribute('src', blob);
       imageElement.appendChild(blobImage);
     };
-    document.getElementById('activity_activity_image').addEventListener('change', (e) =>{
+    document.getElementById('event_event_image').addEventListener('change', (e) =>{
       const imageContent = document.querySelector('img'); 
       if (imageContent){ 
         imageContent.remove(); 

@@ -41,6 +41,9 @@ class Customer < ApplicationRecord
   has_many :activities, dependent: :destroy
   has_many :favorites, dependent: :destroy
   has_many :comments, dependent: :destroy
+  has_many :events, dependent: :destroy
+  has_many :song_customers, dependent: :destroy
+  has_many :songs, through: :song_customers, dependent: :destroy
 
   validates :name, presence: true, length: {maximum: 20}
   validates :email, uniqueness: true, presence: true
@@ -161,5 +164,36 @@ class Customer < ApplicationRecord
       activity_id: activity_id,
     )
     notification.save if notification.valid?
+  end
+
+  def create_notification_event_for_community(current_customer, event_id, community_id)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'event_for_community',
+      event_id: event_id,
+      community_id: community_id,
+    )
+    notification.save if notification.valid?
+  end
+
+  def create_notification_event_for_follow(current_customer, event_id)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'event_for_follow',
+      event_id: event_id,
+    )
+    notification.save if notification.valid?
+  end
+
+  def create_notification_join_event(current_customer, event_id)
+    temp = Notification.where(["visitor_id = ? and visited_id = ? and action = ? and event_id = ?",current_customer.id, id, 'join_event', event_id])
+    if temp.blank?
+      notification = current_customer.active_notifications.new(
+        visited_id: id,
+        action: 'join_event',
+        event_id: event_id,
+      )
+      notification.save if notification.valid?
+    end
   end
 end

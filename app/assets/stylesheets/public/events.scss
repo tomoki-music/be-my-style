@@ -1,19 +1,32 @@
-.community-index-head-title{
+.event-index-head-title{
   text-align: center;
   padding: 5px;
   display: flex;
   justify-content: center;
   align-items: center;
-  .community-index-create-btn{
+  .event-index-create-btn{
     margin-left: 20px;
   }
 }
 
-.community-index-container{
+.event-index-container{
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   width: 90%;
   margin: 0 auto;
+  .end-event{
+    text-align: center;
+    background-color: red;
+    color: white;
+    width: 100px;
+    z-index: 100px;
+    border: solid 2px white;
+    border-radius: 10px;
+    position: absolute;
+    top: 5px;
+    left: 5px;
+  }
   .img-container{
     width: 255px;
     height: 300px;
@@ -31,7 +44,7 @@
       min-height: 60px;
       text-align: center;
     }
-    .community-owner-img{
+    .event-owner-img{
       display: flex;
       justify-content: center;
       align-items: center;
@@ -43,28 +56,31 @@
         border-radius: 10px;
       }
     }
-    .community-show-link-area{
+    .event-show-link-area{
       text-align: center;
-      .community-show-link{
+      .event-show-link{
+        width: 200px;
         border-radius: 10px;
         padding: 10px;
         margin-top: 10px;
         text-decoration: none;
       }
     }
-    .community-action-btn{
+    .event-action-btn{
       text-align: center;
-      .btn{
-        width: 165px;
+      .event-show-link{
+        width: 200px;
         border-radius: 10px;
-        font-size: 15px;
+        padding: 10px;
+        margin-top: 10px;
+        text-decoration: none;
       }
     }
   }
 }
 
 @media (max-width: 600px) {
-  .community-index-container{
+  .event-index-container{
     display: flex;
     flex-wrap: wrap;
     width: 90%;
@@ -84,7 +100,7 @@
     .text-container{
       width: 350px;
       margin-bottom: 5px;
-      .community-index-link{
+      .event-index-link{
         position: absolute;
         left: 70px;
         bottom: 5px;
@@ -93,7 +109,7 @@
   }
 }
 
-.community-show-title{
+.event-show-title{
   text-align: center;
   margin: 0 auto;
   width: 90%;
@@ -101,7 +117,7 @@
   margin-bottom: 10px;
   height: 100px;
   background-color: white;
-  .community-show-follow{
+  .event-show-follow{
     position: sticky;
     top: 0;
     width: 100%;
@@ -112,7 +128,7 @@
     text-align: center;
     padding: 10px 0px;
     background-color: white;
-    .community-show-btn{
+    .event-show-btn{
       margin: 0 auto;
       margin-bottom: 5px;
       text-align: center;
@@ -127,10 +143,10 @@
   }
 }
 
-.community-show-container{
+.event-show-container{
   width: 90%;
   margin: 0 auto;
-  .community-show-card{
+  .event-show-card{
     border: thick double lightblue;
     .img-container{
       width: 100%;
@@ -144,7 +160,7 @@
     }
     .text-container{
       text-align: center;
-      .community-owner-img{
+      .event-owner-img{
         display: flex;
         justify-content: center;
         align-items: center;
@@ -159,7 +175,7 @@
       .card-text{
         margin-top: 10px;
       }
-      .community-show-btn{
+      .event-show-btn{
         margin: 0 auto;
         margin-bottom: 5px;
         text-align: center;
@@ -171,15 +187,78 @@
       }
     }
   }
-  .community-show-table{
+  .event-show-table{
     border: thick double lightblue;
+    margin-top: -25px;
+    #map {
+      height: 300px;
+      width: 700px;
+    }
+    .song-check-box{
+      font-size: 20px;
+    }
+    .song-name{
+      font-weight: bold;
+      font-size: 20px;
+    }
+    .join-member{
+      font-weight: bold;
+      font-size: 15px;
+      margin-bottom: 50px;
+      .member{
+        display: flex;
+        flex-wrap: wrap;
+        margin-top: 5px;
+        min-height: 70px;
+        width: 90%;
+      }
+      .image-style{
+        text-decoration: none;
+        margin-right: 10px;
+        .icon_mini{
+          width: 50px;
+          height: 50px;
+          object-fit: cover;
+          border-radius: 10px;
+          cursor: pointer;
+        }
+      }
+      .part-join-member{
+        border: solid 1px;
+        border-radius: 5px;
+        padding: 8px 5px 5px 5px ;
+        height: 40px;
+      }
+    }
+    input[type="submit"] {
+      width: 20%;
+      font-size: 15px;
+      color: #fff;
+      display: inline-block;
+      padding: 15px 0px;
+      text-align: center;
+      background-color: #5c87a6;
+      border: 1px solid #5c87a6;
+      border-radius: 5px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color 1s;
+    }
+    input[type="submit"]:hover {
+      color: #5c87a6;
+      background-color: #ffffff;
+      border: 1px solid #5c87a6;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 1s;
+    }
   }
-  .community-index-title{
+  .event-index-title{
     width: 100%;
     height: 60px;
     border: 1px solid;
     border-radius: 10px;
-    .community-index-count{
+    .event-index-count{
       margin: 10px 10px 10px 30px;
       display: flex;
       h4{
@@ -196,30 +275,36 @@
     .pc-serch{
       line-height: 60px;
     }
-    .community-index-title__searchForm{
+    .event-index-title__searchForm{
       font-size: 20px;
     }
   }
-  .community-index-body{
+  .event-index-body{
     margin-top: 50px;
   }
 }
 
 @media (max-width: 600px) {
-  .community-show-title{
-    .community-show-follow{
-      .community-show-btn{
+  .event-show-title{
+    .event-show-follow{
+      .event-show-btn{
         width: 100px;
         font-size: 10px;
       }
     }
   }
-  .community-show-container{
+  .event-show-container{
     width: 90%;
     margin: 0 auto;
-    .community-index-title{
+    .event-show-table{
+      #map {
+        height: 300px;
+        width: 300px;
+      }
+    }
+    .event-index-title{
       margin-bottom: 120px;
-      .community-index-count{
+      .event-index-count{
         justify-content: center;
       }
       .sp-kaminari{
@@ -229,13 +314,13 @@
         margin: 0 auto;
       }
     }
-    .community-index-body{
+    .event-index-body{
       width: 100%;
     }
   }
 }
 
-.community-new-title{
+.event-new-title{
   width: 90%;
   text-align: center;
   margin: 0 auto;
@@ -247,10 +332,10 @@
   }
 }
 
-.community-new-container{
+.event-container{
   width: 90%;
   margin: 0 auto 100px auto;
-  .community-new-table{
+  .event-table{
     border: thick double lightblue;
     .new-img{
       width: 300px;
@@ -259,7 +344,7 @@
       padding: 5px;
     }
   }
-  .community-new-btn{
+  .event-btn{
     position: fixed;
     bottom: 30px;
     right: 30px;
@@ -278,8 +363,15 @@ input[type="text"] {
   height: 40px;
 }
 
+@media (max-width: 600px) {
+  .event-container{
+    .event-table{
+      width: 90%;
+    }
+  }
+}
 
-.community-edit-title{
+.event-edit-title{
   width: 90%;
   text-align: center;
   margin: 0 auto;
@@ -291,116 +383,5 @@ input[type="text"] {
   }
 }
 
-.community-edit-container{
-  width: 90%;
-  margin: 0 auto 100px auto;
-  .community-edit-table{
-    border: thick double lightblue;
-    .edit-img{
-      width: 300px;
-      object-fit: cover;
-      border-radius: 10px;
-      padding: 5px;
-    }
-  }
-  .community-edit-btn{
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    display: block;
-    width: 200px;
-    margin-left: auto;
-    text-align: center;
-    font-size: 20px;
-    color: white;
-    border-radius: 10px;
-  }
-}
 
-input[type="text"] {
-  width: 90%;
-  height: 40px;
-}
 
-.community-new-mail-container{
-  width: 90%;
-  margin: 0 auto;
-  .community-new-mail-title{
-    margin-top: 10px;
-    text-align: center;
-  }
-  .community-new-mail-table{
-    border: thick double lightblue;
-  }
-  .community-new-mail-btn{
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    display: block;
-    width: 200px;
-    margin-left: auto;
-    text-align: center;
-    font-size: 20px;
-    color: white;
-    border-radius: 10px;
-  }
-}
-
-.community-send-mail-container{
-  width: 90%;
-  margin: 0 auto;
-  .community-send-mail-title{
-    margin-top: 10px;
-    text-align: center;
-  }
-  .community-send-mail-table{
-    border: thick double lightblue;
-    .community-send-mail-link{
-      margin: 0 auto;
-      margin-bottom: 5px;
-      text-align: center;
-      display: inline-block;
-      width: 200px;
-      font-size: 20px;
-      color: white;
-      border-radius: 10px;
-      text-decoration: none;
-    }
-  } 
-}
-
-.community-permits-container{
-  text-align: center;
-  margin: 0 auto;
-  width: 90%;
-  .community-permits-table{
-    border: thick double lightblue;
-    .permit-table-body{
-      font-size: 20px;
-      line-height: 2;
-      .img-container{
-        margin: 0 auto;
-        width: 50px;
-        height: 50px;
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          border-radius: 10px;
-        }
-      }
-      .customer-permit-btn{
-        margin: 0 auto;
-        margin-bottom: 5px;
-        text-align: center;
-        display: inline-block;
-        width: 200px;
-        height: 40px;
-        line-height: 30px;
-        font-size: 20px;
-        color: white;
-        border-radius: 10px;
-      }
-    }
-  }
-}

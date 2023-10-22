@@ -5,6 +5,8 @@
   - community = Community.find(community_id)
 - if notification.activity_id.present?
   - activity_id = notification.activity_id
+- if notification.event_id.present?
+  - event_id = notification.event_id
 
 .col-md-6.mx-auto
   .form-inline
@@ -55,6 +57,16 @@
         = link_to '活動報告', public_activity_path(activity_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
         = "を投稿しました"
         = link_to "【#{community.name}で同チーム】", public_community_path(community_id), data: { 'turbolinks': false }
+      - when 'event_for_follow' then
+        = link_to 'イベント', public_event_path(event_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
+        = "を投稿しました(フォローメンバー)"
+      - when 'event_for_community' then
+        = link_to 'イベント', public_event_path(event_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
+        = "を投稿しました"
+        = link_to "【#{community.name}で同チーム】", public_community_path(community_id), data: { 'turbolinks': false }
+      - when 'join_event' then
+        = link_to 'イベント', public_event_path(event_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
+        = "に参加しました"
 
 
   .small.text-muted.text-right

@@ -35,12 +35,13 @@
               [コミュニティオーナー]
               %br
               .community-owner-img
-                - if @owner.profile_image.present?
-                  = image_tag @owner.profile_image
-                - else
-                  = image_tag 'no_image'
-                .owner-name
-                  = @owner.name
+                = link_to public_customer_path(@owner), data: { 'turbolinks': false } do
+                  - if @owner.profile_image.present?
+                    = image_tag @owner.profile_image
+                  - else
+                    = image_tag 'no_image'
+                  .owner-name
+                    = @owner.name
             %hr
             %p.card-text
             - if @community.owner_id == current_customer.id

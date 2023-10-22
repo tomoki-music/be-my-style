@@ -27,7 +27,6 @@
         - @chat_messages.each do |chat_message|
           - if chat_message.customer.id != current_customer.id
             .partner-message
-              %hr
               %ul
                 %li
                 = link_to public_customer_path(chat_message.customer), class: "chat-room-customer-link" do
@@ -46,12 +45,11 @@
                   .partner-chat-image
                     = image_tag chat_message.chat_image.variant(resize:'300x300'), class: 'message-image'
                 %li
-                = l chat_message.created_at
+                = l chat_message.created_at, format: :short
                 に送信済み
               %hr
           - else
             .self-message
-              %hr
               %ul
                 %li
                 = link_to public_customer_path(chat_message.customer), class: "chat-room-customer-link" do
@@ -70,7 +68,7 @@
                   .self-chat-image
                     = image_tag chat_message.chat_image.variant(resize:'300x300'), class: 'message-image'
                 %li
-                = l chat_message.created_at
+                = l chat_message.created_at, format: :short
                 に送信済み
               %hr
       .form-container

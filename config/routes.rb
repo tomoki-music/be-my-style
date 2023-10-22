@@ -8,15 +8,24 @@ Rails.application.routes.draw do
   
   namespace :public do
     get 'homes/top'
+
+    # アーティスト関連
     resources :customers, only: [:index,:show,:edit,:update] do
       resource :relationships, only: [:create, :destroy]
       get 'followings' => 'relationships#followings', as: 'followings'
       get 'followers' => 'relationships#followers', as: 'followers'
     end
 
+    # 活動報告機能
     resources :activities do
       resource :favorites, only: [:create, :destroy]
       resources :comments, only: [:create, :destroy]
+   end
+
+   # イベント機能
+   resources :events do
+    get "join" => "events#join"
+    resources :songs, only: [:create, :destroy]
    end
 
     # 通知機能
@@ -28,7 +37,6 @@ Rails.application.routes.draw do
       get "community_show/:id" => "chat_rooms#community_show", on: :collection, as: :community_show
       post "community_create" => "chat_rooms#community_create", on: :collection
     end
-    # get "chat_rooms/community_show/:id" => "chat_rooms#community_show", as: :community_show
     resources :chat_messages, only: [:create] do
       post "community_create" => "chat_messages#community_create", on: :collection
     end

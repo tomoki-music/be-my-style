@@ -14,26 +14,26 @@
           %tr
             %th{scope:"row"} 活動報告「Youtube動画」
             %td
-              = f.text_field :youtube_url, placeholder: 'youtubeの動画URLを記載してください'
+              = f.text_field :youtube_url, placeholder: 'youtubeの動画URL（上部アドレスバーのURL）を記載', class: 'form-control'
           %tr
             %th{scope:"row"} 活動報告「タイトル」
             %td
-              = f.text_field :title
+              = f.text_field :title, class: 'form-control'
               %span.text-red (必須)
           %tr
             %th{scope:"row"} やって良かった事
             %td
-              = f.text_field :keep
+              = f.text_field :keep, class: 'form-control'
               %span.text-red (必須)
           %tr
             %th{scope:"row"} 失敗した事
             %td
-              = f.text_field :problem
+              = f.text_field :problem, class: 'form-control'
               %span.text-red (必須)
           %tr
             %th{scope:"row"} 次回挑戦したい事
             %td
-              = f.text_field :try
+              = f.text_field :try, class: 'form-control'
               %span.text-red (必須)
           %tr
             %th{scope:"row"} 活動報告「詳細」
@@ -48,5 +48,5 @@
                 みんなが知っている課題曲だったので、気軽に参加できた！
                 次は、私からも１曲リクエストしてみようと思います。
                 EOS
-              = f.text_area :introduction, placeholder: text, rows: "10", style: "width:90%"
+              = f.text_area :introduction, placeholder: text, rows: "10", style: "width:90%", class: 'form-control'
           = f.submit "活動報告を登録", class: "btn btn-info activity-new-edit-btn", data: { confirm: 'こちらの内容で登録します。よろしいですか？' }
