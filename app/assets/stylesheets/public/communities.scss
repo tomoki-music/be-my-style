@@ -9,6 +9,9 @@
   }
 }
 
+.communities-kaminari{
+  margin: 10px auto;
+}
 .community-index-container{
   display: flex;
   flex-wrap: wrap;
@@ -190,9 +193,6 @@
         line-height: 40px;
       }
     }
-    .pc-kaminari{
-      margin-top: 10px;
-    }
     .pc-serch{
       line-height: 60px;
     }
@@ -200,8 +200,14 @@
       font-size: 20px;
     }
   }
+  .community-customers-kaminari{
+    text-align: center;
+  }
   .community-index-body{
-    margin-top: 50px;
+    margin-top: 20px;
+  }
+  .community-customers-kaminari{
+    margin: 10px auto;
   }
 }
 
@@ -218,7 +224,7 @@
     width: 90%;
     margin: 0 auto;
     .community-index-title{
-      margin-bottom: 120px;
+      margin-bottom: 80px;
       .community-index-count{
         justify-content: center;
       }

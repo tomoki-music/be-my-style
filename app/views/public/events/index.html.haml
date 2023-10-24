@@ -3,14 +3,19 @@
 .event-index-head-title
   %h2 イベント一覧
   = link_to "イベント作成", new_public_event_path, data: { 'turbolinks': false }, class: "btn btn-info event-index-create-btn"
+.events-kaminari
+  = paginate @events
 .event-index-container
   - if @events.present?
     - @events.each do |event|
       - @owner = Customer.find(event.customer.id)
       .card.mb-5
-        -if event.event_end_time < Time.now
+        - if event.event_end_time < Time.now
           .end-event
             イベント終了
+        - else
+          .active-event
+            参加者募集中
         = link_to public_event_path(event), data: { 'turbolinks': false } do
           .img-container
             - if event.event_image.present?

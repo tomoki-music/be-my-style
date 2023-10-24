@@ -5,13 +5,13 @@ class Public::CommunitiesController < ApplicationController
   before_action :check_mail, only: [:send_mail]
 
   def index
-    @communities = Community.all
+    @communities = Community.all.page(params[:page]).per(5)
   end
 
   def show
     @community = Community.find(params[:id])
     @owner = Customer.find_by(id: @community.owner_id)
-    @community_customers = params[:part_id].present? ? Kaminari.paginate_array(Part.find(params[:part_id]).customers.filter {|customer| customer.community_customers.where(community_id: @community.id).present? } ).page(params[:page]).per(6) : @community.customers.page(params[:page]).per(6)
+    @community_customers = params[:part_id].present? ? Kaminari.paginate_array(Part.find(params[:part_id]).customers.filter {|customer| customer.community_customers.where(community_id: @community.id).present? } ).page(params[:page]).per(3) : @community.customers.page(params[:page]).per(3)
   end
 
   def new

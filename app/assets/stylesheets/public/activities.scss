@@ -9,6 +9,11 @@
   }
 }
 
+.activities-kaminari{
+  margin: 10px auto;
+  width: 100%;
+}
+
 .activity-index-container{
   position: relative;
   display: flex;
@@ -16,10 +21,11 @@
   width: 90%;
   margin: 0 auto;
   .new_activity{
+    padding: 5px;
     text-align: center;
     background-color: red;
     color: white;
-    width: 100px;
+    width: 110px;
     z-index: 100px;
     border: solid 2px white;
     border-radius: 10px;

@@ -4,7 +4,7 @@ class Public::ActivitiesController < ApplicationController
   before_action :set_activity, only: [:show, :edit, :update, :destroy]
 
   def index
-    @activities = Activity.all.order(created_at: :desc).page(params[:page]).per(10)
+    @activities = Activity.all.order(created_at: :desc).page(params[:page]).per(5)
   end
 
   def new

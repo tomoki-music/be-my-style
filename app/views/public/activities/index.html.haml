@@ -3,6 +3,8 @@
 .activity-index-head-title
   %h2 みんなの活動報告一覧
   = link_to "活動報告をする！", new_public_activity_path, data: { 'turbolinks': false }, class: "btn btn-info activity-index-create-btn"
+.activities-kaminari
+  = paginate @activities
 .activity-index-container
   - if @activities.present?
     - @activities.each do |activity|

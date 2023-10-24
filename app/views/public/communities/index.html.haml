@@ -3,6 +3,8 @@
 .community-index-head-title
   %h2 コミュニティ一覧
   = link_to "コミュニティ作成", new_public_community_path, data: { 'turbolinks': false }, class: "btn btn-info community-index-create-btn"
+.communities-kaminari
+  = paginate @communities
 .community-index-container
   - @communities.each do |community|
     - @owner = Customer.find_by(id: community.owner_id)
