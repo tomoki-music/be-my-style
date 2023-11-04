@@ -9,6 +9,10 @@ RSpec.describe 'Communityモデルのテスト', type: :model do
         community.name = ''
         expect(community.valid?).to eq false
       end
+      it '16文字以上でないこと' do
+        community.name = 'コミュニティの名前が１６文字です'
+        expect(community.valid?).to eq false
+      end
     end
     context 'introductionカラムが不正' do
       it '空欄でないこと' do
