@@ -10,6 +10,8 @@
     - @events.each do |event|
       - @owner = Customer.find(event.customer.id)
       .card.mb-5
+        .event-community-name
+          = event.community.name
         - if event.event_end_time < Time.now
           .end-event
             イベント終了
