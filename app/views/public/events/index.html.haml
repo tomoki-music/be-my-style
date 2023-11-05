@@ -2,7 +2,6 @@
 
 .event-index-head-title
   %h2 イベント一覧
-  = link_to "イベント作成", new_public_event_path, data: { 'turbolinks': false }, class: "btn btn-info event-index-create-btn"
 .events-kaminari
   = paginate @events
 .event-index-container
