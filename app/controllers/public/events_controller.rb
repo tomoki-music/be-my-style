@@ -4,7 +4,7 @@ class Public::EventsController < ApplicationController
   before_action :ensure_correct_customer, only: [:update, :edit, :destroy]
 
   def index
-    @events = Event.all.order(created_at: :desc).page(params[:page]).per(10)
+    @events = Event.all.order(created_at: :desc).page(params[:page]).per(5)
   end
 
   def show
