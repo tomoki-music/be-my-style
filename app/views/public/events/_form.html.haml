@@ -16,8 +16,12 @@
               = f.text_field :event_name, class: 'form-control'
           %tr
             %th{scope:"row"} 所属コミュニティ
-            %td 
-              = f.collection_select :community_id, current_customer.communities, :id, :name
+            %td
+              - if @community_id.present?
+                = f.hidden_field :community_id, :value => @community_id
+                = Community.find(@community_id).name
+              - else
+                = f.collection_select :community_id, current_customer.communities, :id, :name
           %tr
             %th{scope:"row"} 開催日(開始時間)
             %td

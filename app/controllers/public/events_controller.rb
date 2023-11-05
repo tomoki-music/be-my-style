@@ -31,6 +31,7 @@ class Public::EventsController < ApplicationController
   def new
     @event = Event.new
     @song = @event.songs.build
+    @community_id = params[:community_id]
   end
 
   def create
