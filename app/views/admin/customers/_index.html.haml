@@ -1,0 +1,18 @@
+%table.table.table-striped
+  %thead
+    %tr
+      %th ID
+      %th 名前
+      %th 詳細
+      %th メール承認
+  - @customers.each do |customer|
+    %tbody
+      %tr
+        %th=customer.id
+        %td=customer.name
+        %td 詳細ページへ
+        %td
+          -if customer.confirmed_at.nil?
+            = link_to "メール承認する", confirmation_path(customer_id: customer.id), class: "btn btn-primary"
+          - else
+            承認済み

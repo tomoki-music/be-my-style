@@ -18,6 +18,8 @@ module BeMyStyle
     #
     config.time_zone = "Tokyo"
     # config.eager_load_paths << Rails.root.join("extras")
+    # バリデーションエラーが発生したときに'field_with_errors'というclassを付加しない
+    config.action_view.field_error_proc = Proc.new { |html_tag, instance| html_tag }
     config.generators do |g|
       g.stylesheets false
       g.javascripts false

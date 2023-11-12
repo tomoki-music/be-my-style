@@ -7,5 +7,10 @@
     %li
       %i.fa-solid.fa-right-to-bracket
       = link_to "管理者ログイン", new_admin_session_path, class: "btn btn-primary"
-%h1 Admin::Homes#top
-%p Find me in app/views/admin/homes/top.html.erb
+.container
+  .row.justify-content-center
+    .col-md-8
+      %h2.text-center
+        管理者ダッシュボード
+
+      = render "admin/customers/index", customers: @customers

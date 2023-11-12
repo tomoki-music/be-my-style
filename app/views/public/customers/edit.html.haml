@@ -23,7 +23,17 @@
           %tr
             %th{scope:"row"} ニックネーム
             %td
-              = f.text_field :name
+              = f.text_field :name, class: 'form-control'
+          %tr
+            %th{scope:"row"} メールアドレス
+            %td
+              = f.email_field :email,
+              autofocus: "true",
+              required: "",
+              value: @customer.email,
+              autocomplete: "email",
+              placeholder: "メールアドレスを入力",
+              class: 'form-control'
           %tr
             %th{scope:"row"} 性別
             %td
@@ -57,25 +67,25 @@
           %tr
             %th{:rowspan => 5} 好きなアーティスト
             %td
-              = f.text_field :favorite_artist1
+              = f.text_field :favorite_artist1, class: 'form-control'
           %tr
             %td
-              = f.text_field :favorite_artist2
+              = f.text_field :favorite_artist2, class: 'form-control'
           %tr
             %td
-              = f.text_field :favorite_artist3
+              = f.text_field :favorite_artist3, class: 'form-control'
           %tr
             %td
-              = f.text_field :favorite_artist4
+              = f.text_field :favorite_artist4, class: 'form-control'
           %tr
             %td
-              = f.text_field :favorite_artist5
+              = f.text_field :favorite_artist5, class: 'form-control'
           %tr
             %th{scope:"row"} 作品URL
             %td
-              = f.text_field :url
+              = f.text_field :url, class: 'form-control'
           %tr
             %th{scope:"row"} 自己紹介
             %td
-              = f.text_area :introduction, style: "width:90%"
+              = f.text_area :introduction, style: "width:90%", class: 'form-control'
           = f.submit "プロフィールを更新", class: "btn btn-info customer-edit-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }

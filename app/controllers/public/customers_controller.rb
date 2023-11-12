@@ -1,7 +1,7 @@
 class Public::CustomersController < ApplicationController
   before_action :authenticate_customer!
   before_action :ensure_correct_customer, only: [:update, :edit]
-  before_action :set_customer, only: [:show, :edit, :update]
+  before_action :set_customer, only: [:show, :edit, :update, :edit_password, :update_password]
   before_action :check_same_community, only: [:show]
   
   def index
@@ -18,10 +18,24 @@ class Public::CustomersController < ApplicationController
   end
 
   def update
-    if @customer.update(customer_params)
+    if @customer.update_without_password(customer_params)
       redirect_to public_customer_path(@customer), notice: "プロフィールの更新が完了しました!"
     else
       render "edit"
+    end
+  end
+
+  def edit_password
+  end
+
+  def update_password
+    if password_set?
+      @customer.update_password(customer_params) 
+      flash[:notice] = "パスワードは正しく更新されました。"
+      redirect_to root_url
+    else
+      @customer.errors.add(:password, "パスワードに不備があります。")
+      render "edit_password"
     end
   end
 
@@ -30,6 +44,7 @@ class Public::CustomersController < ApplicationController
   def customer_params
     params.require(:customer).permit(
       :name,
+      :email,
       :part,
       :sex,
       :birthday,
@@ -43,6 +58,8 @@ class Public::CustomersController < ApplicationController
       :profile_image,
       :prefecture_id,
       :url,
+      :password,
+      :password_confirmation,
       part_ids: [],
       genre_ids: [],
     )
@@ -70,5 +87,10 @@ class Public::CustomersController < ApplicationController
     unless check_same_community_ids.present?
       redirect_to public_communities_path, alert: "メンバー詳細は同じコミュニティメンバーのみ閲覧できます。"
     end
+  end
+
+  def password_set?
+    customer_params[:password].present? && customer_params[:password_confirmation].present? ?
+    true : false
   end
 end

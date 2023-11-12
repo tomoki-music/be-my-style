@@ -1,4 +1,9 @@
 %p
-  Welcome #{@email}!
-%p You can confirm your account email through the link below:
-%p= link_to 'Confirm my account', confirmation_url(@resource, confirmation_token: @token)
+  こんにちは😊 BeMyStyleに登録ありがとうございます🎵 
+  ご登録のメールアドレス: #{@email}
+
+%p 以下の【メールアドレス確認】を押してユーザー登録を完了してください🎸
+%p= link_to 'メールアドレス確認', confirmation_url(@resource, confirmation_token: @token)
+%p ※心当たりがない場合は、本メッセージは破棄してください。
+
+%p Thank you for Using BeMyStyle🎵

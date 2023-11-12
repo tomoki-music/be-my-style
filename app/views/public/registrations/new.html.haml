@@ -15,7 +15,7 @@
           %tr
             %th{scope:"row"} メールアドレス
             %td
-              = f.email_field :email, autofocus: true, autocomplete: "email"
+              = f.email_field :email, autofocus: true, autocomplete: "email", class: 'form-control'
               %i.text-red (必須)
           %tr
             %th{scope:"row"} パスワード
@@ -24,12 +24,12 @@
                 %em
                   (半角 #{@minimum_password_length} 文字以上で入力してください。)
               %br/
-              = f.password_field :password, autocomplete: "new-password"
+              = f.password_field :password, autocomplete: "new-password", class: 'form-control'
               %i.text-red (必須)
           %tr
             %th{scope:"row"} パスワード(確認)
             %td
-              = f.password_field :password_confirmation, autocomplete: "new-password"
+              = f.password_field :password_confirmation, autocomplete: "new-password", class: 'form-control'
               %i.text-red (必須)
           %tr
             %th{scope:"row"} 画像
@@ -39,7 +39,7 @@
           %tr
             %th{scope:"row"} ニックネーム
             %td
-              = f.text_field :name
+              = f.text_field :name, class: 'form-control'
               %i.text-red (必須)
           %tr
             %th{scope:"row"} 性別
@@ -75,27 +75,27 @@
           %tr
             %th{:rowspan => 5} 好きなアーティスト
             %td
-              = f.text_field :favorite_artist1, style: "width:90%"
+              = f.text_field :favorite_artist1, style: "width:90%", class: 'form-control'
           %tr
             %td
-              = f.text_field :favorite_artist2, style: "width:90%"
+              = f.text_field :favorite_artist2, style: "width:90%", class: 'form-control'
           %tr
             %td
-              = f.text_field :favorite_artist3, style: "width:90%"
+              = f.text_field :favorite_artist3, style: "width:90%", class: 'form-control'
           %tr
             %td
-              = f.text_field :favorite_artist4, style: "width:90%"
+              = f.text_field :favorite_artist4, style: "width:90%", class: 'form-control'
           %tr
             %td
-              = f.text_field :favorite_artist5, style: "width:90%"
+              = f.text_field :favorite_artist5, style: "width:90%", class: 'form-control'
           %tr
             %th{scope:"row"} 作品URL
             %td
-              = f.text_field :url, style: "width:90%"
+              = f.text_field :url, style: "width:90%", class: 'form-control'
               %i.block ※「youtube」や「HP」「SNS」のURLを記入する事ができます。
           %tr
             %th{scope:"row"} 自己紹介
             %td
-              = f.text_area :introduction, style: "width:90%"
+              = f.text_area :introduction, style: "width:90%", class: 'form-control'
           .actions
             = f.submit "新規登録する", class: "btn btn-info registration-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }

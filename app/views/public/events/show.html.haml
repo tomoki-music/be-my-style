@@ -6,9 +6,9 @@
     - if @owner == current_customer
       = link_to '編集する', edit_public_event_path(@event), data: { 'turbolinks': false }, class: "btn btn-sm btn-success event-show-btn"
       = link_to 'イベント削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger event-show-btn"
-      = link_to '参加する🎵', '#event-songs', class: "btn btn-sm btn-info event-show-btn"
+      = link_to '参加する🎵', '#event-songs', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
     - else
-      = link_to '参加する🎵', '#event-songs', class: "btn btn-sm btn-info event-show-btn"
+      = link_to '参加する🎵', '#event-songs', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
 
 .event-show-container.px-0.px-sm-0
   .row

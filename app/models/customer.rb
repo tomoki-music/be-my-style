@@ -2,7 +2,8 @@ class Customer < ApplicationRecord
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable
+         :recoverable, :rememberable, :validatable,
+         :confirmable
 
   extend ActiveHash::Associations::ActiveRecordExtensions
   belongs_to :prefecture
@@ -49,6 +50,17 @@ class Customer < ApplicationRecord
   validates :email, uniqueness: true, presence: true
   validates :customer_parts, presence: true
 
+  def update_password(params, *options)
+    if params[:password].blank?
+      params.delete(:password)
+      params.delete(:password_confirmation) if params[:password_confirmation].blank?
+    end
+ 
+    result = update(params, *options)
+    clean_up_passwords
+    result
+  end
+  
   def follow(customer_id)
     relationships.create(followed_id: customer_id)
   end

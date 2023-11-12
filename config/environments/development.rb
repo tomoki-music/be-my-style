@@ -16,8 +16,8 @@ Rails.application.configure do
   :address => "smtp.gmail.com",
   :port => 587,
   :domain => 'smtp.gmail.com',
-  :user_name => ENV["GOOGLE_MAIL_ADDRESS"],
-  :password => ENV["GOOGLE_MAILER_PASSWORD"],
+  :user_name => Rails.application.credentials.gmail[:user_name],
+  :password => Rails.application.credentials.gmail[:password],
   :authentication => 'login'
 }
   # In the development environment your application's code is reloaded any time

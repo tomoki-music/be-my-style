@@ -11,6 +11,10 @@ Rails.application.routes.draw do
 
     # アーティスト関連
     resources :customers, only: [:index,:show,:edit,:update] do
+      member do
+        get "mypage/edit_password", :to =>"customers#edit_password"
+        put "mypage/password", :to => "customers#update_password"
+      end
       resource :relationships, only: [:create, :destroy]
       get 'followings' => 'relationships#followings', as: 'followings'
       get 'followers' => 'relationships#followers', as: 'followers'
@@ -57,12 +61,21 @@ devise_for :customers, controllers: {
   registrations: "public/registrations",
   sessions: 'public/sessions',
   passwords: 'public/passwords',
+  confirmations: 'public/confirmations',
 }
+
+devise_scope :customer do
+  get "verify", :to => "public/registrations#verify"
+end
 
 # 管理者用
 devise_for :admin, skip: [:registrations, :passwords], controllers: {
   sessions: "admin/sessions"
 }
+
+devise_scope :admin do
+  get "confirmation", :to => "admin/homes#confirmation"
+end
   
   # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
 end

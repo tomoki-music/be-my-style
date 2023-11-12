@@ -14,11 +14,11 @@
                 %em
                   (#{@minimum_password_length} 文字以上で入力して下さい)
                 %br/
-              = f.password_field :password, autofocus: true, autocomplete: "new-password"
+              = f.password_field :password, autofocus: true, autocomplete: "new-password", class: 'form-control'
           %tr
             %th{scope:"row"} 新しいパスワード（確認）
             %td
-              = f.password_field :password_confirmation, autocomplete: "new-password"
+              = f.password_field :password_confirmation, autocomplete: "new-password", class: 'form-control'
           .actions
             = f.submit "パスワードを変更", class: "btn btn-info password-btn"
   = render "public/shared/links"

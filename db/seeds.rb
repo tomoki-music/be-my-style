@@ -91,7 +91,7 @@ end
 
 tomusic = Customer.create!(
     name: 'tomusic',
-    email: 'tomusic@gmail.com',
+    email: 'i.tomoki0218+tomusic@gmail.com',
     password: 'tomusic1969',
     sex: :male,
     activity_stance: :mypace,
@@ -113,7 +113,7 @@ end
 
 mayu = Customer.create!(
     name: 'mayu',
-    email: 'mayu@gmail.com',
+    email: 'i.tomoki0218+mayu@gmail.com',
     password: 'mayu1969',
     sex: :female,
     activity_stance: :beginer,
@@ -135,7 +135,7 @@ end
 
 luka = Customer.create!(
     name: 'luka',
-    email: 'luka@gmail.com',
+    email: 'i.tomoki0218+luka@gmail.com',
     password: 'luka1969',
     sex: :female,
     activity_stance: :mypace,
@@ -157,7 +157,7 @@ end
 
 hatsune = Customer.create!(
     name: 'hatsune',
-    email: 'hatsune@gmail.com',
+    email: 'i.tomoki0218+hatsune@gmail.com',
     password: 'hatsune1969',
     sex: :male,
     activity_stance: :tightly,
@@ -179,7 +179,7 @@ end
 
 john = Customer.create!(
     name: 'john',
-    email: 'john@gmail.com',
+    email: 'i.tomoki0218+john@gmail.com',
     password: 'john1969',
     sex: :male,
     activity_stance: :mypace,
@@ -201,7 +201,7 @@ end
 
 paul = Customer.create!(
     name: 'paul',
-    email: 'paul@gmail.com',
+    email: 'i.tomoki0218+paul@gmail.com',
     password: 'paul1969',
     sex: :male,
     activity_stance: :tightly,
@@ -223,7 +223,7 @@ end
 
 george = Customer.create!(
     name: 'george',
-    email: 'george@gmail.com',
+    email: 'i.tomoki0218+george@gmail.com',
     password: 'george1969',
     sex: :male,
     activity_stance: :tightly,
@@ -245,7 +245,7 @@ end
 
 ringo = Customer.create!(
     name: 'ringo',
-    email: 'ringo@gmail.com',
+    email: 'i.tomoki0218+ringo@gmail.com',
     password: 'ringo1969',
     sex: :male,
     activity_stance: :tightly,
@@ -267,7 +267,7 @@ end
 
 takuro = Customer.create!(
     name: 'takuro',
-    email: 'takuro@gmail.com',
+    email: 'i.tomoki0218+takuro@gmail.com',
     password: 'takuro1969',
     sex: :male,
     activity_stance: :mypace,
@@ -408,7 +408,7 @@ study_music.genres << [pops, rock]
 study_music.community_image.attach(io: File.open(Rails.root.join('app/assets/images/study_music.jpg')),filename: 'study_music.jpg')
 
 acoustic_music = Community.create!(
-  name: '【MMM】アコースティックセッション',
+  name: '【MMM】アコースティック',
   activity_stance: :mypace,
   prefecture_id: 12,
   favorite_artist1: 'あいみょん',

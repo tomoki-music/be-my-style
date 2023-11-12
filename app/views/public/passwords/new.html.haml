@@ -9,7 +9,7 @@
           %tr
             %th{scope:"row"} メールアドレス
             %td
-              = f.email_field :email, autofocus: true, autocomplete: "email"
+              = f.email_field :email, autofocus: true, autocomplete: "email", class: 'form-control'
           .actions
             = f.submit "パスワードリセット", class: "btn btn-info password-btn"
   = render "public/shared/links"
