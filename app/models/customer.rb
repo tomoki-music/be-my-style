@@ -3,7 +3,7 @@ class Customer < ApplicationRecord
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable,
-         :confirmable
+         :confirmable, :trackable
 
   extend ActiveHash::Associations::ActiveRecordExtensions
   belongs_to :prefecture
@@ -60,7 +60,7 @@ class Customer < ApplicationRecord
     clean_up_passwords
     result
   end
-  
+
   def follow(customer_id)
     relationships.create(followed_id: customer_id)
   end

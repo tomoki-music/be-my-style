@@ -4,15 +4,20 @@
       %th ID
       %th 名前
       %th 詳細
+      %th 最終ログイン日
       %th メール承認
+      %th 物理削除
   - @customers.each do |customer|
     %tbody
       %tr
         %th=customer.id
         %td=customer.name
         %td 詳細ページへ
+        %td=customer.last_sign_in_at
         %td
           -if customer.confirmed_at.nil?
-            = link_to "メール承認する", confirmation_path(customer_id: customer.id), class: "btn btn-primary"
+            = link_to "承認", approval_path(customer_id: customer.id), method: :patch, data: { 'turbolinks': false }, class: "btn btn-primary"
           - else
             承認済み
+        %td
+          = link_to "物理退会", purge_path(customer_id: customer.id), method: :delete, data: { confirm: "【確認】アカウントを完全に削除してもよろしいですか？", 'turbolinks': false }, class: "btn btn-danger"

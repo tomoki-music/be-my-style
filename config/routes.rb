@@ -74,7 +74,8 @@ devise_for :admin, skip: [:registrations, :passwords], controllers: {
 }
 
 devise_scope :admin do
-  get "confirmation", :to => "admin/homes#confirmation"
+  patch "approval", :to => "admin/customers#approval"
+  delete "purge", :to => "admin/customers#purge"
 end
   
   # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
