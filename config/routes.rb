@@ -62,6 +62,7 @@ devise_for :customers, controllers: {
   sessions: 'public/sessions',
   passwords: 'public/passwords',
   confirmations: 'public/confirmations',
+  tracks: 'public/tracks',
 }
 
 devise_scope :customer do

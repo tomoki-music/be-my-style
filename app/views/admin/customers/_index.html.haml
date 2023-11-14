@@ -13,7 +13,7 @@
         %th=customer.id
         %td=customer.name
         %td 詳細ページへ
-        %td=customer.last_sign_in_at
+        %td=l(customer&.current_sign_in_at, format: :short, default: '-')
         %td
           -if customer.confirmed_at.nil?
             = link_to "承認", approval_path(customer_id: customer.id), method: :patch, data: { 'turbolinks': false }, class: "btn btn-primary"
