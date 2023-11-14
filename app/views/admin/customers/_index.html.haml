@@ -5,6 +5,7 @@
       %th 名前
       %th 詳細
       %th 最終ログイン日
+      %th ログイン回数
       %th メール承認
       %th 物理削除
   - @customers.each do |customer|
@@ -13,7 +14,8 @@
         %th=customer.id
         %td=customer.name
         %td 詳細ページへ
-        %td=l(customer&.current_sign_in_at, format: :short, default: '-')
+        %td=l(customer.current_sign_in_at, format: :short, default: '-')
+        %td="#{customer.sign_in_count}回"
         %td
           -if customer.confirmed_at.nil?
             = link_to "承認", approval_path(customer_id: customer.id), method: :patch, data: { 'turbolinks': false }, class: "btn btn-primary"
