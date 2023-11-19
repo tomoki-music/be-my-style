@@ -70,7 +70,7 @@
               %td
                 - if @activity.youtube_url.present?
                   %iframe{
-                    src: "https://www.youtube.com/embed/#{@activity.youtube_url[32..42]}",
+                    src: "https://www.youtube.com/embed/#{@activity.youtube_url.slice(-11,11)}",
                     allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",
                     allowfullscreen: "",
                     frameborder: "0",
