@@ -96,14 +96,25 @@
                     = song.song_name
                     %br
                   - if song.youtube_url.present?
-                    %iframe{
-                      src: "https://www.youtube.com/embed/#{song.youtube_url[32..42]}",
-                      allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",
-                      allowfullscreen: "",
-                      frameborder: "0",
-                      height: "315",
-                      width: "90%"
-                    }
+                    - if song.youtube_url.present?
+                      - if song.youtube_url.include?("youtube")
+                        %iframe{
+                          src: "https://www.youtube.com/embed/#{song.youtube_url[32..42]}",
+                          allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",
+                          allowfullscreen: "",
+                          frameborder: "0",
+                          height: "315",
+                          width: "90%"
+                        }
+                      - else
+                        %iframe{
+                          src: "https://www.youtube.com/embed/#{song.youtube_url.slice(17,11)}",
+                          allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",
+                          allowfullscreen: "",
+                          frameborder: "0",
+                          height: "315",
+                          width: "90%"
+                        }
                   - else
                     投稿された動画はありません。
                   %br

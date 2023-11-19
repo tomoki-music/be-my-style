@@ -69,14 +69,24 @@
               %th{scope:"row"} 活動報告動画
               %td
                 - if @activity.youtube_url.present?
-                  %iframe{
-                    src: "https://www.youtube.com/embed/#{@activity.youtube_url.slice(-11,11)}",
-                    allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",
-                    allowfullscreen: "",
-                    frameborder: "0",
-                    height: "315",
-                    width: "90%"
-                  }
+                  - if @activity.youtube_url.include?("youtube")
+                    %iframe{
+                      src: "https://www.youtube.com/embed/#{@activity.youtube_url[32..42]}",
+                      allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",
+                      allowfullscreen: "",
+                      frameborder: "0",
+                      height: "315",
+                      width: "90%"
+                    }
+                  - else
+                    %iframe{
+                      src: "https://www.youtube.com/embed/#{@activity.youtube_url.slice(17,11)}",
+                      allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",
+                      allowfullscreen: "",
+                      frameborder: "0",
+                      height: "315",
+                      width: "90%"
+                    }
                 - else
                   投稿された動画はありません。
             %tr
