@@ -1,0 +1,64 @@
+= render 'layouts/header_menu'
+
+.container.about-title
+  %h2 🎵BeMyStyleの歩き方🎵
+
+  .row.about-lead
+    .col-md-8
+      %h4 📝こんな方にオススメ📝
+      %ul.list-style-none
+        %li ①趣味を通して人との繋がりを広げたい
+        %li ②週末などお休みの日に趣味に打ち込みたい
+        %li ③みんなでイベントを企画！など挑戦したい
+    .col-md-4
+      = image_tag asset_path("relax-kuma"), size:"200x200"
+    
+  .about-to-do
+    %h4 📝まずはコレをやってみよう📝
+    %h4 〜３つのオススメBeMyStyleの歩き方〜
+    %ul.list-style-none.about-to-do-list
+      %li ①「コミュニティ」に参加しよう
+      %li ②「みんなの活動報告」に投稿しよう
+      %li ③「イベント」に参加しよう
+
+  .about-community
+    %h4  ①気になる「コミュニティ」に参加申請しよう
+    .row
+      .col-md-8
+        %ul.list-style-none.about-community-list
+          %li 📝参加申請をしたら管理者より承認を待ちます
+          %li 📝承認されたらコミュニティ参加決定
+          %li 📝グループチャットなどで交流しよう
+          %li.about-direct-btn
+            コミュニティ参加はコチラ👉
+            = link_to "コミュニティ", public_communities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+      .col-md-4
+        = image_tag asset_path("letter-form-girl"), size:"250x200"
+
+  .about-activity
+    %h4  ②近況を「みんなの活動報告」で投稿しよう
+    .row
+      .col-md-4
+        = image_tag asset_path("acguitar-girl"), size:"250x200"
+      .col-md-8
+        %ul.list-style-none.about-activity-list
+          %li 📝練習で学んだ事、音楽以外でも何でもOK
+          %li 📝画像や動画も効果的に貼り付けてみよう
+          %li 📝KPTに沿って投稿記事を作成して投稿
+          %li.about-direct-btn
+            みんなの活動報告はコチラ👉
+            = link_to "活動報告", public_activities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+
+  .about-event
+    %h4  ③開催「イベント」に参加してみよう
+    .row
+      .col-md-8
+        %ul.list-style-none.about-event-list
+          %li 📝邦楽、洋楽、コピー、フリーなど様々🎵
+          %li 📝「登録のパート」で曲毎に参加します
+          %li 📝他の参加メンバーもチェックできます
+          %li.about-direct-btn
+            イベント参加はコチラ👉
+            = link_to "イベント参加", public_events_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+      .col-md-4
+        = image_tag asset_path("cool-guitar-woman"), size:"250x200"

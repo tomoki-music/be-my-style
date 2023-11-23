@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   
   namespace :public do
     get 'homes/top'
+    get 'homes/about'
 
     # アーティスト関連
     resources :customers, only: [:index,:show,:edit,:update] do
