@@ -22,7 +22,7 @@
       %li ③「イベント」に参加しよう
 
   .about-community
-    %h5  ①気になる「コミュニティ」に参加申請しよう
+    %h5 ①気になる「コミュニティ」に参加申請しよう
     .row
       .col-md-8
         %ul.list-style-none.about-community-list
@@ -36,7 +36,7 @@
         = image_tag asset_path("letter-form-girl"), size:"250x200"
 
   .about-activity
-    %h5  ②近況を「みんなの活動報告」で投稿しよう
+    %h5 ②近況を「みんなの活動報告」で投稿しよう
     .row
       .col-md-4
         = image_tag asset_path("acguitar-girl"), size:"250x200"
@@ -50,7 +50,7 @@
             = link_to "活動報告", public_activities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
 
   .about-event
-    %h5  ③開催「イベント」に参加してみよう
+    %h5 ③開催「イベント」に参加してみよう
     .row
       .col-md-8
         %ul.list-style-none.about-event-list
@@ -62,3 +62,8 @@
             = link_to "イベント参加", public_events_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
       .col-md-4
         = image_tag asset_path("cool-guitar-woman"), size:"250x200"
+  
+  .attention
+    %h5 アプリ利用可能時間につきまして
+    %p BeMyStyleは【9:00~24:00】間でご利用可能です。
+    %p ※夜間・早朝の【0:00~8:59】はご利用不可。

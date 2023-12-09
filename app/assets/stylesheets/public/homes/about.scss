@@ -24,7 +24,7 @@
   border: solid 5px #17a2b8;
   border-radius: 10px;
   width: 90%;
-  h4{
+  h5{
     margin: 10px 0 20px 0;
   }
   p{
@@ -44,7 +44,7 @@
   border: solid 5px #17a2b8;
   border-radius: 10px;
   width: 90%;
-  h4{
+  h5{
     margin: 10px 0 20px 0;
   }
   p{
@@ -64,7 +64,7 @@
   border: solid 5px #17a2b8;
   border-radius: 10px;
   width: 90%;
-  h4{
+  h5{
     margin: 10px 0 20px 0;
   }
   p{
@@ -84,7 +84,27 @@
   border: solid 5px #17a2b8;
   border-radius: 10px;
   width: 90%;
-  h4{
+  h5{
+    margin: 10px 0 20px 0;
+  }
+  p{
+    margin: 10px 0;
+  }
+  .about-event-list{
+    text-align: left;
+    display: inline-block;
+  }
+}
+
+.attention{
+  text-align: center;
+  margin: 20px auto;
+  padding: 25px 0;
+  font-size: 17px;
+  border: solid 5px red;
+  border-radius: 10px;
+  width: 90%;
+  h5{
     margin: 10px 0 20px 0;
   }
   p{
