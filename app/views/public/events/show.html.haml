@@ -177,7 +177,7 @@
                     %br
                     .member
                       - song.customers.distinct.each do |customer|
-                        - if customer.parts.pluck(:name).include?("キーボード")
+                        - if customer.parts.pluck(:name).include?("ピアノ・キーボード")
                           = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
                             .image_container
                               - if customer.profile_image.present?
@@ -237,6 +237,9 @@
                     📢参加したい曲にチェックを入れて「参加する」ボタンを押して下さい📢
                     %br
                     📢参加ボタンを押すと、チェックを入れた楽曲にアイコンが表示されます📢
+                    %br
+                    📢参加パートはマイページで登録したパート（マルチプレイヤーは全て）で参加となります📢
+                    %br
                     .text-red
                       ※このイベントは【#{@community.name}】に参加している必要があります。
                     %hr
