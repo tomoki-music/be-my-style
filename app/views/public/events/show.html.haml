@@ -214,7 +214,7 @@
                     .member
                       - song.customers.distinct.each do |customer|
                         - part = customer.parts.pluck(:name)
-                        - unless part.include?("ボーカル") || part.include?("ギター") || part.include?("ベース") || part.include?("キーボード")  || part.include?("ドラム")
+                        - unless part.include?("ボーカル") || part.include?("ギター") || part.include?("ベース") || part.include?("ピアノ・キーボード")  || part.include?("ドラム")
                           = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
                             .image_container
                               - if customer.profile_image.present?
