@@ -10,27 +10,16 @@ class Public::EventsController < ApplicationController
   def show
     @owner = Customer.find(@event.customer.id)
     @community = Community.find(@event.community_id)
+    # @joined_member_counts = @event.songs.map{|song| joined_member += song.join_parts}
     @latitude = @event.latitude
     @longitude = @event.longitude
     @address = @event.address
-
-    joined_member_ids = []
-    @event.songs.each do |song|
-      joined_member_ids += song.customers.distinct.pluck(:id)
-    end
-    @joined_member_counts = joined_member_ids.uniq.length
-
-    @vocal = []
-    @guitar = []
-    @bass = []
-    @keyboard = []
-    @drums = []
-    @others = []
   end
 
   def new
     @event = Event.new
     @song = @event.songs.build
+    @join_part = @song.join_parts.build
     @community_id = params[:community_id]
   end
 
@@ -86,13 +75,15 @@ class Public::EventsController < ApplicationController
     community = Community.find(event.community_id)
     customer_ids = community.customers.pluck(:id)
     if customer_ids.include?(current_customer.id)
-      if params[:event][:song_ids] == [""] 
-        redirect_to public_event_path(event), alert: "参加する曲にチェックを入れて下さい。"
+      if params[:event][:join_part_ids] == [""] 
+        redirect_to public_event_path(event), alert: "参加したパートにチェックを入れて下さい。"
       else
-        song_ids = params[:event][:song_ids].reject {|i| i == "" }
+        join_part_ids = params[:event][:join_part_ids].reject {|i| i == "" }
         customer = current_customer
-        song_ids.each do |song_id|
-          Song.find(song_id).customers << customer
+        join_part_ids.each do |join_part_id|
+          unless JoinPart.find(join_part_id).customers.pluck(:id).include?(customer.id)
+            JoinPart.find(join_part_id).customers << customer
+          end
         end
         event.customer.create_notification_join_event(current_customer, event.id)
         redirect_to public_event_path(event), notice: "イベントへの参加が完了しました!"
@@ -118,9 +109,9 @@ class Public::EventsController < ApplicationController
       :latitude,
       :longitude,
       :event_image,
-      song_ids:[],
+      join_part_ids:[],
       part_ids:[],
-      songs_attributes: [:id, :song_name, :youtube_url, :introduction, :_destroy],
+      songs_attributes: [:id, :song_name, :youtube_url, :introduction, :_destroy, join_parts_attributes:[:join_part_name, :_destroy]],
     )
   end
 

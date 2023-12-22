@@ -3,15 +3,16 @@
 .container.about-title
   %h2 🎵BeMyStyleの歩き方🎵
 
-  .row.about-lead
-    .col-md-8
-      %h4 📝こんな方にオススメ📝
-      %ul.list-style-none
-        %li ①趣味を通して人との繋がりを広げたい
-        %li ②週末などお休みの日に趣味に打ち込みたい
-        %li ③みんなでイベントを企画！など挑戦したい
-    .col-md-4
-      = image_tag asset_path("relax-kuma"), size:"200x200"
+  .about-lead
+    %h4 📝こんな方にオススメ📝
+    .row
+      .col-md-8
+        %ul.list-style-none.about-lead-list
+          %li ①趣味を通して人との繋がりを広げたい
+          %li ②週末などお休みの日に趣味に打ち込みたい
+          %li ③みんなでイベントを企画！など挑戦したい
+      .col-md-4
+        = image_tag asset_path("relax-kuma"), size:"200x200"
     
   .about-to-do
     %h5 📝まずはコレをやってみよう📝
@@ -26,7 +27,7 @@
     .row
       .col-md-8
         %ul.list-style-none.about-community-list
-          %li 📝参加申請をしたら管理者より承認を待ちます
+          %li 📝参加申請をしたら管理者の承認待ち
           %li 📝承認されたらコミュニティ参加決定
           %li 📝グループチャットなどで交流しよう
           %li.about-direct-btn
@@ -54,7 +55,7 @@
     .row
       .col-md-8
         %ul.list-style-none.about-event-list
-          %li 📝イベント参加は開催コミュニティ所属が前提です
+          %li 📝参加は開催コミュニティ所属が前提です
           %li 📝「登録のパート」で曲毎に参加します
           %li 📝他の参加メンバーもチェックできます
           %li.about-direct-btn
@@ -65,5 +66,4 @@
   
   .attention
     %h5 アプリ利用可能時間につきまして
-    %p BeMyStyleは【9:00~24:00】間でご利用可能です。
-    %p ※夜間・早朝の【0:00~8:59】はご利用不可。
+    %p BeMyStyleは【6:00~26:00】間でご利用可能です。
