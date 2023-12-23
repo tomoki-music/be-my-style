@@ -10,7 +10,13 @@ class Public::EventsController < ApplicationController
   def show
     @owner = Customer.find(@event.customer.id)
     @community = Community.find(@event.community_id)
-    # @joined_member_counts = @event.songs.map{|song| joined_member += song.join_parts}
+    joined_member_ids = []
+    @event.songs.each do |song|
+      song.join_parts.each do |join_part|
+        joined_member_ids += join_part.customers.pluck(:id)
+      end
+    end
+    @joined_member_counts = joined_member_ids.uniq.length
     @latitude = @event.latitude
     @longitude = @event.longitude
     @address = @event.address

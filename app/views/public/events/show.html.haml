@@ -123,6 +123,8 @@
                       .member
                         .part-name
                           = join_part.join_part_name
+                          = join_part.customers.length
+                          人
                         - join_part.customers.each do |customer|
                           = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
                             .image_container
@@ -133,38 +135,35 @@
                               %br
                               = customer.name
                         %hr
-                        .part-join-member
-                          = join_part.customers.length
-                          人
                       %hr
             %tr
               %th{scope:"row"} 参加フォーム
               %td
                 #event-songs
                   -if @event.event_end_time > Time.now
-                    📢参加したい曲とパートを選んで「参加する」ボタンを押して下さい📢
+                    📢参加したい曲のパートを選んで下部の「参加する」ボタンを押して下さい📢
                     %br
                     📢参加ボタンを押すと、楽曲のパート内にアイコンが表示されます📢
                     %br
                     .text-red
                       ※このイベントは【#{@community.name}】に参加している必要があります。
                     %hr
-                    - @event.songs.each do |song|
-                      .join-part-list
-                        .join-part-song-name
-                          =song.song_name
-                        %hr
-                        = form_tag(public_event_join_path(@event), method: :post,  onSubmit: "return CheckJoin()") do
-                          = collection_check_boxes(:event, :join_part_ids, song.join_parts, :id, :join_part_name, checked:false) do |part|
-                            = part.label do
-                              .song-name
-                                = part.check_box
-                                = part.text
-                              ☝️参加したいパートにチェック🎵
-                              %hr
-                            %br
-                            = hidden_field_tag :event_id, @event.id
-                          %input{type: "submit", value: "参加する", class: "join-part-btn", confirm: "こちらのイベントに参加をします。よろしいですか？", data: {'disable_with': '送信中...', 'turbolinks': false}}
+                    = form_tag(public_event_join_path(@event), method: :post,  onSubmit: "return CheckJoin()") do
+                      - @event.songs.each do |song|
+                        .join-part-list
+                          .join-part-song-name
+                            =song.song_name
+                          %hr
+                            = collection_check_boxes(:event, :join_part_ids, song.join_parts, :id, :join_part_name, checked:false) do |part|
+                              = part.label do
+                                .song-name
+                                  = part.check_box
+                                  = part.text
+                                ☝️参加したいパートにチェック🎵
+                                %hr
+                              %br
+                              = hidden_field_tag :event_id, @event.id
+                      %input{type: "submit", value: "参加する", class: "join-part-btn", confirm: "こちらのイベントに参加をします。よろしいですか？", data: {'disable_with': '送信中...', 'turbolinks': false}}
                   - else
                     こちらのイベントは終了致しました。
             %tr
