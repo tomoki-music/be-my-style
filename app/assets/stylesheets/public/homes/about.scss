@@ -6,13 +6,20 @@
 }
 
 .about-lead{
-  margin: 0 auto;
+  text-align: center;
+  margin: 20px auto;
+  padding-top: 20px;
   font-size: 17px;
   border: solid 5px #17a2b8;
   border-radius: 10px;
-  width: fit-content;
+  width: 90%;
   h4{
     margin: 10px 0 20px 0;
+  }
+  .about-lead-list{
+    text-align: left;
+    display: inline-block;
+    font-size: 20px;
   }
 }
 
@@ -33,6 +40,7 @@
   .about-to-do-list{
     text-align: left;
     display: inline-block;
+    font-size: 20px;
   }
 }
 
@@ -53,6 +61,7 @@
   .about-community-list{
     text-align: left;
     display: inline-block;
+    font-size: 20px;
   }
 }
 
@@ -73,6 +82,7 @@
   .about-activity-list{
     text-align: left;
     display: inline-block;
+    font-size: 20px;
   }
 }
 
@@ -93,6 +103,7 @@
   .about-event-list{
     text-align: left;
     display: inline-block;
+    font-size: 20px;
   }
 }
 
