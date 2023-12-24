@@ -71,6 +71,10 @@
               %td
                 = @customer.birthday.strftime("%Y/%m/%d") unless @customer.birthday.nil?
             %tr
+              %th{scope:"row"} 性別
+              %td
+                = @customer.human_attribute_enum(:sex)
+            %tr
               %th{scope:"row"} パート
               %td
                 - @customer.parts.each do |part|
