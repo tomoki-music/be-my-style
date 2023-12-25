@@ -1,0 +1,32 @@
+= render 'layouts/admin_header_menu'
+
+.row.justify-content-center
+  .col-md-10
+    %h2.text-center
+      イベント一覧
+%table.table.table-striped
+  %thead
+    %tr
+      %th ID
+      %th イベント名
+      %th 開始日時
+      %th 終了日時
+      %th 参加人数
+      %th 詳細ページ
+      %th 物理削除
+  - @events.each do |event|
+    %tbody
+      %tr
+        %th=event.id
+        %td=event.event_name
+        %td=l(event.event_start_time, format: :short, default: '-')
+        %td=l(event.event_end_time, format: :short, default: '-')
+        - joined_member_ids = []
+        - event.songs.each do |song|
+          - joined_member_ids += song.customers.distinct.pluck(:id)
+        - joined_member_counts = joined_member_ids.uniq.length
+        %td="#{joined_member_counts}人"
+        %td
+          = link_to "詳細ページ", admin_event_path(event), data: { 'turbolinks': false }, class: "btn btn-primary"
+        %td
+          = link_to "削除", admin_event_path(event), method: :delete, data: { confirm: "こちらのイベントを削除してもよろしいですか？", 'turbolinks': false }, class: "btn btn-danger"

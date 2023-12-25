@@ -6,6 +6,20 @@ require "active_support/core_ext/integer/time"
 # and recreated between test runs. Don't rely on the data there!
 
 Rails.application.configure do
+    # mail送信用サーバー設定
+    config.action_mailer.perform_caching = true
+    config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+    config.action_mailer.raise_delivery_errors = true
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.smtp_settings = {
+      :enable_starttls_auto => true,
+      :address => "smtp.gmail.com",
+      :port => 587,
+      :domain => 'smtp.gmail.com',
+      :user_name => Rails.application.credentials.gmail[:user_name],
+      :password => Rails.application.credentials.gmail[:password],
+      :authentication => 'login'
+    }
   # Settings specified here will take precedence over those in config/application.rb.
 
   config.cache_classes = false
