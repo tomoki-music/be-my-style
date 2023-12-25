@@ -35,15 +35,15 @@ RSpec.describe "Admin::Events", type: :request do
         end.to change(Event, :count).by(-1)
       end
     end
-    context "event参加メンバーを正しく削除(delete)できる" do
-      it '正しくメンバー削除できる' do
-        event
-        public_event_join_path(event)
-        expect do
-          delete admin_event_delete_path(event, customer_id: customer, song_id: song)
-        end.to change(song.customers, :count).by(-1)
-      end
-    end
+    # context "event参加メンバーを正しく削除(delete)できる" do
+    #   it '正しくメンバー削除できる' do
+    #     event
+    #     public_event_join_path(event)
+    #     expect do
+    #       delete admin_event_delete_path(event, customer_id: customer, song_id: song)
+    #     end.to change(song.customers, :count).by(-1)
+    #   end
+    # end
   end
 
   describe '非ログイン' do

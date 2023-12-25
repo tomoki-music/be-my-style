@@ -51,6 +51,6 @@
                           %th=customer.id
                           %td=customer.name
                           %td
-                            = link_to "削除", admin_event_delete_path(@event, song_id: song, customer_id: customer), method: :delete, data: { confirm: "こちらのイベントを削除してもよろしいですか？", 'turbolinks': false }, class: "btn btn-danger"
+                            = link_to "削除", admin_event_delete_path(@event, song_id: song, customer_id: customer), method: :delete, data: { confirm: "こちらのユーザーを削除してもよろしいですか？", 'turbolinks': false }, class: "btn btn-danger"
                             
 

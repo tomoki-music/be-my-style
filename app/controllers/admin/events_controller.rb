@@ -32,13 +32,13 @@ class Admin::EventsController < ApplicationController
     redirect_to admin_events_path, alert: "イベントを削除しました!"
   end
 
-  # def delete
-  #   event = Event.find(params[:event_id])
-  #   song = Song.find(params[:song_id])
-  #   customer = Customer.find(params[:customer_id])
-  #   song.customers.delete(customer)
-  #   redirect_to admin_event_path(event), alert: "選択したユーザーを削除しました!"
-  # end
+  def delete
+    event = Event.find(params[:event_id])
+    song = Song.find(params[:song_id])
+    customer = Customer.find(params[:customer_id])
+    song.customers.delete(customer)
+    redirect_to admin_event_path(event), alert: "選択したユーザーを削除しました!"
+  end
 
   private
 
