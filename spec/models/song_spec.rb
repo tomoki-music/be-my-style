@@ -29,5 +29,10 @@ RSpec.describe Song, type: :model do
         expect(Song.reflect_on_association(:song_customers).macro).to eq :has_many
       end
     end
+    context 'JoinPartモデルとの関係' do
+      it 'join_partと1:Nとなっている' do
+        expect(Song.reflect_on_association(:join_parts).macro).to eq :has_many
+      end
+    end
   end
 end

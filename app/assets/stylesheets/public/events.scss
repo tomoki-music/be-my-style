@@ -1,3 +1,7 @@
+.event-show{
+  width: 100%;
+}
+
 .event-index-head-title{
   text-align: center;
   padding: 5px;
@@ -211,7 +215,6 @@
   }
   .event-show-table{
     border: thick double lightblue;
-    margin-top: -25px;
     #map {
       height: 300px;
       width: 700px;
@@ -227,6 +230,17 @@
       font-weight: bold;
       font-size: 15px;
       margin-bottom: 50px;
+      .part-name{
+        display: block;
+        text-align: center;
+        border: solid 1px black;
+        border-radius: 10px;
+        margin-right: 5px;
+        width: 130px;
+        height: 70px;
+        line-height: 60px;
+        padding: 5px;
+      }
       .member{
         display: flex;
         flex-wrap: wrap;
@@ -251,6 +265,21 @@
         padding: 8px 5px 5px 5px ;
         height: 40px;
       }
+    }
+    .join-part-list{
+      margin-top: 10px;
+      border: solid 1px black;
+      border-radius: 10px;
+      padding: 5px;
+      .join-part-song-name{
+        font-weight: bold;
+        font-size: 25px;
+        margin-bottom: 5px;
+      }
+    }
+    .join-part-btn{
+      margin: 20px 0 20px 50px;
+      min-width: 100px;
     }
     input[type="submit"] {
       width: 20%;
@@ -319,9 +348,10 @@
     width: 90%;
     margin: 0 auto;
     .event-show-table{
+      width: 300px;
       #map {
-        height: 300px;
-        width: 300px;
+        height: 280px;
+        width: 280px;
       }
     }
     .event-index-title{
@@ -364,6 +394,17 @@
       object-fit: cover;
       border-radius: 10px;
       padding: 5px;
+    }
+    .song-layout{
+      border: solid 3px #17a2b8;
+      border-radius: 10px;
+      padding: 10px;
+      .join-part-layout{
+        border: solid 3px #17a2b8;
+        border-radius: 10px;
+        margin-left: 30px;
+        padding: 10px;
+      }
     }
   }
   .event-btn{

@@ -1,295 +1,206 @@
 = render 'layouts/header_menu'
+.event-show
+  .event-show-title
+    %h2 イベント詳細
+    .event-show-follow
+      - if @owner == current_customer
+        = link_to '編集する', edit_public_event_path(@event), data: { 'turbolinks': false }, class: "btn btn-sm btn-success event-show-btn"
+        = link_to 'イベント削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger event-show-btn"
+        = link_to '参加する🎵', '#event-songs', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
+      - else
+        = link_to '参加する🎵', '#event-songs', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
 
-.event-show-title
-  %h2 イベント詳細
-  .event-show-follow
-    - if @owner == current_customer
-      = link_to '編集する', edit_public_event_path(@event), data: { 'turbolinks': false }, class: "btn btn-sm btn-success event-show-btn"
-      = link_to 'イベント削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger event-show-btn"
-      = link_to '参加する🎵', '#event-songs', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
-    - else
-      = link_to '参加する🎵', '#event-songs', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
-
-.event-show-container.px-0.px-sm-0
-  .row
-    .col-md-3
-      .event-show-card
-        .card
-          .img-container
-            - if @event.event_image.present?
-              = image_tag @event.event_image
-            - else
-              = image_tag 'no_image'
-          .card-body.text-container
-            %h5.card-title
-              = @event.event_name
-            %hr
-            %h6.card-subtitle
-              [イベント作成者]
-              %br
-              .event-owner-img
-                = link_to public_customer_path(@owner), data: { 'turbolinks': false } do
-                  - if @owner.profile_image.present?
-                    = image_tag @owner.profile_image
-                  - else
-                    = image_tag 'no_image'
-                  .owner-name
-                    = @owner.name
-            %hr
-            %p.card-text
-            - if @owner == current_customer
-              .dropdown
-                %button#dropdownMenuButton.btn.btn-secondary.dropdown-toggle{"aria-expanded" => "false", "aria-haspopup" => "true", "data-toggle" => "dropdown", type: "button"}
-                  イベント作成者専用
-                .dropdown-menu{"aria-labelledby" => "dropdownMenuButton"}
-                  = link_to '編集する', edit_public_event_path(@event), data: { 'turbolinks': false }, class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent"
-                  = link_to 'イベント削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "dropdown-item btn btn-sm btn-danger community-show-btn text-secondary bg-transparent"
-                  = link_to '参加する🎵', '#event-songs', class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent"
-            - else
-              = link_to '参加する🎵', '#event-songs', class: "btn btn-sm btn-success event-show-btn"
-
-    .col-md-9
-      %table.table.table-striped.event-show-table{:width=>"100%",:border=>"1"}
-        %colgroup
-          %col{width: "19%"}
-          %col{width: "81%"}
-            %tr
-              %th{scope:"row"} 開催コミュニティ
-              %td
-                = @community.name
-                .text-red
-                  ※このイベントは【#{@community.name}】に参加している必要があります。
-            %tr
-              %th{scope:"row"} イベント名
-              %td
+  .event-show-container.px-0.px-sm-0
+    .row
+      .col-md-3
+        .event-show-card
+          .card
+            .img-container
+              - if @event.event_image.present?
+                = image_tag @event.event_image
+              - else
+                = image_tag 'no_image'
+            .card-body.text-container
+              %h5.card-title
                 = @event.event_name
-            %tr
-              %th{scope:"row"} 参加人数
-              %td
-                #{@joined_member_counts}人
-            %tr
-              %th{scope:"row"} 開始時間
-              %td
-                = l @event.event_start_time, format: :short
-            %tr
-              %th{scope:"row"} 終了時間
-              %td
-                = l @event.event_end_time, format: :short
-            %tr
-              %th{scope:"row"} 参加費用
-              %td
-                = @event.entrance_fee.to_s(:delimited) + "円"
-            %tr
-              %th{scope:"row"} 開催場所
-              %td
-                = @event.place
-            %tr
-              %th{scope:"row"} 開催場所（地図）
-              %td
-                #map
-            %tr
-              %th{scope:"row"} 楽曲
-              %td
-                - @event.songs.each.with_index(1) do |song, i|
-                  .song-name
-                    【#{i}曲目】
-                    = song.song_name
-                    %br
-                  - if song.youtube_url.present?
+              %hr
+              %h6.card-subtitle
+                [イベント作成者]
+                %br
+                .event-owner-img
+                  = link_to public_customer_path(@owner), data: { 'turbolinks': false } do
+                    - if @owner.profile_image.present?
+                      = image_tag @owner.profile_image
+                    - else
+                      = image_tag 'no_image'
+                    .owner-name
+                      = @owner.name
+              %hr
+              %p.card-text
+              - if @owner == current_customer
+                .dropdown
+                  %button#dropdownMenuButton.btn.btn-secondary.dropdown-toggle{"aria-expanded" => "false", "aria-haspopup" => "true", "data-toggle" => "dropdown", type: "button"}
+                    イベント作成者専用
+                  .dropdown-menu{"aria-labelledby" => "dropdownMenuButton"}
+                    = link_to '編集する', edit_public_event_path(@event), data: { 'turbolinks': false }, class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent"
+                    = link_to 'イベント削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "dropdown-item btn btn-sm btn-danger community-show-btn text-secondary bg-transparent"
+                    = link_to '参加する🎵', '#event-songs', class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent"
+              - else
+                = link_to '参加する🎵', '#event-songs', class: "btn btn-sm btn-success event-show-btn"
+
+      .col-md-9
+        %table.table.table-striped.event-show-table{:width=>"50%",:border=>"1"}
+          %colgroup
+            %col{width: "19%"}
+            %col{width: "81%"}
+              %tr
+                %th{scope:"row"} 開催コミュニティ
+                %td
+                  = @community.name
+                  .text-red
+                    ※このイベントは【#{@community.name}】に参加している必要があります。
+              %tr
+                %th{scope:"row"} イベント名
+                %td
+                  = @event.event_name
+              %tr
+                %th{scope:"row"} 参加人数
+                %td
+                  #{@joined_member_counts}人
+              %tr
+                %th{scope:"row"} 開始時間
+                %td
+                  = l @event.event_start_time, format: :short
+              %tr
+                %th{scope:"row"} 終了時間
+                %td
+                  = l @event.event_end_time, format: :short
+              %tr
+                %th{scope:"row"} 参加費用
+                %td
+                  = @event.entrance_fee.to_s(:delimited) + "円"
+              %tr
+                %th{scope:"row"} 開催場所
+                %td
+                  = @event.place
+              %tr
+                %th{scope:"row"} 開催場所（地図）
+                %td
+                  #map
+              %tr
+                %th{scope:"row"} 楽曲
+                %td
+                  - @event.songs.each.with_index(1) do |song, i|
+                    .song-name
+                      【#{i}曲目】
+                      = song.song_name
+                      %br
                     - if song.youtube_url.present?
-                      - if song.youtube_url.include?("youtube")
-                        %iframe{
-                          src: "https://www.youtube.com/embed/#{song.youtube_url[32..42]}",
-                          allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",
-                          allowfullscreen: "",
-                          frameborder: "0",
-                          height: "315",
-                          width: "90%"
-                        }
-                      - else
-                        %iframe{
-                          src: "https://www.youtube.com/embed/#{song.youtube_url.slice(17,11)}",
-                          allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",
-                          allowfullscreen: "",
-                          frameborder: "0",
-                          height: "315",
-                          width: "90%"
-                        }
-                  - else
-                    投稿された動画はありません。
-                  %br
-                  .join-member
-                    #{song.song_name} 🎤ボーカル🎤
+                      - if song.youtube_url.present?
+                        - if song.youtube_url.include?("youtube")
+                          %iframe{
+                            src: "https://www.youtube.com/embed/#{song.youtube_url[32..42]}",
+                            allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",
+                            allowfullscreen: "",
+                            frameborder: "0",
+                            height: "315",
+                            width: "100%"
+                          }
+                        - else
+                          %iframe{
+                            src: "https://www.youtube.com/embed/#{song.youtube_url.slice(17,11)}",
+                            allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",
+                            allowfullscreen: "",
+                            frameborder: "0",
+                            height: "315",
+                            width: "100%"
+                          }
+                    - else
+                      投稿された動画はありません。
                     %br
-                    .member
-                      - song.customers.distinct.each do |customer|
-                        -if customer.parts.pluck(:name).include?("ボーカル")
-                          = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
-                            .image_container
-                              - if customer.profile_image.present?
-                                = image_tag customer.profile_image, class: "icon_mini"
-                              - else
-                                = image_tag 'no_image', class: "icon_mini"
-                            = customer.name
-                          - @vocal << customer.id
-                      %hr
-                      .part-join-member
-                        ボーカル#{@vocal.length}人
-                      - @vocal = []
-                    %hr
-                    #{song.song_name} 🎸ギター🎸
-                    %br
-                    .member
-                      - song.customers.distinct.each do |customer|
-                        - if customer.parts.pluck(:name).include?("ギター")
-                          = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
-                            .image_container
-                              - if customer.profile_image.present?
-                                = image_tag customer.profile_image, class: "icon_mini"
-                              - else
-                                = image_tag 'no_image', class: "icon_mini"
-                            = customer.name
-                          - @guitar << customer.id
-                      %hr
-                      .part-join-member
-                        ギター#{@guitar.length}人
-                      - @guitar = []
-                    %hr
-                    #{song.song_name} 🎸ベース🎸
-                    %br
-                    .member
-                      - song.customers.distinct.each do |customer|
-                        - if customer.parts.pluck(:name).include?("ベース")
-                          = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
-                            .image_container
-                              - if customer.profile_image.present?
-                                = image_tag customer.profile_image, class: "icon_mini"
-                              - else
-                                = image_tag 'no_image', class: "icon_mini"
-                            = customer.name
-                          - @bass << customer.id
-                      %hr
-                      .part-join-member
-                        ベース#{@bass.length}人
-                      - @bass = []
-                    %hr
-                    #{song.song_name} 🎹キーボード🎹
-                    %br
-                    .member
-                      - song.customers.distinct.each do |customer|
-                        - if customer.parts.pluck(:name).include?("ピアノ・キーボード")
-                          = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
-                            .image_container
-                              - if customer.profile_image.present?
-                                = image_tag customer.profile_image, class: "icon_mini"
-                              - else
-                                = image_tag 'no_image', class: "icon_mini"
-                            = customer.name
-                          - @keyboard << customer.id
-                      %hr
-                      .part-join-member
-                        キーボード#{@keyboard.length}人
-                      - @keyboard = []
-                    %hr
-                    #{song.song_name} 🥁ドラム🥁
-                    %br
-                    .member
-                      - song.customers.distinct.each do |customer|
-                        - if customer.parts.pluck(:name).include?("ドラム")
-                          = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
-                            .image_container
-                              - if customer.profile_image.present?
-                                = image_tag customer.profile_image, class: "icon_mini"
-                              - else
-                                = image_tag 'no_image', class: "icon_mini"
-                            = customer.name
-                          - @drums << customer.id
-                      %hr
-                      .part-join-member
-                        ドラム#{@drums.length}人
-                      - @drums = []
-                    %hr
-                    #{song.song_name} 🎷特別枠🎷
-                    %br
-                    .member
-                      - song.customers.distinct.each do |customer|
-                        - part = customer.parts.pluck(:name)
-                        - unless part.include?("ボーカル") || part.include?("ギター") || part.include?("ベース") || part.include?("ピアノ・キーボード")  || part.include?("ドラム")
-                          = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
-                            .image_container
-                              - if customer.profile_image.present?
-                                = image_tag customer.profile_image, class: "icon_mini"
-                              - else
-                                = image_tag 'no_image', class: "icon_mini"
-                            = customer.name
-                          - @others << customer.id
-                      %hr
-                      .part-join-member
-                        特別枠#{@others.length}人
-                      - @others = []
-                  %hr
-              %br
-            %tr
-              %th{scope:"row"} 参加フォーム
-              %td
-                #event-songs
-                  -if @event.event_end_time > Time.now
-                    📢参加したい曲にチェックを入れて「参加する」ボタンを押して下さい📢
-                    %br
-                    📢参加ボタンを押すと、チェックを入れた楽曲にアイコンが表示されます📢
-                    %br
-                    📢参加パートはマイページで登録したパート（マルチプレイヤーは全て）で参加となります📢
-                    %br
-                    .text-red
-                      ※このイベントは【#{@community.name}】に参加している必要があります。
-                    %hr
-                    = form_tag(public_event_join_path(@event), method: :get,  onSubmit: "return CheckJoin()") do
-                      = collection_check_boxes(:event, :song_ids, @event.songs, :id, :song_name, checked:false) do |event|
-                        = event.label do
-                          = event.check_box
-                          ◀️参加したい曲にチェック🎵
-                          .song-name
-                            = event.text
+                    .join-member
+                      - song.join_parts.each do |join_part|
+                        .part-name
+                          = join_part.join_part_name
+                          = join_part.customers.length
+                          人
+                          %br
+                        .member
+                          - join_part.customers.each do |customer|
+                            = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
+                              .image_container
+                                - if customer.profile_image.present?
+                                  = image_tag customer.profile_image, class: "icon_mini"
+                                - else
+                                  = image_tag 'no_image', class: "icon_mini"
+                                %br
+                                = customer.name
                           %hr
-                        %br
-                        = hidden_field_tag :event_id, @event.id
-                      %input{type: "submit", value: "参加する", confirm: "こちらのイベントに参加をします。よろしいですか？", data: {'disable_with': '送信中...', 'turbolinks': false}}
-                  - else
-                    こちらのイベントは終了致しました。
-            %tr
-              %th{scope:"row"} イベント補足
-              %td
-                = simple_format(@event.introduction)
+                        %hr
+              %tr
+                %th{scope:"row"} 参加フォーム
+                %td
+                  #event-songs
+                    -if @event.event_end_time > Time.now
+                      📢参加したい曲のパート（全て）を選んで下部の「参加する」ボタンを押して下さい📢
+                      %br
+                      📢参加ボタンを押すと、楽曲のパート内にアイコンが表示されます📢
+                      %br
+                      .text-red
+                        ※このイベントは【#{@community.name}】に参加している必要があります。
+                      %hr
+                      = form_tag(public_event_join_path(@event), method: :post,  onSubmit: "return CheckJoin()") do
+                        - @event.songs.each do |song|
+                          .join-part-list
+                            .join-part-song-name
+                              =song.song_name
+                            %hr
+                              = collection_check_boxes(:event, :join_part_ids, song.join_parts, :id, :join_part_name, checked:false) do |part|
+                                = part.label do
+                                  .song-name
+                                    = part.check_box
+                                    = part.text
+                                  ☝️参加したいパートにチェック🎵
+                                  %hr
+                                %br
+                                = hidden_field_tag :event_id, @event.id
+                        %input{type: "submit", value: "参加する", class: "join-part-btn", confirm: "こちらのイベントに参加をします。よろしいですか？", data: {'disable_with': '送信中...', 'turbolinks': false}}
+                    - else
+                      こちらのイベントは終了致しました。
+              %tr
+                %th{scope:"row"} イベント補足
+                %td
+                  = simple_format(@event.introduction)
 
-- latitude = @latitude
-- longitude = @longitude
-- address = @address
+  - latitude = @latitude
+  - longitude = @longitude
+  - address = @address
 
-%div{type: "text/javascript"}
-  :javascript
-    function initMap() {
-      var test = {lat: #{latitude}, lng: #{longitude}};
-      var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 15, 
-                center: test
-                });
-      var transitLayer = new google.maps.TransitLayer();
-      transitLayer.setMap(map);
+  %div{type: "text/javascript"}
+    :javascript
+      function initMap() {
+        var test = {lat: #{latitude}, lng: #{longitude}};
+        var map = new google.maps.Map(document.getElementById('map'), {
+                  zoom: 15, 
+                  center: test
+                  });
+        var transitLayer = new google.maps.TransitLayer();
+        transitLayer.setMap(map);
 
-      var contentString = "住所： #{address}";
-      var infowindow = new google.maps.InfoWindow({
-        content: contentString
-      });
+        var contentString = "住所： #{address}";
+        var infowindow = new google.maps.InfoWindow({
+          content: contentString
+        });
 
-      var marker = new google.maps.Marker({
-                    position:test,
-                    map: map,
-                    title: contentString
-                    });
+        var marker = new google.maps.Marker({
+                      position:test,
+                      map: map,
+                      title: contentString
+                      });
 
-      marker.addListener('click', function() {
-        infowindow.open(map, marker);
-      });
-    }
-%script{async: "", defer: "defer", src: "https://maps.googleapis.com/maps/api/js?key=#{Rails.application.credentials.map_api_key}&callback=initMap"}
- 
+        marker.addListener('click', function() {
+          infowindow.open(map, marker);
+        });
+      }
+  %script{async: "", defer: "defer", src: "https://maps.googleapis.com/maps/api/js?key=#{Rails.application.credentials.map_api_key}&callback=initMap"}
+  

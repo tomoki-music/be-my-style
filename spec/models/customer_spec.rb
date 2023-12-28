@@ -104,6 +104,14 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(Customer.reflect_on_association(:song_customers).macro).to eq :has_many
       end
     end
+    context 'join_partモデルとの関係' do
+      it 'join_partモデルと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:join_parts).macro).to eq :has_many
+      end
+      it '中間テーブルjoin_part_customersと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:join_part_customers).macro).to eq :has_many
+      end
+    end
   end
   describe 'モデルのインスタンスメソッドのテスト' do
     context 'フォロー、アンフォローのメソッドテスト' do

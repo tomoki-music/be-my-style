@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_11_13_024213) do
+ActiveRecord::Schema.define(version: 2023_12_22_031146) do
 
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
@@ -226,6 +226,23 @@ ActiveRecord::Schema.define(version: 2023_11_13_024213) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
+  create_table "join_part_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "join_part_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_join_part_customers_on_customer_id"
+    t.index ["join_part_id"], name: "index_join_part_customers_on_join_part_id"
+  end
+
+  create_table "join_parts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "song_id", null: false
+    t.string "join_part_name", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["song_id"], name: "index_join_parts_on_song_id"
+  end
+
   create_table "notifications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.integer "visitor_id", null: false
     t.integer "visited_id", null: false
@@ -307,6 +324,9 @@ ActiveRecord::Schema.define(version: 2023_11_13_024213) do
   add_foreign_key "events", "customers"
   add_foreign_key "favorites", "activities"
   add_foreign_key "favorites", "customers"
+  add_foreign_key "join_part_customers", "customers"
+  add_foreign_key "join_part_customers", "join_parts"
+  add_foreign_key "join_parts", "songs"
   add_foreign_key "permits", "communities"
   add_foreign_key "permits", "customers"
   add_foreign_key "song_customers", "customers"
