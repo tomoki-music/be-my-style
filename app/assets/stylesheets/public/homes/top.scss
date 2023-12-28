@@ -1,6 +1,27 @@
 // Place all the styles related to the public/homes controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: https://sass-lang.com/
+.menu-top-btn{
+  width: 100px;
+}
+
+.customer-menu-top {
+  display: block;
+  width: 90%;
+  height: 50px;
+  background-color: lightblue;
+  margin: 0 auto;
+  border-radius: 10px;
+  ul{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: inherit;
+  }
+  .flex-item{
+    width: 100%;
+  }
+}
 
 .top-container{
   text-align:center;
