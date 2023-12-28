@@ -1,5 +1,6 @@
 .nested-fields
   .field
+    = f.hidden_field :_destroy
     = f.text_field :join_part_name, placeholder: "募集パート名を入力します"
   .field
     = link_to_remove_association 'パートを削除', f, class: 'btn btn-danger js-join-part-remove-btn'

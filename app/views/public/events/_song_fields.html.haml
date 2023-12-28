@@ -10,5 +10,6 @@
       = f.fields_for :join_parts, id: 'js-join-part-field' do |join_part|
         .field
           = render 'public/events/join_part_fields', f: join_part
-      .links{data: {count: @song.join_parts.count}}
+      .links
         = link_to_add_association 'パートを追加',f ,:join_parts ,{ class: 'btn btn-success js-add-join-part-field-btn' }
+

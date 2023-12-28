@@ -50,7 +50,7 @@
                 = f.fields_for :songs, id: 'js-song-field' do |song|
                   .field
                     = render 'public/events/song_fields', f: song
-                .links{data: {count: @event.songs.count}}
+                .links
                   = link_to_add_association '曲を追加',f ,:songs ,{ class: 'btn btn-success js-add-song-field-btn' }
           %tr
             %th{scope:"row"} イベント補足
