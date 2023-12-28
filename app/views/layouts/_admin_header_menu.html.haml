@@ -1,0 +1,40 @@
+.row.justify-content-center
+  .col-md-8
+    %h2.text-center
+      管理者ダッシュボード
+  .col-md-2
+    #admin-open
+      = image_tag asset_path("mmm"), class: "icon_mini sp-menu-open"
+.admin-menu-sp
+  #admin-close
+    %span.fa.fa-times.close-icon
+      閉じる
+  %ul.list-style-none
+    - if admin_signed_in?
+      %li
+        = link_to "Topページ", admin_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        = link_to "イベント設定", admin_events_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        %i.fa-solid.fa-right-from-bracket
+        = link_to "管理者ログアウト", destroy_admin_session_path, method: :delete, class: "btn btn-secondary", data: { 'turbolinks': false }
+    - else
+      %li
+        %i.fa-solid.fa-right-to-bracket
+        = link_to "管理者ログイン", new_admin_session_path, class: "btn btn-primary", data: { 'turbolinks': false }
+      %li
+        = link_to "Topページ", admin_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+
+.admin-menu-pc
+  %ul.list-style-none.list
+    - if admin_signed_in?
+      %li
+        = link_to "Topページ", admin_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        = link_to "イベント設定", admin_events_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        %i.fa-solid.fa-right-from-bracket
+        = link_to "管理者ログアウト", destroy_admin_session_path, method: :delete, class: "btn btn-secondary", data: { 'turbolinks': false }
+    - else
+      %li
+        = link_to "Topページ", admin_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"

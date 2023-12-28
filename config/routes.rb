@@ -4,6 +4,12 @@ Rails.application.routes.draw do
 
   namespace :admin do
     get 'homes/top'
+
+    # イベント機能
+   resources :events do
+    resources :songs, only: [:create, :destroy]
+    delete "delete" => "events#delete"
+   end
   end
   
   namespace :public do
@@ -71,7 +77,7 @@ devise_scope :customer do
 end
 
 # 管理者用
-devise_for :admin, skip: [:registrations, :passwords], controllers: {
+devise_for :admin, skip: [:registrations, :passwords, :confirmations], controllers: {
   sessions: "admin/sessions"
 }
 
