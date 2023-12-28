@@ -117,7 +117,7 @@ class Public::EventsController < ApplicationController
       :event_image,
       join_part_ids:[],
       part_ids:[],
-      songs_attributes: [:id, :song_name, :youtube_url, :introduction, :_destroy, join_parts_attributes:[:join_part_name, :_destroy]],
+      songs_attributes: [:id, :song_name, :youtube_url, :introduction, :_destroy, join_parts_attributes:[:id, :join_part_name, :_destroy]],
     )
   end
 
