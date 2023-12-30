@@ -9,21 +9,15 @@
     %tr
       %th ID
       %th イベント名
-      %th 開始日時
-      %th 終了日時
       %th 参加人数
       %th 物理削除
+      %th 曲リスト
   %tbody
     %tr
       %th=@event.id
       %td=@event.event_name
-      %td=l(@event.event_start_time, format: :short, default: '-')
-      %td=l(@event.event_end_time, format: :short, default: '-')
-      - joined_member_ids = []
-      - @event.songs.each do |song|
-        - joined_member_ids += song.customers.distinct.pluck(:id)
-      - joined_member_counts = joined_member_ids.uniq.length
-      %td="#{joined_member_counts}人"
+      %td
+        #{@joined_member_counts}人
       %td
         = link_to "削除", admin_event_path(@event), method: :delete, data: { confirm: "こちらのイベントを削除してもよろしいですか？", 'turbolinks': false }, class: "btn btn-danger"
       %td
@@ -32,7 +26,7 @@
             %tr
               %th ID
               %th 曲名
-              %th 曲詳細
+              %th パート一覧
           - @event.songs.each do |song|
             %tbody
               %tr
@@ -42,15 +36,25 @@
                   %table.table.table-striped
                     %thead
                       %tr
-                        %th ID
-                        %th 参加者名
-                        %th 削除
-                    - song.customers.each do |customer|
+                        %th 参加パート名
+                        %th 参加メンバー
+                    - song.join_parts.each do |join_part|
                       %tbody
                         %tr
-                          %th=customer.id
-                          %td=customer.name
+                          %td=join_part.join_part_name
                           %td
-                            = link_to "削除", admin_event_delete_path(@event, song_id: song, customer_id: customer), method: :delete, data: { confirm: "こちらのユーザーを削除してもよろしいですか？", 'turbolinks': false }, class: "btn btn-danger"
+                            %table.table.table-striped
+                              %thead
+                                %tr
+                                  %th ID
+                                  %th メンバー名
+                                  %th 削除
+                              - join_part.customers.each do |customer|
+                                %tbody
+                                  %tr
+                                    %td=customer.id
+                                    %td=customer.name
+                                    %td
+                                      = link_to "削除", admin_event_delete_path(@event, song_id: song, join_part_id: join_part, customer_id: customer), method: :delete, data: { confirm: "こちらのユーザーを削除してもよろしいですか？", 'turbolinks': false }, class: "btn btn-danger"
                             
 

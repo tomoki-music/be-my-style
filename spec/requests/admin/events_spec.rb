@@ -40,8 +40,8 @@ RSpec.describe "Admin::Events", type: :request do
     #     event
     #     public_event_join_path(event)
     #     expect do
-    #       delete admin_event_delete_path(event, customer_id: customer, song_id: song)
-    #     end.to change(song.customers, :count).by(-1)
+    #       delete admin_event_delete_path(event, customer_id: customer, join_part_id: join_part)
+    #     end.to change(, :count).by(-1)
     #   end
     # end
   end

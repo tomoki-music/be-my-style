@@ -7,7 +7,13 @@ class Admin::EventsController < ApplicationController
   end
 
   def show
-
+    joined_member_ids = []
+    @event.songs.each do |song|
+      song.join_parts.each do |join_part|
+        joined_member_ids += join_part.customers.pluck(:id)
+      end
+    end
+    @joined_member_counts = joined_member_ids.uniq.length
   end
 
   def new
@@ -34,9 +40,9 @@ class Admin::EventsController < ApplicationController
 
   def delete
     event = Event.find(params[:event_id])
-    song = Song.find(params[:song_id])
+    join_part = JoinPart.find(params[:join_part_id])
     customer = Customer.find(params[:customer_id])
-    song.customers.delete(customer)
+    join_part.customers.delete(customer)
     redirect_to admin_event_path(event), alert: "選択したユーザーを削除しました!"
   end
 

@@ -21,11 +21,16 @@
         %td=event.event_name
         %td=l(event.event_start_time, format: :short, default: '-')
         %td=l(event.event_end_time, format: :short, default: '-')
-        - joined_member_ids = []
-        - event.songs.each do |song|
-          - joined_member_ids += song.customers.distinct.pluck(:id)
-        - joined_member_counts = joined_member_ids.uniq.length
-        %td="#{joined_member_counts}人"
+        %td
+          :ruby
+            joined_member_ids = []
+            event.songs.each do |song|
+              song.join_parts.each do |join_part|
+                joined_member_ids += join_part.customers.pluck(:id)
+              end
+            end
+            joined_member_counts = joined_member_ids.uniq.length
+          #{joined_member_counts}人
         %td
           = link_to "詳細ページ", admin_event_path(event), data: { 'turbolinks': false }, class: "btn btn-primary"
         %td
