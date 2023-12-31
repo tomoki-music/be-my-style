@@ -99,6 +99,14 @@ class Public::EventsController < ApplicationController
     end
   end
 
+  def delete
+    event = Event.find(params[:event_id])
+    join_part = JoinPart.find(params[:join_part_id])
+    customer = Customer.find(params[:customer_id])
+    join_part.customers.delete(customer)
+    redirect_to public_event_path(event), alert: "参加を取消しました!"
+  end
+
   private
 
   def event_params

@@ -96,6 +96,16 @@ RSpec.describe "Public::Events", type: :request do
         expect(response.status).to eq 302
       end
     end
+    context "event参加メンバーを正しく削除(delete)できる" do
+      it '正しくメンバー削除できる' do
+        event
+        join_part = JoinPart.create(song_id: song.id, join_part_name: "vocal")
+        JoinPartCustomer.create(customer_id: customer.id, join_part_id: join_part.id)
+        expect do
+          delete public_event_delete_path(event, customer_id: customer, join_part_id: join_part.id)
+        end.to change(JoinPartCustomer, :count).by(-1)
+      end
+    end
   end
 
   describe '非ログイン' do

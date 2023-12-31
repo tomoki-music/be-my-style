@@ -127,14 +127,16 @@
                           %br
                         .member
                           - join_part.customers.each do |customer|
-                            = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
-                              .image_container
+                            .join-part-member
+                              = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
                                 - if customer.profile_image.present?
                                   = image_tag customer.profile_image, class: "icon_mini"
                                 - else
                                   = image_tag 'no_image', class: "icon_mini"
                                 %br
                                 = customer.name
+                              - if ( customer == current_customer ) && ( @event.event_start_time - 1.week > Time.now )
+                                = link_to '取消', public_event_delete_path(@event, join_part_id: join_part, customer_id: customer), method: :delete, data: { 'turbolinks': false, confirm: 'こちらの参加を取消します。よろしいですか？' }, class: "btn btn-sm btn-danger delete-join-part-btn"
                           %hr
                         %hr
               %tr

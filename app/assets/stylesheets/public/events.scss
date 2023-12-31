@@ -245,12 +245,17 @@
         display: flex;
         flex-wrap: wrap;
         margin-top: 5px;
-        min-height: 70px;
+        min-height: 100px;
         width: 90%;
+        .join-part-member{
+          display:flex;
+          flex-flow: column;
+        }
       }
       .image-style{
         text-decoration: none;
         margin-right: 10px;
+        display: inline-block;
         .icon_mini{
           width: 50px;
           height: 50px;
@@ -259,11 +264,9 @@
           cursor: pointer;
         }
       }
-      .part-join-member{
-        border: solid 1px;
-        border-radius: 5px;
-        padding: 8px 5px 5px 5px ;
-        height: 40px;
+      .delete-join-part-btn{
+        height: 30px;
+        width: 50px;
       }
     }
     .join-part-list{
