@@ -68,6 +68,12 @@
                 %td
                   #{@joined_member_counts}人
               %tr
+                %th{scope:"row"} 成立楽曲数
+                %td
+                  %h4.text-red
+                    #{@complete_count}曲 成立!!
+                  （全#{@event.songs.length}曲）
+              %tr
                 %th{scope:"row"} 開始時間
                 %td
                   = l @event.event_start_time, format: :short
