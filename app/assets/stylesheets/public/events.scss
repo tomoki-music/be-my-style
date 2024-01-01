@@ -219,6 +219,46 @@
       height: 300px;
       width: 700px;
     }
+    .recruiting{
+      position: relative;
+      border: 3px solid blue;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      .recruiting-caption{
+        position: absolute;
+        top: 0;
+        left: 0;
+        border: 3px solid blue;
+        border-radius: 10px;
+        color: blue;
+        font-size: 1em;
+        padding: 0 1em;
+        margin: 0;
+        background-color: white;
+        transform: translateY(-50%) translateX(1em);
+      }
+    }
+    .complete{
+      position: relative;
+      border: 10px solid red;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      .complete-caption{
+        position: absolute;
+        top: 0;
+        left: 0;
+        border: 5px solid red;
+        border-radius: 10px;
+        color: red;
+        font-size: 1em;
+        padding: 0 1em;
+        margin: 0;
+        background-color: white;
+        transform: translateY(-50%) translateX(1em);
+      }
+    }
     .song-check-box{
       font-size: 20px;
     }
