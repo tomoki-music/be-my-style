@@ -1,0 +1,48 @@
+.song-name
+  【#{i}曲目】
+  = song.song_name
+  %br
+- if song.youtube_url.present?
+  - if song.youtube_url.present?
+    - if song.youtube_url.include?("youtube")
+      %iframe{
+        src: "https://www.youtube.com/embed/#{song.youtube_url[32..42]}",
+        allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",
+        allowfullscreen: "",
+        frameborder: "0",
+        height: "315",
+        width: "100%"
+      }
+    - else
+      %iframe{
+        src: "https://www.youtube.com/embed/#{song.youtube_url.slice(17,11)}",
+        allow: "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture",
+        allowfullscreen: "",
+        frameborder: "0",
+        height: "315",
+        width: "100%"
+      }
+- else
+  投稿された動画はありません。
+%br
+.join-member
+  - song.join_parts.each do |join_part|
+    .part-name
+      = join_part.join_part_name
+      = join_part.customers.length
+      人
+      %br
+    .member
+      - join_part.customers.each do |customer|
+        .join-part-member
+          = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
+            - if customer.profile_image.present?
+              = image_tag customer.profile_image, class: "icon_mini"
+            - else
+              = image_tag 'no_image', class: "icon_mini"
+            %br
+            = customer.name
+          - if ( customer == current_customer ) && ( @event.event_start_time - 1.week > Time.now )
+            = link_to '取消', public_event_delete_path(@event, join_part_id: join_part, customer_id: customer), method: :delete, data: { 'turbolinks': false, confirm: 'こちらの参加を取消します。よろしいですか？' }, class: "btn btn-sm btn-danger delete-join-part-btn"
+      %hr
+    %hr
