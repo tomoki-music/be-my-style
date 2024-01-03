@@ -72,7 +72,14 @@
                 %td
                   %h4.text-red
                     #{@complete_count}曲 成立!!
-                  （全#{@event.songs.length}曲）
+                  (全#{@event.songs.length}曲)
+              %tr
+                %th{scope:"row"} 成立楽曲
+                %td
+                  - @complete_songs.each do |song|
+                    🎵
+                    = song.song_name
+                    %br
               %tr
                 %th{scope:"row"} 開始時間
                 %td

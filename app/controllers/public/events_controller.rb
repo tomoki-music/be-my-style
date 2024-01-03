@@ -18,12 +18,17 @@ class Public::EventsController < ApplicationController
     end
     @joined_member_counts = joined_member_ids.uniq.length
 
-    complete_song_ids = []
+    @complete_song_ids = []
     @event.songs.each do |song|
       unless song.join_parts.map{|join_part| join_part.customers.length }.include?(0)
-        complete_song_ids << song.id
-        @complete_count = complete_song_ids.length
+        @complete_song_ids << song.id
       end
+    end
+    @complete_count = @complete_song_ids.length
+
+    @complete_songs = []
+    @complete_song_ids.each do |song_id|
+      @complete_songs << Song.find(song_id)
     end
 
     @latitude = @event.latitude
