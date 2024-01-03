@@ -10,6 +10,8 @@ class Public::EventsController < ApplicationController
   def show
     @owner = Customer.find(@event.customer.id)
     @community = Community.find(@event.community_id)
+
+    #参加人数
     joined_member_ids = []
     @event.songs.each do |song|
       song.join_parts.each do |join_part|
@@ -18,6 +20,13 @@ class Public::EventsController < ApplicationController
     end
     @joined_member_counts = joined_member_ids.uniq.length
 
+    #参加メンバー名
+    @join_members = []
+    joined_member_ids.uniq.each do |member_id|
+      @join_members << Customer.find(member_id)
+    end
+
+    #成立楽曲数
     @complete_song_ids = []
     @event.songs.each do |song|
       unless song.join_parts.map{|join_part| join_part.customers.length }.include?(0)
@@ -26,11 +35,13 @@ class Public::EventsController < ApplicationController
     end
     @complete_count = @complete_song_ids.length
 
+    #成立楽曲リスト
     @complete_songs = []
     @complete_song_ids.each do |song_id|
       @complete_songs << Song.find(song_id)
     end
 
+    #googleMap
     @latitude = @event.latitude
     @longitude = @event.longitude
     @address = @event.address

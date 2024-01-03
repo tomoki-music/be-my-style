@@ -68,6 +68,13 @@
                 %td
                   #{@joined_member_counts}人
               %tr
+                %th{scope:"row"} 参加メンバー
+                %td
+                  - @join_members.each do |member|
+                    🎵
+                    = member.name
+                    %br
+              %tr
                 %th{scope:"row"} 成立楽曲数
                 %td
                   %h4.text-red
