@@ -397,6 +397,9 @@
   .activity-new-edit-table{
     border: thick double lightblue;
     margin-bottom: 100px;
+    .form-control{
+      width: 90%;
+    }
     .new-img{
       width: 300px;
       object-fit: cover;
@@ -407,7 +410,7 @@
   .activity-new-edit-btn{
     position: fixed;
     bottom: 30px;
-    right: 30px;
+    right: 100px;
     display: block;
     width: 200px;
     margin-left: auto;
@@ -419,6 +422,6 @@
 }
 
 input[type="text"] {
-  width: 90%;
+  width: 80%;
   height: 40px;
 }

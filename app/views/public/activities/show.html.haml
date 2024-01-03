@@ -89,6 +89,15 @@
                     }
                 - else
                   投稿された動画はありません。
+            - if @activity.url.present?
+              %tr
+                %th{scope:"row"} 参考URL
+                %td
+                  .event-url
+                    - text = @activity.url
+                    = link_to text, @activity.url, target: :_blank, rel: "noopener noreferrer", data: { 'turbolinks': false }
+                    %hr
+                    = @activity.url_comment
             %tr
               %th{scope:"row"} やって良かった事
               %td

@@ -2,8 +2,8 @@
   .activity-new-edit-container.px-0.px-sm-0
     %table.table.table-striped.activity-new-edit-table{:width=>"100%",:border=>"1"}
       %colgroup
-        %col{width: "19%"}
-        %col{width: "81%"}
+        %col{width: "10%"}
+        %col{width: "70%"}
           %tr
             %th{scope:"row"} 活動報告「画像」
             %td
@@ -15,6 +15,14 @@
             %th{scope:"row"} 活動報告「Youtube動画」
             %td
               = f.text_field :youtube_url, placeholder: 'youtubeの動画URL（上部アドレスバーのURL）を記載', class: 'form-control'
+          %tr
+            %th{scope:"row"} 参考URL
+            %td
+              = f.text_field :url, placeholder: "活動報告に関連するURLを記入します", class: 'form-control'
+          %tr
+            %th{scope:"row"} URLの説明
+            %td
+              = f.text_field :url_comment, placeholder: "URLの説明を記入します", class: 'form-control'
           %tr
             %th{scope:"row"} 活動報告「タイトル」
             %td
