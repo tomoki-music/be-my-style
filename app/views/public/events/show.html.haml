@@ -69,7 +69,7 @@
                   %td
                     .event-url
                       - text = @event.url
-                      = link_to text, @event.url
+                      = link_to text, @event.url, target: :_blank, rel: "noopener noreferrer", data: { 'turbolinks': false }
                       %hr
                       = @event.url_comment
               %tr
