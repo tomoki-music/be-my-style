@@ -4,7 +4,7 @@
     %h2 イベント詳細
     .event-show-follow
       - if @owner == current_customer
-        = link_to '編集する', edit_public_event_path(@event), data: { 'turbolinks': false }, class: "btn btn-sm btn-success event-show-btn"
+        = link_to '編集する', edit_public_event_path(@event, community_id: @event.community_id), data: { 'turbolinks': false }, class: "btn btn-sm btn-success event-show-btn"
         = link_to 'イベント削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger event-show-btn"
         = link_to '参加する🎵', '#event-songs', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
       - else
@@ -49,7 +49,7 @@
                 = link_to '参加する🎵', '#event-songs', class: "btn btn-sm btn-success event-show-btn"
 
       .col-md-9
-        %table.table.table-striped.event-show-table{:width=>"50%",:border=>"1"}
+        %table.table.table-striped.event-show-table{:width=>"90%",:border=>"1"}
           %colgroup
             %col{width: "19%"}
             %col{width: "81%"}
@@ -63,6 +63,15 @@
                 %th{scope:"row"} イベント名
                 %td
                   = @event.event_name
+              - if @event.url.present?
+                %tr
+                  %th{scope:"row"} 参考URL
+                  %td
+                    .event-url
+                      - text = @event.url
+                      = link_to text, @event.url
+                      %hr
+                      = @event.url_comment
               %tr
                 %th{scope:"row"} 参加人数
                 %td
@@ -78,7 +87,7 @@
                         = image_tag 'no_image', class: "icon_mini"
                       = customer.name
                     %br
-                    %br
+                    %hr
               %tr
                 %th{scope:"row"} 成立楽曲数
                 %td
@@ -92,6 +101,7 @@
                     🎵
                     = song.song_name
                     %br
+                    %hr
               %tr
                 %th{scope:"row"} 開始時間
                 %td

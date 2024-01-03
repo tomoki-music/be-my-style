@@ -1,6 +1,6 @@
 = form_with model: [:public, event], local: true do |f|
   .event-container.px-0.px-sm-0
-    %table.table.table-striped.event-table{:width=>"100%",:border=>"1"}
+    %table.table.table-striped.event-table{:width=>"80%",:border=>"1"}
       %colgroup
         %col{width: "19%"}
         %col{width: "81%"}
@@ -14,6 +14,14 @@
             %th{scope:"row"} イベント名
             %td
               = f.text_field :event_name, class: 'form-control'
+          %tr
+            %th{scope:"row"} 参考URL
+            %td
+              = f.text_field :url, placeholder: "イベントに関連するURLを記入します", class: 'form-control'
+          %tr
+            %th{scope:"row"} URLの説明
+            %td
+              = f.text_field :url_comment, placeholder: "URLの説明を記入します", class: 'form-control'
           %tr
             %th{scope:"row"} 所属コミュニティ
             %td
@@ -46,7 +54,7 @@
           %tr
             %th{scope:"row"} 楽曲
             %td
-              #songs
+              #songs.song-container
                 = f.fields_for :songs, id: 'js-song-field' do |song|
                   .field
                     = render 'public/events/song_fields', f: song

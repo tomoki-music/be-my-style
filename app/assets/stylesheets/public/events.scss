@@ -215,6 +215,9 @@
   }
   .event-show-table{
     border: thick double lightblue;
+    .event-url{
+      width: 90%;
+    }
     #map {
       height: 300px;
       width: 700px;
@@ -392,6 +395,9 @@
     margin: 0 auto;
     .event-show-table{
       width: 300px;
+      .event-url{
+        width: 250px;
+      }
       #map {
         height: 280px;
         width: 280px;
@@ -471,8 +477,12 @@ input[type="text"] {
 
 @media (max-width: 600px) {
   .event-container{
+    width: 90%;
     .event-table{
       width: 90%;
+      .song-container{
+        width: 90%;
+      }
     }
   }
 }

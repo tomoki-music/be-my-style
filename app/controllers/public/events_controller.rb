@@ -82,6 +82,7 @@ class Public::EventsController < ApplicationController
   end
 
   def edit
+    @community_id = params[:community_id]
     @latitude = @event.latitude
     @longitude = @event.longitude
     @address = @event.address
@@ -148,6 +149,8 @@ class Public::EventsController < ApplicationController
       :latitude,
       :longitude,
       :event_image,
+      :url,
+      :url_comment,
       join_part_ids:[],
       part_ids:[],
       songs_attributes: [:id, :song_name, :youtube_url, :introduction, :_destroy, join_parts_attributes:[:id, :join_part_name, :_destroy]],
