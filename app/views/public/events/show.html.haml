@@ -100,22 +100,20 @@
                 %td
                   .complete.complete-songs-list
                     - @complete_songs.each do |song|
-                      .jump-to-songs-flex
-                        🎵
-                        = song.song_name
-                        %br
-                        = link_to "詳細", "#selected-#{song.id}", data: { 'turbolinks': false }, class: "btn btn-sm btn-info ml-2"
+                      🎵
+                      = song.song_name
+                      = link_to "詳細", "#selected-#{song.id}", data: { 'turbolinks': false }, class: "btn btn-sm btn-info ml-2 ump-to-songs-btn"
+                      %br
                       %hr
               %tr
                 %th{scope:"row"} 募集中楽曲
                 %td
                   .recruiting.recruiting-songs-list
                     - @recruiting_songs.each do |song|
-                      .jump-to-songs-flex
-                        🎵
-                        = song.song_name
-                        %br
-                        = link_to "詳細", "#selected-#{song.id}", data: { 'turbolinks': false }, class: "btn btn-sm btn-info ml-2"
+                      🎵
+                      = song.song_name
+                      = link_to "詳細", "#selected-#{song.id}", data: { 'turbolinks': false }, class: "btn btn-sm btn-info ml-2 jump-to-songs-btn"
+                      %br
                       %hr
               %tr
                 %th{scope:"row"} 開始時間
