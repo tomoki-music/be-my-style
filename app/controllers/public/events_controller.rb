@@ -41,6 +41,21 @@ class Public::EventsController < ApplicationController
       @complete_songs << Song.find(song_id)
     end
 
+    #募集中楽曲数
+    @recruiting_song_ids = []
+    @event.songs.each do |song|
+      if song.join_parts.map{|join_part| join_part.customers.length }.include?(0)
+        @recruiting_song_ids << song.id
+      end
+    end
+    @recruiting_count = @recruiting_song_ids.length
+
+    #募集中楽曲リスト
+    @recruiting_songs = []
+    @recruiting_song_ids.each do |song_id|
+      @recruiting_songs << Song.find(song_id)
+    end
+
     #googleMap
     @latitude = @event.latitude
     @longitude = @event.longitude

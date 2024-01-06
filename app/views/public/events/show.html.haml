@@ -100,9 +100,22 @@
                 %td
                   .complete.complete-songs-list
                     - @complete_songs.each do |song|
-                      🎵
-                      = song.song_name
-                      %br
+                      .jump-to-songs-flex
+                        🎵
+                        = song.song_name
+                        %br
+                        = link_to "詳細", "#selected-#{song.id}", data: { 'turbolinks': false }, class: "btn btn-sm btn-info ml-2"
+                      %hr
+              %tr
+                %th{scope:"row"} 募集中楽曲
+                %td
+                  .recruiting.recruiting-songs-list
+                    - @recruiting_songs.each do |song|
+                      .jump-to-songs-flex
+                        🎵
+                        = song.song_name
+                        %br
+                        = link_to "詳細", "#selected-#{song.id}", data: { 'turbolinks': false }, class: "btn btn-sm btn-info ml-2"
                       %hr
               %tr
                 %th{scope:"row"} 開始時間
@@ -130,16 +143,17 @@
                   📢スクロールで全楽曲が確認できます
                   .event-songs-list
                     - @event.songs.each.with_index(1) do |song, i|
-                      - if song.join_parts.map{|join_part| join_part.customers.length }.include?(0)
-                        .recruiting
-                          %h2.recruiting-caption
-                            メンバー募集中!!
-                          = render "song_info", song: song, i: i
-                      - else
-                        .complete
-                          %h2.complete-caption
-                            楽曲成立🎵
-                          = render "song_info", song: song, i: i
+                      %div{id: "selected-#{song.id}"}
+                        - if song.join_parts.map{|join_part| join_part.customers.length }.include?(0)
+                          .recruiting
+                            %h2.recruiting-caption
+                              メンバー募集中!!
+                            = render "song_info", song: song, i: i
+                        - else
+                          .complete
+                            %h2.complete-caption
+                              楽曲成立🎵
+                            = render "song_info", song: song, i: i
               %tr
                 %th{scope:"row"} 参加フォーム
                 %td
@@ -157,19 +171,20 @@
                       = form_tag(public_event_join_path(@event), method: :post,  onSubmit: "return CheckJoin()") do
                         .event-songs-join-form
                           - @event.songs.each do |song|
-                            .join-part-list
-                              .join-part-song-name
-                                =song.song_name
-                              %hr
-                                = collection_check_boxes(:event, :join_part_ids, song.join_parts, :id, :join_part_name, checked:false) do |part|
-                                  = part.label do
-                                    .song-name
-                                      = part.check_box
-                                      = part.text
-                                    ☝️参加したいパートにチェック
-                                    %hr
-                                  %br
-                                  = hidden_field_tag :event_id, @event.id
+                            %div{id: "support-join-#{song.id}"}
+                              .join-part-list
+                                .join-part-song-name
+                                  =song.song_name
+                                %hr
+                                  = collection_check_boxes(:event, :join_part_ids, song.join_parts, :id, :join_part_name, checked:false) do |part|
+                                    = part.label do
+                                      .song-name
+                                        = part.check_box
+                                        = part.text
+                                      ☝️参加したいパートにチェック
+                                      %hr
+                                    %br
+                                    = hidden_field_tag :event_id, @event.id
                         %input{type: "submit", value: "参加する", class: "join-part-btn", confirm: "こちらのイベントに参加をします。よろしいですか？", data: {'disable_with': '送信中...', 'turbolinks': false}}
                     - else
                       こちらのイベントは終了致しました。

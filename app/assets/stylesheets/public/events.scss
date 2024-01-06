@@ -218,6 +218,9 @@
     .event-url{
       width: 90%;
     }
+    .jump-to-songs-flex{
+      display: flex;
+    }
     .join-member-list{
       border: 1px solid black;
       border-radius: 10px;
@@ -230,13 +233,18 @@
       max-height: 300px;
       overflow: scroll;
     }
+    .recruiting-songs-list{
+      padding-right: 15px;
+      max-height: 300px;
+      overflow: scroll;
+    }
     #map {
       height: 300px;
       width: 700px;
     }
     .event-songs-list{
       padding-right: 15px;
-      max-height: 300px;
+      max-height: 600px;
       overflow: scroll;
     }
     .recruiting{

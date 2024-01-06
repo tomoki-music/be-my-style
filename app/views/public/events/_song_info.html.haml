@@ -25,6 +25,7 @@
 - else
   投稿された動画はありません。
 %br
+= link_to "今すぐ参加する!!", "#support-join-#{song.id}", data: { 'turbolinks': false }, class: "btn btn-sm btn-info mb-2"
 .join-member
   - song.join_parts.each do |join_part|
     .part-name
