@@ -79,15 +79,16 @@
               %tr
                 %th{scope:"row"} 参加メンバー
                 %td
-                  - @join_members.each do |customer|
-                    = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
-                      - if customer.profile_image.present?
-                        = image_tag customer.profile_image, class: "icon_mini"
-                      - else
-                        = image_tag 'no_image', class: "icon_mini"
-                      = customer.name
-                    %br
-                    %hr
+                  .join-member-list
+                    - @join_members.each do |customer|
+                      = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
+                        - if customer.profile_image.present?
+                          = image_tag customer.profile_image, class: "icon_mini"
+                        - else
+                          = image_tag 'no_image', class: "icon_mini"
+                        = customer.name
+                      %br
+                      %hr
               %tr
                 %th{scope:"row"} 成立楽曲数
                 %td
@@ -97,11 +98,12 @@
               %tr
                 %th{scope:"row"} 成立楽曲
                 %td
-                  - @complete_songs.each do |song|
-                    🎵
-                    = song.song_name
-                    %br
-                    %hr
+                  .complete-songs-list
+                    - @complete_songs.each do |song|
+                      🎵
+                      = song.song_name
+                      %br
+                      %hr
               %tr
                 %th{scope:"row"} 開始時間
                 %td
@@ -125,25 +127,29 @@
               %tr
                 %th{scope:"row"} 楽曲
                 %td
-                  - @event.songs.each.with_index(1) do |song, i|
-                    - if song.join_parts.map{|join_part| join_part.customers.length }.include?(0)
-                      .recruiting
-                        %h2.recruiting-caption
-                          メンバー募集中!!
-                        = render "song_info", song: song, i: i
-                    - else
-                      .complete
-                        %h2.complete-caption
-                          楽曲成立🎵
-                        = render "song_info", song: song, i: i
+                  📢スクロールで全楽曲が確認できます
+                  .event-songs-list
+                    - @event.songs.each.with_index(1) do |song, i|
+                      - if song.join_parts.map{|join_part| join_part.customers.length }.include?(0)
+                        .recruiting
+                          %h2.recruiting-caption
+                            メンバー募集中!!
+                          = render "song_info", song: song, i: i
+                      - else
+                        .complete
+                          %h2.complete-caption
+                            楽曲成立🎵
+                          = render "song_info", song: song, i: i
               %tr
                 %th{scope:"row"} 参加フォーム
                 %td
-                  #event-songs
+                  #event-songs.event-songs-join-form
                     -if @event.event_end_time > Time.now
-                      📢参加したい曲のパート（全て）を選んで下部の「参加する」ボタンを押して下さい📢
+                      📢参加したい曲のパート（全て）を選んで下部の【参加する】ボタンを押して下さい
                       %br
-                      📢参加ボタンを押すと、楽曲のパート内にアイコンが表示されます📢
+                      📢参加ボタンを押すと、上記【楽曲】のパート内にアイコンが表示されます
+                      %br
+                      📢スクロールで全楽曲が確認できます
                       %br
                       .text-red
                         ※このイベントは【#{@community.name}】に参加している必要があります。

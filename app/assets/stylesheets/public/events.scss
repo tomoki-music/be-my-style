@@ -218,9 +218,24 @@
     .event-url{
       width: 90%;
     }
+    .join-member-list{
+      padding-right: 15px;
+      max-height: 300px;
+      overflow: scroll;
+    }
+    .complete-songs-list{
+      padding-right: 15px;
+      max-height: 300px;
+      overflow: scroll;
+    }
     #map {
       height: 300px;
       width: 700px;
+    }
+    .event-songs-list{
+      padding-right: 15px;
+      max-height: 300px;
+      overflow: scroll;
     }
     .recruiting{
       position: relative;
@@ -261,6 +276,11 @@
         background-color: white;
         transform: translateY(-50%) translateX(1em);
       }
+    }
+    .event-songs-join-form{
+      padding-right: 15px;
+      max-height: 300px;
+      overflow: scroll;
     }
     .song-check-box{
       font-size: 20px;
