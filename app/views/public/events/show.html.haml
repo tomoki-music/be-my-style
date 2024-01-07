@@ -99,8 +99,8 @@
                 %th{scope:"row"} 成立楽曲
                 %td
                   .complete.complete-songs-list
-                    - @complete_songs.each do |song|
-                      🎵
+                    - @complete_songs.each.with_index(1) do |song, i|
+                      【#{i}】
                       = song.song_name
                       = link_to "詳細", "#selected-#{song.id}", data: { 'turbolinks': false }, class: "btn btn-sm btn-info ml-2 ump-to-songs-btn"
                       %br
@@ -109,8 +109,8 @@
                 %th{scope:"row"} 募集中楽曲
                 %td
                   .recruiting.recruiting-songs-list
-                    - @recruiting_songs.each do |song|
-                      🎵
+                    - @recruiting_songs.each.with_index(1) do |song, i|
+                      【#{i}】
                       = song.song_name
                       = link_to "詳細", "#selected-#{song.id}", data: { 'turbolinks': false }, class: "btn btn-sm btn-info ml-2 jump-to-songs-btn"
                       %br
