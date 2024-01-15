@@ -8,13 +8,14 @@
             %th{scope:"row"} 活動報告「画像」
             %td
               = f.file_field :activity_image, accept: 'image/*'
-              %span ※TOPのイメージ画像になります。
+              %span [Point]TOPのイメージ画像になります。
               #new-activity-image
               #edit-activity-image
           %tr
             %th{scope:"row"} 活動報告「Youtube動画」
             %td
               = f.text_field :youtube_url, placeholder: 'youtubeの動画URL（上部アドレスバーのURL）を記載', class: 'form-control'
+              %span ※注意※Youtubeショート動画は添付できません。
           %tr
             %th{scope:"row"} 参考URL
             %td

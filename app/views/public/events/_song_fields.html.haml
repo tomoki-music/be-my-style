@@ -5,7 +5,7 @@
     .field
       = f.text_field :youtube_url, placeholder: "Youtubeの動画URL"
     .field
-      = link_to_remove_association '曲を削除', f, class: 'btn btn-danger js-song-remove-btn'
+      = link_to_remove_association '曲を削除', f, class: 'btn btn-danger js-song-remove-btn', data: { 'turbolinks': false, confirm: 'こちらの曲を削除します。よろしいですか？' }
     #join_parts.join-part-layout
       = f.fields_for :join_parts, id: 'js-join-part-field' do |join_part|
         .field
