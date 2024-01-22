@@ -1,4 +1,5 @@
 class Public::EventsController < ApplicationController
+  include CsvModule
   before_action :authenticate_customer!
   before_action :set_event, only: [:show, :edit, :update, :destroy]
   before_action :ensure_correct_customer, only: [:update, :edit, :destroy]
@@ -60,6 +61,15 @@ class Public::EventsController < ApplicationController
     @latitude = @event.latitude
     @longitude = @event.longitude
     @address = @event.address
+
+    #CSVダウロード
+    @songs = @event.songs
+    respond_to do |format|
+      format.html
+      format.csv do
+        generate_csv(@songs)
+      end
+    end
   end
 
   def new

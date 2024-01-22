@@ -63,5 +63,5 @@
           %tr
             %th{scope:"row"} イベント補足
             %td
-              = f.text_area :introduction, style: "width:90%"
+              = f.text_area :introduction, class: "event-introduction"
           = f.submit "イベントを登録", class: "btn btn-info event-btn", data: { confirm: 'こちらの内容で登録します。よろしいですか？' }

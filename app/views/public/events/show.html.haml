@@ -63,6 +63,13 @@
                 %th{scope:"row"} イベント名
                 %td
                   = @event.event_name
+              %tr
+                %th{scope:"row"} 最終更新日
+                %td
+                  = l @event.updated_at, format: :short
+                  (
+                  = time_ago_in_words(@event.updated_at) + "前"
+                  )
               - if @event.url.present?
                 %tr
                   %th{scope:"row"} 参考URL
@@ -190,6 +197,11 @@
                 %th{scope:"row"} イベント補足
                 %td
                   = simple_format(@event.introduction)
+              - if @owner == current_customer
+                %tr
+                  %th{scope:"row"} CSVダウンロード
+                  %td
+                    = link_to "CSVダウンロード", public_event_path(@event, format: :csv), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
 
   - latitude = @latitude
   - longitude = @longitude
