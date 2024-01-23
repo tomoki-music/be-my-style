@@ -10,13 +10,14 @@ module CsvModule
     self.response_body = Enumerator.new do |csv_data|
       csv_data << bom
 
-      header = %i(曲順 名前 内容)
+      header = %i(曲順 演奏時間 曲名 内容)
       csv_data << header.to_csv
 
       number = 1
       songs.each do |song|
         body = [
           number,
+          "00:00",
           song.song_name,
         ]
         csv_data << body.to_csv
