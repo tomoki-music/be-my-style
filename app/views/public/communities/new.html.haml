@@ -21,9 +21,14 @@
               = f.file_field :community_image, accept: 'image/*'
               #new-community-image
           %tr
-            %th{scope:"row"} コミュニティ名前
+            %th{scope:"row"}
+              コミュニティ名前
+              %i.text-red
+                (必須)
             %td
               = f.text_field :name
+              %br
+              ※15文字以内で命名お願い致します。
           %tr
             %th{scope:"row"} 活動場所
             %td 
@@ -60,7 +65,10 @@
             %td
               = f.text_field :url
           %tr
-            %th{scope:"row"} コミュニティ紹介文
+            %th{scope:"row"}
+              コミュニティ紹介文
+              %i.text-red
+                (必須)
             %td
               = f.text_area :introduction, style: "width:90%", rows: "10"
           = f.submit "コミュニティを作成", class: "btn btn-info community-new-btn", data: { confirm: 'こちらの内容で作成します。よろしいですか？' }

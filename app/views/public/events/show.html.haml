@@ -83,45 +83,48 @@
                 %th{scope:"row"} 参加人数
                 %td
                   #{@joined_member_counts}人
-              %tr
-                %th{scope:"row"} 参加メンバー
-                %td
-                  .join-member-list
-                    - @join_members.each do |customer|
-                      = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
-                        - if customer.profile_image.present?
-                          = image_tag customer.profile_image, class: "icon_mini"
-                        - else
-                          = image_tag 'no_image', class: "icon_mini"
-                        = customer.name
-                      %br
-                      %hr
+              - if @join_members.present?
+                %tr 
+                  %th{scope:"row"} 参加メンバー
+                  %td
+                    .join-member-list
+                      - @join_members.each do |customer|
+                        = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
+                          - if customer.profile_image.present?
+                            = image_tag customer.profile_image, class: "icon_mini"
+                          - else
+                            = image_tag 'no_image', class: "icon_mini"
+                          = customer.name
+                        %br
+                        %hr
               %tr
                 %th{scope:"row"} 成立楽曲数
                 %td
                   %h4.text-red
                     #{@complete_count}曲 成立!!
                   (全#{@event.songs.length}曲)
-              %tr
-                %th{scope:"row"} 成立楽曲
-                %td
-                  .complete.complete-songs-list
-                    - @complete_songs.each.with_index(1) do |song, i|
-                      【#{i}】
-                      = song.song_name
-                      = link_to "詳細", "#selected-#{song.id}", data: { 'turbolinks': false }, class: "btn btn-sm btn-info ml-2 ump-to-songs-btn"
-                      %br
-                      %hr
-              %tr
-                %th{scope:"row"} 募集中楽曲
-                %td
-                  .recruiting.recruiting-songs-list
-                    - @recruiting_songs.each.with_index(1) do |song, i|
-                      【#{i}】
-                      = song.song_name
-                      = link_to "詳細", "#selected-#{song.id}", data: { 'turbolinks': false }, class: "btn btn-sm btn-info ml-2 jump-to-songs-btn"
-                      %br
-                      %hr
+              - if @complete_songs.present?
+                %tr
+                  %th{scope:"row"} 成立楽曲
+                  %td
+                    .complete.complete-songs-list
+                      - @complete_songs.each.with_index(1) do |song, i|
+                        【#{i}】
+                        = song.song_name
+                        = link_to "詳細", "#selected-#{song.id}", data: { 'turbolinks': false }, class: "btn btn-sm btn-info ml-2 ump-to-songs-btn"
+                        %br
+                        %hr
+              - if @recruiting_songs.present?
+                %tr
+                  %th{scope:"row"} 募集中楽曲
+                  %td
+                    .recruiting.recruiting-songs-list
+                      - @recruiting_songs.each.with_index(1) do |song, i|
+                        【#{i}】
+                        = song.song_name
+                        = link_to "詳細", "#selected-#{song.id}", data: { 'turbolinks': false }, class: "btn btn-sm btn-info ml-2 jump-to-songs-btn"
+                        %br
+                        %hr
               %tr
                 %th{scope:"row"} 開始時間
                 %td
@@ -201,7 +204,7 @@
                 %tr
                   %th{scope:"row"} CSVダウンロード
                   %td
-                    = link_to "CSVダウンロード", public_event_path(@event, format: :csv), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
+                    = link_to "参加一覧ダウンロード", public_event_path(@event, format: :csv), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
 
   - latitude = @latitude
   - longitude = @longitude

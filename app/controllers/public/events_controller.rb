@@ -102,6 +102,7 @@ class Public::EventsController < ApplicationController
       end
       redirect_to public_event_path(@event), notice: "イベントを投稿しました！"
     else
+      @event = Event.new(event_params)
       render :new, alert: "登録できませんでした。お手数ですが、入力内容をご確認のうえ再度お試しください"
     end
   end

@@ -19,6 +19,12 @@ module CsvModule
           number,
           "00:00",
           song.song_name,
+          customer_name = [],
+          song.join_parts.each do |part|
+            part.customers.each do |customer|
+              customer_name << customer.name
+            end
+          end
         ]
         csv_data << body.to_csv
         number += 1

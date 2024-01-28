@@ -11,7 +11,10 @@
               #new-event-image
               #edit-event-image
           %tr
-            %th{scope:"row"} イベント名
+            %th{scope:"row"}
+              イベント名
+              %i.text-red
+                (必須)
             %td
               = f.text_field :event_name, class: 'form-control'
           %tr
@@ -23,7 +26,10 @@
             %td
               = f.text_field :url_comment, placeholder: "URLの説明を記入します", class: 'form-control'
           %tr
-            %th{scope:"row"} 所属コミュニティ
+            %th{scope:"row"}
+              所属コミュニティ
+              %i.text-red
+                (必須)
             %td
               - if @community_id.present?
                 = f.hidden_field :community_id, :value => @community_id
@@ -31,28 +37,46 @@
               - else
                 = f.collection_select :community_id, current_customer.communities, :id, :name
           %tr
-            %th{scope:"row"} 開催日(開始時間)
+            %th{scope:"row"}
+              開催日(開始時間)
+              %i.text-red
+                (必須)
             %td
               = f.datetime_field :event_start_time, style: "width:260px"
           %tr
-            %th{scope:"row"} 開催日(終了時間)
+            %th{scope:"row"}
+              開催日(終了時間)
+              %i.text-red
+                (必須)
             %td
               = f.datetime_field :event_end_time, style: "width:260px"
           %tr
-            %th{scope:"row"} 参加費用
+            %th{scope:"row"}
+              参加費用
+              %i.text-red
+                (必須)
             %td
               = f.number_field :entrance_fee, style: "width:260px"
           %tr
-            %th{scope:"row"} 開催場所
+            %th{scope:"row"}
+              開催場所
+              %i.text-red
+                (必須)
             %td
               = f.text_field :place, class: 'form-control'
           %tr
-            %th{scope:"row"} 開催場所住所
+            %th{scope:"row"}
+              開催場所住所
+              %i.text-red
+                (必須)
             %td
               = f.text_field :address, class: 'form-control'
               %i.block ※開催場所の地図を表示する事ができます。
           %tr
-            %th{scope:"row"} 楽曲
+            %th{scope:"row"}
+              楽曲
+              %i.text-red
+                (必須)
             %td
               #songs.song-container
                 = f.fields_for :songs, id: 'js-song-field' do |song|
