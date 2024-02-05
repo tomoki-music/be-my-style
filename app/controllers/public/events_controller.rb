@@ -11,6 +11,7 @@ class Public::EventsController < ApplicationController
   def show
     @owner = Customer.find(@event.customer.id)
     @community = Community.find(@event.community_id)
+    @request = Request.new
 
     #参加人数
     joined_member_ids = []

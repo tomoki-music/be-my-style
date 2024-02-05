@@ -31,14 +31,15 @@ Rails.application.routes.draw do
     resources :activities do
       resource :favorites, only: [:create, :destroy]
       resources :comments, only: [:create, :destroy]
-   end
+    end
 
-   # イベント機能
-   resources :events do
-    post "join" => "events#join"
-    delete "delete" => "events#delete"
-    resources :songs, only: [:create, :destroy]
-   end
+    # イベント機能
+    resources :events do
+      post "join" => "events#join"
+      delete "delete" => "events#delete"
+      resources :songs, only: [:create, :destroy]
+      resources :requests, only: [:create, :destroy]
+    end
 
     # 通知機能
     resources :notifications, only: :index

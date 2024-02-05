@@ -1,0 +1,4 @@
+%h2 みんなのリクエスト
+= form_with model: [:public, event, request], local: false do |f|
+  = f.text_field :request, id: "input_request", placeholder: '〇〇の曲をお願いします！', style: "width:100%"
+  = f.submit 'リクエストする', class: "event-request-btn"

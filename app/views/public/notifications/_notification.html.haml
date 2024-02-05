@@ -50,6 +50,9 @@
       - when 'comment' then
         = link_to 'あなたの投稿', public_activity_path(activity_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
         = "にコメントしました"
+      - when 'request-msg' then
+        = link_to 'あなたの企画イベント', public_event_requests_path(event_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
+        = "にリクエストしました"
       - when 'activity_for_follow' then
         = link_to '活動報告', public_activity_path(activity_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
         = "を投稿しました(フォローメンバー)"

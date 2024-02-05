@@ -4,9 +4,9 @@ FactoryBot.define do
     sequence(:youtube_url) { |n| "youtube_url#{n}" }
     sequence(:introduction) { |n| "introduction#{n}" }
     event
-    after(:build) do |song|
-      song.join_parts.each do |join_part|
-        join_part.customers << customer
+    trait :song_with_parts do
+      after(:build) do |song|
+        song.join_parts << build(:join_part)
       end
     end
   end

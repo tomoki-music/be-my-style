@@ -9,6 +9,10 @@
         = link_to '参加する🎵', '#event-songs', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
       - else
         = link_to '参加する🎵', '#event-songs', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
+        .event-request-icon
+          = link_to '#event-request', class: "request-icon-text", data: { 'turbolinks': false } do
+            %i.fa-regular.fa-comments.request-icon
+            リクエストする
 
   .event-show-container.px-0.px-sm-0
     .row
@@ -35,6 +39,12 @@
                       = image_tag 'no_image'
                     .owner-name
                       = @owner.name
+              %hr
+                .got-request-count
+                  リクエスト数
+                  %i.fa-regular.fa-comments
+                  #got-request-count.count
+                    = @event.requests.count
               %hr
               %p.card-text
               - if @owner == current_customer
@@ -205,6 +215,10 @@
                   %th{scope:"row"} CSVダウンロード
                   %td
                     = link_to "参加一覧ダウンロード", public_event_path(@event, format: :csv), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
+        #event-request.event-request
+          = render 'public/requests/form', event: @event, request: @request
+          #event-request-asy.request-part
+            = render 'public/requests/requests', event: @event
 
   - latitude = @latitude
   - longitude = @longitude

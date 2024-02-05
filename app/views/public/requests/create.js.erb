@@ -1,0 +1,3 @@
+$("#event-request-asy").html("<%= j(render 'public/requests/requests', event: @event) %>");
+$("#got-request-count").html("<%= @event.requests.count %>")
+$("#input_request").val('');

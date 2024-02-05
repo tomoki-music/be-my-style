@@ -112,6 +112,11 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(Customer.reflect_on_association(:join_part_customers).macro).to eq :has_many
       end
     end
+    context 'Requestモデルとの関係' do
+      it 'requestモデルと1:Nとなっている' do
+        expect(Customer.reflect_on_association(:requests).macro).to eq :has_many
+      end
+    end
   end
   describe 'モデルのインスタンスメソッドのテスト' do
     context 'フォロー、アンフォローのメソッドテスト' do
@@ -139,7 +144,12 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
     end
     context 'コメントの通知メソッドのテスト' do
       it 'コメントのインスタンスが作成される' do
-        expect { other_customer.create_notification_favorite(customer, comment.id) }.to change(Notification, :count).by(1)
+        expect { other_customer.create_notification_comment(customer, activity.id) }.to change(Notification, :count).by(1)
+      end
+    end
+    context 'リクエストの通知メソッドのテスト' do
+      it 'リクエストのインスタンスが作成される' do
+        expect { other_customer.create_notification_request_msg(customer, event.id) }.to change(Notification, :count).by(1)
       end
     end
     context 'チャットの通知メソッドのテスト' do

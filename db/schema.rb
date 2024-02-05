@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_01_03_124454) do
+ActiveRecord::Schema.define(version: 2024_02_05_093317) do
 
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
@@ -286,6 +286,16 @@ ActiveRecord::Schema.define(version: 2024_01_03_124454) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
+  create_table "requests", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "request"
+    t.bigint "customer_id", null: false
+    t.bigint "event_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_requests_on_customer_id"
+    t.index ["event_id"], name: "index_requests_on_event_id"
+  end
+
   create_table "song_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "song_id", null: false
@@ -333,6 +343,8 @@ ActiveRecord::Schema.define(version: 2024_01_03_124454) do
   add_foreign_key "join_parts", "songs"
   add_foreign_key "permits", "communities"
   add_foreign_key "permits", "customers"
+  add_foreign_key "requests", "customers"
+  add_foreign_key "requests", "events"
   add_foreign_key "song_customers", "customers"
   add_foreign_key "song_customers", "songs"
   add_foreign_key "songs", "events"

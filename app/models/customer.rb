@@ -47,10 +47,11 @@ class Customer < ApplicationRecord
   has_many :songs, through: :song_customers, dependent: :destroy
   has_many :join_part_customers, dependent: :destroy
   has_many :join_parts, through: :join_part_customers, dependent: :destroy
+  has_many :requests, dependent: :destroy
 
   validates :name, presence: true, length: {maximum: 20}
   validates :email, uniqueness: true, presence: true
-  validates :customer_parts, presence: true
+  # validates :customer_parts, presence: true
 
   def update_password(params, *options)
     if params[:password].blank?
@@ -101,6 +102,15 @@ class Customer < ApplicationRecord
       visited_id: id,
       action: 'comment',
       activity_id: activity_id,
+    )
+    notification.save if notification.valid?
+  end
+
+  def create_notification_request_msg(current_customer, event_id)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'request-msg',
+      event_id: event_id,
     )
     notification.save if notification.valid?
   end

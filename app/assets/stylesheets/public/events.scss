@@ -166,6 +166,18 @@
       color: white;
       border-radius: 10px;
     }
+    .event-request-icon{
+      margin-left: 10px;
+      line-height: 30px;
+      display: inline-block;
+      .request-icon-text{
+        font-size: 10px;
+        text-decoration: none;
+        .request-icon{
+          font-size: 30px;
+        }
+      }
+    }
   }
 }
 
@@ -196,6 +208,15 @@
           height: 50px;
           margin: 5px;
           border-radius: 10px;
+        }
+      }
+      .got-request-count{
+        margin-top: 10px;
+        font-size: 17px;
+        color: blue;
+        display: block;
+        .count{
+          display: inline-block;
         }
       }
       .card-text{
@@ -408,6 +429,50 @@
   .event-index-body{
     margin-top: 50px;
   }
+  .event-request{
+    width: 100%;
+    position: relative;
+    margin-bottom: 30px;
+    .event-request-btn{
+      position: absolute;
+      top: 100px;
+      right: 0px;
+    }
+    .request-part{
+      margin-top: 70px;
+      width: 100%;
+      .request-content{
+        display: flex;
+        width: 100%;
+        padding: 10px;
+        border: solid 1px;
+        border-radius: 10px;
+        .request-info{
+          flex-direction: column;
+          width: 100%;
+          font-size: 10px;
+          .request-upper{
+            display: flex;
+            .request-name{
+              margin: 5px 10px;
+            }
+            .request-time{
+              margin: 5px 10px;
+            }
+            .request-delete > .btn{
+              font-size: 10px;
+              padding: 5px;
+              margin: 0 10px;
+            }
+          }
+          .request-beneath{
+            margin-left: 10px;
+            font-size: 15px;
+          }
+        }
+      }
+    }
+  }
 }
 
 @media (max-width: 600px) {
@@ -531,6 +596,3 @@ input[type="text"] {
     border-radius: 10px;
   }
 }
-
-
-

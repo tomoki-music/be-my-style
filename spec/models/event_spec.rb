@@ -43,5 +43,10 @@ RSpec.describe Event, type: :model do
         expect(Event.reflect_on_association(:community).macro).to eq :belongs_to
       end
     end
+    context 'Requestモデルとの関係' do
+      it 'requestモデルと1:Nとなっている' do
+        expect(Event.reflect_on_association(:requests).macro).to eq :has_many
+      end
+    end
   end
 end
