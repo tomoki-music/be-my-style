@@ -8,8 +8,8 @@ class Public::RequestsController < ApplicationController
     @request.customer_id = current_customer.id
     @request.event_id = @event.id
     if @request.save!
-      if current_customer != @request.customer
-        @request.customer.create_notification_request(current_customer, @event.id)
+      if current_customer != @event.customer
+        @event.customer.create_notification_request_msg(current_customer, @event.id)
       end
       flash.now[:notice] = 'リクエストを投稿しました'
     else
