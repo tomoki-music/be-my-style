@@ -45,6 +45,8 @@
                   %i.fa-regular.fa-comments
                   #got-request-count.count
                     = @event.requests.count
+                  %br
+                  ※リプライ数含む
               %hr
               %p.card-text
               - if @owner == current_customer
