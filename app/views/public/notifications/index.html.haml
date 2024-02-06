@@ -2,6 +2,8 @@
 
 .notifications-index-container
   %h2 通知一覧
+  .notifications-kaminari
+    = paginate @notifications
   - notifications = @notifications.where.not(visitor_id: current_customer.id)
   - if notifications.exists?
     = render notifications
