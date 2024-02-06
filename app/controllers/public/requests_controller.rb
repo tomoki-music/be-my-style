@@ -16,7 +16,9 @@ class Public::RequestsController < ApplicationController
       @event.songs.each do |song|
         song.join_parts.each do |join_part|
           join_part.customers.each do |customer|
-            customer.create_notification_request_msg(current_customer, @event.id)
+            if current_customer != customer
+              customer.create_notification_request_msg(current_customer, @event.id)
+            end
           end
         end
       end
