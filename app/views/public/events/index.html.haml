@@ -27,20 +27,32 @@
           %h5.card-title
             = link_to event.event_name, public_event_path(event), data: { 'turbolinks': false }
           %h6.card-subtitle
+            <i class="fa-regular fa-clock"></i>
             %b 開催日(開始時間)
             %br
             = l event.event_start_time, format: :short
             %hr
+            <i class="fa-solid fa-clock"></i>
             %b 開催日(終了時間)
             %br
             = l event.event_end_time, format: :short
             %hr
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            %b 参加締切日
+            %br
+            = l event.event_entry_deadline, format: :short
+            %hr
+            <i class="fa-solid fa-sack-dollar"></i>
             %b 参加費用
+            %br
             = event.entrance_fee.to_s + "円"
             %hr
+            <i class="fa-solid fa-earth-asia"></i>
             %b 開催場所
+            %br
             = event.place
             %hr
+            <i class="fa-solid fa-people-group"></i>
             %b 参加人数
             :ruby
               joined_member_ids = []
@@ -59,9 +71,10 @@
               %hr
               = link_to '編集する', edit_public_event_path(event), data: { 'turbolinks': false }, class: "btn btn-success event-show-link"
           %p.card-text
-            %hr
-            [イベント作成者]
-            %br
+            .center
+              %hr
+              [イベント作成者]
+              %br
             .event-owner-img
               = link_to public_customer_path(@owner), data: { 'turbolinks': false } do
                 - if @owner.profile_image.present?

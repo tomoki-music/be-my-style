@@ -7,22 +7,19 @@ class Public::RequestsController < ApplicationController
     @request = Request.new(request_params)
     @request.customer_id = current_customer.id
     @request.event_id = @event.id
-    if @request.save!
-      #イベント企画者への通知
-      if current_customer != @event.customer
-        @event.customer.create_notification_request_msg(current_customer, @event.id)
-      end
+    if @request.save
       #イベント参加者への通知
+      customer_ids = []
       @event.songs.each do |song|
         song.join_parts.each do |join_part|
-          join_part.customers.each do |customer|
-            if current_customer != customer
-              customer.create_notification_request_msg(current_customer, @event.id)
-            end
-          end
+          customer_ids += join_part.customers.pluck(:id)
         end
       end
-
+      customer_ids.uniq.each do |customer_id|
+        if current_customer != Customer.find(customer_id)
+          Customer.find(customer_id).create_notification_request_msg(current_customer, @event.id)
+        end
+      end
       flash.now[:notice] = 'リクエストを投稿しました'
     else
       redirect_back(fallback_location: root_path)

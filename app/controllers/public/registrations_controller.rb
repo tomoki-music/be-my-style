@@ -48,7 +48,7 @@ class Public::RegistrationsController < Devise::RegistrationsController
   #   super
   # end
 
-  # protected
+  protected
 
   # If you have extra params to permit, append them to the sanitizer.
   def configure_sign_up_params
@@ -77,6 +77,11 @@ class Public::RegistrationsController < Devise::RegistrationsController
   # If you have extra params to permit, append them to the sanitizer.
   def configure_account_update_params
     devise_parameter_sanitizer.permit(:account_update, keys: [:name, :profile_image])
+  end
+
+  #パスワードなしでcustomer情報変更
+  def update_resource(resource, params)
+    resource.update_without_password(params)
   end
 
   # The path used after sign up.
