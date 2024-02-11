@@ -14,6 +14,7 @@ class Event < ApplicationRecord
     validates :event_name
     validates :event_start_time
     validates :event_end_time
+    validates :event_entry_deadline
     validates :entrance_fee
     validates :address
     validates :songs
