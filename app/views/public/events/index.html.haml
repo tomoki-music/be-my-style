@@ -27,27 +27,29 @@
           %h5.card-title
             = link_to event.event_name, public_event_path(event), data: { 'turbolinks': false }
           %h6.card-subtitle
+            <i class="fa-regular fa-clock"></i>
             %b 開催日(開始時間)
             %br
-            <i class="fa-regular fa-clock"></i>
             = l event.event_start_time, format: :short
             %hr
+            <i class="fa-solid fa-clock"></i>
             %b 開催日(終了時間)
             %br
-            <i class="fa-solid fa-clock"></i>
             = l event.event_end_time, format: :short
             %hr
+            <i class="fa-solid fa-clock-rotate-left"></i>
             %b 参加締切日
             %br
-            <i class="fa-solid fa-clock-rotate-left"></i>
             = l event.event_entry_deadline, format: :short
             %hr
             <i class="fa-solid fa-sack-dollar"></i>
             %b 参加費用
+            %br
             = event.entrance_fee.to_s + "円"
             %hr
             <i class="fa-solid fa-earth-asia"></i>
             %b 開催場所
+            %br
             = event.place
             %hr
             <i class="fa-solid fa-people-group"></i>
