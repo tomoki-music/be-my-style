@@ -90,4 +90,10 @@
             %th{scope:"row"} 自己紹介
             %td
               = f.text_area :introduction, style: "width:90%", class: 'form-control'
+          %tr
+            %th{scope:"row"} メール通知設定
+            %td
+              = f.check_box :confirm_mail ,{checked: true}, "true", "false"
+              %br
+              ※チェックを外すと「通知メールを受信しない」設定となります。
           = f.submit "プロフィールを更新", class: "btn btn-info customer-edit-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }

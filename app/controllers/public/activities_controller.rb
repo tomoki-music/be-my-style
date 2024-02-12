@@ -22,6 +22,9 @@ class Public::ActivitiesController < ApplicationController
             community.customers.each do |customer|
               if customer.id != current_customer.id
                 customer.create_notification_activity_for_community(current_customer, @activity.id, community.id)
+                if customer.confirm_mail
+                  CustomerMailer.with(ac_customer: current_customer, ps_customer: customer, activity: @activity).create_activity_mail.deliver_later
+                end
               end
             end
           end

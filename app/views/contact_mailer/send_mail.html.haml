@@ -1,0 +1,23 @@
+.community-send-mail-container
+  .community-send-mail-title
+    %h6
+      = @community.name
+      よりメールのお知らせです！
+    %p 内容は以下の通りです。
+  %table.table.table-striped.community-send-mail-table{:width=>"100%",:border=>"1"}
+    %colgroup
+      %col{width: "19%"}
+      %col{width: "81%"}
+        %tr
+          %th{scope:"row"} タイトル
+          %td
+            = @mail_title
+        %tr
+          %th{scope:"row"} 本文
+          %td
+            = safe_join(@mail_content.split("\n"),tag(:br))
+        %tr
+          %th{scope:"row"} form
+          %td
+            MMM BeMyStyle 事務局
+      

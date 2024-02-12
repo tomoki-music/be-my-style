@@ -58,6 +58,7 @@ class Public::CustomersController < ApplicationController
       :profile_image,
       :prefecture_id,
       :url,
+      :confirm_mail,
       :password,
       :password_confirmation,
       part_ids: [],

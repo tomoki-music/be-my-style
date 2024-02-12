@@ -2,10 +2,14 @@ class Public::RelationshipsController < ApplicationController
   def create
     follow_customer_id = params[:customer_id]
     @customer = Customer.find(params[:customer_id])
-
+    #フォロー機能
     current_customer.follow(follow_customer_id)
-    @customer.create_notification_follow(current_customer)
-    
+    if current_customer != @customer
+      @customer.create_notification_follow(current_customer)
+      if @customer.confirm_mail
+        CustomerMailer.with(ac_customer: current_customer, ps_customer: @customer).create_follow_mail.deliver_later
+      end
+    end
     redirect_to request.referer
   end
   def destroy

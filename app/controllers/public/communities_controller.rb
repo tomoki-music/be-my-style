@@ -70,7 +70,7 @@ class Public::CommunitiesController < ApplicationController
     community_customers = @community.customers
     @mail_title = params[:mail_title]
     @mail_content = params[:mail_content]
-    ContactMailer.send_mail(@mail_title, @mail_content,community_customers).deliver
+    ContactMailer.send_mail(@mail_title, @mail_content, @community, community_customers).deliver
   end
 
   def permits

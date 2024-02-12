@@ -77,7 +77,7 @@
           = f.hidden_field :customer_id, value: @chat_room_customer.id
           = f.text_area :content, autofocus: true, class: 'chat-form'
           = f.file_field :chat_image, accept: 'image/*'
-          = f.submit "メッセージを送信", class: 'btn btn-info chat-form-btn'
+          = f.submit "メッセージを送信", data: { disable_with: '送信中', confirm: "メッセージを送信しますか？"}, class: 'btn btn-info chat-form-btn'
 
     .col-md-3
       .partner-container

@@ -39,6 +39,13 @@
             - if @customer.id == current_customer.id
               = link_to 'プロフィール編集', edit_public_customer_path(@customer), data: { 'turbolinks': false }, class: "btn btn-info customer-show-btn"
               = link_to 'パスワード変更', mypage_edit_password_public_customer_path(@customer), data: { 'turbolinks': false }, class: "btn btn-success customer-show-btn"
+              %div.bold
+                【通知モード】
+                %br
+                - if @customer.confirm_mail
+                  📩通知メールを受信する
+                -else
+                  📩通知メールを受信しない
             - else
               - if current_customer.following?(@customer)
                 = link_to "フォロー外す", public_customer_relationships_path(@customer.id), data: { 'turbolinks': false }, method: :delete, class: "btn btn-info customer-show-btn"
