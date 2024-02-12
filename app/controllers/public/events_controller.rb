@@ -87,15 +87,17 @@ class Public::EventsController < ApplicationController
     if @event.save
       if current_customer.chat_room_customers.present?
         community_ids = current_customer.chat_room_customers.pluck(:community_id)
+        member_ids = []
         community_ids.each do |community_id|
           Community.where(id: community_id).each do |community|
-            community.customers.each do |customer|
-              if customer.id != current_customer.id
-                customer.create_notification_event_for_community(current_customer, @event.id, community.id)
-                if customer.confirm_mail
-                  CustomerMailer.with(ac_customer: current_customer, ps_customer: customer, event_id: @event.id).create_event_mail.deliver_later
-                end
-              end
+            member_ids += community.customers.pluck(:id)
+          end
+        end
+        member_ids.uniq.each do |member_id|
+          if Customer.find(member_id) != current_customer
+            Customer.find(member_id).create_notification_event_for_community(current_customer, @event.id)
+            if Customer.find(member_id).confirm_mail
+              CustomerMailer.with(ac_customer: current_customer, ps_customer: Customer.find(member_id), event_id: @event.id).create_event_mail.deliver_later
             end
           end
         end

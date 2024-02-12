@@ -168,12 +168,11 @@ class Customer < ApplicationRecord
     notification.save if notification.valid?
   end
 
-  def create_notification_activity_for_community(current_customer, activity_id, community_id)
+  def create_notification_activity_for_community(current_customer, activity_id)
     notification = current_customer.active_notifications.new(
       visited_id: id,
       action: 'activity_for_community',
       activity_id: activity_id,
-      community_id: community_id,
     )
     notification.save if notification.valid?
   end
@@ -187,12 +186,11 @@ class Customer < ApplicationRecord
     notification.save if notification.valid?
   end
 
-  def create_notification_event_for_community(current_customer, event_id, community_id)
+  def create_notification_event_for_community(current_customer, event_id)
     notification = current_customer.active_notifications.new(
       visited_id: id,
       action: 'event_for_community',
       event_id: event_id,
-      community_id: community_id,
     )
     notification.save if notification.valid?
   end
