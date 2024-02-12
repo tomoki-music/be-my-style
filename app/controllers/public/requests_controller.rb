@@ -18,6 +18,9 @@ class Public::RequestsController < ApplicationController
       customer_ids.uniq.each do |customer_id|
         if current_customer != Customer.find(customer_id)
           Customer.find(customer_id).create_notification_request_msg(current_customer, @event.id)
+          if Customer.find(customer_id).confirm_mail
+            CustomerMailer.with(ac_customer: current_customer, ps_customer: Customer.find(customer_id), event_id: @event.id, request: @request).request_msg_mail.deliver_later
+          end
         end
       end
       flash.now[:notice] = 'リクエストを投稿しました'

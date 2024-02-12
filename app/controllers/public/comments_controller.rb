@@ -10,6 +10,9 @@ class Public::CommentsController < ApplicationController
     if @comment.save
       if current_customer != @activity.customer
         @activity.customer.create_notification_comment(current_customer, @activity.id)
+        if @activity.customer.confirm_mail
+          CustomerMailer.with(ac_customer: current_customer, ps_customer: @activity.customer, activity: @activity, comment: @comment).create_comment_mail.deliver_later
+        end
       end
       flash.now[:notice] = 'コメントを投稿しました'
     else

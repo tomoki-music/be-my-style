@@ -92,6 +92,9 @@ class Public::EventsController < ApplicationController
             community.customers.each do |customer|
               if customer.id != current_customer.id
                 customer.create_notification_event_for_community(current_customer, @event.id, community.id)
+                if customer.confirm_mail
+                  CustomerMailer.with(ac_customer: current_customer, ps_customer: customer, event_id: @event.id).create_event_mail.deliver_later
+                end
               end
             end
           end
@@ -144,7 +147,12 @@ class Public::EventsController < ApplicationController
             JoinPart.find(join_part_id).customers << customer
           end
         end
-        event.customer.create_notification_join_event(current_customer, event.id)
+        if current_customer != event.customer
+          event.customer.create_notification_join_event(current_customer, event.id)
+          if event.customer.confirm_mail
+            CustomerMailer.with(ac_customer: current_customer, ps_customer: event.customer, event_id: event.id).join_event_mail.deliver_later
+          end
+        end
         redirect_to public_event_path(event), notice: "イベントへの参加が完了しました!"
       end
     else
