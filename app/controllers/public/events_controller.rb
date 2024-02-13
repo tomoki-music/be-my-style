@@ -155,6 +155,20 @@ class Public::EventsController < ApplicationController
             CustomerMailer.with(ac_customer: current_customer, ps_customer: event.customer, event_id: event.id).join_event_mail.deliver_later
           end
         end
+        #イベント参加者への通知
+        customer_ids = []
+        event.songs.each do |song|
+          song.join_parts.each do |join_part|
+            customer_ids += join_part.customers.pluck(:id)
+          end
+        end
+        customer_ids.uniq.each do |customer_id|
+          if current_customer != Customer.find(customer_id)
+            if Customer.find(customer_id).confirm_mail
+              CustomerMailer.with(ac_customer: current_customer, ps_customer: Customer.find(customer_id), event_id: event.id).member_join_event_mail.deliver_later
+            end
+          end
+        end
         redirect_to public_event_path(event), notice: "イベントへの参加が完了しました!"
       end
     else

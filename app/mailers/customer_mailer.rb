@@ -4,7 +4,13 @@ class CustomerMailer < ApplicationMailer
   def join_event_mail
     @event = Event.find(params[:event_id])
     @event_url = "https://be-my-style.com/public/events/#{@event.id}"
-    mail to: @ps_customer.email, subject: 'イベントへの参加がありました！'
+    mail to: @ps_customer.email, subject: 'あなたの企画したイベントへの参加がありました！'
+  end
+
+  def member_join_event_mail
+    @event = Event.find(params[:event_id])
+    @event_url = "https://be-my-style.com/public/events/#{@event.id}"
+    mail to: @ps_customer.email, subject: 'あなたが参加したイベントに、他の参加者がエントリーしました！'
   end
 
   def request_msg_mail
