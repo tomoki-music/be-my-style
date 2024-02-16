@@ -224,6 +224,11 @@
                   %td
                     = link_to "参加一覧ダウンロード", public_event_path(@event, format: :csv), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
         #event-request.event-request
+          - if @event.request_deadline.present?
+            .event-request-deadline
+              曲リクエスト締切日:
+              = l @event.request_deadline, format: :short
+              まで🙏
           = render 'public/requests/form', event: @event, request: @request
           #event-request-asy.request-part
             = render 'public/requests/requests', event: @event

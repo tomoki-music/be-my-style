@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_02_12_065224) do
+ActiveRecord::Schema.define(version: 2024_02_16_032852) do
 
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
@@ -213,6 +213,7 @@ ActiveRecord::Schema.define(version: 2024_02_12_065224) do
     t.text "url"
     t.string "url_comment"
     t.datetime "event_entry_deadline", null: false
+    t.datetime "request_deadline"
     t.index ["community_id"], name: "index_events_on_community_id"
     t.index ["customer_id"], name: "index_events_on_customer_id"
   end

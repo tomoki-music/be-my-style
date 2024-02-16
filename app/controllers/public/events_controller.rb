@@ -194,6 +194,7 @@ class Public::EventsController < ApplicationController
       :event_start_time,
       :event_end_time,
       :event_entry_deadline,
+      :request_deadline,
       :entrance_fee,
       :place,
       :introduction,

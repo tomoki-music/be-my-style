@@ -433,9 +433,15 @@
     width: 100%;
     position: relative;
     margin-bottom: 30px;
+    .event-request-deadline{
+      padding: 5px;
+      width: fit-content;
+      border: 1px solid red;
+      border-radius: 10px;
+    }
     .event-request-btn{
       position: absolute;
-      top: 100px;
+      top: 120px;
       right: 0px;
     }
     .request-part{
