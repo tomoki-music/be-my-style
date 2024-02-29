@@ -42,3 +42,27 @@
 .slider.slick-initialized {
   opacity: 1;
 }
+.parallax {
+  position: relative;
+  background-image: url('enjoy_music.jpg');
+  height: 800px;
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.parallax-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  h2{
+    color: white;
+    font-weight: bold;
+  }
+}

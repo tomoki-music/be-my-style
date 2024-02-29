@@ -42,6 +42,20 @@ ja:
         problem: 失敗した事
         try: 次挑戦したい事
         introduction: 活動報告の詳細紹介
+      event:
+        event_name: イベント名
+        event_start_time: 開始時間
+        event_end_time: 終了時間
+        entrance_fee: 参加費用
+        introduction: 詳細説明
+        place: 開催場所
+        address: 開催場所
+        url: 参考URL
+        url_comment: 参考URL説明
+        event_entry_deadline: エントリー締切日
+        request_deadline: リクエスト締切日
+      event/songs:
+        song_name: 曲名
     errors:
       messages:
         record_invalid: 'バリデーションに失敗しました: %{errors}'
