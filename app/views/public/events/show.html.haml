@@ -5,7 +5,7 @@
     .event-show-follow
       - if @owner == current_customer
         = link_to '編集する', edit_public_event_path(@event, community_id: @event.community_id), data: { 'turbolinks': false }, class: "btn btn-sm btn-success event-show-btn"
-        = link_to 'イベント削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger event-show-btn"
+        = link_to 'コピー作成', copy_public_events_path(event_id: @event.id, community_id: @event.community_id), data: { 'turbolinks': false }, class: "btn btn-sm btn-secondary event-show-btn"
         = link_to '参加する🎵', '#event-songs', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
       - else
         = link_to '参加する🎵', '#event-songs', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
@@ -55,6 +55,7 @@
                     イベント作成者専用
                   .dropdown-menu{"aria-labelledby" => "dropdownMenuButton"}
                     = link_to '編集する', edit_public_event_path(@event), data: { 'turbolinks': false }, class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent"
+                    = link_to 'コピー作成', copy_public_events_path(event_id: @event.id, community_id: @event.community_id), data: { 'turbolinks': false }, class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent"
                     = link_to 'イベント削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "dropdown-item btn btn-sm btn-danger community-show-btn text-secondary bg-transparent"
                     = link_to '参加する🎵', '#event-songs', class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent"
               - else
@@ -223,6 +224,10 @@
                   %th{scope:"row"} CSVダウンロード
                   %td
                     = link_to "参加一覧ダウンロード", public_event_path(@event, format: :csv), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
+                %tr
+                  %th{scope:"row"} 削除
+                  %td
+                    = link_to 'このイベントを削除する', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger event-show-btn"
         #event-request.event-request
           - if @event.request_deadline.present?
             .event-request-deadline

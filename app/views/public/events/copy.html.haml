@@ -1,0 +1,11 @@
+= render 'layouts/header_menu'
+
+.event-copy-title
+  %h2 イベント編集画面
+  - if @event.errors.any?
+    .alert
+      %ul.list-style-none
+        - @event.errors.full_messages.each do |message|
+          %li
+            = message
+= render 'public/events/form', event: @event

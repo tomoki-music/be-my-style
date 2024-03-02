@@ -128,6 +128,30 @@ class Public::EventsController < ApplicationController
     end
   end
 
+  def copy
+    @old_event = Event.find(params[:event_id])
+    @event = Event.new
+    @event.attributes = {
+      event_name: @old_event.event_name,
+      entrance_fee: @old_event.entrance_fee,
+      introduction: @old_event.introduction,
+      place: @old_event.place,
+      address: @old_event.address,
+      url: @old_event.url,
+      url_comment: @old_event.url_comment,
+      songs: @old_event.songs,
+    }
+    #イベントとソングの親子関係を一旦解消
+    @old_event.songs.each do |song|
+      song.id = nil
+    end
+
+    @community_id = params[:community_id]
+    @latitude = @event.latitude
+    @longitude = @event.longitude
+    @address = @event.address
+  end
+
   def destroy
     @event.songs.destroy_all
     @event.destroy

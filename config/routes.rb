@@ -35,6 +35,9 @@ Rails.application.routes.draw do
 
     # イベント機能
     resources :events do
+      collection do
+        get "copy" => "events#copy"
+      end
       post "join" => "events#join"
       delete "delete" => "events#delete"
       resources :songs, only: [:create, :destroy]
