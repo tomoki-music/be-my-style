@@ -1,7 +1,9 @@
 = render 'layouts/header_menu'
 
 .event-copy-title
-  %h2 イベント編集画面
+  %h2 イベント登録画面
+  .text-red
+    ※コピー元の情報が入っております。適宜修正してご利用下さい。
   - if @event.errors.any?
     .alert
       %ul.list-style-none

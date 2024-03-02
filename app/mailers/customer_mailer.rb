@@ -58,20 +58,20 @@ class CustomerMailer < ApplicationMailer
 
   def create_request_mail
     @community = params[:community]
-    @community_url = "https://be-my-style.com/public/customers/#{@community.id}"
+    @community_url = "https://be-my-style.com/public/communities/#{@community.id}"
     mail to: @ps_customer.email, subject: 'あなたの企画した「コミュニティ」へ参加申請が届きました！'
   end
 
   def create_accept_mail
     @community = params[:community]
-    @community_url = "https://be-my-style.com/public/customers/#{@community.id}"
+    @community_url = "https://be-my-style.com/public/communities/#{@community.id}"
     mail to: @ps_customer.email, subject: '参加申請した「コミュニティ」への参加が受理されました！'
   end
 
   def create_group_chat_mail
     @chat_message = params[:chat_message]
     @community = params[:community]
-    @community_url = "https://be-my-style.com/public/customers/#{@community.id}"
+    @community_url = "https://be-my-style.com/public/communities/#{@community.id}"
     mail to: @ps_customer.email, subject: 'あなたの参加するコミュニティにて「チャット」が届きました！'
   end
 
