@@ -86,9 +86,10 @@ GEM
     bindex (0.8.1)
     bootsnap (1.16.0)
       msgpack (~> 1.2)
-    bootstrap-sass (3.4.1)
-      autoprefixer-rails (>= 5.2.1)
-      sassc (>= 2.0.0)
+    bootstrap (4.6.2)
+      autoprefixer-rails (>= 9.1.0)
+      popper_js (>= 1.16.1, < 2)
+      sassc-rails (>= 2.0.0)
     bootstrap4-kaminari-views (1.0.1)
       kaminari (>= 0.13)
       rails (>= 3.1)
@@ -217,6 +218,7 @@ GEM
     nokogiri (1.14.3-x86_64-darwin)
       racc (~> 1.4)
     orm_adapter (0.5.0)
+    popper_js (1.16.1)
     pry (0.14.2)
       coderay (~> 1.1)
       method_source (~> 1.0)
@@ -361,7 +363,7 @@ DEPENDENCIES
   active_hash
   aws-sdk-s3
   bootsnap (>= 1.4.4)
-  bootstrap-sass
+  bootstrap (~> 4.5)
   bootstrap4-kaminari-views
   byebug
   capybara (>= 3.26)
