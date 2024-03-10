@@ -12,10 +12,11 @@
 
 .customer-menu-top {
   display: block;
-  width: 100%;
+  width: 400px;
   height: 50px;
   margin: 0 auto;
-  border: 1px solid black;
+  border: 1px solid white;
+  background-color: rgba(255,255,255,0.5);
   border-radius: 10px;
   ul{
     display: flex;
@@ -60,6 +61,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-flow: column;
   background-color: rgba(0, 0, 0, 0.5);
   h2{
     color: white;
