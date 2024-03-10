@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_02_16_032852) do
+ActiveRecord::Schema.define(version: 2024_03_10_093857) do
 
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
@@ -192,6 +192,7 @@ ActiveRecord::Schema.define(version: 2024_02_16_032852) do
     t.string "current_sign_in_ip"
     t.string "last_sign_in_ip"
     t.boolean "confirm_mail", default: true
+    t.integer "is_owner"
     t.index ["email"], name: "index_customers_on_email", unique: true
     t.index ["reset_password_token"], name: "index_customers_on_reset_password_token", unique: true
   end
@@ -309,13 +310,12 @@ ActiveRecord::Schema.define(version: 2024_02_16_032852) do
   end
 
   create_table "songs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "event_id", null: false
+    t.integer "event_id"
     t.string "song_name", null: false
     t.string "youtube_url"
     t.text "introduction"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.index ["event_id"], name: "index_songs_on_event_id"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
@@ -350,5 +350,4 @@ ActiveRecord::Schema.define(version: 2024_02_16_032852) do
   add_foreign_key "requests", "events"
   add_foreign_key "song_customers", "customers"
   add_foreign_key "song_customers", "songs"
-  add_foreign_key "songs", "events"
 end
