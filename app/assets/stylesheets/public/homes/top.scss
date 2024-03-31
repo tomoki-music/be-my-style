@@ -43,10 +43,11 @@
 .slider.slick-initialized {
   opacity: 1;
 }
+
 .parallax {
   position: relative;
   background-image: url('enjoy_music.jpg');
-  height: 500px;
+  height: 250px;
   background-attachment: fixed;
   background-position: center;
   background-repeat: no-repeat;
@@ -67,8 +68,4 @@
       font-weight: bold;
     }
   }
-}
-
-@media (min-width: 600px) {
-
 }
