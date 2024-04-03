@@ -9,8 +9,6 @@ $(document).on ("turbolinks:load", function(){
     pauseOnFocus: false,
     pauseOnHover: false,
     pauseOnDotsHover: false,
-    prevArrow: '<i class="fas fa-arrow-alt-circle-left"></i>',
-    nextArrow: '<i class="fas fa-arrow-alt-circle-right"></i>',
     responsive: [{
       breakpoint: 768, //ブレークポイントが768px
       settings: {
