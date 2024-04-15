@@ -10,6 +10,11 @@
           リクエストする
 
   .event-show-container.px-0.px-sm-0
+    最終更新日:
+    = l @event.updated_at, format: :short
+    (
+    = time_ago_in_words(@event.updated_at) + "前"
+    )
     .row
       .col-md-3
         .event-show-card
@@ -53,6 +58,10 @@
                     = link_to 'コピー作成', copy_public_events_path(event_id: @event.id, community_id: @event.community_id), data: { 'turbolinks': false }, class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent"
                     = link_to 'イベント削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "dropdown-item btn btn-sm btn-danger community-show-btn text-secondary bg-transparent"
                     = link_to '参加する🎵', '#event-songs', class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent"
+                .mt-2
+                  = link_to 'イベントの編集', edit_public_event_path(@event, community_id: @event.community_id), data: { 'turbolinks': false }, class: "btn btn-sm btn-success event-show-btn"
+                  = link_to 'コピー新規作成', copy_public_events_path(event_id: @event.id, community_id: @event.community_id), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
+                  = link_to 'イベントの削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger event-show-btn"
               - else
                 = link_to '参加する🎵', '#event-songs', class: "btn btn-sm btn-success event-show-btn"
 
@@ -71,22 +80,6 @@
                 %th{scope:"row"} イベント名
                 %td
                   = @event.event_name
-              - if @owner == current_customer
-                %tr
-                  %th{scope:"row"} 編集
-                  %td
-                    = link_to 'このイベントの内容を編集する', edit_public_event_path(@event, community_id: @event.community_id), data: { 'turbolinks': false }, class: "btn btn-sm btn-success event-show-btn"
-                %tr
-                  %th{scope:"row"} コピー
-                  %td
-                    = link_to 'コピーして新規にイベントを作成する', copy_public_events_path(event_id: @event.id, community_id: @event.community_id), data: { 'turbolinks': false }, class: "btn btn-sm btn-secondary event-show-btn"
-              %tr
-                %th{scope:"row"} 最終更新日
-                %td
-                  = l @event.updated_at, format: :short
-                  (
-                  = time_ago_in_words(@event.updated_at) + "前"
-                  )
               - if @event.url.present?
                 %tr
                   %th{scope:"row"} 参考URL
@@ -97,9 +90,39 @@
                       %hr
                       = @event.url_comment
               %tr
+                %th{scope:"row"} 開始時間
+                %td
+                  %h4.font-weight-bold
+                    <i class="fa-regular fa-clock"></i>
+                    = l @event.event_start_time, format: :short
+              %tr
+                %th{scope:"row"} 終了時間
+                %td
+                  %h4.font-weight-bold
+                    <i class="fa-regular fa-clock"></i>
+                    = l @event.event_end_time, format: :short
+              %tr
+                %th{scope:"row"} 参加費用
+                %td
+                  .font-weight-bold
+                    <i class="fa-solid fa-sack-dollar"></i>
+                    = @event.entrance_fee.to_s(:delimited) + "円"
+              %tr
+                %th{scope:"row"} 開催場所
+                %td
+                  .font-weight-bold
+                    <i class="fa-solid fa-earth-asia"></i>
+                    = @event.place
+              %tr
+                %th{scope:"row"} 開催場所（地図）
+                %td
+                  #map
+              %tr
                 %th{scope:"row"} 参加人数
                 %td
-                  #{@joined_member_counts}人
+                  .font-weight-bold
+                    <i class="fa-solid fa-people-group"></i>
+                    #{@joined_member_counts}人
               - if @join_members.present?
                 %tr 
                   %th{scope:"row"} 参加メンバー
@@ -143,26 +166,6 @@
                         %br
                         %hr
               %tr
-                %th{scope:"row"} 開始時間
-                %td
-                  = l @event.event_start_time, format: :short
-              %tr
-                %th{scope:"row"} 終了時間
-                %td
-                  = l @event.event_end_time, format: :short
-              %tr
-                %th{scope:"row"} 参加費用
-                %td
-                  = @event.entrance_fee.to_s(:delimited) + "円"
-              %tr
-                %th{scope:"row"} 開催場所
-                %td
-                  = @event.place
-              %tr
-                %th{scope:"row"} 開催場所（地図）
-                %td
-                  #map
-              %tr
                 %th{scope:"row"} 楽曲
                 %td
                   📢スクロールで全楽曲が確認できます
@@ -183,14 +186,15 @@
                 %tr
                   %th{scope:"row"} 参加締切日
                   %td
-                    = l @event.event_entry_deadline, format: :short
-                    まで🙏
+                    %h5.font-weight-bold
+                      = l @event.event_entry_deadline, format: :short
+                      まで
               %tr
                 %th{scope:"row"} 参加フォーム
                 %td
                   #event-songs
                     -if @event.event_end_time > Time.now
-                      📢参加したい曲のパート（全て）を選んで下部の【参加する】ボタンを押して下さい
+                      📢参加したい曲のパート（複数選択OK）を選んで下部の【参加する】ボタンを押して下さい
                       %br
                       📢参加ボタンを押すと、上記【楽曲】のパート内にアイコンが表示されます
                       %br
@@ -228,16 +232,13 @@
                   %th{scope:"row"} CSVダウンロード
                   %td
                     = link_to "参加一覧ダウンロード", public_event_path(@event, format: :csv), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
-                %tr
-                  %th{scope:"row"} 削除
-                  %td
-                    = link_to 'このイベントを削除する', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger event-show-btn"
         #event-request.event-request
           - if @event.request_deadline.present?
             .event-request-deadline
               曲リクエスト締切日:
-              = l @event.request_deadline, format: :short
-              まで🙏
+              %h5
+                = l @event.request_deadline, format: :short
+                まで
           = render 'public/requests/form', event: @event, request: @request
           #event-request-asy.request-part
             = render 'public/requests/requests', event: @event
