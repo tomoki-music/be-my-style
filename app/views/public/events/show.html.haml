@@ -104,13 +104,13 @@
               %tr
                 %th{scope:"row"} 参加費用
                 %td
-                  .font-weight-bold
+                  %h5.font-weight-bold
                     <i class="fa-solid fa-sack-dollar"></i>
                     = @event.entrance_fee.to_s(:delimited) + "円"
               %tr
                 %th{scope:"row"} 開催場所
                 %td
-                  .font-weight-bold
+                  %h5.font-weight-bold
                     <i class="fa-solid fa-earth-asia"></i>
                     = @event.place
               %tr
