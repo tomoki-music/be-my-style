@@ -203,9 +203,9 @@
                       %hr
                       📢スクロールで全楽曲が確認できます
                       %br
-                      = form_tag(public_event_join_path(@event), method: :post,  onSubmit: "return CheckJoin()") do
+                      = form_tag(public_event_join_path(@event), id: 'join_btn', method: :post,  onSubmit: "return CheckJoin()") do
                         .event-songs-join-form
-                          - @event.songs.each do |song|
+                          - @event.songs.each_with_index do |song, index|
                             %div{id: "support-join-#{song.id}"}
                               .join-part-list
                                 .join-part-song-name
@@ -220,7 +220,7 @@
                                       %hr
                                     %br
                                     = hidden_field_tag :event_id, @event.id
-                        %input{type: "submit", value: "参加する", class: "join-part-btn", confirm: "こちらのイベントに参加をします。よろしいですか？", data: {'disable_with': '送信中...', 'turbolinks': false}}
+                        %input{type: "submit", value: "参加する", class: "join-part-btn", data: {'disable_with': '送信中...', 'turbolinks': false}}
                     - else
                       こちらのイベントは終了致しました。
               %tr
@@ -242,6 +242,18 @@
           = render 'public/requests/form', event: @event, request: @request
           #event-request-asy.request-part
             = render 'public/requests/requests', event: @event
+
+  %div{type: "text/javascript"}
+    :javascript
+      function CheckJoin(){
+        if(confirm("参加申請しますか？")){
+          return true; 
+        }else{
+          alert('キャンセルされました'); 
+          location.reload();
+          return false; 
+        }
+      }
 
   - latitude = @latitude
   - longitude = @longitude

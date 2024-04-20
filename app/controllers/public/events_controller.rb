@@ -173,6 +173,7 @@ class Public::EventsController < ApplicationController
             JoinPart.find(join_part_id).customers << customer
           end
         end
+        #イベント開催者への通知
         if current_customer != event.customer
           event.customer.create_notification_join_event(current_customer, event.id)
           if event.customer.confirm_mail
