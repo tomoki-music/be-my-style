@@ -1,0 +1,32 @@
+= render 'layouts/header_menu'
+
+.event-confirm
+  %h2
+    = @event.event_name
+    %br
+    〜参加確認画面〜
+    %hr
+  .event-confirm-content
+    - @join_parts.each.with_index(1) do |join, i|
+      .confirm-index
+        #{i}曲目
+      = join
+      %hr
+
+  = form_tag(public_event_join_path(@event), method: :post, id: 'join_btn', onSubmit: "return CheckJoin()") do
+    - @join_part_ids.each_with_index do |part_id, i|
+      = hidden_field_tag "join_part_ids[#{i}]", part_id
+    %input{type: "submit", value: "参加する", class: "join-confirm-btn btn btn-lg btn-info", data: {'disable_with': '送信中...', 'turbolinks': false}}
+    = link_to '戻る', public_event_path(@event), method: :get, data: { 'turbolinks': false, confirm: 'イベント詳細ページへ戻ります。よろしいですか？' }, class: "btn btn-lg btn-danger event-back-btn"
+
+  %div{type: "text/javascript"}
+    :javascript
+      function CheckJoin(){
+        if(confirm("参加申請しますか？")){
+          return true; 
+        }else{
+          alert('キャンセルされました'); 
+          location.reload();
+          return false; 
+        }
+      }

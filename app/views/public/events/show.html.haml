@@ -190,20 +190,29 @@
                       = l @event.event_entry_deadline, format: :short
                       まで
               %tr
-                %th{scope:"row"} 参加フォーム
+                %th{scope:"row"}
+                  参加フォーム
                 %td
                   #event-songs
                     -if @event.event_end_time > Time.now
-                      📢参加したい曲のパート（複数選択OK）を選んで下部の【参加する】ボタンを押して下さい
-                      %br
-                      📢参加ボタンを押すと、上記【楽曲】のパート内にアイコンが表示されます
-                      %br
-                      .text-red
-                        ※このイベントは【#{@community.name}】に参加している必要があります。
-                      %hr
-                      📢スクロールで全楽曲が確認できます
-                      %br
-                      = form_tag(public_event_join_path(@event), id: 'join_btn', method: :post,  onSubmit: "return CheckJoin()") do
+                      %i.fa-solid.fa-circle-question.question-icon.fa-2x
+                        %span.explain
+                          📢このイベントは【#{@community.name}】に参加している必要があります。
+                          %hr
+                          %br
+                          📢参加したい曲のパート（複数選択OK）を選んで下部の【確認画面へ】ボタンを押して下さい
+                          %hr
+                          %br
+                          📢確認画面で、参加【楽曲】【パート】の確認ができます。
+                          %hr
+                          %br
+                          📢参加が完了すると、楽曲のパート欄に自分のアイコンが表示されます。
+                          %hr
+                          %br
+                          📢スクロールで全楽曲が確認できます
+                          %hr
+                          %br
+                      = form_tag(public_event_join_confirm_path(@event), method: :get, id: 'join_btn', onSubmit: "return CheckJoin()") do
                         .event-songs-join-form
                           - @event.songs.each_with_index do |song, index|
                             %div{id: "support-join-#{song.id}"}
@@ -220,7 +229,7 @@
                                       %hr
                                     %br
                                     = hidden_field_tag :event_id, @event.id
-                        %input{type: "submit", value: "参加する", class: "join-part-btn", data: {'disable_with': '送信中...', 'turbolinks': false}}
+                        %input{type: "submit", value: "確認画面へ", class: "join-part-btn", data: {'disable_with': '送信中...', 'turbolinks': false}}
                     - else
                       こちらのイベントは終了致しました。
               %tr

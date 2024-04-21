@@ -362,6 +362,26 @@
         width: 50px;
       }
     }
+    .question-icon{
+      margin: 10px 0px 10px 10px;
+      position   : relative;
+    }
+    .question-icon:hover .explain {
+      display: inline;
+    }
+    .explain {
+      position: absolute;
+      display: none;
+      padding: 10px;
+      color: aliceblue;
+      border-radius: 5px;
+      background-color: #5c87a6;
+      width:350px;
+      top: 50px;
+      left: -70px;
+      font-size: 12px;
+      text-align: left;
+    }
     .join-part-list{
       margin-top: 10px;
       border: solid 1px black;
@@ -612,5 +632,24 @@ input[type="text"] {
     color: red;
     border: solid 1px red;
     border-radius: 10px;
+  }
+}
+
+.event-confirm{
+  width: 90%;
+  text-align: center;
+  margin: 0 auto;
+  padding: 20px;
+  border: solid 1px black;
+  border-radius: 10px;
+  .event-confirm-content{
+    text-align: left;
+    .confirm-index{
+      padding: 5px;
+      margin-bottom: 5px;
+      border: solid 1px black;
+      border-radius: 10px;
+      width: fit-content;
+    }
   }
 }

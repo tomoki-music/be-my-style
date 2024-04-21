@@ -40,6 +40,7 @@ Rails.application.routes.draw do
       end
       post "join" => "events#join"
       delete "delete" => "events#delete"
+      get "join_confirm" => "events#join_confirm"
       resources :songs, only: [:create, :destroy]
       resources :requests, only: [:create, :destroy]
     end

@@ -158,44 +158,55 @@ class Public::EventsController < ApplicationController
     redirect_to public_events_path, alert: "イベントを削除しました!"
   end
 
+  def join_confirm
+    @event = Event.find(params[:event_id])
+    if params[:event][:join_part_ids] == [""] 
+      redirect_to public_event_path(event), alert: "参加したパートにチェックを入れて下さい。"
+    else
+      @join_part_ids = params[:event][:join_part_ids].reject {|i| i == "" }
+      customer = current_customer
+      @join_parts = []
+      @join_part_ids.each_with_index do |join_part_id, index|
+        @join_parts << "【" + JoinPart.find(join_part_id).song.song_name + "】の曲に" + "【" + JoinPart.find(join_part_id).join_part_name + "】で参加！"
+      end
+    end
+  end
+
   def join
     event = Event.find(params[:event_id])
     community = Community.find(event.community_id)
     customer_ids = community.customers.pluck(:id)
     if customer_ids.include?(current_customer.id)
-      if params[:event][:join_part_ids] == [""] 
-        redirect_to public_event_path(event), alert: "参加したパートにチェックを入れて下さい。"
-      else
-        join_part_ids = params[:event][:join_part_ids].reject {|i| i == "" }
-        customer = current_customer
-        join_part_ids.each do |join_part_id|
-          unless JoinPart.find(join_part_id).customers.pluck(:id).include?(customer.id)
-            JoinPart.find(join_part_id).customers << customer
-          end
+      join_part_ids = params[:join_part_ids]&.values
+      join_part_ids_array = join_part_ids.map{ |i| i.to_i }
+      customer = current_customer
+      join_part_ids_array.each do |join_part_id|
+        unless JoinPart.find(join_part_id).customers.pluck(:id).include?(customer.id)
+          JoinPart.find(join_part_id).customers << customer
         end
-        #イベント開催者への通知
-        if current_customer != event.customer
-          event.customer.create_notification_join_event(current_customer, event.id)
-          if event.customer.confirm_mail
-            CustomerMailer.with(ac_customer: current_customer, ps_customer: event.customer, event_id: event.id).join_event_mail.deliver_later
-          end
-        end
-        #イベント参加者への通知
-        customer_ids = []
-        event.songs.each do |song|
-          song.join_parts.each do |join_part|
-            customer_ids += join_part.customers.pluck(:id)
-          end
-        end
-        customer_ids.uniq.each do |customer_id|
-          if current_customer != Customer.find(customer_id)
-            if Customer.find(customer_id).confirm_mail
-              CustomerMailer.with(ac_customer: current_customer, ps_customer: Customer.find(customer_id), event_id: event.id).member_join_event_mail.deliver_later
-            end
-          end
-        end
-        redirect_to public_event_path(event), notice: "イベントへの参加が完了しました!"
       end
+      #イベント開催者への通知
+      if current_customer != event.customer
+        event.customer.create_notification_join_event(current_customer, event.id)
+        if event.customer.confirm_mail
+          CustomerMailer.with(ac_customer: current_customer, ps_customer: event.customer, event_id: event.id).join_event_mail.deliver_later
+        end
+      end
+      #イベント参加者への通知
+      customer_ids = []
+      event.songs.each do |song|
+        song.join_parts.each do |join_part|
+          customer_ids += join_part.customers.pluck(:id)
+        end
+      end
+      customer_ids.uniq.each do |customer_id|
+        if current_customer != Customer.find(customer_id)
+          if Customer.find(customer_id).confirm_mail
+            CustomerMailer.with(ac_customer: current_customer, ps_customer: Customer.find(customer_id), event_id: event.id).member_join_event_mail.deliver_later
+          end
+        end
+      end
+      redirect_to public_event_path(event), notice: "イベントへの参加が完了しました!"
     else
       redirect_to public_community_path(community), alert: "まずこちらのコミュニティに参加してください"
     end
