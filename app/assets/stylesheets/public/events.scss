@@ -379,7 +379,7 @@
       width:350px;
       top: 50px;
       left: -70px;
-      font-size: 18px;
+      font-size: 20px;
       text-align: left;
     }
     .join-part-list{
@@ -451,13 +451,16 @@
   }
   .event-request{
     width: 100%;
-    position: relative;
     margin-bottom: 30px;
     .event-request-deadline{
       padding: 5px;
       width: fit-content;
       border: 1px solid red;
       border-radius: 10px;
+    }
+    .event-request-btn{
+      display: block;
+      margin-left: auto;
     }
     .request-part{
       margin-top: 70px;
@@ -493,11 +496,6 @@
         }
       }
     }
-  }
-  .event-request-btn{
-    position: absolute;
-    top: 120px;
-    right: 0px;
   }
 }
 
