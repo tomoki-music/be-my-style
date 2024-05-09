@@ -17,11 +17,12 @@
         %td=customer.email
         %td=l(customer.current_sign_in_at, format: :short, default: '-')
         %td="#{customer.sign_in_count}回"
-        %td 詳細
+        %td 
+          = link_to "編集", edit_admin_customer_path(customer.id), method: :get, data: { 'turbolinks': false }, class: "btn btn-info"
         %td
           -if customer.confirmed_at.nil?
             = link_to "承認", approval_path(customer_id: customer.id), method: :patch, data: { 'turbolinks': false }, class: "btn btn-primary"
           - else
             承認済み
         %td
-          = link_to "物理退会", purge_path(customer_id: customer.id), method: :delete, data: { confirm: "【確認】アカウントを完全に削除してもよろしいですか？", 'turbolinks': false }, class: "btn btn-danger"
+          = link_to "完全退会", purge_path(customer_id: customer.id), method: :delete, data: { confirm: "【確認】アカウントを完全に削除してもよろしいですか？", 'turbolinks': false }, class: "btn btn-danger"

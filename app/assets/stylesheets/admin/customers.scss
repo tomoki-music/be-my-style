@@ -1,0 +1,30 @@
+.admin-customer-edit-title{
+  width: 90%;
+  text-align: center;
+}
+
+.admin-customer-edit-container{
+  width: 90%;
+  margin: 0 auto;
+  .admin-customer-edit-table{
+    border: thick double lightblue;
+    margin-bottom: 100px;
+  }
+  .admin-customer-edit-btn{
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    display: block;
+    width: 200px;
+    margin-left: auto;
+    text-align: center;
+    font-size: 20px;
+    color: white;
+    border-radius: 10px;
+  }
+}
+
+input[type="text"] {
+  width: 90%;
+  height: 40px;
+}

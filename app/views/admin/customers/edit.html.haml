@@ -1,0 +1,101 @@
+= render 'layouts/admin_header_menu'
+
+.admin-customer-edit-title
+  %h2.d-inline アーティスト編集画面
+  = link_to "Topへ戻る", admin_homes_top_path, method: :get, data: { 'turbolinks': false }, class: "btn btn-danger"
+  - if @customer.errors.any?
+    .alert
+    %ul
+      - @customer.errors.full_messages.each do |message|
+        %li
+          = message
+
+= form_with model: [:admin, @customer], local: true do |f|
+  .admin-customer-edit-container.px-0.px-sm-0
+    %table.table.table-striped.admin-customer-edit-table{:width=>"100%",:border=>"1"}
+      %colgroup
+        %col{width: "19%"}
+        %col{width: "81%"}
+          %tr
+            %th{scope:"row"} ニックネーム
+            %td
+              = f.text_field :name, class: 'form-control'
+          %tr
+            %th{scope:"row"} メールアドレス
+            %td
+              = f.email_field :email,
+              autofocus: "true",
+              required: "",
+              value: @customer.email,
+              autocomplete: "email",
+              placeholder: "メールアドレスを入力",
+              class: 'form-control'
+          %tr
+            %th{scope:"row"} 性別
+            %td
+              = f.select :sex, Customer.enum_options_for_select(:sex)
+          %tr
+            %th{scope:"row"} 誕生日
+            %td
+              = f.date_field :birthday
+          %tr
+            %th{scope:"row"} パート
+            %td
+              = f.collection_check_boxes(:part_ids, Part.all, :id, :name) do |tag|
+                = tag.label do
+                  = tag.check_box
+                  = tag.text
+          %tr
+            %th{scope:"row"} 活動場所
+            %td 
+              = f.collection_select :prefecture_id, Prefecture.all, :id, :name
+          %tr
+            %th{scope:"row"} 活動ペース
+            %td
+              = f.select :activity_stance, Customer.enum_options_for_select(:activity_stance)
+          %tr
+            %th{scope:"row"} 好きなジャンル
+            %td
+              = f.collection_check_boxes(:genre_ids, Genre.all, :id, :name) do |genre|
+                = genre.label do
+                  = genre.check_box
+                  = genre.text
+          %tr
+            %th{:rowspan => 5} 好きなアーティスト
+            %td
+              = f.text_field :favorite_artist1, class: 'form-control'
+          %tr
+            %td
+              = f.text_field :favorite_artist2, class: 'form-control'
+          %tr
+            %td
+              = f.text_field :favorite_artist3, class: 'form-control'
+          %tr
+            %td
+              = f.text_field :favorite_artist4, class: 'form-control'
+          %tr
+            %td
+              = f.text_field :favorite_artist5, class: 'form-control'
+          %tr
+            %th{scope:"row"} 作品URL
+            %td
+              = f.text_field :url, class: 'form-control'
+          %tr
+            %th{scope:"row"} 自己紹介
+            %td
+              = f.text_area :introduction, style: "width:90%", class: 'form-control'
+          %tr
+            %th{scope:"row"} メール通知設定
+            %td
+              = f.check_box :confirm_mail ,{checked: true}, "true", "false"
+              %br
+              ※チェックを外すと「通知メールを受信しない」設定となります。
+          %tr
+            %th{scope:"row"} 会員有効化設定
+            %td
+              = f.select :is_deleted, [['有効', false], ['退会', true]], {}, { class: 'form-control' }
+          %tr
+            %th{scope:"row"} 管理者設定
+            %td
+              = f.select :is_owner, [['一般会員', 0], ['管理者', 1]], {}, { class: 'form-control' }
+          = f.submit "プロフィールを更新", class: "btn btn-info admin-customer-edit-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }

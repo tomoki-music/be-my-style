@@ -5,6 +5,9 @@ Rails.application.routes.draw do
   namespace :admin do
     get 'homes/top'
 
+    # アーティスト編集機能
+    resources:customers, only: [:edit, :update]
+
     # イベント機能
    resources :events do
     resources :songs, only: [:create, :destroy]
