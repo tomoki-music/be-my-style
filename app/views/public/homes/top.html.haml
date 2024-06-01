@@ -6,8 +6,8 @@
       %h4
         🎸[好き]で繋がるコミュニティ🎸
         %br
-      - unless customer_signed_in?
-        .customer-menu-top
+      .customer-menu-top
+        - unless customer_signed_in?
           %ul.list-style-none
             %li
               %i.fa-solid.fa-user-plus
@@ -15,6 +15,11 @@
             %li
               %i.fa-solid.fa-right-to-bracket
               = link_to "ログイン", new_customer_session_path, data: { 'turbolinks': false }, class: "btn btn-primary menu-sp-btn"
+        - else
+          %ul.list-style-none
+            %li
+              %i.fa-solid.fa-right-from-bracket
+              = link_to "ログアウト", destroy_customer_session_path, data: { 'turbolinks': false }, method: :delete, class: "btn btn-secondary menu-sp-btn"
   .slider
     = image_tag 'public-top.jpg' ,class:"images"
     = image_tag 'public-top2.jpg' ,class:"images"

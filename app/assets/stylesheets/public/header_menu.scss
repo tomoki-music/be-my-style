@@ -8,8 +8,25 @@
     .top-message{
       width: 300px;
       float: left;
-      h1{
-        font-size: 20px;
+      .top-message-link {
+        text-decoration: none;
+        color: black;
+        display: flex;
+        .top-message-image{
+          width: 30px;
+          height: 30px;
+          margin-right: 5px;
+          object-fit: cover;
+          border-radius: 10px;
+          cursor: pointer;
+        }
+        h1{
+          font-size: 20px;
+        }
+        p{
+          font-size: 10px;
+          margin: 0 0 5px 0;
+        }
       }
       p{
         font-size: 10px;

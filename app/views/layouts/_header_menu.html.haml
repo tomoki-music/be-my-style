@@ -3,7 +3,9 @@
     .row
       .col-8
         .top-message
-          %h1 be My Style
+          = link_to public_homes_top_path, class: 'top-message-link', data: { 'turbolinks': false } do
+            = image_tag 'mmm.jpg' ,class:"top-message-image"
+            %h1 be My Style
           %p あなたの「やりたい！」を叶える場所！」
           %p 利用可能時間【6:00~26:00】
       .col-4
