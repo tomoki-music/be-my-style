@@ -30,7 +30,7 @@
   text-align:center;
   margin: 0 auto;
   width:90%;
-  height:500px;
+  max-height:300px;
   .slider {
     margin-top: 5px;
     opacity: 0;
@@ -38,6 +38,104 @@
     .images{
       width: 100%;
       border-radius: 10px;
+    }
+  }
+  .owners-container {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 50px;
+    .owner-message1 {
+      padding: 50px 0 50px 0;
+      flex-direction: column;
+      width: 55%;
+      object-fit: contain;
+      display: flex;
+      justify-content: center;
+      height: 100%;
+      align-items: center;
+      font-size: 4em;
+      text-align: center;
+      position: relative;
+      color: #FF5733;
+      font-weight: bold;
+      text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700, 0 0 30px #FFD700, 0 0 40px #FF6347;
+      animation: sparkle 1.5s infinite alternate;
+  
+      .highlight-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      .highlight-number {
+        font-size: 3em;   // サイズ変更
+        font-weight: bold;
+        color: #FF6347;
+      }
+
+      strong {
+        background: linear-gradient(45deg, #FF6347, #FFD700, #FF1493);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+      }
+  
+      &::before {
+        height: 100%;
+        content: "";
+        position: absolute;
+        background: rgba(0, 0, 0, 0.9);
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: -1;
+      }
+    }
+  
+    .owner-message2 {
+      width: 45%;
+      display: block;
+      height: auto;
+      
+      img {
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+        display: block;
+      }
+    }
+  
+    @keyframes sparkle {
+      0% {
+        text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700, 0 0 30px #FFD700, 0 0 40px #FF6347;
+      }
+      50% {
+        text-shadow: 0 0 15px #FFD700, 0 0 25px #FFD700, 0 0 35px #FFD700, 0 0 45px #FF6347;
+      }
+      100% {
+        text-shadow: 0 0 20px #FFD700, 0 0 30px #FFD700, 0 0 40px #FFD700, 0 0 50px #FF6347;
+      }
+    }
+
+    @media (max-width: 600px) {
+      flex-direction: column;
+    
+      .owner-message1 {
+        padding: 50px 0 50px 0;
+        font-size: 2em;
+        flex-direction: column;
+        strong {
+          font-size: 0.9em;
+        }
+      }
+      .owner-message1,
+      .owner-message2 {
+        width: 100%;
+      }
     }
   }
 }

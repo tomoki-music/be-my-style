@@ -26,4 +26,14 @@
     = image_tag 'public-top3.jpg' ,class:"images"
     = image_tag 'public-top4.jpg' ,class:"images"
     = image_tag 'public-top5.jpg' ,class:"images"
-  
+
+  .owners-container
+    .owner-message1
+      - customer_count = Customer.count
+      %strong{style: "display: block;"}= "BeMyStyle 会員数"
+      %br/
+      %div{class: "highlight-container"}
+        %span{class: "highlight-number"}= "#{customer_count + 10}"
+        %span= "人達成!!"
+    = link_to 'https://be-my-style.com/public/activities/49', target: "_blank", class: "owner-message2" do
+      = image_tag 'owner-message.png'
