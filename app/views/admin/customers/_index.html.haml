@@ -15,7 +15,7 @@
         %th=customer.id
         %td=customer.name
         %td=customer.email
-        %td=l(customer.current_sign_in_at, format: :short, default: '-')
+        %td= customer.current_sign_in_at&.strftime('%Y/%m/%d') || '-'
         %td="#{customer.sign_in_count}回"
         %td 
           = link_to "編集", edit_admin_customer_path(customer.id), method: :get, data: { 'turbolinks': false }, class: "btn btn-info"

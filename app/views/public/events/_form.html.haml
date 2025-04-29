@@ -92,7 +92,10 @@
             %td
               #songs.song-container
                 = f.fields_for :songs, id: 'js-song-field' do |song|
+                  - index = f.object.songs.index(song.object)
                   .field
+                    .song-header
+                      %strong= "#{index + 1}曲目"
                     = render 'public/events/song_fields', f: song
                 .links
                   = link_to_add_association '曲を追加',f ,:songs ,{ class: 'btn btn-success js-add-song-field-btn' }

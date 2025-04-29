@@ -21,6 +21,11 @@
   flex-wrap: wrap;
   width: 90%;
   margin: 0 auto;
+  .card {
+    width: 255px;
+    margin: 0px;
+    box-sizing: border-box;
+  }
   .event-community-name{
     text-align: center;
     font-weight: bold;
@@ -556,6 +561,12 @@
   margin: 0 auto 100px auto;
   .event-table{
     border: thick double lightblue;
+    .song-header{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
     .new-img{
       width: 300px;
       object-fit: cover;
