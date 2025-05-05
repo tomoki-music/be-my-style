@@ -40,10 +40,26 @@
                 %li
                 .partner-content
                   = simple_format(chat_message.content)
-                - if chat_message.chat_image.present?
-                  %li
-                  .partner-chat-image
-                    = image_tag chat_message.chat_image.variant(resize:'300x300'), class: 'message-image'
+                - if chat_message.attachments.attached?
+                  - chat_message.attachments.each do |file|
+                    %li
+                      .partner-chat-image
+                        - if file.image?
+                          = image_tag file.variant(resize: '300x300'), class: 'message-image'
+                        - elsif file.content_type == "application/pdf"
+                          %div.pdf-preview
+                            %p PDFファイル:
+                            = link_to "🧾 PDFを見る", url_for(file), target: "_blank", rel: "noopener", class: "btn-view"
+                            = link_to "⬇️ ダウンロード", url_for(file), download: file.filename.to_s, class: "btn-download"
+                            %iframe{ src: url_for(file), width: "100%", height: "400px", class: "pdf-frame" }
+                        - elsif file.content_type.start_with?("audio/")
+                          %p 音声ファイル:
+                          %audio{ controls: true }
+                            %source{ src: url_for(file), type: file.content_type }
+                        - elsif file.content_type.start_with?("video/")
+                          %p 動画ファイル:
+                          %video{ controls: true, width: "100%", height: "auto", style: "max-width: 500px;" }
+                            %source{ src: url_for(file), type: file.content_type }
                 %li
                 = l chat_message.created_at, format: :short
                 に送信済み
@@ -63,10 +79,26 @@
                 %li
                 .self-content
                   = simple_format(chat_message.content)
-                - if chat_message.chat_image.present?
-                  %li
-                  .self-chat-image
-                    = image_tag chat_message.chat_image.variant(resize:'300x300'), class: 'message-image'
+                - if chat_message.attachments.attached?
+                  - chat_message.attachments.each do |file|
+                    %li
+                      .self-chat-image
+                        - if file.image?
+                          = image_tag file.variant(resize: '300x300'), class: 'message-image'
+                        - elsif file.content_type == "application/pdf"
+                          %div.pdf-preview
+                            %p PDFファイル:
+                            = link_to "🧾 PDFを見る", url_for(file), target: "_blank", rel: "noopener", class: "btn-view"
+                            = link_to "⬇️ ダウンロード", url_for(file), download: file.filename.to_s, class: "btn-download"
+                            %iframe{ src: url_for(file), width: "100%", height: "400px", class: "pdf-frame" }
+                        - elsif file.content_type.start_with?("audio/")
+                          %p 音声ファイル:
+                          %audio{ controls: true }
+                            %source{ src: url_for(file), type: file.content_type }
+                        - elsif file.content_type.start_with?("video/")
+                          %p 動画ファイル:
+                          %video{ controls: true, width: "100%", height: "auto", style: "max-width: 500px;" }
+                            %source{ src: url_for(file), type: file.content_type }
                 %li
                 = l chat_message.created_at, format: :short
                 に送信済み
@@ -75,7 +107,7 @@
         = form_with model: [:public, @chat_message], url: community_create_public_chat_messages_path do |f|
           = f.hidden_field :chat_room_id, value: @chat_room.id
           = f.text_area :content, autofocus: true, class: 'chat-form'
-          = f.file_field :chat_image, accept: 'image/*'
+          = f.file_field :attachments, multiple: true, accept: 'image/*,application/pdf'
           = f.submit "メッセージを送信", data: { disable_with: '送信中', confirm: "メッセージを送信しますか？"}, class: 'btn btn-info chat-form-btn'
 
     .col-md-3

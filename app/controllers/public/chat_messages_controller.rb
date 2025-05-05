@@ -1,13 +1,18 @@
 class Public::ChatMessagesController < ApplicationController
   before_action :authenticate_customer!
+  before_action :chat_message_params, only: [:create, :community_create]
 
   def create
     @chat_room = ChatRoom.find(params[:chat_message][:chat_room_id])
     @chat_room_customer = @chat_room.chat_room_customers.where.not(customer_id: current_customer.id)[0].customer
     @chat_message = ChatMessage.new(customer_id: current_customer.id, chat_room_id: @chat_room.id, content: params[:chat_message][:content])
-    if params[:chat_message][:chat_image].present?
-      @chat_message.update(chat_image: params[:chat_message][:chat_image])
+
+    if params[:chat_message][:attachments].present?
+      params[:chat_message][:attachments].each do |uploaded_file|
+        @chat_message.attachments.attach(uploaded_file)
+      end
     end
+
     if @chat_message.save
         flash[:notice] = "メッセージを送信しました🎵"
         @chat_room_customer.create_notification_chat(current_customer)
@@ -26,9 +31,13 @@ class Public::ChatMessagesController < ApplicationController
     end
     @community = ChatRoomCustomer.where(chat_room_id: @chat_room.id)[0].community
     @chat_message = ChatMessage.new(customer_id: current_customer.id, chat_room_id: @chat_room.id, content: params[:chat_message][:content])
-    if params[:chat_message][:chat_image].present?
-      @chat_message.update(chat_image: params[:chat_message][:chat_image])
+    
+    if params[:chat_message][:attachments].present?
+      params[:chat_message][:attachments].each do |uploaded_file|
+        @chat_message.attachments.attach(uploaded_file)
+      end
     end
+    
     if @chat_message.save
       @chat_room_customers.each do |chat_room_customer|
         if current_customer != chat_room_customer
@@ -44,5 +53,11 @@ class Public::ChatMessagesController < ApplicationController
       flash[:alert] = "メッセージを入力してください！"
       redirect_back(fallback_location: root_path)
     end
+  end
+
+  private
+
+  def chat_message_params
+    params.require(:chat_message).permit(:content, attachments: [])
   end
 end
