@@ -73,7 +73,7 @@ if ENV['RAILS_ENV'] == 'production'
   stdout_redirect "#{app_root}/log/puma.stdout.log", "#{app_root}/log/puma.stderr.log", true
   pidfile "#{app_root}/tmp/pids/puma.pid"
   state_path "#{app_root}/tmp/pids/puma.state"
-  daemonize false
+  daemonize true
 end
 
 plugin :tmp_restart
