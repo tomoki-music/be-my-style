@@ -16,26 +16,28 @@ jobs:
         HOST_NAME: ${{ secrets.HOST_NAME }}
       run: |
         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-        ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOST_NAME} 'cd be-my-style &&
-        git pull origin main &&
-        ~/.rbenv/shims/bundle install &&
-        ~/.rbenv/shims/bundle exec rails assets:precompile RAILS_ENV=production &&
-        ~/.rbenv/shims/bundle exec rails db:migrate RAILS_ENV=production &&
-        # ✅ Pumaのプロセスをポートで特定して kill（安全）
-        PORT=3000
-        PID=$(lsof -ti tcp:$PORT)
-        if [ -n "$PID" ]; then
-          echo "Killing process on port $PORT (PID: $PID)"
-          kill -9 $PID
-        fi
-
-        # ✅ 古いpidファイルを削除（これも必要）
-        rm -f tmp/pids/server.pid
-
-        # ✅ Puma起動
-        ~/.rbenv/shims/rails s -e production
-        EOF
-
+        ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOST_NAME} << 'EOF'
+          cd be-my-style &&
+          git pull origin main &&
+          ~/.rbenv/shims/bundle install &&
+          ~/.rbenv/shims/bundle exec rails assets:precompile RAILS_ENV=production &&
+          ~/.rbenv/shims/bundle exec rails db:migrate RAILS_ENV=production &&
+          PORT=3000
+          PID=$(lsof -ti tcp:$PORT)
+          if [ -n "$PID" ]; then
+            echo "Killing process on port $PORT (PID: $PID)"
+            kill -9 $PID
+          fi
+          rm -f tmp/pids/server.pid
+          ~/.rbenv/shims/rails s -e production
+      EOF
+      # run: |
+      #   echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+      #   ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOST_NAME} 'cd be-my-style &&
+      #   git pull origin main &&
+      #   ~/.rbenv/shims/bundle install &&
+      #   ~/.rbenv/shims/bundle exec rails assets:precompile RAILS_ENV=production &&
+      #   ~/.rbenv/shims/bundle exec rails db:migrate RAILS_ENV=production &&
         # rm -f tmp/pids/server.pid &&
         # if [[ -e tmp/pids/puma.pid ]];then sudo kill $(cat tmp/pids/puma.pid); echo kill puma process;fi &&
         # ~/.rbenv/shims/rails s -e production'
