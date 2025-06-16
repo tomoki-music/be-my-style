@@ -107,6 +107,61 @@
 }
 
 @media (max-width: 600px) {
+  .event-toc {
+    position: sticky;
+    top: 60px;
+    background: #fff;
+    z-index: 10;
+    padding: 16px;
+    margin: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); // ふんわり影
+    transition: box-shadow 0.3s ease;
+  
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); // ホバーで少し浮く
+    }
+  
+    .event-toc-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+  
+      &::before {
+        content: "📌";
+      }
+    }
+  
+    ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+  
+      li a {
+        font-size: 13px;
+        padding: 6px 10px;
+        background-color: #f8f9fa;
+        border-radius: 20px;
+        text-decoration: none;
+        color: #007bff;
+        border: 1px solid #dee2e6;
+        transition: background-color 0.2s;
+  
+        &:hover {
+          background-color: #e2e6ea;
+        }
+      }
+    }
+  }
+  
   .event-index-container{
     display: flex;
     flex-wrap: wrap;

@@ -5,10 +5,18 @@
   = link_to "コミュニティ作成", new_public_community_path, data: { 'turbolinks': false }, class: "btn btn-info community-index-create-btn"
 .communities-kaminari
   = paginate @communities
+.community-toc
+  .community-toc-title コミュニティ目次
+  %ul
+    - @communities.each do |community|
+      %li
+        🎵
+        = link_to community.name, "#community-#{community.id}", class: "text-decoration-none"
+
 .community-index-container
   - @communities.each do |community|
     - @owner = Customer.find_by(id: community.owner_id)
-    .card.mb-5
+    .card.mb-5{id: "community-#{community.id}"}
       = link_to public_community_path(community), data: { 'turbolinks': false } do
         .img-container
           - if community.community_image.present?

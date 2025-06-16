@@ -27,3 +27,27 @@ if (document.URL.match(/sign_up/)){
     });
   });
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  // スムーススクロール処理（全ページ共通でidリンクに対応）
+  const internalLinks = document.querySelectorAll('a[href^="#"]');
+
+  internalLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      const targetId = this.getAttribute('href');
+      const targetElement = document.querySelector(targetId);
+
+      // 要素が存在する場合のみスクロール実行
+      if (targetElement) {
+        e.preventDefault();
+        targetElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+
+        // URLのハッシュ書き換え（オプション）
+        history.pushState(null, null, targetId);
+      }
+    });
+  });
+});

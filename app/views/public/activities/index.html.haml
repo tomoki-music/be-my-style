@@ -5,11 +5,20 @@
   = link_to "活動報告をする！", new_public_activity_path, data: { 'turbolinks': false }, class: "btn btn-info activity-index-create-btn"
 .activities-kaminari
   = paginate @activities
+- if @activities.present?
+  %nav.activity-toc.d-sm-none
+    %h4.activity-toc-title 📝 目次
+    %ul
+      - @activities.each_with_index do |activity, index|
+        %li
+          🎤
+          %a{href: "#activity-#{index}"}= truncate(activity.title, length: 20)
+
 .activity-index-container
   - if @activities.present?
-    - @activities.each do |activity|
+    - @activities.each_with_index do |activity, index|
       - activity_id = activity.id
-      .card.mb-5
+      .card.mb-5{id: "activity-#{index}"}
         - if time_ago_in_words(activity.created_at) =~ /分|時間/
           .new_activity
             NEW!!

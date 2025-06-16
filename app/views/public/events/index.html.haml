@@ -4,11 +4,20 @@
   %h2 イベント一覧
 .events-kaminari
   = paginate @events
+- if @events.present?
+  %nav.event-toc.d-sm-none
+    %h4.event-toc-title 🧭 目次
+    %ul
+      - @events.each_with_index do |event, index|
+        %li
+          🎸
+          %a{href: "#event-#{index}"}= truncate(event.event_name, length: 20)
+
 .event-index-container
   - if @events.present?
-    - @events.each do |event|
+    - @events.each_with_index do |event, index|
       - @owner = Customer.find(event.customer.id)
-      .card.mb-5
+      .card.mb-5{id: "event-#{index}"}
         .event-community-name
           = event.community.name
         - if event.event_end_time < Time.now
