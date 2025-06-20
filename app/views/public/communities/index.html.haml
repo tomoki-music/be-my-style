@@ -5,7 +5,7 @@
   = link_to "コミュニティ作成", new_public_community_path, data: { 'turbolinks': false }, class: "btn btn-info community-index-create-btn"
 .communities-kaminari
   = paginate @communities
-.community-toc
+.community-toc.d-sm-none
   .community-toc-title コミュニティ目次
   %ul
     - @communities.each do |community|
