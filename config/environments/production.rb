@@ -3,8 +3,8 @@ require "active_support/core_ext/integer/time"
 Rails.application.configure do
   config.hosts << "be-my-style.com"
   config.hosts << "www.be-my-style.com" 
-  config.hosts.clear
-  config.hosts.clear
+  config.hosts << ".be-my-style.com"
+  
   # Settings specified here will take precedence over those in config/application.rb.
 
   # Code is not reloaded between requests.

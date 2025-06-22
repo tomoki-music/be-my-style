@@ -23,7 +23,6 @@ jobs:
           ~/.rbenv/shims/bundle exec rails assets:precompile RAILS_ENV=production &&
           ~/.rbenv/shims/bundle exec rails db:migrate RAILS_ENV=production &&
 
-          # Puma再起動（UNIXソケット用）
           if [ -f tmp/pids/puma.pid ]; then
             echo "Killing old Puma process..."
             kill -9 $(cat tmp/pids/puma.pid) || true
@@ -33,7 +32,7 @@ jobs:
           rm -f tmp/pids/server.pid
 
           echo "Starting Puma with config/puma.rb..."
-          nohup ~/.rbenv/shims/bundle exec puma -C config/puma.rb &
+          nohup ~/.rbenv/shims/bundle exec puma -C config/puma.rb > /dev/null 2>&1 &
         EOF
 
 
