@@ -479,21 +479,21 @@
     .responsive-box {
       width: 280px;
       overflow-x: auto;
-      white-space: nowrap;
     
       @media (min-width: 768px) {
         width: 800px;
       }
     }
     .event-songs-table {
-      min-width: 300px;
+      min-width: 280px;
       th, td {
-        white-space: nowrap;
-        text-align: center;
+        text-align: left;
         vertical-align: middle;
       }
-      .song-detail-link{
-        width: 50px;
+      .song-detail-link {
+        display: inline-block;
+        width: 150px;
+        white-space: normal;
       }
       .badge-warning {
         background-color: #ffc107;

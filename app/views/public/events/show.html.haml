@@ -161,14 +161,14 @@
                       %table.table.table-bordered.event-songs-table{style: "width: 100%;"}
                         %thead
                           %tr
-                            %th{ style: "width: 50px;" } 曲名 / ステータス
+                            %th{ style: "width: 30px;" } 曲名 / ステータス
                             - part_names = ["Vocal", "Guitar", "Bass", "Drums", "Keyboard", "Other"]
                             - part_names.each do |part|
                               %th= part
                         %tbody
                           - @event.songs.each do |song|
                             %tr
-                              %td
+                              %td{ style: "width: 30px;" }
                                 - vacant = song.join_parts.any? { |jp| jp.customers.count == 0 }
                                 - if vacant
                                   %span.badge.badge-warning 募集中!!
