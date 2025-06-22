@@ -60,7 +60,7 @@
 threads_count = ENV.fetch("RAILS_MAX_THREADS") { 10 }
 threads threads_count, threads_count
 
-port        ENV.fetch("PORT") { 3000 }
+# port        ENV.fetch("PORT") { 3000 }
 environment ENV.fetch("RAILS_ENV") { "development" }
 
 pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" }
@@ -73,7 +73,7 @@ if ENV['RAILS_ENV'] == 'production'
   stdout_redirect "#{app_root}/log/puma.stdout.log", "#{app_root}/log/puma.stderr.log", true
   pidfile "#{app_root}/tmp/pids/puma.pid"
   state_path "#{app_root}/tmp/pids/puma.state"
-  # daemonize true
+  daemonize true
 end
 
 plugin :tmp_restart
