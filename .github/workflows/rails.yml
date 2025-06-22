@@ -22,23 +22,20 @@ jobs:
           ~/.rbenv/shims/bundle install &&
           ~/.rbenv/shims/bundle exec rails assets:precompile RAILS_ENV=production &&
           ~/.rbenv/shims/bundle exec rails db:migrate RAILS_ENV=production &&
-          
-          # Kill any process running on port 3000
-          PORT=3000
-          PID=$(lsof -ti tcp:$PORT)
-          if [ -n "$PID" ]; then
-            echo "Killing process on port $PORT (PID: $PID)"
-            kill -9 $PID
-          else
-            echo "No process running on port $PORT"
+
+          # Puma再起動（UNIXソケット用）
+          if [ -f tmp/pids/puma.pid ]; then
+            echo "Killing old Puma process..."
+            kill -9 $(cat tmp/pids/puma.pid) || true
+            rm -f tmp/pids/puma.pid
           fi
-          
-          # Remove the server.pid if it exists
+
           rm -f tmp/pids/server.pid
-          
-          # Start the Rails server in the background
-          nohup ~/.rbenv/shims/rails s -e production -b '0.0.0.0' -p 3000 & 
+
+          echo "Starting Puma with config/puma.rb..."
+          nohup ~/.rbenv/shims/bundle exec puma -C config/puma.rb &
         EOF
+
 
 # 修正前コード
 # name: Rails CI/CD

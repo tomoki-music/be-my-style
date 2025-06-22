@@ -479,6 +479,9 @@
     .responsive-box {
       width: 280px;
       overflow-x: auto;
+      max-height: 500px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
     
       @media (min-width: 768px) {
         width: 800px;
@@ -486,9 +489,19 @@
     }
     .event-songs-table {
       min-width: 280px;
+      border-collapse: collapse;
       th, td {
         text-align: left;
         vertical-align: middle;
+      }
+      th {
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 10;
+        text-align: left;
+        padding: 8px;
+        border-bottom: 1px solid #ccc;
       }
       .song-detail-link {
         display: inline-block;
