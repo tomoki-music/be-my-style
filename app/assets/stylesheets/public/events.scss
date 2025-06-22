@@ -374,6 +374,15 @@
     .song-name{
       font-weight: bold;
       font-size: 20px;
+      .song-detail-link {
+        font-weight: bold;
+        text-decoration: underline;
+        color: #007bff;
+      
+        &:hover {
+          color: #0056b3;
+        }
+      }      
     }
     .join-member{
       font-weight: bold;
