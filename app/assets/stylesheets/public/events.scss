@@ -313,8 +313,9 @@
       overflow: scroll;
     }
     #map {
-      height: 300px;
-      width: 700px;
+      height: 280px;
+      width: 280px;
+      min-width: 320px;
     }
     .event-songs-list{
       padding-right: 15px;
@@ -374,15 +375,6 @@
     .song-name{
       font-weight: bold;
       font-size: 20px;
-      .song-detail-link {
-        font-weight: bold;
-        text-decoration: underline;
-        color: #007bff;
-      
-        &:hover {
-          color: #0056b3;
-        }
-      }      
     }
     .join-member{
       font-weight: bold;
@@ -484,6 +476,40 @@
       cursor: pointer;
       transition: background-color 1s;
     }
+    .responsive-box {
+      width: 280px;
+      overflow-x: auto;
+      white-space: nowrap;
+    
+      @media (min-width: 768px) {
+        width: 800px;
+      }
+    }
+    .event-songs-table {
+      min-width: 300px;
+      th, td {
+        white-space: nowrap;
+        text-align: center;
+        vertical-align: middle;
+      }
+      .song-detail-link{
+        width: 50px;
+      }
+      .badge-warning {
+        background-color: #ffc107;
+        color: #000;
+        padding: 3px 8px;
+        border-radius: 5px;
+        font-size: 0.8rem;
+      }
+      .badge-success {
+        background-color: #28a745;
+        color: #fff;
+        padding: 3px 8px;
+        border-radius: 5px;
+        font-size: 0.8rem;
+      }
+    }
   }
   .event-index-title{
     width: 100%;
@@ -577,14 +603,19 @@
     width: 90%;
     margin: 0 auto;
     .event-show-table{
-      width: 300px;
       .event-url{
         width: 250px;
       }
-      #map {
-        height: 280px;
+      .map-wrapper {
+        overflow-x: auto;
         width: 280px;
       }
+      
+      #map {
+        width: 280px;
+        height: 300px;
+        min-width: 320px;
+      }      
     }
     .event-index-title{
       margin-bottom: 120px;
