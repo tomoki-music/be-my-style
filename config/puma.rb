@@ -1,79 +1,46 @@
-# Puma can serve each request in a thread from an internal thread pool.
-# The `threads` method setting takes two numbers: a minimum and maximum.
-# Any libraries that use thread pools should be configured to match
-# the maximum value specified for Puma. Default is set to 5 threads for minimum
-# and maximum; this matches the default thread size of Active Record.
-#
-# max_threads_count = ENV.fetch("RAILS_MAX_THREADS") { 10 }
-# min_threads_count = ENV.fetch("RAILS_MIN_THREADS") { max_threads_count }
-# threads min_threads_count, max_threads_count
+# =========================================
+# Puma configuration file for production
+# =========================================
 
-# Specifies the `worker_timeout` threshold that Puma will use to wait before
-# terminating a worker in development environments.
-#
-# worker_timeout 3600 if ENV.fetch("RAILS_ENV", "development") == "development"
+app_dir     = File.expand_path('../..', __FILE__)
+tmp_dir     = "#{app_dir}/tmp"
+log_dir     = "#{app_dir}/log"
+rails_env   = ENV.fetch("RAILS_ENV", "production")
 
-# Specifies the `port` that Puma will listen on to receive requests; default is 3000.
-#
-# port ENV.fetch("PORT") { 3000 }
+# Pumaの実行環境
+environment rails_env
 
-# Specifies the `environment` that Puma will run in.
-#
-# environment ENV.fetch("RAILS_ENV") { "development" }
+# ソケット通信（Nginx連携）
+bind "unix://#{tmp_dir}/sockets/puma.sock"
 
-# Specifies the `pidfile` that Puma will use.
-# pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" }
+# プロセス管理
+pidfile     "#{tmp_dir}/pids/puma.pid"
+state_path  "#{tmp_dir}/pids/puma.state"
 
-# Specifies the number of `workers` to boot in clustered mode.
-# Workers are forked web server processes. If using threads and workers together
-# the concurrency of the application would be max `threads` * `workers`.
-# Workers do not work on JRuby or Windows (both of which do not support
-# processes).
-#
-# workers ENV.fetch("WEB_CONCURRENCY") { 2 }
+# ログ出力
+stdout_redirect "#{log_dir}/puma.stdout.log", "#{log_dir}/puma.stderr.log", true
 
-# Use the `preload_app!` method when specifying a `workers` number.
-# This directive tells Puma to first boot the application and load code
-# before forking the application. This takes advantage of Copy On Write
-# process behavior so workers use less memory.
-#
-# preload_app!
-
-# Allow puma to be restarted by `rails restart` command.
-# plugin :tmp_restart
-
-# bind "unix://#{Rails.root}/tmp/sockets/puma.sock"
-# rails_root = Dir.pwd
-# if Rails.env.production?
-#   pidfile File.join(rails_root, 'tmp', 'pids', 'puma.pid')
-#   state_path File.join(rails_root, 'tmp', 'pids', 'puma.state')
-#   stdout_redirect(
-#     File.join(rails_root, 'log', 'puma.log'),
-#     File.join(rails_root, 'log', 'puma-error.log'),
-#     true
-#   )
-#   daemonize
-# end
-
-# Puma configuration for Rails production
-
-threads_count = ENV.fetch("RAILS_MAX_THREADS") { 10 }
+# ワーカーモード（Cluster）
+workers      ENV.fetch("WEB_CONCURRENCY", 2)
+threads_count = ENV.fetch("RAILS_MAX_THREADS", 5).to_i
 threads threads_count, threads_count
 
-# port        ENV.fetch("PORT") { 3000 }
-environment ENV.fetch("RAILS_ENV") { "development" }
+preload_app!
 
-pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" }
+# 再起動サポート
+plugin :tmp_restart
 
-# Use UNIX socket for Nginx upstream
-app_root = File.expand_path("../..", __FILE__)
-bind "unix://#{app_root}/tmp/sockets/puma.sock"
-
-if ENV['RAILS_ENV'] == 'production'
-  stdout_redirect "#{app_root}/log/puma.stdout.log", "#{app_root}/log/puma.stderr.log", true
-  pidfile "#{app_root}/tmp/pids/puma.pid"
-  state_path "#{app_root}/tmp/pids/puma.state"
-  daemonize true
+# 起動前処理（DB接続をクリーンに）
+before_fork do
+  ActiveRecord::Base.connection_pool.disconnect! if defined?(ActiveRecord)
 end
 
-plugin :tmp_restart
+on_worker_boot do
+  ActiveRecord::Base.establish_connection if defined?(ActiveRecord)
+end
+
+# pumactl用のソケット（オプション）
+activate_control_app "unix://#{tmp_dir}/sockets/pumactl.sock"
+
+# デーモン化（※systemdで起動管理するならコメントアウトかfalse）
+# daemonize true if rails_env == 'production'
