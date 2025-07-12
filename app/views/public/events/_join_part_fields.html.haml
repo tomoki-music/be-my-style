@@ -2,6 +2,6 @@
   .field
     = f.hidden_field :_destroy
     = f.label :join_part_name, "パート"
-    = f.select :join_part_name, [['Vocal', 'Vocal'],['Guitar', 'Guitar'],['Guitar(Lead)', 'Guitar(Lead)'],['Guitar(Lythm)', 'Guitar(Lythm)'],['Bass', 'Bass'],['Drums', 'Drums'],['Keyboard', 'Keyboard'],['Other', 'Other'],], include_blank: "募集パート名を選択してください"
+    = f.select :join_part_name, [['Vocal', 'Vocal'],['Guitar', 'Guitar'],['Bass', 'Bass'],['Drums', 'Drums'],['Keyboard', 'Keyboard'],['Other', 'Other'],], include_blank: "募集パート名を選択してください"
   .field
     = link_to_remove_association 'パートを削除', f, class: 'btn btn-danger js-join-part-remove-btn', data: { 'turbolinks': false, confirm: 'こちらのパートを削除します。よろしいですか？' }

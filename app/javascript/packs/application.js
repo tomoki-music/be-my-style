@@ -8,4 +8,4 @@
 require("@rails/activestorage").start()
 require("channels")
 require("jquery")
-require("@nathanvda/cocoon")
+// require("@nathanvda/cocoon")

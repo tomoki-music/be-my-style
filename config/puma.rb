@@ -1,36 +1,41 @@
 # =========================================
-# Puma configuration file for production
+# Puma configuration for Rails 6.1
 # =========================================
 
-app_dir     = File.expand_path('../..', __FILE__)
-tmp_dir     = "#{app_dir}/tmp"
-log_dir     = "#{app_dir}/log"
-rails_env   = ENV.fetch("RAILS_ENV", "production")
-
-# Pumaの実行環境
+# 環境の取得（development / production など）
+rails_env = ENV.fetch("RAILS_ENV") { "development" }
 environment rails_env
 
-# ソケット通信（Nginx連携）
-bind "unix://#{tmp_dir}/sockets/puma.sock"
-
-# プロセス管理
-pidfile     "#{tmp_dir}/pids/puma.pid"
-state_path  "#{tmp_dir}/pids/puma.state"
-
-# ログ出力
-stdout_redirect "#{log_dir}/puma.stdout.log", "#{log_dir}/puma.stderr.log", true
-
-# ワーカーモード（Cluster）
-workers      ENV.fetch("WEB_CONCURRENCY", 2)
+# スレッド数
 threads_count = ENV.fetch("RAILS_MAX_THREADS", 5).to_i
 threads threads_count, threads_count
 
+# ワーカープロセス数（Herokuや本番向け）
+workers ENV.fetch("WEB_CONCURRENCY", 2)
+
+# preload_appはCluster構成で必須
 preload_app!
 
-# 再起動サポート
-plugin :tmp_restart
+if rails_env == "development"
+  # 🔧 開発環境：ポート3000で起動
+  port ENV.fetch("PORT") { 3000 }
+else
+  # 🚀 本番環境：UNIXソケットでバインド
+  app_dir = File.expand_path('../..', __FILE__)
+  tmp_dir = "#{app_dir}/tmp"
+  log_dir = "#{app_dir}/log"
 
-# 起動前処理（DB接続をクリーンに）
+  bind "unix://#{tmp_dir}/sockets/puma.sock"
+  pidfile "#{tmp_dir}/pids/puma.pid"
+  state_path "#{tmp_dir}/pids/puma.state"
+
+  stdout_redirect "#{log_dir}/puma.stdout.log", "#{log_dir}/puma.stderr.log", true
+
+  # pumactlを使う場合はこちら（任意）
+  activate_control_app "unix://#{tmp_dir}/sockets/pumactl.sock"
+end
+
+# プロセスフォーク前後のDB接続管理
 before_fork do
   ActiveRecord::Base.connection_pool.disconnect! if defined?(ActiveRecord)
 end
@@ -39,8 +44,5 @@ on_worker_boot do
   ActiveRecord::Base.establish_connection if defined?(ActiveRecord)
 end
 
-# pumactl用のソケット（オプション）
-activate_control_app "unix://#{tmp_dir}/sockets/pumactl.sock"
-
-# デーモン化（※systemdで起動管理するならコメントアウトかfalse）
-# daemonize true if rails_env == 'production'
+# tmp/restart.txt により再起動可能にする
+plugin :tmp_restart

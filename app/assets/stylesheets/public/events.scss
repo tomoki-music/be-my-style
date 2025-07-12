@@ -368,6 +368,16 @@
       padding: 15px;
       max-height: 500px;
       overflow: scroll;
+      #help-popover {
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        text-align: center;
+        line-height: 22px;
+        font-weight: bold;
+        border-radius: 50%;
+      }      
     }
     .song-check-box{
       font-size: 20px;

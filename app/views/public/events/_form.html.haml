@@ -97,8 +97,11 @@
                     .song-header
                       %strong= "#{index + 1}曲目"
                     = render 'public/events/song_fields', f: song
-                .links
-                  = link_to_add_association '曲を追加',f ,:songs ,{ class: 'btn btn-success js-add-song-field-btn' }
+              .links
+                = link_to_add_association '曲を追加', f, :songs,
+                    class: 'btn btn-success js-add-song-field-btn',
+                    data: { association: 'songs',association_insertion_method: 'append', association_insertion_node: '#songs'}
+
           %tr
             %th{scope:"row"} イベント補足
             %td

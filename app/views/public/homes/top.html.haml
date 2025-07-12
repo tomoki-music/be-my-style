@@ -3,9 +3,6 @@
 .top-container
   .parallax
     .parallax-content
-      %h4
-        🎸[好き]で繋がるコミュニティ🎸
-        %br
       .customer-menu-top
         - unless customer_signed_in?
           %ul.list-style-none
@@ -26,6 +23,13 @@
     = image_tag 'public-top3.jpg' ,class:"images"
     = image_tag 'public-top4.jpg' ,class:"images"
     = image_tag 'public-top5.jpg' ,class:"images"
+
+  .notice-box
+    %ul.notice-list
+      %li
+        %span.notice-date 2025年7月12日：
+        %br
+        イベント詳細ページの楽曲表とエントリーフォームを見やすく改修致しました。
 
   .owners-container
     .owner-message1

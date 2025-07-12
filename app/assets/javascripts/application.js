@@ -5,7 +5,9 @@
 //= require rails-ujs
 //= require activestorage
 //= require turbolinks
+//= require cocoon
 //= require_tree .
+
 
 if (document.URL.match(/sign_up/)){
   document.addEventListener('DOMContentLoaded', () => {
@@ -29,15 +31,16 @@ if (document.URL.match(/sign_up/)){
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // スムーススクロール処理（全ページ共通でidリンクに対応）
   const internalLinks = document.querySelectorAll('a[href^="#"]');
 
   internalLinks.forEach(link => {
     link.addEventListener('click', function(e) {
       const targetId = this.getAttribute('href');
+
+      if (targetId === "#" || !targetId) return;
+
       const targetElement = document.querySelector(targetId);
 
-      // 要素が存在する場合のみスクロール実行
       if (targetElement) {
         e.preventDefault();
         targetElement.scrollIntoView({
@@ -45,9 +48,15 @@ document.addEventListener('DOMContentLoaded', () => {
           block: 'start',
         });
 
-        // URLのハッシュ書き換え（オプション）
         history.pushState(null, null, targetId);
       }
     });
+  });
+});
+
+$(document).on('turbolinks:load', function() {
+  $('#help-popover').popover({
+    trigger: 'focus',
+    html: true
   });
 });

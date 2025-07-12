@@ -147,53 +147,78 @@
                     (全#{@event.songs.length}曲)
                 %tr
                   %th{scope:"row"} 楽曲
-                  %td
-                    %i.fa-solid.fa-circle-question.question-icon.fa-2x
-                      %span.explain
-                        📢「曲名」をクリックすると詳細情報が確認できます🎵
-                        %hr
-                        %br
-                        📢横スクロールで表全体を確認できます🎵
-                        %hr
-                        %br
+                  %td{colspan: "100"}
+                    = form_tag(public_event_join_confirm_path(@event), method: :get, id: 'join_btn', onSubmit: "return CheckJoin()") do
+                      .event-songs-join-form
+                        %div{ style: "display: flex; justify-content: flex-start; align-items: center; margin-bottom: 12px;" }
+                          %div{ style: "display: flex; align-items: center; gap: 12px;" }
+                            %input#submit_join_form{
+                              type: "submit",
+                              value: "参加確認画面へ",
+                              class: "btn btn-lg btn-primary",
+                              style: "padding: 12px 32px; font-size: 1.2rem; min-width: 220px; white-space: nowrap;",
+                              disabled: true,
+                              data: {'disable_with': '送信中...', 'turbolinks': false}
+                            }
+                          %button.btn.btn-sm.btn-outline-info#help-popover{
+                            type: "button",
+                            data: {
+                              toggle: "popover",
+                              html: "true",
+                              content: "①ご希望の「参加パート」にチェックを入れてください。（複数チェック可）<br><br>②「参加確認画面へ」のボタンを押して内容に間違いなければ「参加確定」してください。<br><br>③参加が確定すると楽曲一覧表にご自身のアイコンが表示されます。<br><br>※ご注意※<br>③で参加ができない場合：事前に「開催コミュニティ」へ参加申請を行って下さい。<br><br>【ご参考】<br>現在の参加メンバーは一覧表を右スクロールすると全体像が確認できます🎵",
+                              placement: "bottom"
+                            }
+                          }
+                            ?
 
-                    %div.responsive-box
-                      %table.table.table-bordered.event-songs-table{style: "width: 100%;"}
-                        %thead
-                          %tr
-                            %th{ style: "width: 30px;" } 曲名 / ステータス
-                            - part_names = ["Vocal", "Guitar", "Bass", "Drums", "Keyboard", "Other"]
-                            - part_names.each do |part|
-                              %th= part
-                        %tbody
-                          - @event.songs.each do |song|
-                            %tr
-                              %td{ style: "width: 30px;" }
-                                - vacant = song.join_parts.any? { |jp| jp.customers.count == 0 }
-                                - if vacant
-                                  %span.badge.badge-warning 募集中!!
-                                - else
-                                  %span.badge.badge-success 楽曲成立🎵
-                                %br
-                                = link_to song.song_name, public_event_song_path(@event, song), class: "song-detail-link", data: { turbolinks: false }
-
-                              - part_names.each do |part_name|
-                                - join_part = song.join_parts.find { |jp| jp.join_part_name == part_name }
-                                %td
-                                  - if join_part.present?
-                                    - if join_part.customers.any?
-                                      - join_part.customers.each do |customer|
-                                        .member-display(style="display:flex; align-items:center; gap:4px; margin-bottom:4px;")
-                                          = link_to public_customer_path(customer), data: { turbolinks: false } do
-                                            - if customer.profile_image.present?
-                                              = image_tag customer.profile_image, class: "icon_mini", style: "width:24px; height:24px; border-radius:50%;"
-                                            - else
-                                              = image_tag 'no_image', class: "icon_mini", style: "width:24px; height:24px; border-radius:50%;"
-                                            = customer.name
+                        %div.responsive-box
+                          - part_names = ["Vocal", "Guitar", "Bass", "Drums", "Keyboard", "Other"] 
+                          %table.table.table-bordered.event-songs-table{ style: "min-width: 930px; table-layout: fixed;" }
+                            %thead
+                              %tr
+                                %th{ style: "width: 160px;" } 曲名 / ステータス
+                                %th{ style: "width: 160px;" } 参加フォーム
+                                - part_names.each do |part|
+                                  %th{ style: "min-width: 90px;" }= part
+                            %tbody
+                              - @event.songs.each do |song|
+                                %tr
+                                  %td{ style: "max-width: 120px; overflow-wrap: break-word; word-break: break-word; white-space: normal;" }
+                                    - vacant = song.join_parts.any? { |jp| jp.customers.count == 0 }
+                                    - if vacant
+                                      %span.badge.badge-warning 募集中!!
                                     - else
-                                      %span.text-danger 募集中
-                                  - else
-                                    ー
+                                      %span.badge.badge-success 楽曲成立🎵
+                                    %br
+                                    %div{ style: "white-space: normal; word-break: break-word;" }
+                                      = link_to song.song_name, public_event_song_path(@event, song), class: "song-detail-link", data: { turbolinks: false }
+
+                                  %td
+                                    .check-part-list
+                                      - if @event.event_end_time > Time.now
+                                        - song.join_parts.each do |part|
+                                          .check-part-item(style="margin-bottom: 4px;")
+                                            = label_tag "event_join_part_ids_#{part.id}" do
+                                              = check_box_tag "event[join_part_ids][]", part.id, false, id: "event_join_part_ids_#{part.id}"
+                                              = part.join_part_name
+                                            = hidden_field_tag :event_id, @event.id
+                                      - else
+                                        終了イベントのためチェック不可
+
+                                  - part_names.each do |part_name|
+                                    - join_part = song.join_parts.find { |jp| jp.join_part_name == part_name }
+                                    %td
+                                      - if join_part.present?
+                                        - if join_part.customers.any?
+                                          - join_part.customers.each do |customer|
+                                            .member-display(style="display:flex; align-items:center; gap:4px; margin-bottom:4px;")
+                                              = link_to public_customer_path(customer), data: { turbolinks: false } do
+                                                = image_tag(customer.profile_image.presence || 'no_image', class: "icon_mini", style: "width:24px; height:24px; border-radius:50%;")
+                                                = customer.name
+                                        - else
+                                          %span.text-danger 募集中
+                                      - else
+                                        ー
 
                 - if @event.event_entry_deadline.present?
                   %tr
@@ -202,49 +227,7 @@
                       %h5.font-weight-bold
                         = l @event.event_entry_deadline, format: :short
                         まで
-                %tr
-                  %th{scope:"row"}
-                    参加フォーム
-                  %td
-                    #event-songs
-                      -if @event.event_end_time > Time.now
-                        %i.fa-solid.fa-circle-question.question-icon.fa-2x
-                          %span.explain
-                            📢このイベントは【#{@community.name}】に参加している必要があります。
-                            %hr
-                            %br
-                            📢参加したい曲のパート（複数選択OK）を選んで下部の【確認画面へ】ボタンを押して下さい
-                            %hr
-                            %br
-                            📢確認画面で、参加【楽曲】【パート】の確認ができます。
-                            %hr
-                            %br
-                            📢参加が完了すると、楽曲のパート欄に自分のアイコンが表示されます。
-                            %hr
-                            %br
-                            📢スクロールで全楽曲が確認できます
-                            %hr
-                            %br
-                        = form_tag(public_event_join_confirm_path(@event), method: :get, id: 'join_btn', onSubmit: "return CheckJoin()") do
-                          .event-songs-join-form
-                            - @event.songs.each_with_index do |song, index|
-                              %div{id: "support-join-#{song.id}"}
-                                .join-part-list
-                                  .join-part-song-name
-                                    =song.song_name
-                                  %hr
-                                    = collection_check_boxes(:event, :join_part_ids, song.join_parts, :id, :join_part_name, checked:false) do |part|
-                                      = part.label do
-                                        .song-name
-                                          = part.check_box
-                                          = part.text
-                                        ☝️参加したいパートにチェック
-                                        %hr
-                                      %br
-                                      = hidden_field_tag :event_id, @event.id
-                          %input{type: "submit", value: "確認画面へ", class: "join-part-btn", data: {'disable_with': '送信中...', 'turbolinks': false}}
-                      - else
-                        こちらのイベントは終了致しました。
+
                 %tr
                   %th{scope:"row"} イベント補足
                   %td

@@ -76,7 +76,11 @@ class Public::EventsController < ApplicationController
   def new
     @event = Event.new
     @song = @event.songs.build
-    @join_part = @song.join_parts.build
+  
+    %w[Vocal Guitar Bass Drums Keyboard].each do |part_name|
+      @song.join_parts.build(join_part_name: part_name)
+    end
+  
     @community_id = params[:community_id]
   end
 
@@ -128,10 +132,33 @@ class Public::EventsController < ApplicationController
     end
   end
 
+  # def copy
+  #   @old_event = Event.find(params[:event_id])
+  #   @event = Event.new
+  #   @event.attributes = {
+  #     event_name: @old_event.event_name,
+  #     entrance_fee: @old_event.entrance_fee,
+  #     introduction: @old_event.introduction,
+  #     place: @old_event.place,
+  #     address: @old_event.address,
+  #     url: @old_event.url,
+  #     url_comment: @old_event.url_comment,
+  #     songs: @old_event.songs,
+  #   }
+  #   #イベントとソングの親子関係を一旦解消
+  #   @old_event.songs.each do |song|
+  #     song.id = nil
+  #   end
+
+  #   @community_id = params[:community_id]
+  #   @latitude = @event.latitude
+  #   @longitude = @event.longitude
+  #   @address = @event.address
+  # end
   def copy
     @old_event = Event.find(params[:event_id])
-    @event = Event.new
-    @event.attributes = {
+  
+    @event = Event.new(
       event_name: @old_event.event_name,
       entrance_fee: @old_event.entrance_fee,
       introduction: @old_event.introduction,
@@ -139,17 +166,32 @@ class Public::EventsController < ApplicationController
       address: @old_event.address,
       url: @old_event.url,
       url_comment: @old_event.url_comment,
-      songs: @old_event.songs,
-    }
-    #イベントとソングの親子関係を一旦解消
-    @old_event.songs.each do |song|
-      song.id = nil
-    end
+      community_id: params[:community_id]
+    )
 
-    @community_id = params[:community_id]
+    @community_id = @event.community_id
+  
+    # 🎵 楽曲とデフォルトの5パートを複製
+    @old_event.songs.each do |old_song|
+      new_song = old_song.dup
+  
+      # 🎹 デフォルトパートを1曲ずつ生成
+      ["Vocal", "Guitar", "Bass", "Drums", "Keyboard"].each do |part_name|
+        new_song.join_parts.build(join_part_name: part_name)
+      end
+  
+      @event.songs << new_song
+    end
+  
+    # 🗺️ 地図情報など（必要なら）
     @latitude = @event.latitude
     @longitude = @event.longitude
     @address = @event.address
+  
+    # 🎉 コピーしたことを通知
+    flash.now[:notice] = "イベントの内容をコピーしました！必要に応じて編集してください♪"
+  
+    render :new
   end
 
   def destroy
