@@ -55,8 +55,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 $(document).on('turbolinks:load', function() {
-  $('#help-popover').popover({
-    trigger: 'focus',
-    html: true
+  const $popover = $('#help-popover');
+
+  $popover.popover({
+    trigger: 'click',
+    html: true,
+    placement: 'bottom'
+  });
+
+  // 他をタップしたら閉じる（スマホ対応）
+  $(document).on('click touchstart', function(e) {
+    if (!$popover.is(e.target) && $popover.has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+      $popover.popover('hide');
+    }
   });
 });
