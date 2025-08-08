@@ -89,6 +89,8 @@ document.addEventListener('turbolinks:load', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.querySelector('.event-songs-join-form');
+  if (!form) return;
+
   const checkboxes = form.querySelectorAll('input[type="checkbox"]');
   const submitBtn = document.getElementById('submit_join_form');
 
@@ -97,9 +99,26 @@ document.addEventListener('DOMContentLoaded', () => {
     submitBtn.disabled = !isChecked;
   };
 
-  checkboxes.forEach(cb => {
-    cb.addEventListener('change', toggleButton);
-  });
-
+  checkboxes.forEach(cb => cb.addEventListener('change', toggleButton));
   toggleButton();
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  const box = document.querySelector('.responsive-box');
+  const indicator = document.getElementById('scroll-indicator');
+  if (!box || !indicator) return;
+
+  const checkScroll = () => {
+    if (box.scrollWidth > box.clientWidth) {
+      const atEnd = box.scrollLeft + box.clientWidth >= box.scrollWidth - 5;
+      indicator.style.display = atEnd ? 'none' : 'block';
+    } else {
+      indicator.style.display = 'none';
+    }
+  };
+
+  checkScroll();
+  window.addEventListener('resize', checkScroll);
+  box.addEventListener('scroll', checkScroll);
+});
+

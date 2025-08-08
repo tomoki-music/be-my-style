@@ -366,8 +366,7 @@
       border: 5px solid #5c87a6;
       border-radius: 10px;
       padding: 15px;
-      max-height: 500px;
-      overflow: scroll;
+      max-height: 600px;
       #help-popover {
         cursor: pointer;
         width: 24px;
@@ -486,6 +485,27 @@
       cursor: pointer;
       transition: background-color 1s;
     }
+    .scroll-indicator {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 3rem;
+      font-weight: bold;
+      color: white;
+      background: rgba(0,0,0,0.4);
+      padding: 8px 12px;
+      border-radius: 50%;
+      animation: bounceRight 1s infinite;
+      pointer-events: none;
+      z-index: 10;
+    }
+    
+    @keyframes bounceRight {
+      0%, 100% { transform: translate(0, -50%); }
+      50% { transform: translate(8px, -50%); }
+    }    
+    
     .responsive-box {
       width: 280px;
       overflow-x: auto;

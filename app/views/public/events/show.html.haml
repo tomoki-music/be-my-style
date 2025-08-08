@@ -45,25 +45,19 @@
                   %i.fa-regular.fa-comments
                   #got-request-count.count
                     = @event.requests.count
-                  %br
-                  ※リプライ数含む
               %hr
               %p.card-text
               - if @owner == current_customer
-                .dropdown
-                  %button#dropdownMenuButton.btn.btn-secondary.dropdown-toggle{"aria-expanded" => "false", "aria-haspopup" => "true", "data-toggle" => "dropdown", type: "button"}
-                    イベント作成者専用
-                  .dropdown-menu{"aria-labelledby" => "dropdownMenuButton"}
-                    = link_to '編集する', edit_public_event_path(@event), data: { 'turbolinks': false }, class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent"
-                    = link_to 'コピー作成', copy_public_events_path(event_id: @event.id, community_id: @event.community_id), data: { 'turbolinks': false }, class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent"
-                    = link_to 'イベント削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "dropdown-item btn btn-sm btn-danger community-show-btn text-secondary bg-transparent"
-                    = link_to '参加する🎵', '#event-songs', class: "dropdown-item btn btn-sm btn-success community-show-btn text-secondary bg-transparent"
                 .mt-2
-                  = link_to 'イベントの編集', edit_public_event_path(@event, community_id: @event.community_id), data: { 'turbolinks': false }, class: "btn btn-sm btn-success event-show-btn"
+                  = link_to 'イベントの編集', edit_public_event_path(@event, community_id: @event.community_id), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
                   = link_to 'コピー新規作成', copy_public_events_path(event_id: @event.id, community_id: @event.community_id), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
                   = link_to 'イベントの削除', public_event_path(@event), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのイベントを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger event-show-btn"
+                  %hr
+                  = link_to '参加する🎵', '#event-songs', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
+                  = link_to 'リクエストする🎵', '#event-request', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
               - else
-                = link_to '参加する🎵', '#event-songs', class: "btn btn-sm btn-success event-show-btn"
+                = link_to '参加する🎵', '#event-songs', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
+                = link_to 'リクエストする🎵', '#event-request', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
 
       .col-md-9
         .table-responsive(style="width: 100%;")
@@ -145,13 +139,30 @@
                     %h4.text-red
                       #{@complete_count}曲 成立!!
                     (全#{@event.songs.length}曲)
+                - if @event.event_entry_deadline.present?
+                  %tr
+                    %th{scope:"row"} 参加締切日
+                    %td
+                      %h5.font-weight-bold
+                        = l @event.event_entry_deadline, format: :short
+                        まで
                 %tr
                   %th{scope:"row"} 楽曲
                   %td{colspan: "100"}
                     = form_tag(public_event_join_confirm_path(@event), method: :get, id: 'join_btn', onSubmit: "return CheckJoin()") do
-                      .event-songs-join-form
+                      #event-songs.event-songs-join-form
                         %div{ style: "display: flex; justify-content: flex-start; align-items: center; margin-bottom: 12px;" }
                           %div{ style: "display: flex; align-items: center; gap: 12px;" }
+                            %button.btn.btn-sm.btn-outline-info#help-popover{
+                              type: "button",
+                              data: {
+                                toggle: "popover",
+                                html: "true",
+                                content: "①ご希望の「参加パート」にチェックを入れてください。（複数チェック可）<br><br>②「参加確認画面へ」のボタンを押して内容に間違いなければ「参加確定」してください。<br><br>③参加が確定すると楽曲一覧表にご自身のアイコンが表示されます。<br><br>※ご注意※<br>③で参加ができない場合：事前に「開催コミュニティ」へ参加申請を行って下さい。<br><br>【ご参考】<br>現在の参加メンバーは一覧表を右スクロールすると全体像が確認できます🎵",
+                                placement: "bottom"
+                              }
+                            }
+                              ?
                             %input#submit_join_form{
                               type: "submit",
                               value: "参加確認画面へ",
@@ -160,74 +171,65 @@
                               disabled: true,
                               data: {'disable_with': '送信中...', 'turbolinks': false}
                             }
-                          %button.btn.btn-sm.btn-outline-info#help-popover{
-                            type: "button",
-                            data: {
-                              toggle: "popover",
-                              html: "true",
-                              content: "①ご希望の「参加パート」にチェックを入れてください。（複数チェック可）<br><br>②「参加確認画面へ」のボタンを押して内容に間違いなければ「参加確定」してください。<br><br>③参加が確定すると楽曲一覧表にご自身のアイコンが表示されます。<br><br>※ご注意※<br>③で参加ができない場合：事前に「開催コミュニティ」へ参加申請を行って下さい。<br><br>【ご参考】<br>現在の参加メンバーは一覧表を右スクロールすると全体像が確認できます🎵",
-                              placement: "bottom"
-                            }
-                          }
-                            ?
 
-                        %div.responsive-box
-                          - part_names = ["Vocal", "Guitar", "Bass", "Drums", "Keyboard", "Other"] 
-                          %table.table.table-bordered.event-songs-table{ style: "min-width: 930px; table-layout: fixed;" }
-                            %thead
-                              %tr
-                                %th{ style: "width: 160px;" } 曲名 / ステータス
-                                %th{ style: "width: 160px;" } 参加フォーム
-                                - part_names.each do |part|
-                                  %th{ style: "min-width: 90px;" }= part
-                            %tbody
-                              - @event.songs.each do |song|
+                        %div.responsive-wrapper{ style: "position: relative;" }
+                          %div.scroll-indicator{id: "scroll-indicator"} →
+                          %div.responsive-box
+                            - part_names = ["Vocal", "Guitar", "Bass", "Drums", "Keyboard", "Other"] 
+                            %table.table.table-bordered.event-songs-table{ style: "min-width: 930px; table-layout: fixed;" }
+                              %thead
                                 %tr
-                                  %td{ style: "max-width: 120px; overflow-wrap: break-word; word-break: break-word; white-space: normal;" }
-                                    - vacant = song.join_parts.any? { |jp| jp.customers.count == 0 }
-                                    - if vacant
-                                      %span.badge.badge-warning 募集中!!
-                                    - else
-                                      %span.badge.badge-success 楽曲成立🎵
-                                    %br
-                                    %div{ style: "white-space: normal; word-break: break-word;" }
-                                      = link_to song.song_name, public_event_song_path(@event, song), class: "song-detail-link", data: { turbolinks: false }
-
-                                  %td
-                                    .check-part-list
-                                      - if @event.event_end_time > Time.now
-                                        - song.join_parts.each do |part|
-                                          .check-part-item(style="margin-bottom: 4px;")
-                                            = label_tag "event_join_part_ids_#{part.id}" do
-                                              = check_box_tag "event[join_part_ids][]", part.id, false, id: "event_join_part_ids_#{part.id}"
-                                              = part.join_part_name
-                                            = hidden_field_tag :event_id, @event.id
+                                  %th{ style: "width: 160px;" } 曲名 / ステータス
+                                  %th{ style: "width: 160px;" } 参加フォーム
+                                  - part_names.each do |part|
+                                    %th{ style: "min-width: 90px;" }= part
+                              %tbody
+                                - @event.songs.each do |song|
+                                  %tr
+                                    %td{ style: "max-width: 120px; overflow-wrap: break-word; word-break: break-word; white-space: normal;" }
+                                      - vacant = song.join_parts.any? { |jp| jp.customers.count == 0 }
+                                      - if vacant
+                                        %span.badge.badge-warning 募集中!!
                                       - else
-                                        終了イベントのためチェック不可
+                                        %span.badge.badge-success 楽曲成立🎵
+                                      %br
+                                      %div{ style: "white-space: normal; word-break: break-word;" }
+                                        = link_to song.song_name, public_event_song_path(@event, song), class: "song-detail-link", data: { turbolinks: false }
 
-                                  - part_names.each do |part_name|
-                                    - join_part = song.join_parts.find { |jp| jp.join_part_name == part_name }
                                     %td
-                                      - if join_part.present?
-                                        - if join_part.customers.any?
-                                          - join_part.customers.each do |customer|
-                                            .member-display(style="display:flex; align-items:center; gap:4px; margin-bottom:4px;")
-                                              = link_to public_customer_path(customer), data: { turbolinks: false } do
-                                                = image_tag(customer.profile_image.presence || 'no_image', class: "icon_mini", style: "width:24px; height:24px; border-radius:50%;")
-                                                = customer.name
+                                      .check-part-list
+                                        - if @event.event_end_time > Time.now
+                                          - song.join_parts.each do |part|
+                                            .check-part-item(style="margin-bottom: 4px;")
+                                              = label_tag "event_join_part_ids_#{part.id}" do
+                                                = check_box_tag "event[join_part_ids][]", part.id, false, id: "event_join_part_ids_#{part.id}"
+                                                = part.join_part_name
+                                              = hidden_field_tag :event_id, @event.id
                                         - else
-                                          %span.text-danger 募集中
-                                      - else
-                                        ー
+                                          終了イベントのためチェック不可
 
-                - if @event.event_entry_deadline.present?
-                  %tr
-                    %th{scope:"row"} 参加締切日
-                    %td
-                      %h5.font-weight-bold
-                        = l @event.event_entry_deadline, format: :short
-                        まで
-
+                                    - part_names.each do |part_name|
+                                      - join_part = song.join_parts.find { |jp| jp.join_part_name == part_name }
+                                      %td
+                                        - if join_part.present?
+                                          - if join_part.customers.any?
+                                            - join_part.customers.each do |customer|
+                                              .member-display(style="display:flex; flex-direction:column; align-items:flex-start; gap:4px; margin-bottom:4px;")
+                                                = link_to public_customer_path(customer), data: { turbolinks: false } do
+                                                  = image_tag(customer.profile_image.presence || 'no_image',
+                                                              class: "icon_mini",
+                                                              style: "width:24px; height:24px; border-radius:50%;")
+                                                  = customer.name
+                                                - if customer == current_customer && join_part.customers.include?(current_customer) && @event.event_start_time > Time.current + 7.days
+                                                  = link_to "削除",
+                                                    public_event_delete_path(@event, join_part_id: join_part.id, customer_id: customer.id),
+                                                    method: :delete,
+                                                    data: { confirm: "この参加をキャンセルしますか？" },
+                                                    class: "btn btn-danger w-100"
+                                          - else
+                                            %span.text-danger 募集中
+                                        - else
+                                          ー
                 %tr
                   %th{scope:"row"} イベント補足
                   %td
