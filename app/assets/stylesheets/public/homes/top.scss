@@ -31,6 +31,22 @@
   margin: 0 auto;
   width:90%;
   max-height:300px;
+  .event-notice {
+    margin-top: 5px;
+    width: 100%;
+    transition: opacity .25s ease;
+    .event-image {
+      display: block;
+      border-radius: 10px;
+
+      img {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        display: block;
+      }
+    }
+  }
   .slider {
     margin-top: 5px;
     opacity: 0;

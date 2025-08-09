@@ -122,3 +122,51 @@ document.addEventListener('DOMContentLoaded', () => {
   box.addEventListener('scroll', checkScroll);
 });
 
+document.addEventListener('turbolinks:load', function() {
+  var el = document.getElementById('songs');
+  if (!el) return;
+
+  Sortable.create(el, {
+    handle: '.drag-handle',
+    animation: 150,
+    onEnd: function () {
+      document.querySelectorAll('#songs .nested-fields').forEach(function(field, index) {
+        var posInput = field.querySelector('.song-position');
+        if (posInput) {
+          posInput.value = index + 1;
+        }
+      });
+    }
+  });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const btnAll = document.getElementById('filter-all');
+  const btnComplete = document.getElementById('filter-complete');
+  const btnVacant = document.getElementById('filter-vacant');
+  const rows = document.querySelectorAll('.event-songs-table tbody tr');
+
+  if (!btnAll || !btnComplete || !btnVacant) return;
+
+  btnAll.addEventListener('click', () => {
+    rows.forEach(row => row.style.display = '');
+  });
+
+  btnComplete.addEventListener('click', () => {
+    rows.forEach(row => {
+      row.style.display = row.classList.contains('complete') ? '' : 'none';
+    });
+  });
+
+  btnVacant.addEventListener('click', () => {
+    rows.forEach(row => {
+      row.style.display = row.classList.contains('vacant') ? '' : 'none';
+    });
+  });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  $('[data-toggle="popover"]').popover({
+    html: true
+  });
+});

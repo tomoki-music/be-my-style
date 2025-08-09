@@ -1,6 +1,6 @@
 class Event < ApplicationRecord
   has_one_attached :event_image
-  has_many :songs, dependent: :destroy
+  has_many :songs, -> { order(position: :asc) }, dependent: :destroy, inverse_of: :event
   has_many :requests, dependent: :destroy
   belongs_to :customer
   belongs_to :community

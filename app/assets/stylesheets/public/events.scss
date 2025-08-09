@@ -20,7 +20,7 @@
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  width: 95%;
+  width: 90;
   margin: 0 auto;
   .event-community-name{
     text-align: center;
@@ -366,7 +366,7 @@
       border: 5px solid #5c87a6;
       border-radius: 10px;
       padding: 15px;
-      max-height: 600px;
+      max-height: 650px;
       #help-popover {
         cursor: pointer;
         width: 24px;
@@ -697,7 +697,7 @@
     border: thick double lightblue;
     .song-header{
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
       margin-bottom: 10px;
     }
@@ -711,6 +711,18 @@
       border: solid 3px #17a2b8;
       border-radius: 10px;
       padding: 10px;
+      .song-header .drag-handle {
+        font-size: 24px;
+        cursor: grab;
+        user-select: none;
+        padding: 0 8px;
+        color: #007bff;
+        transition: color 0.2s ease;
+      }
+      .song-header .drag-handle:active {
+        cursor: grabbing;
+        color: #0056b3;
+      }
       .join-part-layout{
         border: solid 3px #17a2b8;
         border-radius: 10px;

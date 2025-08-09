@@ -1,5 +1,11 @@
-.nested-fields
+.nested-fields{ data: { id: f.object.id } }
+  = f.hidden_field :position, class: 'song-position', value: (f.object.try(:position) || '')
+  = f.hidden_field :event_id, value: f.object.event_id
   .song-layout
+    .song-header
+      %span.drag-handle ⇅
+      %button.btn.btn-sm.btn-outline-info.ml-2#drag-help-btn{ type: "button", data: { toggle: "popover", html: true, content: "上下にドラッグすると曲の順番を並べ替えできます。", placement: "left" } }
+        ?
     .field
       = f.text_field :song_name, placeholder: "楽曲名"
     .field
@@ -16,5 +22,3 @@
         = link_to_add_association 'パートを追加', f, :join_parts,
           class: 'btn btn-success js-add-join-part-field-btn',
           data: { 'turbolinks': false }
-
-

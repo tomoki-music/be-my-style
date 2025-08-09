@@ -171,6 +171,11 @@
                               disabled: true,
                               data: {'disable_with': '送信中...', 'turbolinks': false}
                             }
+                        
+                        %div.filter-buttons{ style: "margin-bottom: 12px;" }
+                          %button.btn.btn-outline-primary#filter-all(type="button") すべて表示
+                          %button.btn.btn-outline-success#filter-complete(type="button") 楽曲成立
+                          %button.btn.btn-outline-warning#filter-vacant(type="button") 募集中
 
                         %div.responsive-wrapper{ style: "position: relative;" }
                           %div.scroll-indicator{id: "scroll-indicator"} →
@@ -185,9 +190,9 @@
                                     %th{ style: "min-width: 90px;" }= part
                               %tbody
                                 - @event.songs.each do |song|
-                                  %tr
+                                  - vacant = song.join_parts.any? { |jp| jp.customers.count == 0 }
+                                  %tr{ class: (vacant ? 'vacant' : 'complete') }
                                     %td{ style: "max-width: 120px; overflow-wrap: break-word; word-break: break-word; white-space: normal;" }
-                                      - vacant = song.join_parts.any? { |jp| jp.customers.count == 0 }
                                       - if vacant
                                         %span.badge.badge-warning 募集中!!
                                       - else

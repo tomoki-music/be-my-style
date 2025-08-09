@@ -17,6 +17,9 @@
             %li
               %i.fa-solid.fa-right-from-bracket
               = link_to "ログアウト", destroy_customer_session_path, data: { 'turbolinks': false }, method: :delete, class: "btn btn-secondary menu-sp-btn"
+  .event-notice
+    = link_to 'https://be-my-style.com/public/events/49', target: "_blank", class: "event-image" do
+      = image_tag 'event-image.png'
   .slider
     = image_tag 'public-top.jpg' ,class:"images"
     = image_tag 'public-top2.jpg' ,class:"images"
