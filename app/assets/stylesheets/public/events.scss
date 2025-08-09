@@ -486,8 +486,8 @@
       transition: background-color 1s;
     }
     .scroll-indicator {
-      position: absolute;
-      right: 0;
+      position: fixed;
+      right: 8px;
       top: 50%;
       transform: translateY(-50%);
       font-size: 3rem;
@@ -498,7 +498,7 @@
       border-radius: 50%;
       animation: bounceRight 1s infinite;
       pointer-events: none;
-      z-index: 10;
+      z-index: 9999;
     }
     
     @keyframes bounceRight {
