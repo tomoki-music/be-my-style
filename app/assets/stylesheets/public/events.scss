@@ -501,7 +501,7 @@
       border-radius: 50%;
       animation: bounceRight 1s infinite;
       pointer-events: none;
-      z-index: 9999;
+      z-index: 50;
     }
     
     @keyframes bounceRight {
@@ -646,22 +646,30 @@
     }
   }
   .event-show-container{
-    width: 90%;
+    width: 100%;
     margin: 0 auto;
+    padding: 0 8px;
     .event-show-table{
+      width: 100% !important;
+      table-layout: auto;
+      word-break: break-word;
       .event-url{
-        width: 250px;
+        width: 100%px;
       }
       .map-wrapper {
-        overflow-x: auto;
         width: 280px;
+        overflow-x: auto;
       }
       
       #map {
         width: 280px;
         height: 300px;
-        min-width: 320px;
+        min-width: unset;
       }      
+    }
+    .event-show-table th,
+    .event-show-table td {
+      white-space: normal;
     }
     .event-index-title{
       margin-bottom: 120px;
