@@ -485,9 +485,12 @@
       cursor: pointer;
       transition: background-color 1s;
     }
+    .responsive-wrapper {
+      position: relative;
+    }
     .scroll-indicator {
-      position: fixed;
-      right: 8px;
+      position: absolute;
+      right: 0;
       top: 50%;
       transform: translateY(-50%);
       font-size: 3rem;
