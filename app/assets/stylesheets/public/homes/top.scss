@@ -53,6 +53,9 @@
     transition: opacity .25s ease;
     .images{
       width: 100%;
+      aspect-ratio: 16/9;
+      height: auto;
+      object-fit: cover;
       border-radius: 10px;
     }
   }

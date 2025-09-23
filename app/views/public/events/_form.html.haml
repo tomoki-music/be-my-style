@@ -107,4 +107,4 @@
             %td
               = f.text_area :introduction, class: "event-introduction"
           = f.submit "イベントを登録", class: "btn btn-info event-btn", data: { confirm: 'こちらの内容で登録します。よろしいですか？' }
-          = link_to '← イベントページに戻る', public_event_path(event), class: 'btn btn-secondary'
+          = link_to '← イベントページに戻る', public_events_path(event), class: 'btn btn-secondary'
