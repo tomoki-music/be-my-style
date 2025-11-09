@@ -1,15 +1,21 @@
 class Admin::CustomersController < ApplicationController
   before_action :authenticate_admin!
-  before_action :set_customer, only: [:approval, :purge]
+  before_action :set_customer, only: [:approval, :purge, :edit, :update]
 
   def edit
-    @customer = Customer.find(params[:id])
   end
 
   def update
-    @customer = Customer.find(params[:id])
     @customer.skip_reconfirmation!
+    
     if @customer.update_without_password(customer_params)
+      if params[:customer][:owned_community_ids]
+        @customer.community_owners.destroy_all
+        params[:customer][:owned_community_ids].reject(&:blank?).each do |community_id|
+          @customer.community_owners.create!(community_id: community_id)
+        end
+      end
+
       redirect_to admin_homes_top_path, notice: "会員情報を更新しました。"
     else
       render :edit
@@ -17,7 +23,7 @@ class Admin::CustomersController < ApplicationController
   end
 
   def approval
-    if @customer.update(confirmed_at: Time.now)
+    if @customer.update(confirmed_at: Time.current)
       redirect_to admin_homes_top_path, notice: "メール承認の更新が完了しました!"
     else
       render "index"
@@ -35,7 +41,7 @@ class Admin::CustomersController < ApplicationController
   private
 
   def set_customer
-    @customer = Customer.find(params[:customer_id])
+    @customer = Customer.find(params[:id] || params[:customer_id])
   end
 
   def customer_params
@@ -60,9 +66,8 @@ class Admin::CustomersController < ApplicationController
       :password_confirmation,
       :is_deleted,
       :is_owner,
-      community_ids: [],
+      owned_community_ids: [],
       community_owners_attributes: [:id, :community_id, :_destroy]
     )
   end
-
 end

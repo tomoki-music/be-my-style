@@ -105,6 +105,7 @@
           %tr#community-row
             %th{scope:"row"} 管理コミュニティ
             %td
-              = f.collection_check_boxes :community_ids, Community.all, :id, :name
+              = f.collection_check_boxes :owned_community_ids, Community.all, :id, :name
+
 
           = f.submit "プロフィールを更新", class: "btn btn-info admin-customer-edit-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }
