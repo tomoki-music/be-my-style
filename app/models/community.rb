@@ -12,6 +12,8 @@ class Community < ApplicationRecord
   has_many :customers, through: :chat_room_customers, dependent: :destroy
   has_many :chat_messages, dependent: :destroy
   has_many :events, dependent: :destroy
+  belongs_to :owner, class_name: "Customer", optional: true
+
 
   has_one_attached :community_image
 

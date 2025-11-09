@@ -38,7 +38,7 @@ Rails.application.routes.draw do
 
     # イベント機能
     resources :events do
-      collection do
+      member do
         get "copy" => "events#copy"
       end
       post "join" => "events#join"

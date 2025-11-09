@@ -83,7 +83,7 @@
                   = link_to 'コミュニティのチャットルームへ', community_create_public_chat_rooms_path(community_id: @community.id), method: :post, class: "btn btn-sm btn-info community-show-btn", data: { 'turbolinks': false }
                 - else
                   コミュニティに参加するとチャットできます。
-            - if @community.owner_id == current_customer.id
+            - if current_customer.can_create_event?(@community)
               %tr
                 %th{scope:"row"} イベントを作成
                 %td

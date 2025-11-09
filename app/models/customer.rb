@@ -21,6 +21,41 @@ class Customer < ApplicationRecord
     tightly: 2,
   }, _prefix: true
 
+  enum is_owner: { general: 0, admin: 1, community_owner: 2 }
+
+  def self.is_owners_i18n
+    is_owners.keys.index_with { |k| I18n.t("activerecord.attributes.customer.is_owner.#{k}") }
+  end
+  
+  def available_communities_for_event
+    if admin?
+      Community.all
+    elsif community_owner?
+      owned_communities
+    else
+      communities
+    end
+  end
+
+  def can_create_event?(community = nil)
+    return true if admin?
+  
+    if community_owner?
+      return true if community.nil?  
+      return true if owned_communities.include?(community)
+    end
+  
+    false
+  end
+  
+  def can_edit_event?(event)
+    return true if admin?
+    return false unless event.community
+
+    community_owners.exists?(community_id: event.community.id)
+  end
+  
+
   has_one_attached :profile_image
   has_many :customer_parts, dependent: :destroy
   has_many :parts, through: :customer_parts, dependent: :destroy
@@ -49,9 +84,23 @@ class Customer < ApplicationRecord
   has_many :join_parts, through: :join_part_customers, dependent: :destroy
   has_many :requests, dependent: :destroy
 
+  has_many :community_owners, dependent: :destroy
+  has_many :owned_communities, through: :community_owners, source: :community
+  accepts_nested_attributes_for :community_owners, allow_destroy: true
+
+
   validates :name, presence: true, length: {maximum: 20}
   validates :email, uniqueness: true, presence: true
   # validates :customer_parts, presence: true
+
+  def update_without_password(params, *options)
+    params.delete(:password)
+    params.delete(:password_confirmation)
+    
+    assign_attributes(params)
+    save(validate: true)
+  end
+  
 
   def update_password(params, *options)
     if params[:password].blank?

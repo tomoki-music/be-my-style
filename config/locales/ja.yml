@@ -20,6 +20,10 @@ ja:
         favorite_artist: 好きなアーティスト
         url: 作品HPのURL
         customer_parts: パート
+        is_owner:
+          general: 一般会員
+          admin: 管理者
+          community_owner: コミュニティオーナー（イベント作成可）
       customer/sex:
         gender_private: 非公開
         male: 男性

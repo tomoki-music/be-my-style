@@ -8,7 +8,6 @@
 //= require cocoon
 //= require_tree .
 
-
 if (document.URL.match(/sign_up/)){
   document.addEventListener('DOMContentLoaded', () => {
     const createImageHTML = (blob) => {

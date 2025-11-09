@@ -3,6 +3,22 @@
 }
 
 .event-index-head-title{
+
+  .community-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .community-item {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+  .community-item:hover {
+    background-color: #f8f9fa;
+    transform: scale(1.02);
+  }
+  
   text-align: center;
   padding: 5px;
   display: flex;

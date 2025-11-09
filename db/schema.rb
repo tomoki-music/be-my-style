@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_08_09_062905) do
+ActiveRecord::Schema.define(version: 2025_11_02_034415) do
 
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
@@ -138,6 +138,15 @@ ActiveRecord::Schema.define(version: 2025_08_09_062905) do
     t.datetime "updated_at", precision: 6, null: false
     t.index ["community_id"], name: "index_community_genres_on_community_id"
     t.index ["genre_id"], name: "index_community_genres_on_genre_id"
+  end
+
+  create_table "community_owners", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "community_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["community_id"], name: "index_community_owners_on_community_id"
+    t.index ["customer_id"], name: "index_community_owners_on_customer_id"
   end
 
   create_table "customer_genres", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -334,6 +343,8 @@ ActiveRecord::Schema.define(version: 2025_08_09_062905) do
   add_foreign_key "community_customers", "customers"
   add_foreign_key "community_genres", "communities"
   add_foreign_key "community_genres", "genres"
+  add_foreign_key "community_owners", "communities"
+  add_foreign_key "community_owners", "customers"
   add_foreign_key "customer_genres", "customers"
   add_foreign_key "customer_genres", "genres"
   add_foreign_key "customer_parts", "customers"

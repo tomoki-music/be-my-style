@@ -59,7 +59,9 @@ class Admin::CustomersController < ApplicationController
       :password,
       :password_confirmation,
       :is_deleted,
-      :is_owner
+      :is_owner,
+      community_ids: [],
+      community_owners_attributes: [:id, :community_id, :_destroy]
     )
   end
 

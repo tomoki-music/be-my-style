@@ -2,6 +2,34 @@
 
 .event-index-head-title
   %h2 イベント一覧
+
+  - if current_customer.can_create_event?(nil)
+    %button.btn.btn-info#open-create-event-modal
+      <i class="fa-solid fa-plus"></i> イベント作成
+
+  .modal.fade#createEventModal{ tabindex: "-1", role: "dialog" }
+    .modal-dialog.modal-dialog-centered{ role: "document" }
+      .modal-content
+        .modal-header
+          %h5.modal-title コミュニティを選択
+          %button.close{ "data-dismiss" => "modal", "aria-label" => "Close" }
+            %span{ "aria-hidden" => "true" } ×
+
+        .modal-body
+          - if @available_communities.present?
+            %p 作成したいコミュニティを選択してください：
+            .community-list
+              - @available_communities.each do |community|
+                .community-item.card.mb-2.p-2
+                  %h6= community.name
+                  = link_to "このコミュニティで作成する", new_public_event_path(community_id: community.id),
+                            class: "btn btn-success btn-sm mt-2"
+          - else
+            %p.text-muted 作成できるコミュニティがありません。
+
+        .modal-footer
+          %button.btn.btn-secondary{ "data-dismiss" => "modal" } 閉じる
+
 .events-kaminari
   = paginate @events
 - if @events.present?

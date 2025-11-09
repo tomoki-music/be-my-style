@@ -1,11 +1,14 @@
 class Public::EventsController < ApplicationController
   include CsvModule
   before_action :authenticate_customer!
-  before_action :set_event, only: [:show, :edit, :update, :destroy]
+  before_action :set_event, only: [:show, :edit, :update, :destroy, :copy]
   before_action :ensure_correct_customer, only: [:update, :edit, :destroy]
+  before_action :authorize_event_creation!, only: [:new, :create]
+  before_action :authorize_event_edit!, only: [:edit, :update, :destroy, :copy]
 
   def index
     @events = Event.all.order(created_at: :desc).page(params[:page]).per(5)
+    @available_communities = current_customer.available_communities_for_event
   end
 
   def show
@@ -132,50 +135,21 @@ class Public::EventsController < ApplicationController
     end
   end
 
-  # def copy
-  #   @old_event = Event.find(params[:event_id])
-  #   @event = Event.new
-  #   @event.attributes = {
-  #     event_name: @old_event.event_name,
-  #     entrance_fee: @old_event.entrance_fee,
-  #     introduction: @old_event.introduction,
-  #     place: @old_event.place,
-  #     address: @old_event.address,
-  #     url: @old_event.url,
-  #     url_comment: @old_event.url_comment,
-  #     songs: @old_event.songs,
-  #   }
-  #   #イベントとソングの親子関係を一旦解消
-  #   @old_event.songs.each do |song|
-  #     song.id = nil
-  #   end
-
-  #   @community_id = params[:community_id]
-  #   @latitude = @event.latitude
-  #   @longitude = @event.longitude
-  #   @address = @event.address
-  # end
   def copy
-    @old_event = Event.find(params[:event_id])
+    @old_event = @event  # set_eventで取得済み
   
-    @event = Event.new(
-      event_name: @old_event.event_name,
-      entrance_fee: @old_event.entrance_fee,
-      introduction: @old_event.introduction,
-      place: @old_event.place,
-      address: @old_event.address,
-      url: @old_event.url,
-      url_comment: @old_event.url_comment,
-      community_id: params[:community_id]
-    )
-
-    @community_id = @event.community_id
+    # 🎨 新しいイベントを複製（community_idはオプション）
+    @event = @old_event.dup
+    @event.community_id = params[:community_id] || @old_event.community_id
+    @event.event_name = "#{@old_event.event_name}（コピー）"
+    @event.customer_id = current_customer.id # コピー作成者を変更しておく（安全）
   
-    # 🎵 楽曲とデフォルトの5パートを複製
+    # 🎵 楽曲とパートをコピー
     @old_event.songs.each do |old_song|
       new_song = old_song.dup
+      new_song.event = @event
   
-      # 🎹 デフォルトパートを1曲ずつ生成
+      # 各曲にデフォルトパートを作成
       ["Vocal", "Guitar", "Bass", "Drums", "Keyboard"].each do |part_name|
         new_song.join_parts.build(join_part_name: part_name)
       end
@@ -183,16 +157,16 @@ class Public::EventsController < ApplicationController
       @event.songs << new_song
     end
   
-    # 🗺️ 地図情報など（必要なら）
+    # 🗺️ 地図情報など
     @latitude = @event.latitude
     @longitude = @event.longitude
     @address = @event.address
   
-    # 🎉 コピーしたことを通知
-    flash.now[:notice] = "イベントの内容をコピーしました！必要に応じて編集してください♪"
-  
+    flash.now[:notice] = "イベントをコピーしました！必要に応じて編集してください♪"
     render :new
   end
+  
+  
 
   def destroy
     @event.songs.destroy_all
@@ -298,6 +272,18 @@ class Public::EventsController < ApplicationController
     @event = Event.find(params[:id])
     unless @event.customer == current_customer
       redirect_to public_events_path, alert: "編集権限がありません。"
+    end
+  end
+
+  def authorize_event_creation!
+    unless current_customer.can_create_event?
+      redirect_to public_events_path, alert: "イベントを作成する権限がありません。"
+    end
+  end
+
+  def authorize_event_edit!
+    unless current_customer.can_edit_event?(@event)
+      redirect_to public_events_path, alert: "このイベントを編集する権限がありません。"
     end
   end
 

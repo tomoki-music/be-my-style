@@ -97,5 +97,14 @@
           %tr
             %th{scope:"row"} 管理者設定
             %td
-              = f.select :is_owner, [['一般会員', 0], ['管理者', 1]], {}, { class: 'form-control' }
+              = f.select :is_owner,
+                Customer.is_owners.keys.map { |k| [Customer.is_owners_i18n[k] || k.humanize, k] },
+                {},
+                { class: 'form-control', id: 'customer_is_owner' }
+
+          %tr#community-row
+            %th{scope:"row"} 管理コミュニティ
+            %td
+              = f.collection_check_boxes :community_ids, Community.all, :id, :name
+
           = f.submit "プロフィールを更新", class: "btn btn-info admin-customer-edit-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }
