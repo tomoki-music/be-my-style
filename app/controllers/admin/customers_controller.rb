@@ -3,6 +3,7 @@ class Admin::CustomersController < ApplicationController
   before_action :set_customer, only: [:approval, :purge, :edit, :update]
 
   def edit
+    @customer = Customer.includes(:owned_communities).find(params[:id])
   end
 
   def update

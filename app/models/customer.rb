@@ -87,7 +87,6 @@ class Customer < ApplicationRecord
   has_many :community_owners, dependent: :destroy
   has_many :owned_communities, through: :community_owners, source: :community
   accepts_nested_attributes_for :community_owners, allow_destroy: true
-  attr_accessor :owned_community_ids
 
   validates :name, presence: true, length: {maximum: 20}
   validates :email, uniqueness: true, presence: true
