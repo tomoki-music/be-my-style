@@ -31,8 +31,8 @@
               %i.text-red
                 (必須)
             %td
-              - if @community_id.present?
-                = f.hidden_field :community_id, :value => @community_id
+              - if @community_id.present? && @community_id.to_i > 0
+                = f.hidden_field :community_id, value: @community_id
                 = Community.find(@community_id).name
               - else
                 = f.collection_select :community_id, current_customer.communities, :id, :name

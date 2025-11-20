@@ -143,6 +143,8 @@ class Public::EventsController < ApplicationController
     @event.community_id = params[:community_id] || @old_event.community_id
     @event.event_name = "#{@old_event.event_name}（コピー）"
     @event.customer_id = current_customer.id # コピー作成者を変更しておく（安全）
+
+    @community_id = @event.community_id
   
     # 🎵 楽曲とパートをコピー
     @old_event.songs.each do |old_song|
