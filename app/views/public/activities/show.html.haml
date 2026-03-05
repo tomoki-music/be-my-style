@@ -7,7 +7,7 @@
       = render "public/favorites/favorite", activity: @activity
     .activity-comment-icon
       = link_to '#activity-comment', class: "comment-icon-text", data: { 'turbolinks': false } do
-        %i.fa-regular.fa-comments.comment-icon
+        %i.far.fa-comments.comment-icon
         コメントする
 
 .activity-show-container.px-0.px-sm-0
@@ -52,7 +52,7 @@
                 = @activity.favorites.count
             .got-comment-count
               コメント数
-              %i.fa-regular.fa-comments
+              %i.far.fa-comments
               #got-comment-count.count
                 = @activity.comments.count
 

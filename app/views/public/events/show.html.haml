@@ -6,7 +6,7 @@
       = link_to '参加する🎵', '#event-songs', data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
       .event-request-icon
         = link_to '#event-request', class: "request-icon-text", data: { 'turbolinks': false } do
-          %i.fa-regular.fa-comments.request-icon
+          %i.far.fa-comments.request-icon
           リクエストする
 
   .event-show-container.px-0.px-sm-0
@@ -42,7 +42,7 @@
               %hr
                 .got-request-count
                   リクエスト数
-                  %i.fa-regular.fa-comments
+                  %i.far.fa-comments
                   #got-request-count.count
                     = @event.requests.count
               %hr
@@ -89,13 +89,13 @@
                   %th{scope:"row"} 開始時間
                   %td
                     %h4.font-weight-bold
-                      <i class="fa-regular fa-clock"></i>
+                      <i class="far fa-clock"></i>
                       = l @event.event_start_time, format: :short
                 %tr
                   %th{scope:"row"} 終了時間
                   %td
                     %h4.font-weight-bold
-                      <i class="fa-regular fa-clock"></i>
+                      <i class="far fa-clock"></i>
                       = l @event.event_end_time, format: :short
                 %tr
                   %th{scope:"row"} 参加費用
