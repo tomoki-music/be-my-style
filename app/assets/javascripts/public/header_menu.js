@@ -1,24 +1,23 @@
 'use strict';
 
-if (document.URL.match(/public/)){
+document.addEventListener('turbolinks:load', function(){
 
-  window.onload = function(){
-    const open = document.getElementById('open');
-    const menu = document.querySelector('.customer-menu-sp');
-    const close = document.getElementById('close');
+  const open = document.getElementById('open');
+  const menu = document.querySelector('.customer-menu-sp');
+  const close = document.getElementById('close');
 
-    open.addEventListener('click', () => {
-      menu.classList.add('show');
-    });
+  if(!open || !menu || !close) return;
 
-    close.addEventListener('click', () => {
-      menu.classList.remove('show');
-    });
+  open.addEventListener('click', () => {
+    menu.classList.add('show');
+  });
 
-    menu.addEventListener('click', () => {
-      close.click();
-    });
+  close.addEventListener('click', () => {
+    menu.classList.remove('show');
+  });
 
-  }
+  menu.addEventListener('click', () => {
+    close.click();
+  });
 
-}
+});
