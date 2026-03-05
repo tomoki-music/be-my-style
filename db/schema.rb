@@ -10,7 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_11_02_034415) do
+ActiveRecord::Schema.define(version: 2026_03_01_145423) do
+
+  create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "namespace"
+    t.text "body"
+    t.string "resource_type"
+    t.bigint "resource_id"
+    t.string "author_type"
+    t.bigint "author_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["author_type", "author_id"], name: "index_active_admin_comments_on_author"
+    t.index ["namespace"], name: "index_active_admin_comments_on_namespace"
+    t.index ["resource_type", "resource_id"], name: "index_active_admin_comments_on_resource"
+  end
 
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
@@ -53,6 +67,18 @@ ActiveRecord::Schema.define(version: 2025_11_02_034415) do
     t.text "url"
     t.string "url_comment"
     t.index ["customer_id"], name: "index_activities_on_customer_id"
+  end
+
+  create_table "admin_users", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "email", default: "", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.string "reset_password_token"
+    t.datetime "reset_password_sent_at"
+    t.datetime "remember_created_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["email"], name: "index_admin_users_on_email", unique: true
+    t.index ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true
   end
 
   create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -260,6 +286,21 @@ ActiveRecord::Schema.define(version: 2025_11_02_034415) do
     t.index ["song_id"], name: "index_join_parts_on_song_id"
   end
 
+  create_table "member_profiles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "entry_source"
+    t.text "join_reason"
+    t.text "want_to_do"
+    t.integer "music_experience_level", default: 0, null: false
+    t.integer "engagement_style", default: 0, null: false
+    t.integer "suggested_member_type", default: 0, null: false
+    t.integer "contact_preference", default: 0, null: false
+    t.text "admin_memo"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_member_profiles_on_customer_id"
+  end
+
   create_table "notifications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.integer "visitor_id", null: false
     t.integer "visited_id", null: false
@@ -319,13 +360,14 @@ ActiveRecord::Schema.define(version: 2025_11_02_034415) do
   end
 
   create_table "songs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.integer "event_id"
+    t.bigint "event_id", null: false
     t.string "song_name", null: false
     t.string "youtube_url"
     t.text "introduction"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.integer "position"
+    t.index ["event_id"], name: "index_songs_on_event_id"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
@@ -356,10 +398,12 @@ ActiveRecord::Schema.define(version: 2025_11_02_034415) do
   add_foreign_key "join_part_customers", "customers"
   add_foreign_key "join_part_customers", "join_parts"
   add_foreign_key "join_parts", "songs"
+  add_foreign_key "member_profiles", "customers"
   add_foreign_key "permits", "communities"
   add_foreign_key "permits", "customers"
   add_foreign_key "requests", "customers"
   add_foreign_key "requests", "events"
   add_foreign_key "song_customers", "customers"
   add_foreign_key "song_customers", "songs"
+  add_foreign_key "songs", "events"
 end

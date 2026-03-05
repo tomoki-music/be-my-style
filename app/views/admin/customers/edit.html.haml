@@ -1,111 +1,167 @@
 = render 'layouts/admin_header_menu'
 
-.admin-customer-edit-title
-  %h2.d-inline アーティスト編集画面
-  = link_to "Topへ戻る", admin_homes_top_path, method: :get, data: { 'turbolinks': false }, class: "btn btn-danger"
-  - if @customer.errors.any?
-    .alert
+- if @customer.errors.any?
+  .alert.alert-danger
     %ul
       - @customer.errors.full_messages.each do |message|
-        %li
-          = message
+        %li= message
 
 = form_with model: [:admin, @customer], local: true do |f|
+  .container
+    .row.justify-content-center
+      %h2.d-inline 会員編集画面
+      .col-md-10.d-flex.justify-content-end.gap-2
+        = link_to "キャンセル",
+          admin_homes_top_path,
+          class: "btn btn-outline-secondary"
+
+        = f.submit "保存",
+          class: "btn btn-info",
+          data: { confirm: "こちらの内容で更新します。よろしいですか？" }
   .admin-customer-edit-container.px-0.px-sm-0
-    %table.table.table-striped.admin-customer-edit-table{:width=>"100%",:border=>"1"}
+    %table.table.table-striped.admin-customer-edit-table{ width: "100%", border: "1" }
       %colgroup
-        %col{width: "19%"}
-        %col{width: "81%"}
-          %tr
-            %th{scope:"row"} ニックネーム
-            %td
-              = f.text_field :name, class: 'form-control'
-          %tr
-            %th{scope:"row"} メールアドレス
-            %td
-              = f.email_field :email,
-              autofocus: "true",
-              required: "",
-              value: @customer.email,
-              autocomplete: "email",
-              placeholder: "メールアドレスを入力",
-              class: 'form-control'
-          %tr
-            %th{scope:"row"} 性別
-            %td
-              = f.select :sex, Customer.enum_options_for_select(:sex)
-          %tr
-            %th{scope:"row"} 誕生日
-            %td
-              = f.date_field :birthday
-          %tr
-            %th{scope:"row"} パート
-            %td
-              = f.collection_check_boxes(:part_ids, Part.all, :id, :name) do |tag|
-                = tag.label do
-                  = tag.check_box
-                  = tag.text
-          %tr
-            %th{scope:"row"} 活動場所
-            %td 
-              = f.collection_select :prefecture_id, Prefecture.all, :id, :name
-          %tr
-            %th{scope:"row"} 活動ペース
-            %td
-              = f.select :activity_stance, Customer.enum_options_for_select(:activity_stance)
-          %tr
-            %th{scope:"row"} 好きなジャンル
-            %td
-              = f.collection_check_boxes(:genre_ids, Genre.all, :id, :name) do |genre|
-                = genre.label do
-                  = genre.check_box
-                  = genre.text
-          %tr
-            %th{:rowspan => 5} 好きなアーティスト
-            %td
-              = f.text_field :favorite_artist1, class: 'form-control'
-          %tr
-            %td
-              = f.text_field :favorite_artist2, class: 'form-control'
-          %tr
-            %td
-              = f.text_field :favorite_artist3, class: 'form-control'
-          %tr
-            %td
-              = f.text_field :favorite_artist4, class: 'form-control'
-          %tr
-            %td
-              = f.text_field :favorite_artist5, class: 'form-control'
-          %tr
-            %th{scope:"row"} 作品URL
-            %td
-              = f.text_field :url, class: 'form-control'
-          %tr
-            %th{scope:"row"} 自己紹介
-            %td
-              = f.text_area :introduction, style: "width:90%", class: 'form-control'
-          %tr
-            %th{scope:"row"} メール通知設定
-            %td
-              = f.check_box :confirm_mail ,{checked: true}, "true", "false"
-              %br
-              ※チェックを外すと「通知メールを受信しない」設定となります。
-          %tr
-            %th{scope:"row"} 会員有効化設定
-            %td
-              = f.select :is_deleted, [['有効', false], ['退会', true]], {}, { class: 'form-control' }
-          %tr
-            %th{scope:"row"} 管理者設定
-            %td
-              = f.select :is_owner,
-                Customer.is_owners.keys.map { |k| [Customer.is_owners_i18n[k] || k.humanize, k] },
-                {},
-                { class: 'form-control', id: 'customer_is_owner' }
+        %col{ width: "19%" }
+        %col{ width: "81%" }
 
-          %tr#community-row
-            %th{scope:"row"} 管理コミュニティ
-            %td
-              = f.collection_check_boxes :owned_community_ids, Community.all, :id, :name
+      %tr
+        %th ニックネーム
+        %td= f.text_field :name, class: 'form-control'
 
+      %tr
+        %th メールアドレス
+        %td
+          = f.email_field :email,
+            autofocus: true,
+            autocomplete: "email",
+            class: 'form-control'
 
-          = f.submit "プロフィールを更新", class: "btn btn-info admin-customer-edit-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }
+      %tr
+        %th 性別
+        %td= f.select :sex, Customer.enum_options_for_select(:sex)
+
+      %tr
+        %th 誕生日
+        %td= f.date_field :birthday
+
+      %tr
+        %th パート
+        %td
+          = f.collection_check_boxes(:part_ids, Part.all, :id, :name) do |tag|
+            = tag.label do
+              = tag.check_box
+              = tag.text
+
+      %tr
+        %th 活動場所
+        %td= f.collection_select :prefecture_id, Prefecture.all, :id, :name
+
+      %tr
+        %th 活動ペース
+        %td= f.select :activity_stance, Customer.enum_options_for_select(:activity_stance)
+
+      %tr
+        %th 好きなジャンル
+        %td
+          = f.collection_check_boxes(:genre_ids, Genre.all, :id, :name) do |genre|
+            = genre.label do
+              = genre.check_box
+              = genre.text
+
+      %tr
+        %th{ rowspan: 5 } 好きなアーティスト
+        %td= f.text_field :favorite_artist1, class: 'form-control'
+      %tr
+        %td= f.text_field :favorite_artist2, class: 'form-control'
+      %tr
+        %td= f.text_field :favorite_artist3, class: 'form-control'
+      %tr
+        %td= f.text_field :favorite_artist4, class: 'form-control'
+      %tr
+        %td= f.text_field :favorite_artist5, class: 'form-control'
+
+      %tr
+        %th 作品URL
+        %td= f.text_field :url, class: 'form-control'
+
+      %tr
+        %th 自己紹介
+        %td= f.text_area :introduction, class: 'form-control'
+
+      %tr
+        %th メール通知設定
+        %td
+          = f.check_box :confirm_mail
+          %br
+          ※チェックを外すと通知メールを受信しません
+
+      %tr
+        %th 会員状態
+        %td= f.select :is_deleted, [['有効', false], ['退会', true]]
+
+      %tr
+        %th 管理者設定
+        %td
+          = f.select :is_owner,
+            Customer.is_owners.keys.map { |k| [Customer.is_owners_i18n[k], k] },
+            {},
+            class: 'form-control'
+
+      %tr
+        %th 管理コミュニティ
+        %td
+          = f.collection_check_boxes :owned_community_ids, Community.all, :id, :name
+
+  %hr
+
+  .container
+    .row.justify-content-center
+      .col-md-12
+        %h3.mb-3.text-center.card-header.bg-warning.text-dark 運営・アンケート情報
+        .card.mb-4
+          .card-body
+            = f.fields_for :member_profile, @member_profile do |mp|
+
+              .form-group
+                = mp.label :entry_source, "どこで知ったか"
+                = mp.text_field :entry_source, class: "form-control"
+
+              .form-group
+                = mp.label :join_reason, "参加のきっかけ"
+                = mp.text_area :join_reason, rows: 3, class: "form-control"
+
+              .form-group
+                = mp.label :want_to_do, "やりたいこと"
+                = mp.text_area :want_to_do, rows: 3, class: "form-control"
+
+              .form-group
+                = mp.label :music_experience_level, "音楽経験レベル"
+                = enum_select(mp, :music_experience_level, MemberProfile.music_experience_levels,
+                  i18n_scope: "enums.member_profile.music_experience_level")
+
+              .form-group
+                = mp.label :engagement_style, "関わり方"
+                = enum_select(mp, :engagement_style, MemberProfile.engagement_styles,
+                  i18n_scope: "enums.member_profile.engagement_style")
+
+              .form-group
+                = mp.label :contact_preference, "連絡スタンス"
+                = enum_select(mp, :contact_preference, MemberProfile.contact_preferences,
+                  i18n_scope: "enums.member_profile.contact_preference")
+
+              .form-group
+                = mp.label :suggested_member_type, "メンバータイプ"
+                = enum_select(mp, :suggested_member_type, MemberProfile.suggested_member_types,
+                  i18n_scope: "enums.member_profile.suggested_member_type")
+
+              .form-group
+                = mp.label :admin_memo, "管理メモ"
+                = mp.text_area :admin_memo, rows: 4, class: "form-control"
+
+  .fixed-save-button
+    = link_to "キャンセル",
+      admin_homes_top_path,
+      class: "btn btn-lg btn-outline-secondary me-2"
+    = f.submit "保存",
+      class: "btn btn-info btn-lg shadow",
+      data: { confirm: "こちらの内容で更新します。よろしいですか？" }

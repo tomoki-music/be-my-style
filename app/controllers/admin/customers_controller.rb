@@ -1,14 +1,16 @@
 class Admin::CustomersController < ApplicationController
   before_action :authenticate_admin!
   before_action :set_customer, only: [:approval, :purge, :edit, :update]
+  before_action :set_member_profile, only: [:edit, :update]
 
   def edit
-    @customer = Customer.includes(:owned_communities).find(params[:id])
+    # @customer は before_action で取得済み
+    # @member_profile も取得済み
   end
 
   def update
     @customer.skip_reconfirmation!
-    
+
     if @customer.update_without_password(customer_params)
       if params[:customer][:owned_community_ids]
         @customer.community_owners.destroy_all
@@ -42,14 +44,17 @@ class Admin::CustomersController < ApplicationController
   private
 
   def set_customer
-    @customer = Customer.find(params[:id] || params[:customer_id])
+    @customer = Customer.includes(:owned_communities).find(params[:id] || params[:customer_id])
+  end
+
+  def set_member_profile
+    @member_profile = @customer.member_profile || @customer.build_member_profile
   end
 
   def customer_params
     params.require(:customer).permit(
       :name,
       :email,
-      :part,
       :sex,
       :birthday,
       :activity_stance,
@@ -68,7 +73,20 @@ class Admin::CustomersController < ApplicationController
       :is_deleted,
       :is_owner,
       owned_community_ids: [],
-      community_owners_attributes: [:id, :community_id, :_destroy]
+      community_owners_attributes: [:id, :community_id, :_destroy],
+
+      member_profile_attributes: [
+        :id,
+        :entry_source,
+        :join_reason,
+        :want_to_do,
+        :music_experience_level,
+        :engagement_style,
+        :suggested_member_type,
+        :contact_preference,
+        :admin_memo
+      ]
     )
   end
+
 end

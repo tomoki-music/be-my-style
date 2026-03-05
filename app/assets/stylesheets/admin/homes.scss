@@ -1,3 +1,24 @@
 // Place all the styles related to the admin/homes controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: https://sass-lang.com/
+
+/* 管理画面：一覧テーブルのヘッダー固定 */
+.admin-table-sticky thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #f8f9fa;
+  white-space: nowrap;
+}
+
+/* フィルター用 select */
+.filter-select {
+  background-color: #f8f9fa;
+  border-radius: 0.6rem;
+}
+
+.filter-select:focus {
+  background-color: #fff;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.15rem rgba(13,110,253,.25);
+}

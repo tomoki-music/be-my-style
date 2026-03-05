@@ -16,7 +16,7 @@ class Customer < ApplicationRecord
   }, _prefix: true
 
   enum activity_stance: {
-    beginer: 0,
+    beginner: 0,
     mypace: 1,
     tightly: 2,
   }, _prefix: true
@@ -87,6 +87,9 @@ class Customer < ApplicationRecord
   has_many :community_owners, dependent: :destroy
   has_many :owned_communities, through: :community_owners, source: :community
   accepts_nested_attributes_for :community_owners, allow_destroy: true
+
+  has_one :member_profile, dependent: :destroy
+  accepts_nested_attributes_for :member_profile
 
   validates :name, presence: true, length: {maximum: 20}
   validates :email, uniqueness: true, presence: true

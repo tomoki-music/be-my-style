@@ -28,3 +28,10 @@ input[type="text"] {
   width: 90%;
   height: 40px;
 }
+
+.fixed-save-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+}

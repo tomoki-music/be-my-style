@@ -22,7 +22,7 @@ class Community < ApplicationRecord
   validates :introduction, presence: true
 
   enum activity_stance: {
-    beginer: 0,
+    beginner: 0,
     mypace: 1,
     tightly: 2,
   }, _prefix: true

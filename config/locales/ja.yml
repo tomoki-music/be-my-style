@@ -30,14 +30,14 @@ ja:
         female: 女性
         others: その他
       customer/activity_stance:
-        beginer: 初心者(月1回以内)
+        beginner: 初心者(月1回以内)
         mypace: マイペース(週1回〜月1回以内)
         tightly: ガッツリ(週1回以上)
       community:
         name: コミュニティ名
         introduction: コミュニティ紹介文
       community/activity_stance:
-        beginer: 初心者(月1回以内)
+        beginner: 初心者(月1回以内)
         mypace: マイペース(週1回〜月1回以内)
         tightly: ガッツリ(週1回以上)
       activity:
@@ -240,3 +240,26 @@ ja:
       long: "%Y/%m/%d %H:%M"
       short: "%m/%d %H:%M"
     pm: 午後
+  enums:
+    member_profile:
+      music_experience_level:
+        beginner: 初心者
+        hobby: 趣味
+        band: バンド経験あり
+
+      engagement_style:
+        casual: ゆるく参加
+        regular: 定期参加
+        challenge_active: 積極的
+        undecided: 未定
+
+      contact_preference:
+        welcome: 連絡OK
+        passive: 受け身
+        no_contact: 連絡不要
+
+      suggested_member_type:
+        enjoy: エンジョイ
+        growth: 成長志向
+        challenge_member: 挑戦者
+        unclassified: 未設定

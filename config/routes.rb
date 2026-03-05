@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-
+  
   root to: 'public/homes#top'
 
   namespace :admin do
@@ -72,28 +72,48 @@ Rails.application.routes.draw do
     get "communities/:id/permits" => "communities#permits", as: :permits
   end
 
-# 顧客(アーティスト)用
-devise_for :customers, controllers: {
-  registrations: "public/registrations",
-  sessions: 'public/sessions',
-  passwords: 'public/passwords',
-  confirmations: 'public/confirmations',
-  tracks: 'public/tracks',
-}
+  # 顧客(アーティスト)用
+  devise_for :customers, controllers: {
+    registrations: "public/registrations",
+    sessions: 'public/sessions',
+    passwords: 'public/passwords',
+    confirmations: 'public/confirmations',
+    tracks: 'public/tracks',
+  }
 
-devise_scope :customer do
-  get "verify", :to => "public/registrations#verify"
-end
+  devise_scope :customer do
+    get "verify", :to => "public/registrations#verify"
+  end
 
-# 管理者用
-devise_for :admin, skip: [:registrations, :passwords, :confirmations], controllers: {
-  sessions: "admin/sessions"
-}
+  # 管理者用
+  devise_for :admin, skip: [:registrations, :passwords, :confirmations], controllers: {
+    sessions: "admin/sessions"
+  }
 
-devise_scope :admin do
-  patch "approval", :to => "admin/customers#approval"
-  delete "purge", :to => "admin/customers#purge"
-end
+  devise_scope :admin do
+    patch "approval", :to => "admin/customers#approval"
+    delete "purge", :to => "admin/customers#purge"
+  end
+
+  # =====================
+  # BUSINESS（新規）
+  # =====================
+  namespace :business do
+    root to: 'homes#top'
+
+    resources :customers, only: [:show, :edit, :update]
+
+    resources :posts do
+      resources :comments, only: [:create, :destroy]
+    end
+
+    resources :projects do
+      member do
+        post :join
+        delete :leave
+      end
+    end
+  end
   
   # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
 end

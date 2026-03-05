@@ -1,28 +1,101 @@
-%table.table.table-striped
+.card.mb-3.shadow-sm
+  .card-body
+    = form_with url: admin_homes_top_path, method: :get, local: true do
+      .row.g-3.align-items-end
+
+        .col-md-2
+          %label.form-label.fw-semibold
+            %i.bi.bi-person-badge.me-1
+            メンバータイプ
+          = select_tag :member_type,
+            options_for_select(enum_filter_options(MemberProfile.suggested_member_types, "enums.member_profile.suggested_member_type"), params[:member_type]),
+            class: "form-select filter-select"
+
+        .col-md-2
+          %label.form-label.fw-semibold
+            %i.bi.bi-music-note-list.me-1
+            音楽経験
+          = select_tag :music_experience_level,
+            options_for_select(enum_filter_options(MemberProfile.music_experience_levels, "enums.member_profile.music_experience_level"), params[:music_experience_level]),
+            class: "form-select filter-select"
+
+        .col-md-2
+          %label.form-label.fw-semibold
+            %i.bi.bi-people.me-1
+            関わり方
+          = select_tag :engagement_style,
+            options_for_select(enum_filter_options(MemberProfile.engagement_styles, "enums.member_profile.engagement_style"), params[:engagement_style]),
+            class: "form-select filter-select"
+
+        .col-md-2
+          %label.form-label.fw-semibold
+            %i.bi.bi-chat-dots.me-1
+            連絡スタンス
+          = select_tag :contact_preference,
+            options_for_select(enum_filter_options(MemberProfile.contact_preferences, "enums.member_profile.contact_preference"), params[:contact_preference]),
+            class: "form-select filter-select"
+
+        .col-md-4
+          .d-inline-flex.gap-2
+            = submit_tag "絞り込み", class: "btn btn-primary px-4"
+            = link_to "リセット", admin_homes_top_path, class: "btn btn-outline-secondary px-4"
+
+
+%table.table.table-striped.w-100.admin-table-sticky
   %thead
     %tr
       %th ID
       %th 名前
-      %th メールアドレス
       %th 最終ログイン日
       %th ログイン回数
+      %th メンバータイプ
+      %th 音楽経験
+      %th 関わり方
+      %th 連絡スタンス
       %th 詳細
       %th メール承認
       %th 物理削除
-  - @customers.each do |customer|
-    %tbody
+
+  %tbody
+    - @customers.each do |customer|
       %tr
-        %th=customer.id
-        %td=customer.name
-        %td=customer.email
+        %th= customer.id
+        %td= customer.name
         %td= customer.current_sign_in_at&.strftime('%Y/%m/%d') || '-'
-        %td="#{customer.sign_in_count}回"
-        %td 
-          = link_to "編集", edit_admin_customer_path(customer.id), method: :get, data: { 'turbolinks': false }, class: "btn btn-info"
+        %td= "#{customer.sign_in_count}回"
+
         %td
-          -if customer.confirmed_at.nil?
-            = link_to "承認", approval_path(customer_id: customer.id), method: :patch, data: { 'turbolinks': false }, class: "btn btn-primary"
+          = member_type_badge(customer.member_profile&.suggested_member_type)
+
+        %td
+          = music_experience_badge(customer.member_profile&.music_experience_level)
+
+        %td
+          = engagement_style_badge(customer.member_profile&.engagement_style)
+
+        %td
+          = contact_preference_badge(customer.member_profile&.contact_preference)
+
+        %td
+          = link_to "編集",
+            edit_admin_customer_path(customer.id),
+            method: :get,
+            data: { 'turbolinks': false },
+            class: "btn btn-info"
+
+        %td
+          - if customer.confirmed_at.nil?
+            = link_to "承認",
+              approval_path(customer_id: customer.id),
+              method: :patch,
+              data: { 'turbolinks': false },
+              class: "btn btn-primary"
           - else
             承認済み
+
         %td
-          = link_to "完全退会", purge_path(customer_id: customer.id), method: :delete, data: { confirm: "【確認】アカウントを完全に削除してもよろしいですか？", 'turbolinks': false }, class: "btn btn-danger"
+          = link_to "完全退会",
+            purge_path(customer_id: customer.id),
+            method: :delete,
+            data: { confirm: "【確認】アカウントを完全に削除してもよろしいですか？", 'turbolinks': false },
+            class: "btn btn-danger"

@@ -1,5 +1,3 @@
-= render 'layouts/header_menu'
-
 .top-container
   .parallax
     .parallax-content
@@ -8,36 +6,56 @@
           %ul.list-style-none
             %li
               %i.fa-solid.fa-user-plus
-              = link_to "新規登録", new_customer_registration_path, data: { 'turbolinks': false }, class: "btn btn-success menu-sp-btn"
+              = link_to "新規登録", new_customer_registration_path, class: "btn btn-success menu-sp-btn"
             %li
               %i.fa-solid.fa-right-to-bracket
-              = link_to "ログイン", new_customer_session_path, data: { 'turbolinks': false }, class: "btn btn-primary menu-sp-btn"
+              = link_to "ログイン", new_customer_session_path, class: "btn btn-primary menu-sp-btn"
         - else
           %ul.list-style-none
             %li
               %i.fa-solid.fa-right-from-bracket
-              = link_to "ログアウト", destroy_customer_session_path, data: { 'turbolinks': false }, method: :delete, class: "btn btn-secondary menu-sp-btn"
+              = link_to "ログアウト", destroy_customer_session_path, method: :delete, class: "btn btn-secondary menu-sp-btn"
 
   .slider
-    = image_tag 'public-top2.jpg' ,class:"images"
-    = image_tag 'public-top3.jpg' ,class:"images"
-    = image_tag 'public-top4.jpg' ,class:"images"
-    = image_tag 'public-top5.jpg' ,class:"images"
+    = image_tag 'public-top2.jpg', class: "images"
+    = image_tag 'public-top3.jpg', class: "images"
+    = image_tag 'public-top4.jpg', class: "images"
+    = image_tag 'public-top5.jpg', class: "images"
 
   .notice-box
     %ul.notice-list
       %li
+        %span.notice-date 2026年2月23日：
+        %br
+        「持ち込み企画」機能を実装しました。
+      %li
         %span.notice-date 2025年7月12日：
         %br
-        イベント詳細ページの楽曲表とエントリーフォームを見やすく改修致しました。
+        イベント詳細ページを改修しました。
 
   .owners-container
-    .owner-message1
+    / --- 注目企画（持ち込み企画） ---
+    .owners-card
+      = link_to 'https://be-my-style.com/public/activities/71',
+                target: "_blank",
+                class: "project-banner" do
+        = image_tag 'owned-project.jpg', alt: "歓迎!! 持ち込み企画"
+        .project-banner-text
+          %span 歓迎!!
+          %br
+          %strong 持ち込み企画
+
+    / --- 会員数 ---
+    .owners-card.owner-message1
       - customer_count = Customer.count
-      %strong{style: "display: block;"}= "BeMyStyle 会員数"
-      %br/
-      %div{class: "highlight-container"}
-        %span{class: "highlight-number"}= "#{customer_count + 10}"
-        %span= "人達成!!"
-    = link_to 'https://be-my-style.com/public/activities/49', target: "_blank", class: "owner-message2" do
-      = image_tag 'owner-message.png'
+      %strong.gradient-text BeMyStyle 会員数
+      %div.highlight-container
+        %span.highlight-number= "#{customer_count + 10}"
+        %span 人達成!!
+
+    / --- 主催だより ---
+    .owners-card
+      = link_to 'https://be-my-style.com/public/activities/49',
+                target: "_blank",
+                class: "owner-message2" do
+        = image_tag 'owner-message.png'
