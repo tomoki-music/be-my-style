@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_03_01_145423) do
+ActiveRecord::Schema.define(version: 2026_03_04_000000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -94,6 +94,58 @@ ActiveRecord::Schema.define(version: 2026_03_01_145423) do
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
   end
 
+  create_table "applications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "customer_id", null: false
+    t.string "target_type", null: false
+    t.bigint "target_id", null: false
+    t.string "status", default: "pending", null: false
+    t.text "message"
+    t.datetime "submitted_at"
+    t.datetime "reviewed_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_applications_on_customer_id"
+    t.index ["status"], name: "index_applications_on_status"
+    t.index ["target_type", "target_id"], name: "index_applications_on_target_type_and_target_id"
+    t.index ["workspace_id"], name: "index_applications_on_workspace_id"
+  end
+
+  create_table "approvals", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "application_id", null: false
+    t.bigint "reviewer_id", null: false
+    t.string "decision", null: false
+    t.text "comment"
+    t.datetime "decided_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["application_id"], name: "index_approvals_on_application_id"
+    t.index ["decision"], name: "index_approvals_on_decision"
+    t.index ["reviewer_id"], name: "index_approvals_on_reviewer_id"
+  end
+
+  create_table "categories", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.string "name", null: false
+    t.string "kind", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["workspace_id", "kind", "name"], name: "index_categories_on_workspace_id_and_kind_and_name", unique: true
+    t.index ["workspace_id"], name: "index_categories_on_workspace_id"
+  end
+
+  create_table "category_assignments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "category_id", null: false
+    t.string "target_type", null: false
+    t.bigint "target_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["category_id", "target_type", "target_id"], name: "index_category_assignments_on_category_and_target", unique: true
+    t.index ["category_id"], name: "index_category_assignments_on_category_id"
+    t.index ["target_type", "target_id"], name: "index_category_assignments_on_target_type_and_target_id"
+  end
+
   create_table "chat_messages", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "chat_room_id", null: false
     t.bigint "customer_id", null: false
@@ -173,6 +225,38 @@ ActiveRecord::Schema.define(version: 2026_03_01_145423) do
     t.datetime "updated_at", precision: 6, null: false
     t.index ["community_id"], name: "index_community_owners_on_community_id"
     t.index ["customer_id"], name: "index_community_owners_on_customer_id"
+  end
+
+  create_table "custom_field_definitions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.string "entity_type", null: false
+    t.string "field_key", null: false
+    t.string "label", null: false
+    t.string "field_type", null: false
+    t.boolean "required", default: false, null: false
+    t.json "options"
+    t.integer "position", default: 0, null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["workspace_id", "entity_type", "field_key"], name: "index_custom_field_definitions_on_workspace_and_entity_and_key", unique: true
+    t.index ["workspace_id"], name: "index_custom_field_definitions_on_workspace_id"
+  end
+
+  create_table "custom_field_values", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "custom_field_definition_id", null: false
+    t.string "target_type", null: false
+    t.bigint "target_id", null: false
+    t.text "value_text"
+    t.decimal "value_number", precision: 15, scale: 4
+    t.boolean "value_boolean"
+    t.date "value_date"
+    t.json "value_json"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["custom_field_definition_id", "target_type", "target_id"], name: "index_custom_field_values_on_definition_and_target", unique: true
+    t.index ["custom_field_definition_id"], name: "index_custom_field_values_on_custom_field_definition_id"
+    t.index ["target_type", "target_id"], name: "index_custom_field_values_on_target_type_and_target_id"
   end
 
   create_table "customer_genres", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -370,9 +454,60 @@ ActiveRecord::Schema.define(version: 2026_03_01_145423) do
     t.index ["event_id"], name: "index_songs_on_event_id"
   end
 
+  create_table "workspace_memberships", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "customer_id", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "joined_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_workspace_memberships_on_customer_id"
+    t.index ["workspace_id", "customer_id"], name: "index_workspace_memberships_on_workspace_id_and_customer_id", unique: true
+    t.index ["workspace_id"], name: "index_workspace_memberships_on_workspace_id"
+  end
+
+  create_table "workspace_role_assignments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "workspace_membership_id", null: false
+    t.bigint "workspace_role_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["workspace_membership_id", "workspace_role_id"], name: "index_workspace_role_assignments_on_membership_and_role", unique: true
+    t.index ["workspace_membership_id"], name: "index_workspace_role_assignments_on_workspace_membership_id"
+    t.index ["workspace_role_id"], name: "index_workspace_role_assignments_on_workspace_role_id"
+  end
+
+  create_table "workspace_roles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.string "role_key", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.boolean "system_role", default: false, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["workspace_id", "role_key"], name: "index_workspace_roles_on_workspace_id_and_role_key", unique: true
+    t.index ["workspace_id"], name: "index_workspace_roles_on_workspace_id"
+  end
+
+  create_table "workspaces", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.text "description"
+    t.string "industry_code"
+    t.json "settings"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["slug"], name: "index_workspaces_on_slug", unique: true
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "activities", "customers"
+  add_foreign_key "applications", "customers"
+  add_foreign_key "applications", "workspaces"
+  add_foreign_key "approvals", "applications"
+  add_foreign_key "approvals", "customers", column: "reviewer_id"
+  add_foreign_key "categories", "workspaces"
+  add_foreign_key "category_assignments", "categories"
   add_foreign_key "chat_messages", "chat_rooms"
   add_foreign_key "chat_messages", "communities"
   add_foreign_key "chat_messages", "customers"
@@ -387,6 +522,8 @@ ActiveRecord::Schema.define(version: 2026_03_01_145423) do
   add_foreign_key "community_genres", "genres"
   add_foreign_key "community_owners", "communities"
   add_foreign_key "community_owners", "customers"
+  add_foreign_key "custom_field_definitions", "workspaces"
+  add_foreign_key "custom_field_values", "custom_field_definitions"
   add_foreign_key "customer_genres", "customers"
   add_foreign_key "customer_genres", "genres"
   add_foreign_key "customer_parts", "customers"
@@ -406,4 +543,9 @@ ActiveRecord::Schema.define(version: 2026_03_01_145423) do
   add_foreign_key "song_customers", "customers"
   add_foreign_key "song_customers", "songs"
   add_foreign_key "songs", "events"
+  add_foreign_key "workspace_memberships", "customers"
+  add_foreign_key "workspace_memberships", "workspaces"
+  add_foreign_key "workspace_role_assignments", "workspace_memberships"
+  add_foreign_key "workspace_role_assignments", "workspace_roles"
+  add_foreign_key "workspace_roles", "workspaces"
 end
