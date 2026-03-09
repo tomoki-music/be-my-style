@@ -1,0 +1,61 @@
+= render 'layouts/header_menu'
+
+.top-container
+  .parallax
+    .parallax-content
+      .customer-menu-top
+        - unless customer_signed_in?
+          %ul.list-style-none
+            %li
+              %i.fa-solid.fa-user-plus
+              = link_to "新規登録", new_customer_registration_path, class: "btn btn-success menu-sp-btn"
+            %li
+              %i.fa-solid.fa-right-to-bracket
+              = link_to "ログイン", new_customer_session_path, class: "btn btn-primary menu-sp-btn"
+        - else
+          %ul.list-style-none
+            %li
+              %i.fa-solid.fa-right-from-bracket
+              = link_to "ログアウト", destroy_customer_session_path, method: :delete, class: "btn btn-secondary menu-sp-btn"
+
+  .slider
+    = image_tag 'business1.png', class: "images"
+    = image_tag 'business2.png', class: "images"
+    = image_tag 'business3.png', class: "images"
+    = image_tag 'business4.png', class: "images"
+    = image_tag 'business5.png', class: "images"
+
+  .notice-box
+    %ul.notice-list
+      %li
+        %span.notice-date 2026年3月1日：
+        %br
+        NAKAMA ビジネスコミュニティを公開しました。
+      %li
+        %span.notice-date 2026年3月5日：
+        %br
+        コミュニティ機能を追加しました。
+
+  .owners-container
+
+    / --- ビジネスコミュニティ紹介 ---
+    .owners-card
+      = link_to '#', class: "project-banner" do
+        = image_tag 'compose1.jpg'
+        .project-banner-text
+          %span 新しい出会い
+          %br
+          %strong ビジネスコミュニティ
+
+    / --- 会員数 ---
+    .owners-card.owner-message1
+      - customer_count = Customer.joins(:domains).where(domains: {name: "business"}).count
+      %strong.gradient-text NAKAMA 会員数
+      %div.highlight-container
+        %span.highlight-number= "#{customer_count}"
+        %span 人参加中
+
+    / --- お知らせ ---
+    .owners-card
+      = link_to '#', class: "owner-message2" do
+        = image_tag 'owner-message.png'

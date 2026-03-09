@@ -304,6 +304,14 @@
         color: white;
         border-radius: 10px;
       }
+      .danger-zone{
+        border:2px solid #dc3545;
+        padding:20px;
+        margin-top:30px;
+        border-radius:8px;
+        background:#fff5f5;
+        max-width:400px;
+      }
     }
   }
   .event-show-table{

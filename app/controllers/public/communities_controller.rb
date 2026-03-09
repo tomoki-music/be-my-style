@@ -1,15 +1,18 @@
 class Public::CommunitiesController < ApplicationController
   before_action :authenticate_customer!
   before_action :ensure_correct_customer, only: [:edit, :update, :destroy, :permits]
-  before_action :authority_create_community, only: [:new, :create]
   before_action :check_mail, only: [:send_mail]
+  before_action :authorize_admin!, only: [:new, :create]
 
   def index
-    @communities = Community.all.page(params[:page]).per(5)
+    @communities = Community.where(domain_id: current_domain.id).page(params[:page]).per(5)
   end
 
   def show
-    @community = Community.find(params[:id])
+    @community = Community.find_by!(
+      id: params[:id],
+      domain_id: current_domain.id
+    )
     @owner = Customer.find_by(id: @community.owner_id)
     @community_customers = params[:part_id].present? ? Kaminari.paginate_array(Part.find(params[:part_id]).customers.filter {|customer| customer.community_customers.where(community_id: @community.id).present? } ).page(params[:page]).per(3) : @community.customers.page(params[:page]).per(3)
   end
@@ -21,6 +24,7 @@ class Public::CommunitiesController < ApplicationController
   def create
     @community = Community.new(community_params)
     @community.owner_id = current_customer.id
+    @community.domain_id = current_domain.id
 
     if @community.save
       chat_room = ChatRoom.create
@@ -104,9 +108,9 @@ class Public::CommunitiesController < ApplicationController
     end
   end
 
-  def authority_create_community
-    unless current_customer.id == 1
-      redirect_to public_communities_path, alert: "コミュニティを作成する権限がありません。"
+  def authorize_admin!
+    unless current_customer.admin?
+      redirect_to public_communities_path, alert: "この操作は管理者のみ可能です。"
     end
   end
 

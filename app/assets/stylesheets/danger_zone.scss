@@ -1,0 +1,13 @@
+.danger-zone{
+  border:2px solid #dc3545;
+  padding:20px;
+  margin-top:30px;
+  border-radius:8px;
+  background:#fff5f5;
+  max-width:420px;
+}
+
+.danger-delete-btn{
+  pointer-events:none;
+  opacity:0.5;
+}

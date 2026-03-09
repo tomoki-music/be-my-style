@@ -8,6 +8,81 @@ class Customer < ApplicationRecord
   extend ActiveHash::Associations::ActiveRecordExtensions
   belongs_to :prefecture
 
+  has_one_attached :profile_image
+  has_many :customer_domains
+  has_many :domains, through: :customer_domains
+
+  attr_accessor :domain_name
+
+  has_many :customer_parts, dependent: :destroy
+  has_many :parts, through: :customer_parts, dependent: :destroy
+  has_many :customer_genres, dependent: :destroy
+  has_many :genres, through: :customer_genres, dependent: :destroy
+  has_many :relationships, class_name: "Relationship", foreign_key: "follower_id", dependent: :destroy
+  has_many :reverse_of_relationships, class_name: "Relationship", foreign_key: "followed_id", dependent: :destroy
+  has_many :followings, through: :relationships, source: :followed, dependent: :destroy
+  has_many :followers, through: :reverse_of_relationships, source: :follower, dependent: :destroy
+  has_many :active_notifications, class_name: 'Notification', foreign_key: 'visitor_id', dependent: :destroy
+  has_many :passive_notifications, class_name: 'Notification', foreign_key: 'visited_id', dependent: :destroy
+  has_many :chat_room_customers, dependent: :destroy
+  has_many :chat_rooms, through: :chat_room_customers, dependent: :destroy
+  has_many :communities, through: :chat_room_customers, dependent: :destroy
+  has_many :chat_messages, dependent: :destroy
+  has_many :community_customers, dependent: :destroy
+  has_many :communities, through: :community_customers, dependent: :destroy
+  has_many :permits, dependent: :destroy
+  has_many :activities, dependent: :destroy
+  has_many :favorites, dependent: :destroy
+  has_many :comments, dependent: :destroy
+  has_many :events, dependent: :destroy
+  has_many :song_customers, dependent: :destroy
+  has_many :songs, through: :song_customers, dependent: :destroy
+  has_many :join_part_customers, dependent: :destroy
+  has_many :join_parts, through: :join_part_customers, dependent: :destroy
+  has_many :requests, dependent: :destroy
+
+  has_many :community_owners, dependent: :destroy
+  has_many :owned_communities, through: :community_owners, source: :community
+  accepts_nested_attributes_for :community_owners, allow_destroy: true
+
+  has_one :member_profile, dependent: :destroy
+  accepts_nested_attributes_for :member_profile
+
+  validates :name, presence: true, length: {maximum: 20}
+  validates :email, uniqueness: true, presence: true
+  # validates :customer_parts, presence: true
+
+  def has_domain?(name)
+    domains.exists?(name: name)
+  end
+  
+  def music_user?
+    domains.exists?(name: "music")
+  end
+
+  def business_user?
+    domains.exists?(name: "business")
+  end
+
+  def community_owner_of?(community)
+    owned_communities.exists?(id: community.id)
+  end
+
+  def can_edit_event?(event)
+
+    # 管理者
+    return true if admin?
+
+    # イベント作成者
+    return true if event.customer_id == id
+
+    # コミュニティオーナー
+    return true if community_owner_of?(event.community)
+
+    false
+
+  end
+
   enum sex: {
     gender_private: 0,
     male: 1,
@@ -54,46 +129,6 @@ class Customer < ApplicationRecord
 
     community_owners.exists?(community_id: event.community.id)
   end
-  
-
-  has_one_attached :profile_image
-  has_many :customer_parts, dependent: :destroy
-  has_many :parts, through: :customer_parts, dependent: :destroy
-  has_many :customer_genres, dependent: :destroy
-  has_many :genres, through: :customer_genres, dependent: :destroy
-  has_many :relationships, class_name: "Relationship", foreign_key: "follower_id", dependent: :destroy
-  has_many :reverse_of_relationships, class_name: "Relationship", foreign_key: "followed_id", dependent: :destroy
-  has_many :followings, through: :relationships, source: :followed, dependent: :destroy
-  has_many :followers, through: :reverse_of_relationships, source: :follower, dependent: :destroy
-  has_many :active_notifications, class_name: 'Notification', foreign_key: 'visitor_id', dependent: :destroy
-  has_many :passive_notifications, class_name: 'Notification', foreign_key: 'visited_id', dependent: :destroy
-  has_many :chat_room_customers, dependent: :destroy
-  has_many :chat_rooms, through: :chat_room_customers, dependent: :destroy
-  has_many :communities, through: :chat_room_customers, dependent: :destroy
-  has_many :chat_messages, dependent: :destroy
-  has_many :community_customers, dependent: :destroy
-  has_many :communities, through: :community_customers, dependent: :destroy
-  has_many :permits, dependent: :destroy
-  has_many :activities, dependent: :destroy
-  has_many :favorites, dependent: :destroy
-  has_many :comments, dependent: :destroy
-  has_many :events, dependent: :destroy
-  has_many :song_customers, dependent: :destroy
-  has_many :songs, through: :song_customers, dependent: :destroy
-  has_many :join_part_customers, dependent: :destroy
-  has_many :join_parts, through: :join_part_customers, dependent: :destroy
-  has_many :requests, dependent: :destroy
-
-  has_many :community_owners, dependent: :destroy
-  has_many :owned_communities, through: :community_owners, source: :community
-  accepts_nested_attributes_for :community_owners, allow_destroy: true
-
-  has_one :member_profile, dependent: :destroy
-  accepts_nested_attributes_for :member_profile
-
-  validates :name, presence: true, length: {maximum: 20}
-  validates :email, uniqueness: true, presence: true
-  # validates :customer_parts, presence: true
 
   def update_without_password(params, *options)
     params.delete(:password)

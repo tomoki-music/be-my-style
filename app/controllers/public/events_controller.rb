@@ -2,7 +2,6 @@ class Public::EventsController < ApplicationController
   include CsvModule
   before_action :authenticate_customer!
   before_action :set_event, only: [:show, :edit, :update, :destroy, :copy]
-  before_action :ensure_correct_customer, only: [:update, :edit, :destroy]
   before_action :authorize_event_creation!, only: [:new, :create]
   before_action :authorize_event_edit!, only: [:edit, :update, :destroy, :copy]
 
@@ -268,13 +267,6 @@ class Public::EventsController < ApplicationController
 
   def set_event
     @event = Event.find(params[:id])
-  end
-
-  def ensure_correct_customer
-    @event = Event.find(params[:id])
-    unless @event.customer == current_customer
-      redirect_to public_events_path, alert: "編集権限がありません。"
-    end
   end
 
   def authorize_event_creation!

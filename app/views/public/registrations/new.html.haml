@@ -13,6 +13,17 @@
         %col{width: "19%"}
         %col{width: "81%"}
           %tr
+            %th{scope:"row"} 利用タイプ
+            %td
+              = f.collection_radio_buttons :domain_name, Domain.where(name: ["music","business"]), :name, :name do |d|
+                = d.label(class: "domain-radio") do
+                  = d.radio_button
+                  - if d.text == "music"
+                    音楽コミュニティ（BeMyStyle）
+                  - else
+                    ビジネスコミュニティ（NAKAMA）
+          
+          %tr
             %th{scope:"row"} メールアドレス
             %td
               = f.email_field :email, autofocus: true, autocomplete: "email", class: 'form-control'

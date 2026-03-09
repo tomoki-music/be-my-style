@@ -2,7 +2,12 @@
 
 .community-index-head-title
   %h2 コミュニティ一覧
-  = link_to "コミュニティ作成", new_public_community_path, data: { 'turbolinks': false }, class: "btn btn-info community-index-create-btn"
+
+  - if admin?
+    = link_to "コミュニティ作成",
+      new_public_community_path,
+      class: "btn btn-info community-index-create-btn"
+
 .communities-kaminari
   = paginate @communities
 .community-toc.d-sm-none
@@ -19,8 +24,8 @@
     .card.mb-5{id: "community-#{community.id}"}
       = link_to public_community_path(community), data: { 'turbolinks': false } do
         .img-container
-          - if community.community_image.present?
-            = image_tag community.community_image
+          - if community.community_image.attached?
+            = image_tag url_for(community.community_image)
           - else
             = image_tag 'no_image'
       .card-body.text-container

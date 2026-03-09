@@ -1,18 +1,18 @@
 Rails.application.routes.draw do
-  
+
   root to: 'public/homes#top'
 
   namespace :admin do
     get 'homes/top'
 
     # アーティスト編集機能
-    resources:customers, only: [:edit, :update]
+    resources :customers, only: [:edit, :update]
 
     # イベント機能
-   resources :events do
-    resources :songs, only: [:create, :destroy]
-    delete "delete" => "events#delete"
-   end
+    resources :events do
+      resources :songs, only: [:create, :destroy]
+      delete "delete" => "events#delete"
+    end
   end
   
   namespace :public do
@@ -101,19 +101,34 @@ Rails.application.routes.draw do
   namespace :business do
     root to: 'homes#top'
 
+    # ユーザー
     resources :customers, only: [:show, :edit, :update]
 
+    # 投稿
     resources :posts do
       resources :comments, only: [:create, :destroy]
     end
 
+    # プロジェクト
     resources :projects do
       member do
         post :join
         delete :leave
       end
     end
+
+    # コミュニティ（publicと同構造）
+    resources :communities do
+      delete "leave" => "communities#leave"
+      get "new/mail" => "communities#new_mail"
+      get "send/mail" => "communities#send_mail"
+      resource :permits, only: [:create, :destroy]
+      resource :community_customers, only: [:create, :destroy]
+    end
+
+    get "communities/:id/permits" => "communities#permits", as: :permits
   end
-  
-  # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
+
+  # For details on the DSL available within this file, see
+  # https://guides.rubyonrails.org/routing.html
 end

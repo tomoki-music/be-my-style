@@ -6,7 +6,6 @@
     - if @community.owner_id == current_customer.id
       = link_to "承認待ち一覧", public_permits_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-info community-show-btn"
       = link_to '編集する', edit_public_community_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-success community-show-btn"
-      = link_to 'コミュニティ削除', public_community_path(@community), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのコミュニティを削除します。よろしいですか？' }, class: "btn btn-sm btn-danger community-show-btn"
     - elsif @community.customers.include?(current_customer)
       = link_to 'コミュニティを退会', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
       また参加してね!
@@ -45,15 +44,13 @@
             %hr
             %p.card-text
             - if @community.owner_id == current_customer.id
-              .dropdown
-                %button#dropdownMenuButton.btn.btn-secondary.dropdown-toggle{"aria-expanded" => "false", "aria-haspopup" => "true", "data-toggle" => "dropdown", type: "button"}
-                  コミュニティオーナー専用
-                .dropdown-menu{"aria-labelledby" => "dropdownMenuButton"}
-                  = link_to "承認待ち一覧確認", public_permits_path(@community), data: { 'turbolinks': false }, class: "dropdown-item btn btn-sm btn-info community-show-btn dropdown-item text-secondary bg-transparent"
-                  = link_to 'メンバーへメール', public_community_new_mail_path(@community), data: { 'turbolinks': false }, class: "dropdown-item btn btn-info community-show-btn text-secondary bg-transparent"
-                  = link_to "イベント作成", new_public_event_path(community_id: @community.id), data: { 'turbolinks': false }, class: "dropdown-item btn btn-info community-show-btn text-secondary bg-transparent"
-                  = link_to 'コミュニティ編集', edit_public_community_path(@community), data: { 'turbolinks': false }, class: "dropdown-item btn btn-sm btn-success community-show-btn dropdown-item text-secondary bg-transparent"
-                  = link_to 'コミュニティ削除', public_community_path(@community), method: :delete, data: { 'turbolinks': false, confirm: 'こちらのコミュニティを削除します。よろしいですか？' }, class: "dropdown-item btn btn-sm btn-danger community-show-btn dropdown-item text-secondary bg-transparent"
+              = link_to "承認待ち一覧", public_permits_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-info community-show-btn"
+              = link_to '編集する', edit_public_community_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-success community-show-btn"
+              = render "shared/danger_zone_delete",
+                button_text: "コミュニティ削除",
+                path: public_community_path(@community),
+                confirm_message: "コミュニティを削除します。よろしいですか？"
+
             - elsif @community.customers.include?(current_customer)
               = link_to 'コミュニティを退会', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
               また参加してね!

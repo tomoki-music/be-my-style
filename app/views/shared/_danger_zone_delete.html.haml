@@ -1,0 +1,22 @@
+.danger-zone
+  %h5.text-danger ⚠ Danger Zone
+
+  %p
+    この操作は取り消せません。
+    %br
+    本当に削除する場合は
+    %strong DELETE
+    と入力してください。
+
+  %input.form-control.danger-confirm-input{
+    type: "text",
+    placeholder: "DELETE"
+  }
+
+  %br
+
+  = link_to button_text,
+    path,
+    method: :delete,
+    class: "btn btn-danger danger-delete-btn",
+    data: { confirm: confirm_message, turbolinks: false }

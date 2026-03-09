@@ -10,12 +10,24 @@ class Public::RegistrationsController < Devise::RegistrationsController
   # end
 
   # POST /resource
-  def create
-    super
-    if sign_up_params[:profile_image].present?
-      resource.profile_image.attach(sign_up_params[:profile_image])    
+def create
+  super do |customer|
+
+    if customer.persisted?
+
+      if sign_up_params[:profile_image].present?
+        customer.profile_image.attach(sign_up_params[:profile_image])
+      end
+
+      domain = Domain.find_by(name: params[:customer][:domain_name])
+
+      if domain
+        customer.domains << domain
+      end
+
     end
   end
+end
 
   # GET /resource/edit
   # def edit
@@ -68,6 +80,7 @@ class Public::RegistrationsController < Devise::RegistrationsController
       :profile_image,
       :prefecture_id,
       :url,
+      :domain_name,
       part_ids: [],
       genre_ids: [],
       ]
@@ -86,7 +99,12 @@ class Public::RegistrationsController < Devise::RegistrationsController
 
   # The path used after sign up.
   def after_sign_up_path_for(resource)
-    public_homes_top_path
+    
+    if resource.domains.exists?(name: "business")
+      business_homes_top_path
+    else
+      public_homes_top_path
+    end
   end
 
   # The path used after sign up for inactive accounts.

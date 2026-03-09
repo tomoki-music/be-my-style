@@ -3,7 +3,7 @@ tomoki = Customer.find_or_create_by!(email: 'i.tomoki0218@gmail.com') do |c|
   c.name = 'トモキ'
   c.password = 'password'
   c.sex = :male
-  c.activity_stance = :active
+  c.activity_stance = :tightly
   c.prefecture_id = 12
   c.introduction = '音楽で人と人が繋がる場を作りたい'
 end
