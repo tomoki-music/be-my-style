@@ -2,7 +2,7 @@ class Public::CommunitiesController < ApplicationController
   before_action :authenticate_customer!
   before_action :ensure_correct_customer, only: [:edit, :update, :destroy, :permits]
   before_action :check_mail, only: [:send_mail]
-  before_action :authorize_admin!, only: [:new, :create]
+  before_action :admin_only!, only: [:new, :create, :destroy]
 
   def index
     @communities = Community.where(domain_id: current_domain.id).page(params[:page]).per(5)
@@ -105,12 +105,6 @@ class Public::CommunitiesController < ApplicationController
     @community = Community.find(params[:id])
     unless @community.owner_id == current_customer.id
       redirect_to public_communities_path, alert: "編集・削除する権限がありません。"
-    end
-  end
-
-  def authorize_admin!
-    unless current_customer.admin?
-      redirect_to public_communities_path, alert: "この操作は管理者のみ可能です。"
     end
   end
 

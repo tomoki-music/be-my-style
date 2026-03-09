@@ -1,5 +1,8 @@
 class ApplicationController < ActionController::Base
   before_action :set_current_domain
+  before_action :authenticate_customer!
+
+  helper_method :current_domain
 
   private
 
@@ -18,5 +21,4 @@ class ApplicationController < ActionController::Base
   def current_domain
     @current_domain
   end
-  helper_method :current_domain
 end
