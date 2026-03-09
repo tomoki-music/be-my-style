@@ -3,7 +3,7 @@
 .community-index-head-title
   %h2 コミュニティ一覧
 
-  - if admin?
+  - if current_customer&.admin?
     = link_to "コミュニティ作成",
       new_public_community_path,
       class: "btn btn-info community-index-create-btn"
