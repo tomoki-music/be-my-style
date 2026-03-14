@@ -1,0 +1,27 @@
+= render 'layouts/header_menu_nakama'
+
+.container
+
+  %h2 タイムライン
+
+  - @posts.each do |post|
+
+    = link_to business_post_path(post) do
+
+      .post-card
+
+        .post-header
+
+          - if post.customer.profile_image.attached?
+            = image_tag post.customer.profile_image,
+              class:"user-icon"
+
+          %strong
+            = post.customer.name
+
+        .post-body
+          %p= post.body
+
+        - if post.post_image.attached?
+          = image_tag post.post_image,
+            class:"post-image"

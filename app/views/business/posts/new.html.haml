@@ -1,0 +1,22 @@
+.container
+  %h2 投稿作成
+
+  = form_with model: [:business, @post], local: true do |f|
+
+    .form-group
+      = f.label :title
+      = f.text_field :title, class:"form-control"
+
+    .form-group
+      = f.label :category
+      = f.select :category, Post.categories.keys.map { |k| [k.humanize, k] }, {}, class:"form-control"
+
+    .form-group
+      = f.label :body
+      = f.text_area :body, class:"form-control"
+
+    .form-group
+      = f.label :post_image, "画像"
+      = f.file_field :post_image
+
+    = f.submit "投稿する", class:"btn btn-primary"

@@ -1,0 +1,138 @@
+= render "layouts/header_menu_nakama"
+
+.community-container
+
+  / =========================
+  / コミュニティヘッダー
+  / =========================
+  - unless @community.customers.include?(current_customer)
+
+    = link_to "参加申請",
+      business_community_permit_path(@community),
+      method: :post,
+      class:"btn btn-primary"
+
+  .community-hero
+
+    - if @community.community_image.attached?
+      = image_tag @community.community_image, class:"community-cover"
+
+    .community-hero-content
+
+      .community-title
+
+        %h1
+          = @community.name
+
+        .community-meta
+          %span
+            メンバー
+            = @community.customers.count
+            人
+
+      .community-actions
+
+        - unless @community.customers.include?(current_customer)
+
+          = link_to "参加申請",
+            business_community_permit_path(@community),
+            method: :post,
+            class:"btn btn-primary"
+
+        - if @community.owner == current_customer
+          = link_to "編集",
+            edit_business_community_path(@community),
+            class:"btn btn-outline"
+
+
+  / =========================
+  / コミュニティ紹介
+  / =========================
+
+  .community-info
+
+    %h3 コミュニティ紹介
+
+    %p
+      = @community.introduction
+
+
+  / =========================
+  / プロジェクト
+  / =========================
+
+  .community-projects
+
+    .section-header
+      %h3 プロジェクト
+
+      = link_to "＋ 作成",
+        new_business_project_path(community_id: @community.id),
+        class:"btn btn-primary btn-small"
+
+    .project-grid
+
+      - @projects.each do |project|
+
+        = link_to business_project_path(project) do
+
+          .project-card
+
+            %h4
+              = project.title
+
+            %p
+              = truncate(project.description, length:80)
+
+
+  / =========================
+  / メンバー
+  / =========================
+
+  .community-members
+
+    %h3 メンバー
+
+    .member-grid
+
+      - @community.customers.each do |customer|
+
+        = link_to business_customer_path(customer) do
+
+          .member-card
+
+            - if customer.profile_image.attached?
+              = image_tag customer.profile_image, class:"member-icon"
+            - else
+              = image_tag "no_image", class:"member-icon"
+
+            %span
+              = customer.name
+
+  / =========================
+  / タイムライン
+  / =========================
+
+  .community-timeline
+
+    %h3 コミュニティ投稿
+
+    = form_with model: [:business, @community, CommunityPost.new] do |f|
+
+      = f.hidden_field :community_id,
+        value:@community.id
+
+      = f.text_area :body,
+        placeholder:"コミュニティに投稿"
+
+      = f.submit "投稿"
+
+    - @community.community_posts.order(created_at: :desc).each do |post|
+
+      .timeline-card
+
+        %strong
+          = post.customer.name
+
+        %p
+          = post.body

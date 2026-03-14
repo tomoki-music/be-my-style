@@ -1,0 +1,18 @@
+.community-projects
+
+  %h3 プロジェクト
+
+  = link_to "＋作成",
+    new_business_project_path(
+      community_id:@community.id
+    )
+
+  - @community.projects.each do |project|
+
+    .project-card
+
+      %h4
+        = project.title
+
+      %p
+        = project.description

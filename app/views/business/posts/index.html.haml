@@ -1,0 +1,45 @@
+= render 'layouts/header_menu_nakama'
+
+.container
+
+  .posts-header
+    .d-flex.align-items-center.gap-2
+      %h2 投稿一覧
+      = link_to "＋ 新規投稿", new_business_post_path, class: "btn btn-primary new-post-btn"
+
+  - if @posts.present?
+
+    .search-box
+
+      = form_with url: business_posts_path, method: :get, local: true, class: "search-form" do |f|
+
+        = f.text_field :keyword,
+          placeholder: "投稿検索",
+          class: "search-input"
+
+        = f.submit "検索",
+          class: "btn btn-primary search-btn"
+
+        = link_to "クリア",
+          business_posts_path,
+          class: "btn btn-secondary clear-btn"
+
+    - @posts.each do |post|
+      = link_to business_post_path(post) do
+
+        .post-card
+
+          .post-author
+            %strong= post.customer.name
+
+          .post-body
+            %p= post.body
+
+          - if post.post_image.attached?
+            = image_tag post.post_image, class:"post-image"
+
+  - else
+
+    .no-post-message
+      %p 投稿がまだありません。
+      %p 最初の投稿をしてみましょう！

@@ -1,0 +1,18 @@
+.container
+
+  %h2 参加申請一覧
+
+  - @permits.each do |permit|
+
+    .permit-card
+
+      %strong
+        = permit.customer.name
+
+      = link_to "承認",
+        business_community_community_customers_path(
+          community_id: @community.id,
+          customer_id: permit.customer.id
+        ),
+        method: :post,
+        class:"btn btn-success"

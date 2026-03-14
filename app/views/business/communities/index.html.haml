@@ -1,0 +1,30 @@
+= render "layouts/header_menu_nakama"
+
+.container
+
+  .page-header
+
+    %h2 コミュニティ一覧
+
+    = link_to "＋ 新規コミュニティ",
+      new_business_community_path,
+      class:"btn btn-primary"
+
+
+  .community-grid
+
+    - @communities.each do |community|
+
+      = link_to business_community_path(community) do
+
+        .community-card
+
+          - if community.community_image.attached?
+            = image_tag community.community_image,
+              class:"community-card-image"
+
+          %h3
+            = community.name
+
+          %p
+            = truncate(community.introduction, length:80)

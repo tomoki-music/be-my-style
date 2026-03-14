@@ -52,6 +52,13 @@ class Customer < ApplicationRecord
   validates :email, uniqueness: true, presence: true
   # validates :customer_parts, presence: true
 
+  # business
+  has_many :posts, dependent: :destroy
+  has_many :likes, dependent: :destroy
+  has_many :messages, dependent: :destroy
+
+  has_many :community_posts
+
   def has_domain?(name)
     domains.exists?(name: name)
   end
@@ -151,6 +158,7 @@ class Customer < ApplicationRecord
   end
 
   def follow(customer_id)
+    return if id == customer_id
     relationships.create(followed_id: customer_id)
   end
   def unfollow(customer_id)

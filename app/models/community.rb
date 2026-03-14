@@ -14,6 +14,10 @@ class Community < ApplicationRecord
   has_many :events, dependent: :destroy
   belongs_to :owner, class_name: "Customer", optional: true
 
+  has_many :community_domains, dependent: :destroy
+  has_many :domains, through: :community_domains
+
+  has_many :community_posts, dependent: :destroy
 
   has_one_attached :community_image
 

@@ -1,0 +1,38 @@
+= render 'layouts/header_menu_nakama'
+
+.container.profile-container
+
+  .profile-card
+
+    .profile-header
+
+      .profile-avatar
+        - if @customer.profile_image.attached?
+          = image_tag @customer.profile_image, class:"profile-icon"
+        - else
+          = image_tag "no_image", class:"profile-icon"
+
+      .profile-info
+
+        %h2.profile-name
+          = @customer.name
+
+        .profile-stats
+
+          .stat
+            %span.number
+              = @customer.followings.count
+            %span.label
+              フォロー
+
+          .stat
+            %span.number
+              = @customer.followers.count
+            %span.label
+              フォロワー
+
+      .profile-action
+
+        - if current_customer != @customer
+          %div{id: "follow_button_#{@customer.id}"}
+            = render "business/relationships/follow_button", customer: @customer

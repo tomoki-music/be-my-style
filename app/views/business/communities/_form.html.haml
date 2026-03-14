@@ -1,0 +1,45 @@
+= form_with model: [:business, community] do |f|
+
+  .form-group
+
+    = f.label :name, "コミュニティ名"
+
+    = f.text_field :name,
+      class:"form-control"
+
+
+  .form-group
+
+    = f.label :introduction, "紹介"
+
+    = f.text_area :introduction,
+      class:"form-control"
+
+
+  .form-group
+
+    = f.label :prefecture_id
+
+    = f.collection_select :prefecture_id,
+      Prefecture.all,
+      :id,
+      :name
+
+
+  .form-group
+
+    = f.label :community_image
+
+    = f.file_field :community_image
+
+
+  .form-group
+
+    = f.label :activity_stance
+
+    = f.select :activity_stance,
+      Community.activity_stances.keys
+
+
+  = f.submit "保存",
+    class:"btn btn-primary"

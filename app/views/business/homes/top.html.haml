@@ -1,61 +1,165 @@
-= render 'layouts/header_menu'
+= render 'layouts/header_menu_nakama'
 
 .top-container
-  .parallax
-    .parallax-content
-      .customer-menu-top
-        - unless customer_signed_in?
-          %ul.list-style-none
-            %li
-              %i.fa-solid.fa-user-plus
-              = link_to "新規登録", new_customer_registration_path, class: "btn btn-success menu-sp-btn"
-            %li
-              %i.fa-solid.fa-right-to-bracket
-              = link_to "ログイン", new_customer_session_path, class: "btn btn-primary menu-sp-btn"
-        - else
-          %ul.list-style-none
-            %li
-              %i.fa-solid.fa-right-from-bracket
-              = link_to "ログアウト", destroy_customer_session_path, method: :delete, class: "btn btn-secondary menu-sp-btn"
 
+  / ===== HERO =====
+  .hero-section
+
+    .hero-content
+
+      %h1.hero-title
+        仲間とビジネスを加速させよう
+
+      %p.hero-subtitle
+        NAKAMAはビジネスコミュニティのためのSNSです
+
+      - unless customer_signed_in?
+
+        .hero-buttons
+
+          = link_to "新規登録",
+            new_customer_registration_path,
+            class:"btn btn-success hero-btn"
+
+          = link_to "ログイン",
+            new_customer_session_path,
+            class:"btn btn-primary hero-btn"
+
+      - else
+
+        .hero-buttons
+
+          = link_to "投稿を見る",
+            business_posts_path,
+            class:"btn btn-primary hero-btn"
+
+
+  / ===== SLIDER =====
   .slider
-    = image_tag 'business1.png', class: "images"
-    = image_tag 'business2.png', class: "images"
-    = image_tag 'business3.png', class: "images"
-    = image_tag 'business4.png', class: "images"
-    = image_tag 'business5.png', class: "images"
 
-  .notice-box
+    = image_tag 'business1.png', class:"images"
+    = image_tag 'business2.png', class:"images"
+    = image_tag 'business3.png', class:"images"
+    = image_tag 'business4.png', class:"images"
+    = image_tag 'business5.png', class:"images"
+
+
+  / ===== NOTICE =====
+  .notice-section
+
+    %h3.notice-title お知らせ
+
     %ul.notice-list
+
       %li
-        %span.notice-date 2026年3月1日：
-        %br
+        %span.notice-date
+          2026年3月1日
+
         NAKAMA ビジネスコミュニティを公開しました。
+
       %li
-        %span.notice-date 2026年3月5日：
-        %br
+        %span.notice-date
+          2026年3月5日
+
         コミュニティ機能を追加しました。
 
-  .owners-container
 
-    / --- ビジネスコミュニティ紹介 ---
-    .owners-card
-      = link_to '#', class: "project-banner" do
-        = image_tag 'compose1.jpg'
-        .project-banner-text
-          %span 新しい出会い
-          %br
-          %strong ビジネスコミュニティ
+  / ===== DASHBOARD =====
+  .container.dashboard
 
-    / --- 会員数 ---
-    .owners-card.owner-message1
-      - customer_count = Customer.joins(:domains).where(domains: {name: "business"}).count
-      %strong.gradient-text NAKAMA 会員数
-      %div.highlight-container
-        %span.highlight-number= "#{customer_count}"
-        %span 人参加中
+    %h2.dashboard-title
+      ダッシュボード
 
-    / --- お知らせ ---
-    .owners-card
-      = link_to '#', class: "owner-message2" do
-        = image_tag 'owner-message.png'
+
+    / 新着投稿
+    .dashboard-section
+
+      .section-header
+        %h3 新着投稿
+        = link_to "もっと見る", business_posts_path
+
+      .dashboard-grid
+
+        - if @posts.present?
+
+          - @posts.each do |post|
+
+            .dashboard-card
+
+              .card-user
+
+                - if post.customer.profile_image.attached?
+                  = image_tag post.customer.profile_image, class:"card-icon"
+                - else
+                  = image_tag "no_image", class:"card-icon"
+
+                %span
+                  = post.customer.name
+
+              %p.card-body
+                = truncate(post.body, length:80)
+
+
+    / プロジェクト
+    /
+      .dashboard-section
+
+        .section-header
+          %h3 新しいプロジェクト
+
+        .dashboard-grid
+
+          - @projects.each do |project|
+
+            .dashboard-card
+
+              %strong
+                = link_to project.title,
+                  business_project_path(project)
+
+              %p
+                = truncate(project.description, length:80)
+
+
+    / コミュニティ
+    /
+      .dashboard-section
+
+        .section-header
+          %h3 新しいコミュニティ
+
+        .dashboard-grid
+
+          - @communities.each do |community|
+
+            .dashboard-card
+
+              %strong
+                = link_to community.name,
+                  business_community_path(community)
+
+              %p
+                = truncate(community.introduction, length:80)
+
+
+    / メンバー
+    .dashboard-section
+
+      .section-header
+        %h3 新しいメンバー
+
+      .dashboard-grid
+
+        - @customers.each do |customer|
+
+          .dashboard-card.member
+
+            = link_to business_customer_path(customer) do
+
+              - if customer.profile_image.attached?
+                = image_tag customer.profile_image, class:"member-icon"
+              - else
+                = image_tag "no_image", class:"member-icon"
+
+              .member-name
+                = customer.name

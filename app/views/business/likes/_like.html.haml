@@ -1,0 +1,21 @@
+%div{id: "like_button_#{post.id}"}
+
+  - if current_customer.likes.exists?(post: post)
+
+    = link_to business_post_like_path(post),
+      method: :delete,
+      remote: true,
+      class: "like-btn liked" do
+
+      %i.fa-solid.fa-heart
+      = post.likes.count
+
+  - else
+
+    = link_to business_post_like_path(post),
+      method: :post,
+      remote: true,
+      class: "like-btn" do
+
+      %i.fa-regular.fa-heart
+      = post.likes.count

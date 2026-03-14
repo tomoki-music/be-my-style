@@ -106,8 +106,13 @@ Rails.application.routes.draw do
 
     # 投稿
     resources :posts do
-      resources :comments, only: [:create, :destroy]
+      resources :messages, only: [:create, :destroy]
+      resource :like, only: [:create, :destroy]
     end
+
+    get "timeline", to: "posts#timeline"
+
+    resources :notifications, only: [:index]
 
     # プロジェクト
     resources :projects do
@@ -122,8 +127,9 @@ Rails.application.routes.draw do
       delete "leave" => "communities#leave"
       get "new/mail" => "communities#new_mail"
       get "send/mail" => "communities#send_mail"
-      resource :permits, only: [:create, :destroy]
+      resource :permit, only: [:create, :destroy]
       resource :community_customers, only: [:create, :destroy]
+      resources :community_posts
     end
 
     get "communities/:id/permits" => "communities#permits", as: :permits

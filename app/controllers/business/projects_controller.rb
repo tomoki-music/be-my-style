@@ -4,11 +4,15 @@ class Business::ProjectsController < ApplicationController
   before_action :set_project, only: [:show, :join, :leave]
 
   def new
-    @project = @community.projects.new
+
+    @community = Community.find(params[:community_id])
+    @project = Project.new
+
   end
 
   def create
-    @project = @community.projects.new(project_params)
+
+    project = Project.new(project_params)
     @project.owner = current_customer
 
     if @project.save
@@ -16,6 +20,7 @@ class Business::ProjectsController < ApplicationController
     else
       render :new
     end
+
   end
 
   def show
@@ -53,7 +58,8 @@ class Business::ProjectsController < ApplicationController
   def project_params
     params.require(:project).permit(
       :title,
-      :description
+      :description,
+      :community_id
     )
   end
 

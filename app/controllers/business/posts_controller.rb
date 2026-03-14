@@ -1,11 +1,20 @@
 class Business::PostsController < ApplicationController
+  before_action :authenticate_customer!
   before_action :set_post, only: [:show, :edit, :update, :destroy]
 
   def index
-    @posts = Post.order(created_at: :desc)
+    if params[:keyword].present?
+      @posts = Post.where(
+        "body LIKE ?", "%#{params[:keyword]}%"
+      )
+    else
+      @posts = Post.includes(:customer).order(created_at: :desc)
+    end
   end
 
   def show
+    @post = Post.find(params[:id])
+    @message = Message.new
   end
 
   def new
@@ -38,6 +47,17 @@ class Business::PostsController < ApplicationController
     redirect_to business_posts_path
   end
 
+  def timeline
+
+    following_ids = current_customer.followings.pluck(:id)
+
+    @posts = Post
+              .where(customer_id: following_ids + [current_customer.id])
+              .includes(:customer)
+              .order(created_at: :desc)
+
+  end
+
   private
 
   def set_post
@@ -45,6 +65,6 @@ class Business::PostsController < ApplicationController
   end
 
   def post_params
-    params.require(:post).permit(:title, :body, :image)
+    params.require(:post).permit(:title, :body, :category, :post_image)
   end
 end

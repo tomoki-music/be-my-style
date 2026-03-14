@@ -1,0 +1,14 @@
+.container
+
+  %h2 プロジェクト作成
+
+  = form_with model: [:business, @project] do |f|
+
+    = f.hidden_field :community_id,
+      value:@community.id
+
+    = f.text_field :title
+
+    = f.text_area :description
+
+    = f.submit "作成"

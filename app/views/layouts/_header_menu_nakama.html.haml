@@ -1,0 +1,110 @@
+.header_container.sticky-top
+  .header-menu
+    .row
+      .col-8
+        .top-message
+          = link_to business_root_path, class: "top-message-link", data: { turbolinks: false } do
+            = image_tag "nakama_logo.jpg", class: "top-message-image"
+            %h1 NAKAMA
+          %p ビジネスを加速させるコミュニティ
+
+      .col-4
+        %ul.list-style-none.header-sign-in-list
+          - if customer_signed_in?
+            %li#open
+              %span
+                %li
+                  = link_to business_notifications_path do
+
+                    - if current_customer.passive_notifications.where(checked: false).any?
+
+                      %span.notification-badge
+                        = current_customer.passive_notifications.where(checked: false).count
+
+                    %i.fa-regular.fa-bell.fa-lg
+                - if current_customer.present? && current_customer.profile_image.present?
+                  = image_tag current_customer.profile_image, class: "icon_mini sp-menu-open"
+                - else
+                  = image_tag asset_path("no_image"), class: "icon_mini sp-menu-open"
+
+  / =========================
+  / スマホメニュー
+  / =========================
+  .customer-menu-sp
+    #close
+      %span.fa.fa-times.close-icon
+        閉じる
+
+    %ul.list-style-none
+      - if customer_signed_in?
+
+        %li
+          = link_to "HOME", business_root_path, class: "btn btn-primary menu-sp-btn"
+        
+        %li
+          = link_to "タイムライン",
+            business_timeline_path,
+            class:"menu-btn"
+
+        %li
+          = link_to "コミュニティ", business_communities_path, class: "btn btn-primary menu-sp-btn"
+
+        %li
+          = link_to "投稿", business_posts_path, class: "btn btn-primary menu-sp-btn"
+
+        %li
+          = link_to "プロジェクト", business_projects_path, class: "btn btn-primary menu-sp-btn"
+
+        %li
+          = link_to "プロフィール", business_customer_path(current_customer), class: "btn btn-primary menu-sp-btn"
+
+        %li
+          = link_to "ログアウト", destroy_customer_session_path, method: :delete, class: "btn btn-secondary menu-sp-btn"
+
+      - else
+
+        %li
+          = link_to "新規登録", new_customer_registration_path, class: "btn btn-success menu-sp-btn"
+
+        %li
+          = link_to "ログイン", new_customer_session_path, class: "btn btn-primary menu-sp-btn"
+
+        %li
+          = link_to "HOME", business_root_path, class: "btn btn-info menu-sp-btn"
+
+
+  / =========================
+  / PCメニュー
+  / =========================
+  .customer-menu-pc
+    %ul.list-style-none.list
+
+      - if customer_signed_in?
+
+        %li
+          = link_to "HOME", business_root_path, class: "menu-btn"
+
+        %li
+          = link_to "タイムライン",
+            business_timeline_path,
+            class:"menu-btn"
+
+        %li
+          = link_to "コミュニティ", business_communities_path, class: "menu-btn"
+
+        %li
+          = link_to "投稿", business_posts_path, class: "menu-btn"
+
+        %li
+          = link_to "プロジェクト", business_projects_path, class: "menu-btn"
+
+        %li
+          = link_to "プロフィール", business_customer_path(current_customer), class: "menu-btn"
+
+      - else
+
+        %li
+          = link_to "HOME", business_root_path, class: "menu-btn"
+
+        %li
+          = link_to "ログイン", new_customer_session_path, class: "menu-btn"

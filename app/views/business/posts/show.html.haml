@@ -1,0 +1,73 @@
+= render 'layouts/header_menu_nakama'
+
+.container.post-show-container
+
+  .post-card
+
+    .post-header
+
+      .post-user-info
+
+        - if @post.customer.profile_image.attached?
+          = link_to business_customer_path(@post.customer) do
+            = image_tag @post.customer.profile_image, class:"user-icon"
+        - else
+          = link_to business_customer_path(@post.customer) do
+            = image_tag "no_image", class:"user-icon"
+
+        .user-meta
+
+          = link_to @post.customer.name,
+            business_customer_path(@post.customer),
+            class:"user-name"
+
+          .post-time
+            = time_ago_in_words(@post.created_at)
+            前
+
+    .post-body
+      %p= @post.body
+
+    - if @post.post_image.attached?
+      .post-image-wrapper
+        = image_tag @post.post_image, class:"post-image"
+
+    .post-actions
+      = render "business/likes/like", post: @post
+
+
+  .comment-section
+
+    %h3 コメント
+
+    %div{id: "comments_#{@post.id}", class:"comments-list"}
+
+      - @post.messages.each do |message|
+        .comment
+
+          - if message.customer.profile_image.attached?
+            = link_to business_customer_path(message.customer) do
+              = image_tag message.customer.profile_image, class:"comment-icon"
+          - else
+            = link_to business_customer_path(message.customer) do
+              = image_tag "no_image", class:"comment-icon"
+
+          .comment-body
+
+            = link_to message.customer.name,
+              business_customer_path(message.customer),
+              class:"comment-user"
+
+            %p.comment-text
+              = message.body
+
+    .comment-form
+
+      = form_with model: [:business, @post, Message.new], remote: true do |f|
+
+        = f.text_field :body,
+          placeholder:"コメントを書く...",
+          id:"comment_body",
+          class:"comment-input"
+
+        = f.submit "送信", class:"comment-submit"

@@ -19,6 +19,7 @@ class ApplicationController < ActionController::Base
   end
 
   def current_domain
-    @current_domain
+    Domain.find_by(name: "business")
   end
+
 end
