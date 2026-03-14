@@ -13,19 +13,18 @@
           - if customer_signed_in?
             %li#open
               %span
-                %li
-                  = link_to business_notifications_path do
+                = link_to business_notifications_path do
 
-                    - if current_customer.passive_notifications.where(checked: false).any?
+                  - if current_customer.passive_notifications.where(checked: false).any?
+                    %span.notification-badge
+                      = current_customer.passive_notifications.where(checked: false).count
 
-                      %span.notification-badge
-                        = current_customer.passive_notifications.where(checked: false).count
+                  %i.fa-regular.fa-bell.fa-lg
 
-                    %i.fa-regular.fa-bell.fa-lg
-                - if current_customer.present? && current_customer.profile_image.present?
-                  = image_tag current_customer.profile_image, class: "icon_mini sp-menu-open"
-                - else
-                  = image_tag asset_path("no_image"), class: "icon_mini sp-menu-open"
+              - if current_customer.present? && current_customer.profile_image.present?
+                = image_tag current_customer.profile_image, class: "icon_mini"
+              - else
+                = image_tag asset_path("no_image"), class: "icon_mini"
 
   / =========================
   / スマホメニュー
@@ -44,7 +43,7 @@
         %li
           = link_to "タイムライン",
             business_timeline_path,
-            class:"menu-btn"
+            class:"btn btn-primary menu-sp-btn"
 
         %li
           = link_to "コミュニティ", business_communities_path, class: "btn btn-primary menu-sp-btn"
