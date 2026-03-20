@@ -101,8 +101,8 @@ end
   # The path used after sign up.
   def after_sign_up_path_for(resource)
 
-    return onboarding_business_path if resource.business_user? && !resource.onboarding_done
-    return onboarding_music_path if resource.music_user? && !resource.onboarding_done
+    # return onboarding_business_path if resource.business_user? && !resource.onboarding_done
+    # return onboarding_music_path if resource.music_user? && !resource.onboarding_done
 
     return business_root_path if resource.business_user?
     return root_path
