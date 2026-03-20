@@ -1,113 +1,118 @@
-.devise-container.px-0.px-sm-0
-  .devise-sign-up-header
-    .row
-      .col-5-md
-        %h2 新規登録
-      .col-7-md.shared-link
-        = render "public/shared/links"
-  
-  = form_with model: @customer, url: customer_registration_path, local: true do |f|
-    = render 'public/shared/error_messages', model:f.object
-    %table.table.table-striped.registration-table{:width=>"100%",:border=>"1"}
-      %colgroup
-        %col{width: "19%"}
-        %col{width: "81%"}
-          %tr
-            %th{scope:"row"} 利用タイプ
-            %td
-              = f.collection_radio_buttons :domain_name, Domain.where(name: ["music","business"]), :name, :name do |d|
-                = d.label(class: "domain-radio") do
-                  = d.radio_button
-                  - if d.text == "music"
-                    音楽コミュニティ（BeMyStyle）
-                  - else
-                    ビジネスコミュニティ（NAKAMA）
-          
-          %tr
-            %th{scope:"row"} メールアドレス
-            %td
-              = f.email_field :email, autofocus: true, autocomplete: "email", class: 'form-control'
-              %i.text-red (必須)
-          %tr
-            %th{scope:"row"} パスワード
-            %td
-              - if @minimum_password_length
-                %em
-                  (半角 #{@minimum_password_length} 文字以上で入力してください。)
-              %br/
-              = f.password_field :password, autocomplete: "new-password", class: 'form-control'
-              %i.text-red (必須)
-          %tr
-            %th{scope:"row"} パスワード(確認)
-            %td
-              = f.password_field :password_confirmation, autocomplete: "new-password", class: 'form-control'
-              %i.text-red (必須)
-          %tr
-            %th{scope:"row"} 画像
-            %td
-              = f.file_field :profile_image, accept: 'image/*'
-              #registration-image
-          %tr
-            %th{scope:"row"} ニックネーム
-            %td
-              = f.text_field :name, class: 'form-control'
-              %i.text-red (必須)
-          %tr
-            %th{scope:"row"} 性別
-            %td
-              = f.select :sex, Customer.enum_options_for_select(:sex)
-          %tr
-            %th{scope:"row"} 誕生日
-            %td
-              = f.date_field :birthday
-          %tr
-            %th{scope:"row"} パート
-            %td
-              = f.collection_check_boxes(:part_ids, Part.all, :id, :name) do |tag|
-                = tag.label do
-                  = tag.check_box
-                  = tag.text
-              %i.text-red.block ※パートの入力(チェック)必須
-              %i※初心者でもOK!やってみたいパートでもOKです！
-          %tr
-            %th{scope:"row"} 活動場所
-            %td 
-              = f.collection_select :prefecture_id, Prefecture.all, :id, :name
-          %tr
-            %th{scope:"row"} 活動ペース
-            %td
-              = f.select :activity_stance, Customer.enum_options_for_select(:activity_stance)
-          %tr
-            %th{scope:"row"} 好きなジャンル
-            %td
-              = f.collection_check_boxes(:genre_ids, Genre.all, :id, :name) do |genre|
-                = genre.label do
-                  = genre.check_box
-                  = genre.text
-          %tr
-            %th{:rowspan => 5} 好きなアーティスト
-            %td
-              = f.text_field :favorite_artist1, style: "width:90%", class: 'form-control'
-          %tr
-            %td
-              = f.text_field :favorite_artist2, style: "width:90%", class: 'form-control'
-          %tr
-            %td
-              = f.text_field :favorite_artist3, style: "width:90%", class: 'form-control'
-          %tr
-            %td
-              = f.text_field :favorite_artist4, style: "width:90%", class: 'form-control'
-          %tr
-            %td
-              = f.text_field :favorite_artist5, style: "width:90%", class: 'form-control'
-          %tr
-            %th{scope:"row"} 作品URL
-            %td
-              = f.text_field :url, style: "width:90%", class: 'form-control'
-              %i.block ※「youtube」や「HP」「SNS」のURLを記入する事ができます。
-          %tr
-            %th{scope:"row"} 自己紹介
-            %td
-              = f.text_area :introduction, style: "width:90%", class: 'form-control'
-          .actions
-            = f.submit "新規登録する", class: "btn btn-info registration-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }
+.devise-container
+  .signup-card
+
+    %h2.signup-title 新規登録
+
+    = form_with model: resource, url: customer_registration_path, local: true do |f|
+
+      .domain-cards
+        - ["music","business"].each do |type|
+          - label = type == "music" ? "音楽" : "ビジネス"
+          - desc  = type == "music" ? "仲間とセッション" : "スキルで繋がる"
+          - icon  = type == "music" ? "🎸" : "💼"
+
+          %label.domain-card{ class: type }
+            = f.radio_button :domain_name, type,
+              class:"domain-radio",
+              checked: (f.object.domain_name.presence || "music") == type
+
+            .card-inner
+              .icon= icon
+              .text
+                %h4= label
+                %p= desc
+
+      .form-group
+        %label メールアドレス
+        = f.email_field :email, class:"form-control"
+
+      .form-group
+        %label パスワード
+        = f.password_field :password, class:"form-control"
+
+      .form-group
+        %label ニックネーム
+        = f.text_field :name, class:"form-control"
+
+      / =========================
+      / プロフィール画像
+      / =========================
+      .form-group
+
+        %label プロフィール画像
+
+        .image-upload-area
+
+          .image-preview
+            %img#preview-image{ src: asset_path("no_image"), class: "preview-avatar" }
+            %span.camera-icon 📷
+
+          = f.file_field :profile_image,
+            accept: "image/*",
+            class: "image-input",
+            id: "image-input"
+
+        %small.text-muted アイコンを設定すると見つけてもらいやすくなります
+
+        
+
+      / =========================
+      / 🎸 MUSIC専用
+      / =========================
+      .music-fields
+
+        .form-card
+          %h4 🎸 パート
+
+          .checkbox-grid
+            = f.collection_check_boxes(:part_ids, Part.all, :id, :name) do |tag|
+              = tag.label(class:"check-item") do
+                = tag.check_box
+                %span= tag.text
+
+        .form-card
+          %h4 🎵 ジャンル
+
+          .checkbox-grid
+            = f.collection_check_boxes(:genre_ids, Genre.all, :id, :name) do |genre|
+              = genre.label(class:"check-item") do
+                = genre.check_box
+                %span= genre.text
+
+        .form-card
+          %h4 🎤 好きなアーティスト
+
+          .artist-inputs
+            = f.text_field :favorite_artist1, placeholder:"例：ONE OK ROCK", class:"form-control"
+            = f.text_field :favorite_artist2, class:"form-control"
+            = f.text_field :favorite_artist3, class:"form-control"
+            = f.text_field :favorite_artist4, class:"form-control"
+            = f.text_field :favorite_artist5, class:"form-control"
+
+      / =========================
+      / 💼 BUSINESS専用
+      / =========================
+      .business-fields
+        %h4.section-title 💼 ビジネスプロフィール
+
+        .form-group
+          %label 職種
+          = f.text_field :job, class:"form-control", placeholder:"例：エンジニア / マーケター"
+
+        .form-group
+          %label スキル
+          = f.text_area :skills, class:"form-control", placeholder:"Ruby / AWS / 営業 など"
+
+        .form-group
+          %label 実績・サービス
+          = f.text_area :achievements, class:"form-control"
+
+        .form-group
+          %label HP / SNS
+          = f.text_field :url, class:"form-control"
+
+      .form-group
+        %label 自己紹介
+        = f.text_area :introduction, class:"form-control"
+
+      = f.submit "登録する", class:"btn btn-primary signup-btn"

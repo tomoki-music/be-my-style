@@ -59,6 +59,10 @@ class Customer < ApplicationRecord
 
   has_many :community_posts
 
+  has_many :projects, dependent: :destroy
+  has_many :project_members, dependent: :destroy
+  has_many :joined_projects, through: :project_members, source: :project
+
   def has_domain?(name)
     domains.exists?(name: name)
   end
@@ -71,10 +75,18 @@ class Customer < ApplicationRecord
     domains.exists?(name: "business")
   end
 
+  # 汎用型（ビジネス・音楽etc）
+  def can_manage_community?(community)
+    return true if admin?
+    return true if community_owner_of?(community)
+    false
+  end
+
   def community_owner_of?(community)
     owned_communities.exists?(id: community.id)
   end
 
+  # イベント専用（音楽）
   def can_edit_event?(event)
 
     # 管理者

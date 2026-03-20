@@ -1,0 +1,38 @@
+= render "onboardings/layout",
+  step: 2,
+  visual_image: (current_customer.business_user? ? "onboarding-business.jpg" : "onboarding-music.jpg") do
+
+  .onboarding-content
+
+    %h1.title コミュニティに参加しよう
+    %p.description
+      気になるコミュニティを選んで参加しましょう。
+      後から変更も可能です。
+
+    .community-list
+      - @communities.each do |c|
+
+        - is_joined = @my_permits.include?(c.id)
+
+        - permit_path = current_customer.business_user? ? business_community_permit_path(c) : public_community_permits_path(c)
+        - permit_create_path = current_customer.business_user? ? business_community_permit_path(c) : public_community_permits_path(c)
+
+        .community-card{ class: (is_joined ? "active" : "") }
+
+          .community-name
+            = c.name
+
+          .community-action
+            - if is_joined
+              = link_to permit_path,
+                method: :delete,
+                class: "btn-leave" do
+                申請を取り下げる
+            - else
+              = link_to permit_create_path,
+                method: :post,
+                class: "btn-join" do
+                参加する →
+
+    .actions
+      = link_to "次へ進む", onboarding_step3_path, class:"btn btn-outline-secondary btn-lg"

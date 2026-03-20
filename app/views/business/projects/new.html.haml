@@ -1,14 +1,14 @@
-.container
+= render "layouts/header_menu_nakama"
 
-  %h2 プロジェクト作成
+.container.project-edit-container
+  .edit-card
+    .edit-header
+      %h2 プロジェクト作成
+      %p 新しい仲間を募集しよう
 
-  = form_with model: [:business, @project] do |f|
-
-    = f.hidden_field :community_id,
-      value:@community.id
-
-    = f.text_field :title
-
-    = f.text_area :description
-
-    = f.submit "作成"
+    = render "form",
+      project: @project,
+      url: business_projects_path,
+      method: :post,
+      submit_label: "作成する",
+      cancel_path: business_projects_path

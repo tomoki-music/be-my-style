@@ -25,6 +25,27 @@
             = time_ago_in_words(@post.created_at)
             前
 
+    .post-actions
+
+      - if @post.customer == current_customer
+
+        = link_to "編集",
+          edit_business_post_path(@post),
+          class:"btn btn-primary"
+
+        = link_to "削除",
+          business_post_path(@post),
+          method: :delete,
+          data: { confirm: "削除しますか？" },
+          class:"btn btn-danger"
+
+    - if @post.tags.any?
+      .post-tags
+        - @post.tags.each do |tag|
+          = link_to "##{tag.name}",
+            business_posts_path(tag: tag.name),
+            class:"tag"
+
     .post-body
       %p= @post.body
 

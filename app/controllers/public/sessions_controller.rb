@@ -4,12 +4,14 @@ class Public::SessionsController < Devise::SessionsController
   before_action :configure_permitted_parameters, if: :devise_controller?
 
   def after_sign_in_path_for(resource)
-    if resource.domains.exists?(name: "business")
-      business_root_path
-    else
-      root_path
-      # public_homes_top_path
+
+    unless resource.onboarding_done
+      return onboarding_step1_path
     end
+
+    return business_root_path if resource.business_user?
+    return root_path
+
   end
 
   def after_sign_out_path_for(resource)

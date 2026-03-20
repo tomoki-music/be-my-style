@@ -14,29 +14,52 @@ class Public::ActivitiesController < ApplicationController
   def create
     @activity = Activity.new(activity_params)
     @activity.customer_id = current_customer.id
+
     if @activity.save
-      if current_customer.chat_room_customers.present?
-        community_ids = current_customer.chat_room_customers.pluck(:community_id)
+
+      # =========================
+      # 通知処理
+      # =========================
+      if current_customer.communities.present?
+        community_ids = current_customer.communities.pluck(:id)
         member_ids = []
+
         community_ids.each do |community_id|
           Community.where(id: community_id).each do |community|
             member_ids += community.customers.pluck(:id)
           end
         end
+
         member_ids.uniq.each do |member_id|
-          if Customer.find(member_id) != current_customer
-            Customer.find(member_id).create_notification_activity_for_community(current_customer, @activity.id)
-            if Customer.find(member_id).confirm_mail
-              CustomerMailer.with(ac_customer: current_customer, ps_customer: Customer.find(member_id), activity: @activity).create_activity_mail.deliver_later
-            end
+          customer = Customer.find(member_id)
+          next if customer == current_customer
+
+          customer.create_notification_activity_for_community(current_customer, @activity.id)
+
+          if customer.confirm_mail
+            CustomerMailer.with(
+              ac_customer: current_customer,
+              ps_customer: customer,
+              activity: @activity
+            ).create_activity_mail.deliver_later
           end
         end
+
       elsif current_customer.followers.present?
         current_customer.followers.each do |customer|
           customer.create_notification_activity_for_follow(current_customer, @activity.id)
         end
       end
-      redirect_to public_activities_path, notice: "活動報告の投稿が完了しました!"
+
+      # =========================
+      #  リダイレクト分岐
+      # =========================
+      if current_customer.onboarding_done?
+        redirect_to public_activities_path, notice: "活動報告の投稿が完了しました!"
+      else
+        redirect_to onboarding_step3_path
+      end
+
     else
       render "new", alert: "もう一度お試しください。"
     end

@@ -1,20 +1,28 @@
 class Public::CommunitiesController < ApplicationController
-  before_action :authenticate_customer!
+  before_action :set_community, only: [:show, :edit, :update, :destroy, :leave, :new_mail, :send_mail, :permits]
   before_action :ensure_correct_customer, only: [:edit, :update, :destroy, :permits]
   before_action :check_mail, only: [:send_mail]
   before_action :admin_only!, only: [:new, :create, :destroy]
 
   def index
-    @communities = Community.where(domain_id: current_domain.id).page(params[:page]).per(5)
+    @communities = Community
+      .where(domain_id: @current_domain.id)
+      .page(params[:page]).per(5)
   end
 
   def show
-    @community = Community.find_by!(
-      id: params[:id],
-      domain_id: current_domain.id
-    )
-    @owner = Customer.find_by(id: @community.owner_id)
-    @community_customers = params[:part_id].present? ? Kaminari.paginate_array(Part.find(params[:part_id]).customers.filter {|customer| customer.community_customers.where(community_id: @community.id).present? } ).page(params[:page]).per(3) : @community.customers.page(params[:page]).per(3)
+    @owner = @community.owner
+
+    @community_customers =
+      if params[:part_id].present?
+        Kaminari.paginate_array(
+          Part.find(params[:part_id]).customers.select do |customer|
+            customer.community_customers.where(community_id: @community.id).exists?
+          end
+        ).page(params[:page]).per(3)
+      else
+        @community.customers.page(params[:page]).per(3)
+      end
   end
 
   def new
@@ -24,11 +32,16 @@ class Public::CommunitiesController < ApplicationController
   def create
     @community = Community.new(community_params)
     @community.owner_id = current_customer.id
-    @community.domain_id = current_domain.id
+    @community.domain_id = @current_domain.id
 
     if @community.save
       chat_room = ChatRoom.create
-      chat_room_customer = ChatRoomCustomer.create({ community_id: @community.id, customer_id: current_customer.id, chat_room_id: chat_room.id})
+      ChatRoomCustomer.create!(
+        community_id: @community.id,
+        customer_id: current_customer.id,
+        chat_room_id: chat_room.id
+      )
+
       redirect_to public_communities_path, notice: "コミュニティを作成しました!"
     else
       render 'new'
@@ -36,7 +49,6 @@ class Public::CommunitiesController < ApplicationController
   end
 
   def edit
-    @community = Community.find(params[:id])
   end
 
   def update
@@ -48,41 +60,53 @@ class Public::CommunitiesController < ApplicationController
   end
 
   def destroy
-    @community = Community.find(params[:id])
     @community.destroy
     redirect_to public_communities_path, alert: "コミュニティを削除しました!"
   end
 
   def leave
-    @community = Community.find(params[:community_id])
-    owner = Customer.find_by(id: @community.owner_id)
+    owner = @community.owner
     owner.create_notification_leave(current_customer, @community.id)
 
-    chat_room_customer = ChatRoomCustomer.where(customer_id: current_customer.id, community_id: @community.id)[0]
-    chat_room_customer.delete
+    chat_room_customer = ChatRoomCustomer.find_by(
+      customer_id: current_customer.id,
+      community_id: @community.id
+    )
+    chat_room_customer&.destroy
 
     @community.customers.delete(current_customer)
+
     redirect_to public_communities_path, alert: "コミュニティを退会しました!"
   end
 
   def new_mail
-    @community = Community.find(params[:community_id])
   end
 
   def send_mail
-    @community = Community.find(params[:community_id])
     community_customers = @community.customers
     @mail_title = params[:mail_title]
     @mail_content = params[:mail_content]
-    ContactMailer.send_mail(@mail_title, @mail_content, @community, community_customers).deliver
+
+    ContactMailer.send_mail(
+      @mail_title,
+      @mail_content,
+      @community,
+      community_customers
+    ).deliver
   end
 
   def permits
-    @community = Community.find(params[:id])
     @permits = @community.permits.page(params[:page])
   end
 
   private
+
+  def set_community
+    @community = Community.find_by!(
+      id: params[:id] || params[:community_id],
+      domain_id: @current_domain.id
+    )
+  end
 
   def community_params
     params.require(:community).permit(
@@ -102,14 +126,13 @@ class Public::CommunitiesController < ApplicationController
   end
 
   def ensure_correct_customer
-    @community = Community.find(params[:id])
     unless @community.owner_id == current_customer.id
       redirect_to public_communities_path, alert: "編集・削除する権限がありません。"
     end
   end
 
   def check_mail
-    if params[:mail_title] == "" || params[:mail_content] == ""
+    if params[:mail_title].blank? || params[:mail_content].blank?
       flash[:alert] = "タイトル、本文は必須です。"
       redirect_back(fallback_location: root_path)
     end

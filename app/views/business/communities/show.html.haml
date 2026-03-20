@@ -3,136 +3,168 @@
 .community-container
 
   / =========================
-  / コミュニティヘッダー
+  / ヒーロー
   / =========================
-  - unless @community.customers.include?(current_customer)
-
-    = link_to "参加申請",
-      business_community_permit_path(@community),
-      method: :post,
-      class:"btn btn-primary"
-
   .community-hero
 
     - if @community.community_image.attached?
       = image_tag @community.community_image, class:"community-cover"
 
-    .community-hero-content
+    .hero-overlay
 
-      .community-title
+      .hero-content
 
-        %h1
-          = @community.name
+        %h1= @community.name
 
-        .community-meta
-          %span
-            メンバー
-            = @community.customers.count
-            人
+        .hero-meta
+          👥 #{@community.customers.count}人
 
-      .community-actions
+        / ===== オーナー =====
+        .hero-owner
+          = link_to business_customer_path(@community.owner) do
+            .owner-info
 
-        - unless @community.customers.include?(current_customer)
+              .owner-avatar
+                - if @community.owner.profile_image.attached?
+                  = image_tag @community.owner.profile_image, class:"owner-img"
+                - else
+                  = image_tag "no_image", class:"owner-img"
 
-          = link_to "参加申請",
-            business_community_permit_path(@community),
-            method: :post,
-            class:"btn btn-primary"
+              .owner-meta
+                %span.owner-label オーナー
+                %span.owner-name
+                  = @community.owner.name
+                  %span.owner-badge 👑
 
-        - if @community.owner == current_customer
-          = link_to "編集",
-            edit_business_community_path(@community),
-            class:"btn btn-outline"
+        / ===== アクション =====
+        .hero-actions
 
+          - if @community.customers.include?(current_customer)
 
-  / =========================
-  / コミュニティ紹介
-  / =========================
+            %span.btn-joined 参加済み
 
-  .community-info
+          - elsif @permit.present?
 
-    %h3 コミュニティ紹介
+            .permit-status
+              %span.permit-badge 🟡 申請中
 
-    %p
-      = @community.introduction
+              = link_to "申請を取り消す",
+                business_community_permit_path(@community, customer_id: current_customer.id),
+                method: :delete,
+                class:"permit-cancel"
 
+          - else
 
-  / =========================
-  / プロジェクト
-  / =========================
+            .permit-cta
 
-  .community-projects
+              = link_to "参加申請する",
+                business_community_permit_path(@community),
+                method: :post,
+                class:"btn btn-primary btn-cta"
 
-    .section-header
-      %h3 プロジェクト
-
-      = link_to "＋ 作成",
-        new_business_project_path(community_id: @community.id),
-        class:"btn btn-primary btn-small"
-
-    .project-grid
-
-      - @projects.each do |project|
-
-        = link_to business_project_path(project) do
-
-          .project-card
-
-            %h4
-              = project.title
-
-            %p
-              = truncate(project.description, length:80)
-
+              %p.permit-note
+                このコミュニティに参加すると、
+                %br
+                プロジェクトや限定コンテンツに参加できます。
 
   / =========================
-  / メンバー
+  / メイン
   / =========================
+  .community-body
 
-  .community-members
+    / ===== 左 =====
+    .left
 
-    %h3 メンバー
+      .card
+        %h3 概要
+        %p= @community.introduction
 
-    .member-grid
+      .card
+        .section-header
+          %h3 プロジェクト
 
-      - @community.customers.each do |customer|
+          - if current_customer.can_manage_community?(@community)
+            = link_to "＋ 作成",
+              new_business_project_path(community_id: @community.id),
+              class:"btn btn-primary btn-small"
 
-        = link_to business_customer_path(customer) do
+        .project-grid
+          - @projects.each do |project|
+            = link_to business_project_path(project) do
+              .project-card
+                %h4= project.title
+                %p= truncate(project.description, length:80)
 
-          .member-card
+      .card
+        %h3 タイムライン
 
-            - if customer.profile_image.attached?
-              = image_tag customer.profile_image, class:"member-icon"
-            - else
-              = image_tag "no_image", class:"member-icon"
+        = form_with model: [:business, @community, CommunityPost.new] do |f|
+          = f.text_area :body, placeholder:"投稿する...", class:"post-input"
+          = f.submit "投稿", class:"btn btn-primary"
 
-            %span
-              = customer.name
+        - @community.community_posts.order(created_at: :desc).each do |post|
 
-  / =========================
-  / タイムライン
-  / =========================
+          .timeline-item
 
-  .community-timeline
+            .timeline-header
 
-    %h3 コミュニティ投稿
+              .user-block
 
-    = form_with model: [:business, @community, CommunityPost.new] do |f|
+                .avatar
+                  - if post.customer.profile_image.attached?
+                    = image_tag post.customer.profile_image, class:"avatar-img"
+                  - else
+                    = image_tag "no_image", class:"avatar-img"
 
-      = f.hidden_field :community_id,
-        value:@community.id
+                .user-info
+                  %span.user-name
+                    = post.customer.name
 
-      = f.text_area :body,
-        placeholder:"コミュニティに投稿"
+                    - if post.customer == @community.owner
+                      %span.owner-tag オーナー
 
-      = f.submit "投稿"
+                  %span.time= time_ago_in_words(post.created_at) + "前"
 
-    - @community.community_posts.order(created_at: :desc).each do |post|
+            .timeline-body
+              %p= post.body
 
-      .timeline-card
+    / ===== 右 =====
+    .right
 
-        %strong
-          = post.customer.name
+      .card
+        %h3 メンバー
 
-        %p
-          = post.body
+        .member-grid
+          - @community.customers.each do |customer|
+            = link_to business_customer_path(customer) do
+              .member-card
+                - if customer.profile_image.attached?
+                  = image_tag customer.profile_image, class:"member-icon"
+                - else
+                  = image_tag "no_image", class:"member-icon"
+
+                .member-info
+                  %span.member-name= customer.name
+
+                  - if customer == @community.owner
+                    %span.owner-tag オーナー
+
+      - if current_customer.can_manage_community?(@community)
+
+        .card
+          %h3 参加申請
+
+          - @permits.each do |permit|
+            .permit-card
+              %span= permit.customer.name
+
+              .permit-actions
+                = link_to "承認",
+                  business_community_community_customers_path(community_id: @community.id, customer_id: permit.customer.id),
+                  method: :post,
+                  class:"btn btn-success btn-small"
+
+                = link_to "拒否",
+                  business_community_permit_path(@community, customer_id: permit.customer.id),
+                  method: :delete,
+                  class:"btn btn-danger btn-small"

@@ -1,18 +1,60 @@
-.community-projects
+= render "layouts/header_menu_nakama"
 
-  %h3 プロジェクト
+.container.project-container
 
-  = link_to "＋作成",
-    new_business_project_path(
-      community_id:@community.id
-    )
+  .page-header
+    %h2 プロジェクト一覧
 
-  - @community.projects.each do |project|
+  .project-grid
 
-    .project-card
+    - @projects.each do |project|
 
-      %h4
-        = project.title
+      - if @community.present?
+        - path = business_community_project_path(@community, project)
+      - else
+        - path = business_project_path(project)
 
-      %p
-        = project.description
+      = link_to path, class:"project-link" do
+
+        .project-card
+
+          / =========================
+          / 画像（←ここが主役）
+          / =========================
+          .card-image
+            - if project.project_image.attached?
+              = image_tag project.project_image, class:"project-img"
+            - else
+              .no-image
+                %span No Image
+
+          / =========================
+          / 本文
+          / =========================
+          .card-body
+
+            .project-header
+              %h3.project-title= project.title
+
+              .project-meta
+                %span.community= project.community.name
+
+            .project-body
+              %p= truncate(project.description, length: 70)
+
+            / =========================
+            / フッター
+            / =========================
+            .project-footer
+
+              .owner
+                - if project.customer&.profile_image&.attached?
+                  = image_tag project.customer.profile_image, class:"mini-icon"
+                - else
+                  = image_tag "no_image", class:"mini-icon"
+
+                %span= project.customer&.name || "不明"
+
+              .project-stats
+                %span 👥 #{project.project_members.count rescue 0}
+                %span 🗓 #{l(project.created_at, format: :short)}

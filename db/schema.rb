@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_03_13_175703) do
+ActiveRecord::Schema.define(version: 2026_03_15_060323) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -343,6 +343,10 @@ ActiveRecord::Schema.define(version: 2026_03_13_175703) do
     t.string "last_sign_in_ip"
     t.boolean "confirm_mail", default: true
     t.integer "is_owner"
+    t.string "job"
+    t.text "skills"
+    t.text "achievements"
+    t.boolean "onboarding_done"
     t.index ["email"], name: "index_customers_on_email", unique: true
     t.index ["reset_password_token"], name: "index_customers_on_reset_password_token", unique: true
   end
@@ -481,7 +485,28 @@ ActiveRecord::Schema.define(version: 2026_03_13_175703) do
     t.integer "category"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "tags"
+    t.integer "project_id"
     t.index ["customer_id"], name: "index_posts_on_customer_id"
+  end
+
+  create_table "project_chats", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.bigint "customer_id", null: false
+    t.text "body"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_project_chats_on_customer_id"
+    t.index ["project_id"], name: "index_project_chats_on_project_id"
+  end
+
+  create_table "project_members", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.bigint "customer_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_project_members_on_customer_id"
+    t.index ["project_id"], name: "index_project_members_on_project_id"
   end
 
   create_table "projects", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -491,6 +516,9 @@ ActiveRecord::Schema.define(version: 2026_03_13_175703) do
     t.text "description"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.integer "status", default: 0
+    t.datetime "deadline"
+    t.string "goal"
     t.index ["community_id"], name: "index_projects_on_community_id"
     t.index ["customer_id"], name: "index_projects_on_customer_id"
   end
@@ -530,6 +558,37 @@ ActiveRecord::Schema.define(version: 2026_03_13_175703) do
     t.datetime "updated_at", precision: 6, null: false
     t.integer "position"
     t.index ["event_id"], name: "index_songs_on_event_id"
+  end
+
+  create_table "taggings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "tag_id"
+    t.string "taggable_type"
+    t.bigint "taggable_id"
+    t.string "tagger_type"
+    t.bigint "tagger_id"
+    t.string "context", limit: 128
+    t.datetime "created_at"
+    t.string "tenant", limit: 128
+    t.index ["context"], name: "index_taggings_on_context"
+    t.index ["tag_id", "taggable_id", "taggable_type", "context", "tagger_id", "tagger_type"], name: "taggings_idx", unique: true
+    t.index ["tag_id"], name: "index_taggings_on_tag_id"
+    t.index ["taggable_id", "taggable_type", "context"], name: "taggings_taggable_context_idx"
+    t.index ["taggable_id", "taggable_type", "tagger_id", "context"], name: "taggings_idy"
+    t.index ["taggable_id"], name: "index_taggings_on_taggable_id"
+    t.index ["taggable_type", "taggable_id"], name: "index_taggings_on_taggable_type_and_taggable_id"
+    t.index ["taggable_type"], name: "index_taggings_on_taggable_type"
+    t.index ["tagger_id", "tagger_type"], name: "index_taggings_on_tagger_id_and_tagger_type"
+    t.index ["tagger_id"], name: "index_taggings_on_tagger_id"
+    t.index ["tagger_type", "tagger_id"], name: "index_taggings_on_tagger_type_and_tagger_id"
+    t.index ["tenant"], name: "index_taggings_on_tenant"
+  end
+
+  create_table "tags", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "name", collation: "utf8mb3_bin"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.integer "taggings_count", default: 0
+    t.index ["name"], name: "index_tags_on_name", unique: true
   end
 
   create_table "workspace_memberships", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -628,6 +687,10 @@ ActiveRecord::Schema.define(version: 2026_03_13_175703) do
   add_foreign_key "permits", "communities"
   add_foreign_key "permits", "customers"
   add_foreign_key "posts", "customers"
+  add_foreign_key "project_chats", "customers"
+  add_foreign_key "project_chats", "projects"
+  add_foreign_key "project_members", "customers"
+  add_foreign_key "project_members", "projects"
   add_foreign_key "projects", "communities"
   add_foreign_key "projects", "customers"
   add_foreign_key "requests", "customers"
@@ -635,6 +698,7 @@ ActiveRecord::Schema.define(version: 2026_03_13_175703) do
   add_foreign_key "song_customers", "customers"
   add_foreign_key "song_customers", "songs"
   add_foreign_key "songs", "events"
+  add_foreign_key "taggings", "tags"
   add_foreign_key "workspace_memberships", "customers"
   add_foreign_key "workspace_memberships", "workspaces"
   add_foreign_key "workspace_role_assignments", "workspace_memberships"

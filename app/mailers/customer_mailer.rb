@@ -75,6 +75,21 @@ class CustomerMailer < ApplicationMailer
     mail to: @ps_customer.email, subject: 'あなたの参加するコミュニティにて「チャット」が届きました！'
   end
 
+
+  # ビジネスNAKAMA
+  def like_post_mail
+    @post = params[:post]
+    @post_url = "https://be-my-style.com/business/posts/#{@post.id}"
+    mail to: @ps_customer.email, subject: 'あなたの投稿がいいねされました！'
+  end
+
+  def comment_post_mail
+    @post = params[:post]
+    @message = params[:message]
+    @post_url = "https://be-my-style.com/business/posts/#{@post.id}"
+    mail to: @ps_customer.email, subject: 'あなたの投稿にコメントが付きました！'
+  end
+
   private
 
   def set_default_params

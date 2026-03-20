@@ -1,45 +1,35 @@
-= form_with model: [:business, community] do |f|
+.container.form-container
 
-  .form-group
+  .form-card
 
-    = f.label :name, "コミュニティ名"
+    %h2 コミュニティ編集
 
-    = f.text_field :name,
-      class:"form-control"
+    = form_with model: [:business, @community], local: true do |f|
 
+      .form-group
+        %label コミュニティ名
+        = f.text_field :name, class:"form-control"
 
-  .form-group
+      .form-group
+        %label 紹介文
+        = f.text_area :introduction, class:"form-control", rows:5
 
-    = f.label :introduction, "紹介"
+      .form-group
+        %label カバー画像
 
-    = f.text_area :introduction,
-      class:"form-control"
+        .image-upload-area
 
+          .image-preview
+            - if @community.community_image.attached?
+              = image_tag @community.community_image, id:"preview-image", class:"preview-img"
+            - else
+              = image_tag "no_image", id:"preview-image", class:"preview-img"
 
-  .form-group
+          = f.file_field :community_image,
+            accept: "image/*",
+            class: "form-control",
+            id: "image-input"
 
-    = f.label :prefecture_id
-
-    = f.collection_select :prefecture_id,
-      Prefecture.all,
-      :id,
-      :name
-
-
-  .form-group
-
-    = f.label :community_image
-
-    = f.file_field :community_image
-
-
-  .form-group
-
-    = f.label :activity_stance
-
-    = f.select :activity_stance,
-      Community.activity_stances.keys
-
-
-  = f.submit "保存",
-    class:"btn btn-primary"
+      .form-actions
+        = f.submit "更新する", class:"btn btn-primary"
+        = link_to "戻る", business_communities_path(@community), class:"btn btn-light"

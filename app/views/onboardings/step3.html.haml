@@ -1,0 +1,24 @@
+= render "onboardings/layout",
+  step: 3,
+  visual_image: (current_customer.business_user? ? "onboarding-business.jpg" : "onboarding-music.jpg") do
+
+  .onboarding-content
+
+    .complete-icon
+      ✓
+
+    %h1.title
+      準備ができました！
+
+    %p.description
+      さっそく最初の一歩を踏み出しましょう。
+      あなたの活動がここから始まります。
+
+    .action-buttons
+
+      - if current_customer.business_user?
+        = link_to "投稿する", new_business_post_path, class:"btn btn-primary btn-lg"
+      - else
+        = link_to "活動を投稿", new_public_activity_path, class:"btn btn-primary btn-lg"
+
+      = link_to "準備完了！", onboarding_complete_path, method: :patch, class:"btn btn-secondary btn-lg"

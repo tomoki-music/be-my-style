@@ -1,30 +1,47 @@
 = render "layouts/header_menu_nakama"
 
-.container
+.container.community-container
 
+  / =========================
+  / ヘッダー
+  / =========================
   .page-header
 
-    %h2 コミュニティ一覧
+    %h2.page-title コミュニティ一覧
 
-    = link_to "＋ 新規コミュニティ",
+    = link_to "＋ 新規作成",
       new_business_community_path,
-      class:"btn btn-primary"
+      class:"btn btn-primary new-btn"
 
-
+  / =========================
+  / グリッド
+  / =========================
   .community-grid
 
     - @communities.each do |community|
 
-      = link_to business_community_path(community) do
+      = link_to business_community_path(community), class:"community-link" do
 
         .community-card
 
-          - if community.community_image.attached?
-            = image_tag community.community_image,
-              class:"community-card-image"
+          / --- 画像 ---
+          .card-image
+            - if community.community_image.attached?
+              = image_tag community.community_image, class:"community-img"
+            - else
+              = image_tag "no_image", class:"community-img"
 
-          %h3
-            = community.name
+          / --- 本文 ---
+          .card-body
 
-          %p
-            = truncate(community.introduction, length:80)
+            %h3.community-name
+              = community.name
+
+            .community-meta
+              %span.member-count
+                👥
+                = community.customers.count
+                人
+
+            %p.community-desc
+              = truncate(community.introduction, length:70)

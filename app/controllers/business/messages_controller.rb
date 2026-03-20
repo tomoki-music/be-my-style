@@ -9,6 +9,15 @@ class Business::MessagesController < ApplicationController
         current_customer,
       )
 
+      if @post.customer.confirm_mail
+        CustomerMailer.with(
+          ac_customer: current_customer,
+          ps_customer: @post.customer,
+          post: @post,
+          message: @message
+        ).comment_post_mail.deliver_later
+      end
+
       respond_to do |format|
         format.html { redirect_to business_post_path(@post) }
         format.js

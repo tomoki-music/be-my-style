@@ -2,9 +2,12 @@
 
 .container.profile-container
 
-  .profile-card
+  .profile-wrapper
 
-    .profile-header
+    / =========================
+    / ヘッダー（強化）
+    / =========================
+    .profile-hero
 
       .profile-avatar
         - if @customer.profile_image.attached?
@@ -12,27 +15,72 @@
         - else
           = image_tag "no_image", class:"profile-icon"
 
-      .profile-info
+      .profile-main
 
-        %h2.profile-name
-          = @customer.name
+        %h2.profile-name= @customer.name
+
+        - if @customer.job.present?
+          %p.profile-job= @customer.job
 
         .profile-stats
-
           .stat
-            %span.number
-              = @customer.followings.count
-            %span.label
-              フォロー
-
+            %span.number= @customer.followings.count
+            %span.label フォロー
           .stat
-            %span.number
-              = @customer.followers.count
-            %span.label
-              フォロワー
+            %span.number= @customer.followers.count
+            %span.label フォロワー
 
       .profile-action
-
-        - if current_customer != @customer
+        - if current_customer == @customer
+          = link_to "編集", edit_business_customer_path(@customer), class:"btn btn-primary"
+        - else
           %div{id: "follow_button_#{@customer.id}"}
             = render "business/relationships/follow_button", customer: @customer
+
+    / =========================
+    / メインコンテンツ（2カラム）
+    / =========================
+    .profile-body
+
+      .profile-left
+
+        .card
+          %h3 自己紹介
+          %p= @customer.introduction.presence || "未設定"
+
+        - if @customer.business_user?
+
+          .card
+            %h3 スキル
+            %p= @customer.skills.presence || "未設定"
+
+          .card
+            %h3 実績
+            %p= @customer.achievements.presence || "未設定"
+
+          .card
+            %h3 リンク
+            - if @customer.url.present?
+              = link_to @customer.url, @customer.url, target:"_blank"
+            - else
+              %p 未設定
+
+      .profile-right
+
+        .card
+          %h3 投稿
+
+          - @customer.posts.order(created_at: :desc).limit(5).each do |post|
+            .post-item
+              %p= truncate(post.body, length: 80)
+              %small= l(post.created_at, format: :short)
+
+          = link_to "もっと見る", business_posts_path(user_id: @customer.id), class:"link-more"
+
+        .card
+          %h3 参加コミュニティ
+
+          .community-list
+            - @customer.communities.each do |community|
+              = link_to business_community_path(community) do
+                .community-chip= community.name

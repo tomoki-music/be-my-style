@@ -5,6 +5,10 @@ class Post < ApplicationRecord
   has_many :likes, dependent: :destroy
   has_many :messages, dependent: :destroy
 
+  belongs_to :project, optional: true
+
+  acts_as_taggable_on :tags
+
   enum category: {
     business_consultation: 0,
     learning: 1,
@@ -14,6 +18,11 @@ class Post < ApplicationRecord
   }
 
   validates :body, presence: true
+
+  # ビジネス
+  def tag_list
+    tags.to_s.split(" ")
+  end
 
   def create_notification_like!(current_customer)
 

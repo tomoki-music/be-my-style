@@ -1,26 +1,73 @@
-.community-grid{
-
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
-gap:20px;
-
+.community-container {
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
-.community-card{
-
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 2px 6px rgba(0,0,0,0.08);
-
+/* ===== ヘッダー ===== */
+.page-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:25px;
 }
 
-.community-card-image{
+.page-title {
+  font-size:22px;
+  font-weight:bold;
+}
 
-width:100%;
-height:150px;
-object-fit:cover;
-border-radius:8px;
-margin-bottom:10px;
+/* ===== グリッド ===== */
+.community-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+  gap:20px;
+}
 
+/* ===== カード ===== */
+.community-card {
+  background:#fff;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 8px 25px rgba(0,0,0,0.08);
+  transition:0.25s;
+}
+
+.community-card:hover {
+  transform:translateY(-4px);
+  box-shadow:0 12px 30px rgba(0,0,0,0.12);
+}
+
+/* ===== 画像 ===== */
+.card-image {
+  height:150px;
+  overflow:hidden;
+}
+
+.community-img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* ===== 本文 ===== */
+.card-body {
+  padding:15px;
+}
+
+.community-name {
+  font-size:16px;
+  font-weight:bold;
+  margin-bottom:6px;
+}
+
+.community-meta {
+  font-size:12px;
+  color:#666;
+  margin-bottom:8px;
+}
+
+.community-desc {
+  font-size:13px;
+  color:#444;
+  line-height:1.5;
 }
