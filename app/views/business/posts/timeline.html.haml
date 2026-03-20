@@ -1,0 +1,113 @@
+= render 'layouts/header_menu_nakama'
+
+.container.timeline-container
+
+  / =========================
+  / ヘッダー
+  / =========================
+  .timeline-header
+
+    .header-left
+      %h2 タイムライン
+      %p.sub フォローしている人の「いま起きていること」をチェックしよう
+
+    .header-actions
+      = link_to "＋ 投稿",
+        new_business_post_path,
+        class:"btn btn-primary new-post-btn"
+
+  .search-box
+
+    = form_with url: business_timeline_path, method: :get, local: true, class:"search-form" do |f|
+
+      = hidden_field_tag :tab, params[:tab]
+
+      .search-input-wrapper
+        %i.fa.fa-search.search-icon
+
+        = f.text_field :keyword,
+          value: params[:keyword],
+          placeholder:"投稿を検索",
+          class:"search-input"
+
+      = f.submit "検索", class:"btn btn-primary"
+
+      = link_to "クリア",
+        business_timeline_path(tab: params[:tab]),
+        class:"btn btn-light clear-btn"
+
+  / タブ
+  .timeline-tabs
+
+    = link_to "おすすめ",
+      business_timeline_path(tab: "recommended"),
+      class: "tab #{params[:tab] == "recommended" || params[:tab].blank? ? 'active' : ''}"
+
+    = link_to "フォロー",
+      business_timeline_path(tab: "following"),
+      class: "tab #{params[:tab] == "following" ? 'active' : ''}"
+
+    = link_to "コミュニティ",
+      business_timeline_path(tab: "community"),
+      class: "tab #{params[:tab] == "community" ? 'active' : ''}"
+
+  / ページネーション
+  = paginate @posts
+
+  / =========================
+  / 投稿
+  / =========================
+  - if @posts.present?
+
+    .timeline-grid
+
+      - @posts.each do |post|
+
+        = link_to business_post_path(post), class:"timeline-link" do
+
+          .timeline-card
+
+            / ===== 画像 =====
+            .timeline-image
+              - if post.post_image.attached?
+                = image_tag post.post_image, class:"post-img"
+              - else
+                .no-image
+                  %span No Image
+
+            / ===== 本文 =====
+            .timeline-body
+
+              .timeline-top
+
+                .avatar
+                  - if post.customer.profile_image.attached?
+                    = image_tag post.customer.profile_image, class:"avatar-img"
+                  - else
+                    = image_tag "no_image", class:"avatar-img"
+
+                .meta
+                  %span.name= post.customer.name
+                  %span.time= time_ago_in_words(post.created_at) + "前"
+
+              %p.post-text
+                = truncate(post.body, length: 90)
+
+            / ===== アクション =====
+            .timeline-actions
+
+              .action
+                %i.fa-regular.fa-heart
+                %span いいね
+
+              .action
+                %i.fa-regular.fa-comment
+                %span コメント
+
+    = paginate @posts
+  - else
+
+    .empty-state
+      %h3 投稿がまだありません
+      %p 最初の投稿でコミュニティを盛り上げよう🔥
+      = link_to "投稿する", new_business_post_path, class:"btn btn-primary"

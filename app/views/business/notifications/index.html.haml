@@ -1,0 +1,29 @@
+= render 'layouts/header_menu_nakama'
+
+.container
+
+  %h2 通知
+
+  - @notifications.each do |notification|
+
+    .notification-card
+
+      - case notification.action
+
+      - when "like"
+
+        %p
+          = notification.visitor.name
+          があなたの投稿にいいねしました
+
+      - when "comment"
+
+        %p
+          = notification.visitor.name
+          がコメントしました
+
+      - when "follow"
+
+        %p
+          = notification.visitor.name
+          がフォローしました

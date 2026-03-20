@@ -1,8 +1,9 @@
 class ApplicationController < ActionController::Base
   before_action :set_current_domain
   before_action :authenticate_customer!
-
-  helper_method :current_domain
+  
+  helper_method :current_domain_business
+  helper_method :current_domain_music
 
   private
 
@@ -18,7 +19,12 @@ class ApplicationController < ActionController::Base
     redirect_to root_path, alert: "管理者のみ操作可能です。" unless current_customer&.admin?
   end
 
-  def current_domain
-    @current_domain
+  def current_domain_business
+    Domain.find_by(name: "business")
   end
+
+  def current_domain_music
+    Domain.find_by(name: "music")
+  end
+
 end

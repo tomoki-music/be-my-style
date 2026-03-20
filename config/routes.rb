@@ -2,6 +2,15 @@ Rails.application.routes.draw do
 
   root to: 'public/homes#top'
 
+  # オンボーディング
+  get "onboarding/music", to: "onboardings#music", as: :onboarding_music
+  get "onboarding/business", to: "onboardings#business", as: :onboarding_business
+  patch "onboarding/complete", to: "onboardings#complete"
+
+  get "onboarding/step1", to: "onboardings#step1", as: :onboarding_step1
+  get "onboarding/step2", to: "onboardings#step2", as: :onboarding_step2
+  get "onboarding/step3", to: "onboardings#step3", as: :onboarding_step3
+
   namespace :admin do
     get 'homes/top'
 
@@ -106,24 +115,31 @@ Rails.application.routes.draw do
 
     # 投稿
     resources :posts do
-      resources :comments, only: [:create, :destroy]
+      resources :messages, only: [:create, :destroy]
+      resource :like, only: [:create, :destroy]
     end
 
-    # プロジェクト
+    get "timeline", to: "posts#timeline"
+
+    resources :notifications, only: [:index]
+
     resources :projects do
       member do
         post :join
         delete :leave
       end
+
+      resources :project_chats, only: [:create, :destroy]
     end
 
-    # コミュニティ（publicと同構造）
     resources :communities do
       delete "leave" => "communities#leave"
+
       get "new/mail" => "communities#new_mail"
       get "send/mail" => "communities#send_mail"
-      resource :permits, only: [:create, :destroy]
+      resource :permit, only: [:create, :destroy]
       resource :community_customers, only: [:create, :destroy]
+      resources :community_posts
     end
 
     get "communities/:id/permits" => "communities#permits", as: :permits

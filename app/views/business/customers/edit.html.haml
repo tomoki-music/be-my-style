@@ -1,0 +1,57 @@
+.container
+
+  .edit-card
+
+    %h2 プロフィール編集
+
+    = form_with model: @customer, url: business_customer_path(@customer), method: :patch do |f|
+
+      .form-group
+        %label 名前
+        = f.text_field :name, class:"form-control"
+
+      .form-group
+        %label プロフィール画像
+
+        .image-upload-area
+
+          .image-preview
+            - if @customer.profile_image.attached?
+              = image_tag @customer.profile_image, id:"preview-image", class:"preview-avatar"
+            - else
+              = image_tag "no_image", id:"preview-image", class:"preview-avatar"
+
+            = f.file_field :profile_image,
+            accept: "image/*",
+            class: "image-input",
+            id: "image-input"
+
+      .form-group
+        %label 自己紹介
+        = f.text_area :introduction, class:"form-control"
+
+      - if @customer.business_user?
+
+        .form-group
+          %label 職種
+          = f.text_field :job, class:"form-control"
+
+        .form-group
+          %label スキル
+          = f.text_area :skills, class:"form-control"
+
+        .form-group
+          %label 実績
+          = f.text_area :achievements, class:"form-control"
+
+      - if @customer.music_user?
+
+        .form-group
+          %label パート
+          = f.collection_check_boxes(:part_ids, Part.all, :id, :name)
+
+        .form-group
+          %label ジャンル
+          = f.collection_check_boxes(:genre_ids, Genre.all, :id, :name)
+
+      = f.submit "更新する", class:"btn btn-primary"

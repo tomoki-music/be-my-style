@@ -1,0 +1,125 @@
+.project-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ===== グリッド ===== */
+.project-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+  gap:20px;
+}
+
+/* ===== カード ===== */
+.project-card {
+  background:#fff;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 8px 25px rgba(0,0,0,0.08);
+  transition:0.25s;
+  display:flex;
+  flex-direction:column;
+}
+
+.project-card:hover {
+  transform:translateY(-4px);
+  box-shadow:0 12px 30px rgba(0,0,0,0.12);
+}
+
+/* ===== 画像 ===== */
+.card-image {
+  height:150px;
+  overflow:hidden;
+  background:#f5f5f5;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.project-img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* 画像なし */
+.no-image {
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#aaa;
+  font-size:12px;
+  background:linear-gradient(135deg, #f0f0f0, #fafafa);
+}
+
+/* ===== 本文 ===== */
+.card-body {
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  flex:1;
+}
+
+/* ===== ヘッダー ===== */
+.project-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.project-title {
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #111;
+}
+
+.project-card .project-title {
+  color: #111;
+}
+
+.project-card:hover .project-title {
+  color: #6366f1;
+}
+
+.project-meta {
+  font-size:12px;
+  color:#666;
+}
+
+/* ===== 本文 ===== */
+.project-body {
+  font-size:13px;
+  color:#444;
+  margin:10px 0;
+  line-height:1.5;
+}
+
+/* ===== フッター ===== */
+.project-footer {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.owner {
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.mini-icon {
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  object-fit:cover;
+}
+
+.project-stats {
+  font-size:12px;
+  color:#777;
+  display:flex;
+  gap:8px;
+}

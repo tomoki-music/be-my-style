@@ -1,0 +1,83 @@
+.post-create-card
+
+  .post-header
+    %h2= @post.persisted? ? "投稿編集" : "投稿作成"
+    %p.sub あなたの活動をシェアしよう
+
+  = form_with model: [:business, @post], local: true, html: { class: "post-form" } do |f|
+
+    .form-group
+      %label タイトル
+      = f.text_field :title,
+        class:"form-control",
+        placeholder:"例：新しいプロジェクト始めました！"
+
+    .form-group
+      %label プロジェクト（任意）
+      = f.collection_select :project_id,
+        (current_customer.projects + current_customer.joined_projects).uniq,
+        :id,
+        :title,
+        { include_blank: "選択なし" },
+        class:"form-control"
+
+    .form-group
+      %label カテゴリ
+      = f.select :category,
+        Post.categories.keys.map { |k| [k.humanize, k] },
+        {},
+        class:"form-control"
+
+    / =========================
+    / タグ入力（チップ型）
+    / =========================
+    .form-group
+      %label タグ（Enterで追加）
+
+      .tag-input-wrapper
+        #tag-container
+
+        %input{
+          type: "text",
+          id: "tag-input",
+          placeholder: "例：エンジニア",
+          class: "tag-input"
+        }
+
+      - safe_tags = @post.tags.pluck(:name)
+
+      = hidden_field_tag "post[tag_list]",
+        safe_tags.join(" "),
+        id: "tag-hidden",
+        data: { tags: safe_tags.join(" ") }
+
+      %small.tag-hint
+        Enterでタグを追加できます
+
+    .form-group
+      %label 本文
+      = f.text_area :body,
+        class:"form-control",
+        rows:5,
+        placeholder:"どんなことをしているのか書いてみよう"
+
+    .form-group
+      %label 画像
+
+      .image-upload
+        - if @post.post_image.attached?
+          = image_tag @post.post_image, id:"preview-image", class:"preview-img"
+        - else
+          = image_tag "no_image", id:"preview-image", class:"preview-img"
+
+        = f.file_field :post_image,
+          id:"image-input",
+          class:"file-input"
+
+    .form-actions
+      = link_to "キャンセル",
+        business_timeline_path,
+        class:"btn btn-secondary"
+
+      = f.submit @post.persisted? ? "更新する" : "投稿する",
+        class:"btn btn-primary submit-btn"

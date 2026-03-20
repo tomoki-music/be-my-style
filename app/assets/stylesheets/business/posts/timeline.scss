@@ -1,0 +1,220 @@
+.timeline-container {
+  max-width:1100px;
+  margin:0 auto;
+}
+
+/* ===== ヘッダー ===== */
+.timeline-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.new-post-btn {
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  border-radius:50px;
+  padding:12px 18px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.2);
+}
+
+.sub {
+  font-size:13px;
+  color:#888;
+}
+
+.timeline-tabs {
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+.tab {
+  padding:8px 16px;
+  border-radius:20px;
+  background:#f1f5f9;
+  font-size:13px;
+  text-decoration:none;
+  color:#333;
+  transition:0.2s;
+}
+
+.tab:hover {
+  background:#e2e8f0;
+}
+
+.tab.active {
+  background:#007bff;
+  color:#fff;
+  font-weight:600;
+}
+
+/* ===== 検索 ===== */
+.search-box {
+  margin-bottom:20px;
+}
+
+.search-form {
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.search-input-wrapper {
+  position:relative;
+  flex:1;
+}
+
+.search-icon {
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#aaa;
+}
+
+.search-input {
+  width:100%;
+  padding:10px 12px 10px 35px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  transition:0.2s;
+}
+
+.search-input:focus {
+  border-color:#007bff;
+  box-shadow:0 0 0 2px rgba(0,123,255,0.1);
+}
+
+.clear-btn {
+  background:#f3f4f6;
+}
+
+/* ===== グリッド（PC） ===== */
+.timeline-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+  gap:20px;
+}
+
+/* ===== SP対応 ===== */
+@media (max-width:768px) {
+  .timeline-grid {
+    grid-template-columns:1fr;
+  }
+}
+
+/* ===== カード ===== */
+.timeline-card {
+  background:#fff;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 8px 25px rgba(0,0,0,0.08);
+  transition:0.25s;
+  display:flex;
+  flex-direction:column;
+}
+
+.timeline-card:hover {
+  transform:translateY(-4px);
+  box-shadow:0 12px 30px rgba(0,0,0,0.12);
+}
+
+/* ===== 画像 ===== */
+.timeline-image {
+  height:150px;
+  background:#f5f5f5;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+.post-img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* No Image */
+.no-image {
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  color:#aaa;
+  background:linear-gradient(135deg,#f0f0f0,#fafafa);
+}
+
+/* ===== 本文 ===== */
+.timeline-body {
+  padding:14px;
+}
+
+/* ヘッダー */
+.timeline-top {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.avatar-img {
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  object-fit:cover;
+}
+
+.meta {
+  display:flex;
+  flex-direction:column;
+}
+
+.name {
+  font-size:13px;
+  font-weight:600;
+}
+
+.time {
+  font-size:11px;
+  color:#999;
+}
+
+/* テキスト */
+.post-text {
+  font-size:13px;
+  color:#444;
+  line-height:1.5;
+}
+
+/* ===== アクション ===== */
+.timeline-actions {
+  display:flex;
+  justify-content:space-around;
+  padding:10px;
+  border-top:1px solid #f0f0f0;
+}
+
+.action {
+  display:flex;
+  gap:6px;
+  align-items:center;
+  font-size:13px;
+  color:#666;
+  cursor:pointer;
+}
+
+.action:hover {
+  color:#007bff;
+}
+
+/* ===== 空状態 ===== */
+.empty-state {
+  text-align:center;
+  padding:60px 20px;
+}

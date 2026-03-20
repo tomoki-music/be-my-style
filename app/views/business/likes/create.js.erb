@@ -1,0 +1,2 @@
+$("#like_button_<%= @post.id %>")
+.html("<%= j(render 'business/likes/like', post: @post) %>");

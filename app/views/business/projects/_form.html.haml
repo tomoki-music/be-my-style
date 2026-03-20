@@ -1,0 +1,63 @@
+.container.form-container
+
+  .form-card
+
+    %h2= project.persisted? ? "プロジェクト編集" : "プロジェクト作成"
+
+    = form_with model: [:business, project], local: true do |f|
+
+      = f.hidden_field :community_id, value: @community.id
+
+      .form-group
+        %label プロジェクト名
+        = f.text_field :title, class:"form-control", placeholder:"例）バンドメンバー募集"
+
+      .form-group
+        %label 所属コミュニティ
+        %p.form-static= @community.name
+
+      .form-group
+        %label 目標（Goal）
+        = f.text_field :goal,
+          class:"form-control",
+          placeholder:"例）ライブ出演 / 3曲完成 / メンバー5人集める"
+
+      .form-group
+        %label 説明
+        = f.text_area :description,
+          class:"form-control",
+          rows:5,
+          placeholder:"どんなプロジェクトか詳しく書こう"
+
+      .form-group
+        %label ステータス
+        = f.select :status,
+          [["募集中", "recruiting"], ["進行中", "active"], ["終了", "completed"]],
+          {},
+          class:"form-control"
+
+      .form-group
+        %label 締切日
+        = f.date_field :deadline, class:"form-control"
+
+      .form-group
+        %label 画像
+
+        .image-upload-area
+
+          .image-preview
+            - if project.project_image.attached?
+              = image_tag project.project_image, id:"preview-image", class:"preview-img"
+            - else
+              = image_tag "no_image", id:"preview-image", class:"preview-img"
+
+          = f.file_field :project_image,
+            accept: "image/*",
+            class:"form-control",
+            id:"image-input"
+
+      .form-actions
+        = f.submit project.persisted? ? "更新する" : "作成する", class:"btn btn-primary"
+        = link_to "戻る",
+          business_community_path(@community),
+          class:"btn btn-light"

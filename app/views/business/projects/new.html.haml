@@ -1,0 +1,14 @@
+= render "layouts/header_menu_nakama"
+
+.container.project-edit-container
+  .edit-card
+    .edit-header
+      %h2 プロジェクト作成
+      %p 新しい仲間を募集しよう
+
+    = render "form",
+      project: @project,
+      url: business_projects_path,
+      method: :post,
+      submit_label: "作成する",
+      cancel_path: business_projects_path

@@ -1,0 +1,116 @@
+= render 'layouts/header_menu_nakama'
+
+.container.posts-container
+
+  / =========================
+  / ヘッダー
+  / =========================
+  .page-header
+
+    %h2.page-title 投稿一覧
+
+    = link_to "＋ 投稿",
+      new_business_post_path,
+      class:"btn btn-primary new-btn"
+
+  / =========================
+  / 検索
+  / =========================
+  .search-box
+
+    = form_with url: business_posts_path, method: :get, local: true, class:"search-form" do |f|
+
+      = hidden_field_tag :user_id, params[:user_id]
+
+      .search-input-wrapper
+        %i.fa.fa-search.search-icon
+
+        = f.text_field :keyword,
+          value: params[:keyword],
+          placeholder:"投稿を検索",
+          class:"search-input"
+
+      .search-actions
+        = f.submit "検索", class:"btn btn-primary"
+
+        = link_to "クリア",
+          business_posts_path(user_id: params[:user_id]),
+          class:"btn btn-light clear-btn"
+
+  / =========================
+  / タグフィルター
+  / =========================
+  .tag-filter
+
+    %h4.tag-title 人気タグ
+
+    - if @popular_tags.present?
+      .tag-list
+
+        - @popular_tags.each do |tag|
+          - is_active = params[:tag] == tag.name
+          - path = business_posts_path(tag: tag.name, keyword: params[:keyword], user_id: params[:user_id])
+
+          .tag-wrapper
+            = link_to path, class: "tag-chip #{'active' if is_active}" do
+              %span.tag-name= tag.name
+              %span.tag-count= tag.count
+
+            - if is_active
+              - clear_path = business_posts_path(keyword: params[:keyword], user_id: params[:user_id])
+              = link_to clear_path, class:"tag-remove" do
+                %i.fa.fa-times
+
+  / =========================
+  / グリッド投稿
+  / =========================
+  - if @posts.present?
+
+    .post-grid
+
+      - @posts.each do |post|
+
+        = link_to business_post_path(post), class:"post-link" do
+
+          .post-card
+
+            / --- 画像 ---
+            .card-image
+              - if post.post_image.attached?
+                = image_tag post.post_image, class:"post-img"
+              - else
+                .no-image
+                  %span No Image
+
+            / --- 本文 ---
+            .card-body
+
+              .post-header
+                .avatar
+                  - if post.customer.profile_image.attached?
+                    = image_tag post.customer.profile_image, class:"avatar-img"
+                  - else
+                    = image_tag "no_image", class:"avatar-img"
+
+                .user-meta
+                  %strong= post.customer.name
+                  %span.time= time_ago_in_words(post.created_at) + "前"
+
+              %p.post-text
+                = truncate(post.body, length:80)
+
+              .post-actions
+                .action-item.like
+                  %i.fa.fa-heart
+                  %span= post.likes.count
+
+                .action-item
+                  %i.fa.fa-comment
+                  %span= post.messages.count
+
+  - else
+
+    .empty-state
+      %h3 投稿がまだありません
+      %p 最初の投稿をしてみましょう🔥
+      = link_to "投稿する", new_business_post_path, class:"btn btn-primary"

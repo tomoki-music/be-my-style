@@ -1,0 +1,17 @@
+- if current_customer.following?(customer)
+
+  = link_to public_customer_relationships_path(customer),
+    method: :delete,
+    remote: true,
+    class: "follow-btn following" do
+
+    フォロー中
+
+- else
+
+  = link_to public_customer_relationships_path(customer_id: customer.id, followed_id: customer.id),
+    method: :post,
+    remote: true,
+    class: "follow-btn" do
+
+    フォロー

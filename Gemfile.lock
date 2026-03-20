@@ -72,6 +72,8 @@ GEM
       minitest (>= 5.1)
       tzinfo (~> 2.0)
       zeitwerk (~> 2.3)
+    acts-as-taggable-on (10.0.0)
+      activerecord (>= 6.1, < 7.2)
     addressable (2.8.4)
       public_suffix (>= 2.0.2, < 6.0)
     arbre (1.7.0)
@@ -396,6 +398,7 @@ PLATFORMS
 DEPENDENCIES
   active_hash
   activeadmin
+  acts-as-taggable-on
   aws-sdk-s3
   bootsnap (>= 1.4.4)
   bootstrap (~> 4.5)

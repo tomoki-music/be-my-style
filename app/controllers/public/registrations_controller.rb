@@ -5,9 +5,10 @@ class Public::RegistrationsController < Devise::RegistrationsController
   before_action :configure_account_update_params, only: [:update]
 
   # GET /resource/sign_up
-  # def new
-  #   super
-  # end
+  def new
+    super
+    resource.domain_name = "music" if resource.domain_name.blank?
+  end
 
   # POST /resource
 def create
@@ -99,12 +100,13 @@ end
 
   # The path used after sign up.
   def after_sign_up_path_for(resource)
-    
-    if resource.domains.exists?(name: "business")
-      business_homes_top_path
-    else
-      public_homes_top_path
-    end
+
+    return onboarding_business_path if resource.business_user? && !resource.onboarding_done
+    return onboarding_music_path if resource.music_user? && !resource.onboarding_done
+
+    return business_root_path if resource.business_user?
+    return root_path
+
   end
 
   # The path used after sign up for inactive accounts.

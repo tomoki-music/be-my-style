@@ -1,0 +1,7 @@
+.comment
+
+  - if message.customer.profile_image.attached?
+    = image_tag message.customer.profile_image, class:"user-icon"
+
+  %strong= message.customer.name
+  %p= message.body

@@ -91,8 +91,8 @@ class Public::EventsController < ApplicationController
     @event.customer_id = current_customer.id
     @event.community_id = params[:event][:community_id].to_i
     if @event.save
-      if current_customer.chat_room_customers.present?
-        community_ids = current_customer.chat_room_customers.pluck(:community_id)
+      if current_customer.communities.present?
+        community_ids = current_customer.communities.pluck(:id)
         member_ids = []
         community_ids.each do |community_id|
           Community.where(id: community_id).each do |community|

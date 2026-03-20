@@ -1,0 +1,156 @@
+= render "layouts/header_menu_nakama"
+
+.container.project-show
+
+  / =========================
+  / ヘッダー
+  / =========================
+  .project-hero
+
+    - if @project.project_image.attached?
+      = image_tag @project.project_image, class:"project-cover"
+
+    .project-hero-overlay
+
+      .project-hero-content
+
+        %h1.project-title= @project.title
+
+        .project-meta
+          %span 👤 #{@project.customer.name}
+          %span 🏢 #{@project.community.name}
+          %span 🗓 #{l(@project.created_at, format: :short)}
+
+        - deadline_over = @project.deadline.present? && @project.deadline < Time.current
+
+        .project-actions
+
+          - if @project.customer == current_customer
+            = link_to "編集",
+              edit_business_project_path(@project),
+              class:"btn btn-primary"
+
+          - if @project.members.include?(current_customer)
+            %span.btn.btn-joined.btn-joined--light 参加中
+
+          - elsif deadline_over
+            %span.btn.btn-disabled 募集終了
+
+          - elsif @project.community.customers.include?(current_customer)
+            = link_to "参加",
+              join_business_project_path(@project),
+              method: :post,
+              class:"btn btn-primary"
+
+          - else
+            = link_to "コミュニティに参加する",
+              business_community_path(@project.community),
+              class:"btn btn-primary"
+
+            %p.join-note
+              ※このプロジェクトに参加するには、
+              %br
+              開催コミュニティに事前に参加する必要があります。
+
+        %span.status-badge= @project.status
+
+        .project-goal
+          %span.goal-label 🎯 GOAL
+          %p.goal-text= @project.goal
+
+        - if @project.deadline.present?
+          %p ⏰ 締切：#{l(@project.deadline, format: :short)}
+        - else
+          %p ⏰ 締切：未設定
+
+  / =========================
+  / 本文
+  / =========================
+  .project-section
+    %h3 概要
+    %p= simple_format(@project.description)
+
+  / =========================
+  / メンバー
+  / =========================
+  .project-section
+    %h3 メンバー
+
+    .member-grid
+      - @project.project_members.each do |member|
+        - customer = member.customer
+        = link_to business_customer_path(customer) do
+          .member-card
+            - if customer.profile_image.attached?
+              = image_tag customer.profile_image, class:"member-icon"
+            - else
+              = image_tag "no_image", class:"member-icon"
+
+            .member-info
+              %span.member-name= customer.name
+
+              - if customer == @project.customer
+                %span.owner-tag オーナー
+
+  / =========================
+  / チャット
+  / =========================
+  .project-section
+    %h3 チャット
+
+    - if @project.members.include?(current_customer)
+
+      .chat-container
+
+        - if @messages.present?
+
+          - @messages.each do |msg|
+            - is_me = msg.customer == current_customer
+
+            .chat-row
+
+              .chat-avatar
+                - if msg.customer.profile_image.attached?
+                  = image_tag msg.customer.profile_image, class:"chat-avatar-img"
+                - else
+                  %span= msg.customer.name.first
+
+              .chat-content
+
+                .chat-header
+                  %span.chat-user= msg.customer.name
+
+                  - if msg.customer == @project.customer
+                    %span.owner-tag オーナー
+
+                  %span.chat-time= l(msg.created_at, format: :short)
+
+                .chat-bubble{ class: is_me ? "me" : "" }
+                  %p.chat-body= msg.body
+
+                - if is_me
+                  = link_to "削除",
+                    business_project_project_chat_path(@project, msg),
+                    method: :delete,
+                    data: { confirm: "削除する？" },
+                    class: "chat-delete"
+
+        - else
+          .empty-state
+            %p まだメッセージはありません
+            %span 最初の一言を投稿してみよう！
+
+      / 投稿フォーム
+      = form_with model: [ :business, @project, @new_message ], local: true, class: "chat-form" do |f|
+        .chat-input-area
+          = f.text_field :body, placeholder: "メッセージを入力...", class: "chat-input"
+          = f.submit "送信", class: "btn btn-primary"
+
+    - else
+
+      .chat-locked
+        %p 🔒 このチャットはプロジェクト参加者のみ閲覧できます
+        = link_to "参加する",
+          join_business_project_path(@project),
+          method: :post,
+          class:"btn btn-primary"

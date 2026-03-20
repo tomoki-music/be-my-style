@@ -1,0 +1,82 @@
+.post-create-container {
+  max-width: 700px;
+  margin: 40px auto;
+}
+
+.post-create-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.post-header h2 {
+  font-size: 22px;
+  margin-bottom: 5px;
+}
+
+.post-header .sub {
+  font-size: 13px;
+  color: #777;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+/* タグ入力 */
+.tag-input-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+}
+
+.tag-input {
+  border: none;
+  outline: none;
+  flex: 1;
+  min-width: 120px;
+}
+
+.tag-chip {
+  background: #eef3ff;
+  color: #3b5bdb;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-chip .remove {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* 画像 */
+.preview-img {
+  width: 100%;
+  max-height: 250px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  background: #f5f5f5;
+}
+
+/* ボタン */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}

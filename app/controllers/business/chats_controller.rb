@@ -8,7 +8,7 @@ class Business::ChatsController < ApplicationController
 
     chat.save
 
-    redirect_to business_project_path(project)
+    redirect_to business_community_projects_path(project)
   end
 
   private

@@ -1,0 +1,153 @@
+.header_container{
+
+  .header-menu{
+    margin:0 auto;
+    width:90%;
+    height:80px;
+    background-color:#1E3A5F;
+    padding:10px;
+    color:white;
+
+    .top-message{
+      width:300px;
+      float:left;
+
+      .top-message-link{
+        text-decoration:none;
+        color:white;
+        display:flex;
+        align-items:center;
+
+        .top-message-image{
+          width:30px;
+          height:30px;
+          margin-right:8px;
+          object-fit:cover;
+          border-radius:6px;
+        }
+
+        h1{
+          font-size:22px;
+          font-weight:bold;
+        }
+      }
+
+      p{
+        font-size:11px;
+        margin:0;
+        opacity:0.8;
+      }
+    }
+
+    .header-sign-in-list{
+      float:right;
+      margin:20px 10px;
+      display:flex;
+      align-items:center;
+
+      .icon_mini{
+        width:40px;
+        height:40px;
+        object-fit:cover;
+        border-radius:50%;
+        cursor:pointer;
+      }
+    }
+  }
+
+  #open {
+    cursor: pointer;
+  }
+
+  .customer-menu-pc{
+    display:none;
+  }
+
+  .customer-menu-sp{
+    position:fixed;
+    top:0;
+    bottom:0;
+    right:0;
+    left:0;
+
+    background:rgba(0,0,0,0.9);
+
+    text-align:center;
+    padding-top:100px;
+
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .3s;
+
+    .menu-sp-btn{
+      width:220px;
+      margin:10px auto;
+      font-size:16px;
+    }
+
+    .close-icon{
+      color:white;
+      font-size:20px;
+      cursor:pointer;
+      margin-bottom:40px;
+    }
+  }
+
+  .customer-menu-sp.show{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  .notification-badge{
+
+    background:red;
+    color:white;
+    border-radius:50%;
+    padding:2px 6px;
+    font-size:12px;
+    margin-right:4px;
+
+    }
+
+    .notification-card{
+
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:10px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.08);
+
+    }
+
+  @media (min-width:600px){
+
+    .customer-menu-pc{
+      display:block;
+      width:90%;
+      margin:0 auto;
+      background-color:#2563EB;
+      border-radius:10px;
+      height:50px;
+
+      ul{
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        height:100%;
+      }
+
+      .menu-btn{
+        color:white;
+        margin:0 20px;
+        text-decoration:none;
+        font-weight:bold;
+      }
+
+      .menu-btn:hover{
+        opacity:0.7;
+      }
+    }
+
+  }
+
+}

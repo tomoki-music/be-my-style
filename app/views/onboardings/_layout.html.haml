@@ -1,0 +1,16 @@
+.onboarding-wrapper
+
+  .onboarding-left
+    - if local_assigns[:visual_image]
+      = image_tag visual_image, class: "visual-img"
+
+  .onboarding-right
+    .onboarding-card
+
+      .progress
+        .progress-bar{ style: "width: #{step * 33}%" }
+
+      .step-label
+        STEP #{step} / 3
+
+      = yield

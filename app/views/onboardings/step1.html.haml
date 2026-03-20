@@ -1,0 +1,27 @@
+= render "onboardings/layout",
+  step: 1,
+  visual_image: (current_customer.business_user? ? "onboarding-business.jpg" : "onboarding-music.jpg") do
+
+  .onboarding-content
+    %h1.title
+      - if current_customer.business_user?
+        ビジネスを加速しよう
+      - else
+        音楽でもっと繋がろう
+
+    %p.subtitle 
+      - if current_customer.business_user?
+        NAKAMAへようこそ。
+      - else
+        Be My Styleへようこそ。
+
+    %p.description
+      - if current_customer.business_user?
+        あなたのビジネスを広げる仲間と出会い、
+        新しいチャンスを見つけましょう。
+      - else
+        あなたに合った音楽仲間と出会い、
+        最高のセッション体験を作りましょう。
+
+    .actions
+      = link_to "スタートする", onboarding_step2_path, class:"btn btn-primary btn-lg"

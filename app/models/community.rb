@@ -9,11 +9,21 @@ class Community < ApplicationRecord
   has_many :genres, through: :community_genres, dependent: :destroy
   has_many :chat_room_customers, dependent: :destroy
   has_many :chat_rooms, through: :chat_room_customers, dependent: :destroy
-  has_many :customers, through: :chat_room_customers, dependent: :destroy
+  has_many :chat_room_members, through: :chat_room_customers, source: :customer
   has_many :chat_messages, dependent: :destroy
   has_many :events, dependent: :destroy
   belongs_to :owner, class_name: "Customer", optional: true
 
+# NOTE: 将来的に多対多対応するために残しているが、
+# 現在はdomain_idのみ使用
+  # has_many :community_domains, dependent: :destroy
+  # has_many :domains, through: :community_domains
+  belongs_to :domain
+
+  has_many :community_posts, dependent: :destroy
+  has_many :projects, dependent: :destroy
+  
+  has_many :members, through: :community_customers, source: :customer
 
   has_one_attached :community_image
 

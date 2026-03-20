@@ -1,0 +1,4 @@
+$("#comments_<%= @post.id %>")
+.append("<%= j(render @comment) %>");
+
+$("#comment_body").val("");

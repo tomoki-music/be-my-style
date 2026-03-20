@@ -1,0 +1,35 @@
+.container.form-container
+
+  .form-card
+
+    %h2 コミュニティ編集
+
+    = form_with model: [:business, @community], local: true do |f|
+
+      .form-group
+        %label コミュニティ名
+        = f.text_field :name, class:"form-control"
+
+      .form-group
+        %label 紹介文
+        = f.text_area :introduction, class:"form-control", rows:5
+
+      .form-group
+        %label カバー画像
+
+        .image-upload-area
+
+          .image-preview
+            - if @community.community_image.attached?
+              = image_tag @community.community_image, id:"preview-image", class:"preview-img"
+            - else
+              = image_tag "no_image", id:"preview-image", class:"preview-img"
+
+          = f.file_field :community_image,
+            accept: "image/*",
+            class: "form-control",
+            id: "image-input"
+
+      .form-actions
+        = f.submit "更新する", class:"btn btn-primary"
+        = link_to "戻る", business_communities_path(@community), class:"btn btn-light"
