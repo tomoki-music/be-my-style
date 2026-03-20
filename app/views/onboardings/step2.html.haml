@@ -23,8 +23,8 @@
 
             - is_joined = @my_permits.include?(c.id)
 
-            - permit_destroy_path = current_customer.business_user? ? business_community_permit_path(c) : public_community_permit_path(c)
-            - permit_create_path  = current_customer.business_user? ? business_community_permits_path(c) : public_community_permits_path(c)
+            - permit_destroy_path = current_customer.business_user? ? business_community_permit_path(c) : public_community_permits_path(c)
+            - permit_create_path  = current_customer.business_user? ? business_community_permit_path(c) : public_community_permits_path(c)
 
             .community-card{ class: (is_joined ? "active" : "") }
 
