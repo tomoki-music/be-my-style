@@ -11,7 +11,8 @@ document.addEventListener("turbolinks:load", () => {
   if (radios.length && music && business) {
 
     const toggle = () => {
-      const selected = document.querySelector(".domain-radio:checked")?.value;
+      const selectedEl = document.querySelector(".domain-radio:checked");
+      const selected = selectedEl ? selectedEl.value : null;
 
       if (selected === "music") {
         music.style.display = "block";
