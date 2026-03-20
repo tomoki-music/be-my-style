@@ -1,110 +1,96 @@
 /* =========================
-  Step2（完成版）
+   全体レイアウト
 ========================= */
+.onboarding-wrapper {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
+/* =========================
+   スクロールエリア
+========================= */
+.onboarding-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* =========================
+   コンテンツ
+========================= */
+.onboarding-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.description {
+  color: #666;
+  margin-bottom: 24px;
+}
+
+/* =========================
+   コミュニティ一覧
+========================= */
 .community-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-bottom: 32px;
+  gap: 16px;
 }
 
 /* カード */
 .community-card {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  background: #fff;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 20px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  text-decoration: none;
-  color: #111827;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+  transition: all 0.2s ease;
 }
 
-/* ホバー */
-.community-card:hover {
-  border-color: #2563eb;
-  background: #f0f7ff;
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
-}
-
-/* 選択中（申請済） */
 .community-card.active {
-  border-color: #22c55e;
-  background: #f0fdf4;
+  border: 2px solid #4CAF50;
+  background: #f6fff7;
 }
 
-/* 名前 */
 .community-name {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-/* 右側 */
-.community-action {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  font-weight: bold;
 }
 
 /* =========================
-  ボタン（CTA強化）
+   ボタン
 ========================= */
-
-/* 参加ボタン */
 .btn-join {
-  padding: 8px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #4f8cff, #2563eb);
+  background: #4CAF50;
   color: #fff;
-  border: none;
-  transition: all 0.2s ease;
-}
-
-.btn-join:hover {
-  opacity: 0.9;
-  transform: scale(1.05);
-}
-
-/* 取り下げボタン */
-.btn-leave {
   padding: 8px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 999px;
-  background: #fee2e2;
-  color: #dc2626;
-  border: none;
-  transition: all 0.2s ease;
+  border-radius: 8px;
+  text-decoration: none;
 }
 
-.btn-leave:hover {
-  background: #fecaca;
-  transform: scale(1.05);
+.btn-leave {
+  background: #eee;
+  color: #333;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: none;
 }
 
 /* =========================
-  下部ボタン
+   フッター（固定）
 ========================= */
-
-.btn-outline-secondary {
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  border: 1px solid #d1d5db;
-  background: #fff;
-  color: #374151;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.btn-outline-secondary:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+.onboarding-footer {
+  padding: 16px;
+  border-top: 1px solid #eee;
+  background: linear-gradient(to top, #fff 80%, transparent);
+  position: sticky;
+  bottom: 0;
 }
