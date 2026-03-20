@@ -5,9 +5,9 @@ class Public::SessionsController < Devise::SessionsController
 
   def after_sign_in_path_for(resource)
 
-    unless resource.onboarding_done
-      return onboarding_step1_path
-    end
+    # unless resource.onboarding_done
+    #   return onboarding_step1_path
+    # end
 
     return business_root_path if resource.business_user?
     return root_path
