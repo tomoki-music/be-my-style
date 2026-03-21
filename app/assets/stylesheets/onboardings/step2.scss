@@ -1,96 +1,123 @@
 /* =========================
-   全体レイアウト
+  左：ビジュアル
 ========================= */
-.onboarding-wrapper {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* =========================
-   スクロールエリア
-========================= */
-.onboarding-scroll {
+.onboarding-left {
   flex: 1;
-  overflow-y: auto;
-  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+/* 画像 */
+.visual {
+  width: 100%;
+  height: 100%;
+}
+
+.visual-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* グラデーションオーバーレイ（プロ感UP） */
+.onboarding-left::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0.45),
+    rgba(0,0,0,0.1),
+    rgba(0,0,0,0)
+  );
 }
 
 /* =========================
-   コンテンツ
+  右：コンテンツ
 ========================= */
-.onboarding-content {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.title {
-  font-size: 28px;
-  font-weight: bold;
-  margin-bottom: 12px;
-}
-
-.description {
-  color: #666;
-  margin-bottom: 24px;
-}
-
-/* =========================
-   コミュニティ一覧
-========================= */
-.community-list {
+.onboarding-right {
+  flex: 1;
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  background: #f9fafb;
+  padding: 20px;
 }
 
 /* カード */
-.community-card {
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid #ddd;
+.onboarding-card {
+  width: 100%;
+  max-width: 420px;
   background: #fff;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: all 0.2s ease;
-}
-
-.community-card.active {
-  border: 2px solid #4CAF50;
-  background: #f6fff7;
-}
-
-.community-name {
-  font-weight: bold;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
 }
 
 /* =========================
-   ボタン
+  プログレス
 ========================= */
+.progress {
+  height: 6px;
+  background: #eee;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.step-label {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-bottom: 24px;
+}
+
+.community-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.community-card:hover {
+  border-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+/* 選択状態 */
+.community-card.active {
+  border: 2px solid #2563eb;
+  background: #eff6ff;
+}
+
 .btn-join {
-  background: #4CAF50;
-  color: #fff;
-  padding: 8px 14px;
-  border-radius: 8px;
-  text-decoration: none;
+  color: #2563eb;
+  font-weight: 600;
 }
 
 .btn-leave {
-  background: #eee;
-  color: #333;
-  padding: 8px 14px;
-  border-radius: 8px;
-  text-decoration: none;
+  color: #ef4444;
+  font-weight: 600;
 }
 
-/* =========================
-   フッター（固定）
-========================= */
+.onboarding-scroll {
+  overflow-y: auto;
+  max-height: 400px;
+  padding-right: 8px;
+}
+
 .onboarding-footer {
-  padding: 16px;
-  border-top: 1px solid #eee;
-  background: linear-gradient(to top, #fff 80%, transparent);
   position: sticky;
   bottom: 0;
+  background: #fff;
+  padding-top: 16px;
 }

@@ -3,7 +3,7 @@
 ========================= */
 
 .onboarding-wrapper {
-  display: flex;
+  display: flex !important;
   height: 100vh;
   width: 100%;
   overflow: hidden;
@@ -13,7 +13,7 @@
   左：ビジュアル
 ========================= */
 .onboarding-left {
-  width: 50%;
+  flex: 1;
   position: relative;
   overflow: hidden;
   background: #000;
@@ -49,7 +49,7 @@
   右：コンテンツ
 ========================= */
 .onboarding-right {
-  width: 50%;
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
