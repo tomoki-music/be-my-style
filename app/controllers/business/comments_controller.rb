@@ -12,7 +12,7 @@ class Business::CommentsController < ApplicationController
       CustomerMailer.with(
         ac_customer: current_customer,
         ps_customer: post.customer,
-        post: post
+        post: post,
         message: comment
       ).comment_post_mail.deliver_later
     end
