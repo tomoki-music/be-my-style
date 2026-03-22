@@ -39,6 +39,12 @@
         / ===== アクション =====
         .hero-actions
 
+          - if current_customer.can_manage_community?(@community)
+
+            = link_to "✏️ 編集",
+              edit_business_community_path(@community),
+              class: "btn btn-primary btn-small"
+
           - if @community.customers.include?(current_customer)
 
             %span.btn-joined 参加済み

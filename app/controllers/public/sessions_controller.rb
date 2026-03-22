@@ -5,8 +5,8 @@ class Public::SessionsController < Devise::SessionsController
 
   def after_sign_in_path_for(resource)
 
-    return onboarding_business_path if resource.business_user? && !resource.onboarding_done
-    return onboarding_music_path if resource.music_user? && !resource.onboarding_done
+    return onboarding_step1_path if resource.business_user? && !resource.onboarding_done
+    return onboarding_step1_path if resource.music_user? && !resource.onboarding_done
 
     return business_root_path if resource.business_user?
     return root_path

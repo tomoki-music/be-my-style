@@ -90,6 +90,11 @@ class CustomerMailer < ApplicationMailer
     mail to: @ps_customer.email, subject: 'あなたの投稿にコメントが付きました！'
   end
 
+  def business_follow_mail
+    @follower_url = "https://be-my-style.com/business/customers/#{@ac_customer.id}"
+    mail to: @ps_customer.email, subject: 'あなたのアカウントが「フォロー」されました！'
+  end
+
   private
 
   def set_default_params
@@ -97,6 +102,7 @@ class CustomerMailer < ApplicationMailer
     @ps_customer = params[:ps_customer]
     @url = 'https://be-my-style.com/customers/sign_in'
     @mypage = "https://be-my-style.com/public/customers/#{@ps_customer.id}"
+    @business_mypage = "https://be-my-style.com/business/customers/#{@ps_customer.id}"
   end
 
 end

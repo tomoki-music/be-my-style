@@ -6,6 +6,17 @@ class Business::CommentsController < ApplicationController
 
     comment.save
 
+    post.create_notification_message!(current_customer)
+
+    if post.customer.confirm_mail
+      CustomerMailer.with(
+        ac_customer: current_customer,
+        ps_customer: post.customer,
+        post: post
+        message: comment
+      ).comment_post_mail.deliver_later
+    end
+
     redirect_to business_post_path(post)
   end
 

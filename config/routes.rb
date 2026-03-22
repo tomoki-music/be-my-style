@@ -111,7 +111,9 @@ Rails.application.routes.draw do
     root to: 'homes#top'
 
     # ユーザー
-    resources :customers, only: [:show, :edit, :update]
+    resources :customers, only: [:show, :edit, :update] do
+      resource :relationships, only: [:create, :destroy]
+    end
 
     # 投稿
     resources :posts do

@@ -28,7 +28,7 @@ class Community < ApplicationRecord
   has_one_attached :community_image
 
   validates :name, presence: true
-  validates :name, length: { maximum: 15 }
+  validates :name, length: { maximum: 30 }
   validates :introduction, presence: true
 
   enum activity_stance: {
