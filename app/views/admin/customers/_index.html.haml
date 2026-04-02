@@ -58,9 +58,15 @@
 
   %tbody
     - @customers.each do |customer|
-      %tr
+      %tr{ class: ("table-secondary text-muted" if customer.is_deleted) }
         %th= customer.id
-        %td= customer.name
+        %td
+          - if customer.is_deleted
+            %span.badge.bg-secondary.text-white.ms-2 退会済み
+            %span.fw-semibold.text-decoration-line-through= customer.name
+          - else
+            = customer.name
+
         %td= customer.current_sign_in_at&.strftime('%Y/%m/%d') || '-'
         %td= "#{customer.sign_in_count}回"
 
@@ -81,7 +87,7 @@
             edit_admin_customer_path(customer.id),
             method: :get,
             data: { 'turbolinks': false },
-            class: "btn btn-info"
+            class: "btn btn-info btn-sm"
 
         %td
           - if customer.confirmed_at.nil?
@@ -89,7 +95,7 @@
               approval_path(customer_id: customer.id),
               method: :patch,
               data: { 'turbolinks': false },
-              class: "btn btn-primary"
+              class: "btn btn-primary btn-sm"
           - else
             承認済み
 
@@ -98,4 +104,4 @@
             purge_path(customer_id: customer.id),
             method: :delete,
             data: { confirm: "【確認】アカウントを完全に削除してもよろしいですか？", 'turbolinks': false },
-            class: "btn btn-danger"
+            class: "btn btn-danger btn-sm"

@@ -263,3 +263,6 @@ ja:
         growth: 成長志向
         challenge_member: 挑戦者
         unclassified: 未設定
+  devise:
+    failure:
+      deleted_account: "このアカウントは退会済みです。"

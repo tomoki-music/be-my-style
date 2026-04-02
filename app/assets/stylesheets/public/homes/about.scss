@@ -1,128 +1,200 @@
-.about-title{
-  margin: 20px 0 20px 10px;
-  .about-direct-btn{
-    margin: 20px 0;
+.about-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* =====================
+   HERO（スマホ最適）
+===================== */
+.about-hero {
+  position: relative;
+  height: 260px;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 50px;
+  background: image-url('music-bg.jpg') center/cover;
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(13,110,253,0.6));
+  }
+
+  .hero-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    padding: 20px;
+    text-align: center;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: bold;
+  }
+
+  .hero-sub {
+    font-size: 14px;
+    margin-top: 8px;
+  }
+
+  .hero-buttons {
+    margin-top: 15px;
+
+    .btn {
+      margin: 5px;
+    }
   }
 }
 
-.about-lead{
-  text-align: center;
-  margin: 20px auto;
-  padding-top: 20px;
-  font-size: 17px;
-  border: solid 5px #17a2b8;
-  border-radius: 10px;
-  width: 90%;
-  h4{
-    margin: 10px 0 20px 0;
-  }
-  .about-lead-list{
-    text-align: left;
-    display: inline-block;
-    font-size: 20px;
-  }
+/* =====================
+   セクション
+===================== */
+.about-section {
+  margin: 60px 0;
 }
 
-.about-to-do{
+.section-title {
   text-align: center;
-  margin: 20px auto;
-  padding-top: 20px;
-  font-size: 17px;
-  border: solid 5px #17a2b8;
-  border-radius: 10px;
-  width: 90%;
-  h5{
-    margin: 10px 0 20px 0;
-  }
-  p{
-    margin: 10px 0;
-  }
-  .about-to-do-list{
-    text-align: left;
-    display: inline-block;
-    font-size: 20px;
-  }
+  font-size: 20px;
+  margin-bottom: 30px;
 }
 
-.about-community{
-  text-align: center;
-  margin: 20px auto;
-  padding-top: 25px;
-  font-size: 17px;
-  border: solid 5px #17a2b8;
-  border-radius: 10px;
-  width: 90%;
-  h5{
-    margin: 10px 0 20px 0;
-  }
-  p{
-    margin: 10px 0;
-  }
-  .about-community-list{
-    text-align: left;
-    display: inline-block;
-    font-size: 20px;
-  }
+/* =====================
+   コンセプト
+===================== */
+.concept-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
-.about-activity{
+.concept-item {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
   text-align: center;
-  margin: 20px auto;
-  padding-top: 25px;
-  font-size: 17px;
-  border: solid 5px #17a2b8;
-  border-radius: 10px;
-  width: 90%;
-  h5{
-    margin: 10px 0 20px 0;
-  }
-  p{
-    margin: 10px 0;
-  }
-  .about-activity-list{
-    text-align: left;
-    display: inline-block;
-    font-size: 20px;
-  }
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
-.about-event{
-  text-align: center;
-  margin: 20px auto;
-  padding-top: 25px;
-  font-size: 17px;
-  border: solid 5px #17a2b8;
-  border-radius: 10px;
-  width: 90%;
-  h5{
-    margin: 10px 0 20px 0;
-  }
-  p{
-    margin: 10px 0;
-  }
-  .about-event-list{
-    text-align: left;
-    display: inline-block;
-    font-size: 20px;
-  }
+/* =====================
+   カード
+===================== */
+.alt-bg {
+  background: #f8f9fa;
+  padding: 30px 10px;
+  border-radius: 16px;
 }
 
-.attention{
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
   text-align: center;
-  margin: 20px auto;
-  padding: 25px 0;
-  font-size: 17px;
-  border: solid 5px red;
+  font-weight: bold;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+}
+
+/* =====================
+   タイムライン
+===================== */
+.step-timeline {
+  position: relative;
+  margin-left: 10px;
+  padding-left: 20px;
+  border-left: 2px solid #17a2b8;
+}
+
+.step {
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.step-dot {
+  position: absolute;
+  left: -11px;
+  top: 5px;
+  width: 14px;
+  height: 14px;
+  background: #17a2b8;
+  border-radius: 50%;
+}
+
+.step-content h4 {
+  margin-bottom: 5px;
+}
+
+/* =====================
+   ボタン
+===================== */
+.btn-main {
+  background: #17a2b8;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+
+.btn-sub {
+  border: 1px solid white;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+
+/* =====================
+   注意
+===================== */
+.attention-box {
+  border-left: 5px solid #dc3545;
+  background: #fff5f5;
+  padding: 15px;
   border-radius: 10px;
-  width: 90%;
-  h5{
-    margin: 10px 0 20px 0;
+  font-size: 14px;
+}
+
+/* =====================
+   メッセージ
+===================== */
+.about-message {
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 50px 0;
+}
+
+/* =====================
+   PC対応（ここが神）
+===================== */
+@media (min-width: 768px) {
+
+  .about-hero {
+    height: 320px;
+
+    h1 {
+      font-size: 36px;
+    }
+
+    .hero-sub {
+      font-size: 16px;
+    }
   }
-  p{
-    margin: 10px 0;
+
+  .concept-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
-  .about-event-list{
-    text-align: left;
-    display: inline-block;
+
+  .card-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }

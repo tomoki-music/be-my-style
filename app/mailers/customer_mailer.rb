@@ -77,6 +77,7 @@ class CustomerMailer < ApplicationMailer
 
 
   # ビジネスNAKAMA
+  # いいね、コメント、フォロー通知
   def like_post_mail
     @post = params[:post]
     @post_url = "https://be-my-style.com/business/posts/#{@post.id}"
@@ -93,6 +94,19 @@ class CustomerMailer < ApplicationMailer
   def business_follow_mail
     @follower_url = "https://be-my-style.com/business/customers/#{@ac_customer.id}"
     mail to: @ps_customer.email, subject: 'あなたのアカウントが「フォロー」されました！'
+  end
+
+  # コミュニティ申請通知、許可通知
+  def business_request_mail
+    @community = params[:community]
+    @community_url = "https://be-my-style.com/business/communities/#{@community.id}"
+    mail to: @ps_customer.email, subject: 'あなたの企画した「コミュニティ」へ参加申請が届きました！'
+  end
+
+  def business_accept_mail
+    @community = params[:community]
+    @community_url = "https://be-my-style.com/business/communities/#{@community.id}"
+    mail to: @ps_customer.email, subject: '参加申請した「コミュニティ」への参加が受理されました！'
   end
 
   private

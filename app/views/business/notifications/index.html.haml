@@ -27,3 +27,15 @@
         %p
           = notification.visitor.name
           がフォローしました
+
+      - when "request"
+
+        %p
+          = notification.visitor.name
+          があなたのコミュニティへ参加申請しました
+
+      - when "accept"
+
+        %p
+          = notification.visitor.name
+          があなたのコミュニティ参加申請を受理しました

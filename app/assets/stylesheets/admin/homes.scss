@@ -22,3 +22,28 @@
   border-color: #0d6efd;
   box-shadow: 0 0 0 0.15rem rgba(13,110,253,.25);
 }
+
+/* 退会ユーザー行 */
+.table-secondary {
+  background-color: #e9ecef !important;
+}
+
+/* 退会ユーザーのテキスト */
+.text-muted {
+  color: #6c757d !important;
+}
+
+/* 退会ユーザーのホバー調整（UX改善） */
+.table tbody tr.table-secondary:hover {
+  background-color: #dee2e6 !important;
+}
+
+/* 取り消し線を少し柔らかく */
+.text-decoration-line-through {
+  opacity: 0.8;
+}
+
+/* ボタンも少しトーンダウン */
+.table-secondary .btn {
+  opacity: 0.85;
+}

@@ -102,6 +102,16 @@ class Customer < ApplicationRecord
 
   end
 
+  # 退会機能
+  def active_for_authentication?
+    return true if is_owner == 1
+    super && !is_deleted
+  end
+
+  def inactive_message
+    !is_deleted ? super : :deleted_account
+  end
+
   enum sex: {
     gender_private: 0,
     male: 1,
@@ -332,4 +342,24 @@ class Customer < ApplicationRecord
       notification.save if notification.valid?
     end
   end
+
+  # ビジネス（NAKAMA）
+  def business_notification_request(current_customer, community_id)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'request',
+      community_id: community_id,
+    )
+    notification.save if notification.valid?
+  end
+
+  def business_notification_accept(current_customer, community_id)
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'accept',
+      community_id: community_id,
+    )
+    notification.save if notification.valid?
+  end
+
 end

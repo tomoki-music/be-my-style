@@ -1,69 +1,91 @@
 = render 'layouts/header_menu'
 
-.container.about-title
-  %h2 🎵BeMyStyleの歩き方🎵
+.container.about-page
 
-  .about-lead
-    %h4 📝こんな方にオススメ📝
-    .row
-      .col-md-8
-        %ul.list-style-none.about-lead-list
-          %li ①趣味を通して人との繋がりを広げたい
-          %li ②週末などお休みの日に趣味に打ち込みたい
-          %li ③みんなでイベントを企画！など挑戦したい
-      .col-md-4
-        = image_tag asset_path("relax-kuma"), size:"200x200"
-    
-  .about-to-do
-    %h5 📝まずはコレをやってみよう📝
-    %h6 〜３つのオススメBeMyStyleの歩き方〜
-    %ul.list-style-none.about-to-do-list
-      %li ①「コミュニティ」に参加しよう
-      %li ②「みんなの活動報告」に投稿しよう
-      %li ③「イベント」に参加しよう
+  / =====================
+  / 🎵 HERO
+  / =====================
+  .about-hero
+    .hero-overlay
+    .hero-content
+      %h1 BeMyStyle
+      %p.hero-sub 初めてでも、初心者でも、安心して楽しめる音楽コミュニティ
 
-  .about-community
-    %h5 ①気になる「コミュニティ」に参加申請しよう
-    .row
-      .col-md-8
-        %ul.list-style-none.about-community-list
-          %li 📝参加申請をしたら管理者の承認待ち
-          %li 📝承認されたらコミュニティ参加決定
-          %li 📝グループチャットなどで交流しよう
-          %li.about-direct-btn
-            コミュニティ参加はコチラ👉
-            = link_to "コミュニティ", public_communities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
-      .col-md-4
-        = image_tag asset_path("letter-form-girl"), size:"250x200"
+      .hero-buttons
+        = link_to "コミュニティを見る", public_communities_path, class: "btn btn-main"
+        = link_to "イベントを見る", public_events_path, class: "btn btn-sub"
 
-  .about-activity
-    %h5 ②近況を「みんなの活動報告」で投稿しよう
-    .row
-      .col-md-4
-        = image_tag asset_path("acguitar-girl"), size:"250x200"
-      .col-md-8
-        %ul.list-style-none.about-activity-list
-          %li 📝練習で学んだ事、音楽以外でも何でもOK
-          %li 📝画像や動画も効果的に貼り付けてみよう
-          %li 📝KPTに沿って投稿記事を作成して投稿
-          %li.about-direct-btn
-            みんなの活動報告はコチラ👉
-            = link_to "活動報告", public_activities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+  / =====================
+  / 🎯 コンセプト
+  / =====================
+  .about-section
+    %h2.section-title 🎵 大切にしていること
 
-  .about-event
-    %h5 ③開催「イベント」に参加してみよう
-    .row
-      .col-md-8
-        %ul.list-style-none.about-event-list
-          %li 📝参加は開催コミュニティ所属が前提です
-          %li 📝「登録のパート」で曲毎に参加します
-          %li 📝他の参加メンバーもチェックできます
-          %li.about-direct-btn
-            イベント参加はコチラ👉
-            = link_to "イベント参加", public_events_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
-      .col-md-4
-        = image_tag asset_path("cool-guitar-woman"), size:"250x200"
-  
-  .attention
-    %h5 アプリ利用可能時間につきまして
-    %p BeMyStyleは【6:00~26:00】間でご利用可能です。
+    .concept-grid
+      .concept-item
+        .icon 🎵
+        %h4 自分を大切に
+        %p やりたい気持ちを優先しよう
+
+      .concept-item
+        .icon 🤝
+        %h4 相手を尊重
+        %p お互いの自由を大切に
+
+      .concept-item
+        .icon 🌱
+        %h4 挑戦を応援
+        %p 成長を楽しめる環境に
+
+  / =====================
+  / 💡 ターゲット
+  / =====================
+  .about-section.alt-bg
+    %h2.section-title 📝 こんな方におすすめ
+
+    .card-grid
+      .card
+        %p 🤝 人との繋がりを広げたい
+      .card
+        %p 🎸 趣味に打ち込みたい
+      .card
+        %p 🚀 新しいことに挑戦したい
+
+  / =====================
+  / 🚀 ステップ
+  / =====================
+  .about-section
+    %h2.section-title 🚀 はじめ方
+
+    .step-timeline
+      .step
+        .step-dot
+        .step-content
+          %h4 コミュニティに参加
+          %p 気になる場所に申請しよう
+
+      .step
+        .step-dot
+        .step-content
+          %h4 活動報告を投稿
+          %p 成長や日常をシェア
+
+      .step
+        .step-dot
+        .step-content
+          %h4 イベントに参加
+          %p 実際に演奏して楽しもう
+
+  / =====================
+  / ⚠️ 注意
+  / =====================
+  .attention-box
+    %h4 利用時間
+    %p 6:00〜26:00
+
+  / =====================
+  / 💬 メッセージ
+  / =====================
+  .about-message
+    %p
+      みんなで安心して楽しめる場所を作っていきましょう😊

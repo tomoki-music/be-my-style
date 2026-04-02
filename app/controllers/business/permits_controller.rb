@@ -8,6 +8,12 @@ class Business::PermitsController < ApplicationController
       customer_id: current_customer.id
     )
 
+    owner = Customer.find(@community.owner_id)
+    owner.business_notification_request(current_customer, @community.id)
+    if owner.confirm_mail
+      CustomerMailer.with(ac_customer: current_customer, ps_customer: owner, community: @community).business_request_mail.deliver_later
+    end
+    flash[:notice] = "コミュニティへ参加申請しました"
     redirect_after_action
   end
 
@@ -19,6 +25,7 @@ class Business::PermitsController < ApplicationController
 
     permit&.destroy
 
+    flash[:alert] = "コミュニティ参加申請をキャンセルしました"
     redirect_after_action
   end
 
