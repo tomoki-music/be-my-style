@@ -3,6 +3,7 @@ class Public::CustomersController < ApplicationController
   before_action :ensure_correct_customer, only: [:update, :edit]
   before_action :set_customer, only: [:show, :edit, :update, :edit_password, :update_password]
   before_action :check_same_community, only: [:show]
+  before_action :reject_deleted_customer, only: [:show]
   
   def index
   end
@@ -93,5 +94,11 @@ class Public::CustomersController < ApplicationController
   def password_set?
     customer_params[:password].present? && customer_params[:password_confirmation].present? ?
     true : false
+  end
+
+  def reject_deleted_customer
+    return unless @customer.is_deleted
+
+    redirect_to public_communities_path, alert: "このユーザーはすでに退会しています。"
   end
 end

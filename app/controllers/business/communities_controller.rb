@@ -28,18 +28,20 @@ class Business::CommunitiesController < ApplicationController
     @community.owner = current_customer
     @community.domain_id = @current_domain.id
 
-    if @community.save
-
+    ActiveRecord::Base.transaction do
+      @community.save!
       CommunityCustomer.create!(
         community_id: @community.id,
         customer_id: current_customer.id
       )
-
-      redirect_to business_community_path(@community)
-
-    else
-      render :new
     end
+
+    redirect_to business_community_path(@community)
+
+  rescue => e
+    Rails.logger.debug "🔥🔥🔥 ERROR 🔥🔥🔥"
+    Rails.logger.debug e.message
+    render :new
   end
 
   def edit

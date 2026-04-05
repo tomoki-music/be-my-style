@@ -35,7 +35,15 @@ class Public::CommunitiesController < ApplicationController
     @community.domain_id = @current_domain.id
 
     if @community.save
+      # 👇① コミュニティ参加させる（これ追加）
+      CommunityCustomer.create!(
+        community_id: @community.id,
+        customer_id: current_customer.id
+      )
+
+      # 👇② チャットルーム作成
       chat_room = ChatRoom.create
+
       ChatRoomCustomer.create!(
         community_id: @community.id,
         customer_id: current_customer.id,
