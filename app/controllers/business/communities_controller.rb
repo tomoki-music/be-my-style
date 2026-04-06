@@ -33,19 +33,22 @@ class Business::CommunitiesController < ApplicationController
         @community.save!
         Rails.logger.error "✅ community saved: #{@community.id}"
 
-        Rails.logger.error "👤 current_customer: #{current_customer&.id}"
-
         CommunityCustomer.create!(
           community_id: @community.id,
           customer_id: current_customer.id
         )
+        Rails.logger.error "✅ community_customer created"
       end
 
       redirect_to business_community_path(@community)
 
     rescue => e
-      Rails.logger.error "🔥 ERROR: #{e.message}"
+      Rails.logger.error "🔥🔥🔥 ERROR START 🔥🔥🔥"
+      Rails.logger.error e.class.name
+      Rails.logger.error e.message
       Rails.logger.error e.backtrace.join("\n")
+      Rails.logger.error "🔥🔥🔥 ERROR END 🔥🔥🔥"
+
       render :new
     end
   end
