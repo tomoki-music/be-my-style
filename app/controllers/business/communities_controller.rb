@@ -36,11 +36,12 @@ class Business::CommunitiesController < ApplicationController
       )
     end
 
+    Rails.logger.debug "✅ community created: #{@community.id}, domain: #{@community.domain_id}"
+
     redirect_to business_community_path(@community)
 
   rescue => e
-    Rails.logger.debug "🔥🔥🔥 ERROR 🔥🔥🔥"
-    Rails.logger.debug e.message
+    Rails.logger.error "🔥 ERROR: #{e.message}"
     render :new
   end
 
