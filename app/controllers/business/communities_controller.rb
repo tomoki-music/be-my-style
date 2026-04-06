@@ -35,6 +35,7 @@ class Business::CommunitiesController < ApplicationController
       )
       redirect_to business_community_path(@community)
     else
+      Rails.logger.error "🔥 SAVE FAILED"
       Rails.logger.error @community.errors.full_messages
       render :new
     end
