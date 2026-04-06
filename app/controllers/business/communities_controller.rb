@@ -43,11 +43,11 @@ class Business::CommunitiesController < ApplicationController
       redirect_to business_community_path(@community)
 
     rescue => e
-      Rails.logger.error "🔥🔥🔥 ERROR START 🔥🔥🔥"
+      Rails.logger.error "🔥🔥🔥 ERROR 🔥🔥🔥"
       Rails.logger.error e.class.name
       Rails.logger.error e.message
       Rails.logger.error e.backtrace.join("\n")
-      Rails.logger.error "🔥🔥🔥 ERROR END 🔥🔥🔥"
+      Rails.logger.error "🔥🔥🔥 END 🔥🔥🔥"
 
       render :new
     end
