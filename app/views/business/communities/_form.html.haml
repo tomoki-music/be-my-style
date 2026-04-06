@@ -1,5 +1,11 @@
 .container.form-container
 
+  - if @community.errors.any?
+    .alert.alert-danger
+      %ul
+        - @community.errors.full_messages.each do |message|
+          %li= message
+
   .form-card
 
     %h2 コミュニティ編集
@@ -8,7 +14,11 @@
 
       .form-group
         %label コミュニティ名
-        = f.text_field :name, class:"form-control"
+        = f.text_field :name, class:"form-control", maxlength: 30
+
+        - if @community.errors[:name].any?
+          .text-danger
+            = @community.errors[:name].first
 
       .form-group
         %label 紹介文
