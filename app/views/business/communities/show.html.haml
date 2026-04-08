@@ -81,9 +81,7 @@
     / ===== 左 =====
     .left
 
-      .card
-        %h3 概要
-        %p= simple_format(@community.introduction)
+      %pre= @community.introduction
 
       .card
         .section-header
