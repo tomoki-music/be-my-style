@@ -81,7 +81,9 @@
     / ===== 左 =====
     .left
 
-      %pre= @community.introduction
+      .card
+        %h3 概要
+        = simple_format(@community.introduction, {}, wrapper_tag: "div")
 
       .card
         .section-header
