@@ -16,10 +16,6 @@
         %label コミュニティ名
         = f.text_field :name, class:"form-control", maxlength: 30
 
-        - if @community.errors[:name].any?
-          .text-danger
-            = @community.errors[:name].first
-
       .form-group
         %label 紹介文
         = f.text_area :introduction, class:"form-control", rows:5
