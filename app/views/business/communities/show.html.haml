@@ -83,7 +83,7 @@
 
       .card
         %h3 概要
-        %p= simple_format(@community.introduction)
+        = simple_format(@community.introduction, {}, wrapper_tag: "div")
 
       .card
         .section-header
