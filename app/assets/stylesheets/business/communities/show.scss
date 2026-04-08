@@ -245,17 +245,17 @@
 ========================= */
 
 .card {
-  background:#fff;
-  padding:18px;
-  border-radius:16px;
-  margin-bottom:15px;
-
-  box-shadow:0 6px 20px rgba(0,0,0,0.06);
-  transition:0.2s;
+  background: #fff;
+  padding: 18px;
+  border-radius: 16px;
+  margin-bottom: 15px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
 }
 
 .card p {
+  white-space: pre-line;
   line-height: 1.7;
+  text-align: left;
 }
 
 .card:hover {
