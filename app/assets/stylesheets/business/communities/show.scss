@@ -252,9 +252,8 @@
   box-shadow: 0 6px 20px rgba(0,0,0,0.06);
 }
 
-.card p {
-  line-height: 1.7;
-  text-align: left;
+.introduction {
+  white-space: pre-line;
 }
 
 .card:hover {

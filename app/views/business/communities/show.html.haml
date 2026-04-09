@@ -83,7 +83,7 @@
 
       .card
         %h3 概要
-        %p= raw(@community.introduction.gsub(/\r\n?/, "<br>"))
+        %p.introduction= @community.introduction
 
       .card
         .section-header
