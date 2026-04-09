@@ -83,10 +83,7 @@
 
       .card
         %h3 概要
-        - text = @community.introduction.to_s
-        - text = text.gsub(/\r\n?/, "\n")
-        - text = text.gsub(/\u2028/, "\n")
-        = simple_format(text)
+        %p= raw(@community.introduction.gsub(/\r\n?/, "<br>"))
 
       .card
         .section-header
