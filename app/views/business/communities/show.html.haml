@@ -84,7 +84,8 @@
       .card
         %h3 概要
         .introduction
-          = simple_format(@community.introduction)
+          = simple_format(@community.introduction.to_s)
+          = simple_format("A\nB")
 
       .card
         .section-header
