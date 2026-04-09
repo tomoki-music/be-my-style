@@ -83,7 +83,7 @@
 
       .card
         %h3 概要
-        %p.introduction= @community.introduction
+        = simple_format(@community.introduction)
 
       .card
         .section-header
