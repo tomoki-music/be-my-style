@@ -37,13 +37,4 @@ class Community < ApplicationRecord
     tightly: 2,
   }, _prefix: true
 
-  before_save :normalize_text
-
-  private
-
-  def normalize_text
-    self.introduction = introduction.to_s
-      .gsub(/\r\n?/, "\n")   # Windows改行 → 統一
-      .gsub(/\u2028/, "\n")  # 謎改行 → 正常化
-  end
 end
