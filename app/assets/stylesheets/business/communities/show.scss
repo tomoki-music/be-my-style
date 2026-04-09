@@ -253,7 +253,11 @@
 }
 
 .introduction {
-  white-space: normal;
+  white-space: pre-line !important;
+}
+
+.introduction p {
+  white-space: pre-line !important;
 }
 
 .card:hover {
