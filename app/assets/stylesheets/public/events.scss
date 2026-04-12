@@ -661,29 +661,26 @@
   .markdown-body {
     line-height: 1.8;
     font-size: 14px;
-    white-space: pre-wrap;
-    margin-bottom: 0.8em;
-  }
-
-  .markdown-body br {
-    margin-bottom: 4px;
   }
 
   .markdown-body h1,
   .markdown-body h2,
   .markdown-body h3 {
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
+    margin: 0.6em 0 0.3em;
     font-weight: bold;
   }
 
   .markdown-body p {
-    margin-bottom: 1em;
+    margin-bottom: 0.6em;
   }
 
   .markdown-body ul {
     padding-left: 20px;
-    margin-bottom: 1em;
+    margin-bottom: 0.6em;
+  }
+
+  .markdown-body br {
+    margin-bottom: 4px;
   }
 
   .markdown-body code {

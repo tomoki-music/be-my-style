@@ -89,7 +89,11 @@
           %tr
             %th{scope:"row"} 自己紹介
             %td
-              = f.text_area :introduction, style: "width:90%", class: 'form-control'
+              = f.text_area :introduction,
+                rows: 10,
+                class: "form-control markdown-input",
+                style: "width:90%",
+                placeholder: placeholder_markdown_profile
           %tr
             %th{scope:"row"} メール通知設定
             %td

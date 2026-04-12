@@ -122,4 +122,5 @@
             %tr
               %th{scope:"row"} 自己紹介
               %td
-                = simple_format(@customer.human_attribute_enum(:introduction))
+                .markdown-body.profile-markdown
+                  = markdown(@customer.introduction)
