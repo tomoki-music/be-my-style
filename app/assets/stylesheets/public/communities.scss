@@ -261,6 +261,55 @@
   .community-customers-kaminari{
     margin: 10px auto;
   }
+  .markdown-body {
+    white-space: pre-wrap; // ← 改行・空行をそのまま反映
+    line-height: 1.8;
+    font-size: 14px;
+    word-break: break-word;
+  }
+
+  /* 見出し */
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-weight: bold;
+  }
+
+  /* 段落 */
+  .markdown-body p {
+    margin-bottom: 1em;
+  }
+
+  /* リスト */
+  .markdown-body ul,
+  .markdown-body ol {
+    padding-left: 20px;
+    margin-bottom: 1em;
+  }
+
+  /* コード */
+  .markdown-body code {
+    background: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* 引用 */
+  .markdown-body blockquote {
+    border-left: 4px solid #ccc;
+    padding-left: 10px;
+    color: #666;
+    margin: 1em 0;
+  }
+
+  /* 区切り線 */
+  .markdown-body hr {
+    margin: 2em 0;
+    border: none;
+    border-top: 1px solid #ddd;
+  }
 }
 
 @media (max-width: 600px) {

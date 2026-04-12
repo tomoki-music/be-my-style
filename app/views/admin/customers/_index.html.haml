@@ -49,6 +49,7 @@
       %th 最終ログイン日
       %th ログイン回数
       %th メンバータイプ
+      %th ドメインタイプ
       %th 音楽経験
       %th 関わり方
       %th 連絡スタンス
@@ -58,7 +59,16 @@
 
   %tbody
     - @customers.each do |customer|
-      %tr{ class: ("table-secondary text-muted" if customer.is_deleted) }
+
+      - row_class = nil
+      - if customer.music_user? && customer.business_user?
+        - row_class = "table-warning"
+      - elsif customer.music_user?
+        - row_class = "table-primary"
+      - elsif customer.business_user?
+        - row_class = "table-success"
+
+      %tr{ class: [row_class, ("table-secondary text-muted" if customer.is_deleted)].compact.join(" ") }
         %th= customer.id
         %td
           - if customer.is_deleted
@@ -73,6 +83,8 @@
         %td
           = member_type_badge(customer.member_profile&.suggested_member_type)
 
+        %td= domain_badges(customer)
+        
         %td
           = music_experience_badge(customer.member_profile&.music_experience_level)
 

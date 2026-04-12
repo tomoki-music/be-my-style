@@ -67,6 +67,24 @@ module Admin::CustomersHelper
     badge(label, color)
   end
 
+  def domain_badges(customer)
+    badges = []
+
+    if customer.music_user?
+      badges << content_tag(:span, class: "badge bg-primary me-1") do
+        content_tag(:i, "", class: "bi bi-music-note-beamed me-1") + "音楽"
+      end
+    end
+
+    if customer.business_user?
+      badges << content_tag(:span, class: "badge bg-success") do
+        content_tag(:i, "", class: "bi bi-briefcase me-1") + "ビジネス"
+      end
+    end
+
+    safe_join(badges)
+  end
+
   private
 
   def badge(label, color)

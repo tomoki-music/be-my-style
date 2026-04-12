@@ -116,7 +116,8 @@
             %tr
               %th{scope:"row"} 活動報告詳細紹介
               %td
-                = simple_format(@activity.introduction)
+                %div.markdown-body
+                  = markdown(@activity.introduction)
             %tr
               %th{scope:"row"} 所属コミュニティ
               %td

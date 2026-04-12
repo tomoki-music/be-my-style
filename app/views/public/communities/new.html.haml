@@ -70,5 +70,8 @@
               %i.text-red
                 (必須)
             %td
-              = f.text_area :introduction, style: "width:90%", rows: "10"
+              = f.text_area :introduction,
+                style: "width:90%",
+                rows: "10",
+                placeholder: "# コミュニティ紹介\n\n## 概要\nこのコミュニティは音楽好きが集まる場所です！\n\n## 活動内容\n- セッション会（月1回）\n- ライブイベント\n- オフ会（BBQ・カラオケなど）\n\n## こんな人におすすめ\n- 音楽仲間が欲しい\n- 初心者だけど参加してみたい\n- バンドを組んでみたい\n\n## 注意事項\n**最低限のマナーを守って楽しみましょう！**\n\n自由に改行して読みやすく書いてね！\n\n---\n\n【Markdown記法の使い方】\n\n# 見出し1\n## 見出し2\n### 見出し3\n\n- リスト\n- リスト\n\n1. 番号リスト\n2. 番号リスト\n\n**太字**\n*斜体*\n\n~~打ち消し~~\n\n[リンク](https://example.com)\n\n> 引用\n\n`コード`\n\n```コードブロック```\n\n---\n\n※改行をうまく使うと、読みやすさがグッと上がります！"
           = f.submit "コミュニティを作成", class: "btn btn-info community-new-btn", data: { confirm: 'こちらの内容で作成します。よろしいですか？' }

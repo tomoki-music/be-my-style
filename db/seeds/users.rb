@@ -37,3 +37,8 @@ tomoki.genres = (tomoki.genres + [pops, rock]).uniq
 
 quiet.parts   = (quiet.parts + [vocal]).uniq
 quiet.genres  = (quiet.genres + [jazz]).uniq
+
+# 3人に音楽ドメイン付与
+[tomoki, quiet, newbie].each do |customer|
+  customer.domains << music unless customer.domains.include?(music)
+end

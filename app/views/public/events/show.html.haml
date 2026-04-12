@@ -243,7 +243,9 @@
                 %tr
                   %th{scope:"row"} イベント補足
                   %td
-                    = simple_format(@event.introduction)
+                    %div.markdown-body
+                      = markdown(@event.introduction)
+
                 - if @owner == current_customer
                   %tr
                     %th{scope:"row"} CSVダウンロード

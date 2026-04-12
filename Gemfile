@@ -83,3 +83,5 @@ gem 'cocoon'
 gem "gon"
 gem 'listen', '~> 3.3'
 gem 'acts-as-taggable-on'
+gem 'redcarpet'
+gem 'sanitize'

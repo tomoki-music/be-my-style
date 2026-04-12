@@ -124,7 +124,8 @@
             %tr
               %th{scope:"row"} コミュニティ紹介
               %td
-                = simple_format(@community.introduction)
+                %div.markdown-body
+                  = markdown(@community.introduction)
 
       .community-index-title
         .row
