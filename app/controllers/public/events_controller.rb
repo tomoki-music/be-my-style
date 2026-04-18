@@ -6,7 +6,7 @@ class Public::EventsController < ApplicationController
   before_action :authorize_event_edit!, only: [:edit, :update, :destroy, :copy]
 
   def index
-    @events = Event.all.order(created_at: :desc).page(params[:page]).per(5)
+    @events = Event.order(event_start_time: :desc).page(params[:page]).per(5)
     @available_communities = current_customer.available_communities_for_event
   end
 
