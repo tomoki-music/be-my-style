@@ -13,7 +13,7 @@
 
       .hero-buttons
         = link_to "コミュニティを見る", public_communities_path, class: "btn btn-main"
-        = link_to "イベントを見る", public_events_path, class: "btn btn-sub"
+        = link_to "イベントを見る", public_events_path, class: "btn btn-main"
 
   / =====================
   / 🎯 コンセプト
@@ -52,6 +52,101 @@
         %p 🚀 新しいことに挑戦したい
 
   / =====================
+  / 💥 共感セクション（LP追加）
+  / =====================
+  .about-section.alt-bg
+    %h2.section-title 👀 こんな想いありませんか？
+
+    .empathy-list
+      %p 音楽をやりたいけど一歩踏み出せない
+      %p バンドを組む仲間がいない
+      %p 初心者で不安
+      %p 趣味で終わらせたくない
+
+    %p.empathy-footer
+      その気持ち、ここで変えられます。
+
+  / =====================
+  / 🔥 価値訴求
+  / =====================
+  .about-section
+    %h2.section-title 🚀 BeMyStyleで得られるもの
+
+    .value-grid
+      .value-item
+        %h4 挑戦できる環境
+        %p 初心者でも安心して一歩踏み出せる
+
+      .value-item
+        %h4 仲間との出会い
+        %p 音楽で繋がる最高のコミュニティ
+
+      .value-item
+        %h4 成長実感
+        %p 「できた」が増えて自信になる
+
+  / =====================
+  / 🎯 ストーリー導線
+  / =====================
+  .about-section.alt-bg
+    %h2.section-title 🌱 参加するとどうなる？
+
+    .story-flow
+      %p{"data-step" => "①"} 不安だけど参加
+      %p{"data-step" => "②"} 初めてのセッション
+      %p{"data-step" => "③"} 仲間ができる
+      %p{"data-step" => "④"} 自信がつく
+      %p{"data-step" => "⑤"} 音楽が人生の一部になる
+  
+  / =====================
+  / 🎬 ストーリー設計（最重要）
+  / =====================
+  .about-section.story-section
+    %h2.section-title 🎬 あなたのストーリーがここから始まる
+
+    %p.story-intro
+      最初はみんな、同じ不安を抱えています。<br>
+      でも一歩踏み出した先に、変化があります。
+
+    .story-steps
+
+      .story-step
+        .step-number 01
+        .step-body
+          %h4 入口（共感）
+          %p 「音楽やりたいけど機会がない」<br>「自信がない」
+
+      .story-step
+        .step-number 02
+        .step-body
+          %h4 挑戦（参加）
+          %p 初めてのセッション、初めてのバンド<br>
+          %span.highlight 少し怖い。でもそれが一歩目。
+
+      .story-step
+        .step-number 03
+        .step-body
+          %h4 成長（成功体験）
+          %p 演奏できた、褒められた、仲間ができた
+
+      .story-step
+        .step-number 04
+        .step-body
+          %h4 役割（居場所）
+          %p 誰かを支える、常連になる、企画に関わる
+
+      .story-step
+        .step-number 05
+        .step-body
+          %h4 拡張（未来へ）
+          %p ライブ出演、自主企画、次の挑戦へ
+
+    .story-result
+      %p
+        気づけば、<br>
+        %strong 「ただの参加者」から「人生が変わった人」へ。
+
+  / =====================
   / 🚀 ステップ
   / =====================
   .about-section
@@ -61,27 +156,34 @@
       .step
         .step-dot
         .step-content
-          %h4 コミュニティに参加
+          %h4 🎸コミュニティに参加
           %p 気になる場所に申請しよう
 
       .step
         .step-dot
         .step-content
-          %h4 活動報告を投稿
+          %h4 🗒️活動報告を投稿
           %p 成長や日常をシェア
 
       .step
         .step-dot
         .step-content
-          %h4 イベントに参加
+          %h4 🎤イベントに参加
           %p 実際に演奏して楽しもう
 
   / =====================
-  / ⚠️ 注意
+  / 🎤 CTA（最重要）
   / =====================
-  .attention-box
-    %h4 利用時間
-    %p 6:00〜26:00
+  .about-cta
+    %h2 一歩踏み出してみませんか？
+
+    %p
+      音楽は、環境で変わる。<br>
+      あなたの挑戦を待っています。
+
+    .cta-buttons
+      = link_to "無料で参加する", new_customer_registration_path, class: "btn btn-main"
+      = link_to "イベントを見る", public_events_path, class: "btn btn-main"
 
   / =====================
   / 💬 メッセージ
@@ -89,3 +191,10 @@
   .about-message
     %p
       みんなで安心して楽しめる場所を作っていきましょう😊
+
+  / =====================
+  / ⚠️ 注意
+  / =====================
+  .attention-box
+    %h4 利用時間
+    %p 6:00〜26:00

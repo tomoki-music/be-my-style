@@ -44,10 +44,13 @@
   }
 
   .hero-buttons {
-    margin-top: 15px;
+    margin-top: 20px;
+    color: #ffffff;
 
     .btn {
-      margin: 5px;
+      min-width: 160px;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
   }
 }
@@ -56,13 +59,22 @@
    セクション
 ===================== */
 .about-section {
+  margin: 80px 0;
+}
+
+.about-hero + .about-section {
+  margin-top: 100px;
+}
+
+.about-section.alt-bg {
   margin: 60px 0;
+  padding: 40px 20px;
 }
 
 .section-title {
   text-align: center;
-  font-size: 20px;
-  margin-bottom: 30px;
+  font-size: 22px;
+  margin-bottom: 40px;
 }
 
 /* =====================
@@ -109,47 +121,110 @@
 /* =====================
    タイムライン
 ===================== */
+
 .step-timeline {
   position: relative;
-  margin-left: 10px;
-  padding-left: 20px;
-  border-left: 2px solid #17a2b8;
+  margin: 0 auto;
+  max-width: 400px;
+  padding-left: 30px;
 }
 
+/* 左ライン */
+.step-timeline::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: #17a2b8;
+}
+
+/* 各ステップ */
 .step {
   position: relative;
   margin-bottom: 30px;
+  padding-left: 30px;
 }
 
+/* ドット */
 .step-dot {
   position: absolute;
-  left: -11px;
-  top: 5px;
+  left: 4px;
+  top: 6px;
   width: 14px;
   height: 14px;
   background: #17a2b8;
   border-radius: 50%;
 }
 
+/* テキスト */
+.step-content {
+  text-align: left;
+}
+
 .step-content h4 {
   margin-bottom: 5px;
+}
+
+.step {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease;
+}
+
+.step.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* =====================
    ボタン
 ===================== */
-.btn-main {
-  background: #17a2b8;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 8px;
+
+.btn {
+  display: inline-block;
+  font-weight: bold;
+  border-radius: 12px;
+  padding: 12px 20px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  text-align: center;
 }
 
+/* メインボタン（CTA） */
+.btn-main {
+  background: linear-gradient(135deg, #17a2b8, #0d6efd);
+  color: #ffffff;
+  box-shadow: 0 6px 0 #0b5ed7, 0 8px 20px rgba(0,0,0,0.2);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 0 #0b5ed7, 0 12px 25px rgba(0,0,0,0.25);
+  }
+
+  &:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #0b5ed7;
+  }
+}
+
+/* サブボタン */
 .btn-sub {
-  border: 1px solid white;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 8px;
+  background: white;
+  color: #0d6efd;
+  border: 2px solid #0d6efd;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+
+  &:hover {
+    background: #0d6efd;
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(2px);
+  }
 }
 
 /* =====================
@@ -196,5 +271,176 @@
 
   .card-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* =====================
+   LP追加セクション
+===================== */
+
+.empathy-list {
+  max-width: 320px;
+  margin: 0 auto 10px;
+  padding-left: 10px;
+  text-align: left;
+}
+
+.empathy-list p {
+  position: relative;
+  padding-left: 18px;
+}
+
+.empathy-list p::before {
+  content: "✔";
+  position: absolute;
+  left: 0;
+  color: #17a2b8;
+  font-weight: bold;
+}
+
+.empathy-footer {
+  text-align: center;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+.value-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.value-item {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+}
+
+.story-flow {
+  max-width: 320px;
+  margin: 0 auto;
+  text-align: left;
+  line-height: 2;
+  font-weight: bold;
+}
+
+.story-flow p {
+  position: relative;
+  padding-left: 26px;
+}
+
+.story-flow p::before {
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+  color: #17a2b8;
+  content: attr(data-step);
+}
+
+/* =====================
+   CTA（激重要）
+===================== */
+
+.about-cta {
+  text-align: center;
+  margin: 100px 0 60px;
+
+  h2 {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+
+  p {
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .cta-buttons {
+    .btn {
+      margin: 5px;
+    }
+  }
+
+  .btn-main {
+    font-size: 16px;
+    padding: 14px 24px;
+    color: #ffffff;
+  }
+}
+
+/* =====================
+   PC対応
+===================== */
+
+@media (min-width: 768px) {
+  .value-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* =====================
+   ストーリーセクション（神UI）
+===================== */
+
+.story-section {
+  text-align: center;
+}
+
+.story-intro {
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.story-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.story-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  background: white;
+  padding: 16px;
+  border-radius: 14px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+  text-align: left;
+}
+
+.step-number {
+  font-size: 20px;
+  font-weight: bold;
+  color: #17a2b8;
+  min-width: 40px;
+}
+
+.step-body h4 {
+  margin-bottom: 5px;
+}
+
+.highlight {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.story-result {
+  margin-top: 30px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* PCで横並びに進化 */
+@media (min-width: 768px) {
+  .story-steps {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .story-step {
+    width: 45%;
   }
 }
