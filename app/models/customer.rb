@@ -11,6 +11,7 @@ class Customer < ApplicationRecord
   has_one_attached :profile_image
   has_many :customer_domains
   has_many :domains, through: :customer_domains
+  has_one :subscription
 
   attr_accessor :domain_name
 
@@ -63,6 +64,28 @@ class Customer < ApplicationRecord
   has_many :project_members, dependent: :destroy
   has_many :joined_projects, through: :project_members, source: :project
 
+  # ストライプ（権限制御）
+  def active_subscription
+    subscription&.status == "active" ? subscription : nil
+  end
+
+  def plan
+    active_subscription&.plan || "free"
+  end
+
+  def light?
+    plan == "light"
+  end
+
+  def core?
+    %w[core premium].include?(plan)
+  end
+
+  def premium?
+    plan == "premium"
+  end
+
+  # ドメイン管理
   def has_domain?(name)
     domains.exists?(name: name)
   end

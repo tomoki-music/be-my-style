@@ -1,0 +1,38 @@
+/ app/views/public/pages/privacy.html.haml
+- content_for :title, "プライバシーポリシー"
+
+.lp-header.light
+  .header-inner
+    = link_to root_path, class: "lp-logo dark" do
+      %span.logo-main BeMyStyle
+
+    = link_to "← 戻る", :back, class: "back-link"
+    
+.legal-container
+  %h1 プライバシーポリシー
+
+  %p BeMyStyleは、ユーザーの個人情報を適切に取り扱います。
+
+  %h2 1. 収集する情報
+  %ul
+    %li 氏名
+    %li メールアドレス
+    %li 決済情報（※Stripe経由）
+
+  %h2 2. 利用目的
+  %ul
+    %li サービス提供
+    %li 本人確認
+    %li お問い合わせ対応
+
+  %h2 3. 第三者提供
+  %p 法令に基づく場合を除き、第三者に提供しません。
+
+  %h2 4. 外部サービス
+  %p 当サービスは決済にStripeを利用しています。
+
+  %h2 5. セキュリティ
+  %p 個人情報は適切に管理されます。
+
+  %h2 6. お問い合わせ
+  %p i.tomoki0218@gmail.com

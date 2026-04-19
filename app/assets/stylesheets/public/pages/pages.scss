@@ -1,0 +1,39 @@
+/* app/assets/stylesheets/public/pages.scss */
+.lp-header.light {
+  background: #fff;
+  position: relative;
+
+  .lp-logo.dark {
+    color: #111;
+  }
+
+  .back-link {
+    font-size: 0.9rem;
+    color: #666;
+    text-decoration: none;
+
+    &:hover {
+      color: #000;
+    }
+  }
+}
+
+.legal-container {
+  max-width: 800px;
+  margin: 60px auto;
+  padding: 20px;
+  line-height: 1.8;
+
+  h1 {
+    margin-bottom: 20px;
+  }
+
+  h2 {
+    margin-top: 30px;
+    font-size: 1.2rem;
+  }
+
+  ul {
+    margin-left: 20px;
+  }
+}

@@ -1,0 +1,180 @@
+- content_for :title, "BeMyStyle"
+
+.lp-container
+
+  .lp-header
+    .header-inner
+      = link_to root_path, class: "lp-logo" do
+        %span.logo-main BeMyStyleへ
+        %span.logo-sub Back to BeMyStyle
+
+      .header-actions
+        = link_to "今すぐ体験する", "#lp-section", class: "lp-btn small"
+
+  / ===== HERO =====
+  .lp-hero
+    .lp-hero-inner
+      %p.lp-eyebrow Choose your pace, grow your style
+      %h1
+        見つけるだけで終わらない。<br>
+        つながり、動き、育てていく。
+      %p
+        無料で雰囲気をつかみ、必要なタイミングで機能を広げられるプラン設計。
+      .lp-hero-points
+        %span.lp-chip コミュニティやイベントは無料でチェック
+        %span.lp-chip 発信はLightから
+        %span.lp-chip 主催や運営はCore/Premiumで解放
+      = link_to "今すぐ体験する", "#lp-section", class: "lp-btn"
+
+  / ===== PROBLEM =====
+  .lp-section
+    %h2 こんな気持ちに応えるサービスです
+    %ul.lp-list
+      %li まずは雰囲気を見てから、自分に合う場を選びたい
+      %li 仲間とつながりたいけど、何から始めればいいかわからない
+      %li 投稿やイベント、コミュニティ運営まで少しずつ広げていきたい
+
+  / ===== SOLUTION =====
+  .lp-section.gray
+    %h2 BeMyStyleなら段階的に広げられます
+    .lp-grid
+      .lp-card
+        %strong まずは無料で体験
+        %p コミュニティやイベント、投稿を見ながらサービスの空気感をチェックできます。
+      .lp-card
+        %strong 発信と交流をスタート
+        %p Lightでチャットや投稿を開放。見る側から、つながる側へ進めます。
+      .lp-card
+        %strong 主催・運営まで育てる
+        %p CoreやPremiumでイベント作成や運営機能が使え、自分の活動を形にできます。
+
+  / ===== BEFORE AFTER =====
+  .lp-section
+    %h2 プランが進むほど、できることが増える
+    %p
+      %strong free：
+      見つける・知る・参加する<br>
+      %strong light：
+      発信する・つながる<br>
+      %strong core：
+      主催する・募集する<br>
+      %strong premium：
+      運営する・広げる
+
+  / ===== VOICE =====
+  .lp-section.gray
+    %h2 こんな使い方ができます
+    .lp-grid.lp-grid-voices
+      .lp-card
+        %strong free
+        %p まずはイベントやコミュニティを見て、自分に合う場所を探したい。
+      .lp-card
+        %strong light
+        %p 投稿やチャットで交流を増やして、ちゃんとつながりを育てたい。
+      .lp-card
+        %strong core / premium
+        %p 自分でイベントや企画を動かして、活動の中心に立ちたい。
+
+  / ===== PRICING =====
+  .lp-section#lp-section
+    %h2 料金プラン
+    %p.lp-section-lead
+      まずは無料で雰囲気を知り、必要なタイミングで次の機能を開放できます。
+    .lp-pricing-grid
+
+      .lp-pricing.free
+        .plan-head
+          %span.plan-badge Starter
+          %h3 free
+          %p.plan-tag まずは試したい
+        %p.price ¥0
+        %p.plan-copy コミュニティやイベントを見ながら、自分に合う使い方を見つけるプラン。
+        %ul
+          %li コミュニティ一覧・詳細の閲覧
+          %li イベント一覧・詳細の閲覧
+          %li 活動や投稿コンテンツの閲覧
+          %li プロフィール編集
+          %li フォロー・参加で雰囲気を試せる
+        .plan-note 見つける・知る・参加する
+
+      .lp-pricing
+        .plan-head
+          %span.plan-badge Popular
+          %h3 light
+          %p.plan-tag 交流と発信を増やしたい
+        = link_to "ライトで始める", public_checkout_path("light"), method: :post, class: "lp-btn"
+        %p.price ¥1,500/月
+        %p.plan-copy 見るだけでなく、自分から発信してつながりを広げたい人向け。
+        %ul
+          %li 個別チャット
+          %li 活動報告や投稿の作成
+          %li コミュニティ内での発信
+          %li 気になる相手との交流を深めやすい
+        .plan-note 発信する・つながる
+
+      .lp-pricing.recommend
+        .plan-head
+          %span.plan-badge Recommended
+          %h3 core
+          %p.plan-tag イベントや企画を動かしたい
+        = link_to "コアで成長する", public_checkout_path("core"), method: :post, class: "lp-btn primary"
+        %p.price ¥3,980/月
+        %p.plan-copy 参加する側から一歩進んで、自分で企画や募集を動かしたい人へ。
+        %ul
+          %li イベント作成
+          %li プロジェクト作成
+          %li 企画や募集のスタート
+          %li 主催者として活動の中心に立てる
+        .plan-note 主催する・募集する
+
+      .lp-pricing
+        .plan-head
+          %span.plan-badge Owner
+          %h3 premium
+          %p.plan-tag コミュニティを育てたい
+        = link_to "本気で変わる", public_checkout_path("premium"), method: :post, class: "lp-btn"
+        %p.price ¥9,800/月
+        %p.plan-copy コミュニティ運営や継続的な活動づくりまで本格的に進めたい人向け。
+        %ul
+          %li コミュニティ運営向け機能
+          %li 一斉連絡や管理機能の解放
+          %li メンバーとの継続的な関係づくり
+          %li 活動を広げるための上位プラン特典
+        .plan-note 運営する・広げる
+
+    .lp-compare
+      %h3 こんな人におすすめ
+      .lp-compare-grid
+        .compare-item
+          %strong free
+          %p まずは雰囲気を見たい
+        .compare-item
+          %strong light
+          %p 投稿や交流を始めたい
+        .compare-item
+          %strong core
+          %p イベントや企画を動かしたい
+        .compare-item
+          %strong premium
+          %p コミュニティを育てたい
+
+  / ===== CTA =====
+  .lp-section.cta
+    %h2 あなたのペースで、できることを広げよう
+    %p.cta-copy
+      まずは無料で体験。必要になったタイミングで、次の機能を開放できます。
+
+    .cta-main
+      = link_to "今すぐ体験する", "#lp-section", class: "lp-btn big"
+
+    .cta-sub
+      = link_to "すでに会員の方はこちら（プラン変更・解約）", public_portal_path, method: :post, class: "lp-link"
+
+  %footer.lp-footer
+    .footer-inner
+      %p.footer-copy © BeMyStyle
+
+      .footer-links
+        = link_to "特定商取引法", public_legal_path
+        = link_to "利用規約", public_terms_path
+        = link_to "プライバシーポリシー", public_privacy_path

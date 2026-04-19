@@ -1,0 +1,38 @@
+/ app/views/public/pages/terms.html.haml
+- content_for :title, "利用規約"
+
+.lp-header.light
+  .header-inner
+    = link_to root_path, class: "lp-logo dark" do
+      %span.logo-main BeMyStyle
+
+    = link_to "← 戻る", :back, class: "back-link"
+    
+.legal-container
+  %h1 利用規約
+
+  %p 本規約は、BeMyStyle（以下「当サービス」）の利用条件を定めるものです。
+
+  %h2 第1条（適用）
+  %p 本規約は、ユーザーと当サービスとの間の一切の関係に適用されます。
+
+  %h2 第2条（利用登録）
+  %p 登録希望者が申請し、当サービスが承認した場合に利用登録が完了します。
+
+  %h2 第3条（禁止事項）
+  %ul
+    %li 法令または公序良俗に違反する行為
+    %li 他のユーザーへの迷惑行為
+    %li サービスの運営を妨害する行為
+
+  %h2 第4条（料金および支払）
+  %p ユーザーは当サービスの定める料金を支払うものとします。
+
+  %h2 第5条（解約）
+  %p ユーザーはいつでも解約可能です。
+
+  %h2 第6条（免責事項）
+  %p 当サービスは、提供内容に関して一切の保証を行いません。
+
+  %h2 第7条（規約変更）
+  %p 本規約は必要に応じて変更される場合があります。

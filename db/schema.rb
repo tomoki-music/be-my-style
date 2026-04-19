@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_03_15_060323) do
+ActiveRecord::Schema.define(version: 2026_04_18_160827) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -476,6 +476,17 @@ ActiveRecord::Schema.define(version: 2026_03_15_060323) do
     t.index ["event_id"], name: "index_songs_on_event_id"
   end
 
+  create_table "subscriptions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "stripe_customer_id"
+    t.string "stripe_subscription_id"
+    t.string "status"
+    t.string "plan"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_subscriptions_on_customer_id"
+  end
+
   create_table "taggings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "tag_id"
     t.string "taggable_type"
@@ -561,5 +572,6 @@ ActiveRecord::Schema.define(version: 2026_03_15_060323) do
   add_foreign_key "song_customers", "customers"
   add_foreign_key "song_customers", "songs"
   add_foreign_key "songs", "events"
+  add_foreign_key "subscriptions", "customers"
   add_foreign_key "taggings", "tags"
 end

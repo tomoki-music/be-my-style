@@ -1,5 +1,8 @@
 Rails.application.routes.draw do
 
+  namespace :public do
+    get 'lp/index'
+  end
   root to: 'public/homes#top'
 
   # オンボーディング
@@ -27,6 +30,19 @@ Rails.application.routes.draw do
   namespace :public do
     get 'homes/top'
     get 'homes/about'
+
+    # ランディングページ
+    get 'lp', to: 'public/lp#index'
+
+    # サブスク
+    post '/webhooks/stripe', to: 'webhooks#stripe'
+    post 'checkout/:plan', to: 'stripe#create_checkout', as: :checkout
+    post '/portal', to: 'stripe#portal'
+
+    # 特定商取引法、プライバシーポリシー、利用規約
+    get 'legal', to: 'pages#legal'
+    get 'terms', to: 'pages#terms'
+    get 'privacy', to: 'pages#privacy'
 
     # アーティスト関連
     resources :customers, only: [:index,:show,:edit,:update] do

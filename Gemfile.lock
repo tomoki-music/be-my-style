@@ -98,6 +98,7 @@ GEM
     aws-sigv4 (1.5.2)
       aws-eventstream (~> 1, >= 1.0.2)
     bcrypt (3.1.18)
+    bigdecimal (4.1.1)
     bindex (0.8.1)
     bootsnap (1.16.0)
       msgpack (~> 1.2)
@@ -215,6 +216,7 @@ GEM
     listen (3.8.0)
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
+    logger (1.7.0)
     loofah (2.20.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
@@ -360,6 +362,9 @@ GEM
       sprockets (>= 3.0.0)
     sqlite3 (1.6.2-arm64-darwin)
     sqlite3 (1.6.2-x86_64-darwin)
+    stripe (19.0.0)
+      bigdecimal
+      logger
     temple (0.10.0)
     thor (1.2.1)
     tilt (2.1.0)
@@ -442,6 +447,7 @@ DEPENDENCIES
   selenium-webdriver
   spring
   sqlite3 (~> 1.4)
+  stripe
   turbolinks (~> 5)
   tzinfo-data
   uglifier
