@@ -1,0 +1,51 @@
+= form_with model: [:admin, @activity], local: true, html: { multipart: true } do |f|
+  - if @activity.errors.any?
+    .alert.alert-danger
+      %ul.mb-0
+        - @activity.errors.full_messages.each do |message|
+          %li= message
+
+  .card.shadow-sm
+    .card-body
+      .form-row
+        .form-group.col-md-6
+          = f.label :customer_id, "投稿者"
+          = f.collection_select :customer_id, Customer.order(:name), :id, :name, {}, class: "form-control"
+        .form-group.col-md-6
+          = f.label :title, "タイトル"
+          = f.text_field :title, class: "form-control"
+
+      .form-row
+        .form-group.col-md-6
+          = f.label :activity_image, "画像"
+          = f.file_field :activity_image, class: "form-control-file"
+        .form-group.col-md-6
+          = f.label :youtube_url, "Youtube URL"
+          = f.text_field :youtube_url, class: "form-control"
+
+      .form-row
+        .form-group.col-md-4
+          = f.label :keep, "Keep"
+          = f.text_field :keep, class: "form-control"
+        .form-group.col-md-4
+          = f.label :problem, "Problem"
+          = f.text_field :problem, class: "form-control"
+        .form-group.col-md-4
+          = f.label :try, "Try"
+          = f.text_field :try, class: "form-control"
+
+      .form-row
+        .form-group.col-md-6
+          = f.label :url, "参考URL"
+          = f.text_field :url, class: "form-control"
+        .form-group.col-md-6
+          = f.label :url_comment, "URL説明"
+          = f.text_field :url_comment, class: "form-control"
+
+      .form-group
+        = f.label :introduction, "詳細"
+        = f.text_area :introduction, rows: 8, class: "form-control"
+
+      .d-flex.justify-content-between
+        = link_to "一覧へ戻る", admin_activities_path, class: "btn btn-outline-secondary"
+        = f.submit (@activity.persisted? ? "更新する" : "登録する"), class: "btn btn-primary"

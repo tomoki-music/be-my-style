@@ -7,9 +7,9 @@ class Business::RelationshipsController < ApplicationController
     current_customer.follow(customer.id)
     customer.business_notification_follow(current_customer)
 
-    if current_customer != @customer
+    if current_customer != customer
       if customer.confirm_mail
-        CustomerMailer.with(ac_customer: current_customer, ps_customer: customer).create_follow_mail.deliver_later
+        CustomerMailer.with(ac_customer: current_customer, ps_customer: customer).business_follow_mail.deliver_later
       end
     end
 

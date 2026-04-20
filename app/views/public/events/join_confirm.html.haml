@@ -13,6 +13,39 @@
       = join
       %hr
 
+  - if current_customer.paid_plan?
+    .join-credit-summary
+      - if @session_credit_available
+        %h4 今月の有料プラン特典
+        %p
+          このイベントでは
+          %strong= "#{@session_credit_amount.to_s(:delimited)}円分"
+          の参加費特典が適用されます。
+        .join-credit-summary__breakdown
+          .join-credit-summary__row
+            %span イベント参加費
+            %strong= "#{@event.entrance_fee.to_s(:delimited)}円"
+          .join-credit-summary__row
+            %span 特典適用
+            %strong.join-credit-summary__discount= "-#{@session_credit_amount.to_s(:delimited)}円"
+          .join-credit-summary__row.join-credit-summary__row--total
+            %span 当日のお支払い
+            %strong= "#{@remaining_fee_after_credit.to_s(:delimited)}円"
+        - if @remaining_fee_after_credit.zero?
+          %p.join-credit-summary__free 現地集金は不要です。
+        - else
+          %p.join-credit-summary__remaining
+            特典は
+            %strong 1,500円分まで
+            のため、当日は残額のみのお支払いになります。
+      - else
+        %h4 今月の有料プラン特典
+        %p 今月の1,500円分特典はすでに別イベントで使用済みです。
+        .join-credit-summary__breakdown
+          .join-credit-summary__row.join-credit-summary__row--total
+            %span 今回の当日支払い
+            %strong= "#{@event.entrance_fee.to_s(:delimited)}円"
+
   = form_tag(public_event_join_path(@event), method: :post, id: 'join_btn', onSubmit: "return CheckJoin()") do
     - @join_part_ids.each_with_index do |part_id, i|
       = hidden_field_tag "join_part_ids[#{i}]", part_id

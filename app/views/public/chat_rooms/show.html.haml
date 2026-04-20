@@ -13,10 +13,7 @@
           .form-inline
             %span
               = link_to public_chat_rooms_path(customer_id: matching_customer.id), method: :post do
-                - if matching_customer.profile_image.present?
-                  = image_tag matching_customer.profile_image, class: "icon_mini"
-                - else
-                  = image_tag 'no_image', class: "icon_mini"
+                = customer_avatar_tag(matching_customer, class_name: "icon_mini")
                 %strong.do-chat
                   = matching_customer.name + 'さんと チャット🎵'
             %hr
@@ -31,15 +28,15 @@
                 %li
                 = link_to public_customer_path(chat_message.customer), class: "chat-room-customer-link" do
                   .img-element
-                    - if chat_message.customer.profile_image.present?
-                      = image_tag chat_message.customer.profile_image
-                    - else
-                      = image_tag 'no_image'
+                    = customer_avatar_tag(chat_message.customer)
                   .name-element
                     = chat_message.customer.name + 'さんのメッセージ'
                 %li
                 .partner-content
-                  = simple_format(chat_message.content)
+                  - if chat_message.stamped?
+                    %span.stamp-badge= chat_message.stamp_label
+                  - elsif chat_message.content.present?
+                    = simple_format(chat_message.content)
                 - if chat_message.attachments.attached?
                   - chat_message.attachments.each do |file|
                     %li
@@ -70,15 +67,15 @@
                 %li
                 = link_to public_customer_path(chat_message.customer), class: "chat-room-customer-link" do
                   .img-element
-                    - if chat_message.customer.profile_image.present?
-                      = image_tag chat_message.customer.profile_image
-                    - else
-                      = image_tag 'no_image'
+                    = customer_avatar_tag(chat_message.customer)
                   .name-element
                     = chat_message.customer.name + 'さんのメッセージ'
                 %li
                 .self-content
-                  = simple_format(chat_message.content)
+                  - if chat_message.stamped?
+                    %span.stamp-badge= chat_message.stamp_label
+                  - elsif chat_message.content.present?
+                    = simple_format(chat_message.content)
                 - if chat_message.attachments.attached?
                   - chat_message.attachments.each do |file|
                     %li
@@ -110,6 +107,12 @@
           = f.text_area :content, autofocus: true, class: 'chat-form'
           = f.file_field :attachments, multiple: true, accept: 'image/*,application/pdf'
           = f.submit "メッセージを送信", data: { disable_with: '送信中', confirm: "メッセージを送信しますか？"}, class: 'btn btn-info chat-form-btn'
+        .stamp-picker
+          - stamp_options.each do |stamp_type, label|
+            = form_with model: [:public, ChatMessage.new], local: true, html: { class: "stamp-picker-form" } do |f|
+              = f.hidden_field :chat_room_id, value: @chat_room.id
+              = f.hidden_field :stamp_type, value: stamp_type
+              = f.submit label, class: "stamp-button"
 
     .col-md-3
       .partner-container
@@ -117,10 +120,7 @@
         .card
           = link_to public_customer_path(@chat_room_customer) do
             .img-container
-              - if @chat_room_customer.profile_image.present?
-                = image_tag @chat_room_customer.profile_image
-              - else
-                = image_tag 'no_image'
+              = customer_avatar_tag(@chat_room_customer)
           .card-body.text-container
             %h5.card-title
               = @chat_room_customer.human_attribute_enum(:name)

@@ -102,7 +102,15 @@
           %span.plan-badge Popular
           %h3 light
           %p.plan-tag 交流と発信を増やしたい
-        = link_to "ライトで始める", public_checkout_path("light"), method: :post, class: "lp-btn"
+          - if customer_signed_in?
+            - if current_customer.plan == "light"
+              %span.lp-btn.lp-btn-disabled 契約中
+            - elsif current_customer.stripe_managed_subscription?
+              = link_to "このプランに変更", public_portal_path, method: :post, class: "lp-btn"
+            - else
+              = link_to "ライトで始める", public_checkout_path("light"), method: :post, class: "lp-btn"
+          - else
+            = link_to "ライトで始める", new_customer_session_path, class: "lp-btn"
         %p.price ¥1,500/月
         %p.plan-copy 見るだけでなく、自分から発信してつながりを広げたい人向け。
         %ul
@@ -117,7 +125,15 @@
           %span.plan-badge Recommended
           %h3 core
           %p.plan-tag イベントや企画を動かしたい
-        = link_to "コアで成長する", public_checkout_path("core"), method: :post, class: "lp-btn primary"
+          - if customer_signed_in?
+            - if current_customer.plan == "core"
+              %span.lp-btn.primary.lp-btn-disabled 契約中
+            - elsif current_customer.stripe_managed_subscription?
+              = link_to "このプランに変更", public_portal_path, method: :post, class: "lp-btn primary"
+            - else
+              = link_to "コアで成長する", public_checkout_path("core"), method: :post, class: "lp-btn primary"
+          - else
+            = link_to "コアで成長する", new_customer_session_path, class: "lp-btn primary"
         %p.price ¥3,980/月
         %p.plan-copy 参加する側から一歩進んで、自分で企画や募集を動かしたい人へ。
         %ul
@@ -132,7 +148,15 @@
           %span.plan-badge Owner
           %h3 premium
           %p.plan-tag コミュニティを育てたい
-        = link_to "本気で変わる", public_checkout_path("premium"), method: :post, class: "lp-btn"
+          - if customer_signed_in?
+            - if current_customer.plan == "premium"
+              %span.lp-btn.lp-btn-disabled 契約中
+            - elsif current_customer.stripe_managed_subscription?
+              = link_to "このプランに変更", public_portal_path, method: :post, class: "lp-btn"
+            - else
+              = link_to "本気で変わる", public_checkout_path("premium"), method: :post, class: "lp-btn"
+          - else
+            = link_to "本気で変わる", new_customer_session_path, class: "lp-btn"
         %p.price ¥9,800/月
         %p.plan-copy コミュニティ運営や継続的な活動づくりまで本格的に進めたい人向け。
         %ul

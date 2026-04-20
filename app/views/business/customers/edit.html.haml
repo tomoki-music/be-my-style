@@ -28,7 +28,11 @@
 
       .form-group
         %label 自己紹介
-        = f.text_area :introduction, class:"form-control"
+        = f.text_area :introduction, class:"form-control", rows: 6, placeholder: placeholder_markdown_profile
+
+      .form-group
+        %label 契約プラン管理
+        = render "shared/subscription_manager", customer: @customer
 
       - if @customer.business_user?
 
@@ -38,11 +42,11 @@
 
         .form-group
           %label スキル
-          = f.text_area :skills, class:"form-control"
+          = f.text_area :skills, class:"form-control", rows: 6, placeholder: "## 得意領域\n- Rails\n- 営業企画\n- UI設計"
 
         .form-group
           %label 実績
-          = f.text_area :achievements, class:"form-control"
+          = f.text_area :achievements, class:"form-control", rows: 6, placeholder: "## 実績\n- 2025年に新規事業立ち上げ\n- BtoB営業で月間MVP"
 
       - if @customer.music_user?
 

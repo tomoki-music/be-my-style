@@ -20,6 +20,14 @@
       %td= @song.song_name
 
     %tr
+      %th 演奏時間
+      %td= @song.performance_time.presence || "未設定"
+
+    %tr
+      %th 演奏開始時間
+      %td= @song.performance_start_time.presence || "未設定"
+
+    %tr
       %th 所属イベント
       %td
         = link_to @event.event_name, public_event_path(@event), data: { turbolinks: false }

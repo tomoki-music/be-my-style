@@ -1,0 +1,23 @@
+= render 'layouts/admin_header_menu'
+
+.container.py-4
+  .d-flex.justify-content-between.align-items-center.mb-3
+    %h2.mb-0= "イベントコメント詳細 ##{@request.id}"
+    .btn-group
+      = link_to "編集", edit_admin_event_comment_path(@request), class: "btn btn-success"
+      = link_to "削除", admin_event_comment_path(@request), method: :delete, data: { confirm: "このイベントコメントを削除しますか？" }, class: "btn btn-danger"
+
+  .card.shadow-sm
+    .card-body
+      %dl.row.mb-0
+        %dt.col-sm-3 イベント
+        %dd.col-sm-9= @request.event&.event_name
+        %dt.col-sm-3 投稿者
+        %dd.col-sm-9= @request.customer&.name
+        %dt.col-sm-3 内容
+        %dd.col-sm-9= @request.stamped? ? @request.stamp_label : simple_format(@request.request)
+        %dt.col-sm-3 投稿日
+        %dd.col-sm-9= l @request.created_at, format: :short
+
+  .mt-3
+    = link_to "一覧へ戻る", admin_event_comments_path, class: "btn btn-outline-secondary"

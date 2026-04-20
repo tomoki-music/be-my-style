@@ -1,0 +1,79 @@
+= form_with model: [:admin, @event], local: true, html: { multipart: true } do |f|
+  - if @event.errors.any?
+    .alert.alert-danger
+      %ul.mb-0
+        - @event.errors.full_messages.each do |message|
+          %li= message
+
+  .card.shadow-sm
+    .card-body
+      .form-row
+        .form-group.col-md-6
+          = f.label :event_name, "イベント名"
+          = f.text_field :event_name, class: "form-control"
+        .form-group.col-md-3
+          = f.label :customer_id, "主催者"
+          = f.collection_select :customer_id, Customer.order(:name), :id, :name, {}, class: "form-control"
+        .form-group.col-md-3
+          = f.label :community_id, "コミュニティ"
+          = f.collection_select :community_id, Community.order(:name), :id, :name, {}, class: "form-control"
+
+      .form-row
+        .form-group.col-md-4
+          = f.label :event_start_time, "開始日時"
+          = f.datetime_field :event_start_time, class: "form-control"
+        .form-group.col-md-4
+          = f.label :event_end_time, "終了日時"
+          = f.datetime_field :event_end_time, class: "form-control"
+        .form-group.col-md-4
+          = f.label :event_entry_deadline, "参加締切"
+          = f.datetime_field :event_entry_deadline, class: "form-control"
+
+      .form-row
+        .form-group.col-md-4
+          = f.label :request_deadline, "リクエスト締切"
+          = f.datetime_field :request_deadline, class: "form-control"
+        .form-group.col-md-4
+          = f.label :entrance_fee, "参加費"
+          = f.number_field :entrance_fee, class: "form-control"
+        .form-group.col-md-4
+          = f.label :event_image, "イベント画像"
+          = f.file_field :event_image, class: "form-control-file"
+
+      .form-row
+        .form-group.col-md-6
+          = f.label :place, "開催場所"
+          = f.text_field :place, class: "form-control"
+        .form-group.col-md-6
+          = f.label :address, "住所"
+          = f.text_field :address, class: "form-control"
+
+      .form-row
+        .form-group.col-md-6
+          = f.label :url, "参考URL"
+          = f.text_field :url, class: "form-control"
+        .form-group.col-md-6
+          = f.label :url_comment, "URL説明"
+          = f.text_field :url_comment, class: "form-control"
+
+      .form-group
+        = f.label :introduction, "イベント補足"
+        = f.text_area :introduction, rows: 6, class: "form-control"
+
+      %hr
+      %h4 曲目
+      #songs.song-container
+        = f.fields_for :songs do |song|
+          - index = f.object.songs.index(song.object)
+          .field.mb-4
+            .song-header
+              %strong= "#{index + 1}曲目"
+            = render 'admin/events/song_fields', f: song
+      .links.mb-3
+        = link_to_add_association '曲を追加', f, :songs,
+          class: 'btn btn-outline-success js-add-song-field-btn',
+          data: { association: 'songs', association_insertion_method: 'append', association_insertion_node: '#songs' }
+
+      .d-flex.justify-content-between
+        = link_to "一覧へ戻る", admin_events_path, class: "btn btn-outline-secondary"
+        = f.submit (@event.persisted? ? "更新する" : "登録する"), class: "btn btn-primary"

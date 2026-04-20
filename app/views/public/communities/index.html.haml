@@ -8,6 +8,16 @@
       new_public_community_path,
       class: "btn btn-info community-index-create-btn"
 
+.directory-search
+  = form_with url: public_communities_path, method: :get, local: true, class: "directory-search__form" do
+    = text_field_tag :keyword, params[:keyword], placeholder: "コミュニティ名・紹介・好きなアーティストで検索", class: "directory-search__input"
+    = select_tag :prefecture_id, options_for_select([["活動場所", ""]] + prefecture_options_for_select, params[:prefecture_id]), class: "directory-search__select"
+    = select_tag :activity_stance, options_for_select([["活動ペース", ""]] + community_activity_stance_options, params[:activity_stance]), class: "directory-search__select"
+    = select_tag :genre_id, options_from_collection_for_select(Genre.order(:name), :id, :name, params[:genre_id]), include_blank: "ジャンル", class: "directory-search__select"
+    = select_tag :sort, options_for_select(community_sort_options, params[:sort].presence || "members_desc"), class: "directory-search__select"
+    = submit_tag "検索する", class: "btn btn-info directory-search__submit"
+    = link_to "リセット", public_communities_path, class: "btn btn-outline-secondary directory-search__reset"
+
 .communities-kaminari
   = paginate @communities
 .community-toc.d-sm-none
@@ -39,10 +49,7 @@
           %br
           .community-owner-img
             = link_to public_customer_path(@owner), data: { 'turbolinks': false } do
-              - if @owner.profile_image.present?
-                = image_tag @owner.profile_image
-              - else
-                = image_tag 'no_image'
+              = customer_avatar_tag(@owner)
               .owner-name
                 = @owner.name
         %hr

@@ -14,7 +14,17 @@
       %li
         = link_to "Topページ", admin_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
       %li
-        = link_to "イベント設定", admin_events_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+        = link_to "コミュニティ", admin_communities_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        = link_to "活動報告", admin_activities_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        = link_to "イベント", admin_events_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        = link_to "活動コメント", admin_activity_comments_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        = link_to "イベントコメント", admin_event_comments_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        = link_to "分析", admin_analytics_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
       %li
         %i.fa-solid.fa-right-from-bracket
         = link_to "管理者ログアウト", destroy_admin_session_path, method: :delete, class: "btn btn-secondary", data: { 'turbolinks': false }
@@ -31,7 +41,17 @@
       %li
         = link_to "Topページ", admin_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
       %li
-        = link_to "イベント設定", admin_events_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+        = link_to "コミュニティ", admin_communities_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        = link_to "活動報告", admin_activities_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        = link_to "イベント", admin_events_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        = link_to "活動コメント", admin_activity_comments_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        = link_to "イベントコメント", admin_event_comments_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        = link_to "分析", admin_analytics_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
       %li
         %i.fa-solid.fa-right-from-bracket
         = link_to "管理者ログアウト", destroy_admin_session_path, method: :delete, class: "btn btn-secondary", data: { 'turbolinks': false }

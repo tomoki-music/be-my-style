@@ -33,10 +33,7 @@
                 %br
                 .event-owner-img
                   = link_to public_customer_path(@owner), data: { 'turbolinks': false } do
-                    - if @owner.profile_image.present?
-                      = image_tag @owner.profile_image
-                    - else
-                      = image_tag 'no_image'
+                    = customer_avatar_tag(@owner)
                     .owner-name
                       = @owner.name
               %hr
@@ -107,6 +104,42 @@
                     %h5.font-weight-bold
                       <i class="fa-solid fa-sack-dollar"></i>
                       = @event.entrance_fee.to_s(:delimited) + "円"
+                    - if current_customer.paid_plan?
+                      .session-credit-panel
+                        - if @current_customer_session_credit_available
+                          %span.session-credit-panel__badge 今月の特典対象
+                          %p
+                            有料プラン特典として、
+                            %strong= "#{@current_customer_session_credit_amount.to_s(:delimited)}円分"
+                            をこのイベントに適用できます。
+                          .session-credit-panel__breakdown
+                            .session-credit-panel__row
+                              %span.session-credit-panel__label イベント参加費
+                              %strong= "#{@event.entrance_fee.to_s(:delimited)}円"
+                            .session-credit-panel__row
+                              %span.session-credit-panel__label 特典適用
+                              %strong.session-credit-panel__discount
+                                = "-#{@current_customer_session_credit_amount.to_s(:delimited)}円"
+                            .session-credit-panel__row.session-credit-panel__row--total
+                              %span.session-credit-panel__label 当日のお支払い
+                              %strong= "#{@current_customer_remaining_fee.to_s(:delimited)}円"
+                          - if @current_customer_remaining_fee.zero?
+                            %p.session-credit-panel__free 現地集金は不要です。
+                          - else
+                            %p.session-credit-panel__remaining
+                              今回は特典の
+                              %strong 1,500円分のみ
+                              が適用されるため、当日は残額のみのお支払いです。
+                            %p.session-credit-panel__hint
+                              スタッフ向け表示でも「有料プラン」「集金不要 / 残額あり」が分かるようになります。
+                        - else
+                          %span.session-credit-panel__badge.session-credit-panel__badge--muted 今月特典は使用済み
+                          %p
+                            今月の1,500円分特典は別イベントで利用済みです。
+                          .session-credit-panel__breakdown
+                            .session-credit-panel__row.session-credit-panel__row--total
+                              %span.session-credit-panel__label 今回の当日支払い
+                              %strong= "#{@event.entrance_fee.to_s(:delimited)}円"
                 %tr
                   %th{scope:"row"} 開催場所
                   %td
@@ -131,11 +164,16 @@
                       .join-member-list
                         - @join_members.each do |customer|
                           = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
-                            - if customer.profile_image.present?
-                              = image_tag customer.profile_image, class: "icon_mini"
-                            - else
-                              = image_tag 'no_image', class: "icon_mini"
+                            = customer_avatar_tag(customer, class_name: "icon_mini")
                             = customer.name
+                          - if @event.paid_participant_for_display?(customer)
+                            %span.member-plan-badge.member-plan-badge--paid
+                              %i.fa-solid.fa-star
+                              有料プラン
+                          - if @event.session_credit_applied_for?(customer)
+                            %span.member-plan-badge.member-plan-badge--credit
+                              %i.fa-solid.fa-sparkles
+                              集金不要
                           %br
                           %hr
                 %tr
@@ -203,6 +241,10 @@
                                       - else
                                         %span.badge.badge-success 楽曲成立🎵
                                       %br
+                                      - if song.performance_start_time.present?
+                                        %span.song-start-time
+                                          = "開始 #{song.performance_start_time}"
+                                        %br
                                       %div{ style: "white-space: normal; word-break: break-word;" }
                                         = link_to song.song_name, public_event_song_path(@event, song), class: "song-detail-link", data: { turbolinks: false }
 
@@ -230,6 +272,14 @@
                                                               class: "icon_mini",
                                                               style: "width:24px; height:24px; border-radius:50%;")
                                                   = customer.name
+                                                - if @event.paid_participant_for_display?(customer)
+                                                  %span.member-plan-badge.member-plan-badge--paid
+                                                    %i.fa-solid.fa-star
+                                                    有料
+                                                - if @event.session_credit_applied_for?(customer)
+                                                  %span.member-plan-badge.member-plan-badge--credit
+                                                    %i.fa-solid.fa-sparkles
+                                                    集金不要
                                                 - if customer == current_customer && join_part.customers.include?(current_customer) && @event.event_start_time > Time.current + 7.days
                                                   = link_to "削除",
                                                     public_event_delete_path(@event, join_part_id: join_part.id, customer_id: customer.id),
@@ -251,6 +301,10 @@
                     %th{scope:"row"} CSVダウンロード
                     %td
                       = link_to "参加一覧ダウンロード", public_event_path(@event, format: :csv), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
+                      %p.mt-2.mb-0.text-muted
+                        CSVには有料プラン参加者と、今月特典適用済みユーザーがわかる表記を含めています。
+                      %p.mb-0.text-muted
+                        参加費が1,500円を超えるイベントでも、現地集金が必要な参加者を見分けやすくしています。
         #event-request.event-request
           - if @event.request_deadline.present?
             .event-request-deadline

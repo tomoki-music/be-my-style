@@ -12,10 +12,7 @@
   .form-inline
     %span
       = link_to public_customer_path(visitor), data: { 'turbolinks': false } do
-        - if visitor.profile_image.present?
-          = image_tag visitor.profile_image, class: "icon_mini"
-        - else
-          = image_tag 'no_image', class: "icon_mini"
+        = customer_avatar_tag(visitor, class_name: "icon_mini")
         %strong
           = visitor.name + 'さん'
       が

@@ -173,7 +173,11 @@ margin:2px 0;
 .comment-form{
 
 margin-top:15px;
+display:block;
+
+form:first-child{
 display:flex;
+}
 
 }
 

@@ -2,7 +2,23 @@
 
 .activity-index-head-title
   %h2 みんなの活動報告一覧
-  = link_to "活動報告をする！", new_public_activity_path, data: { 'turbolinks': false }, class: "btn btn-info activity-index-create-btn"
+  - if feature_available?(:music_activity_create)
+    = link_to "活動報告をする！", new_public_activity_path, data: { 'turbolinks': false }, class: "btn btn-info activity-index-create-btn"
+  - else
+    = render "shared/feature_gate",
+      feature_key: :music_activity_create,
+      title: "活動報告を始める",
+      message: "一覧はそのまま見られます。投稿を始めるときはlightプラン以上で開放できます。",
+      cta: "lightで投稿を始める",
+      class_name: "feature-gate--inline"
+
+.directory-search
+  = form_with url: public_activities_path, method: :get, local: true, class: "directory-search__form" do
+    = text_field_tag :keyword, params[:keyword], placeholder: "タイトル・KPT・紹介文で検索", class: "directory-search__input"
+    = text_field_tag :author, params[:author], placeholder: "投稿者名で検索", class: "directory-search__input"
+    = select_tag :sort, options_for_select(activity_sort_options, params[:sort].presence || "newest"), class: "directory-search__select"
+    = submit_tag "検索する", class: "btn btn-info directory-search__submit"
+    = link_to "リセット", public_activities_path, class: "btn btn-outline-secondary directory-search__reset"
 .activities-kaminari
   = paginate @activities
 - if @activities.present?

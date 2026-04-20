@@ -16,7 +16,11 @@
           %ul.list-style-none
             %li
               %i.fa-solid.fa-right-from-bracket
-              = link_to "ログアウト", destroy_customer_session_path, method: :delete, class: "btn btn-secondary menu-sp-btn"
+              = button_to "ログアウト",
+                destroy_customer_session_path,
+                method: :delete,
+                form_class: "d-inline",
+                class: "btn btn-secondary menu-sp-btn"
 
   .slider
     = image_tag 'public-top2.jpg', class: "images"

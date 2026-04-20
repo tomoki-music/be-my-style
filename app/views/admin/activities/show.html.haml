@@ -1,0 +1,29 @@
+= render 'layouts/admin_header_menu'
+
+.container.py-4
+  .d-flex.justify-content-between.align-items-center.mb-3
+    %h2.mb-0= "Activity詳細 ##{@activity.id}"
+    .btn-group
+      = link_to "編集", edit_admin_activity_path(@activity), class: "btn btn-success"
+      = link_to "削除", admin_activity_path(@activity), method: :delete, data: { confirm: "この活動報告を削除しますか？" }, class: "btn btn-danger"
+
+  .card.shadow-sm
+    .card-body
+      %dl.row.mb-0
+        %dt.col-sm-3 タイトル
+        %dd.col-sm-9= @activity.title
+        %dt.col-sm-3 投稿者
+        %dd.col-sm-9= @activity.customer&.name
+        %dt.col-sm-3 Keep
+        %dd.col-sm-9= @activity.keep
+        %dt.col-sm-3 Problem
+        %dd.col-sm-9= @activity.problem
+        %dt.col-sm-3 Try
+        %dd.col-sm-9= @activity.try
+        %dt.col-sm-3 URL
+        %dd.col-sm-9= @activity.url.presence || "-"
+        %dt.col-sm-3 詳細
+        %dd.col-sm-9= simple_format(@activity.introduction)
+
+  .mt-3
+    = link_to "一覧へ戻る", admin_activities_path, class: "btn btn-outline-secondary"

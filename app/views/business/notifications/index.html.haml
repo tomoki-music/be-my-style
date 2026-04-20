@@ -5,37 +5,47 @@
   %h2 通知
 
   - @notifications.each do |notification|
-
-    .notification-card
-
-      - case notification.action
-
-      - when "like"
-
-        %p
-          = notification.visitor.name
-          があなたの投稿にいいねしました
-
-      - when "message"
-
-        %p
-          = notification.visitor.name
-          がコメントしました
-
-      - when "follow"
-
-        %p
-          = notification.visitor.name
-          がフォローしました
-
-      - when "request"
-
-        %p
-          = notification.visitor.name
-          があなたのコミュニティへ参加申請しました
-
-      - when "accept"
-
-        %p
-          = notification.visitor.name
-          があなたのコミュニティ参加申請を受理しました
+    - link_path = business_notification_path(notification)
+    - content = capture do
+      .notification-card
+        - case notification.action
+        - when "like"
+          %p
+            = notification.visitor.name
+            があなたの投稿にいいねしました
+        - when "message"
+          %p
+            = notification.visitor.name
+            があなたの投稿にコメントしました
+        - when "follow"
+          %p
+            = notification.visitor.name
+            がフォローしました
+        - when "request"
+          %p
+            = notification.visitor.name
+            があなたのコミュニティへ参加申請しました
+        - when "accept"
+          %p
+            = notification.visitor.name
+            があなたのコミュニティ参加申請を受理しました
+        - when "project_created"
+          %p
+            = notification.visitor.name
+            が所属コミュニティで新しいプロジェクトを作成しました
+        - when "project_joined"
+          %p
+            = notification.visitor.name
+            がプロジェクトに参加しました
+        - when "project_message"
+          %p
+            = notification.visitor.name
+            がプロジェクトにコメントしました
+        - else
+          %p 新しい通知があります
+        %small.text-muted= l(notification.created_at, format: :short)
+    - if link_path.present?
+      = link_to link_path, class: "text-decoration-none text-reset", data: { turbolinks: false } do
+        = content
+    - else
+      = content

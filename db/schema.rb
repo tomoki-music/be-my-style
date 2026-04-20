@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_04_18_160827) do
+ActiveRecord::Schema.define(version: 2026_04_19_120000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -101,6 +101,7 @@ ActiveRecord::Schema.define(version: 2026_04_18_160827) do
     t.bigint "community_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "stamp_type"
     t.index ["chat_room_id"], name: "index_chat_messages_on_chat_room_id"
     t.index ["community_id"], name: "index_chat_messages_on_community_id"
     t.index ["customer_id"], name: "index_chat_messages_on_customer_id"
@@ -128,6 +129,7 @@ ActiveRecord::Schema.define(version: 2026_04_18_160827) do
     t.bigint "activity_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "stamp_type"
     t.index ["activity_id"], name: "index_comments_on_activity_id"
     t.index ["customer_id"], name: "index_comments_on_customer_id"
   end
@@ -316,6 +318,9 @@ ActiveRecord::Schema.define(version: 2026_04_18_160827) do
     t.bigint "join_part_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.boolean "session_credit_applied", default: false, null: false
+    t.integer "session_credit_amount", default: 0, null: false
+    t.string "plan_snapshot"
     t.index ["customer_id"], name: "index_join_part_customers_on_customer_id"
     t.index ["join_part_id"], name: "index_join_part_customers_on_join_part_id"
   end
@@ -358,6 +363,7 @@ ActiveRecord::Schema.define(version: 2026_04_18_160827) do
     t.text "body"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "stamp_type"
     t.index ["customer_id"], name: "index_messages_on_customer_id"
     t.index ["post_id"], name: "index_messages_on_post_id"
   end
@@ -373,8 +379,12 @@ ActiveRecord::Schema.define(version: 2026_04_18_160827) do
     t.datetime "updated_at", precision: 6, null: false
     t.integer "community_id"
     t.integer "activity_id"
+    t.integer "post_id"
+    t.integer "project_id"
     t.index ["comment_id"], name: "index_notifications_on_comment_id"
     t.index ["event_id"], name: "index_notifications_on_event_id"
+    t.index ["post_id"], name: "index_notifications_on_post_id"
+    t.index ["project_id"], name: "index_notifications_on_project_id"
     t.index ["visited_id"], name: "index_notifications_on_visited_id"
     t.index ["visitor_id"], name: "index_notifications_on_visitor_id"
   end
@@ -452,6 +462,7 @@ ActiveRecord::Schema.define(version: 2026_04_18_160827) do
     t.bigint "event_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "stamp_type"
     t.index ["customer_id"], name: "index_requests_on_customer_id"
     t.index ["event_id"], name: "index_requests_on_event_id"
   end
@@ -473,6 +484,8 @@ ActiveRecord::Schema.define(version: 2026_04_18_160827) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.integer "position"
+    t.string "performance_time"
+    t.string "performance_start_time"
     t.index ["event_id"], name: "index_songs_on_event_id"
   end
 

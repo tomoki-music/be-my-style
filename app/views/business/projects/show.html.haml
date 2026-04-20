@@ -68,7 +68,7 @@
   / =========================
   .project-section
     %h3 概要
-    %p= simple_format(@project.description)
+    .markdown-body= markdown(@project.description)
 
   / =========================
   / メンバー
@@ -81,10 +81,7 @@
         - customer = member.customer
         = link_to business_customer_path(customer) do
           .member-card
-            - if customer.profile_image.attached?
-              = image_tag customer.profile_image, class:"member-icon"
-            - else
-              = image_tag "no_image", class:"member-icon"
+            = customer_avatar_tag(customer, class_name: "member-icon")
 
             .member-info
               %span.member-name= customer.name
@@ -110,10 +107,7 @@
             .chat-row
 
               .chat-avatar
-                - if msg.customer.profile_image.attached?
-                  = image_tag msg.customer.profile_image, class:"chat-avatar-img"
-                - else
-                  %span= msg.customer.name.first
+                = customer_avatar_tag(msg.customer, class_name: "chat-avatar-img")
 
               .chat-content
 
@@ -126,7 +120,7 @@
                   %span.chat-time= l(msg.created_at, format: :short)
 
                 .chat-bubble{ class: is_me ? "me" : "" }
-                  %p.chat-body= msg.body
+                  .chat-body= simple_format(msg.body)
 
                 - if is_me
                   = link_to "削除",

@@ -25,10 +25,7 @@
             .owner-info
 
               .owner-avatar
-                - if @community.owner.profile_image.attached?
-                  = image_tag @community.owner.profile_image, class:"owner-img"
-                - else
-                  = image_tag "no_image", class:"owner-img"
+                = customer_avatar_tag(@community.owner, class_name: "owner-img")
 
               .owner-meta
                 %span.owner-label オーナー
@@ -84,30 +81,41 @@
       .card
         %h3 概要
         .introduction
-          = simple_format(@community.introduction)
+          .markdown-body= markdown(@community.introduction)
 
       .card
         .section-header
           %h3 プロジェクト
 
-          - if current_customer.can_manage_community?(@community)
+          - if current_customer.can_create_project_for?(@community)
             = link_to "＋ 作成",
               new_business_project_path(community_id: @community.id),
               class:"btn btn-primary btn-small"
+          - elsif @community.customers.include?(current_customer)
+            = link_to feature_upgrade_cta(:business_project_create),
+              feature_upgrade_path(:business_project_create),
+              class:"btn btn-primary btn-small menu-btn-locked"
 
         .project-grid
           - @projects.each do |project|
             = link_to business_project_path(project) do
               .project-card
                 %h4= project.title
-                %p= truncate(project.description, length:80)
+                %p= truncate(project.description.to_s, length: 80)
 
       .card
         %h3 タイムライン
 
-        = form_with model: [:business, @community, CommunityPost.new] do |f|
-          = f.text_area :body, placeholder:"投稿する...", class:"post-input"
-          = f.submit "投稿", class:"btn btn-primary"
+        - if feature_available?(:business_community_post_create)
+          = form_with model: [:business, @community, CommunityPost.new] do |f|
+            = f.text_area :body, placeholder:"投稿する...", class:"post-input"
+            = f.submit "投稿", class:"btn btn-primary"
+        - else
+          = render "shared/feature_gate",
+            feature_key: :business_community_post_create,
+            title: "コミュニティ投稿を始める",
+            message: "読むことはそのままで、発信はlightプラン以上で開放できます。",
+            class_name: "feature-gate--inline"
 
         - @community.community_posts.order(created_at: :desc).each do |post|
 
@@ -118,10 +126,7 @@
               .user-block
 
                 .avatar
-                  - if post.customer.profile_image.attached?
-                    = image_tag post.customer.profile_image, class:"avatar-img"
-                  - else
-                    = image_tag "no_image", class:"avatar-img"
+                  = customer_avatar_tag(post.customer, class_name: "avatar-img")
 
                 .user-info
                   %span.user-name
@@ -133,7 +138,7 @@
                   %span.time= time_ago_in_words(post.created_at) + "前"
 
             .timeline-body
-              %p= post.body
+              .markdown-body= markdown(post.body)
 
     / ===== 右 =====
     .right
@@ -145,10 +150,7 @@
           - @community.customers.each do |customer|
             = link_to business_customer_path(customer) do
               .member-card
-                - if customer.profile_image.attached?
-                  = image_tag customer.profile_image, class:"member-icon"
-                - else
-                  = image_tag "no_image", class:"member-icon"
+                = customer_avatar_tag(customer, class_name: "member-icon")
 
                 .member-info
                   %span.member-name= customer.name

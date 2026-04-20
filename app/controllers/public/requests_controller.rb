@@ -49,7 +49,7 @@ class Public::RequestsController < ApplicationController
   private
 
   def request_params
-    params.require(:request).permit(:request)
+    params.require(:request).permit(:request, :stamp_type)
   end
 
   def ensure_correct_customer

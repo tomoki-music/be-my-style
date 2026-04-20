@@ -9,9 +9,16 @@
 
     %h2.page-title 投稿一覧
 
-    = link_to "＋ 投稿",
-      new_business_post_path,
-      class:"btn btn-primary new-btn"
+    - if feature_available?(:business_post_create)
+      = link_to "＋ 投稿",
+        new_business_post_path,
+        class:"btn btn-primary new-btn"
+    - else
+      = render "shared/feature_gate",
+        feature_key: :business_post_create,
+        title: "ビジネス投稿を始める",
+        message: "一覧や他の投稿はそのまま見られます。発信を始めるタイミングでlight以上に進めます。",
+        class_name: "feature-gate--inline"
 
   / =========================
   / 検索
@@ -87,10 +94,7 @@
 
               .post-header
                 .avatar
-                  - if post.customer.profile_image.attached?
-                    = image_tag post.customer.profile_image, class:"avatar-img"
-                  - else
-                    = image_tag "no_image", class:"avatar-img"
+                  = customer_avatar_tag(post.customer, class_name: "avatar-img")
 
                 .user-meta
                   %strong= post.customer.name
@@ -113,4 +117,10 @@
     .empty-state
       %h3 投稿がまだありません
       %p 最初の投稿をしてみましょう🔥
-      = link_to "投稿する", new_business_post_path, class:"btn btn-primary"
+      - if feature_available?(:business_post_create)
+        = link_to "投稿する", new_business_post_path, class:"btn btn-primary"
+      - else
+        = render "shared/feature_gate",
+          feature_key: :business_post_create,
+          title: "最初の投稿を始める",
+          class_name: "feature-gate--inline"

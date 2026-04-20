@@ -3,10 +3,7 @@
     .card.center
       = link_to public_customer_path(customer), data: { 'turbolinks': false } do
         .img-container
-          - if customer.profile_image.present?
-            = image_tag customer.profile_image
-          - else
-            = image_tag 'no_image'
+          = customer_avatar_tag(customer)
       .card-body.text-container
         %h5.card-title
           = customer.human_attribute_enum(:name)

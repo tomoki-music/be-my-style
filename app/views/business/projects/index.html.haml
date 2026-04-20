@@ -4,6 +4,13 @@
 
   .page-header
     %h2 プロジェクト一覧
+    - if @community.present? && current_customer.can_create_project_for?(@community)
+      = link_to "＋ 作成", new_business_project_path(community_id: @community.id), class:"btn btn-primary new-btn"
+    - elsif @community.present? && @community.customers.include?(current_customer)
+      = render "shared/feature_gate",
+        feature_key: :business_project_create,
+        title: "このコミュニティでプロジェクトを始める",
+        class_name: "feature-gate--inline"
 
   .project-grid
 
@@ -48,10 +55,7 @@
             .project-footer
 
               .owner
-                - if project.customer&.profile_image&.attached?
-                  = image_tag project.customer.profile_image, class:"mini-icon"
-                - else
-                  = image_tag "no_image", class:"mini-icon"
+                = customer_avatar_tag(project.customer, class_name: "mini-icon")
 
                 %span= project.customer&.name || "不明"
 

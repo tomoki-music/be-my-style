@@ -1,7 +1,10 @@
 .comment
+  = customer_avatar_tag(message.customer, class_name: "user-icon")
 
-  - if message.customer.profile_image.attached?
-    = image_tag message.customer.profile_image, class:"user-icon"
-
-  %strong= message.customer.name
-  %p= message.body
+  .comment-body
+    = link_to message.customer.name, business_customer_path(message.customer), class:"comment-user"
+    - if message.stamped?
+      %p.comment-text
+        %span.stamp-badge= message.stamp_label
+    - else
+      %p.comment-text= message.body

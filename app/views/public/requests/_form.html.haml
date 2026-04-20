@@ -2,3 +2,8 @@
 = form_with model: [:public, event, request], local: false do |f|
   = f.text_field :request, id: "input_request", placeholder: '〇〇の曲をお願いします！', style: "width:100%"
   = f.submit 'リクエストする', class: "event-request-btn", data: { 'turbolinks': false, confirm: 'リクエストを送信します。よろしいですか？' }
+.stamp-picker
+  - stamp_options.each do |stamp_type, label|
+    = form_with model: [:public, event, Request.new], local: false, html: { class: "stamp-picker-form" } do |f|
+      = f.hidden_field :stamp_type, value: stamp_type
+      = f.submit label, class: "stamp-button"

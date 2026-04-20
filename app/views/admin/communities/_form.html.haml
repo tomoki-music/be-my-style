@@ -1,0 +1,74 @@
+= form_with model: [:admin, @community], local: true, html: { multipart: true } do |f|
+  - if @community.errors.any?
+    .alert.alert-danger
+      %ul.mb-0
+        - @community.errors.full_messages.each do |message|
+          %li= message
+  - selected_domain = @community.domain || Domain.find_by(id: @community.domain_id) || Domain.find_by(name: "music")
+  - selected_domain_name = selected_domain&.name.to_s
+
+  .card.shadow-sm
+    .card-body
+      .form-row
+        .form-group.col-md-6
+          = f.label :name, "コミュニティ名"
+          = f.text_field :name, class: "form-control"
+        .form-group.col-md-3
+          = f.label :domain_id, "ドメイン"
+          = f.collection_select :domain_id, Domain.order(:name), :id, :name, {}, class: "form-control"
+        .form-group.col-md-3
+          = f.label :owner_id, "オーナー"
+          = f.collection_select :owner_id, Customer.order(:name), :id, :name, { include_blank: "未設定" }, class: "form-control"
+
+      .form-row
+        .form-group.col-md-4
+          = f.label :prefecture_id, "活動場所"
+          = f.collection_select :prefecture_id, Prefecture.all, :id, :name, {}, class: "form-control"
+        .form-group.col-md-4
+          = f.label :activity_stance, "活動ペース"
+          = f.select :activity_stance, Community.enum_options_for_select(:activity_stance), {}, class: "form-control"
+        .form-group.col-md-4
+          = f.label :community_image, "コミュニティ画像"
+          = f.file_field :community_image, class: "form-control-file"
+
+      - if selected_domain_name == "music"
+        .form-group
+          = f.label :genre_ids, "ジャンル"
+          .d-flex.flex-wrap
+            = f.collection_check_boxes :genre_ids, Genre.order(:name), :id, :name do |genre|
+              .mr-3.mb-2
+                = genre.label do
+                  = genre.check_box
+                  = genre.text
+
+        .form-row
+          .form-group.col-md-6
+            = f.label :favorite_artist1, "PickUpアーティスト1"
+            = f.text_field :favorite_artist1, class: "form-control"
+          .form-group.col-md-6
+            = f.label :favorite_artist2, "PickUpアーティスト2"
+            = f.text_field :favorite_artist2, class: "form-control"
+
+        .form-row
+          .form-group.col-md-6
+            = f.label :favorite_artist3, "PickUpアーティスト3"
+            = f.text_field :favorite_artist3, class: "form-control"
+          .form-group.col-md-6
+            = f.label :favorite_artist4, "PickUpアーティスト4"
+            = f.text_field :favorite_artist4, class: "form-control"
+
+        .form-group
+          = f.label :favorite_artist5, "PickUpアーティスト5"
+          = f.text_field :favorite_artist5, class: "form-control"
+
+        .form-group
+          = f.label :url, "コミュニティURL"
+          = f.text_field :url, class: "form-control"
+
+      .form-group
+        = f.label :introduction, "紹介文"
+        = f.text_area :introduction, rows: 8, class: "form-control"
+
+      .d-flex.justify-content-between
+        = link_to "一覧へ戻る", admin_communities_path, class: "btn btn-outline-secondary"
+        = f.submit (@community.persisted? ? "更新する" : "登録する"), class: "btn btn-primary"

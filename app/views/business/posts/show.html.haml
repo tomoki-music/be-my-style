@@ -8,12 +8,8 @@
 
       .post-user-info
 
-        - if @post.customer.profile_image.attached?
-          = link_to business_customer_path(@post.customer) do
-            = image_tag @post.customer.profile_image, class:"user-icon"
-        - else
-          = link_to business_customer_path(@post.customer) do
-            = image_tag "no_image", class:"user-icon"
+        = link_to business_customer_path(@post.customer) do
+          = customer_avatar_tag(@post.customer, class_name: "user-icon")
 
         .user-meta
 
@@ -47,7 +43,7 @@
             class:"tag"
 
     .post-body
-      %p= @post.body
+      .markdown-body= markdown(@post.body)
 
     - if @post.post_image.attached?
       .post-image-wrapper
@@ -64,23 +60,7 @@
     %div{id: "comments_#{@post.id}", class:"comments-list"}
 
       - @post.messages.each do |message|
-        .comment
-
-          - if message.customer.profile_image.attached?
-            = link_to business_customer_path(message.customer) do
-              = image_tag message.customer.profile_image, class:"comment-icon"
-          - else
-            = link_to business_customer_path(message.customer) do
-              = image_tag "no_image", class:"comment-icon"
-
-          .comment-body
-
-            = link_to message.customer.name,
-              business_customer_path(message.customer),
-              class:"comment-user"
-
-            %p.comment-text
-              = message.body
+        = render "business/messages/message", message: message
 
     .comment-form
 
@@ -92,3 +72,8 @@
           class:"comment-input"
 
         = f.submit "送信", class:"comment-submit"
+      .stamp-picker
+        - stamp_options.each do |stamp_type, label|
+          = form_with model: [:business, @post, Message.new], remote: true, html: { class: "stamp-picker-form" } do |f|
+            = f.hidden_field :stamp_type, value: stamp_type
+            = f.submit label, class: "stamp-button"

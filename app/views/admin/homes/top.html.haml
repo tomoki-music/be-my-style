@@ -1,3 +1,16 @@
 .container-fluid.px-3
   = render 'layouts/admin_header_menu'
+  .container.py-3
+    .row
+      .col-md-12.mb-3
+        .card.shadow-sm
+          .card-body
+            %h3.h5.mb-3 管理メニュー
+            .d-flex.flex-wrap.gap-2
+              = link_to "Community管理", admin_communities_path, class: "btn btn-outline-primary mr-2 mb-2"
+              = link_to "Activity管理", admin_activities_path, class: "btn btn-outline-primary mr-2 mb-2"
+              = link_to "Event管理", admin_events_path, class: "btn btn-outline-primary mr-2 mb-2"
+              = link_to "活動コメント管理", admin_activity_comments_path, class: "btn btn-outline-primary mr-2 mb-2"
+              = link_to "イベントコメント管理", admin_event_comments_path, class: "btn btn-outline-primary mr-2 mb-2"
+              = link_to "ユーザ分析", admin_analytics_path, class: "btn btn-outline-dark mr-2 mb-2"
   = render "admin/customers/index", customers: @customers

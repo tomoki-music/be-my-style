@@ -1,25 +1,25 @@
 .hero-section{
-
-background:linear-gradient(135deg,#1da1f2,#3b82f6);
+background:
+radial-gradient(circle at top left, rgba(255,255,255,0.18), transparent 22%),
+linear-gradient(135deg,#123259,#2563eb 58%,#3b82f6);
 color:white;
 text-align:center;
-padding:80px 20px;
-
+padding:92px 20px 78px;
 }
 
 .hero-title{
-
-font-size:36px;
+font-size:clamp(2.4rem, 5vw, 4.2rem);
 font-weight:bold;
 margin-bottom:10px;
-
+line-height:1.12;
 }
 
 .hero-subtitle{
-
 font-size:18px;
 margin-bottom:20px;
-
+max-width:760px;
+margin-left:auto;
+margin-right:auto;
 }
 
 .hero-buttons{
@@ -27,6 +27,7 @@ margin-bottom:20px;
 display:flex;
 justify-content:center;
 gap:10px;
+flex-wrap:wrap;
 
 }
 
@@ -35,6 +36,66 @@ gap:10px;
 padding:10px 20px;
 border-radius:8px;
 
+}
+
+.hero-eyebrow{
+display:inline-flex;
+padding:8px 14px;
+border-radius:999px;
+background:rgba(255,255,255,0.14);
+border:1px solid rgba(255,255,255,0.18);
+font-size:12px;
+font-weight:700;
+letter-spacing:0.08em;
+text-transform:uppercase;
+margin-bottom:18px;
+}
+
+.hero-chips{
+display:flex;
+justify-content:center;
+flex-wrap:wrap;
+gap:10px;
+margin-bottom:28px;
+}
+
+.hero-chip{
+display:inline-flex;
+padding:8px 14px;
+border-radius:999px;
+background:rgba(255,255,255,0.12);
+border:1px solid rgba(255,255,255,0.14);
+font-size:13px;
+}
+
+.lp-value-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:16px;
+max-width:1100px;
+margin:28px auto 0;
+padding:0 20px;
+}
+
+.value-card{
+background:white;
+border-radius:18px;
+padding:22px;
+box-shadow:0 10px 28px rgba(15,23,42,0.08);
+border:1px solid rgba(37,99,235,0.08);
+}
+
+.value-card strong{
+display:block;
+margin-bottom:8px;
+font-size:18px;
+color:#1d4ed8;
+text-transform:lowercase;
+}
+
+.value-card p{
+margin:0;
+color:#475569;
 }
 
 /* notice */
@@ -141,4 +202,175 @@ height:40px;
 border-radius:50%;
 object-fit:cover;
 
+}
+
+.business-pricing-section{
+max-width:1180px;
+margin:56px auto 0;
+padding:0 20px 20px;
+text-align:center;
+}
+
+.section-title{
+font-size:32px;
+font-weight:700;
+margin-bottom:10px;
+}
+
+.section-copy{
+max-width:720px;
+margin:0 auto 28px;
+color:#64748b;
+}
+
+.business-plan-status{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:12px;
+flex-wrap:wrap;
+margin:0 auto 24px;
+padding:14px 18px;
+max-width:720px;
+border-radius:18px;
+background:linear-gradient(135deg,#f8fbff,#fff7ef);
+border:1px solid rgba(37,99,235,0.12);
+box-shadow:0 12px 28px rgba(15,23,42,0.06);
+text-align:left;
+}
+
+.business-plan-status__badge{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+padding:6px 12px;
+border-radius:999px;
+background:#dbeafe;
+color:#1d4ed8;
+font-size:12px;
+font-weight:700;
+letter-spacing:0.04em;
+}
+
+.business-plan-status__body{
+display:flex;
+align-items:center;
+gap:10px;
+flex-wrap:wrap;
+color:#334155;
+}
+
+.business-plan-status__body strong{
+font-size:18px;
+color:#0f172a;
+}
+
+.business-pricing-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+gap:20px;
+}
+
+.business-pricing-card{
+text-align:left;
+background:white;
+border-radius:22px;
+padding:24px;
+border:1px solid rgba(15,23,42,0.08);
+box-shadow:0 14px 34px rgba(15,23,42,0.08);
+position:relative;
+}
+
+.business-pricing-card.recommend{
+border:2px solid #2563eb;
+background:linear-gradient(180deg,#eff6ff,#ffffff);
+}
+
+.business-pricing-card.is-current{
+border:2px solid #f59e0b;
+background:linear-gradient(180deg,#fff9eb,#ffffff);
+box-shadow:0 18px 38px rgba(245,158,11,0.16);
+}
+
+.plan-current{
+position:absolute;
+top:18px;
+right:18px;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+padding:5px 10px;
+border-radius:999px;
+background:#fff3c4;
+color:#9a6700;
+font-size:11px;
+font-weight:700;
+letter-spacing:0.04em;
+}
+
+.business-pricing-card h3{
+margin:8px 0 6px;
+font-size:28px;
+text-transform:lowercase;
+}
+
+.plan-badge{
+display:inline-flex;
+padding:5px 10px;
+border-radius:999px;
+background:#dbeafe;
+color:#1d4ed8;
+font-size:11px;
+font-weight:700;
+letter-spacing:0.06em;
+text-transform:uppercase;
+}
+
+.plan-tag{
+color:#475569;
+font-size:14px;
+margin-bottom:12px;
+}
+
+.plan-copy{
+min-height:72px;
+color:#334155;
+}
+
+.business-pricing-card ul{
+padding-left:18px;
+margin:0;
+color:#334155;
+}
+
+.business-pricing-card li{
+margin-bottom:8px;
+}
+
+.business-pricing-actions{
+margin-top:26px;
+display:flex;
+justify-content:center;
+gap:12px;
+flex-wrap:wrap;
+}
+
+@media (max-width:768px){
+.hero-section{
+padding:72px 16px 60px;
+}
+
+.section-title{
+font-size:28px;
+}
+
+.business-plan-status{
+padding:14px;
+align-items:flex-start;
+}
+
+.plan-current{
+position:static;
+margin-left:8px;
+}
 }

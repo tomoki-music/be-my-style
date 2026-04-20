@@ -1,37 +1,45 @@
 = render 'layouts/header_menu_nakama'
 
 .top-container
-
-  / ===== HERO =====
   .hero-section
-
     .hero-content
-
+      %p.hero-eyebrow Build your circle, move your work
       %h1.hero-title
-        仲間とビジネスを加速させよう
+        見つけるだけで終わらない。<br>
+        仲間と企画を動かすビジネスコミュニティへ。
 
       %p.hero-subtitle
-        NAKAMAはビジネスコミュニティのためのSNSです
+        NAKAMAは、見る・つながる・募集する・育てるを段階的に広げられるビジネスSNSです。
+
+      .hero-chips
+        %span.hero-chip freeで雰囲気をチェック
+        %span.hero-chip lightで投稿を開始
+        %span.hero-chip coreでプロジェクトを始動
+        %span.hero-chip premiumでコミュニティを運営
 
       - unless customer_signed_in?
-
         .hero-buttons
-
-          = link_to "新規登録",
-            new_customer_registration_path,
-            class:"btn btn-success hero-btn"
-
-          = link_to "ログイン",
-            new_customer_session_path,
-            class:"btn btn-primary hero-btn"
-
+          = link_to "新規登録", new_customer_registration_path, class:"btn btn-success hero-btn"
+          = link_to "ログイン", new_customer_session_path, class:"btn btn-primary hero-btn"
       - else
-
         .hero-buttons
+          = link_to "投稿を見る", business_posts_path, class:"btn btn-primary hero-btn"
+          - unless feature_available?(:business_post_create)
+            = link_to feature_upgrade_cta(:business_post_create), feature_upgrade_path(:business_post_create), class:"btn btn-outline-light hero-btn"
 
-          = link_to "投稿を見る",
-            business_posts_path,
-            class:"btn btn-primary hero-btn"
+  .lp-value-grid
+    .value-card
+      %strong free
+      %p コミュニティや投稿を見ながら、自分に合う人や場を探せます。
+    .value-card
+      %strong light
+      %p 投稿やコミュニティ内発信を始めて、つながりを育てられます。
+    .value-card
+      %strong core
+      %p プロジェクトを立ち上げて、仲間集めや企画の前進ができます。
+    .value-card
+      %strong premium
+      %p 自分のコミュニティをつくり、継続的な場づくりまで広げられます。
 
 
   / ===== SLIDER =====
@@ -63,103 +71,118 @@
 
         コミュニティ機能を追加しました。
 
+  .business-pricing-section#business-pricing
+    %h2.section-title 料金プラン
+    %p.section-copy
+      まずは無料で雰囲気を知り、必要なタイミングで次の機能を開放できます。
+
+    - if customer_signed_in?
+      .business-plan-status
+        .business-plan-status__badge
+          現在の契約プラン
+        .business-plan-status__body
+          %strong= customer_plan_label(current_customer)
+          %span
+            - if current_customer.subscribed? && current_customer.stripe_managed_subscription?
+              Stripeで有効なサブスクリプションです。
+            - elsif current_customer.subscribed?
+              Stripe未連携のプラン状態です。テスト反映または手動設定の可能性があります。
+            - else
+              現在は free プランです。必要になったタイミングでアップグレードできます。
+
+    .business-pricing-grid
+      .business-pricing-card{ class: ("is-current" if customer_signed_in? && current_customer.plan == "free") }
+        %span.plan-badge Starter
+        - if customer_signed_in? && current_customer.plan == "free"
+          %span.plan-current 現在のプラン
+        %h3 free
+        %p.plan-tag まずは試したい
+        %p.plan-copy コミュニティや投稿を見ながら、自分に合う使い方を見つけるプラン。
+        %ul
+          %li コミュニティや投稿の閲覧
+          %li プロフィール編集
+          %li プロジェクトへの参加
+          %li 気になるテーマの情報収集
+
+      .business-pricing-card{ class: ("is-current" if customer_signed_in? && current_customer.plan == "light") }
+        .plan-head
+          %span.plan-badge Popular
+          - if customer_signed_in? && current_customer.plan == "light"
+            %span.plan-current 現在のプラン
+          %h3 light
+          %p.plan-tag 交流と発信を増やしたい
+          - if customer_signed_in?
+            - if current_customer.plan == "light"
+              %span.lp-btn.lp-btn-disabled 契約中
+            - elsif current_customer.stripe_managed_subscription?
+              = link_to "このプランに変更", business_portal_path, method: :post, class: "lp-btn"
+            - else
+              = link_to "ライトで始める", business_checkout_path("light"), method: :post, class: "lp-btn"
+          - else
+            = link_to "ライトで始める", new_customer_session_path, class: "lp-btn"
+        %p.plan-copy 自分から投稿し、コミュニティの中でも発信したい人向け。
+        %ul
+          %li ビジネス投稿の作成
+          %li コミュニティ内投稿
+          %li 自分の知見や進捗を発信
+          %li つながりの密度を高めやすい
+
+      .business-pricing-card.recommend{ class: ("is-current" if customer_signed_in? && current_customer.plan == "core") }
+        .plan-head
+          %span.plan-badge Recommended
+          - if customer_signed_in? && current_customer.plan == "core"
+            %span.plan-current 現在のプラン
+          %h3 core
+          %p.plan-tag 企画を動かしたい
+          - if customer_signed_in?
+            - if current_customer.plan == "core"
+              %span.lp-btn.primary.lp-btn-disabled 契約中
+            - elsif current_customer.stripe_managed_subscription?
+              = link_to "このプランに変更", business_portal_path, method: :post, class: "lp-btn primary"
+            - else
+              = link_to "コアで成長する", business_checkout_path("core"), method: :post, class: "lp-btn primary"
+          - else
+            = link_to "コアで成長する", new_customer_session_path, class: "lp-btn primary"
+        %p.plan-copy 参加する側から一歩進んで、プロジェクトを立ち上げたい人へ。
+        %ul
+          %li プロジェクト作成
+          %li 募集と企画のスタート
+          %li 活動の中心に立てる
+          %li チームづくりを前に進められる
+
+      .business-pricing-card{ class: ("is-current" if customer_signed_in? && current_customer.plan == "premium") }
+        .plan-head
+          %span.plan-badge Owner
+          - if customer_signed_in? && current_customer.plan == "premium"
+            %span.plan-current 現在のプラン
+          %h3 premium
+          %p.plan-tag コミュニティを育てたい
+          - if customer_signed_in?
+            - if current_customer.plan == "premium"
+              %span.lp-btn.lp-btn-disabled 契約中
+            - elsif current_customer.stripe_managed_subscription?
+              = link_to "このプランに変更", business_portal_path, method: :post, class: "lp-btn"
+            - else
+              = link_to "本気で変わる", business_checkout_path("premium"), method: :post, class: "lp-btn"
+          - else
+            = link_to "本気で変わる", new_customer_session_path, class: "lp-btn"
+        %p.plan-copy 新しいテーマで場をつくり、継続的な運営まで進めたい人向け。
+        %ul
+          %li コミュニティ作成
+          %li オーナーとしての場づくり
+          %li 継続的な仲間集め
+          %li ブランドや活動の土台をつくれる
+
+    .business-pricing-actions
+      - if customer_signed_in?
+        - if current_customer.subscribed? && current_customer.stripe_managed_subscription?
+          = link_to "Stripeでプラン変更・解約", business_portal_path, method: :post, class:"btn btn-primary hero-btn"
+        - elsif current_customer.subscribed?
+          = link_to "プロフィールで契約状況を確認", edit_business_customer_path(current_customer), class:"btn btn-primary hero-btn"
+        - else
+          = link_to "プロフィールでプランを選ぶ", edit_business_customer_path(current_customer), class:"btn btn-primary hero-btn"
+      - else
+        = link_to "無料ではじめる", new_customer_registration_path, class:"btn btn-success hero-btn"
+
 
   / ===== DASHBOARD =====
-  .container.dashboard
-
-    %h2.dashboard-title
-      ダッシュボード
-
-
-    / 新着投稿
-    .dashboard-section
-
-      .section-header
-        %h3 新着投稿
-        = link_to "もっと見る", business_posts_path
-
-      .dashboard-grid
-
-        - if @posts.present?
-
-          - @posts.each do |post|
-
-            .dashboard-card
-
-              .card-user
-
-                - if post.customer.profile_image.attached?
-                  = image_tag post.customer.profile_image, class:"card-icon"
-                - else
-                  = image_tag "no_image", class:"card-icon"
-
-                %span
-                  = post.customer.name
-
-              %p.card-body
-                = truncate(post.body, length:80)
-
-
-    / プロジェクト
-    /
-      .dashboard-section
-
-        .section-header
-          %h3 新しいプロジェクト
-
-        .dashboard-grid
-
-          - @projects.each do |project|
-
-            .dashboard-card
-
-              %strong
-                = link_to project.title,
-                  business_community_projects_path(project)
-
-              %p
-                = truncate(project.description, length:80)
-
-
-    / コミュニティ
-    /
-      .dashboard-section
-
-        .section-header
-          %h3 新しいコミュニティ
-
-        .dashboard-grid
-
-          - @communities.each do |community|
-
-            .dashboard-card
-
-              %strong
-                = link_to community.name,
-                  business_community_path(community)
-
-              %p
-                = truncate(community.introduction, length:80)
-
-
-    / メンバー
-    .dashboard-section
-
-      .section-header
-        %h3 新しいメンバー
-
-      .dashboard-grid
-
-        - @customers.each do |customer|
-
-          .dashboard-card.member
-
-            = link_to business_customer_path(customer) do
-
-              - if customer.profile_image.attached?
-                = image_tag customer.profile_image, class:"member-icon"
-              - else
-                = image_tag "no_image", class:"member-icon"
-
-              .member-name
-                = customer.name

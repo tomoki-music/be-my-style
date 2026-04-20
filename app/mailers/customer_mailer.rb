@@ -109,6 +109,25 @@ class CustomerMailer < ApplicationMailer
     mail to: @ps_customer.email, subject: '参加申請した「コミュニティ」への参加が受理されました！'
   end
 
+  def business_project_created_mail
+    @project = params[:project]
+    @project_url = "https://be-my-style.com/business/projects/#{@project.id}"
+    mail to: @ps_customer.email, subject: '所属コミュニティで新しいプロジェクトが作成されました！'
+  end
+
+  def business_project_joined_mail
+    @project = params[:project]
+    @project_url = "https://be-my-style.com/business/projects/#{@project.id}"
+    mail to: @ps_customer.email, subject: 'プロジェクトに新しい参加メンバーが加わりました！'
+  end
+
+  def business_project_chat_mail
+    @project = params[:project]
+    @project_chat = params[:project_chat]
+    @project_url = "https://be-my-style.com/business/projects/#{@project.id}"
+    mail to: @ps_customer.email, subject: '参加中のプロジェクトに新しいコメントが届きました！'
+  end
+
   private
 
   def set_default_params

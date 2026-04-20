@@ -29,10 +29,7 @@
               %br
               = link_to public_customer_path(@activity.customer), data: { 'turbolinks': false } do
                 .activity-owner-img
-                  - if @activity.customer.profile_image.present?
-                    = image_tag @activity.customer.profile_image
-                  - else
-                    = image_tag 'no_image'
+                  = customer_avatar_tag(@activity.customer)
                   .activity-name
                     = @activity.customer.name
               %hr

@@ -11,7 +11,12 @@ class Admin::CustomersController < ApplicationController
   def update
     @customer.skip_reconfirmation!
 
-    if @customer.update_without_password(customer_params)
+    ActiveRecord::Base.transaction do
+      updated = @customer.update_without_password(customer_params.except(:subscription_plan))
+      raise ActiveRecord::Rollback unless updated
+
+      @customer.sync_subscription_plan!(customer_params[:subscription_plan])
+
       if params[:customer][:owned_community_ids]
         @customer.community_owners.destroy_all
         params[:customer][:owned_community_ids].reject(&:blank?).each do |community_id|
@@ -20,9 +25,12 @@ class Admin::CustomersController < ApplicationController
       end
 
       redirect_to admin_homes_top_path, notice: "会員情報を更新しました。"
-    else
-      render :edit
+      return
     end
+
+    render :edit
+  rescue ActiveRecord::RecordInvalid
+    render :edit
   end
 
   def approval
@@ -68,6 +76,7 @@ class Admin::CustomersController < ApplicationController
       :prefecture_id,
       :url,
       :confirm_mail,
+      :subscription_plan,
       :password,
       :password_confirmation,
       :is_deleted,

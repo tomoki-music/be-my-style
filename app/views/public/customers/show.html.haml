@@ -12,9 +12,14 @@
         = link_to "フォローする", public_customer_relationships_path(@customer.id), method: :post, data: { 'turbolinks': false }, class: "btn btn-info customer-show-btn"
         フォローしてみよう!
     - if @mathing_customers.present? && current_customer.id != @customer.id && @mathing_customers.include?(@customer.id)
-      = link_to public_chat_rooms_path(customer_id: @customer.id), method: :post, data: { 'turbolinks': false }, class: "btn btn-info" do
-        %i.fa-regular.fa-comments.chat-icon
-        チャットする
+      - if feature_available?(:music_direct_chat)
+        = link_to public_chat_rooms_path(customer_id: @customer.id), method: :post, data: { 'turbolinks': false }, class: "btn btn-info" do
+          %i.fa-regular.fa-comments.chat-icon
+          チャットする
+      - else
+        = link_to feature_upgrade_path(:music_direct_chat), class: "btn btn-info menu-btn-locked" do
+          %i.fa-regular.fa-comments.chat-icon
+          チャットを開放
 
 .customer-show-container.px-0.px-sm-0
   .row
@@ -22,10 +27,7 @@
       .customer-show-card
         .card
           .img-container
-            - if @customer.profile_image.present?
-              = image_tag @customer.profile_image
-            - else
-              = image_tag 'no_image'
+            = customer_avatar_tag(@customer)
           .card-body.text-container
             %h5.card-title
               = @customer.human_attribute_enum(:name)
@@ -39,6 +41,7 @@
             - if @customer.id == current_customer.id
               = link_to 'プロフィール編集', edit_public_customer_path(@customer), data: { 'turbolinks': false }, class: "btn btn-info customer-show-btn"
               = link_to 'パスワード変更', mypage_edit_password_public_customer_path(@customer), data: { 'turbolinks': false }, class: "btn btn-success customer-show-btn"
+              = render "shared/subscription_manager", customer: @customer
               %div.bold
                 【通知モード】
                 %br
@@ -53,9 +56,14 @@
                 = link_to "フォローする", public_customer_relationships_path(@customer.id), data: { 'turbolinks': false }, method: :post, class: "btn btn-info customer-show-btn"
                 【相互フォロー】でチャット可能!
             - if @mathing_customers.present? && current_customer.id != @customer.id && @mathing_customers.include?(@customer.id)
-              = link_to public_chat_rooms_path(customer_id: @customer.id), data: { 'turbolinks': false }, method: :post, class: "btn btn-info customer-show-btn" do
-                %i.fa-regular.fa-comments.chat-icon
-                チャットする
+              - if feature_available?(:music_direct_chat)
+                = link_to public_chat_rooms_path(customer_id: @customer.id), data: { 'turbolinks': false }, method: :post, class: "btn btn-info customer-show-btn" do
+                  %i.fa-regular.fa-comments.chat-icon
+                  チャットする
+              - else
+                = link_to feature_upgrade_path(:music_direct_chat), class: "btn btn-info customer-show-btn menu-btn-locked" do
+                  %i.fa-regular.fa-comments.chat-icon
+                  チャットを開放
     .col-md-9
       %table.table.table-striped.customer-show-table{:width=>"100%",:border=>"1"}
         %colgroup
@@ -95,6 +103,12 @@
               %th{scope:"row"} 活動ペース
               %td
                 = @customer.human_attribute_enum(:activity_stance)
+            %tr
+              %th{scope:"row"} 契約プラン
+              %td
+                %span.plan-badge-inline= customer_plan_label(@customer)
+                %span.ml-2
+                  = @customer.subscribed? ? "有効" : "無料プラン"
             %tr
               %th{scope:"row"} 好きなジャンル
               %td

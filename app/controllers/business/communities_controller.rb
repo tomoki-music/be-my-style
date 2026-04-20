@@ -1,6 +1,9 @@
 class Business::CommunitiesController < ApplicationController
 
   before_action :set_community, only: [:show, :edit, :update, :destroy, :permits]
+  before_action only: [:new, :create] do
+    require_feature!(:business_community_create, redirect_to_path: business_communities_path)
+  end
 
   def index
     @communities = Community

@@ -3,11 +3,48 @@ class Public::CommunitiesController < ApplicationController
   before_action :ensure_correct_customer, only: [:edit, :update, :destroy, :permits]
   before_action :check_mail, only: [:send_mail]
   before_action :admin_only!, only: [:new, :create, :destroy]
+  before_action only: [:new_mail, :send_mail] do
+    require_feature!(:music_community_mail, redirect_to_path: public_community_path(@community))
+  end
 
   def index
-    @communities = Community
+    communities = Community
       .where(domain_id: @current_domain.id)
-      .page(params[:page]).per(5)
+      .left_joins(:genres, :community_customers)
+      .distinct
+
+    if params[:keyword].present?
+      keyword = "%#{params[:keyword].strip}%"
+      communities = communities.where(
+        "communities.name LIKE :keyword OR communities.introduction LIKE :keyword OR "\
+        "communities.favorite_artist1 LIKE :keyword OR communities.favorite_artist2 LIKE :keyword OR "\
+        "communities.favorite_artist3 LIKE :keyword OR communities.favorite_artist4 LIKE :keyword OR "\
+        "communities.favorite_artist5 LIKE :keyword",
+        keyword: keyword
+      )
+    end
+
+    if params[:prefecture_id].present?
+      communities = communities.where(prefecture_id: params[:prefecture_id])
+    end
+
+    if params[:activity_stance].present?
+      communities = communities.where(activity_stance: params[:activity_stance])
+    end
+
+    if params[:genre_id].present?
+      communities = communities.where(genres: { id: params[:genre_id] })
+    end
+
+    communities =
+      case params[:sort]
+      when "newest"
+        communities.group("communities.id").order("communities.created_at DESC")
+      else
+        communities.group("communities.id").order(Arel.sql("COUNT(DISTINCT community_customers.customer_id) DESC"), Arel.sql("communities.created_at DESC"))
+      end
+
+    @communities = communities.page(params[:page]).per(5)
   end
 
   def show

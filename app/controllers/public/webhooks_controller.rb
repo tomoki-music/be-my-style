@@ -1,5 +1,7 @@
 # app/controllers/public/webhooks_controller.rb
 class Public::WebhooksController < ApplicationController
+  include StripeSubscriptionSync
+
   skip_before_action :verify_authenticity_token
   skip_before_action :authenticate_customer!, raise: false
   skip_before_action :set_current_domain, raise: false
@@ -21,6 +23,8 @@ class Public::WebhooksController < ApplicationController
     case event.type
     when 'checkout.session.completed'
       handle_checkout_completed(event)
+    when 'customer.subscription.created', 'customer.subscription.updated'
+      handle_subscription_updated(event)
     when 'customer.subscription.deleted'
       handle_subscription_deleted(event)
     else
@@ -37,19 +41,7 @@ class Public::WebhooksController < ApplicationController
   # =========================
   def handle_checkout_completed(event)
     session = event.data.object
-
-    # 🔥 line_itemsを確実に取得（最重要）
-    session = Stripe::Checkout::Session.retrieve(
-      {
-        id: session.id,
-        expand: ['line_items']
-      }
-    )
-
-    price_id = session.line_items.data[0].price.id
     email = session.customer_details&.email
-
-    Rails.logger.info("🔥 price_id: #{price_id}")
     Rails.logger.info("🔥 email: #{email}")
 
     return unless email
@@ -61,20 +53,7 @@ class Public::WebhooksController < ApplicationController
       return
     end
 
-    plan = detect_plan(price_id)
-
-    Rails.logger.info("🔥 plan: #{plan}")
-
-    # 🔥 二重登録防止
-    return if Subscription.exists?(stripe_subscription_id: session.subscription)
-
-    Subscription.create!(
-      customer: customer,
-      stripe_customer_id: session.customer,
-      stripe_subscription_id: session.subscription,
-      status: 'active',
-      plan: plan
-    )
+    sync_subscription_from_checkout_session!(customer, session.id)
   end
 
   # =========================
@@ -92,25 +71,13 @@ class Public::WebhooksController < ApplicationController
     end
   end
 
-  # =========================
-  # プラン判定
-  # =========================
-  def detect_plan(price_id)
-    prices = Rails.application.credentials.dig(:stripe, :price)
+  def handle_subscription_updated(event)
+    sub = event.data.object
 
-    case price_id
-    when prices[:light][:test], prices[:light][:live]
-      "light"
-    when prices[:core][:test], prices[:core][:live]
-      "core"
-    when prices[:premium][:test], prices[:premium][:live]
-      "premium"
-    else
-      Rails.logger.error("❌ unknown price_id: #{price_id}")
-      "unknown"
+    unless sync_subscription_from_stripe_subscription!(sub)
+      Rails.logger.warn("⚠️ subscription update sync skipped: #{sub.id}")
     end
   end
-
   # =========================
   # Webhook secret切替
   # =========================

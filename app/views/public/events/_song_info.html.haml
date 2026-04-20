@@ -14,10 +14,7 @@
       - join_part.customers.each do |customer|
         .join-part-member
           = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
-            - if customer.profile_image.present?
-              = image_tag customer.profile_image, class: "icon_mini"
-            - else
-              = image_tag 'no_image', class: "icon_mini"
+            = customer_avatar_tag(customer, class_name: "icon_mini")
             %br
             = customer.name
           - if ( customer == current_customer ) && ( @event.event_start_time - 1.week > Time.now )

@@ -1,4 +1,6 @@
 # db/seeds/users.rb
+music = Domain.find_by!(name: "music")
+
 tomoki = Customer.find_or_create_by!(email: 'i.tomoki0218@gmail.com') do |c|
   c.name = 'トモキ'
   c.password = 'password'

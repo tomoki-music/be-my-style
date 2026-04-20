@@ -1,0 +1,29 @@
+= render 'layouts/admin_header_menu'
+
+.container.py-4
+  .d-flex.justify-content-between.align-items-center.mb-3
+    %h2.mb-0 活動報告コメント一覧
+    = link_to "新規登録", new_admin_activity_comment_path, class: "btn btn-primary"
+
+  .table-responsive
+    %table.table.table-striped.table-bordered
+      %thead
+        %tr
+          %th ID
+          %th 活動報告
+          %th 投稿者
+          %th 内容
+          %th 投稿日
+          %th
+      %tbody
+        - @comments.each do |comment|
+          %tr
+            %td= comment.id
+            %td= comment.activity&.title
+            %td= comment.customer&.name
+            %td= comment.stamped? ? comment.stamp_label : truncate(comment.comment, length: 40)
+            %td= l comment.created_at, format: :short
+            %td.text-nowrap
+              = link_to "詳細", admin_activity_comment_path(comment), class: "btn btn-sm btn-outline-primary"
+              = link_to "編集", edit_admin_activity_comment_path(comment), class: "btn btn-sm btn-outline-success"
+              = link_to "削除", admin_activity_comment_path(comment), method: :delete, data: { confirm: "このコメントを削除しますか？" }, class: "btn btn-sm btn-outline-danger"

@@ -47,3 +47,35 @@
 .table-secondary .btn {
   opacity: 0.85;
 }
+
+.admin-analytics {
+  .analytics-bar__track {
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background: #e9eef5;
+    overflow: hidden;
+  }
+
+  .analytics-bar__fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #2563eb, #60a5fa);
+  }
+
+  .analytics-bar__fill--teal {
+    background: linear-gradient(90deg, #0f766e, #2dd4bf);
+  }
+
+  .analytics-bar__fill--orange {
+    background: linear-gradient(90deg, #c2410c, #fb923c);
+  }
+
+  .analytics-bar__fill--purple {
+    background: linear-gradient(90deg, #6d28d9, #a78bfa);
+  }
+
+  .analytics-bar__fill--green {
+    background: linear-gradient(90deg, #15803d, #4ade80);
+  }
+}

@@ -1,0 +1,28 @@
+= form_with model: [:admin, @comment], url: (@comment.persisted? ? admin_activity_comment_path(@comment) : admin_activity_comments_path), local: true do |f|
+  - if @comment.errors.any?
+    .alert.alert-danger
+      %ul.mb-0
+        - @comment.errors.full_messages.each do |message|
+          %li= message
+
+  .card.shadow-sm
+    .card-body
+      .form-row
+        .form-group.col-md-6
+          = f.label :activity_id, "対象活動報告"
+          = f.collection_select :activity_id, Activity.order(created_at: :desc), :id, :title, {}, class: "form-control"
+        .form-group.col-md-6
+          = f.label :customer_id, "投稿者"
+          = f.collection_select :customer_id, Customer.order(:name), :id, :name, {}, class: "form-control"
+
+      .form-group
+        = f.label :comment, "コメント本文"
+        = f.text_area :comment, rows: 5, class: "form-control"
+
+      .form-group
+        = f.label :stamp_type, "スタンプ"
+        = f.select :stamp_type, [["未設定", ""]] + stamp_options.map { |key, label| [label, key] }, {}, class: "form-control"
+
+      .d-flex.justify-content-between
+        = link_to "一覧へ戻る", admin_activity_comments_path, class: "btn btn-outline-secondary"
+        = f.submit (@comment.persisted? ? "更新する" : "登録する"), class: "btn btn-primary"

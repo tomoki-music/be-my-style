@@ -24,6 +24,8 @@ class Public::CustomersController < ApplicationController
     else
       render "edit"
     end
+  rescue ActiveRecord::RecordInvalid
+    render "edit"
   end
 
   def edit_password

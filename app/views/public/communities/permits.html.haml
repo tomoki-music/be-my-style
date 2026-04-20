@@ -18,10 +18,7 @@
             %th{scope: "row"} #{i}
             %td
               .img-container
-                - if permit.customer.profile_image.present?
-                  = image_tag permit.customer.profile_image
-                - else
-                  = image_tag 'no_image'
+                = customer_avatar_tag(permit.customer)
             %td
               = permit.customer.name
             %td

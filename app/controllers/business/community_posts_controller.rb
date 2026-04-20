@@ -1,4 +1,8 @@
 class Business::CommunityPostsController < ApplicationController
+  before_action only: [:create] do
+    require_feature!(:business_community_post_create, redirect_to_path: business_community_path(params[:community_id]))
+  end
+
   def create
     @community = Community.find(params[:community_id])
 

@@ -9,6 +9,10 @@
     .field
       = f.text_field :song_name, placeholder: "楽曲名"
     .field
+      = f.text_field :performance_start_time, placeholder: "演奏開始時間（例: 19:30）"
+    .field
+      = f.text_field :performance_time, placeholder: "演奏時間（例: 04:30）"
+    .field
       = f.text_field :youtube_url, placeholder: "Youtubeの動画URL"
     .field
       = f.text_area :introduction, placeholder: "楽曲の紹介文（意気込みや想いなど）", rows: 3, class: "form-control"

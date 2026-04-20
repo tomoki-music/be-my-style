@@ -1,11 +1,17 @@
 class Public::ChatMessagesController < ApplicationController
   before_action :authenticate_customer!
   before_action :chat_message_params, only: [:create, :community_create]
+  before_action only: [:create] do
+    require_feature!(:music_direct_chat, redirect_to_path: public_matchings_path)
+  end
+  before_action only: [:community_create] do
+    require_feature!(:music_community_chat, redirect_to_path: public_communities_path)
+  end
 
   def create
     @chat_room = ChatRoom.find(params[:chat_message][:chat_room_id])
     @chat_room_customer = @chat_room.chat_room_customers.where.not(customer_id: current_customer.id)[0].customer
-    @chat_message = ChatMessage.new(customer_id: current_customer.id, chat_room_id: @chat_room.id, content: params[:chat_message][:content])
+    @chat_message = ChatMessage.new(chat_message_params.except(:attachments).merge(customer_id: current_customer.id, chat_room_id: @chat_room.id))
 
     if params[:chat_message][:attachments].present?
       params[:chat_message][:attachments].each do |uploaded_file|
@@ -30,7 +36,7 @@ class Public::ChatMessagesController < ApplicationController
       chat_room_customer.customer
     end
     @community = ChatRoomCustomer.where(chat_room_id: @chat_room.id)[0].community
-    @chat_message = ChatMessage.new(customer_id: current_customer.id, chat_room_id: @chat_room.id, content: params[:chat_message][:content])
+    @chat_message = ChatMessage.new(chat_message_params.except(:attachments).merge(customer_id: current_customer.id, chat_room_id: @chat_room.id))
     
     if params[:chat_message][:attachments].present?
       params[:chat_message][:attachments].each do |uploaded_file|
@@ -58,6 +64,6 @@ class Public::ChatMessagesController < ApplicationController
   private
 
   def chat_message_params
-    params.require(:chat_message).permit(:content, attachments: [])
+    params.require(:chat_message).permit(:content, :stamp_type, attachments: [])
   end
 end

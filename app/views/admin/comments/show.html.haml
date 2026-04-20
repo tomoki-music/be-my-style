@@ -1,0 +1,23 @@
+= render 'layouts/admin_header_menu'
+
+.container.py-4
+  .d-flex.justify-content-between.align-items-center.mb-3
+    %h2.mb-0= "活動コメント詳細 ##{@comment.id}"
+    .btn-group
+      = link_to "編集", edit_admin_activity_comment_path(@comment), class: "btn btn-success"
+      = link_to "削除", admin_activity_comment_path(@comment), method: :delete, data: { confirm: "このコメントを削除しますか？" }, class: "btn btn-danger"
+
+  .card.shadow-sm
+    .card-body
+      %dl.row.mb-0
+        %dt.col-sm-3 活動報告
+        %dd.col-sm-9= @comment.activity&.title
+        %dt.col-sm-3 投稿者
+        %dd.col-sm-9= @comment.customer&.name
+        %dt.col-sm-3 内容
+        %dd.col-sm-9= @comment.stamped? ? @comment.stamp_label : simple_format(@comment.comment)
+        %dt.col-sm-3 投稿日
+        %dd.col-sm-9= l @comment.created_at, format: :short
+
+  .mt-3
+    = link_to "一覧へ戻る", admin_activity_comments_path, class: "btn btn-outline-secondary"

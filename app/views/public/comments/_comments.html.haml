@@ -4,10 +4,7 @@
   .comment-content
     .commenter-image
       = link_to public_customer_path(comment.customer), data: { 'turbolinks': false } do
-        - if comment.customer.profile_image.present?
-          = image_tag comment.customer.profile_image, class: "icon_mini"
-        - else
-          = image_tag 'no_image', class: "icon_mini"
+        = customer_avatar_tag(comment.customer, class_name: "icon_mini")
     .comment-info
       .comment-upper
         .comment-name
@@ -18,5 +15,8 @@
           - if comment.customer == current_customer
             = link_to '削除', public_activity_comment_path(comment.activity, comment), method: :delete, remote: true, class: "btn btn-danger", data: { 'turbolinks': false, confirm: "本当に削除しますか？" }
       .comment-beneath
-        = comment.comment
+        - if comment.stamped?
+          %span.stamp-badge= comment.stamp_label
+        - else
+          = comment.comment
         %br

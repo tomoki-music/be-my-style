@@ -1,60 +1,54 @@
 = render 'layouts/admin_header_menu'
 
-.row.justify-content-center
-  .col-md-10
-    %h2.text-center
-      イベント詳細
-%table.table.table-striped
-  %thead
-    %tr
-      %th ID
-      %th イベント名
-      %th 参加人数
-      %th 物理削除
-      %th 曲リスト
-  %tbody
-    %tr
-      %th=@event.id
-      %td=@event.event_name
-      %td
-        #{@joined_member_counts}人
-      %td
-        = link_to "削除", admin_event_path(@event), method: :delete, data: { confirm: "こちらのイベントを削除してもよろしいですか？", 'turbolinks': false }, class: "btn btn-danger"
-      %td
-        %table.table.table-striped
+.container.py-4
+  .d-flex.justify-content-between.align-items-center.mb-3
+    %h2.mb-0 イベント詳細
+    .btn-group
+      = link_to "編集", edit_admin_event_path(@event), data: { 'turbolinks': false }, class: "btn btn-success"
+      = link_to "削除", admin_event_path(@event), method: :delete, data: { confirm: "こちらのイベントを削除してもよろしいですか？", 'turbolinks': false }, class: "btn btn-danger"
+
+  .card.shadow-sm.mb-4
+    .card-body
+      %dl.row.mb-0
+        %dt.col-sm-3 ID
+        %dd.col-sm-9= @event.id
+        %dt.col-sm-3 イベント名
+        %dd.col-sm-9= @event.event_name
+        %dt.col-sm-3 コミュニティ
+        %dd.col-sm-9= @event.community&.name
+        %dt.col-sm-3 主催者
+        %dd.col-sm-9= @event.customer&.name
+        %dt.col-sm-3 参加人数
+        %dd.col-sm-9= "#{@joined_member_counts}人"
+        %dt.col-sm-3 開始日時
+        %dd.col-sm-9= l(@event.event_start_time, format: :short)
+        %dt.col-sm-3 終了日時
+        %dd.col-sm-9= l(@event.event_end_time, format: :short)
+
+  %h3.h5.mb-3 曲リスト
+  - @event.songs.each do |song|
+    .card.shadow-sm.mb-3
+      .card-body
+        %h4.h6= song.song_name
+        - if song.performance_start_time.present? || song.performance_time.present?
+          %p.text-muted.mb-2
+            = [song.performance_start_time.presence && "開始 #{song.performance_start_time}", song.performance_time.presence && "演奏時間 #{song.performance_time}"].compact.join(" / ")
+        %table.table.table-sm.table-bordered.mb-0
           %thead
             %tr
-              %th ID
-              %th 曲名
-              %th パート一覧
-          - @event.songs.each do |song|
-            %tbody
+              %th パート
+              %th 参加メンバー
+          %tbody
+            - song.join_parts.each do |join_part|
               %tr
-                %th=song.id
-                %td=song.song_name
+                %td= join_part.join_part_name
                 %td
-                  %table.table.table-striped
-                    %thead
-                      %tr
-                        %th 参加パート名
-                        %th 参加メンバー
-                    - song.join_parts.each do |join_part|
-                      %tbody
-                        %tr
-                          %td=join_part.join_part_name
-                          %td
-                            %table.table.table-striped
-                              %thead
-                                %tr
-                                  %th ID
-                                  %th メンバー名
-                                  %th 削除
-                              - join_part.customers.each do |customer|
-                                %tbody
-                                  %tr
-                                    %td=customer.id
-                                    %td=customer.name
-                                    %td
-                                      = link_to "削除", admin_event_delete_path(@event, song_id: song, join_part_id: join_part, customer_id: customer), method: :delete, data: { confirm: "こちらのユーザーを削除してもよろしいですか？", 'turbolinks': false }, class: "btn btn-danger"
-                            
+                  - if join_part.customers.any?
+                    - join_part.customers.each do |customer|
+                      .d-flex.justify-content-between.align-items-center.mb-2
+                        %span= customer.name
+                        = link_to "削除", admin_event_delete_path(@event, song_id: song, join_part_id: join_part, customer_id: customer), method: :delete, data: { confirm: "こちらのユーザーを削除してもよろしいですか？", 'turbolinks': false }, class: "btn btn-sm btn-outline-danger"
+                  - else
+                    %span.text-muted 未参加
 
+  = link_to "一覧へ戻る", admin_events_path, class: "btn btn-outline-secondary"

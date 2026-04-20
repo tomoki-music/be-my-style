@@ -1,17 +1,23 @@
 # app/controllers/public/stripe_controller.rb
 class Public::StripeController < ApplicationController
+  include StripeSubscriptionSync
+
   before_action :authenticate_customer!
 
   def create_checkout
-    plan = params[:plan]
+    current_customer.clear_stale_subscription!
 
-    price_id = case plan
-    when "light"
-      Rails.env.production? ? "price_1TNcFJFzjXRw4GqFwDLOlLcF" : "price_1TNcJeFzjXRw4GqF5uvUk00I"
-    when "core"
-      Rails.env.production? ? "price_1TNcGRFzjXRw4GqFEZD9xvv6" : "price_1TNcK3FzjXRw4GqFaCKKlZ79"
-    when "premium"
-      Rails.env.production? ? "price_1TNcH0FzjXRw4GqFpVuGN1cp" : "price_1TNcKPFzjXRw4GqFrOCiFEuR"
+    if current_customer.stripe_managed_subscription?
+      redirect_to edit_public_customer_path(current_customer),
+        alert: "現在契約中のプラン変更・キャンセルはStripeの管理画面から行えます。"
+      return
+    end
+
+    price_id = stripe_price_id_for(params[:plan])
+
+    unless price_id
+      redirect_to public_lp_path(anchor: "lp-section"), alert: "選択したプランが見つかりません。"
+      return
     end
 
     session = Stripe::Checkout::Session.create({
@@ -22,16 +28,27 @@ class Public::StripeController < ApplicationController
         quantity: 1,
       }],
       mode: 'subscription',
-      success_url: root_url + "?success=true",
+      success_url: success_public_stripe_url(session_id: "{CHECKOUT_SESSION_ID}"),
       cancel_url: root_url + "?canceled=true",
     })
 
     redirect_to session.url, allow_other_host: true
   end
 
+  def success
+    if sync_subscription_from_checkout_session!(current_customer, params[:session_id])
+      redirect_to public_lp_path(anchor: "lp-section"), notice: "プラン登録が完了しました。"
+    else
+      redirect_to public_lp_path(anchor: "lp-section"), alert: "プランの反映を確認できませんでした。しばらくしてから再度ご確認ください。"
+    end
+  rescue Stripe::InvalidRequestError => e
+    Rails.logger.error("Stripe checkout sync failed: #{e.message}")
+    redirect_to public_lp_path(anchor: "lp-section"), alert: "プラン反映時にエラーが発生しました。"
+  end
+
   def portal
-    unless current_customer.subscription&.stripe_customer_id
-      return redirect_to root_path, alert: "サブスクが見つかりません"
+    unless current_customer.stripe_managed_subscription?
+      return redirect_to root_path, alert: "Stripe連携されたサブスクが見つかりません。もう一度プラン登録をお試しください。"
     end
 
     session = Stripe::BillingPortal::Session.create({
@@ -41,5 +58,4 @@ class Public::StripeController < ApplicationController
 
     redirect_to session.url, allow_other_host: true
   end
-
 end

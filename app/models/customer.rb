@@ -1,4 +1,25 @@
 class Customer < ApplicationRecord
+  MONTHLY_SESSION_CREDIT_AMOUNT = 1500
+
+  PLAN_OPTIONS = [
+    ["free", "free"],
+    ["light", "light"],
+    ["core", "core"],
+    ["premium", "premium"]
+  ].freeze
+
+  FEATURE_RULES = {
+    music_direct_chat: %w[light core premium],
+    music_community_chat: %w[light core premium],
+    music_activity_create: %w[light core premium],
+    music_event_create: %w[core premium],
+    music_community_mail: %w[premium],
+    business_post_create: %w[light core premium],
+    business_community_post_create: %w[light core premium],
+    business_project_create: %w[core premium],
+    business_community_create: %w[premium]
+  }.freeze
+
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   devise :database_authenticatable, :registerable,
@@ -73,6 +94,61 @@ class Customer < ApplicationRecord
     active_subscription&.plan || "free"
   end
 
+  def subscribed?
+    active_subscription.present?
+  end
+
+  def paid_plan?
+    plan != "free"
+  end
+
+  def subscription_plan
+    plan
+  end
+
+  def subscription_status
+    active_subscription&.status || subscription&.status || "free"
+  end
+
+  def stripe_managed_subscription?
+    subscription&.stripe_customer_id.present? && subscription&.stripe_subscription_id.present?
+  end
+
+  def stale_subscription?
+    subscribed? && !stripe_managed_subscription?
+  end
+
+  def clear_stale_subscription!
+    return unless stale_subscription?
+
+    subscription.update!(
+      status: "canceled",
+      plan: nil,
+      stripe_customer_id: nil,
+      stripe_subscription_id: nil
+    )
+  end
+
+  def plan_badge_label
+    plan.to_s.upcase
+  end
+
+  def session_credit_amount
+    MONTHLY_SESSION_CREDIT_AMOUNT
+  end
+
+  def session_credit_available_for?(event)
+    return false unless paid_plan?
+
+    monthly_credited_participation_scope(event).none?
+  end
+
+  def session_credit_amount_for(event)
+    return 0 unless session_credit_available_for?(event)
+
+    [event.entrance_fee.to_i, session_credit_amount].min
+  end
+
   def light?
     plan == "light"
   end
@@ -84,6 +160,44 @@ class Customer < ApplicationRecord
   def premium?
     plan == "premium"
   end
+
+  def has_feature?(feature_key)
+    return true if admin?
+
+    allowed_plans = FEATURE_RULES[feature_key.to_sym]
+    return false if allowed_plans.blank?
+
+    allowed_plans.include?(plan)
+  end
+
+  def self.subscription_plan_options
+    PLAN_OPTIONS
+  end
+
+  def sync_subscription_plan!(next_plan)
+    normalized_plan = next_plan.presence || "free"
+
+    if normalized_plan == "free"
+      subscription&.update!(status: "canceled", plan: nil)
+      return
+    end
+
+    record = subscription || build_subscription
+    record.plan = normalized_plan
+    record.status = "active"
+    record.save!
+  end
+
+  private
+
+  def monthly_credited_participation_scope(event)
+    join_part_customers
+      .with_session_credit
+      .joins(join_part: { song: :event })
+      .where(events: { event_start_time: event.event_start_time.in_time_zone.all_month })
+  end
+
+  public
 
   # ドメイン管理
   def has_domain?(name)
@@ -101,6 +215,8 @@ class Customer < ApplicationRecord
   # 汎用型（ビジネス・音楽etc）
   def can_manage_community?(community)
     return true if admin?
+    return false if community.blank?
+    return true if community.owner_id == id
     return true if community_owner_of?(community)
     false
   end
@@ -109,20 +225,9 @@ class Customer < ApplicationRecord
     owned_communities.exists?(id: community.id)
   end
 
-  # イベント専用（音楽）
-  def can_edit_event?(event)
-
-    # 管理者
-    return true if admin?
-
-    # イベント作成者
-    return true if event.customer_id == id
-
-    # コミュニティオーナー
-    return true if community_owner_of?(event.community)
-
-    false
-
+  def manageable_communities
+    owned_ids = owned_communities.select(:id)
+    Community.where(owner_id: id).or(Community.where(id: owned_ids)).distinct
   end
 
   # 退会機能
@@ -157,29 +262,43 @@ class Customer < ApplicationRecord
   def available_communities_for_event
     if admin?
       Community.all
-    elsif community_owner?
-      owned_communities
+    elsif manageable_communities.exists?
+      manageable_communities
     else
       communities
     end
   end
 
+  def eligible_to_create_event_for?(community = nil)
+    return true if admin?
+    return can_manage_community?(community) if community.present?
+
+    manageable_communities.exists?
+  end
+
   def can_create_event?(community = nil)
     return true if admin?
-  
-    if community_owner?
-      return true if community.nil?  
-      return true if owned_communities.include?(community)
-    end
-  
-    false
+    return true if eligible_to_create_event_for?(community)
+    return false unless has_feature?(:music_event_create)
+    return communities.exists? if community.blank?
+
+    communities.exists?(id: community.id)
   end
-  
+
+  def can_create_project_for?(community)
+    return true if admin?
+    return true if can_manage_community?(community)
+    return false unless has_feature?(:business_project_create)
+
+    community.present? && communities.exists?(id: community.id)
+  end
+
   def can_edit_event?(event)
     return true if admin?
+    return true if event.customer_id == id
     return false unless event.community
 
-    community_owners.exists?(community_id: event.community.id)
+    can_manage_community?(event.community)
   end
 
   def update_without_password(params, *options)
@@ -225,6 +344,8 @@ class Customer < ApplicationRecord
   end
 
   def business_notification_follow(current_customer)
+    return if current_customer.id == id
+
     temp = Notification.where(["visitor_id = ? and visited_id = ? and action = ? ",current_customer.id, id, 'follow'])
     if temp.blank?
       notification = current_customer.active_notifications.new(
@@ -368,6 +489,8 @@ class Customer < ApplicationRecord
 
   # ビジネス（NAKAMA）
   def business_notification_request(current_customer, community_id)
+    return if current_customer.id == id
+
     notification = current_customer.active_notifications.new(
       visited_id: id,
       action: 'request',
@@ -377,10 +500,48 @@ class Customer < ApplicationRecord
   end
 
   def business_notification_accept(current_customer, community_id)
+    return if current_customer.id == id
+
     notification = current_customer.active_notifications.new(
       visited_id: id,
       action: 'accept',
       community_id: community_id,
+    )
+    notification.save if notification.valid?
+  end
+
+  def business_notification_project_created(current_customer, project)
+    return if current_customer.id == id
+
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'project_created',
+      community_id: project.community_id,
+      project_id: project.id
+    )
+    notification.save if notification.valid?
+  end
+
+  def business_notification_project_joined(current_customer, project)
+    return if current_customer.id == id
+
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'project_joined',
+      community_id: project.community_id,
+      project_id: project.id
+    )
+    notification.save if notification.valid?
+  end
+
+  def business_notification_project_message(current_customer, project)
+    return if current_customer.id == id
+
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'project_message',
+      community_id: project.community_id,
+      project_id: project.id
     )
     notification.save if notification.valid?
   end

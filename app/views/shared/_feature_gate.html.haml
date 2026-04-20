@@ -1,0 +1,12 @@
+- gate = feature_gate(feature_key)
+- title_text = local_assigns[:title] || gate[:title]
+- message_text = local_assigns[:message] || gate[:message]
+- cta_text = local_assigns[:cta] || gate[:cta]
+- extra_classes = local_assigns[:class_name]
+
+.feature-gate{ class: extra_classes }
+  .feature-gate__meta
+    %span.feature-gate__badge= feature_locked_badge(feature_key)
+    %strong.feature-gate__title= title_text
+    %p.feature-gate__message= message_text
+  = link_to cta_text, feature_upgrade_path(feature_key), class: "feature-gate__link"

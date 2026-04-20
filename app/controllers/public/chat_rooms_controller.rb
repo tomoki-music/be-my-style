@@ -3,6 +3,12 @@ class Public::ChatRoomsController < ApplicationController
   include MatchingIndex
   before_action :matching_index, only: [:show]
   before_action :check_community_member, only: [:community_create]
+  before_action only: [:create, :show] do
+    require_feature!(:music_direct_chat, redirect_to_path: public_matchings_path)
+  end
+  before_action only: [:community_create] do
+    require_feature!(:music_community_chat, redirect_to_path: public_communities_path)
+  end
 
   def create
     current_customers_chat_rooms = ChatRoomCustomer.where(customer_id: current_customer.id).map do |chat_room_customer|

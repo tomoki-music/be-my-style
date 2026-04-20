@@ -1,6 +1,9 @@
 class Business::PostsController < ApplicationController
   before_action :authenticate_customer!
   before_action :set_post, only: [:show, :edit, :update, :destroy]
+  before_action only: [:new, :create] do
+    require_feature!(:business_post_create, redirect_to_path: business_posts_path)
+  end
 
   def index
 

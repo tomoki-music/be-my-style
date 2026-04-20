@@ -2,9 +2,37 @@ class Public::ActivitiesController < ApplicationController
   before_action :authenticate_customer!
   before_action :ensure_correct_customer, only: [:update, :edit, :destroy]
   before_action :set_activity, only: [:show, :edit, :update, :destroy]
+  before_action only: [:new, :create] do
+    require_feature!(:music_activity_create, redirect_to_path: public_activities_path)
+  end
 
   def index
-    @activities = Activity.all.order(created_at: :desc).page(params[:page]).per(5)
+    activities = Activity.includes(:customer).left_joins(:favorites)
+
+    if params[:keyword].present?
+      keyword = "%#{params[:keyword].strip}%"
+      activities = activities.where(
+        "activities.title LIKE :keyword OR activities.keep LIKE :keyword OR "\
+        "activities.problem LIKE :keyword OR activities.try LIKE :keyword OR "\
+        "activities.introduction LIKE :keyword OR activities.url_comment LIKE :keyword",
+        keyword: keyword
+      )
+    end
+
+    if params[:author].present?
+      author = "%#{params[:author].strip}%"
+      activities = activities.joins(:customer).where("customers.name LIKE ?", author)
+    end
+
+    activities =
+      case params[:sort]
+      when "popular"
+        activities.group("activities.id").order(Arel.sql("COUNT(favorites.id) DESC"), Arel.sql("activities.created_at DESC"))
+      else
+        activities.group("activities.id").order("activities.created_at DESC")
+      end
+
+    @activities = activities.page(params[:page]).per(5)
   end
 
   def new

@@ -10,10 +10,7 @@
     .profile-hero
 
       .profile-avatar
-        - if @customer.profile_image.attached?
-          = image_tag @customer.profile_image, class:"profile-icon"
-        - else
-          = image_tag "no_image", class:"profile-icon"
+        = customer_avatar_tag(@customer, class_name: "profile-icon")
 
       .profile-main
 
@@ -46,17 +43,26 @@
 
         .card
           %h3 自己紹介
-          %p= @customer.introduction.presence || "未設定"
+          - if @customer.introduction.present?
+            .markdown-body= markdown(@customer.introduction)
+          - else
+            %p 未設定
 
         - if @customer.business_user?
 
           .card
             %h3 スキル
-            %p= @customer.skills.presence || "未設定"
+            - if @customer.skills.present?
+              .markdown-body= markdown(@customer.skills)
+            - else
+              %p 未設定
 
           .card
             %h3 実績
-            %p= @customer.achievements.presence || "未設定"
+            - if @customer.achievements.present?
+              .markdown-body= markdown(@customer.achievements)
+            - else
+              %p 未設定
 
           .card
             %h3 リンク
@@ -66,6 +72,15 @@
               %p 未設定
 
       .profile-right
+
+        .card
+          %h3 契約プラン
+          %p
+            %span.plan-badge-inline= customer_plan_label(@customer)
+            %span.ml-2
+              = @customer.subscribed? ? "有効" : "無料プラン"
+          - if current_customer == @customer
+            = render "shared/subscription_manager", customer: @customer
 
         .card
           %h3 投稿

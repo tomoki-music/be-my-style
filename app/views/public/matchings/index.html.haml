@@ -5,15 +5,20 @@
   %strong
     = @mathing_customers.size.to_s + '人'
   %p 「相互フォロー」の方とチャットしよう🎵
+  - unless feature_available?(:music_direct_chat)
+    = render "shared/feature_gate",
+      feature_key: :music_direct_chat,
+      title: "気になる相手との個別チャットを開放",
+      message: "相互フォローの相手はここで確認できます。lightプラン以上でチャットをスタートできます。",
+      class_name: "feature-gate--inline"
   - @mathing_customers.each do |matching_customer|
     .col-md-6.mx-auto.matching-index
       .form-inline
         %span
-          = link_to public_chat_rooms_path(customer_id: matching_customer.id), method: :post do
-            - if matching_customer.profile_image.present?
-              = image_tag matching_customer.profile_image, class: "icon_mini"
-            - else
-              = image_tag 'no_image', class: "icon_mini"
+          - path = feature_available?(:music_direct_chat) ? public_chat_rooms_path(customer_id: matching_customer.id) : feature_upgrade_path(:music_direct_chat)
+          - options = feature_available?(:music_direct_chat) ? { method: :post } : {}
+          = link_to path, options do
+            = customer_avatar_tag(matching_customer, class_name: "icon_mini")
             %strong.do-chat
-              = matching_customer.name + 'さんと チャット🎵'
+              = matching_customer.name + "さんと #{feature_available?(:music_direct_chat) ? 'チャット🎵' : 'チャットを開放'}"
       %hr

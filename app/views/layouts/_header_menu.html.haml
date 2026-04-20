@@ -25,10 +25,7 @@
                     %i.far.fa-bell.fa-lg
           %li#open
             %span
-              - if current_customer.present? && current_customer.profile_image.present?
-                = image_tag current_customer.profile_image, class: "icon_mini sp-menu-open"
-              - else
-                = image_tag asset_path("no_image"), class: "icon_mini sp-menu-open"
+              = customer_avatar_tag(current_customer, class_name: "icon_mini sp-menu-open")
 
   .customer-menu-sp
     #close
@@ -46,14 +43,26 @@
           - if current_customer.present?
             = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
-          = link_to "個別チャット", public_matchings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+          = link_to public_matchings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn #{'menu-sp-btn-locked' unless feature_available?(:music_direct_chat)}" do
+            個別チャット
+            - unless feature_available?(:music_direct_chat)
+              %span.menu-lock-note= feature_locked_badge(:music_direct_chat)
         %li
           = link_to "みんなの活動報告", public_activities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
           = link_to "イベント参加", public_events_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+        %li.menu-upgrade-item
+          = link_to public_lp_path(anchor: "lp-section"), data: { 'turbolinks': false }, class: "menu-upgrade-cta" do
+            %span.menu-upgrade-cta__spark ✦
+            %span.menu-upgrade-cta__label プランUPGRADE
+            %span.menu-upgrade-cta__spark ✦
         %li
           %i.fa-solid.fa-right-from-bracket
-          = link_to "ログアウト", destroy_customer_session_path, data: { 'turbolinks': false }, method: :delete, class: "btn btn-secondary menu-sp-btn"
+          = button_to "ログアウト",
+            destroy_customer_session_path,
+            method: :delete,
+            form_class: "d-inline",
+            class: "btn btn-secondary menu-sp-btn"
       - else
         %li
           %i.fa-solid.fa-user-plus
@@ -79,13 +88,26 @@
           - if current_customer.present?
             = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
-          = link_to "個別チャット", public_matchings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+          = link_to public_matchings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn #{'menu-sp-btn-locked' unless feature_available?(:music_direct_chat)}" do
+            個別チャット
+            - unless feature_available?(:music_direct_chat)
+              %span.menu-lock-note= feature_locked_badge(:music_direct_chat)
         %li
           = link_to "みんなの活動報告", public_activities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
           = link_to "イベント参加", public_events_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+        %li.menu-upgrade-item
+          = link_to public_lp_path(anchor: "lp-section"), data: { 'turbolinks': false }, class: "menu-upgrade-cta menu-upgrade-cta--compact" do
+            %span.menu-upgrade-cta__spark ✦
+            %span.menu-upgrade-cta__label プランUPGRADE
+            %span.menu-upgrade-cta__spark ✦
       - else
         %li
           = link_to "Topページ", public_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
           = link_to "BeMyStyleとは？", public_homes_about_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+        %li.menu-upgrade-item
+          = link_to public_lp_path(anchor: "lp-section"), data: { 'turbolinks': false }, class: "menu-upgrade-cta menu-upgrade-cta--compact" do
+            %span.menu-upgrade-cta__spark ✦
+            %span.menu-upgrade-cta__label 料金を見る
+            %span.menu-upgrade-cta__spark ✦

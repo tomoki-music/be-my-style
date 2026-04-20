@@ -25,17 +25,20 @@ class Post < ApplicationRecord
   end
 
   def create_notification_like!(current_customer)
+    return if current_customer.id == customer_id
 
     temp = Notification.where(
       visitor_id: current_customer.id,
       visited_id: customer_id,
-      action: "like"
+      action: "like",
+      post_id: id
     )
 
     if temp.blank?
       notification = current_customer.active_notifications.new(
         visited_id: customer_id,
-        action: "like"
+        action: "like",
+        post_id: id
       )
 
       notification.save if notification.valid?
@@ -44,17 +47,20 @@ class Post < ApplicationRecord
   end
 
   def create_notification_message!(current_customer)
+    return if current_customer.id == customer_id
 
     temp = Notification.where(
       visitor_id: current_customer.id,
       visited_id: customer_id,
-      action: "message"
+      action: "message",
+      post_id: id
     )
 
     if temp.blank?
       notification = current_customer.active_notifications.new(
         visited_id: customer_id,
-        action: "message"
+        action: "message",
+        post_id: id
       )
 
       notification.save if notification.valid?

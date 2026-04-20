@@ -2,3 +2,8 @@
 = form_with model: [:public, activity, comment], local: false do |f|
   = f.text_field :comment, id: "input_comment", placeholder: '素敵な活動ですね！', style: "width:100%"
   = f.submit 'コメントする', class: "activity-comment-btn", data: { 'turbolinks': false, confirm: 'コメントを送信します。よろしいですか？' }
+.stamp-picker
+  - stamp_options.each do |stamp_type, label|
+    = form_with model: [:public, activity, Comment.new], local: false, html: { class: "stamp-picker-form" } do |f|
+      = f.hidden_field :stamp_type, value: stamp_type
+      = f.submit label, class: "stamp-button"

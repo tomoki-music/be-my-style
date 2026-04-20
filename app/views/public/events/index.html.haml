@@ -6,29 +6,44 @@
   - if current_customer.can_create_event?(nil)
     %button.btn.btn-info#open-create-event-modal
       <i class="fa-solid fa-plus"></i> イベント作成
+  - elsif current_customer.available_communities_for_event.exists?
+    = render "shared/feature_gate",
+      feature_key: :music_event_create,
+      title: "イベント作成を開放",
+      message: "イベント一覧や参加はそのまま使えます。主催したくなったタイミングでcore以上へ進めます。",
+      class_name: "feature-gate--inline"
 
-  .modal.fade#createEventModal{ tabindex: "-1", role: "dialog" }
-    .modal-dialog.modal-dialog-centered{ role: "document" }
-      .modal-content
-        .modal-header
-          %h5.modal-title コミュニティを選択
-          %button.close{ "data-dismiss" => "modal", "aria-label" => "Close" }
-            %span{ "aria-hidden" => "true" } ×
+.directory-search
+  = form_with url: public_events_path, method: :get, local: true, class: "directory-search__form" do
+    = text_field_tag :keyword, params[:keyword], placeholder: "イベント名・場所・コミュニティ名・曲名で検索", class: "directory-search__input"
+    = select_tag :community_id, options_from_collection_for_select(@search_communities, :id, :name, params[:community_id]), include_blank: "コミュニティ", class: "directory-search__select"
+    = select_tag :status, options_for_select(event_status_options, params[:status].presence || "all"), class: "directory-search__select"
+    = select_tag :sort, options_for_select(event_sort_options, params[:sort].presence || "start_soon"), class: "directory-search__select"
+    = submit_tag "検索する", class: "btn btn-info directory-search__submit"
+    = link_to "リセット", public_events_path, class: "btn btn-outline-secondary directory-search__reset"
 
-        .modal-body
-          - if @available_communities.present?
-            %p 作成したいコミュニティを選択してください：
-            .community-list
-              - @available_communities.each do |community|
-                .community-item.card.mb-2.p-2
-                  %h6= community.name
-                  = link_to "このコミュニティで作成する", new_public_event_path(community_id: community.id),
-                            class: "btn btn-success btn-sm mt-2"
-          - else
-            %p.text-muted 作成できるコミュニティがありません。
+.modal.fade#createEventModal{ tabindex: "-1", role: "dialog" }
+  .modal-dialog.modal-dialog-centered{ role: "document" }
+    .modal-content
+      .modal-header
+        %h5.modal-title コミュニティを選択
+        %button.close{ "data-dismiss" => "modal", "aria-label" => "Close" }
+          %span{ "aria-hidden" => "true" } ×
 
-        .modal-footer
-          %button.btn.btn-secondary{ "data-dismiss" => "modal" } 閉じる
+      .modal-body
+        - if @available_communities.present?
+          %p 作成したいコミュニティを選択してください：
+          .community-list
+            - @available_communities.each do |community|
+              .community-item.card.mb-2.p-2
+                %h6= community.name
+                = link_to "このコミュニティで作成する", new_public_event_path(community_id: community.id),
+                          class: "btn btn-success btn-sm mt-2"
+        - else
+          %p.text-muted 作成できるコミュニティがありません。
+
+      .modal-footer
+        %button.btn.btn-secondary{ "data-dismiss" => "modal" } 閉じる
 
 .events-kaminari
   = paginate @events
@@ -114,10 +129,7 @@
               %br
             .event-owner-img
               = link_to public_customer_path(@owner), data: { 'turbolinks': false } do
-                - if @owner.profile_image.present?
-                  = image_tag @owner.profile_image
-                - else
-                  = image_tag 'no_image'
+                = customer_avatar_tag(@owner)
                 .owner-name
                   = @owner.name
   - else

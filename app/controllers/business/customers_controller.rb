@@ -14,6 +14,8 @@ class Business::CustomersController < ApplicationController
     else
       render :edit
     end
+  rescue ActiveRecord::RecordInvalid
+    render :edit
   end
 
   private

@@ -33,7 +33,7 @@ class Public::CommentsController < ApplicationController
   private
 
   def comment_params
-    params.require(:comment).permit(:comment)
+    params.require(:comment).permit(:comment, :stamp_type)
   end
 
   def ensure_correct_customer

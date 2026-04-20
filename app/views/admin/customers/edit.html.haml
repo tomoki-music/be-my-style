@@ -61,6 +61,17 @@
         %td= f.select :activity_stance, Customer.enum_options_for_select(:activity_stance)
 
       %tr
+        %th 契約プラン
+        %td
+          = f.select :subscription_plan,
+            options_for_select(Customer.subscription_plan_options, @customer.subscription_plan),
+            {},
+            class: 'form-control'
+          %small.text-muted 現在の状態: #{@customer.subscription_status}
+          %br
+          %small.text-muted 管理画面からの変更はStripe請求情報とは別管理です。
+
+      %tr
         %th 好きなジャンル
         %td
           = f.collection_check_boxes(:genre_ids, Genre.all, :id, :name) do |genre|

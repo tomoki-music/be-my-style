@@ -565,6 +565,16 @@
         width: 150px;
         white-space: normal;
       }
+      .song-start-time {
+        display: inline-block;
+        margin: 6px 0 4px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #e8f7ff;
+        color: #0b7285;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
       .badge-warning {
         background-color: #ffc107;
         color: #000;
@@ -687,6 +697,159 @@
     background: #f5f5f5;
     padding: 2px 6px;
     border-radius: 4px;
+  }
+}
+
+.session-credit-panel{
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff7dc, #eef7ff);
+  border: 1px solid rgba(255, 184, 28, 0.28);
+
+  p{
+    margin: 0 0 6px;
+  }
+
+  &__badge{
+    display: inline-flex;
+    margin-bottom: 8px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #ffda63;
+    color: #654000;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  &__badge--muted{
+    background: #dbe7f6;
+    color: #37506f;
+  }
+
+  &__free{
+    color: #0d7a45;
+    font-weight: 700;
+  }
+
+  &__remaining{
+    color: #9a4d00;
+    font-weight: 700;
+  }
+
+  &__hint{
+    margin-top: 8px;
+    color: #64748b;
+    font-size: 12px;
+  }
+
+  &__breakdown{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 12px 0 10px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px dashed rgba(154, 77, 0, 0.2);
+  }
+
+  &__row{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    font-size: 14px;
+  }
+
+  &__row--total{
+    padding-top: 8px;
+    border-top: 1px solid rgba(154, 77, 0, 0.15);
+    font-size: 15px;
+  }
+
+  &__label{
+    color: #5b6472;
+  }
+
+  &__discount{
+    color: #d9485f;
+  }
+}
+
+.member-plan-badge{
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+
+  &--paid{
+    background: #fff1b8;
+    color: #8a5b00;
+  }
+
+  &--credit{
+    background: #dff8ea;
+    color: #0d7a45;
+  }
+}
+
+.join-credit-summary{
+  max-width: 720px;
+  margin: 0 auto 24px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fff8e1, #eef7ff);
+  border: 1px solid rgba(255, 184, 28, 0.24);
+
+  h4{
+    margin-bottom: 10px;
+  }
+
+  p{
+    margin-bottom: 6px;
+  }
+
+  &__free{
+    color: #0d7a45;
+    font-weight: 700;
+  }
+
+  &__remaining{
+    color: #9a4d00;
+    font-weight: 700;
+  }
+
+  &__breakdown{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 14px 0 12px;
+    padding: 14px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px dashed rgba(154, 77, 0, 0.2);
+  }
+
+  &__row{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__row--total{
+    padding-top: 8px;
+    border-top: 1px solid rgba(154, 77, 0, 0.15);
+    font-size: 15px;
+  }
+
+  &__discount{
+    color: #d9485f;
   }
 }
 

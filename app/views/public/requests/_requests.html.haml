@@ -4,10 +4,7 @@
   .request-content
     .request-image
       = link_to public_customer_path(request.customer), data: { 'turbolinks': false } do
-        - if request.customer.profile_image.present?
-          = image_tag request.customer.profile_image, class: "icon_mini"
-        - else
-          = image_tag 'no_image', class: "icon_mini"
+        = customer_avatar_tag(request.customer, class_name: "icon_mini")
     .request-info
       .request-upper
         .request-name
@@ -18,5 +15,8 @@
           - if request.customer == current_customer
             = link_to '削除', public_event_request_path(request.event, request), method: :delete, remote: true, class: "btn btn-danger", data: { 'turbolinks': false, confirm: "本当に削除しますか？" }
       .request-beneath
-        = request.request
+        - if request.stamped?
+          %span.stamp-badge= request.stamp_label
+        - else
+          = request.request
         %br

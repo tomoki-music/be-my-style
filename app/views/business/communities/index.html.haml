@@ -9,9 +9,16 @@
 
     %h2.page-title コミュニティ一覧
 
-    = link_to "＋ 新規作成",
-      new_business_community_path,
-      class:"btn btn-primary new-btn"
+    - if feature_available?(:business_community_create)
+      = link_to "＋ 新規作成",
+        new_business_community_path,
+        class:"btn btn-primary new-btn"
+    - else
+      = render "shared/feature_gate",
+        feature_key: :business_community_create,
+        title: "自分のコミュニティを作る",
+        message: "まずは既存コミュニティを見ながら雰囲気を確認できます。premiumで新しい場を作れます。",
+        class_name: "feature-gate--inline"
 
   / =========================
   / グリッド

@@ -10,6 +10,19 @@ class Song < ApplicationRecord
     validates :song_name
   end
 
+  validates :performance_time,
+            format: {
+              with: /\A\d{1,2}:\d{2}\z/,
+              message: "は MM:SS 形式で入力してください"
+            },
+            allow_blank: true
+  validates :performance_start_time,
+            format: {
+              with: /\A\d{1,2}:\d{2}\z/,
+              message: "は HH:MM 形式で入力してください"
+            },
+            allow_blank: true
+
   before_validation :set_default_position, on: :create
 
   private

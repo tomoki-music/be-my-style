@@ -2,6 +2,7 @@ Rails.application.routes.draw do
 
   namespace :public do
     get 'lp/index'
+    get 'stripe/success', to: 'stripe#success', as: :success_stripe
   end
   root to: 'public/homes#top'
 
@@ -16,9 +17,15 @@ Rails.application.routes.draw do
 
   namespace :admin do
     get 'homes/top'
+    get 'analytics', to: 'analytics#show'
 
     # アーティスト編集機能
     resources :customers, only: [:edit, :update]
+
+    resources :communities
+    resources :activities
+    resources :activity_comments
+    resources :event_comments
 
     # イベント機能
     resources :events do
@@ -32,7 +39,7 @@ Rails.application.routes.draw do
     get 'homes/about'
 
     # ランディングページ
-    get 'lp', to: 'public/lp#index'
+    get 'lp', to: 'lp#index'
 
     # サブスク
     post '/webhooks/stripe', to: 'webhooks#stripe'
@@ -125,6 +132,10 @@ Rails.application.routes.draw do
   # =====================
   namespace :business do
     root to: 'homes#top'
+
+    post 'checkout/:plan', to: 'stripe#create_checkout', as: :checkout
+    post '/portal', to: 'stripe#portal'
+    get 'stripe/success', to: 'stripe#success', as: :success_stripe
 
     # ユーザー
     resources :customers, only: [:show, :edit, :update] do

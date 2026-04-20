@@ -35,10 +35,7 @@
               %br
               .community-owner-img
                 = link_to public_customer_path(@owner), data: { 'turbolinks': false } do
-                  - if @owner.profile_image.present?
-                    = image_tag @owner.profile_image
-                  - else
-                    = image_tag 'no_image'
+                  = customer_avatar_tag(@owner)
                   .owner-name
                     = @owner.name
             %hr
@@ -76,19 +73,40 @@
             %tr
               %th{scope:"row"} チャットする
               %td
-                - if ChatRoomCustomer.where(customer_id: current_customer.id, community_id: @community.id).present?
+                - if ChatRoomCustomer.where(customer_id: current_customer.id, community_id: @community.id).present? && feature_available?(:music_community_chat)
                   = link_to 'コミュニティのチャットルームへ', community_create_public_chat_rooms_path(community_id: @community.id), method: :post, class: "btn btn-sm btn-info community-show-btn", data: { 'turbolinks': false }
+                - elsif ChatRoomCustomer.where(customer_id: current_customer.id, community_id: @community.id).present?
+                  = render "shared/feature_gate",
+                    feature_key: :music_community_chat,
+                    title: "コミュニティチャット",
+                    message: "参加メンバーとの会話はlightプラン以上で開放できます。",
+                    cta: "lightでチャットを開放",
+                    class_name: "feature-gate--table"
                 - else
                   コミュニティに参加するとチャットできます。
-            - if current_customer.can_create_event?(@community)
+            - if current_customer.communities.include?(@community) || current_customer.can_manage_community?(@community)
               %tr
                 %th{scope:"row"} イベントを作成
                 %td
-                  = link_to "イベント作成", new_public_event_path(community_id: @community.id), data: { 'turbolinks': false }, class: "btn btn-info event-index-create-btn"
+                  - if current_customer.can_create_event?(@community)
+                    = link_to "イベント作成", new_public_event_path(community_id: @community.id), data: { 'turbolinks': false }, class: "btn btn-info event-index-create-btn"
+                  - else
+                    = render "shared/feature_gate",
+                      feature_key: :music_event_create,
+                      title: "このコミュニティでイベントを作成",
+                      message: "主催できる立場のユーザーです。core以上でイベント作成を開放できます。",
+                      class_name: "feature-gate--table"
               %tr
                 %th{scope:"row"} メンバーへメール
                 %td
-                  = link_to 'メールする', public_community_new_mail_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-info fas fa-paper-plane community-show-btn"
+                  - if feature_available?(:music_community_mail)
+                    = link_to 'メールする', public_community_new_mail_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-info fas fa-paper-plane community-show-btn"
+                  - else
+                    = render "shared/feature_gate",
+                      feature_key: :music_community_mail,
+                      title: "メンバーへ一斉メール",
+                      message: "オーナー向けの運営機能です。premiumでまとめて案内できるようになります。",
+                      class_name: "feature-gate--table"
             %tr
               %th{scope:"row"} 活動場所
               %td

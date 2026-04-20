@@ -1,4 +1,4 @@
 $("#comments_<%= @post.id %>")
-.append("<%= j(render @comment) %>");
+.append("<%= j(render 'business/messages/message', message: @message) %>");
 
 $("#comment_body").val("");

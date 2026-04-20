@@ -21,10 +21,7 @@
 
                   %i.fa-regular.fa-bell.fa-lg
 
-              - if current_customer.present? && current_customer.profile_image.present?
-                = image_tag current_customer.profile_image, class: "icon_mini"
-              - else
-                = image_tag asset_path("no_image"), class: "icon_mini"
+              = customer_avatar_tag(current_customer, class_name: "icon_mini")
 
   / =========================
   / スマホメニュー
@@ -49,16 +46,32 @@
           = link_to "コミュニティ", business_communities_path, class: "btn btn-primary menu-sp-btn"
 
         %li
-          = link_to "投稿", business_posts_path, class: "btn btn-primary menu-sp-btn"
+          = link_to business_posts_path, class: "btn btn-primary menu-sp-btn #{'menu-sp-btn-locked' unless feature_available?(:business_post_create)}" do
+            投稿
+            - unless feature_available?(:business_post_create)
+              %span.menu-lock-note= feature_locked_badge(:business_post_create)
 
         %li
-          = link_to "プロジェクト", business_projects_path, class: "btn btn-primary menu-sp-btn"
+          = link_to business_projects_path, class: "btn btn-primary menu-sp-btn #{'menu-sp-btn-locked' unless feature_available?(:business_project_create)}" do
+            プロジェクト
+            - unless feature_available?(:business_project_create)
+              %span.menu-lock-note= feature_locked_badge(:business_project_create)
 
         %li
           = link_to "プロフィール", business_customer_path(current_customer), class: "btn btn-primary menu-sp-btn"
 
+        %li.menu-upgrade-item
+          = link_to business_root_path(anchor: "business-pricing"), class: "menu-upgrade-cta" do
+            %span.menu-upgrade-cta__spark ✦
+            %span.menu-upgrade-cta__label プランUPGRADE
+            %span.menu-upgrade-cta__spark ✦
+
         %li
-          = link_to "ログアウト", destroy_customer_session_path, method: :delete, class: "btn btn-secondary menu-sp-btn"
+          = button_to "ログアウト",
+            destroy_customer_session_path,
+            method: :delete,
+            form_class: "d-inline",
+            class: "btn btn-secondary menu-sp-btn"
 
       - else
 
@@ -92,13 +105,25 @@
           = link_to "コミュニティ", business_communities_path, class: "menu-btn"
 
         %li
-          = link_to "投稿", business_posts_path, class: "menu-btn"
+          = link_to business_posts_path, class: "menu-btn #{'menu-btn-locked' unless feature_available?(:business_post_create)}" do
+            投稿
+            - unless feature_available?(:business_post_create)
+              %span.menu-lock-note= feature_locked_badge(:business_post_create)
 
         %li
-          = link_to "プロジェクト", business_projects_path, class: "menu-btn"
+          = link_to business_projects_path, class: "menu-btn #{'menu-btn-locked' unless feature_available?(:business_project_create)}" do
+            プロジェクト
+            - unless feature_available?(:business_project_create)
+              %span.menu-lock-note= feature_locked_badge(:business_project_create)
 
         %li
           = link_to "プロフィール", business_customer_path(current_customer), class: "menu-btn"
+
+        %li.menu-upgrade-item
+          = link_to business_root_path(anchor: "business-pricing"), class: "menu-upgrade-cta menu-upgrade-cta--compact" do
+            %span.menu-upgrade-cta__spark ✦
+            %span.menu-upgrade-cta__label プランUPGRADE
+            %span.menu-upgrade-cta__spark ✦
 
       - else
 
@@ -107,3 +132,9 @@
 
         %li
           = link_to "ログイン", new_customer_session_path, class: "menu-btn"
+
+        %li.menu-upgrade-item
+          = link_to business_root_path(anchor: "business-pricing"), class: "menu-upgrade-cta menu-upgrade-cta--compact" do
+            %span.menu-upgrade-cta__spark ✦
+            %span.menu-upgrade-cta__label 料金を見る
+            %span.menu-upgrade-cta__spark ✦

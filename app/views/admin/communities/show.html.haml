@@ -1,0 +1,33 @@
+= render 'layouts/admin_header_menu'
+
+.container.py-4
+  .d-flex.justify-content-between.align-items-center.mb-3
+    %h2.mb-0= "Community詳細 ##{@community.id}"
+    .btn-group
+      = link_to "編集", edit_admin_community_path(@community), class: "btn btn-success"
+      = link_to "削除", admin_community_path(@community), method: :delete, data: { confirm: "このコミュニティを削除しますか？" }, class: "btn btn-danger"
+
+  .card.shadow-sm
+    .card-body
+      %dl.row.mb-0
+        %dt.col-sm-3 名前
+        %dd.col-sm-9= @community.name
+        %dt.col-sm-3 ドメイン
+        %dd.col-sm-9= @community.domain&.name
+        %dt.col-sm-3 オーナー
+        %dd.col-sm-9= @community.owner&.name || "未設定"
+        %dt.col-sm-3 活動場所
+        %dd.col-sm-9= @community.prefecture&.name
+        %dt.col-sm-3 活動ペース
+        %dd.col-sm-9= @community.human_attribute_enum(:activity_stance)
+        %dt.col-sm-3 参加人数
+        %dd.col-sm-9= @community.customers.count
+        %dt.col-sm-3 ジャンル
+        %dd.col-sm-9= @community.genres.pluck(:name).join(", ")
+        %dt.col-sm-3 URL
+        %dd.col-sm-9= @community.url.presence || "-"
+        %dt.col-sm-3 紹介文
+        %dd.col-sm-9= simple_format(@community.introduction)
+
+  .mt-3
+    = link_to "一覧へ戻る", admin_communities_path, class: "btn btn-outline-secondary"

@@ -60,6 +60,10 @@
             %td
               = f.select :activity_stance, Customer.enum_options_for_select(:activity_stance)
           %tr
+            %th{scope:"row"} 契約プラン管理
+            %td
+              = render "shared/subscription_manager", customer: @customer
+          %tr
             %th{scope:"row"} 好きなジャンル
             %td
               = f.collection_check_boxes(:genre_ids, Genre.all, :id, :name) do |genre|
@@ -100,4 +104,8 @@
               = f.check_box :confirm_mail ,{checked: true}, "true", "false"
               %br
               ※チェックを外すと「通知メールを受信しない」設定となります。
+          %tr
+            %th{scope:"row"} Stripe連携
+            %td
+              Stripeの決済画面で登録・変更・キャンセルを行います。
           = f.submit "プロフィールを更新", class: "btn btn-info customer-edit-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }

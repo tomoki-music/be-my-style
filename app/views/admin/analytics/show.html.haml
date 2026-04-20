@@ -1,0 +1,82 @@
+= render 'layouts/admin_header_menu'
+
+.container.py-4.admin-analytics
+  %h2.mb-4 ユーザ分析
+
+  .row
+    - @summary_cards.each do |label, value|
+      .col-md-3.mb-3
+        .card.shadow-sm
+          .card-body.text-center
+            .text-muted.small= label
+            .display-4.font-weight-bold= value
+
+  .row
+    .col-md-4.mb-4
+      .card.shadow-sm.h-100
+        .card-body
+          %h4.h6.mb-3 プラン構成
+          - max_value = [@plan_stats.values.max.to_i, 1].max
+          - @plan_stats.each do |label, value|
+            .analytics-bar.mb-3
+              .d-flex.justify-content-between.small.mb-1
+                %span= label.upcase
+                %span= value
+              .analytics-bar__track
+                .analytics-bar__fill{ style: "width: #{(value.to_f / max_value * 100).round(1)}%" }
+
+    .col-md-4.mb-4
+      .card.shadow-sm.h-100
+        .card-body
+          %h4.h6.mb-3 認証状況
+          - max_value = [@confirmation_stats.values.max.to_i, 1].max
+          - @confirmation_stats.each do |label, value|
+            .analytics-bar.mb-3
+              .d-flex.justify-content-between.small.mb-1
+                %span= label
+                %span= value
+              .analytics-bar__track
+                .analytics-bar__fill.analytics-bar__fill--teal{ style: "width: #{(value.to_f / max_value * 100).round(1)}%" }
+
+    .col-md-4.mb-4
+      .card.shadow-sm.h-100
+        .card-body
+          %h4.h6.mb-3 退会状況
+          - max_value = [@deleted_stats.values.max.to_i, 1].max
+          - @deleted_stats.each do |label, value|
+            .analytics-bar.mb-3
+              .d-flex.justify-content-between.small.mb-1
+                %span= label
+                %span= value
+              .analytics-bar__track
+                .analytics-bar__fill.analytics-bar__fill--orange{ style: "width: #{(value.to_f / max_value * 100).round(1)}%" }
+
+  .row
+    .col-md-6.mb-4
+      .card.shadow-sm.h-100
+        .card-body
+          %h4.h6.mb-3 直近7日 新規登録
+          - max_value = [@signup_stats.values.max.to_i, 1].max
+          - @signup_stats.each do |label, value|
+            .analytics-bar.mb-3
+              .d-flex.justify-content-between.small.mb-1
+                %span= label
+                %span= value
+              .analytics-bar__track
+                .analytics-bar__fill.analytics-bar__fill--purple{ style: "width: #{(value.to_f / max_value * 100).round(1)}%" }
+
+    .col-md-6.mb-4
+      .card.shadow-sm.h-100
+        .card-body
+          %h4.h6.mb-3 直近7日 投稿数
+          - @content_stats.each do |content_label, stats|
+            .mb-3
+              %div.font-weight-bold.small.mb-2= content_label
+              - max_value = [stats.values.max.to_i, 1].max
+              - stats.each do |label, value|
+                .analytics-bar.mb-2
+                  .d-flex.justify-content-between.small.mb-1
+                    %span= label
+                    %span= value
+                  .analytics-bar__track
+                    .analytics-bar__fill.analytics-bar__fill--green{ style: "width: #{(value.to_f / max_value * 100).round(1)}%" }

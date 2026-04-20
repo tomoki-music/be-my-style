@@ -1,0 +1,72 @@
+- customer ||= current_customer
+
+.subscription-manager
+  .subscription-manager__header
+    %span.plan-badge-inline= customer_plan_label(customer)
+    %span.subscription-manager__status
+      = customer.subscribed? ? "有効なサブスクリプション" : "現在は free プラン"
+
+  - if customer.subscribed? && customer.stripe_managed_subscription?
+    %p.subscription-manager__copy
+      プラン変更やキャンセルは、Stripeの管理画面から安全に行えます。
+    = link_to "Stripeでプラン変更・解約",
+      subscription_portal_path_for_current_domain,
+      method: :post,
+      class: "btn btn-primary subscription-manager__cta",
+      data: { turbolinks: false }
+  - elsif customer.subscribed?
+    %p.subscription-manager__copy
+      現在のプラン情報は保持されていますが、Stripeの契約情報とはまだ連携されていません。テスト用または管理画面から反映された状態の可能性があります。
+    .subscription-manager__plans
+      .subscription-manager__plan
+        %strong light
+        %span ¥1,500/月
+        = link_to "lightを登録し直す",
+          subscription_checkout_path_for("light"),
+          method: :post,
+          class: "btn btn-outline-primary btn-sm",
+          data: { turbolinks: false }
+      .subscription-manager__plan
+        %strong core
+        %span ¥3,980/月
+        = link_to "coreを登録し直す",
+          subscription_checkout_path_for("core"),
+          method: :post,
+          class: "btn btn-primary btn-sm",
+          data: { turbolinks: false }
+      .subscription-manager__plan
+        %strong premium
+        %span ¥9,800/月
+        = link_to "premiumを登録し直す",
+          subscription_checkout_path_for("premium"),
+          method: :post,
+          class: "btn btn-outline-primary btn-sm",
+          data: { turbolinks: false }
+  - else
+    %p.subscription-manager__copy
+      新しいプラン登録は、Stripeの決済画面から行えます。
+    .subscription-manager__plans
+      .subscription-manager__plan
+        %strong light
+        %span ¥1,500/月
+        = link_to "lightを始める",
+          subscription_checkout_path_for("light"),
+          method: :post,
+          class: "btn btn-outline-primary btn-sm",
+          data: { turbolinks: false }
+      .subscription-manager__plan
+        %strong core
+        %span ¥3,980/月
+        = link_to "coreを始める",
+          subscription_checkout_path_for("core"),
+          method: :post,
+          class: "btn btn-primary btn-sm",
+          data: { turbolinks: false }
+      .subscription-manager__plan
+        %strong premium
+        %span ¥9,800/月
+        = link_to "premiumを始める",
+          subscription_checkout_path_for("premium"),
+          method: :post,
+          class: "btn btn-outline-primary btn-sm",
+          data: { turbolinks: false }

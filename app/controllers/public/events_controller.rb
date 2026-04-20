@@ -6,8 +6,48 @@ class Public::EventsController < ApplicationController
   before_action :authorize_event_edit!, only: [:edit, :update, :destroy, :copy]
 
   def index
-    @events = Event.order(event_start_time: :desc).page(params[:page]).per(5)
+    events = Event.left_joins(:community, songs: { join_parts: :join_part_customers }).distinct
+
+    if params[:keyword].present?
+      keyword = "%#{params[:keyword].strip}%"
+      events = events.where(
+        "events.event_name LIKE :keyword OR events.place LIKE :keyword OR "\
+        "events.address LIKE :keyword OR communities.name LIKE :keyword OR songs.song_name LIKE :keyword",
+        keyword: keyword
+      )
+    end
+
+    if params[:community_id].present?
+      events = events.where(community_id: params[:community_id])
+    end
+
+    events =
+      case params[:status]
+      when "recruiting"
+        events.where("events.event_end_time > ?", Time.current)
+              .group("events.id")
+              .having("COUNT(DISTINCT join_parts.id) > COUNT(DISTINCT join_part_customers.join_part_id)")
+      when "ended"
+        events.where("events.event_end_time < ?", Time.current)
+      when "upcoming"
+        events.where("events.event_end_time > ?", Time.current)
+      else
+        events
+      end
+
+    events =
+      case params[:sort]
+      when "newest"
+        events.order("events.created_at DESC")
+      when "start_later"
+        events.order("events.event_start_time DESC")
+      else
+        events.order("events.event_start_time ASC")
+      end
+
+    @events = events.page(params[:page]).per(5)
     @available_communities = current_customer.available_communities_for_event
+    @search_communities = Community.where(domain_id: @current_domain.id).order(:name)
   end
 
   def show
@@ -67,10 +107,13 @@ class Public::EventsController < ApplicationController
 
     #CSVダウロード
     @songs = @event.songs
+    @current_customer_session_credit_available = current_customer.session_credit_available_for?(@event)
+    @current_customer_session_credit_amount = current_customer.session_credit_amount_for(@event)
+    @current_customer_remaining_fee = [@event.entrance_fee.to_i - @current_customer_session_credit_amount, 0].max
     respond_to do |format|
       format.html
       format.csv do
-        generate_csv(@songs)
+        generate_csv(@event)
       end
     end
   end
@@ -186,6 +229,9 @@ class Public::EventsController < ApplicationController
       @join_part_ids.each_with_index do |join_part_id, index|
         @join_parts << "【" + JoinPart.find(join_part_id).song.song_name + "】の曲に" + "【" + JoinPart.find(join_part_id).join_part_name + "】で参加！"
       end
+      @session_credit_available = current_customer.session_credit_available_for?(@event)
+      @session_credit_amount = current_customer.session_credit_amount_for(@event)
+      @remaining_fee_after_credit = [@event.entrance_fee.to_i - @session_credit_amount, 0].max
     end
   end
 
@@ -197,11 +243,15 @@ class Public::EventsController < ApplicationController
       join_part_ids = params[:join_part_ids]&.values
       join_part_ids_array = join_part_ids.map{ |i| i.to_i }
       customer = current_customer
+      created_join_records = []
       join_part_ids_array.each do |join_part_id|
         unless JoinPart.find(join_part_id).customers.pluck(:id).include?(customer.id)
-          JoinPart.find(join_part_id).customers << customer
+          join_part = JoinPart.find(join_part_id)
+          join_part.customers << customer
+          created_join_records << JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part.id)
         end
       end
+      apply_session_credit_if_needed!(event, customer, created_join_records.compact)
       #イベント開催者への通知
       if current_customer != event.customer
         event.customer.create_notification_join_event(current_customer, event.id)
@@ -233,7 +283,10 @@ class Public::EventsController < ApplicationController
     event = Event.find(params[:event_id])
     join_part = JoinPart.find(params[:join_part_id])
     customer = Customer.find(params[:customer_id])
+    join_record = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part.id)
+    credited_record = join_record if join_record&.session_credit_applied?
     join_part.customers.delete(customer)
+    transfer_session_credit_if_needed!(event, customer, credited_record)
     redirect_to public_event_path(event), alert: "参加を取消しました!"
   end
 
@@ -259,7 +312,7 @@ class Public::EventsController < ApplicationController
       :url_comment,
       join_part_ids:[],
       part_ids:[],
-      songs_attributes: [:id, :event_id, :song_name, :youtube_url, :introduction, :position, :_destroy,
+      songs_attributes: [:id, :event_id, :song_name, :performance_time, :performance_start_time, :youtube_url, :introduction, :position, :_destroy,
         join_parts_attributes:[:id, :join_part_name, :_destroy]
       ],
     )
@@ -270,7 +323,14 @@ class Public::EventsController < ApplicationController
   end
 
   def authorize_event_creation!
-    unless current_customer.can_create_event?
+    community =
+      if params[:community_id].present?
+        Community.find_by(id: params[:community_id], domain_id: @current_domain.id)
+      elsif params.dig(:event, :community_id).present?
+        Community.find_by(id: params[:event][:community_id], domain_id: @current_domain.id)
+      end
+
+    unless current_customer.can_create_event?(community)
       redirect_to public_events_path, alert: "イベントを作成する権限がありません。"
     end
   end
@@ -279,6 +339,31 @@ class Public::EventsController < ApplicationController
     unless current_customer.can_edit_event?(@event)
       redirect_to public_events_path, alert: "このイベントを編集する権限がありません。"
     end
+  end
+
+  def apply_session_credit_if_needed!(event, customer, created_join_records)
+    return if created_join_records.blank?
+    return unless customer.session_credit_available_for?(event)
+
+    credit_record = created_join_records.first
+    credit_record.update!(
+      session_credit_applied: true,
+      session_credit_amount: customer.session_credit_amount_for(event),
+      plan_snapshot: customer.plan
+    )
+  end
+
+  def transfer_session_credit_if_needed!(event, customer, credited_record)
+    return if credited_record.blank?
+
+    remaining_records = event.participation_records_for(customer)
+    return if remaining_records.blank?
+
+    remaining_records.first.update!(
+      session_credit_applied: true,
+      session_credit_amount: credited_record.session_credit_amount,
+      plan_snapshot: credited_record.plan_snapshot.presence || customer.plan
+    )
   end
 
 end

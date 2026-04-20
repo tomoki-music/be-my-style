@@ -12,9 +12,14 @@
       %p.sub フォローしている人の「いま起きていること」をチェックしよう
 
     .header-actions
-      = link_to "＋ 投稿",
-        new_business_post_path,
-        class:"btn btn-primary new-post-btn"
+      - if feature_available?(:business_post_create)
+        = link_to "＋ 投稿",
+          new_business_post_path,
+          class:"btn btn-primary new-post-btn"
+      - else
+        = link_to feature_upgrade_cta(:business_post_create),
+          feature_upgrade_path(:business_post_create),
+          class:"btn btn-primary new-post-btn menu-btn-locked"
 
   .search-box
 
@@ -81,10 +86,7 @@
               .timeline-top
 
                 .avatar
-                  - if post.customer.profile_image.attached?
-                    = image_tag post.customer.profile_image, class:"avatar-img"
-                  - else
-                    = image_tag "no_image", class:"avatar-img"
+                  = customer_avatar_tag(post.customer, class_name: "avatar-img")
 
                 .meta
                   %span.name= post.customer.name
@@ -110,4 +112,10 @@
     .empty-state
       %h3 投稿がまだありません
       %p 最初の投稿でコミュニティを盛り上げよう🔥
-      = link_to "投稿する", new_business_post_path, class:"btn btn-primary"
+      - if feature_available?(:business_post_create)
+        = link_to "投稿する", new_business_post_path, class:"btn btn-primary"
+      - else
+        = render "shared/feature_gate",
+          feature_key: :business_post_create,
+          title: "投稿を始める",
+          class_name: "feature-gate--inline"
