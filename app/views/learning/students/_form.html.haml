@@ -1,0 +1,46 @@
+- selected_parts = @student.learning_student_parts.map(&:part)
+- selected_parts = [@student.main_part] if selected_parts.blank? && @student.main_part.present?
+- form_url = @student.persisted? ? learning_student_path(@student) : learning_students_path
+= form_with model: @student, url: form_url, local: true, class: "learning-form" do |f|
+  - if @student.errors.any?
+    #error_explanation.learning-errors
+      %h2= "#{@student.errors.count}件のエラーがあります"
+      %ul
+        - @student.errors.full_messages.each do |message|
+          %li= message
+
+  .learning-form-grid
+    .learning-form-group
+      = f.label :name, "名前"
+      = f.text_field :name, class: "learning-input"
+    .learning-form-group
+      = f.label :email, "生徒メール"
+      = f.email_field :email, class: "learning-input", placeholder: "例: student@example.com"
+    .learning-form-group
+      = f.label :learning_school_group_id, "所属高校"
+      = f.select :learning_school_group_id, learning_school_group_options(current_customer.learning_school_groups.ordered), { include_blank: "選択してください" }, class: "learning-select"
+    .learning-form-group
+      = f.label :grade, "学年"
+      = f.text_field :grade, class: "learning-input", placeholder: "例: 高校1年"
+    .learning-form-group
+      = f.label :main_part, "メインパート"
+      = f.select :main_part, learning_part_options, {}, class: "learning-select"
+    .learning-form-group
+      = f.label :status, "ステータス"
+      = f.select :status, learning_student_status_options, {}, class: "learning-select"
+
+  .learning-form-group
+    %label 担当パート
+    .learning-checkbox-grid
+      - learning_part_options.each do |label, value|
+        %label.learning-check-pill
+          = check_box_tag "learning_student[parts][]", value, selected_parts.include?(value)
+          %span= label
+
+  .learning-form-group
+    = f.label :memo, "メモ"
+    = f.text_area :memo, rows: 5, class: "learning-textarea", placeholder: "性格、練習時の様子、注意点など"
+
+  .learning-inline-actions
+    = f.submit(@student.persisted? ? "更新する" : "作成する", class: "learning-button")
+    = link_to "一覧へ戻る", learning_students_path, class: "learning-button learning-button--ghost"

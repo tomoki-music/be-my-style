@@ -1,0 +1,109 @@
+- action = link_to("生徒を編集", edit_learning_student_path(@student), class: "learning-button")
+= render "learning/shared/page", title: @student.name, subtitle: "今の目標と進捗を確認しながら、次にやることを迷わず決められる画面です。", action: action do
+  .learning-stat-grid
+    .learning-stat-card{ style: learning_progress_style(@student.main_part) }
+      %span.learning-stat-card__label メインパート
+      %strong.learning-stat-card__value= learning_part_label(@student.main_part)
+      %p.learning-stat-card__sub= @student.displayed_parts.map { |part| learning_part_label(part) }.join(" / ")
+    .learning-stat-card
+      %span.learning-stat-card__label 進捗率
+      %strong.learning-stat-card__value= "#{@training_summary[:progress_rate]}%"
+      .learning-progress{ style: learning_progress_style(@student.main_part) }
+        .learning-progress__bar{ style: "width: #{learning_progress_bar_width(@training_summary[:progress_rate])}%" }
+    .learning-stat-card
+      %span.learning-stat-card__label 達成数
+      %strong.learning-stat-card__value= @training_summary[:achievement_count]
+      %p.learning-stat-card__sub= "全 #{@training_summary[:total_count]} 件"
+    .learning-stat-card
+      %span.learning-stat-card__label 所属高校
+      %strong.learning-stat-card__value= @student.learning_school_group&.name || "未所属"
+      %p.learning-stat-card__sub= learning_student_status_label(@student.status)
+    .learning-stat-card
+      %span.learning-stat-card__label ステータス
+      %strong.learning-stat-card__value= learning_student_status_label(@student.status)
+      %p.learning-stat-card__sub= @student.grade.presence || "学年未設定"
+
+  .learning-two-column
+    .learning-section
+      .learning-section__header
+        %h2 生徒情報
+      .learning-detail-card
+        %p
+          %strong 生徒メール
+          = @student.email.presence || "未登録"
+        %p
+          %strong 所属高校
+          = @student.learning_school_group&.name || "未所属"
+        %p
+          %strong 学年
+          = @student.grade.presence || "未設定"
+        %p
+          %strong メモ
+          = @student.memo.presence || "メモはまだありません。"
+        .learning-inline-actions
+          = link_to "トレーニング割当を管理", learning_student_student_trainings_path(@student), class: "learning-button"
+          = link_to "進捗ログを追加", new_learning_student_progress_log_path(@student), class: "learning-button learning-button--ghost"
+          = link_to "生徒ページを見る", learning_student_portal_path(@student.public_access_token), class: "learning-button learning-button--ghost", target: "_blank", rel: "noopener"
+          = button_to "生徒へメール送信", send_portal_mail_learning_student_path(@student), method: :post, class: "learning-button"
+
+    .learning-section
+      .learning-section__header
+        %h2 今週の目標
+      - current_goal = @student_trainings.map(&:weekly_goal).find(&:present?)
+      - teacher_comment = @student_trainings.map(&:teacher_comment).find(&:present?)
+      .learning-detail-card
+        %p
+          %strong 目標
+          = current_goal.presence || "今週の目標はまだ設定されていません。"
+        %p
+          %strong 先生コメント
+          = teacher_comment.presence || "先生コメントはまだありません。"
+        %p
+          %strong 生徒向けページURL
+          %br
+          = link_to learning_student_portal_url(@student.public_access_token), learning_student_portal_url(@student.public_access_token), target: "_blank", rel: "noopener"
+
+  .learning-two-column
+    .learning-section
+      .learning-section__header
+        %h2 割当中のトレーニング
+        = link_to "一覧へ", learning_student_student_trainings_path(@student), class: "learning-text-link"
+      .learning-stack
+        - @student_trainings.each do |training|
+          .learning-training-card{ style: learning_progress_style(training.part) }
+            .learning-training-card__header
+              %strong= training.title
+              %span= learning_mark_label(training.achievement_mark)
+            %p= training.description
+            %small= "#{learning_part_label(training.part)} / #{training.period} / #{training.level}"
+
+    .learning-section
+      .learning-section__header
+        %h2 最近の進捗ログ
+        = link_to "履歴を見る", learning_progress_logs_path(student_id: @student.id), class: "learning-text-link"
+      .learning-stack
+        - @recent_logs.each do |log|
+          .learning-log-card
+            .learning-log-card__head
+              %strong= l(log.practiced_on)
+              %span= learning_mark_label(log.achievement_mark)
+            %p= "#{learning_part_label(log.part)} / #{log.training_title}"
+            %small= log.comment.presence || "コメントなし"
+
+  .learning-section
+    .learning-section__header
+      %h2 関係するバンド練習
+      - if @student.learning_bands.any?
+        %small= @student.learning_bands.map(&:name).join(" / ")
+    - if @related_band_trainings.any?
+      .learning-stack
+        - @related_band_trainings.each do |training|
+          .learning-training-card{ style: learning_progress_style("band") }
+            .learning-training-card__header
+              %strong= training.title
+              %span= training.learning_band.name
+            %p= training.description
+            %small= "関連パート: #{training.related_parts_list.map { |part| learning_part_label(part) }.join(' / ').presence || '全体'}"
+    - else
+      .learning-empty
+        %p この生徒に紐づくバンド練習はまだありません。

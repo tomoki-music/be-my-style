@@ -2,7 +2,9 @@ class Public::CommunitiesController < ApplicationController
   before_action :set_community, only: [:show, :edit, :update, :destroy, :leave, :new_mail, :send_mail, :permits]
   before_action :ensure_correct_customer, only: [:edit, :update, :destroy, :permits]
   before_action :check_mail, only: [:send_mail]
-  before_action :admin_only!, only: [:new, :create, :destroy]
+  before_action only: [:new, :create] do
+    require_feature!(:music_community_create, redirect_to_path: public_communities_path)
+  end
   before_action only: [:new_mail, :send_mail] do
     require_feature!(:music_community_mail, redirect_to_path: public_community_path(@community))
   end

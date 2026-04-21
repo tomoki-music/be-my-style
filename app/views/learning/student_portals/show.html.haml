@@ -1,0 +1,85 @@
+.learning-shell.learning-shell--portal
+  .learning-main.learning-main--portal
+    .learning-topbar
+      .learning-topbar__text
+        %p.learning-topbar__eyebrow Student Page
+        %h1= "#{@student.name} さんのトレーニング"
+        %p.learning-topbar__subtitle
+          = [@student.learning_school_group&.name, @student.grade.presence].compact.join(" / ").presence || "今週の目標と進捗を確認できます。"
+
+    .learning-content
+      .learning-stat-grid
+        .learning-stat-card{ style: learning_progress_style(@student.main_part) }
+          %span.learning-stat-card__label 進捗率
+          %strong.learning-stat-card__value= "#{@summary[:progress_rate]}%"
+          .learning-progress{ style: learning_progress_style(@student.main_part) }
+            .learning-progress__bar{ style: "width: #{learning_progress_bar_width(@summary[:progress_rate])}%" }
+        .learning-stat-card
+          %span.learning-stat-card__label 達成数
+          %strong.learning-stat-card__value= @summary[:achievement_count]
+          %p.learning-stat-card__sub= "全 #{@summary[:total_count]} 件"
+        .learning-stat-card
+          %span.learning-stat-card__label 今週の目標
+          %strong.learning-stat-card__value= @summary[:weekly_goal].presence || "確認しよう"
+        .learning-stat-card
+          %span.learning-stat-card__label メインパート
+          %strong.learning-stat-card__value= learning_part_label(@student.main_part)
+          %p.learning-stat-card__sub= @student.displayed_parts.map { |part| learning_part_label(part) }.join(" / ")
+
+      .learning-two-column
+        .learning-section
+          .learning-section__header
+            %h2 今週の目標
+          .learning-detail-card
+            %p
+              %strong 目標
+              = @summary[:weekly_goal].presence || "先生と次の目標を相談してみよう。"
+            %p
+              %strong 先生からのメッセージ
+              = @summary[:teacher_comment].presence || "先生からのコメントはまだありません。"
+
+        .learning-section
+          .learning-section__header
+            %h2 次にやる課題
+          .learning-stack
+            - upcoming_trainings = @current_trainings.reject(&:star?).first(4)
+            - if upcoming_trainings.any?
+              - upcoming_trainings.each do |training|
+                .learning-training-card{ style: learning_progress_style(training.part) }
+                  .learning-training-card__header
+                    %strong= training.title
+                    %span= learning_mark_label(training.achievement_mark)
+                  %p= training.description
+                  %small= "#{training.period} / #{training.level}"
+            - else
+              .learning-empty
+                %p 今の課題はよく進んでいます。この調子で続けよう。
+
+      .learning-two-column
+        .learning-section
+          .learning-section__header
+            %h2 取り組み中のメニュー
+          .learning-stack
+            - @current_trainings.each do |training|
+              .learning-training-card{ style: learning_progress_style(training.part) }
+                .learning-training-card__header
+                  %strong= training.title
+                  %span= learning_mark_label(training.achievement_mark)
+                %p= training.description
+                %small= "#{training.period} / #{training.level} / #{training.frequency.presence || '頻度未設定'}"
+
+        .learning-section
+          .learning-section__header
+            %h2 最近のがんばり記録
+          .learning-stack
+            - if @recent_logs.any?
+              - @recent_logs.each do |log|
+                .learning-log-card
+                  .learning-log-card__head
+                    %strong= l(log.practiced_on)
+                    %span= learning_mark_label(log.achievement_mark)
+                  %p= "#{learning_part_label(log.part)} / #{log.training_title}"
+                  %small= log.comment.presence || "コメントなし"
+            - else
+              .learning-empty
+                %p これからの記録がここに増えていきます。

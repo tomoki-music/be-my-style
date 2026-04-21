@@ -3,6 +3,15 @@
 }
 
 .event-index-head-title{
+  width: calc(100% - 32px);
+  max-width: 1040px;
+  margin: 18px auto 22px;
+  padding: 24px 20px;
+  display: block;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 251, 255, 0.94));
+  border: 1px solid rgba(28, 36, 48, 0.08);
+  box-shadow: 0 14px 34px rgba(18, 31, 53, 0.07);
 
   .community-list {
     display: grid;
@@ -19,13 +28,10 @@
     transform: scale(1.02);
   }
   
-  text-align: center;
-  padding: 5px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   .event-index-create-btn{
-    margin-left: 20px;
+    border-radius: 999px;
+    padding: 10px 20px;
+    font-weight: 700;
   }
 }
 .events-kaminari{
@@ -123,6 +129,13 @@
 }
 
 @media (max-width: 600px) {
+  .event-index-head-title {
+    width: calc(100% - 20px);
+    margin: 12px auto 16px;
+    padding: 18px 16px;
+    border-radius: 16px;
+  }
+
   .event-toc {
     position: sticky;
     top: 60px;

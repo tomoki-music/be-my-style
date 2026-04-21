@@ -1,0 +1,43 @@
+- form_url = @training_master.persisted? ? learning_training_master_path(@training_master) : learning_training_masters_path
+= form_with model: @training_master, url: form_url, local: true, class: "learning-form" do |f|
+  - if @training_master.errors.any?
+    #error_explanation.learning-errors
+      %h2= "#{@training_master.errors.count}件のエラーがあります"
+      %ul
+        - @training_master.errors.full_messages.each do |message|
+          %li= message
+
+  .learning-form-grid
+    .learning-form-group
+      = f.label :part, "パート"
+      = f.select :part, learning_part_options, {}, class: "learning-select"
+    .learning-form-group
+      = f.label :period, "期間"
+      = f.select :period, learning_period_options, {}, class: "learning-select"
+    .learning-form-group
+      = f.label :level, "レベル"
+      = f.select :level, learning_level_options, {}, class: "learning-select"
+    .learning-form-group
+      = f.label :frequency, "頻度"
+      = f.text_field :frequency, class: "learning-input", placeholder: "例: 毎日5分 / 週3回"
+
+  .learning-form-group
+    = f.label :title, "項目名"
+    = f.text_field :title, class: "learning-input"
+
+  .learning-form-group
+    = f.label :description, "トレーニング内容"
+    = f.text_area :description, rows: 5, class: "learning-textarea"
+
+  .learning-form-group
+    = f.label :achievement_criteria, "達成基準"
+    = f.text_area :achievement_criteria, rows: 4, class: "learning-textarea"
+
+  .learning-form-group
+    %label.learning-switch
+      = f.check_box :is_band_training
+      %span バンド練習用トレーニングとして登録する
+
+  .learning-inline-actions
+    = f.submit(@training_master.persisted? ? "更新する" : "作成する", class: "learning-button")
+    = link_to "一覧へ戻る", learning_training_masters_path, class: "learning-button learning-button--ghost"

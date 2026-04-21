@@ -1,0 +1,123 @@
+- action = link_to("生徒詳細へ戻る", learning_student_path(@student), class: "learning-button learning-button--ghost")
+= render "learning/shared/page", title: "#{@student.name} のトレーニング割当", subtitle: "割当、並び替え、達成記号、講師コメントをまとめて管理できます。", action: action do
+  .learning-stat-grid
+    .learning-stat-card
+      %span.learning-stat-card__label 進捗率
+      %strong.learning-stat-card__value= "#{@summary[:progress_rate]}%"
+      .learning-progress{ style: learning_progress_style(@student.main_part) }
+        .learning-progress__bar{ style: "width: #{learning_progress_bar_width(@summary[:progress_rate])}%" }
+    .learning-stat-card
+      %span.learning-stat-card__label 達成数
+      %strong.learning-stat-card__value= @summary[:achievement_count]
+      %p.learning-stat-card__sub= "全 #{@summary[:total_count]} 件"
+    .learning-stat-card
+      %span.learning-stat-card__label 今週の目標
+      %strong.learning-stat-card__value= @student_trainings.map(&:weekly_goal).find(&:present?) || "未設定"
+    .learning-stat-card
+      %span.learning-stat-card__label 最新コメント
+      %strong.learning-stat-card__value= @student_trainings.map(&:teacher_comment).find(&:present?) || "まだありません"
+
+  .learning-section
+    .learning-section__header
+      %h2 成長ロードマップ
+      %small= "#{learning_part_label(@student.main_part)} の全体スケジュール"
+    .learning-roadmap
+      - @training_schedule.each do |entry|
+        .learning-roadmap__card{ class: "is-#{entry[:state]}" }
+          .learning-roadmap__period= entry[:period]
+          .learning-roadmap__levels= entry[:levels].join(" / ")
+          %strong.learning-roadmap__count= "#{entry[:count]}メニュー"
+          %small.learning-muted= "達成 #{entry[:completed_count]} / #{entry[:count]}"
+          %p.learning-roadmap__titles= entry[:titles].first(3).join(" / ")
+          - if entry[:titles].size > 3
+            %small.learning-muted= "ほか #{entry[:titles].size - 3} 件"
+
+  .learning-two-column
+    .learning-section
+      .learning-section__header
+        %h2 新しい課題を割り当てる
+      - if @training_masters.blank?
+        .learning-empty
+          %p 先にトレーニングマスターを登録してください。
+          = link_to "マスターを追加", new_learning_training_master_path, class: "learning-button"
+      - else
+        - training_master_payload = @training_masters.to_h { |master| [master.id, { part: learning_part_label(master.part), period: master.period, level: master.level, title: master.title, description: master.description, achievement_criteria: master.achievement_criteria, frequency: master.frequency }] }
+        = form_with model: @new_student_training, url: learning_student_student_trainings_path(@student), local: true, class: "learning-form" do |f|
+          - if @new_student_training.errors.any?
+            #error_explanation.learning-errors
+              %h2= "#{@new_student_training.errors.count}件のエラーがあります"
+              %ul
+                - @new_student_training.errors.full_messages.each do |message|
+                  %li= message
+
+          .learning-form-group
+            = f.label :learning_training_master_id, "トレーニングマスター"
+            = f.select :learning_training_master_id, grouped_options_for_select(@training_master_groups, @new_student_training.learning_training_master_id), { prompt: "選択してください" }, class: "learning-select", data: { learning_training_master_select: true }
+            %small.learning-muted= "#{learning_part_label(@student.main_part)} の項目だけを、レベルごとにまとめて表示しています。"
+          .learning-master-preview{ data: { learning_training_master_preview: true, training_masters: training_master_payload.to_json } }
+            .learning-master-preview__empty{ data: { learning_training_master_empty: true } }
+              %strong 項目を選ぶと詳細がここに表示されます
+              %p トレーニング内容と達成基準を確認してから割り当てできます。
+            .learning-master-preview__content{ data: { learning_training_master_content: true }, hidden: true }
+              .learning-master-preview__header
+                .learning-master-preview__meta{ data: { learning_training_master_meta: true } }
+                %strong.learning-master-preview__title{ data: { learning_training_master_title: true } }
+              .learning-master-preview__section
+                %span.learning-master-preview__label トレーニング内容
+                %p.learning-master-preview__text{ data: { learning_training_master_description: true } }
+              .learning-master-preview__section
+                %span.learning-master-preview__label 達成基準
+                %p.learning-master-preview__text{ data: { learning_training_master_criteria: true } }
+              .learning-master-preview__footer
+                %span.learning-master-preview__frequency{ data: { learning_training_master_frequency: true } }
+          .learning-form-group
+            = f.label :weekly_goal, "今週の目標"
+            = f.text_field :weekly_goal, class: "learning-input", placeholder: "例: 毎日ロングトーンを3分続ける"
+          .learning-form-group
+            = f.label :teacher_comment, "講師コメント"
+            = f.text_area :teacher_comment, rows: 4, class: "learning-textarea", placeholder: "できた点、次回見たいポイントなど"
+          = f.submit "割り当てる", class: "learning-button"
+
+    .learning-section
+      .learning-section__header
+        %h2 絞り込み
+      = form_with url: learning_student_student_trainings_path(@student), method: :get, local: true, class: "learning-filter-form" do
+        = text_field_tag :keyword, params[:keyword], placeholder: "項目名・内容で検索", class: "learning-input"
+        = select_tag :part, options_for_select([["全パート", ""]] + learning_part_options, params[:part]), class: "learning-select"
+        = select_tag :level, options_for_select([["全レベル", ""]] + learning_level_options, params[:level]), class: "learning-select"
+        = select_tag :status, options_for_select([["全ステータス", ""]] + learning_training_status_options, params[:status]), class: "learning-select"
+        = submit_tag "絞り込む", class: "learning-button"
+
+  .learning-section
+    .learning-section__header
+      %h2 割当一覧
+      %small ドラッグで順番を変えられます
+    .learning-table-wrap
+      %table.learning-table
+        %thead
+          %tr
+            %th 並び替え
+            %th 項目
+            %th 状態
+            %th 達成記号
+            %th 今週の目標
+            %th コメント
+            %th 操作
+        %tbody{ data: { learning_sortable: true, reorder_url: reorder_learning_student_student_trainings_path(@student) } }
+          - @student_trainings.each do |training|
+            %tr{ data: { training_id: training.id } }
+              %td.learning-drag-handle ↕
+              %td
+                %strong= training.title
+                %div.learning-muted= "#{learning_part_label(training.part)} / #{training.period} / #{training.level}"
+                %div.learning-muted= truncate(training.description, length: 80)
+              %td= learning_training_status_label(training.status)
+              %td
+                .learning-mark-buttons
+                  - LearningCatalog::ACHIEVEMENT_MARKS.each do |mark, label|
+                    = button_to label, mark_learning_student_training_path(training, achievement_mark: mark), method: :patch, class: "learning-mark-button #{'is-active' if training.achievement_mark == mark}"
+              %td= training.weekly_goal.presence || "-"
+              %td= training.teacher_comment.presence || "-"
+              %td.learning-table__actions
+                = link_to "編集", edit_learning_student_training_path(training), class: "learning-text-link"
+                = link_to "削除", learning_student_training_path(training), method: :delete, data: { confirm: "削除しますか？" }, class: "learning-text-link learning-text-link--danger"

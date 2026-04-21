@@ -1,0 +1,37 @@
+- action = link_to("生徒を追加", new_learning_student_path, class: "learning-button")
+= render "learning/shared/page", title: "生徒一覧", subtitle: "担当パートや在籍ステータスを確認しながら、生徒ごとの育成状況へすぐ移動できます。", action: action do
+  .learning-section
+    = form_with url: learning_students_path, method: :get, local: true, class: "learning-filter-form" do
+      = text_field_tag :keyword, params[:keyword], placeholder: "名前・メモで検索", class: "learning-input"
+      = select_tag :learning_school_group_id, options_for_select([["全高校", ""]] + learning_school_group_options(@school_groups), params[:learning_school_group_id]), class: "learning-select"
+      = select_tag :part, options_for_select([["全パート", ""]] + learning_part_options, params[:part]), class: "learning-select"
+      = select_tag :status, options_for_select([["全ステータス", ""]] + learning_student_status_options, params[:status]), class: "learning-select"
+      = submit_tag "絞り込む", class: "learning-button"
+      = link_to "リセット", learning_students_path, class: "learning-button learning-button--ghost"
+
+  .learning-section
+    .learning-table-wrap
+      %table.learning-table
+        %thead
+          %tr
+            %th 名前
+            %th 高校
+            %th パート
+            %th 学年
+            %th ステータス
+            %th 割当数
+            %th 操作
+        %tbody
+          - @students.each do |student|
+            %tr
+              %td= link_to student.name, learning_student_path(student)
+              %td= student.learning_school_group&.name || "未所属"
+              %td= student.displayed_parts.map { |part| learning_part_label(part) }.join(" / ")
+              %td= student.grade.presence || "-"
+              %td= learning_student_status_label(student.status)
+              %td= student.learning_student_trainings.size
+              %td.learning-table__actions
+                = link_to "詳細", learning_student_path(student), class: "learning-text-link"
+                = link_to "編集", edit_learning_student_path(student), class: "learning-text-link"
+                = link_to "割当", learning_student_student_trainings_path(student), class: "learning-text-link"
+                = link_to "削除", learning_student_path(student), method: :delete, data: { confirm: "削除しますか？" }, class: "learning-text-link learning-text-link--danger"

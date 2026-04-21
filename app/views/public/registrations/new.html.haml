@@ -4,23 +4,26 @@
     %h2.signup-title 新規登録
 
     = form_with model: resource, url: customer_registration_path, local: true do |f|
+      - if resource.errors.any?
+        #error_explanation
+          %ul
+            - resource.errors.full_messages.each do |message|
+              %li= message
 
       .domain-cards
-        - ["music","business"].each do |type|
-          - label = type == "music" ? "音楽" : "ビジネス"
-          - desc  = type == "music" ? "仲間とセッション" : "スキルで繋がる"
-          - icon  = type == "music" ? "🎸" : "💼"
+        - registration_domains = { "music" => { label: "音楽", desc: "仲間とセッション", icon: "🎸" }, "business" => { label: "ビジネス", desc: "スキルで繋がる", icon: "💼" }, "learning" => { label: "学習", desc: "成長を見える化", icon: "🏫" } }
+        - registration_domains.each do |type, config|
 
           %label.domain-card{ class: type }
             = f.radio_button :domain_name, type,
               class:"domain-radio",
-              checked: (f.object.domain_name.presence || "music") == type
+              checked: f.object.domain_name == type
 
             .card-inner
-              .icon= icon
+              .icon= config[:icon]
               .text
-                %h4= label
-                %p= desc
+                %h4= config[:label]
+                %p= config[:desc]
 
       .form-group
         %label メールアドレス
@@ -114,5 +117,11 @@
       .form-group
         %label 自己紹介
         = f.text_area :introduction, class:"form-control"
+
+      .learning-fields
+        .form-card
+          %h4.section-title 🏫 学習向けアカウント
+          %p.mb-2 音楽スクールやコミュニティで、生徒ごとの課題・進捗・目標を管理できます。
+          %p.text-muted.mb-0 登録後はダッシュボードから生徒管理、トレーニング割当、進捗ログ管理を始められます。
 
       = f.submit "登録する", class:"btn btn-primary signup-btn"

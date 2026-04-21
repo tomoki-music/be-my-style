@@ -1,0 +1,76 @@
+- action = link_to("バンド練習を追加", new_learning_band_training_path(band_id: @selected_band&.id), class: "learning-button")
+= render "learning/shared/page", title: "バンド練習一覧", subtitle: "バンド練習の課題も個人課題と同じ感覚で管理できます。", action: action do
+  .learning-section
+    = form_with url: learning_band_trainings_path, method: :get, local: true, class: "learning-filter-form" do
+      = select_tag :learning_school_group_id, options_for_select([["全高校", ""]] + learning_school_group_options(@school_groups), @selected_school_group&.id), class: "learning-select"
+      = select_tag :band_id, options_for_select([["全バンド", ""]] + @bands.map { |band| [band.name, band.id] }, @selected_band&.id), class: "learning-select"
+      = submit_tag "切り替える", class: "learning-button"
+      = link_to "リセット", learning_band_trainings_path, class: "learning-button learning-button--ghost"
+
+  - if @bands.present?
+    .learning-section
+      .learning-section__header
+        %h2 バンド練習ロードマップ
+        %small= "#{@selected_band&.name || @selected_school_group&.name || '全バンド'} の全体スケジュール"
+      .learning-roadmap
+        - @training_schedule.each do |entry|
+          .learning-roadmap__card{ class: "is-#{entry[:state]}" }
+            .learning-roadmap__period= entry[:period]
+            .learning-roadmap__levels= entry[:levels].join(" / ")
+            %strong.learning-roadmap__count= "#{entry[:count]}メニュー"
+            %small.learning-muted= "達成 #{entry[:completed_count]} / #{entry[:count]}"
+            %p.learning-roadmap__titles= entry[:titles].first(3).join(" / ")
+            - if entry[:titles].size > 3
+              %small.learning-muted= "ほか #{entry[:titles].size - 3} 件"
+
+  .learning-two-column
+    .learning-section
+      .learning-section__header
+        %h2 バンド
+        = link_to "グループ管理", learning_bands_path, class: "learning-text-link"
+      .learning-stack
+        - @bands.each do |band|
+          = link_to learning_band_trainings_path(learning_school_group_id: @selected_school_group&.id, band_id: band.id), class: "learning-band-link #{'is-active' if @selected_band == band}" do
+            %strong= band.name
+            %small= "#{band.learning_band_trainings.count}件のトレーニング"
+
+    .learning-section
+      .learning-section__header
+        %h2 一覧
+      - if @bands.present?
+        .learning-table-wrap
+          %table.learning-table
+            %thead
+              %tr
+                %th バンド
+                %th 項目
+                %th 期間
+                %th レベル
+                %th 状態
+                %th 達成
+                %th コメント
+                %th 操作
+            %tbody
+              - @band_trainings.each do |training|
+                %tr
+                  %td= link_to training.learning_band.name, learning_band_path(training.learning_band), class: "learning-text-link"
+                  %td
+                    %strong= training.title
+                    %div.learning-muted= truncate(training.description, length: 60)
+                  %td= training.period
+                  %td= training.level
+                  %td= learning_training_status_label(training.status)
+                  %td
+                    .learning-mark-buttons
+                      - LearningCatalog::ACHIEVEMENT_MARKS.each do |mark, label|
+                        = button_to label, mark_learning_band_training_path(training, achievement_mark: mark), method: :patch, class: "learning-mark-button #{'is-active' if training.achievement_mark == mark}"
+                  %td
+                    = training.teacher_comment.presence || "-"
+                    %div.learning-muted= "関連: #{training.related_parts_list.map { |part| learning_part_label(part) }.join(' / ').presence || '全体'}"
+                  %td.learning-table__actions
+                    = link_to "編集", edit_learning_band_training_path(training), class: "learning-text-link"
+                    = link_to "削除", learning_band_training_path(training), method: :delete, data: { confirm: "削除しますか？" }, class: "learning-text-link learning-text-link--danger"
+      - else
+        .learning-empty
+          %p バンドグループがまだありません。
+          = link_to "最初のグループを作る", new_learning_band_path, class: "learning-button"

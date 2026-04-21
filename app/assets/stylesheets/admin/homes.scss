@@ -3,6 +3,117 @@
 // You can use Sass (SCSS) here: https://sass-lang.com/
 
 /* 管理画面：一覧テーブルのヘッダー固定 */
+.admin-notification-card {
+  border: 1px solid #e6eaf0;
+}
+
+.admin-notification-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.admin-notification-card__title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-notification-card__subtext {
+  color: #6c757d;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-notification-card__meta {
+  flex: 0 0 auto;
+}
+
+.admin-notification-list {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid #edf0f4;
+  border-radius: 8px;
+}
+
+.admin-notification-list__item {
+  border-right: 0;
+  border-left: 0;
+  padding: 12px 14px;
+}
+
+.admin-notification-list__item:first-child {
+  border-top: 0;
+}
+
+.admin-notification-list__item:last-child {
+  border-bottom: 0;
+}
+
+.admin-notification-list__item.is-unread {
+  background: #f7fbff;
+  box-shadow: inset 3px 0 0 #0d6efd;
+}
+
+.admin-notification-list__content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-notification-list__main {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.admin-notification-list__plan {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.admin-notification-list__message {
+  color: #1f2937;
+  line-height: 1.5;
+}
+
+.admin-notification-list__time {
+  flex: 0 0 auto;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+.admin-notification-card__empty {
+  display: flex;
+  align-items: center;
+  min-height: 64px;
+  padding: 0 4px;
+}
+
+@media (max-width: 576px) {
+  .admin-notification-card__header,
+  .admin-notification-list__content {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .admin-notification-card__title,
+  .admin-notification-list__main {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-notification-list {
+    max-height: 320px;
+  }
+}
+
 .admin-table-sticky thead th {
   position: sticky;
   top: 0;

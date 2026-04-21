@@ -1,0 +1,29 @@
+- form_url = @band.persisted? ? learning_band_path(@band) : learning_bands_path
+= form_with model: @band, url: form_url, local: true, class: "learning-form" do |f|
+  - if @band.errors.any?
+    #error_explanation.learning-errors
+      %h2= "#{@band.errors.count}件のエラーがあります"
+      %ul
+        - @band.errors.full_messages.each do |message|
+          %li= message
+
+  .learning-form-group
+    = f.label :name, "名前"
+    = f.text_field :name, class: "learning-input", placeholder: "例: 全体 / 3年生バンド / 文化祭チームA"
+
+  .learning-form-group
+    = f.label :memo, "メモ"
+    = f.text_area :memo, rows: 4, class: "learning-textarea"
+
+  .learning-form-group
+    %label バンドメンバー
+    .learning-checkbox-grid
+      - selected_ids = @band.learning_student_ids
+      - @students.each do |student|
+        %label.learning-check-pill
+          = check_box_tag "learning_band[student_ids][]", student.id, selected_ids.include?(student.id)
+          %span= "#{student.name}（#{student.displayed_parts.map { |part| learning_part_label(part) }.join(' / ')}）"
+
+  .learning-inline-actions
+    = f.submit(@band.persisted? ? "更新する" : "作成する", class: "learning-button")
+    = link_to "一覧へ戻る", learning_bands_path, class: "learning-button learning-button--ghost"

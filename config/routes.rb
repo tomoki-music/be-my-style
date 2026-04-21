@@ -174,6 +174,38 @@ Rails.application.routes.draw do
     get "communities/:id/permits" => "communities#permits", as: :permits
   end
 
+  namespace :learning do
+    root to: "dashboards#show"
+
+    resource :dashboard, only: :show, controller: :dashboards
+    get "portal/:token", to: "student_portals#show", as: :student_portal
+    resources :school_groups
+    resources :students do
+      member do
+        post :send_portal_mail
+      end
+      resources :student_trainings, only: [:index, :create] do
+        collection do
+          patch :reorder
+        end
+      end
+      resources :progress_logs, only: [:new, :create]
+    end
+    resources :training_masters, except: :show
+    resources :student_trainings, only: [:edit, :update, :destroy] do
+      member do
+        patch :mark
+      end
+    end
+    resources :progress_logs, only: [:index, :edit, :update, :destroy]
+    resources :bands
+    resources :band_trainings, except: :show do
+      member do
+        patch :mark
+      end
+    end
+  end
+
   # For details on the DSL available within this file, see
   # https://guides.rubyonrails.org/routing.html
 end

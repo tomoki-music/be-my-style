@@ -1,16 +1,22 @@
 = render 'layouts/header_menu'
 
 .matchings-index-container
-  %h5 チャットできるアーティスト
-  %strong
-    = @mathing_customers.size.to_s + '人'
-  %p 「相互フォロー」の方とチャットしよう🎵
+  .directory-page-heading
+    %p.directory-page-heading__eyebrow Direct Chat
+    %h2 個別チャット
+    %p.directory-page-heading__lead
+      相互フォローの相手と、次のセッションや練習の話を始められます。
+  .matching-summary
+    %span.matching-summary__label チャットできるアーティスト
+    %strong.matching-summary__count= @mathing_customers.size
+    %span.matching-summary__unit 人
   - unless feature_available?(:music_direct_chat)
-    = render "shared/feature_gate",
-      feature_key: :music_direct_chat,
-      title: "気になる相手との個別チャットを開放",
-      message: "相互フォローの相手はここで確認できます。lightプラン以上でチャットをスタートできます。",
-      class_name: "feature-gate--inline"
+    .directory-upgrade-panel
+      = render "shared/feature_gate",
+        feature_key: :music_direct_chat,
+        title: "個別チャットボタン",
+        message: "個別チャットはLightプラン契約で解放されます。相互フォローの相手ともっと深くつながれます。",
+        class_name: "feature-gate--inline"
   - @mathing_customers.each do |matching_customer|
     .col-md-6.mx-auto.matching-index
       .form-inline

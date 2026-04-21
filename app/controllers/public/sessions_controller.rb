@@ -7,6 +7,7 @@ class Public::SessionsController < Devise::SessionsController
 
     return onboarding_step1_path if resource.business_user? && !resource.onboarding_done
     return onboarding_step1_path if resource.music_user? && !resource.onboarding_done
+    return learning_root_path if resource.learning_user?
 
     return business_root_path if resource.business_user?
     return root_path

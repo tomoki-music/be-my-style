@@ -1,0 +1,23 @@
+%p BeMyStyleで有料プラン契約がありました。
+
+%p
+  %strong プラン:
+  = @plan.upcase
+
+%p
+  %strong ユーザー:
+  = @customer.name.presence || "名称未設定"
+
+%p
+  %strong メール:
+  = @customer.email
+
+- if @notification&.stripe_subscription_id.present?
+  %p
+    %strong Stripe Subscription ID:
+    = @notification.stripe_subscription_id
+
+%p
+  管理画面でユーザー情報を確認できます。
+  %br
+  = link_to @customer_url, @customer_url

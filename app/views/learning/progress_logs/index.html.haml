@@ -1,0 +1,34 @@
+- action = params[:student_id].present? ? link_to("ログを追加", new_learning_student_progress_log_path(params[:student_id]), class: "learning-button") : link_to("生徒を選ぶ", learning_students_path, class: "learning-button")
+= render "learning/shared/page", title: "進捗ログ一覧", subtitle: "日々の練習記録を残し、最近の頑張りを振り返れます。", action: action do
+  .learning-section
+    = form_with url: learning_progress_logs_path, method: :get, local: true, class: "learning-filter-form" do
+      = text_field_tag :keyword, params[:keyword], placeholder: "項目名・コメントで検索", class: "learning-input"
+      = select_tag :learning_school_group_id, options_for_select([["全高校", ""]] + learning_school_group_options(@school_groups), @selected_school_group&.id), class: "learning-select"
+      = select_tag :student_id, options_for_select([["全生徒", ""]] + @students.map { |student| [student.name, student.id] }, params[:student_id]), class: "learning-select"
+      = select_tag :part, options_for_select([["全パート", ""]] + learning_part_options, params[:part]), class: "learning-select"
+      = submit_tag "絞り込む", class: "learning-button"
+
+  .learning-section
+    .learning-table-wrap
+      %table.learning-table
+        %thead
+          %tr
+            %th 日付
+            %th 生徒
+            %th パート
+            %th トレーニング項目
+            %th 達成
+            %th コメント
+            %th 操作
+        %tbody
+          - @progress_logs.each do |log|
+            %tr
+              %td= l(log.practiced_on)
+              %td= log.learning_student.name
+              %td= learning_part_label(log.part)
+              %td= log.training_title
+              %td= learning_mark_label(log.achievement_mark)
+              %td= truncate(log.comment, length: 70)
+              %td.learning-table__actions
+                = link_to "編集", edit_learning_progress_log_path(log), class: "learning-text-link"
+                = link_to "削除", learning_progress_log_path(log), method: :delete, data: { confirm: "削除しますか？" }, class: "learning-text-link learning-text-link--danger"

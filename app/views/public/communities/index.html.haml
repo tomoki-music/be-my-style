@@ -1,12 +1,24 @@
 = render 'layouts/header_menu'
 
 .community-index-head-title
-  %h2 コミュニティ一覧
+  .directory-page-heading
+    %p.directory-page-heading__eyebrow Community
+    %h2 コミュニティ一覧
+    %p.directory-page-heading__lead
+      音楽仲間が集まる場所を見つけて、気になるコミュニティに参加してみましょう。
 
-  - if customer_signed_in? && current_customer.admin?
-    = link_to "コミュニティ作成",
-      new_public_community_path,
-      class: "btn btn-info community-index-create-btn"
+  - if feature_available?(:music_community_create)
+    .directory-page-action
+      = link_to "コミュニティ作成",
+        new_public_community_path,
+        class: "btn btn-info community-index-create-btn"
+  - else
+    .directory-upgrade-panel
+      = render "shared/feature_gate",
+        feature_key: :music_community_create,
+        title: "コミュニティ作成ボタン",
+        message: "コミュニティ作成ボタンはPremiumプラン契約で解放されます。あなたのテーマで新しい場をつくれます。",
+        class_name: "feature-gate--inline"
 
 .directory-search
   = form_with url: public_communities_path, method: :get, local: true, class: "directory-search__form" do

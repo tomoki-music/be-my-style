@@ -1,0 +1,20 @@
+- form_url = @school_group.persisted? ? learning_school_group_path(@school_group) : learning_school_groups_path
+= form_with model: @school_group, url: form_url, local: true, class: "learning-form" do |f|
+  - if @school_group.errors.any?
+    #error_explanation.learning-errors
+      %h2= "#{@school_group.errors.count}件のエラーがあります"
+      %ul
+        - @school_group.errors.full_messages.each do |message|
+          %li= message
+
+  .learning-form-group
+    = f.label :name, "高校名"
+    = f.text_field :name, class: "learning-input", placeholder: "例: A高校"
+
+  .learning-form-group
+    = f.label :memo, "メモ"
+    = f.text_area :memo, rows: 5, class: "learning-textarea", placeholder: "担当講師、活動方針、共有事項など"
+
+  .learning-inline-actions
+    = f.submit(@school_group.persisted? ? "更新する" : "作成する", class: "learning-button")
+    = link_to "一覧へ戻る", learning_school_groups_path, class: "learning-button learning-button--ghost"

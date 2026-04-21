@@ -76,7 +76,7 @@
         .card
           %h3 契約プラン
           %p
-            %span.plan-badge-inline= customer_plan_label(@customer)
+            %span{ class: customer_plan_badge_class(@customer) }= customer_plan_label(@customer)
             %span.ml-2
               = @customer.subscribed? ? "有効" : "無料プラン"
           - if current_customer == @customer

@@ -7,28 +7,46 @@ class Public::RegistrationsController < Devise::RegistrationsController
   # GET /resource/sign_up
   def new
     super
-    resource.domain_name = "music" if resource.domain_name.blank?
+    resource.domain_name = Customer::DEFAULT_SIGN_UP_DOMAIN if resource.domain_name.blank?
   end
 
   # POST /resource
-def create
-  super do |customer|
+  def create
+    build_resource(sign_up_params)
+    resource.domain_name = normalized_requested_domain_name
+    resource.save
 
-    if customer.persisted?
+    yield resource if block_given?
 
-      if sign_up_params[:profile_image].present?
-        customer.profile_image.attach(sign_up_params[:profile_image])
+    if resource.persisted?
+      begin
+        ActiveRecord::Base.transaction do
+          attach_profile_image!(resource)
+          attach_selected_domain!(resource)
+        end
+      rescue ActiveRecord::ActiveRecordError
+        resource.destroy
+        resource.errors.add(:base, "ドメイン設定の保存に失敗しました。")
+        clean_up_passwords resource
+        set_minimum_password_length
+        return render :new
       end
 
-      domain = Domain.find_by(name: params[:customer][:domain_name])
-
-      if domain
-        customer.domains << domain
+      if resource.active_for_authentication?
+        set_flash_message! :notice, :signed_up if is_flashing_format?
+        sign_up(resource_name, resource)
+        respond_with resource, location: after_sign_up_path_for(resource)
+      else
+        set_flash_message! :notice, :"signed_up_but_#{resource.inactive_message}" if is_flashing_format?
+        expire_data_after_sign_in!
+        respond_with resource, location: after_inactive_sign_up_path_for(resource)
       end
-
+    else
+      clean_up_passwords resource
+      set_minimum_password_length
+      respond_with resource
     end
   end
-end
 
   # GET /resource/edit
   # def edit
@@ -103,6 +121,7 @@ end
 
     return onboarding_step1_path if resource.business_user? && !resource.onboarding_done
     return onboarding_step1_path if resource.music_user? && !resource.onboarding_done
+    return learning_root_path if resource.learning_user?
 
     return business_root_path if resource.business_user?
     return root_path
@@ -112,5 +131,22 @@ end
   # The path used after sign up for inactive accounts.
   def after_inactive_sign_up_path_for(resource)
     verify_path
+  end
+
+  private
+
+  def normalized_requested_domain_name
+    sign_up_params[:domain_name].to_s.strip.downcase.presence
+  end
+
+  def attach_profile_image!(customer)
+    return unless sign_up_params[:profile_image].present?
+
+    customer.profile_image.attach(sign_up_params[:profile_image])
+  end
+
+  def attach_selected_domain!(customer)
+    domain = Domain.find_or_create_by!(name: customer.normalized_domain_name)
+    CustomerDomain.find_or_create_by!(customer: customer, domain: domain)
   end
 end

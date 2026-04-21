@@ -1,0 +1,145 @@
+= render "learning/shared/page", title: "ダッシュボード", subtitle: "生徒の進捗、今週の目標、最近のがんばりをひと目で確認できます。" do
+  .learning-section
+    = form_with url: learning_root_path, method: :get, local: true, class: "learning-filter-form" do
+      = select_tag :learning_school_group_id, options_for_select([["全高校を表示", ""]] + learning_school_group_options(@school_groups), @selected_school_group&.id), class: "learning-select"
+      = submit_tag "切り替える", class: "learning-button"
+      - if @selected_school_group.present?
+        = link_to "全体に戻す", learning_root_path, class: "learning-button learning-button--ghost"
+
+  .learning-stat-grid
+    .learning-stat-card
+      %span.learning-stat-card__label 対象
+      %strong.learning-stat-card__value= @dashboard.school_group&.name || "全高校"
+      %p.learning-stat-card__sub= @dashboard.school_group.present? ? "高校単位で集計中" : "すべての生徒を集計中"
+    .learning-stat-card
+      %span.learning-stat-card__label 全体達成率
+      %strong.learning-stat-card__value= "#{@dashboard.overall_progress_rate}%"
+      .learning-progress{ style: learning_progress_style("band") }
+        .learning-progress__bar{ style: "width: #{learning_progress_bar_width(@dashboard.overall_progress_rate)}%" }
+    .learning-stat-card
+      %span.learning-stat-card__label 達成数
+      %strong.learning-stat-card__value= @dashboard.overall_achievement_count
+      %p.learning-stat-card__sub ⭐ の総数
+    .learning-stat-card
+      %span.learning-stat-card__label 週間MVP
+      - if @dashboard.weekly_mvps.any?
+        %strong.learning-stat-card__value= @dashboard.weekly_mvps.map { |row| row.student.name }.join(" / ")
+        %p.learning-stat-card__sub 直近7日間の⭐が最多
+      - else
+        %strong.learning-stat-card__value まだ集計前
+    .learning-stat-card
+      %span.learning-stat-card__label 最近頑張っている生徒
+      - top_student = @dashboard.top_recent_students.first
+      - if top_student.present?
+        %strong.learning-stat-card__value= top_student.student.name
+        %p.learning-stat-card__sub= "直近7日 ⭐ #{top_student.recent_star_count}件"
+      - else
+        %strong.learning-stat-card__value データ準備中
+
+  .learning-section
+    .learning-section__header
+      %h2 生徒カード
+    .learning-dashboard-cards
+      - @dashboard.student_rows.each do |row|
+        .learning-student-card{ style: learning_progress_style(row.student.main_part) }
+          .learning-student-card__header
+            .learning-student-card__title
+              %h3= row.student.name
+              .learning-inline-tags
+                - row.parts.each do |part|
+                  %span.learning-part-tag= learning_part_label(part)
+            .learning-badges
+              - if row.mvp
+                %span.learning-badge.learning-badge--mvp 🏆 MVP
+              - if row.weekly_mvp
+                %span.learning-badge.learning-badge--weekly 今週MVP
+          .learning-rank
+            %span.learning-rank__label 順位
+            %strong= "#{row.rank}位"
+          .learning-progress
+            .learning-progress__bar{ style: "width: #{learning_progress_bar_width(row.progress_rate)}%" }
+          .learning-student-card__metrics
+            %span= "進捗率 #{row.progress_rate}%"
+            %span= "達成数 #{row.achievement_count} / #{row.total_count}"
+          .learning-student-card__body
+            %p
+              %strong 今週の目標:
+              = row.weekly_goal.presence || "未設定"
+            %p
+              %strong コメント:
+              = row.comment.presence || "先生からのコメントはまだありません。"
+          .learning-student-card__footer
+            = link_to "詳細を見る", learning_student_path(row.student), class: "learning-button learning-button--ghost"
+            = link_to "割当を管理", learning_student_student_trainings_path(row.student), class: "learning-button"
+
+  .learning-two-column
+    .learning-section
+      .learning-section__header
+        %h2 ランキング一覧
+      .learning-table-wrap
+        %table.learning-table
+          %thead
+            %tr
+              %th 順位
+              %th 名前
+              %th 高校
+              %th パート
+              %th 進捗率
+              %th 達成数
+              %th 今週の目標
+              %th コメント
+          %tbody
+            - @dashboard.student_rows.each do |row|
+              %tr
+                %td
+                  = row.rank
+                  - if row.mvp
+                    %span.learning-table__icon 🏆
+                %td= link_to row.student.name, learning_student_path(row.student)
+                %td= row.student.learning_school_group&.name || "未所属"
+                %td= row.parts.map { |part| learning_part_label(part) }.join(" / ")
+                %td
+                  .learning-progress.learning-progress--compact{ style: learning_progress_style(row.student.main_part) }
+                    .learning-progress__bar{ style: "width: #{learning_progress_bar_width(row.progress_rate)}%" }
+                  = "#{row.progress_rate}%"
+                %td= row.achievement_count
+                %td= row.weekly_goal.presence || "未設定"
+                %td= row.comment.presence || "-"
+
+    .learning-section
+      .learning-section__header
+        %h2 パート別達成率
+      .learning-stack
+        - @dashboard.part_stats.each do |stat|
+          .learning-part-stat{ style: learning_progress_style(stat[:part]) }
+            .learning-part-stat__head
+              %strong= learning_part_label(stat[:part])
+              %span= "#{stat[:progress_rate]}%"
+            .learning-progress
+              .learning-progress__bar{ style: "width: #{learning_progress_bar_width(stat[:progress_rate])}%" }
+            %small= "⭐ #{stat[:achievement_count]} / #{stat[:total_count]}"
+
+  .learning-section
+    .learning-section__header
+      %h2 直近の進捗ログ
+    .learning-table-wrap
+      %table.learning-table
+        %thead
+          %tr
+            %th 日付
+            %th 生徒
+            %th 高校
+            %th パート
+            %th 項目
+            %th 達成
+            %th コメント
+        %tbody
+          - @dashboard.recent_logs.each do |log|
+            %tr
+              %td= l(log.practiced_on)
+              %td= log.learning_student.name
+              %td= log.learning_student.learning_school_group&.name || "未所属"
+              %td= learning_part_label(log.part)
+              %td= log.training_title
+              %td= learning_mark_label(log.achievement_mark)
+              %td= log.comment.presence || "-"

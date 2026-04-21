@@ -29,7 +29,7 @@ class Business::StripeController < ApplicationController
         }
       ],
       mode: "subscription",
-      success_url: business_success_stripe_url(session_id: "{CHECKOUT_SESSION_ID}"),
+      success_url: "#{business_success_stripe_url}?session_id={CHECKOUT_SESSION_ID}",
       cancel_url: business_root_url(canceled: true)
     )
 
@@ -37,6 +37,11 @@ class Business::StripeController < ApplicationController
   end
 
   def success
+    if params[:session_id] == "{CHECKOUT_SESSION_ID}" && current_customer.subscribed?
+      redirect_to business_root_path(anchor: "business-pricing"), notice: "プラン登録が完了しました。"
+      return
+    end
+
     if sync_subscription_from_checkout_session!(current_customer, params[:session_id])
       redirect_to business_root_path(anchor: "business-pricing"), notice: "プラン登録が完了しました。"
     else
@@ -44,7 +49,11 @@ class Business::StripeController < ApplicationController
     end
   rescue Stripe::InvalidRequestError => e
     Rails.logger.error("Stripe checkout sync failed: #{e.message}")
-    redirect_to business_root_path(anchor: "business-pricing"), alert: "プラン反映時にエラーが発生しました。"
+    if current_customer.subscribed?
+      redirect_to business_root_path(anchor: "business-pricing"), notice: "プラン登録が完了しました。"
+    else
+      redirect_to business_root_path(anchor: "business-pricing"), alert: "プラン反映時にエラーが発生しました。"
+    end
   end
 
   def portal

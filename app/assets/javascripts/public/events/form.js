@@ -1,44 +1,27 @@
-if (document.URL.match(/events\/new/)){
-  document.addEventListener('DOMContentLoaded', () => {
-    const createImageHTML = (blob) => {
-      const imageElement = document.getElementById('new-event-image');
-      const blobImage = document.createElement('img');
-      blobImage.setAttribute('class', 'new-img')
-      blobImage.setAttribute('src', blob);
-      imageElement.appendChild(blobImage);
-    };
-    document.getElementById('event_event_image').addEventListener('change', (e) =>{
-      const imageContent = document.querySelector('img'); 
-      if (imageContent){ 
-        imageContent.remove(); 
-      }
-      const file = e.target.files[0];
-      const blob = window.URL.createObjectURL(file);
-      createImageHTML(blob);
-    });
-  });
-}
+document.addEventListener('turbolinks:load', () => {
+  const isNew = document.URL.match(/events\/new/);
+  const isEdit = document.URL.match(/\/events\/[^/]+\/edit/);
+  if (!isNew && !isEdit) return;
 
-if (document.URL.match(/events\/edit/)){
-  document.addEventListener('DOMContentLoaded', () => {
-    const createImageHTML = (blob) => {
-      const imageElement = document.getElementById('edit-event-image');
-      const blobImage = document.createElement('img');
-      blobImage.setAttribute('class', 'new-img')
-      blobImage.setAttribute('src', blob);
-      imageElement.appendChild(blobImage);
-    };
-    document.getElementById('event_event_image').addEventListener('change', (e) =>{
-      const imageContent = document.querySelector('img'); 
-      if (imageContent){ 
-        imageContent.remove(); 
-      }
-      const file = e.target.files[0];
-      const blob = window.URL.createObjectURL(file);
-      createImageHTML(blob);
-    });
+  const input = document.getElementById('event_event_image');
+  const previewArea = document.getElementById(isNew ? 'new-event-image' : 'edit-event-image');
+  if (!input || !previewArea) return;
+
+  input.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const imageContent = previewArea.querySelector('.new-img');
+    if (imageContent) {
+      imageContent.remove();
+    }
+
+    const blobImage = document.createElement('img');
+    blobImage.setAttribute('class', 'new-img');
+    blobImage.setAttribute('src', window.URL.createObjectURL(file));
+    previewArea.appendChild(blobImage);
   });
-}
+});
 
 document.addEventListener('turbolinks:load', () => {
   $('body').on('cocoon:after-insert', function(e, insertedItem) {

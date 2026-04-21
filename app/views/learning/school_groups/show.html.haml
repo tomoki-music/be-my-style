@@ -1,0 +1,56 @@
+- action = link_to("高校情報を編集", edit_learning_school_group_path(@school_group), class: "learning-button")
+= render "learning/shared/page", title: @school_group.name, subtitle: "高校単位で生徒の所属と進捗をまとめて確認できます。", action: action do
+  .learning-stat-grid
+    .learning-stat-card
+      %span.learning-stat-card__label 生徒数
+      %strong.learning-stat-card__value= @students.count
+      %p.learning-stat-card__sub 在籍中の所属生徒
+    .learning-stat-card
+      %span.learning-stat-card__label 達成率
+      %strong.learning-stat-card__value= "#{@dashboard.overall_progress_rate}%"
+      .learning-progress{ style: learning_progress_style("band") }
+        .learning-progress__bar{ style: "width: #{learning_progress_bar_width(@dashboard.overall_progress_rate)}%" }
+    .learning-stat-card
+      %span.learning-stat-card__label 達成数
+      %strong.learning-stat-card__value= @dashboard.overall_achievement_count
+      %p.learning-stat-card__sub ⭐ の総数
+    .learning-stat-card
+      %span.learning-stat-card__label 週間MVP
+      - if @dashboard.weekly_mvps.any?
+        %strong.learning-stat-card__value= @dashboard.weekly_mvps.map { |row| row.student.name }.join(" / ")
+      - else
+        %strong.learning-stat-card__value まだ集計前
+
+  .learning-two-column
+    .learning-section
+      .learning-section__header
+        %h2 グループ情報
+      .learning-detail-card
+        %p
+          %strong 高校名
+          = @school_group.name
+        %p
+          %strong メモ
+          = @school_group.memo.presence || "メモはまだありません。"
+        .learning-inline-actions
+          = link_to "ダッシュボードで見る", learning_root_path(learning_school_group_id: @school_group.id), class: "learning-button"
+          = link_to "生徒を追加", new_learning_student_path(learning_school_group_id: @school_group.id), class: "learning-button learning-button--ghost"
+
+    .learning-section
+      .learning-section__header
+        %h2 生徒一覧
+      .learning-table-wrap
+        %table.learning-table
+          %thead
+            %tr
+              %th 名前
+              %th パート
+              %th 学年
+              %th 進捗率
+          %tbody
+            - @dashboard.student_rows.each do |row|
+              %tr
+                %td= link_to row.student.name, learning_student_path(row.student)
+                %td= row.parts.map { |part| learning_part_label(part) }.join(" / ")
+                %td= row.student.grade.presence || "-"
+                %td= "#{row.progress_rate}%"

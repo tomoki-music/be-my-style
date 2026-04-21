@@ -3,6 +3,33 @@
   .container.py-3
     .row
       .col-md-12.mb-3
+        .card.shadow-sm.admin-notification-card
+          .card-body
+            .admin-notification-card__header
+              .admin-notification-card__title
+                %h3.h5.mb-0 管理者通知
+                %span.admin-notification-card__subtext 最新30件
+              .admin-notification-card__meta
+                - if @unchecked_admin_notifications_count.to_i.positive?
+                  %span.badge.badge-danger
+                    未読 #{@unchecked_admin_notifications_count}件
+                - else
+                  %span.badge.badge-light.text-muted 未読なし
+            - if @admin_notifications.present?
+              .list-group.admin-notification-list
+                - @admin_notifications.each do |notification|
+                  = link_to edit_admin_customer_path(notification.customer), class: "list-group-item list-group-item-action admin-notification-list__item #{'is-unread' unless notification.checked?}" do
+                    .admin-notification-list__content
+                      .admin-notification-list__main
+                        %span.badge.badge-primary.admin-notification-list__plan= notification.plan.upcase
+                        %span.admin-notification-list__message= notification.message
+                      %small.admin-notification-list__time= l(notification.created_at, format: :short)
+            - else
+              .admin-notification-card__empty
+                %p.text-muted.mb-0 まだ通知はありません。
+
+    .row
+      .col-md-12.mb-3
         .card.shadow-sm
           .card-body
             %h3.h5.mb-3 管理メニュー

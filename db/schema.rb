@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_04_19_120000) do
+ActiveRecord::Schema.define(version: 2026_04_21_143000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -67,6 +67,21 @@ ActiveRecord::Schema.define(version: 2026_04_19_120000) do
     t.text "url"
     t.string "url_comment"
     t.index ["customer_id"], name: "index_activities_on_customer_id"
+  end
+
+  create_table "admin_notifications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "admin_id", null: false
+    t.bigint "customer_id", null: false
+    t.string "action", limit: 50, default: "", null: false
+    t.string "plan", limit: 30, null: false
+    t.string "stripe_subscription_id", limit: 100
+    t.text "message"
+    t.boolean "checked", default: false, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["admin_id", "customer_id", "action", "plan", "stripe_subscription_id"], name: "index_admin_notifications_on_subscription_event"
+    t.index ["admin_id"], name: "index_admin_notifications_on_admin_id"
+    t.index ["customer_id"], name: "index_admin_notifications_on_customer_id"
   end
 
   create_table "admin_users", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -333,6 +348,152 @@ ActiveRecord::Schema.define(version: 2026_04_19_120000) do
     t.index ["song_id"], name: "index_join_parts_on_song_id"
   end
 
+  create_table "learning_band_memberships", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "learning_band_id", null: false
+    t.bigint "learning_student_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["learning_band_id", "learning_student_id"], name: "index_learning_band_memberships_on_band_and_student", unique: true
+    t.index ["learning_band_id"], name: "index_learning_band_memberships_on_learning_band_id"
+    t.index ["learning_student_id"], name: "index_learning_band_memberships_on_learning_student_id"
+  end
+
+  create_table "learning_band_trainings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "learning_band_id", null: false
+    t.bigint "learning_training_master_id"
+    t.string "part", default: "band", null: false
+    t.string "period", null: false
+    t.string "level", null: false
+    t.string "title", null: false
+    t.text "description", null: false
+    t.text "achievement_criteria"
+    t.string "frequency"
+    t.string "status", default: "not_started", null: false
+    t.string "achievement_mark", default: "cross", null: false
+    t.text "teacher_comment"
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.text "related_parts"
+    t.index ["customer_id"], name: "index_learning_band_trainings_on_customer_id"
+    t.index ["learning_band_id", "position"], name: "index_learning_band_trainings_on_band_and_position"
+    t.index ["learning_band_id"], name: "index_learning_band_trainings_on_learning_band_id"
+    t.index ["learning_training_master_id"], name: "index_learning_band_trainings_on_learning_training_master_id"
+  end
+
+  create_table "learning_bands", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "name", null: false
+    t.text "memo"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id", "name"], name: "index_learning_bands_on_customer_id_and_name", unique: true
+    t.index ["customer_id"], name: "index_learning_bands_on_customer_id"
+  end
+
+  create_table "learning_progress_logs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "learning_student_id", null: false
+    t.bigint "learning_student_training_id"
+    t.string "part", null: false
+    t.string "training_title", null: false
+    t.date "practiced_on", null: false
+    t.string "achievement_mark", default: "triangle", null: false
+    t.text "comment"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id", "practiced_on"], name: "index_learning_progress_logs_on_customer_id_and_practiced_on"
+    t.index ["customer_id"], name: "index_learning_progress_logs_on_customer_id"
+    t.index ["learning_student_id", "practiced_on"], name: "index_learning_progress_logs_on_student_and_date"
+    t.index ["learning_student_id"], name: "index_learning_progress_logs_on_learning_student_id"
+    t.index ["learning_student_training_id"], name: "index_learning_progress_logs_on_learning_student_training_id"
+  end
+
+  create_table "learning_school_groups", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "name", null: false
+    t.text "memo"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id", "name"], name: "index_learning_school_groups_on_customer_id_and_name", unique: true
+    t.index ["customer_id"], name: "index_learning_school_groups_on_customer_id"
+  end
+
+  create_table "learning_student_parts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "learning_student_id", null: false
+    t.string "part", null: false
+    t.boolean "primary", default: false, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["learning_student_id", "part"], name: "index_learning_student_parts_on_student_and_part", unique: true
+    t.index ["learning_student_id"], name: "index_learning_student_parts_on_learning_student_id"
+  end
+
+  create_table "learning_student_trainings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "learning_student_id", null: false
+    t.bigint "learning_training_master_id"
+    t.string "part", null: false
+    t.string "period", null: false
+    t.string "level", null: false
+    t.string "title", null: false
+    t.text "description", null: false
+    t.text "achievement_criteria"
+    t.string "frequency"
+    t.string "status", default: "not_started", null: false
+    t.string "achievement_mark", default: "cross", null: false
+    t.string "weekly_goal"
+    t.text "teacher_comment"
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id", "status"], name: "index_learning_student_trainings_on_customer_id_and_status"
+    t.index ["customer_id"], name: "index_learning_student_trainings_on_customer_id"
+    t.index ["learning_student_id", "position"], name: "index_learning_student_trainings_on_student_and_position"
+    t.index ["learning_student_id"], name: "index_learning_student_trainings_on_learning_student_id"
+    t.index ["learning_training_master_id"], name: "index_learning_student_trainings_on_learning_training_master_id"
+  end
+
+  create_table "learning_students", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "name", null: false
+    t.string "main_part", null: false
+    t.string "grade"
+    t.text "memo"
+    t.string "status", default: "active", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.bigint "learning_school_group_id"
+    t.string "email"
+    t.string "public_access_token"
+    t.index ["customer_id", "email"], name: "index_learning_students_on_customer_id_and_email"
+    t.index ["customer_id", "learning_school_group_id"], name: "index_learning_students_on_customer_and_school_group"
+    t.index ["customer_id", "name"], name: "index_learning_students_on_customer_id_and_name"
+    t.index ["customer_id", "status"], name: "index_learning_students_on_customer_id_and_status"
+    t.index ["customer_id"], name: "index_learning_students_on_customer_id"
+    t.index ["learning_school_group_id"], name: "index_learning_students_on_learning_school_group_id"
+    t.index ["public_access_token"], name: "index_learning_students_on_public_access_token", unique: true
+  end
+
+  create_table "learning_training_masters", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "part", null: false
+    t.string "period", null: false
+    t.string "level", null: false
+    t.string "title", null: false
+    t.text "description", null: false
+    t.text "achievement_criteria"
+    t.string "frequency"
+    t.boolean "is_band_training", default: false, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id", "level"], name: "index_learning_training_masters_on_customer_id_and_level"
+    t.index ["customer_id", "part"], name: "index_learning_training_masters_on_customer_id_and_part"
+    t.index ["customer_id", "period"], name: "index_learning_training_masters_on_customer_id_and_period"
+    t.index ["customer_id"], name: "index_learning_training_masters_on_customer_id"
+  end
+
   create_table "likes", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "post_id", null: false
@@ -534,6 +695,8 @@ ActiveRecord::Schema.define(version: 2026_04_19_120000) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "activities", "customers"
+  add_foreign_key "admin_notifications", "admins"
+  add_foreign_key "admin_notifications", "customers"
   add_foreign_key "chat_messages", "chat_rooms"
   add_foreign_key "chat_messages", "communities"
   add_foreign_key "chat_messages", "customers"
@@ -566,6 +729,23 @@ ActiveRecord::Schema.define(version: 2026_04_19_120000) do
   add_foreign_key "join_part_customers", "customers"
   add_foreign_key "join_part_customers", "join_parts"
   add_foreign_key "join_parts", "songs"
+  add_foreign_key "learning_band_memberships", "learning_bands"
+  add_foreign_key "learning_band_memberships", "learning_students"
+  add_foreign_key "learning_band_trainings", "customers"
+  add_foreign_key "learning_band_trainings", "learning_bands"
+  add_foreign_key "learning_band_trainings", "learning_training_masters"
+  add_foreign_key "learning_bands", "customers"
+  add_foreign_key "learning_progress_logs", "customers"
+  add_foreign_key "learning_progress_logs", "learning_student_trainings"
+  add_foreign_key "learning_progress_logs", "learning_students"
+  add_foreign_key "learning_school_groups", "customers"
+  add_foreign_key "learning_student_parts", "learning_students"
+  add_foreign_key "learning_student_trainings", "customers"
+  add_foreign_key "learning_student_trainings", "learning_students"
+  add_foreign_key "learning_student_trainings", "learning_training_masters"
+  add_foreign_key "learning_students", "customers"
+  add_foreign_key "learning_students", "learning_school_groups"
+  add_foreign_key "learning_training_masters", "customers"
   add_foreign_key "likes", "customers"
   add_foreign_key "likes", "posts"
   add_foreign_key "member_profiles", "customers"

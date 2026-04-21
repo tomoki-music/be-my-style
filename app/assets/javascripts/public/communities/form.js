@@ -1,41 +1,25 @@
-if (document.URL.match(/communities\/new/)){
-  document.addEventListener('DOMContentLoaded', () => {
-    const createImageHTML = (blob) => {
-      const imageElement = document.getElementById('new-community-image');
-      const blobImage = document.createElement('img');
-      blobImage.setAttribute('class', 'new-img')
-      blobImage.setAttribute('src', blob);
-      imageElement.appendChild(blobImage);
-    };
-    document.getElementById('community_community_image').addEventListener('change', (e) =>{
-      const imageContent = document.querySelector('img'); 
-      if (imageContent){ 
-        imageContent.remove(); 
-      }
-      const file = e.target.files[0];
-      const blob = window.URL.createObjectURL(file);
-      createImageHTML(blob);
-    });
-  });
-}
+document.addEventListener('turbolinks:load', () => {
+  const isNew = document.URL.match(/communities\/new/);
+  const isEdit = document.URL.match(/\/communities\/[^/]+\/edit/);
+  if (!isNew && !isEdit) return;
 
-if (document.URL.match(/communities\/edit/)){
-  document.addEventListener('DOMContentLoaded', () => {
-    const createImageHTML = (blob) => {
-      const imageElement = document.getElementById('edit-community-image');
-      const blobImage = document.createElement('img');
-      blobImage.setAttribute('class', 'edit-img')
-      blobImage.setAttribute('src', blob);
-      imageElement.appendChild(blobImage);
-    };
-    document.getElementById('community_community_image').addEventListener('change', (e) =>{
-      const imageContent = document.querySelector('img'); 
-      if (imageContent){ 
-        imageContent.remove(); 
-      }
-      const file = e.target.files[0];
-      const blob = window.URL.createObjectURL(file);
-      createImageHTML(blob);
-    });
+  const input = document.getElementById('community_community_image');
+  const previewArea = document.getElementById(isNew ? 'new-community-image' : 'edit-community-image');
+  const previewClass = isNew ? 'new-img' : 'edit-img';
+  if (!input || !previewArea) return;
+
+  input.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const imageContent = previewArea.querySelector(`.${previewClass}`);
+    if (imageContent) {
+      imageContent.remove();
+    }
+
+    const blobImage = document.createElement('img');
+    blobImage.setAttribute('class', previewClass);
+    blobImage.setAttribute('src', window.URL.createObjectURL(file));
+    previewArea.appendChild(blobImage);
   });
-}
+});

@@ -9,6 +9,7 @@ if Rails.env.development?
   load Rails.root.join('db/seeds/users.rb')
   load Rails.root.join('db/seeds/admins.rb')
   load Rails.root.join('db/seeds/communities.rb')
+  load Rails.root.join('db/seeds/learning.rb')
 end
 
 # ActiveAdminは現在未使用

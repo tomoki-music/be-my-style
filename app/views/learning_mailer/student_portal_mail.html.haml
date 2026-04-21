@@ -1,0 +1,42 @@
+%p= "#{@student.name}さん"
+
+%p
+  = "#{@teacher.name}先生から、今の進捗と今週の目標が届きました。"
+  %br
+  下のリンクから自分のページを見て、次にやることを確認してみましょう。
+
+%hr
+
+%p
+  %strong 今週の目標
+  %br
+  = @summary[:weekly_goal].presence || "今週の目標はまだ設定されていません。"
+
+%p
+  %strong 先生コメント
+  %br
+  = @summary[:teacher_comment].presence || "先生コメントはまだありません。"
+
+%p
+  %strong 進捗率
+  %br
+  = "#{@summary[:progress_rate]}%（⭐ #{@summary[:achievement_count]} / #{@summary[:total_count]}件）"
+
+- if @upcoming_trainings.any?
+  %p
+    %strong 次にやる課題
+  %ul
+    - @upcoming_trainings.each do |training|
+      %li= "#{training.title}（#{training.period} / #{training.level}）"
+
+%p
+  %strong 先生と確認してほしいこと
+  %br
+  今週の目標と、次に取り組む課題をいっしょに確認してみてください。
+
+%hr
+
+%p
+  自分のペースで大丈夫です。
+  %br
+  できたことを少しずつ増やしていきましょう。

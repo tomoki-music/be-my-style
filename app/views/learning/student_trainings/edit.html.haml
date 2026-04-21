@@ -1,0 +1,55 @@
+= render "learning/shared/page", title: "割当トレーニングを編集", subtitle: "目標、状態、コメントを見直して、生徒が次にやることをわかりやすく整えます。" do
+  .learning-section
+    = form_with model: @student_training, url: learning_student_training_path(@student_training), local: true, class: "learning-form" do |f|
+      - if @student_training.errors.any?
+        #error_explanation.learning-errors
+          %h2= "#{@student_training.errors.count}件のエラーがあります"
+          %ul
+            - @student_training.errors.full_messages.each do |message|
+              %li= message
+
+      .learning-form-grid
+        .learning-form-group
+          = f.label :part, "パート"
+          = f.select :part, learning_part_options, {}, class: "learning-select"
+        .learning-form-group
+          = f.label :period, "期間"
+          = f.select :period, learning_period_options, {}, class: "learning-select"
+        .learning-form-group
+          = f.label :level, "レベル"
+          = f.select :level, learning_level_options, {}, class: "learning-select"
+        .learning-form-group
+          = f.label :status, "状態"
+          = f.select :status, learning_training_status_options, {}, class: "learning-select"
+
+      .learning-form-group
+        = f.label :title, "項目名"
+        = f.text_field :title, class: "learning-input"
+
+      .learning-form-group
+        = f.label :description, "トレーニング内容"
+        = f.text_area :description, rows: 5, class: "learning-textarea"
+
+      .learning-form-group
+        = f.label :achievement_criteria, "達成基準"
+        = f.text_area :achievement_criteria, rows: 4, class: "learning-textarea"
+
+      .learning-form-grid
+        .learning-form-group
+          = f.label :frequency, "頻度"
+          = f.text_field :frequency, class: "learning-input"
+        .learning-form-group
+          = f.label :achievement_mark, "達成記号"
+          = f.select :achievement_mark, learning_achievement_mark_options, {}, class: "learning-select"
+
+      .learning-form-group
+        = f.label :weekly_goal, "今週の目標"
+        = f.text_field :weekly_goal, class: "learning-input"
+
+      .learning-form-group
+        = f.label :teacher_comment, "講師コメント"
+        = f.text_area :teacher_comment, rows: 4, class: "learning-textarea"
+
+      .learning-inline-actions
+        = f.submit "更新する", class: "learning-button"
+        = link_to "一覧へ戻る", learning_student_student_trainings_path(@student_training.learning_student), class: "learning-button learning-button--ghost"

@@ -1,0 +1,38 @@
+- action = link_to("マスターを追加", new_learning_training_master_path, class: "learning-button")
+= render "learning/shared/page", title: "トレーニングマスター", subtitle: "パートごとの育成メニューを期間・レベル単位で整理できます。", action: action do
+  .learning-section
+    = form_with url: learning_training_masters_path, method: :get, local: true, class: "learning-filter-form" do
+      = text_field_tag :keyword, params[:keyword], placeholder: "項目名・内容で検索", class: "learning-input"
+      = select_tag :learning_school_group_id, options_for_select([["全高校", ""]] + learning_school_group_options(@school_groups), @selected_school_group&.id), class: "learning-select"
+      = select_tag :part, options_for_select([["全パート", ""]] + learning_part_options, params[:part]), class: "learning-select"
+      = select_tag :period, options_for_select([["全期間", ""]] + learning_period_options, params[:period]), class: "learning-select"
+      = select_tag :level, options_for_select([["全レベル", ""]] + learning_level_options, params[:level]), class: "learning-select"
+      = select_tag :band, options_for_select([["個人/バンド練習すべて", ""], ["個人", "false"], ["バンド練習", "true"]], params[:band]), class: "learning-select"
+      = submit_tag "絞り込む", class: "learning-button"
+
+  .learning-section
+    .learning-table-wrap
+      %table.learning-table
+        %thead
+          %tr
+            %th 種別
+            %th パート
+            %th 期間
+            %th レベル
+            %th 項目名
+            %th 頻度
+            %th 操作
+        %tbody
+          - @training_masters.each do |master|
+            %tr
+              %td= master.kind_label
+              %td= learning_part_label(master.part)
+              %td= master.period
+              %td= master.level
+              %td
+                %strong= master.title
+                %div.learning-muted= truncate(master.description, length: 60)
+              %td= master.frequency.presence || "-"
+              %td.learning-table__actions
+                = link_to "編集", edit_learning_training_master_path(master), class: "learning-text-link"
+                = link_to "削除", learning_training_master_path(master), method: :delete, data: { confirm: "削除しますか？" }, class: "learning-text-link learning-text-link--danger"

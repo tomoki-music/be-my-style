@@ -28,7 +28,7 @@ class Public::StripeController < ApplicationController
         quantity: 1,
       }],
       mode: 'subscription',
-      success_url: success_public_stripe_url(session_id: "{CHECKOUT_SESSION_ID}"),
+      success_url: "#{public_success_stripe_url}?session_id={CHECKOUT_SESSION_ID}",
       cancel_url: root_url + "?canceled=true",
     })
 
@@ -36,6 +36,11 @@ class Public::StripeController < ApplicationController
   end
 
   def success
+    if params[:session_id] == "{CHECKOUT_SESSION_ID}" && current_customer.subscribed?
+      redirect_to public_lp_path(anchor: "lp-section"), notice: "プラン登録が完了しました。"
+      return
+    end
+
     if sync_subscription_from_checkout_session!(current_customer, params[:session_id])
       redirect_to public_lp_path(anchor: "lp-section"), notice: "プラン登録が完了しました。"
     else
@@ -43,7 +48,11 @@ class Public::StripeController < ApplicationController
     end
   rescue Stripe::InvalidRequestError => e
     Rails.logger.error("Stripe checkout sync failed: #{e.message}")
-    redirect_to public_lp_path(anchor: "lp-section"), alert: "プラン反映時にエラーが発生しました。"
+    if current_customer.subscribed?
+      redirect_to public_lp_path(anchor: "lp-section"), notice: "プラン登録が完了しました。"
+    else
+      redirect_to public_lp_path(anchor: "lp-section"), alert: "プラン反映時にエラーが発生しました。"
+    end
   end
 
   def portal

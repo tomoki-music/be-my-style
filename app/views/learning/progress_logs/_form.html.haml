@@ -1,0 +1,37 @@
+- target_url = @progress_log.persisted? ? learning_progress_log_path(@progress_log) : learning_student_progress_logs_path(@student)
+- target_student = @student || @progress_log.learning_student
+- available_trainings = target_student.learning_student_trainings.ordered
+= form_with model: @progress_log, url: target_url, local: true, class: "learning-form" do |f|
+  - if @progress_log.errors.any?
+    #error_explanation.learning-errors
+      %h2= "#{@progress_log.errors.count}件のエラーがあります"
+      %ul
+        - @progress_log.errors.full_messages.each do |message|
+          %li= message
+
+  .learning-form-grid
+    .learning-form-group
+      = f.label :practiced_on, "日付"
+      = f.date_field :practiced_on, class: "learning-input"
+    .learning-form-group
+      = f.label :part, "パート"
+      = f.select :part, learning_part_options, {}, class: "learning-select"
+    .learning-form-group
+      = f.label :achievement_mark, "達成状況"
+      = f.select :achievement_mark, learning_achievement_mark_options, {}, class: "learning-select"
+
+  .learning-form-group
+    = f.label :learning_student_training_id, "割当トレーニング"
+    = f.select :learning_student_training_id, [["手入力する", ""]] + available_trainings.map { |training| [training.title, training.id] }, {}, class: "learning-select"
+
+  .learning-form-group
+    = f.label :training_title, "トレーニング項目名"
+    = f.text_field :training_title, class: "learning-input", placeholder: "割当を選ぶと自動反映されます"
+
+  .learning-form-group
+    = f.label :comment, "コメント"
+    = f.text_area :comment, rows: 5, class: "learning-textarea", placeholder: "できたこと、次回やること、講師メモなど"
+
+  .learning-inline-actions
+    = f.submit(@progress_log.persisted? ? "更新する" : "記録する", class: "learning-button")
+    = link_to "一覧へ戻る", learning_progress_logs_path(student_id: target_student.id), class: "learning-button learning-button--ghost"

@@ -35,6 +35,7 @@
 .domain-cards {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .domain-card {
@@ -103,6 +104,11 @@
   background: #eff6ff;
 }
 
+.domain-card.learning input:checked + .card-inner {
+  border: 2px solid #7c3aed;
+  background: #f5f3ff;
+}
+
 /* アイコン */
 .icon {
   font-size: 22px;
@@ -153,4 +159,14 @@
 .domain-card.active .card-inner {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.learning-fields {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .domain-card {
+    min-width: calc(50% - 6px);
+  }
 }

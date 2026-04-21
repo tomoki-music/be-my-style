@@ -54,11 +54,15 @@ module ApplicationHelper
 
   def feature_locked_badge(feature_key)
     required_plan = ApplicationController::FEATURE_CATALOG.fetch(feature_key.to_sym)[:required_plan]
-    "#{required_plan.upcase}で開放"
+    "#{required_plan.capitalize}プラン契約で解放"
   end
 
   def customer_plan_label(customer)
     customer.plan_badge_label
+  end
+
+  def customer_plan_badge_class(customer)
+    "plan-badge-inline plan-badge-inline--#{customer.plan}"
   end
 
   def customer_role_badge_label(customer)

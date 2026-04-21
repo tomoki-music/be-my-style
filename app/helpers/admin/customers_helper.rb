@@ -82,6 +82,12 @@ module Admin::CustomersHelper
       end
     end
 
+    if customer.learning_user?
+      badges << content_tag(:span, class: "badge me-1", style: "background-color: #f59e0b; color: #ffffff;") do
+        content_tag(:i, "", class: "bi bi-mortarboard me-1") + "学習"
+      end
+    end
+
     safe_join(badges)
   end
 

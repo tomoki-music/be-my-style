@@ -48,6 +48,7 @@
       %th 名前
       %th 最終ログイン日
       %th ログイン回数
+      %th 契約プラン
       %th メンバータイプ
       %th ドメインタイプ
       %th 音楽経験
@@ -61,14 +62,17 @@
     - @customers.each do |customer|
 
       - row_class = nil
+      - row_style = nil
       - if customer.music_user? && customer.business_user?
         - row_class = "table-warning"
       - elsif customer.music_user?
         - row_class = "table-primary"
       - elsif customer.business_user?
         - row_class = "table-success"
+      - elsif customer.learning_user?
+        - row_style = "background-color: #fff4e5;"
 
-      %tr{ class: [row_class, ("table-secondary text-muted" if customer.is_deleted)].compact.join(" ") }
+      %tr{ class: [row_class, ("table-secondary text-muted" if customer.is_deleted)].compact.join(" "), style: row_style }
         %th= customer.id
         %td
           - if customer.is_deleted
@@ -79,6 +83,8 @@
 
         %td= customer.current_sign_in_at&.strftime('%Y/%m/%d') || '-'
         %td= "#{customer.sign_in_count}回"
+        %td
+          %span{ class: customer_plan_badge_class(customer) }= customer_plan_label(customer)
 
         %td
           = member_type_badge(customer.member_profile&.suggested_member_type)

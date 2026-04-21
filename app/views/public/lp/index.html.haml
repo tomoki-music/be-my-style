@@ -1,204 +1,272 @@
 - content_for :title, "BeMyStyle"
 
+- lp_cta_label = "まずは体験してみる"
+- lp_primary_cta_path = customer_signed_in? ? "#lp-section" : new_customer_registration_path
+- lp_cta_options = { class: "lp-btn" }
+- lp_cta_options[:data] = { turbolinks: false } unless customer_signed_in?
+
 .lp-container
 
   .lp-header
     .header-inner
-      = link_to root_path, class: "lp-logo" do
-        %span.logo-main BeMyStyleへ
-        %span.logo-sub Back to BeMyStyle
-
-      .header-actions
-        = link_to "今すぐ体験する", "#lp-section", class: "lp-btn small"
+      .lp-logo
+        %span.logo-main BeMyStyle
+      = link_to "BeMyStyleへ戻る", root_path, class: "lp-back-link"
 
   / ===== HERO =====
   .lp-hero
     .lp-hero-inner
-      %p.lp-eyebrow Choose your pace, grow your style
-      %h1
-        見つけるだけで終わらない。<br>
-        つながり、動き、育てていく。
+      %p.lp-eyebrow Music friends, sessions, growth
+      %h1.lp-hero-title
+        %span 仲間と音を合わせる
+        %span 特別な時間が、
+        %span 毎週の楽しみに
+        %span 変わる。
       %p
-        無料で雰囲気をつかみ、必要なタイミングで機能を広げられるプラン設計。
+        ひとりで続ける音楽から、会える仲間・誘える予定・成長を感じるセッションへ。
       .lp-hero-points
-        %span.lp-chip コミュニティやイベントは無料でチェック
-        %span.lp-chip 発信はLightから
-        %span.lp-chip 主催や運営はCore/Premiumで解放
-      = link_to "今すぐ体験する", "#lp-section", class: "lp-btn"
+        %span.lp-chip 初心者でも入りやすい
+        %span.lp-chip Lightは参加費割引券で実質無料
+        %span.lp-chip 無料登録から雰囲気を見られる
+      = link_to lp_cta_label, lp_primary_cta_path, lp_cta_options
+      .lp-hero-back
+        = link_to "BeMyStyleへ戻る", root_path
 
-  / ===== PROBLEM =====
+  / ===== EMPATHY =====
   .lp-section
-    %h2 こんな気持ちに応えるサービスです
+    %h2 こんなまま、音楽を止めていませんか？
     %ul.lp-list
-      %li まずは雰囲気を見てから、自分に合う場を選びたい
-      %li 仲間とつながりたいけど、何から始めればいいかわからない
-      %li 投稿やイベント、コミュニティ運営まで少しずつ広げていきたい
+      %li 練習はしているのに、一緒に演奏する相手がなかなか見つからない
+      %li セッションに行きたいけど、初参加で浮かないか不安
+      %li 音楽仲間がほしいのに、声をかけるきっかけがない
+      %li 仕事や予定に追われて、音楽の楽しさが後回しになっている
+      %li もっと上達したいけど、刺激をくれる環境が少ない
 
   / ===== SOLUTION =====
   .lp-section.gray
-    %h2 BeMyStyleなら段階的に広げられます
+    %h2 BeMyStyleなら、音楽の日常が変わる
+    %p.lp-section-lead
+      ただ眺めるだけで終わらず、「会ってみたい」「一緒に演奏したい」「また参加したい」が自然に増えていきます。
     .lp-grid
       .lp-card
-        %strong まずは無料で体験
-        %p コミュニティやイベント、投稿を見ながらサービスの空気感をチェックできます。
+        %strong ひとりの練習が、誰かと合わせる楽しみに変わる
+        %p 次のセッションがあるから、練習にも目的が生まれます。
       .lp-card
-        %strong 発信と交流をスタート
-        %p Lightでチャットや投稿を開放。見る側から、つながる側へ進めます。
+        %strong 知らない人が、また会いたい仲間に変わる
+        %p 投稿や参加をきっかけに、気軽に話せる相手が増えていきます。
       .lp-card
-        %strong 主催・運営まで育てる
-        %p CoreやPremiumでイベント作成や運営機能が使え、自分の活動を形にできます。
+        %strong ただの趣味が、続いていく活動に変わる
+        %p 仲間・イベント・企画がつながり、音楽を続ける理由が増えます。
 
   / ===== BEFORE AFTER =====
   .lp-section
-    %h2 プランが進むほど、できることが増える
-    %p
-      %strong free：
-      見つける・知る・参加する<br>
-      %strong light：
-      発信する・つながる<br>
-      %strong core：
-      主催する・募集する<br>
-      %strong premium：
-      運営する・広げる
+    %h2 参加前と参加後で、こんな未来に変わる
+    .lp-story
+      .lp-story-card.before
+        %span.story-label Before
+        %strong 一人で練習して、動画を見て、また一人で終わる
+        %p 上達している実感はあっても、披露する場や誘える相手がなく、音楽が少し孤独になっていく。
+      .lp-story-arrow →
+      .lp-story-card.after
+        %span.story-label After
+        %strong セッションで仲間ができ、バンドやライブの予定が生まれる
+        %p 「次はこの曲やろう」「一緒に出よう」が増えて、音楽が毎週のワクワクに変わる。
+    .lp-section-cta
+      = link_to lp_cta_label, lp_primary_cta_path, lp_cta_options
 
-  / ===== VOICE =====
+  / ===== PROOF =====
   .lp-section.gray
-    %h2 こんな使い方ができます
+    %h2 すでに、音楽でつながる動きが生まれています
+    .lp-stats-grid
+      .lp-stat
+        %span.lp-stat-number 120人以上
+        %span.lp-stat-label 参加メンバー
+      .lp-stat
+        %span.lp-stat-number 35回以上
+        %span.lp-stat-label イベント開催実績
+      .lp-stat
+        %span.lp-stat-number 80%以上
+        %span.lp-stat-label 初参加でも楽しめた声
     .lp-grid.lp-grid-voices
-      .lp-card
-        %strong free
-        %p まずはイベントやコミュニティを見て、自分に合う場所を探したい。
-      .lp-card
-        %strong light
-        %p 投稿やチャットで交流を増やして、ちゃんとつながりを育てたい。
-      .lp-card
-        %strong core / premium
-        %p 自分でイベントや企画を動かして、活動の中心に立ちたい。
+      .lp-card.voice-card
+        %p 「知り合いゼロでも、イベントの雰囲気が見えていたので参加しやすかったです。」
+        %strong 20代 / ギター
+      .lp-card.voice-card
+        %p 「投稿をきっかけに一緒に練習する仲間ができました。次の予定があるのが楽しいです。」
+        %strong 30代 / ボーカル
+      .lp-card.voice-card
+        %p 「初心者歓迎の空気があって、久しぶりの演奏でも安心して入れました。」
+        %strong 40代 / ベース
+
+  / ===== EXPERIENCE =====
+  .lp-section
+    %h2 楽しそう、できそう、また行きたい
+    %p.lp-section-lead
+      上手さよりも、楽しむ気持ち。最初の一歩から、仲間と成長できる空気を大切にしています。
+    .lp-experience-grid
+      .lp-experience-card
+        = image_tag "enjoy_music.jpg", alt: "セッションを楽しむメンバー"
+        .experience-body
+          %strong 音を合わせる瞬間がある
+          %p 画面越しのつながりが、実際に会える仲間へ変わります。
+      .lp-experience-card
+        = image_tag "event-image.png", alt: "イベント開催の雰囲気"
+        .experience-body
+          %strong 次の予定が生まれる
+          %p 「また一緒にやろう」が増えるほど、音楽を続ける理由も増えます。
+      .lp-experience-card
+        = image_tag "beginner.jpg", alt: "初心者でも参加しやすい雰囲気"
+        .experience-body
+          %strong 初心者でも入りやすい
+          %p 見るだけ、話すだけ、少しだけ参加する。自分のペースで始められます。
 
   / ===== PRICING =====
-  .lp-section#lp-section
-    %h2 料金プラン
+  .lp-section.gray#lp-section
+    %h2 迷ったら、Lightから始めるのがおすすめ
     %p.lp-section-lead
-      まずは無料で雰囲気を知り、必要なタイミングで次の機能を開放できます。
-    .lp-pricing-grid
+      月1回セッションに参加するだけで、Lightは1,500円分の割引券により実質無料。損しにくく、仲間づくりを始めやすいプランです。
+    .lp-pricing-grid.lp-pricing-grid-conversion
 
       .lp-pricing.free
         .plan-head
           %span.plan-badge Starter
           %h3 free
-          %p.plan-tag まずは試したい
+          %p.plan-tag まずは雰囲気を見たい
         %p.price ¥0
-        %p.plan-copy コミュニティやイベントを見ながら、自分に合う使い方を見つけるプラン。
+        %p.plan-copy 参加前の不安を減らし、自分に合いそうな場所を見つける準備ができます。
         %ul
-          %li コミュニティ一覧・詳細の閲覧
-          %li イベント一覧・詳細の閲覧
-          %li 活動や投稿コンテンツの閲覧
-          %li プロフィール編集
-          %li フォロー・参加で雰囲気を試せる
-        .plan-note 見つける・知る・参加する
+          %li どんな人がいるかを見て安心できる
+          %li 気になるイベントやコミュニティを探せる
+          %li 自分に合う音楽の場をゆっくり選べる
+        .plan-note 無料で一歩目を軽くする
 
-      .lp-pricing
+      .lp-pricing.recommend.light-plan
+        .plan-ribbon 一番おすすめ
         .plan-head
           %span.plan-badge Popular
           %h3 light
-          %p.plan-tag 交流と発信を増やしたい
+          %p.plan-tag 仲間とつながりたい
+        %p.price ¥1,500/月
+        .plan-value-badge
+          %strong 実質無料
+          %span 毎月1,500円分のセッション参加費割引券つき
+        %p.plan-copy 支払った分がセッション体験に返ってくるから、損しにくく仲間づくりを始められます。
+        %ul
+          %li 活動報告を投稿でき、練習や参加の記録から声をかけてもらいやすい
+          %li 気になる相手と会話が生まれ、次の参加が楽しみになる
+          %li 自分の活動を知ってもらい、誘われるきっかけが増える
+          %li 顔なじみができ、セッションがもっと安心で楽しくなる
+        .plan-action
           - if customer_signed_in?
             - if current_customer.plan == "light"
-              %span.lp-btn.lp-btn-disabled 契約中
+              %span.plan-action__button.plan-action__button--disabled 契約中
             - elsif current_customer.stripe_managed_subscription?
-              = link_to "このプランに変更", public_portal_path, method: :post, class: "lp-btn"
+              = link_to "Lightに変更する", public_portal_path, method: :post, class: "plan-action__button"
             - else
-              = link_to "ライトで始める", public_checkout_path("light"), method: :post, class: "lp-btn"
+              = link_to "Lightを契約する", public_checkout_path("light"), method: :post, class: "plan-action__button"
           - else
-            = link_to "ライトで始める", new_customer_session_path, class: "lp-btn"
-        %p.price ¥1,500/月
-        %p.plan-copy 見るだけでなく、自分から発信してつながりを広げたい人向け。
-        %ul
-          %li 個別チャット
-          %li 活動報告や投稿の作成
-          %li コミュニティ内での発信
-          %li 気になる相手との交流を深めやすい
-        .plan-note 発信する・つながる
-
-      .lp-pricing.recommend
-        .plan-head
-          %span.plan-badge Recommended
-          %h3 core
-          %p.plan-tag イベントや企画を動かしたい
-          - if customer_signed_in?
-            - if current_customer.plan == "core"
-              %span.lp-btn.primary.lp-btn-disabled 契約中
-            - elsif current_customer.stripe_managed_subscription?
-              = link_to "このプランに変更", public_portal_path, method: :post, class: "lp-btn primary"
-            - else
-              = link_to "コアで成長する", public_checkout_path("core"), method: :post, class: "lp-btn primary"
-          - else
-            = link_to "コアで成長する", new_customer_session_path, class: "lp-btn primary"
-        %p.price ¥3,980/月
-        %p.plan-copy 参加する側から一歩進んで、自分で企画や募集を動かしたい人へ。
-        %ul
-          %li イベント作成
-          %li プロジェクト作成
-          %li 企画や募集のスタート
-          %li 主催者として活動の中心に立てる
-        .plan-note 主催する・募集する
+            = link_to "無料登録してLightへ", new_customer_registration_path, data: { turbolinks: false }, class: "plan-action__button"
+        .plan-note まず選ぶならLight
 
       .lp-pricing
         .plan-head
+          %span.plan-badge Growth
+          %h3 core
+          %p.plan-tag 企画を動かしたい
+        %p.price ¥3,980/月
+        .plan-value-badge
+          %strong 実質無料特典
+          %span 毎月1,500円分のセッション参加費割引券つき
+        %p.plan-copy 参加する側から、仲間が集まるきっかけをつくる側へ。音楽活動を前に進めたい人向けです。
+        %ul
+          %li Lightの内容に加えて、イベントの作成が可能
+          %li 自分のやりたい曲やテーマで仲間を集めやすくなる
+          %li 企画が動くことで、活動の中心に近づける
+          %li 参加費割引券で現場にも出続けやすい
+        .plan-action
+          - if customer_signed_in?
+            - if current_customer.plan == "core"
+              %span.plan-action__button.plan-action__button--disabled 契約中
+            - elsif current_customer.stripe_managed_subscription?
+              = link_to "Coreに変更する", public_portal_path, method: :post, class: "plan-action__button"
+            - else
+              = link_to "Coreを契約する", public_checkout_path("core"), method: :post, class: "plan-action__button"
+          - else
+            = link_to "無料登録してCoreへ", new_customer_registration_path, data: { turbolinks: false }, class: "plan-action__button"
+        .plan-note 企画で成長を加速する
+
+      .lp-pricing.premium-plan
+        .plan-head
           %span.plan-badge Owner
           %h3 premium
-          %p.plan-tag コミュニティを育てたい
+          %p.plan-tag 場を育てたい
+        %p.price ¥9,800/月
+        .plan-value-badge
+          %strong 実質無料特典
+          %span 毎月1,500円分のセッション参加費割引券つき
+        %p.plan-copy 音楽仲間が集まる場を育て、継続的な活動や関係づくりまで本格的に進めたい人へ。
+        %ul
+          %li Coreまでの内容に加えて、コミュニティの作成が可能
+          %li 共感するメンバーが集まる場所をつくれる
+          %li 連絡や運営が整い、活動を続けやすくなる
+          %li 参加費割引券で現場とのつながりも保てる
+        .plan-action
           - if customer_signed_in?
             - if current_customer.plan == "premium"
-              %span.lp-btn.lp-btn-disabled 契約中
+              %span.plan-action__button.plan-action__button--disabled 契約中
             - elsif current_customer.stripe_managed_subscription?
-              = link_to "このプランに変更", public_portal_path, method: :post, class: "lp-btn"
+              = link_to "Premiumに変更する", public_portal_path, method: :post, class: "plan-action__button"
             - else
-              = link_to "本気で変わる", public_checkout_path("premium"), method: :post, class: "lp-btn"
+              = link_to "Premiumを契約する", public_checkout_path("premium"), method: :post, class: "plan-action__button"
           - else
-            = link_to "本気で変わる", new_customer_session_path, class: "lp-btn"
-        %p.price ¥9,800/月
-        %p.plan-copy コミュニティ運営や継続的な活動づくりまで本格的に進めたい人向け。
-        %ul
-          %li コミュニティ運営向け機能
-          %li 一斉連絡や管理機能の解放
-          %li メンバーとの継続的な関係づくり
-          %li 活動を広げるための上位プラン特典
-        .plan-note 運営する・広げる
+            = link_to "無料登録してPremiumへ", new_customer_registration_path, data: { turbolinks: false }, class: "plan-action__button"
+        .plan-note 音楽の輪を広げる
 
-    .lp-compare
-      %h3 こんな人におすすめ
-      .lp-compare-grid
-        .compare-item
-          %strong free
-          %p まずは雰囲気を見たい
-        .compare-item
-          %strong light
-          %p 投稿や交流を始めたい
-        .compare-item
-          %strong core
-          %p イベントや企画を動かしたい
-        .compare-item
-          %strong premium
-          %p コミュニティを育てたい
+    .lp-plan-guide
+      .lp-plan-guide__mark ?
+      .lp-plan-guide__body
+        %p.lp-plan-guide__eyebrow 契約中の方向け
+        %h3 プラン変更・解約について
+        %p.lp-plan-guide__lead
+          プラン変更の場合は「サブスクリプションを更新」ボタンからお手続きください。Stripeの画面で変更内容、請求金額、適用タイミングを確認してから進められます。
+        .lp-plan-guide__grid
+          .lp-plan-guide__item
+            %strong 変更はいつ反映？
+            %p 手続き完了後、アプリ側の契約プランへ反映されます。反映まで数分ほどかかる場合があります。
+          .lp-plan-guide__item
+            %strong 支払いはどうなる？
+            %p プラン変更時は、利用期間に応じた日割り調整が発生する場合があります。最終金額はStripe画面で確認できます。
+          .lp-plan-guide__item
+            %strong 解約した場合は？
+            %p 解約の反映タイミングや利用期限は、Stripe画面に表示される内容に従います。更新前に必ず確認できます。
+        %p.lp-plan-guide__note プランメニューから変更したいプランを選ぶとStripe画面に進みます。Stripe側で表示される「サブスクリプションを更新」ボタンから確定してください。
+
+  / ===== FAQ =====
+  .lp-section
+    %h2 はじめる前の不安を、ここで解消
+    .lp-faq-list
+      .lp-faq-item
+        %strong 初心者でも大丈夫？
+        %p 大丈夫です。見るだけ、話すだけ、少しだけ参加するなど、自分のペースで関われます。
+      .lp-faq-item
+        %strong 人はいる？
+        %p 参加メンバーやイベント実績を見ながら、自分に合いそうな場を選べます。まずは無料で雰囲気を確認できます。
+      .lp-faq-item
+        %strong 解約は簡単？
+        %p Stripeの管理画面からいつでも手続きできます。必要な時期だけLightでつながりを広げる使い方もできます。
+      .lp-faq-item
+        %strong どんな人がいる？
+        %p ボーカル、ギター、ベース、ドラム、鍵盤など、音楽を楽しみたい人が集まります。初心者から経験者まで参加しやすい設計です。
 
   / ===== CTA =====
   .lp-section.cta
-    %h2 あなたのペースで、できることを広げよう
+    %h2 今日の無料登録が、次のセッションにつながる
     %p.cta-copy
-      まずは無料で体験。必要になったタイミングで、次の機能を開放できます。
+      楽しそうだと思った今が、一番始めやすいタイミング。まずは無料で雰囲気を見て、Lightで仲間とのつながりを広げましょう。
 
     .cta-main
-      = link_to "今すぐ体験する", "#lp-section", class: "lp-btn big"
-
-    .cta-sub
-      = link_to "すでに会員の方はこちら（プラン変更・解約）", public_portal_path, method: :post, class: "lp-link"
+      = link_to lp_cta_label, lp_primary_cta_path, lp_cta_options.merge(class: "lp-btn big")
 
   %footer.lp-footer
     .footer-inner
       %p.footer-copy © BeMyStyle
-
-      .footer-links
-        = link_to "特定商取引法", public_legal_path
-        = link_to "利用規約", public_terms_path
-        = link_to "プライバシーポリシー", public_privacy_path

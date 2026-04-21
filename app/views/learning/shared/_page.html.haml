@@ -1,0 +1,38 @@
+.learning-shell
+  .learning-sidebar
+    = link_to learning_root_path, class: "learning-brand" do
+      %span.learning-brand__icon 🎼
+      .learning-brand__body
+        %strong BeMyStyle Learning
+        %small 音楽スクール向け進捗管理
+
+    %nav.learning-nav
+      = link_to "ダッシュボード", learning_root_path, class: "learning-nav__link #{'is-active' if current_page?(learning_root_path)}"
+      = link_to "高校グループ", learning_school_groups_path, class: "learning-nav__link #{'is-active' if learning_nav_active?(learning_school_groups_path)}"
+      = link_to "生徒一覧", learning_students_path, class: "learning-nav__link #{'is-active' if learning_nav_active?(learning_students_path)}"
+      = link_to "トレーニングマスター", learning_training_masters_path, class: "learning-nav__link #{'is-active' if learning_nav_active?(learning_training_masters_path)}"
+      = link_to "進捗ログ", learning_progress_logs_path, class: "learning-nav__link #{'is-active' if learning_nav_active?(learning_progress_logs_path)}"
+      = link_to "バンド練習", learning_band_trainings_path, class: "learning-nav__link #{'is-active' if learning_nav_active?(learning_band_trainings_path) || learning_nav_active?(learning_bands_path)}"
+
+  .learning-main
+    .learning-topbar
+      .learning-topbar__text
+        %p.learning-topbar__eyebrow Learning Domain
+        %h1= title
+        - if local_assigns[:subtitle].present?
+          %p.learning-topbar__subtitle= subtitle
+      .learning-topbar__right
+        .learning-account-menu
+          .learning-account-menu__body
+            %span.learning-account-menu__label 運用アカウント
+            %strong= current_customer.name
+          = button_to "ログアウト",
+            destroy_customer_session_path,
+            method: :delete,
+            form_class: "learning-account-menu__logout-form",
+            class: "learning-account-menu__logout"
+        - if local_assigns[:action].present?
+          .learning-topbar__action= action
+
+    .learning-content
+      = yield

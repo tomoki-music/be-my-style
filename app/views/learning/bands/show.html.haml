@@ -1,0 +1,51 @@
+- action = link_to("バンドグループを編集", edit_learning_band_path(@band), class: "learning-button")
+= render "learning/shared/page", title: @band.name, subtitle: "バンド練習と参加メンバーを同じ画面で見ながら、個人練習とのつながりを整理できます。", action: action do
+  .learning-stat-grid
+    .learning-stat-card
+      %span.learning-stat-card__label メンバー数
+      %strong.learning-stat-card__value= @students.count
+      %p.learning-stat-card__sub バンド練習に参加する生徒
+    .learning-stat-card
+      %span.learning-stat-card__label バンド練習数
+      %strong.learning-stat-card__value= @band_trainings.count
+      %p.learning-stat-card__sub 現在の実戦メニュー
+    .learning-stat-card
+      %span.learning-stat-card__label 達成数
+      %strong.learning-stat-card__value= @band_trainings.count(&:star?)
+      %p.learning-stat-card__sub ⭐ のバンド練習
+    .learning-stat-card
+      %span.learning-stat-card__label メモ
+      %strong.learning-stat-card__value= @band.memo.presence || "未設定"
+
+  .learning-two-column
+    .learning-section
+      .learning-section__header
+        %h2 メンバー
+      .learning-stack
+        - if @students.any?
+          - @students.each do |student|
+            .learning-training-card{ style: learning_progress_style(student.main_part) }
+              .learning-training-card__header
+                %strong= link_to student.name, learning_student_path(student)
+                %span= student.grade.presence || "学年未設定"
+              %p= student.displayed_parts.map { |part| learning_part_label(part) }.join(" / ")
+        - else
+          .learning-empty
+            %p まだメンバーが登録されていません。
+
+    .learning-section
+      .learning-section__header
+        %h2 バンド練習
+        = link_to "管理画面へ", learning_band_trainings_path(band_id: @band.id), class: "learning-text-link"
+      .learning-stack
+        - if @band_trainings.any?
+          - @band_trainings.each do |training|
+            .learning-training-card{ style: learning_progress_style("band") }
+              .learning-training-card__header
+                %strong= training.title
+                %span= learning_mark_label(training.achievement_mark)
+              %p= training.description
+              %small= "関連パート: #{training.related_parts_list.map { |part| learning_part_label(part) }.join(' / ').presence || '全体'}"
+        - else
+          .learning-empty
+            %p まだバンド練習がありません。

@@ -1,0 +1,20 @@
+- action = link_to("バンドグループを追加", new_learning_band_path, class: "learning-button")
+= render "learning/shared/page", title: "バンドグループ", subtitle: "全体練習やバンド単位の管理先をここで用意します。", action: action do
+  .learning-section
+    .learning-table-wrap
+      %table.learning-table
+        %thead
+          %tr
+            %th 名前
+            %th メモ
+            %th 操作
+        %tbody
+          - @bands.each do |band|
+            %tr
+              %td= link_to band.name, learning_band_path(band)
+              %td= band.memo.presence || "-"
+              %td.learning-table__actions
+                = link_to "詳細", learning_band_path(band), class: "learning-text-link"
+                = link_to "バンド練習", learning_band_trainings_path(band_id: band.id), class: "learning-text-link"
+                = link_to "編集", edit_learning_band_path(band), class: "learning-text-link"
+                = link_to "削除", learning_band_path(band), method: :delete, data: { confirm: "削除しますか？" }, class: "learning-text-link learning-text-link--danger"

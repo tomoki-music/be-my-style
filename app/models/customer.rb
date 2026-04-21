@@ -1,5 +1,7 @@
 class Customer < ApplicationRecord
   MONTHLY_SESSION_CREDIT_AMOUNT = 1500
+  SIGN_UP_DOMAIN_NAMES = %w[music business learning].freeze
+  DEFAULT_SIGN_UP_DOMAIN = "music".freeze
 
   PLAN_OPTIONS = [
     ["free", "free"],
@@ -14,6 +16,7 @@ class Customer < ApplicationRecord
     music_activity_create: %w[light core premium],
     music_event_create: %w[core premium],
     music_community_mail: %w[premium],
+    music_community_create: %w[premium],
     business_post_create: %w[light core premium],
     business_community_post_create: %w[light core premium],
     business_project_create: %w[core premium],
@@ -30,9 +33,10 @@ class Customer < ApplicationRecord
   belongs_to :prefecture
 
   has_one_attached :profile_image
-  has_many :customer_domains
+  has_many :customer_domains, dependent: :destroy
   has_many :domains, through: :customer_domains
   has_one :subscription
+  has_many :admin_notifications, dependent: :destroy
 
   attr_accessor :domain_name
 
@@ -72,6 +76,7 @@ class Customer < ApplicationRecord
 
   validates :name, presence: true, length: {maximum: 20}
   validates :email, uniqueness: true, presence: true
+  validates :domain_name, presence: true, inclusion: { in: SIGN_UP_DOMAIN_NAMES }, on: :create
   # validates :customer_parts, presence: true
 
   # business
@@ -84,6 +89,14 @@ class Customer < ApplicationRecord
   has_many :projects, dependent: :destroy
   has_many :project_members, dependent: :destroy
   has_many :joined_projects, through: :project_members, source: :project
+  has_many :learning_students, dependent: :destroy
+  has_many :learning_school_groups, dependent: :destroy
+  has_many :learning_training_masters, dependent: :destroy
+  has_many :learning_student_trainings, dependent: :destroy
+  has_many :learning_progress_logs, dependent: :destroy
+  has_many :learning_bands, dependent: :destroy
+  has_many :learning_band_memberships, through: :learning_bands
+  has_many :learning_band_trainings, dependent: :destroy
 
   # ストライプ（権限制御）
   def active_subscription
@@ -212,6 +225,14 @@ class Customer < ApplicationRecord
     domains.exists?(name: "business")
   end
 
+  def learning_user?
+    domains.exists?(name: "learning")
+  end
+
+  def normalized_domain_name
+    domain_name.to_s.strip.downcase.presence
+  end
+
   # 汎用型（ビジネス・音楽etc）
   def can_manage_community?(community)
     return true if admin?
@@ -278,11 +299,10 @@ class Customer < ApplicationRecord
 
   def can_create_event?(community = nil)
     return true if admin?
-    return true if eligible_to_create_event_for?(community)
     return false unless has_feature?(:music_event_create)
-    return communities.exists? if community.blank?
+    return true if community.blank?
 
-    communities.exists?(id: community.id)
+    eligible_to_create_event_for?(community) || communities.exists?(id: community.id)
   end
 
   def can_create_project_for?(community)

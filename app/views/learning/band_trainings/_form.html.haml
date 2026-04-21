@@ -1,0 +1,82 @@
+- form_url = @band_training.persisted? ? learning_band_training_path(@band_training) : learning_band_trainings_path
+- training_master_payload = @training_masters.to_h { |master| [master.id, { part: learning_part_label(master.part), period: master.period, level: master.level, title: master.title, description: master.description, achievement_criteria: master.achievement_criteria, frequency: master.frequency }] }
+= form_with model: @band_training, url: form_url, local: true, class: "learning-form" do |f|
+  - if @band_training.errors.any?
+    #error_explanation.learning-errors
+      %h2= "#{@band_training.errors.count}件のエラーがあります"
+      %ul
+        - @band_training.errors.full_messages.each do |message|
+          %li= message
+
+  .learning-form-grid
+    .learning-form-group
+      = f.label :learning_band_id, "バンドグループ"
+      = f.select :learning_band_id, @bands.map { |band| [band.name, band.id] }, { prompt: "選択してください" }, class: "learning-select"
+    .learning-form-group
+      = f.label :learning_training_master_id, "Band用マスター"
+      = f.select :learning_training_master_id, [["手入力する", ""]] + @training_masters.map { |master| ["#{master.period} / #{master.level} / #{master.title}", master.id] }, {}, class: "learning-select", data: { learning_training_master_select: true }
+    .learning-form-group
+      = f.label :period, "期間"
+      = f.select :period, learning_period_options, {}, class: "learning-select"
+    .learning-form-group
+      = f.label :level, "レベル"
+      = f.select :level, learning_level_options, {}, class: "learning-select"
+
+  .learning-master-preview{ data: { learning_training_master_preview: true, training_masters: training_master_payload.to_json } }
+    .learning-master-preview__empty{ data: { learning_training_master_empty: true } }
+      %strong Band用マスターを選ぶと詳細がここに表示されます
+      %p バンド練習の内容と達成基準を確認しながら登録できます。
+    .learning-master-preview__content{ data: { learning_training_master_content: true }, hidden: true }
+      .learning-master-preview__header
+        .learning-master-preview__meta{ data: { learning_training_master_meta: true } }
+        %strong.learning-master-preview__title{ data: { learning_training_master_title: true } }
+      .learning-master-preview__section
+        %span.learning-master-preview__label トレーニング内容
+        %p.learning-master-preview__text{ data: { learning_training_master_description: true } }
+      .learning-master-preview__section
+        %span.learning-master-preview__label 達成基準
+        %p.learning-master-preview__text{ data: { learning_training_master_criteria: true } }
+      .learning-master-preview__footer
+        %span.learning-master-preview__frequency{ data: { learning_training_master_frequency: true } }
+
+  .learning-form-group
+    = f.label :title, "項目名"
+    = f.text_field :title, class: "learning-input"
+
+  .learning-form-group
+    = f.label :description, "トレーニング内容"
+    = f.text_area :description, rows: 5, class: "learning-textarea"
+
+  .learning-form-group
+    = f.label :achievement_criteria, "達成基準"
+    = f.text_area :achievement_criteria, rows: 4, class: "learning-textarea"
+
+  .learning-form-group
+    %label 関連する個人パート
+    .learning-checkbox-grid
+      - selected_parts = @band_training.related_parts_list
+      - LearningCatalog::PARTS.except("band").each do |part, label|
+        %label.learning-check-pill
+          = check_box_tag "learning_band_training_related_parts[]", part, selected_parts.include?(part)
+          %span= label
+
+  .learning-form-grid
+    .learning-form-group
+      = f.label :frequency, "頻度"
+      = f.text_field :frequency, class: "learning-input"
+    .learning-form-group
+      = f.label :status, "状態"
+      = f.select :status, learning_training_status_options, {}, class: "learning-select"
+    .learning-form-group
+      = f.label :achievement_mark, "達成記号"
+      = f.select :achievement_mark, learning_achievement_mark_options, {}, class: "learning-select"
+
+  .learning-form-group
+    = f.label :teacher_comment, "コメント"
+    = f.text_area :teacher_comment, rows: 4, class: "learning-textarea"
+
+  = f.hidden_field :part, value: "band"
+
+  .learning-inline-actions
+    = f.submit(@band_training.persisted? ? "更新する" : "作成する", class: "learning-button")
+    = link_to "一覧へ戻る", learning_band_trainings_path(band_id: @band_training.learning_band_id), class: "learning-button learning-button--ghost"

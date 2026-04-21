@@ -35,6 +35,13 @@ class ApplicationController < ActionController::Base
       cta: "premiumで運営機能を開放",
       upgrade_path: -> { public_lp_path(anchor: "lp-section") }
     },
+    music_community_create: {
+      required_plan: "premium",
+      title: "コミュニティ作成",
+      message: "コミュニティ作成はpremiumプランで利用できます。あなたのテーマで新しい場をつくれます。",
+      cta: "premiumでコミュニティを作成",
+      upgrade_path: -> { public_lp_path(anchor: "lp-section") }
+    },
     business_post_create: {
       required_plan: "light",
       title: "ビジネス投稿",
@@ -70,6 +77,7 @@ class ApplicationController < ActionController::Base
   
   helper_method :current_domain_business
   helper_method :current_domain_music
+  helper_method :current_domain_learning
   helper_method :feature_available?
   helper_method :feature_gate
   helper_method :feature_upgrade_path
@@ -89,11 +97,14 @@ class ApplicationController < ActionController::Base
   private
 
   def set_current_domain
-    if request.path.start_with?("/business")
-      @current_domain = Domain.find_by(name: "business")
-    else
-      @current_domain = Domain.find_by(name: "music")
-    end
+    @current_domain =
+      if request.path.start_with?("/business")
+        Domain.find_by(name: "business")
+      elsif request.path.start_with?("/learning")
+        Domain.find_by(name: "learning")
+      else
+        Domain.find_by(name: "music")
+      end
   end
 
   def admin_only!
@@ -106,6 +117,10 @@ class ApplicationController < ActionController::Base
 
   def current_domain_music
     Domain.find_by(name: "music")
+  end
+
+  def current_domain_learning
+    Domain.find_by(name: "learning")
   end
 
   def feature_available?(feature_key, customer = current_customer)

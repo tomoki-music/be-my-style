@@ -2,7 +2,7 @@
 
 .subscription-manager
   .subscription-manager__header
-    %span.plan-badge-inline= customer_plan_label(customer)
+    %span{ class: customer_plan_badge_class(customer) }= customer_plan_label(customer)
     %span.subscription-manager__status
       = customer.subscribed? ? "有効なサブスクリプション" : "現在は free プラン"
 

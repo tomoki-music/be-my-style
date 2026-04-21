@@ -2,10 +2,17 @@ class Admin::HomesController < ApplicationController
   before_action :authenticate_admin!
   
   def top
-    @customers = Customer.all
+    @admin_notifications = current_admin
+      .admin_notifications
+      .includes(:customer)
+      .order(created_at: :desc)
+      .limit(30)
+      .to_a
+    @unchecked_admin_notifications_count = current_admin.admin_notifications.where(checked: false).count
+    current_admin.admin_notifications.where(id: @admin_notifications.map(&:id), checked: false).update_all(checked: true)
 
     @customers = Customer
-      .includes(:member_profile)
+      .includes(:member_profile, :subscription)
       .references(:member_profile)
 
     if params[:member_type].present?

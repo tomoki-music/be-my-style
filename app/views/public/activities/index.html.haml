@@ -1,16 +1,22 @@
 = render 'layouts/header_menu'
 
 .activity-index-head-title
-  %h2 みんなの活動報告一覧
+  .directory-page-heading
+    %p.directory-page-heading__eyebrow Activities
+    %h2 みんなの活動報告一覧
+    %p.directory-page-heading__lead
+      セッションの記録や練習の気づきを見つけて、音楽仲間との会話のきっかけにしましょう。
   - if feature_available?(:music_activity_create)
-    = link_to "活動報告をする！", new_public_activity_path, data: { 'turbolinks': false }, class: "btn btn-info activity-index-create-btn"
+    .directory-page-action
+      = link_to "活動報告を投稿する", new_public_activity_path, data: { 'turbolinks': false }, class: "btn btn-info activity-index-create-btn"
   - else
-    = render "shared/feature_gate",
-      feature_key: :music_activity_create,
-      title: "活動報告を始める",
-      message: "一覧はそのまま見られます。投稿を始めるときはlightプラン以上で開放できます。",
-      cta: "lightで投稿を始める",
-      class_name: "feature-gate--inline"
+    .directory-upgrade-panel
+      = render "shared/feature_gate",
+        feature_key: :music_activity_create,
+        title: "活動報告の投稿ボタン",
+        message: "活動報告の投稿はLightプラン契約で解放されます。あなたの活動を仲間に届けましょう。",
+        cta: "lightで投稿を始める",
+        class_name: "feature-gate--inline"
 
 .directory-search
   = form_with url: public_activities_path, method: :get, local: true, class: "directory-search__form" do

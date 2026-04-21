@@ -11,15 +11,15 @@
 document.addEventListener('turbolinks:load', () => {
 
   const imageInput = document.getElementById('customer_profile_image');
+  const registrationImage = document.getElementById('registration-image');
 
-  if(!imageInput) return;
+  if(!imageInput || !registrationImage) return;
 
   const createImageHTML = (blob) => {
-    const imageElement = document.getElementById('registration-image');
     const blobImage = document.createElement('img');
     blobImage.setAttribute('class', 'registration-img')
     blobImage.setAttribute('src', blob);
-    imageElement.appendChild(blobImage);
+    registrationImage.appendChild(blobImage);
   };
 
   imageInput.addEventListener('change', (e) =>{
