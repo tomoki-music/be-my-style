@@ -7,59 +7,48 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
     - uses: actions/setup-node@v3
     - name: Deploy 
       env:
-        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-        USER_NAME: ${{ secrets.USER_NAME }}
-        HOST_NAME: ${{ secrets.HOST_NAME }}
+        EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY || secrets.PRIVATE_KEY }}
+        EC2_USER: ${{ secrets.EC2_USER || 'ec2-user' }}
+        EC2_HOST: ${{ secrets.EC2_HOST || '13.113.0.43' }}
+        DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/home/ec2-user/be-my-style' }}
       run: |
-        echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-        ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOST_NAME} << 'EOF'
-          cd be-my-style &&
-          git pull origin main &&
-          ~/.rbenv/shims/bundle install &&
-          ~/.rbenv/shims/bundle exec rails assets:precompile RAILS_ENV=production &&
-          ~/.rbenv/shims/bundle exec rails db:migrate RAILS_ENV=production &&
+        set -euo pipefail
 
-          if [ -f tmp/pids/puma.pid ]; then
-            echo "Killing old Puma process..."
-            kill -9 $(cat tmp/pids/puma.pid) || true
-            rm -f tmp/pids/puma.pid
-          fi
+        test -n "$EC2_SSH_KEY"
+        test -n "$EC2_USER"
+        test -n "$EC2_HOST"
+        test -n "$DEPLOY_PATH"
 
-          rm -f tmp/pids/server.pid
+        echo "$EC2_SSH_KEY" > private_key
+        chmod 600 private_key
 
-          echo "Starting Puma with config/puma.rb..."
-          nohup ~/.rbenv/shims/bundle exec puma -C config/puma.rb > /dev/null 2>&1 &
+        ssh -o StrictHostKeyChecking=no -i private_key "${EC2_USER}@${EC2_HOST}" "DEPLOY_PATH='${DEPLOY_PATH}' bash -s" << 'EOF'
+          set -euo pipefail
+
+          echo "Host: $(hostname)"
+          echo "Deploy path: ${DEPLOY_PATH}"
+
+          cd "${DEPLOY_PATH}"
+
+          echo "Before deploy: $(git rev-parse --short HEAD)"
+          git fetch origin main
+          git reset --hard origin/main
+          echo "After deploy: $(git rev-parse --short HEAD)"
+
+          ~/.rbenv/shims/bundle config set deployment 'true'
+          ~/.rbenv/shims/bundle config set without 'development test'
+          ~/.rbenv/shims/bundle install --jobs 4 --retry 3
+
+          RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:precompile
+          RAILS_ENV=production ~/.rbenv/shims/bundle exec rails db:migrate
+
+          sudo systemctl restart puma
+          sudo systemctl status puma --no-pager --lines=20
         EOF
 
-
-# 修正前コード
-# name: Rails CI/CD
-
-# on:
-#   push:
-#     branches: [main]
-
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
-#     steps:
-#     - uses: actions/setup-node@v3
-#     - name: Deploy 
-#       env:
-#         PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-#         USER_NAME: ${{ secrets.USER_NAME }}
-#         HOST_NAME: ${{ secrets.HOST_NAME }}
-      # run: |
-      #   echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-      #   ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOST_NAME} 'cd be-my-style &&
-      #   git pull origin main &&
-      #   ~/.rbenv/shims/bundle install &&
-      #   ~/.rbenv/shims/bundle exec rails assets:precompile RAILS_ENV=production &&
-      #   ~/.rbenv/shims/bundle exec rails db:migrate RAILS_ENV=production &&
-        # rm -f tmp/pids/server.pid &&
-        # if [[ -e tmp/pids/puma.pid ]];then sudo kill $(cat tmp/pids/puma.pid); echo kill puma process;fi &&
-        # ~/.rbenv/shims/rails s -e production'
+        rm -f private_key
