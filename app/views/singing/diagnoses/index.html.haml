@@ -1,0 +1,60 @@
+.singing-diagnosis{ data: (@polling_required ? { singing_diagnosis_polling: true, singing_diagnosis_polling_interval: 5000 } : {}) }
+  .singing-diagnosis__inner
+    %p.singing-diagnosis__eyebrow Singing / Performance Diagnosis
+    %h1 診断履歴
+    %p.singing-diagnosis__lead 過去に依頼した歌唱・演奏診断の状態と結果を確認できます。
+
+    .singing-diagnosis__actions
+      = link_to "新しい診断を作成", new_singing_diagnosis_path, class: "btn btn-primary"
+      = link_to "歌唱・演奏診断トップへ", singing_root_path, class: "btn btn-secondary"
+
+    - if @polling_required
+      %p.singing-diagnosis__polling-note 解析中の診断があるため、自動更新しています。すべて完了または失敗になると更新は止まります。
+
+    - if @diagnoses.any?
+      .singing-diagnosis__history
+        .singing-diagnosis__history-row.singing-diagnosis__history-row--head
+          %div 状態
+          %div 診断対象
+          %div 曲名
+          %div 作成日時
+          %div 総合スコア
+          %div 詳細
+
+        - @diagnoses.each do |diagnosis|
+          .singing-diagnosis__history-row
+            .singing-diagnosis__history-status
+              %span.singing-diagnosis__history-badge{ class: "singing-diagnosis__history-badge--#{diagnosis.status}" }
+                = diagnosis.respond_to?(:status_i18n) ? diagnosis.status_i18n : diagnosis.status
+
+            .singing-diagnosis__history-type
+              %span.singing-diagnosis__type-badge= diagnosis.performance_type_label
+
+            .singing-diagnosis__history-title
+              = diagnosis.song_title.presence || "未入力"
+              - if diagnosis.completed?
+                %p.singing-diagnosis__history-growth
+                  %span.singing-diagnosis__history-growth-label= singing_history_growth_label(diagnosis)
+                  %span.singing-diagnosis__history-growth-text= singing_history_growth_hint(diagnosis, current_customer)
+
+            .singing-diagnosis__history-date
+              = diagnosis.created_at.strftime("%Y/%m/%d %H:%M")
+
+            .singing-diagnosis__history-score
+              - if diagnosis.completed?
+                %strong= diagnosis.overall_score || "-"
+                %span / 100
+              - elsif diagnosis.processing?
+                %span 解析中
+              - elsif diagnosis.failed?
+                %span 失敗
+              - else
+                %span 解析待ち
+
+            .singing-diagnosis__history-link
+              = link_to "詳細", singing_diagnosis_path(diagnosis), class: "btn btn-sm btn-outline-primary"
+    - else
+      .singing-diagnosis__empty
+        %h2 まだ診断履歴はありません
+        %p 音声ファイルを添付して、最初の歌唱・演奏診断を依頼できます。
+        = link_to "診断を始める", new_singing_diagnosis_path, class: "btn btn-primary"

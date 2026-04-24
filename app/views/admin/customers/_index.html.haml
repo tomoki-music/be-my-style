@@ -71,6 +71,8 @@
         - row_class = "table-success"
       - elsif customer.learning_user?
         - row_style = "background-color: #fff4e5;"
+      - elsif customer.singing_user?
+        - row_style = "background-color: #fff1f2;"
 
       %tr{ class: [row_class, ("table-secondary text-muted" if customer.is_deleted)].compact.join(" "), style: row_style }
         %th= customer.id

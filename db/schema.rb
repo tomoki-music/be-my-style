@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_04_21_143000) do
+ActiveRecord::Schema.define(version: 2026_04_23_090000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -628,6 +628,32 @@ ActiveRecord::Schema.define(version: 2026_04_21_143000) do
     t.index ["event_id"], name: "index_requests_on_event_id"
   end
 
+  create_table "singing_diagnoses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "song_title"
+    t.text "memo"
+    t.integer "status", default: 0, null: false
+    t.integer "overall_score"
+    t.integer "pitch_score"
+    t.integer "rhythm_score"
+    t.integer "expression_score"
+    t.text "result_payload"
+    t.datetime "diagnosed_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.text "failure_reason"
+    t.text "ai_comment"
+    t.integer "ai_comment_status", default: 0, null: false
+    t.text "ai_comment_failure_reason"
+    t.datetime "ai_commented_at"
+    t.integer "performance_type", default: 0, null: false
+    t.index ["ai_comment_status"], name: "index_singing_diagnoses_on_ai_comment_status"
+    t.index ["customer_id"], name: "index_singing_diagnoses_on_customer_id"
+    t.index ["diagnosed_at"], name: "index_singing_diagnoses_on_diagnosed_at"
+    t.index ["performance_type"], name: "index_singing_diagnoses_on_performance_type"
+    t.index ["status"], name: "index_singing_diagnoses_on_status"
+  end
+
   create_table "song_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "song_id", null: false
@@ -762,6 +788,7 @@ ActiveRecord::Schema.define(version: 2026_04_21_143000) do
   add_foreign_key "projects", "customers"
   add_foreign_key "requests", "customers"
   add_foreign_key "requests", "events"
+  add_foreign_key "singing_diagnoses", "customers"
   add_foreign_key "song_customers", "customers"
   add_foreign_key "song_customers", "songs"
   add_foreign_key "songs", "events"

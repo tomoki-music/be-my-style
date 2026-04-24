@@ -50,6 +50,9 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
+  # Run diagnosis analyzer jobs in-process during local development.
+  config.active_job.queue_adapter = :async
+
   # 開発中も送信失敗を見えるようにする
   config.action_mailer.raise_delivery_errors = true
 

@@ -40,3 +40,10 @@ yarn-debug.log*
 .yarn-integrity
 .env
 be-my-style.pem
+
+# Ignore Python virtual environments and caches used by the singing analyzer.
+.venv/
+singing_analyzer/.venv/
+singing_analyzer/.pytest_cache/
+__pycache__/
+*.py[cod]

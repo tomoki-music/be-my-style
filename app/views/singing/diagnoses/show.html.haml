@@ -1,0 +1,528 @@
+- status_key = @diagnosis.status
+- if @diagnosis.completed?
+  - status_title = "診断結果が出ました"
+  - status_message = "スコアを確認して、次の練習や再診断に活用できます。"
+- elsif @diagnosis.processing?
+  - status_title = "解析中です"
+  - status_message = "音声を解析しています。しばらくしてからこのページを再読み込みしてください。"
+- elsif @diagnosis.failed?
+  - status_title = "解析に失敗しました"
+  - status_message = "音声の読み込みや解析中に問題が発生しました。内容を確認して、必要であればもう一度診断してください。"
+- else
+  - status_title = "診断を受け付けました"
+  - status_message = "診断リクエストは保存され、解析待ちの状態です。"
+
+.singing-diagnosis{ data: (@polling_required ? { singing_diagnosis_polling: true, singing_diagnosis_polling_interval: 5000 } : {}) }
+  .singing-diagnosis__inner
+    %p.singing-diagnosis__eyebrow Singing / Performance Diagnosis
+    %h1 診断リクエスト
+
+    .singing-diagnosis__status{ class: "singing-diagnosis__status--#{status_key}" }
+      %span.singing-diagnosis__status-label= @diagnosis.respond_to?(:status_i18n) ? @diagnosis.status_i18n : @diagnosis.status
+      %h2= status_title
+      %p= status_message
+      - if @diagnosis.priority_analysis?
+        .singing-diagnosis__priority-badge
+          %strong Premium 優先解析
+          %span この診断は優先解析対象として受け付けています。
+
+    .singing-diagnosis__summary
+      %h2 依頼内容
+      %dl
+        %dt 診断対象
+        %dd= @diagnosis.performance_type_label
+
+        %dt 曲名
+        %dd= @diagnosis.song_title.presence || "未入力"
+
+        - reference_input = @diagnosis.reference_input
+        - if reference_input.present?
+          %dt 参考キー
+          %dd= reference_input[:reference_key] || reference_input["reference_key"] || "未入力"
+
+          %dt 参考テンポ
+          - reference_bpm = reference_input[:reference_bpm] || reference_input["reference_bpm"]
+          %dd= reference_bpm.present? ? "#{reference_bpm} BPM" : "未入力"
+
+        %dt メモ
+        %dd= simple_format(@diagnosis.memo.presence || "未入力")
+
+        %dt 音声ファイル
+        %dd= @diagnosis.audio_file.attached? ? "添付済み" : "未添付"
+
+        %dt 診断日時
+        %dd= @diagnosis.diagnosed_at&.strftime("%Y/%m/%d %H:%M") || "未完了"
+
+        %dt 解析種別
+        %dd= @diagnosis.priority_analysis? ? "Premium 優先解析" : "通常解析"
+
+    - if @diagnosis.completed?
+      .singing-diagnosis__scores
+        .singing-diagnosis__score-main
+          %span 総合スコア
+          %strong= @diagnosis.overall_score || "-"
+          %small / 100
+          %p= singing_score_comment(@diagnosis.overall_score)
+
+        - radar_chart_data = singing_radar_chart_data(@diagnosis)
+        - if radar_chart_data.size >= 3
+          .singing-diagnosis__radar
+            .singing-diagnosis__radar-chart{
+              data: {
+                singing_diagnosis_radar: true,
+                radar_items: radar_chart_data.to_json
+              }
+            }
+            .singing-diagnosis__radar-copy
+              %h2= singing_radar_chart_title(@diagnosis)
+              %p= singing_radar_chart_description(@diagnosis)
+
+        .singing-diagnosis__score-grid
+          - singing_common_score_cards(@diagnosis).each do |card|
+            .singing-diagnosis__score-card
+              %span= card[:label]
+              %strong= card[:score] || "-"
+              %small= card[:short_label]
+              %p= card[:comment]
+
+      .singing-diagnosis__score-guides
+        %h2 スコアの見方
+        %p.singing-diagnosis__score-note この診断は現時点の音声から見た目安です。絶対的な評価ではなく、練習や振り返りのヒントとしてご活用ください。
+        .singing-diagnosis__score-guide-grid
+          - [:overall, :pitch, :rhythm, :expression].each do |score_key|
+            - guide = singing_score_guide(score_key)
+            .singing-diagnosis__score-guide
+              %h3= guide[:label]
+              %p= guide[:description]
+
+      - growth_chart_data = singing_growth_chart_data(@growth_diagnoses)
+      .singing-diagnosis__growth
+        %h2= singing_growth_chart_title(@diagnosis)
+        %p.singing-diagnosis__growth-lead= singing_growth_chart_lead(@diagnosis, @growth_diagnoses)
+        - if singing_growth_chart_enabled?(@growth_diagnoses)
+          .singing-diagnosis__growth-chart{
+            data: {
+              singing_diagnosis_growth: true,
+              growth_items: growth_chart_data.to_json,
+              growth_series: singing_growth_chart_series(@diagnosis).to_json
+            }
+          }
+          .singing-diagnosis__growth-legend
+            - singing_growth_chart_series(@diagnosis).each do |series|
+              %span
+                %i{ style: "background: #{series[:color]}" }
+                = series[:label]
+        - else
+          .singing-diagnosis__growth-empty
+            %h3 これからの変化をここで確認できます
+            %p 次回以降、同じ診断対象での完了済み診断が増えると、総合・音程・リズム・表現の推移がグラフで見えるようになります。
+
+      .singing-diagnosis__growth.singing-diagnosis__growth--specific
+        %h2= singing_specific_growth_chart_title(@diagnosis)
+        - if current_customer.has_feature?(:singing_diagnosis_priority)
+          %p.singing-diagnosis__growth-lead= singing_specific_growth_chart_lead(@diagnosis, @growth_diagnoses)
+          - if singing_specific_growth_chart_enabled?(@growth_diagnoses, @diagnosis)
+            - specific_growth_chart_data = singing_specific_growth_chart_data(@diagnosis, @growth_diagnoses)
+            - specific_growth_chart_series = singing_specific_growth_chart_series(@diagnosis, @growth_diagnoses)
+            - specific_growth_summary_cards = singing_specific_growth_summary_cards(@diagnosis, @growth_diagnoses)
+            .singing-diagnosis__growth-chart{
+              data: {
+                singing_diagnosis_growth: true,
+                growth_items: specific_growth_chart_data.to_json,
+                growth_series: specific_growth_chart_series.to_json
+              }
+            }
+            .singing-diagnosis__growth-legend
+              - specific_growth_chart_series.each do |series|
+                %span
+                  %i{ style: "background: #{series[:color]}" }
+                  = series[:label]
+            - if (specific_growth_note = singing_specific_growth_chart_note(@diagnosis, @growth_diagnoses)).present?
+              %p.singing-diagnosis__growth-note= specific_growth_note
+            - if specific_growth_summary_cards.any?
+              .singing-diagnosis__growth-summary
+                %p.singing-diagnosis__growth-summary-lead= singing_specific_growth_summary_lead(@diagnosis, @growth_diagnoses)
+                .singing-diagnosis__growth-summary-grid
+                  - specific_growth_summary_cards.each do |item|
+                    .singing-diagnosis__growth-summary-card
+                      %span= item[:label]
+                      %h3= item[:title]
+                      %p= item[:body]
+          - else
+            .singing-diagnosis__growth-empty
+              %h3 細かな伸びも、次回以降ここで見えるようになります
+              %p 同じ診断対象での完了済み診断が増えると、パート固有の補足スコア推移を確認できます。
+        - else
+          %p.singing-diagnosis__growth-lead= singing_specific_growth_chart_locked_lead(@diagnosis)
+          .singing-diagnosis__growth-empty.singing-diagnosis__growth-empty--locked
+            %h3 Premiumで、パート別の細かな成長ポイントを確認できます
+            %p 共通スコアだけでなく、あなたの演奏タイプごとの伸びを見える化できます。
+            = link_to "Premiumプランを見る", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
+
+      - reference_comparison = @diagnosis.reference_comparison
+      - if reference_comparison.present?
+        .singing-diagnosis__reference-comparison
+          %h2 曲基準の簡易比較
+          %p.singing-diagnosis__score-note 参考キー・テンポが入力されている場合だけ、録音からの簡易推定との差を表示します。録音条件によって揺れるため、練習の目安としてご活用ください。
+          %dl
+            - if reference_comparison["reference_key"].present? || reference_comparison[:reference_key].present?
+              %dt キー
+              - reference_key = reference_comparison["reference_key"] || reference_comparison[:reference_key]
+              - estimated_key = reference_comparison["estimated_key"] || reference_comparison[:estimated_key] || "推定不可"
+              - key_level = reference_comparison["key_match_level"] || reference_comparison[:key_match_level]
+              %dd
+                %span= "参考: #{reference_key} / 推定: #{estimated_key}"
+                %span{ class: singing_reference_match_badge_class(key_level) }= singing_reference_match_badge_label(key_level)
+            - if reference_comparison["reference_bpm"].present? || reference_comparison[:reference_bpm].present?
+              %dt テンポ
+              - reference_bpm = reference_comparison["reference_bpm"] || reference_comparison[:reference_bpm]
+              - estimated_bpm = reference_comparison["estimated_bpm"] || reference_comparison[:estimated_bpm] || "推定不可"
+              - bpm_diff = reference_comparison["bpm_diff"] || reference_comparison[:bpm_diff]
+              - tempo_level = reference_comparison["tempo_match_level"] || reference_comparison[:tempo_match_level]
+              %dd
+                %span= "参考: #{reference_bpm} BPM / 推定: #{estimated_bpm} BPM / 差: #{bpm_diff || '-'}"
+                %span{ class: singing_reference_match_badge_class(tempo_level) }= singing_reference_match_badge_label(tempo_level)
+
+      - specific_score_cards = singing_specific_score_cards(@diagnosis)
+      - if specific_score_cards.any?
+        - if @diagnosis.performance_type_band?
+          .singing-diagnosis__ensemble-diagnosis
+            %h2= singing_band_ensemble_section_title(@diagnosis)
+            %p.singing-diagnosis__ensemble-diagnosis-lead= singing_band_ensemble_section_description(@diagnosis)
+            .singing-diagnosis__ensemble-grid
+              - specific_score_cards.each do |card|
+                .singing-diagnosis__ensemble-card
+                  .singing-diagnosis__ensemble-card-header
+                    %span= card[:label]
+                    %em= card[:rating]
+                  %strong
+                    = card[:score] || "-"
+                    %small / 100
+                  %p.singing-diagnosis__ensemble-card-description= card[:description]
+                  %p.singing-diagnosis__ensemble-card-comment= card[:comment]
+        - else
+          .singing-diagnosis__specific-scores{ class: "singing-diagnosis__specific-scores--#{@diagnosis.performance_type}" }
+            %h2= singing_specific_score_section_title(@diagnosis)
+            %p.singing-diagnosis__specific-scores-lead= singing_specific_score_section_description(@diagnosis)
+            .singing-diagnosis__specific-score-grid
+              - specific_score_cards.each do |card|
+                .singing-diagnosis__specific-score-card
+                  %span= card[:label]
+                  %strong
+                    = card[:score]
+                    %small / 100
+                  %p= card[:comment]
+
+      - if singing_band_quality_notice_visible?(@diagnosis)
+        .singing-diagnosis__quality-notice
+          %h2 診断精度に関するお知らせ
+          %p= singing_band_quality_message(@diagnosis)
+
+      - if current_customer.has_feature?(:singing_diagnosis_comparison)
+        .singing-diagnosis__comparison
+          %h2 前回診断との比較
+          %p.singing-diagnosis__comparison-lead 前回との違いを、練習や録音を振り返るための目安として表示しています。
+          - comparison_rows = singing_score_comparison_rows(@diagnosis)
+          - if comparison_rows.any?
+            .singing-diagnosis__comparison-grid
+              - comparison_rows.each do |row|
+                .singing-diagnosis__comparison-card{ class: "singing-diagnosis__comparison-card--#{row[:state]}" }
+                  %span= row[:label]
+                  %strong= row[:delta_label]
+                  %small
+                    前回
+                    = row[:previous] || "-"
+                    → 今回
+                    = row[:current] || "-"
+                  %p= row[:message]
+          - else
+            .singing-diagnosis__comparison-empty
+              %h3 比較できる前回診断がまだありません
+              %p 次回以降の診断で、今回の結果との差分を確認できるようになります。
+          - specific_comparison_rows = singing_specific_score_comparison_rows(@diagnosis)
+          - if specific_comparison_rows.any?
+            .singing-diagnosis__specific-comparison
+              %h3= singing_specific_score_comparison_section_title(@diagnosis)
+              %p.singing-diagnosis__specific-comparison-lead 診断タイプ別の補足スコアも、前回との違いを目安として確認できます。
+              .singing-diagnosis__specific-comparison-grid
+                - specific_comparison_rows.each do |row|
+                  .singing-diagnosis__specific-comparison-card{ class: "singing-diagnosis__specific-comparison-card--#{row[:state]}" }
+                    %span= row[:label]
+                    %strong= row[:delta_label]
+                    %small
+                      前回
+                      = row[:previous] || "-"
+                      → 今回
+                      = row[:current] || "-"
+                    %p= row[:message]
+
+      - advanced_feedback_class = ["singing-diagnosis__advanced-feedback--#{@diagnosis.performance_type}"]
+      - advanced_feedback_class << "singing-diagnosis__advanced-feedback--locked" unless current_customer.has_feature?(:singing_diagnosis_advanced_feedback)
+      .singing-diagnosis__advanced-feedback{ class: advanced_feedback_class.join(" ") }
+        - if current_customer.has_feature?(:singing_diagnosis_advanced_feedback) && singing_advanced_feedback_available?(@diagnosis)
+          %h2 詳しく振り返る
+          %p.singing-diagnosis__advanced-feedback-lead= singing_advanced_feedback_lead(@diagnosis)
+          .singing-diagnosis__advanced-feedback-grid
+            - singing_advanced_feedback_cards(@diagnosis).each do |feedback|
+              .singing-diagnosis__advanced-feedback-card{ class: "singing-diagnosis__advanced-feedback-card--#{feedback[:band]}" }
+                %span= feedback[:label]
+                %h3= feedback[:title]
+                %strong
+                  = feedback[:score] || "-"
+                  %small / 100
+                %p= feedback[:summary]
+                %dl
+                  %dt 良い点
+                  %dd= feedback[:strength]
+                  %dt 次に意識したいこと
+                  %dd= feedback[:next_step]
+        - elsif current_customer.has_feature?(:singing_diagnosis_advanced_feedback)
+          %h2= "#{@diagnosis.performance_type_label}向け詳細フィードバック"
+          %p.singing-diagnosis__advanced-feedback-lead= singing_advanced_feedback_lead(@diagnosis)
+        - else
+          %h2 詳しく振り返りたい方へ
+          %p.singing-diagnosis__advanced-feedback-lead= singing_advanced_feedback_locked_lead(@diagnosis)
+          = link_to "Core以上のプランを見る", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
+
+      - if current_customer.has_feature?(:singing_diagnosis_priority) && @diagnosis.performance_type_vocal?
+        - voice_type = singing_premium_voice_type(@diagnosis)
+        .singing-diagnosis__premium-report{ class: "singing-diagnosis__premium-report--#{singing_premium_type_diagnosis_accent_key(@diagnosis)}" }
+          .singing-diagnosis__premium-header
+            %span.singing-diagnosis__premium-badge
+              %span.singing-diagnosis__premium-badge-icon= singing_premium_type_diagnosis_icon(@diagnosis)
+              Premium限定
+            %h2= singing_premium_type_diagnosis_title(@diagnosis)
+            %p.singing-diagnosis__premium-report-lead 歌唱チェック、ミックスボイスの状態、歌声タイプを5段階評価で整理します。点数は優劣ではなく、今の声の特徴と練習の方向を見つけるための目安です。
+
+          .singing-diagnosis__premium-section
+            %h3 歌唱チェック項目
+            .singing-diagnosis__premium-grid
+              - singing_premium_voice_check_items(@diagnosis).each do |item|
+                .singing-diagnosis__premium-card
+                  %span= item[:label]
+                  %strong= item[:rating]
+                  %small / 5
+                  %p= item[:description]
+                  %em= item[:comment]
+
+          .singing-diagnosis__premium-section
+            %h3 ミックスボイスチェック項目
+            .singing-diagnosis__premium-grid
+              - singing_premium_mix_voice_check_items(@diagnosis).each do |item|
+                .singing-diagnosis__premium-card
+                  %span= item[:label]
+                  %strong= item[:rating]
+                  %small / 5
+                  %p= item[:description]
+                  %em= item[:comment]
+
+          .singing-diagnosis__voice-type
+            %span 取り入れると良い歌声タイプ
+            %h3= voice_type[:title]
+            %p.singing-diagnosis__voice-type-examples= "参考イメージ: #{voice_type[:examples]}"
+            %p= voice_type[:description]
+            %small ※タイプ分けは診断結果から見た一例です。声の魅力を固定するものではなく、練習や選曲のヒントとしてご活用ください。
+
+          .singing-diagnosis__voice-type-map
+            %h3 6つの歌声タイプマップ
+            %p.singing-diagnosis__voice-type-map-lead ひとつの六角形の6つの角にタイプを配置しています。強く出たタイプを中心に、近い特徴も見てみましょう。
+            .singing-diagnosis__voice-hexagon-map
+              .singing-diagnosis__voice-hexagon-shape
+              - singing_premium_voice_type_map(@diagnosis).each do |type|
+                - point_class = ["singing-diagnosis__voice-hex-point", "singing-diagnosis__voice-hex-point--#{type[:key]}"]
+                - point_class << "singing-diagnosis__voice-hex-point--selected" if type[:selected]
+                %div{ class: point_class.join(" ") }
+                  %strong= type[:title]
+                  %span= type[:short_description]
+      - elsif @diagnosis.performance_type.to_s != "vocal"
+        .singing-diagnosis__premium-report{ class: "singing-diagnosis__premium-report--#{singing_premium_type_diagnosis_accent_key(@diagnosis)}" }
+          - if current_customer.has_feature?(:singing_diagnosis_priority)
+            .singing-diagnosis__premium-header
+              %span.singing-diagnosis__premium-badge
+                %span.singing-diagnosis__premium-badge-icon= singing_premium_type_diagnosis_icon(@diagnosis)
+                Premium限定
+              %h2= singing_premium_type_diagnosis_title(@diagnosis)
+              %p.singing-diagnosis__premium-report-lead= singing_premium_type_diagnosis_lead(@diagnosis)
+            .singing-diagnosis__premium-grid
+              - singing_premium_type_diagnosis_cards(@diagnosis).each do |item|
+                .singing-diagnosis__premium-card{ class: "singing-diagnosis__premium-card--#{singing_premium_type_diagnosis_accent_key(@diagnosis)}" }
+                  %span= item[:label]
+                  %h3= item[:title]
+                  .singing-diagnosis__premium-card-score
+                    %strong= premium_rating(item[:score])
+                    %small / 5
+                  .singing-diagnosis__premium-card-copy
+                    %p.singing-diagnosis__premium-card-insight
+                      %strong 今回の特徴
+                      = item[:insight]
+                    %p.singing-diagnosis__premium-card-strength
+                      %strong 良さ
+                      = item[:strength]
+                    %p.singing-diagnosis__premium-card-risk
+                      %strong 崩れやすいポイント
+                      = item[:risk]
+                    %p.singing-diagnosis__premium-card-next
+                      %strong 次の改善テーマ
+                      = item[:next_theme]
+                  - if item[:comparison_note].present?
+                    %p.singing-diagnosis__premium-card-note
+                      %strong 補足
+                      = item[:comparison_note]
+          - else
+            .singing-diagnosis__premium-header
+              %span.singing-diagnosis__premium-badge
+                %span.singing-diagnosis__premium-badge-icon= singing_premium_type_diagnosis_icon(@diagnosis)
+                Premium限定
+              %h2 Premium タイプ別詳細診断
+              %p.singing-diagnosis__premium-report-lead Premium限定：演奏傾向をさらに深く読み解く詳細診断
+              %p.singing-diagnosis__premium-report-sublead あなたの演奏の強み・崩れやすいポイント・次の伸ばし方を、パート別に整理して確認できます。
+              %p.singing-diagnosis__premium-report-lead= singing_premium_type_diagnosis_locked_lead(@diagnosis)
+            = link_to "Premiumプランを見る", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
+
+      - if current_customer.has_feature?(:singing_diagnosis_ai_comment)
+        .singing-diagnosis__ai-comment{ class: "singing-diagnosis__ai-comment--#{@diagnosis.ai_comment_status}" }
+          %h2 AIコメント
+          - if @diagnosis.ai_comment_completed? && @diagnosis.ai_comment.present?
+            %p.singing-diagnosis__ai-comment-lead スコア、補足スコア、前回比較をもとに、次の練習へつなげるコメントを生成しました。
+            .singing-diagnosis__ai-comment-body
+              = simple_format(@diagnosis.ai_comment)
+            - if @diagnosis.ai_commented_at.present?
+              %p.singing-diagnosis__ai-comment-meta= "生成日時 #{@diagnosis.ai_commented_at.strftime('%Y/%m/%d %H:%M')}"
+          - elsif @diagnosis.ai_comment_queued? || @diagnosis.ai_comment_processing?
+            %p.singing-diagnosis__ai-comment-lead AIコメントを生成中です。診断結果はこのまま確認できます。
+          - elsif @diagnosis.ai_comment_failed?
+            %p.singing-diagnosis__ai-comment-lead AIコメントの生成に失敗しました。スコア・比較・補足スコアは通常どおり確認できます。
+          - else
+            %p.singing-diagnosis__ai-comment-lead AIコメントは、Premium向けに解析完了後の診断から生成されます。
+
+      .singing-diagnosis__coach{ class: "singing-diagnosis__coach--#{@diagnosis.performance_type}" }
+        - if singing_weekly_coach_available?(current_customer)
+          - coach = singing_weekly_coach_card(@diagnosis)
+          %h2= singing_weekly_coach_title(@diagnosis)
+          %p.singing-diagnosis__coach-lead= singing_weekly_coach_lead(@diagnosis)
+          .singing-diagnosis__coach-card
+            %span.singing-diagnosis__coach-badge 今週のテーマ
+            - if coach[:quality_note].present?
+              %p.singing-diagnosis__coach-note= coach[:quality_note]
+            %h3= coach[:theme]
+            .singing-diagnosis__coach-points
+              - if @diagnosis.performance_type_band?
+                .singing-diagnosis__coach-point
+                  %strong 今週の練習ゴール
+                  %p= coach[:goal]
+                .singing-diagnosis__coach-point
+                  %strong スタジオ練習でやること
+                  %h4= coach[:practice_title]
+                  %ul
+                    - Array(coach[:studio_steps]).each do |step|
+                      %li= step
+                .singing-diagnosis__coach-point
+                  %strong 録音して確認するポイント
+                  %ul
+                    - Array(coach[:recording_points]).each do |point|
+                      %li= point
+                .singing-diagnosis__coach-point
+                  %strong 次回までの宿題
+                  %p= coach[:homework]
+                .singing-diagnosis__coach-point
+                  %strong 今週の補足
+                  %p= coach[:focus]
+              - else
+                .singing-diagnosis__coach-point
+                  %strong 意識するポイント
+                  %p= coach[:focus]
+                .singing-diagnosis__coach-point
+                  %strong 具体的な練習メニュー
+                  %h4= coach[:practice_title]
+                  %p= coach[:practice_description]
+                .singing-diagnosis__coach-point
+                  %strong ひとこと励まし
+                  %p= coach[:encouragement]
+            - if coach[:reference_note].present?
+              %p.singing-diagnosis__coach-note
+                = coach[:reference_note]
+        - else
+          %h2= singing_weekly_coach_title(@diagnosis)
+          %p.singing-diagnosis__coach-lead= singing_weekly_coach_locked_lead(@diagnosis)
+          .singing-diagnosis__coach-card.singing-diagnosis__coach-card--locked
+            %span.singing-diagnosis__coach-badge Premium限定
+            %h3 今週の練習テーマを自動で提案します
+            %p 診断履歴、伸び方、補足スコアの変化をもとに、今週優先すると良い練習テーマを短く整理して確認できます。
+            = link_to "Premiumプランを見る", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
+
+      .singing-diagnosis__practice
+        %h2= singing_practice_section_title(@diagnosis)
+        %p.singing-diagnosis__practice-lead= singing_practice_section_lead(@diagnosis)
+        .singing-diagnosis__practice-grid
+          - singing_practice_menus(@diagnosis).each do |menu|
+            .singing-diagnosis__practice-card
+              %span= menu[:target]
+              %h3= menu[:title]
+              %p= menu[:description]
+
+      .singing-diagnosis__plan-features
+        %h2 プラン別の解放予定
+        %p.singing-diagnosis__plan-features-lead 回数制限とは別に、振り返りや分析を深める機能差分を少しずつ追加していく予定です。
+        .singing-diagnosis__plan-feature-grid
+          - singing_plan_feature_cards(current_customer).each do |feature|
+            - feature_card_class = ["singing-diagnosis__plan-feature-card"]
+            - feature_card_class << "singing-diagnosis__plan-feature-card--locked" unless feature[:available]
+            %div{ class: feature_card_class.join(" ") }
+              %span= feature[:plan_label]
+              %h3= feature[:title]
+              %p= feature[:description]
+              - if feature[:available]
+                %strong 利用対象です
+              - else
+                %strong アップグレードで解放予定
+
+      - if singing_band_payload_check_visible?(@diagnosis)
+        - payload_check_items = singing_band_payload_check_items(@diagnosis)
+        %details.singing-diagnosis__payload-check
+          %summary
+            %span Payload確認
+            %small development only
+          %p.singing-diagnosis__debug-lead band診断の保存 payload に必要キーが入っているかを開発用に確認できます。
+          .singing-diagnosis__payload-check-grid
+            - payload_check_items.each do |item|
+              - item_class = item[:present] ? "singing-diagnosis__payload-check-item--ok" : "singing-diagnosis__payload-check-item--missing"
+              %div{ class: ["singing-diagnosis__payload-check-item", item_class].join(" ") }
+                = item[:message]
+
+      - if singing_band_analysis_debug_visible?(@diagnosis)
+        - analysis_debug_sections = singing_band_analysis_debug_sections(@diagnosis)
+        - if analysis_debug_sections.any?
+          %details.singing-diagnosis__debug
+            %summary
+              %span 解析デバッグ情報
+              %small development only
+            %p.singing-diagnosis__debug-lead band診断のスコア根拠を確認するための開発者向け情報です。本番環境では表示されません。
+            .singing-diagnosis__debug-sections
+              - analysis_debug_sections.each do |section|
+                .singing-diagnosis__debug-section
+                  %h3= section[:title]
+                  %dl.singing-diagnosis__debug-list
+                    - section[:items].each do |item|
+                      %dt= item[:label]
+                      %dd= item[:value]
+
+      - if @diagnosis.result_payload.present?
+        %details.singing-diagnosis__payload
+          %summary 解析レスポンスを確認する
+          %pre= JSON.pretty_generate(@diagnosis.result_payload)
+
+    - elsif @diagnosis.failed?
+      .singing-diagnosis__failure
+        %h2 失敗理由
+        %p= @diagnosis.failure_reason.presence || "詳しい失敗理由は保存されていません。"
+
+    - else
+      .singing-diagnosis__waiting
+        %h2= @diagnosis.processing? ? "解析中" : "解析待ち"
+        %p 結果が保存されると、このページにスコアが表示されます。
+        %p.singing-diagnosis__polling-note 自動更新中です。完了または失敗になると更新は止まります。
+
+    .singing-diagnosis__actions
+      = link_to "もう一度診断する", new_singing_diagnosis_path, class: "btn btn-primary"
+      = link_to "診断履歴へ戻る", singing_diagnoses_path, class: "btn btn-secondary"
+      = link_to "歌唱・演奏診断トップへ", singing_root_path, class: "btn btn-secondary"

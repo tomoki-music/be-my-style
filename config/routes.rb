@@ -40,6 +40,8 @@ Rails.application.routes.draw do
 
     # ランディングページ
     get 'lp', to: 'lp#index'
+    get 'lp/singing', to: 'lp#singing', as: :singing_lp
+    get 'singing_performance_diagnosis', to: 'singing_performance_diagnoses#show'
 
     # サブスク
     post '/webhooks/stripe', to: 'webhooks#stripe'
@@ -172,6 +174,11 @@ Rails.application.routes.draw do
     end
 
     get "communities/:id/permits" => "communities#permits", as: :permits
+  end
+
+  namespace :singing do
+    root to: "homes#top"
+    resources :diagnoses, only: [:index, :new, :create, :show]
   end
 
   namespace :learning do

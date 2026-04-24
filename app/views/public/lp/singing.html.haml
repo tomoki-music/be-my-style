@@ -1,0 +1,232 @@
+- content_for :title, "歌唱・演奏診断 | BeMyStyle"
+
+- lp_cta_label = customer_signed_in? ? "診断を始める" : "無料登録して診断する"
+- lp_primary_cta_path = customer_signed_in? ? new_singing_diagnosis_path : new_customer_registration_path
+- lp_cta_options = { class: "lp-btn" }
+- lp_cta_options[:data] = { turbolinks: false } unless customer_signed_in?
+- singing_lp_back_label = @singing_lp_back_label || "歌唱・演奏診断トップへ"
+- singing_lp_back_path = @singing_lp_back_path || singing_root_path
+- singing_lp_hero_back_label = @singing_lp_hero_back_label || "歌唱・演奏診断トップへ戻る"
+
+.lp-container.lp-container--singing
+
+  .lp-header
+    .header-inner
+      .lp-logo
+        %span.logo-main BeMyStyle
+      .lp-singing-nav
+        - if customer_signed_in?
+          = link_to "診断を始める", new_singing_diagnosis_path, class: "lp-singing-nav__link lp-singing-nav__link--primary"
+          = link_to "診断履歴を見る", singing_diagnoses_path, class: "lp-singing-nav__link"
+          = link_to "プランを変更する", "#lp-section", class: "lp-singing-nav__link"
+        = link_to "BeMyStyleへ", root_path, class: "lp-singing-nav__link"
+
+  .lp-hero
+    .lp-hero-inner
+      %p.lp-eyebrow Singing / Performance Diagnosis
+      %h1.lp-hero-title
+        %span 歌声の今を知る。
+        %span 練習の次を決める。
+      %p
+        音程・リズム・表現を見える化し、あなたの歌声や演奏に合った振り返りと練習のヒントを届けます。
+      .lp-hero-points
+        %span.lp-chip スコアで見える
+        %span.lp-chip 前回比較で続けやすい
+        %span.lp-chip PremiumはAIコメント対応
+      = link_to lp_cta_label, lp_primary_cta_path, lp_cta_options
+      .lp-hero-back
+        = link_to singing_lp_hero_back_label, singing_lp_back_path
+
+  .lp-section
+    %h2 なんとなく練習する、から抜け出す
+    %ul.lp-list
+      %li 音程やリズムの弱点を、自分だけでは判断しにくい
+      %li 何を優先して練習すればいいか迷ってしまう
+      %li 前より良くなっているのか、感覚だけでは分かりにくい
+      %li 本番前や練習後に、今の声の状態を確認したい
+
+  .lp-section.gray
+    %h2 診断結果が、次の練習を選びやすくする
+    %p.lp-section-lead
+      歌唱・演奏診断は、点数で優劣を決めるものではありません。今の状態を知り、次に整えるポイントを見つけるための目印です。
+    .lp-grid
+      .lp-card
+        %strong 音程・リズム・表現を見える化
+        %p 感覚だけでは気づきにくい傾向を、スコアとコメントで振り返れます。
+      .lp-card
+        %strong 前回との差を確認
+        %p 継続して録音すると、練習前後や本番前後の変化を見つけやすくなります。
+      .lp-card
+        %strong 練習メニューにつながる
+        %p 診断結果に合わせて、次に試しやすい練習の方向を絞れます。
+
+  .lp-section
+    %h2 続けるほど、自分の歌声が見えてくる
+    .lp-story
+      .lp-story-card.before
+        %span.story-label Before
+        %strong なんとなく録音して、なんとなく練習する
+        %p うまく歌えた日とそうでない日の違いが分かりにくく、練習の優先順位も曖昧になりがち。
+      .lp-story-arrow →
+      .lp-story-card.after
+        %span.story-label After
+        %strong 診断結果を見ながら、次の一歩を決める
+        %p 音程・リズム・表現の変化を振り返り、自分に合った練習を選びやすくなります。
+    .lp-section-cta
+      = link_to lp_cta_label, lp_primary_cta_path, lp_cta_options
+
+  .lp-section
+    %h2 バンド演奏診断で、まとまりの課題も見つけやすく
+    %p.lp-section-lead= singing_band_promo_catch_copy
+    .lp-grid
+      .lp-card
+        %strong 何が分かる？
+        %p= singing_band_promo_description
+      .lp-card
+        %strong こんな人におすすめ
+        %ul.lp-list
+          - singing_band_promo_recommended_for.first(2).each do |item|
+            %li= item
+      .lp-card
+        %strong 推奨音源
+        %p= singing_band_promo_upload_note
+    .lp-section-cta
+      %p.lp-section-lead= singing_band_premium_promo
+      = link_to lp_cta_label, lp_primary_cta_path, lp_cta_options
+
+  .lp-section.gray
+    %h2 Premiumでは、より深い振り返りまで
+    %p.lp-section-lead
+      歌唱チェック、ミックスボイスチェック、6つの歌声タイプ、AIコメントまで使って、今の声の特徴を立体的に整理できます。
+    .lp-grid
+      .lp-card
+        %strong 6つの歌声タイプ
+        %p 取り入れると良い歌声タイプを、パワフル・ハイトーン・クリスタルなどの観点で確認できます。
+      .lp-card
+        %strong 詳細診断
+        %p 声量、リラックス、発音、声帯の閉鎖など、スコアをもう一段細かく読み解きます。
+      .lp-card
+        %strong AIコメント
+        %p 詳細フィードバックと比較結果をもとに、次の練習へつながるコメントを生成します。
+
+  .lp-section.gray#lp-section
+    %h2 歌唱・演奏診断プラン
+    %p.lp-section-lead
+      回数制限は現行仕様のまま、freeは月1回、Lightは月5回、Coreは月20回、Premiumは無制限で利用できます。
+    .lp-pricing-grid.lp-pricing-grid-conversion#lp-pricing-plans
+
+      .lp-pricing.free
+        .plan-head
+          %span.plan-badge Starter
+          %h3 free
+          %p.plan-tag まずは自分の声を知りたい
+        %p.price ¥0
+        %p.plan-copy 月1回の診断で、今の歌声の状態を試せます。改善の入口を軽くつかみたい人向けです。
+        %p.plan-singing-copy 歌唱・演奏診断 1回／月
+        %ul
+          %li 音程・リズム・表現のスコアを確認できる
+          %li おすすめ練習メニューを見られる
+          %li まずは診断の雰囲気を試せる
+        .plan-note 無料で最初の一歩を軽くする
+
+      .lp-pricing.recommend.light-plan
+        .plan-ribbon 継続しやすい
+        .plan-head
+          %span.plan-badge Popular
+          %h3 light
+          %p.plan-tag 練習の変化を見たい
+        %p.price ¥1,500/月
+        %p.plan-copy 月5回まで診断できるので、練習前後や週ごとの変化を無理なく振り返れます。
+        %p.plan-singing-copy 歌唱・演奏診断 5回／月
+        %ul
+          %li 前回比較で変化を確認しやすい
+          %li 練習の成果を定期的に残せる
+          %li 本番前の声の状態チェックにも使える
+        .plan-action
+          - if customer_signed_in?
+            - if current_customer.plan == "light"
+              %span.plan-action__button.plan-action__button--disabled 契約中
+            - elsif current_customer.stripe_managed_subscription?
+              = link_to "Lightに変更する", public_portal_path, method: :post, class: "plan-action__button"
+            - else
+              = link_to "Lightを契約する", public_checkout_path("light"), method: :post, class: "plan-action__button"
+          - else
+            = link_to "無料登録してLightへ", new_customer_registration_path, data: { turbolinks: false }, class: "plan-action__button"
+        .plan-note 継続のリズムを作る
+
+      .lp-pricing
+        .plan-head
+          %span.plan-badge Growth
+          %h3 core
+          %p.plan-tag もっと深く振り返りたい
+        %p.price ¥3,980/月
+        %p.plan-copy 月20回まで診断でき、練習テーマごとに細かく確認できます。詳細フィードバックも使えるプランです。
+        %p.plan-singing-copy 歌唱・演奏診断 20回／月
+        %ul
+          %li 音程・リズム・表現を深く読み解ける
+          %li 課題別に診断し、練習の方向を決めやすい
+          %li イベントや録音前後の振り返りにも使いやすい
+        .plan-action
+          - if customer_signed_in?
+            - if current_customer.plan == "core"
+              %span.plan-action__button.plan-action__button--disabled 契約中
+            - elsif current_customer.stripe_managed_subscription?
+              = link_to "Coreに変更する", public_portal_path, method: :post, class: "plan-action__button"
+            - else
+              = link_to "Coreを契約する", public_checkout_path("core"), method: :post, class: "plan-action__button"
+          - else
+            = link_to "無料登録してCoreへ", new_customer_registration_path, data: { turbolinks: false }, class: "plan-action__button"
+        .plan-note 練習の質を高める
+
+      .lp-pricing.premium-plan
+        .plan-head
+          %span.plan-badge Premium
+          %h3 premium
+          %p.plan-tag 本格的に歌声を育てたい
+        %p.price ¥9,800/月
+        %p.plan-copy 回数を気にせず診断し、Premium詳細診断・6タイプ診断・AIコメントまで使って改善サイクルを回せます。
+        %p.plan-singing-copy 歌唱・演奏診断 無制限
+        %ul
+          %li 優先解析対象として診断を受け付け
+          %li 6つの歌声タイプとミックスボイス項目を確認
+          %li AIコメントで次の練習ポイントを整理
+        .plan-action
+          - if customer_signed_in?
+            - if current_customer.plan == "premium"
+              %span.plan-action__button.plan-action__button--disabled 契約中
+            - elsif current_customer.stripe_managed_subscription?
+              = link_to "Premiumに変更する", public_portal_path, method: :post, class: "plan-action__button"
+            - else
+              = link_to "Premiumを契約する", public_checkout_path("premium"), method: :post, class: "plan-action__button"
+          - else
+            = link_to "無料登録してPremiumへ", new_customer_registration_path, data: { turbolinks: false }, class: "plan-action__button"
+        .plan-note 歌声改善を本格運用する
+
+  .lp-section
+    %h2 はじめる前の不安を、ここで解消
+    .lp-faq-list
+      .lp-faq-item
+        %strong 点数が低いと落ち込みそうです
+        %p 点数は優劣ではなく、今の状態を知るための目安です。伸ばしどころを見つけるために使えます。
+      .lp-faq-item
+        %strong どんな音声を出せばいいですか？
+        %p 歌っている音声ファイルを添付してください。練習中の曲や本番前に確認したい曲でも大丈夫です。
+      .lp-faq-item
+        %strong 失敗した診断も回数に含まれますか？
+        %p いいえ。月次回数は完了した診断だけを対象にしているため、失敗した診断は回数に含まれません。
+      .lp-faq-item
+        %strong 解約やプラン変更はできますか？
+        %p Stripeの管理画面から手続きできます。変更内容や請求金額を確認してから進められます。
+
+  .lp-section.cta
+    %h2 今日の録音が、次の練習を決めるヒントになる
+    %p.cta-copy
+      まずは1回、今の歌声を見える化してみましょう。結果は評価ではなく、あなたの練習を進めるための地図です。
+
+    .cta-main
+      = link_to lp_cta_label, lp_primary_cta_path, lp_cta_options.merge(class: "lp-btn big")
+
+  %footer.lp-footer
+    .footer-inner
+      = render "public/lp/footer_links"
+      %p.footer-copy © BeMyStyle

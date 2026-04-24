@@ -1,0 +1,16 @@
+.singing-top
+  .singing-top__inner
+    %p.singing-top__eyebrow Singing Domain
+    %h1 歌唱・演奏診断トップ
+    %p 歌声の特徴や現在の状態を見える化するためのβ版エリアです。
+    %p 今後ここから診断の開始、結果確認、改善メニューの提案へ進める予定です。
+
+    .singing-top__actions
+      = link_to "診断を始める", new_singing_diagnosis_path, class: "btn btn-primary"
+      = link_to "診断履歴を見る", singing_diagnoses_path, class: "btn btn-secondary"
+      = link_to "BeMyStyleトップへ", root_path, class: "btn btn-secondary"
+      = button_to "ログアウト",
+        destroy_customer_session_path,
+        method: :delete,
+        form_class: "d-inline",
+        class: "btn btn-outline-secondary"

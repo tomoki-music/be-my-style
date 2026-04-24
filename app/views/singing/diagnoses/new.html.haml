@@ -1,0 +1,92 @@
+.singing-diagnosis
+  .singing-diagnosis__inner
+    %p.singing-diagnosis__eyebrow Singing / Performance Diagnosis
+    %h1 歌唱・演奏診断を依頼する
+    %p 音声ファイルを添付して、診断リクエストを作成します。
+
+    .singing-diagnosis__quota{ class: ("singing-diagnosis__quota--limited" if @singing_diagnosis_quota_exceeded) }
+      - if @singing_diagnosis_quota_limited
+        %h2 今月の歌唱・演奏診断
+        %p
+          = "今月の完了済み診断 #{@singing_diagnosis_monthly_count} / #{@singing_diagnosis_monthly_limit} 回"
+        - if @singing_diagnosis_quota_exceeded
+          %p 今月の完了済み診断回数を使い切りました。継続して変化を見たい場合は、歌唱・演奏診断向けのプラン案内を確認できます。
+          = link_to "歌唱・演奏診断のプランを見る", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
+        - else
+          %p= "残り #{@singing_diagnosis_remaining_quota} 回、今月の完了済み診断として利用できます。失敗した診断は回数に含まれません。"
+      - else
+        %h2 歌唱・演奏診断を利用できます
+        %p 現在のプランでは、今月の診断回数を気にせず依頼できます。
+
+    - if current_customer.has_feature?(:singing_diagnosis_priority)
+      .singing-diagnosis__priority-notice
+        %h2 Premium 優先解析
+        %p 現在のプランでは、歌唱・演奏診断リクエストを優先解析対象として受け付けます。
+
+    = form_with model: @diagnosis, url: singing_diagnoses_path, local: true do |f|
+      - if @diagnosis.errors.any?
+        #error_explanation
+          %ul
+            - @diagnosis.errors.full_messages.each do |message|
+              %li= message
+
+      .form-group
+        %label 診断対象
+        = f.select :performance_type, SingingDiagnosis.performance_type_options, {}, class: "form-control"
+        .singing-diagnosis__type-grid
+          - singing_performance_type_cards.each do |card|
+            - card_classes = ["singing-diagnosis__type-card"]
+            - card_classes << "singing-diagnosis__type-card--featured" if card[:featured]
+            %div{ class: card_classes.join(" ") }
+              .singing-diagnosis__type-card-header
+                %strong= card[:label]
+                - if card[:badges].present?
+                  .singing-diagnosis__type-card-badges
+                    - card[:badges].each do |badge|
+                      %span= badge
+              %p= card[:description]
+        - if SingingDiagnosis.future_performance_type_labels.present?
+          %small.form-text.text-muted
+            = "#{SingingDiagnosis.future_performance_type_labels.join(' / ')}は今後対応予定です。"
+
+      .singing-diagnosis__band-guide
+        %h2= singing_band_promo_catch_copy
+        %p.singing-diagnosis__band-guide-lead= singing_band_promo_description
+        .singing-diagnosis__band-guide-grid
+          .singing-diagnosis__band-guide-card
+            %h3 おすすめ対象
+            %ul
+              - singing_band_promo_recommended_for.each do |item|
+                %li= item
+          .singing-diagnosis__band-guide-card
+            %h3 推奨音源
+            %p= singing_band_promo_upload_note
+          .singing-diagnosis__band-guide-card
+            %h3 Premiumで深く見られること
+            %p= singing_band_premium_promo
+
+      .form-group
+        %label 音声ファイル
+        = f.file_field :audio_file, accept: "audio/*", class: "form-control"
+
+      .form-group
+        %label 曲名
+        = f.text_field :song_title, class: "form-control", placeholder: "未定の場合は空欄でOK"
+
+      .form-group
+        %label 参考キー（任意）
+        = f.text_field :reference_key, class: "form-control", placeholder: "例: C / G# / Bb"
+        %small.form-text.text-muted 曲のキーが分かる場合だけ入力してください。簡易比較の目安として使います。
+
+      .form-group
+        %label 参考テンポ BPM（任意）
+        = f.number_field :reference_bpm, class: "form-control", min: 1, step: 0.1, placeholder: "例: 120"
+        %small.form-text.text-muted 曲のテンポが分かる場合だけ入力してください。録音から推定したテンポとの差を表示します。
+
+      .form-group
+        %label メモ
+        = f.text_area :memo, class: "form-control", rows: 5, placeholder: "気になる点、診断してほしいポイントなど"
+
+      .singing-diagnosis__actions
+        = f.submit "診断を依頼する", class: "btn btn-primary", disabled: @singing_diagnosis_quota_exceeded
+        = link_to "戻る", singing_root_path, class: "btn btn-secondary"

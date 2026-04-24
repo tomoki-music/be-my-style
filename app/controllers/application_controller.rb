@@ -74,10 +74,12 @@ class ApplicationController < ActionController::Base
 
   before_action :set_current_domain
   before_action :authenticate_customer!
+  before_action :ensure_music_domain_access_for_public_routes!
   
   helper_method :current_domain_business
   helper_method :current_domain_music
   helper_method :current_domain_learning
+  helper_method :current_domain_singing
   helper_method :feature_available?
   helper_method :feature_gate
   helper_method :feature_upgrade_path
@@ -102,9 +104,47 @@ class ApplicationController < ActionController::Base
         Domain.find_by(name: "business")
       elsif request.path.start_with?("/learning")
         Domain.find_by(name: "learning")
+      elsif request.path.start_with?("/singing")
+        Domain.find_by(name: "singing")
       else
         Domain.find_by(name: "music")
       end
+  end
+
+  def ensure_music_domain_access_for_public_routes!
+    return unless public_music_platform_route?
+    return if current_customer&.admin?
+    return if current_customer&.music_user?
+
+    redirect_to non_music_domain_home_path, alert: "音楽プラットフォームの利用には音楽ドメインの登録が必要です。"
+  end
+
+  def public_music_platform_route?
+    path = request.path
+    return false unless path == "/" || path.start_with?("/public")
+
+    public_shared_route_exceptions.none? { |prefix| path.start_with?(prefix) }
+  end
+
+  def public_shared_route_exceptions
+    [
+      "/public/lp",
+      "/public/legal",
+      "/public/terms",
+      "/public/privacy",
+      "/public/checkout",
+      "/public/stripe",
+      "/public/portal",
+      "/public/webhooks"
+    ]
+  end
+
+  def non_music_domain_home_path
+    return singing_root_path if current_customer&.singing_user?
+    return business_root_path if current_customer&.business_user?
+    return learning_root_path if current_customer&.learning_user?
+
+    new_customer_session_path
   end
 
   def admin_only!
@@ -121,6 +161,10 @@ class ApplicationController < ActionController::Base
 
   def current_domain_learning
     Domain.find_by(name: "learning")
+  end
+
+  def current_domain_singing
+    Domain.find_by(name: "singing")
   end
 
   def feature_available?(feature_key, customer = current_customer)

@@ -1,6 +1,13 @@
 class Customer < ApplicationRecord
   MONTHLY_SESSION_CREDIT_AMOUNT = 1500
-  SIGN_UP_DOMAIN_NAMES = %w[music business learning].freeze
+  FREE_MONTHLY_SINGING_DIAGNOSIS_LIMIT = 1
+  SINGING_DIAGNOSIS_MONTHLY_LIMITS = {
+    "free" => FREE_MONTHLY_SINGING_DIAGNOSIS_LIMIT,
+    "light" => 5,
+    "core" => 20,
+    "premium" => nil
+  }.freeze
+  SIGN_UP_DOMAIN_NAMES = %w[music business learning singing].freeze
   DEFAULT_SIGN_UP_DOMAIN = "music".freeze
 
   PLAN_OPTIONS = [
@@ -20,7 +27,12 @@ class Customer < ApplicationRecord
     business_post_create: %w[light core premium],
     business_community_post_create: %w[light core premium],
     business_project_create: %w[core premium],
-    business_community_create: %w[premium]
+    business_community_create: %w[premium],
+    singing_diagnosis_history: %w[free light core premium],
+    singing_diagnosis_comparison: %w[light core premium],
+    singing_diagnosis_advanced_feedback: %w[core premium],
+    singing_diagnosis_priority: %w[premium],
+    singing_diagnosis_ai_comment: %w[premium]
   }.freeze
 
   # Include default devise modules. Others available are:
@@ -97,6 +109,7 @@ class Customer < ApplicationRecord
   has_many :learning_bands, dependent: :destroy
   has_many :learning_band_memberships, through: :learning_bands
   has_many :learning_band_trainings, dependent: :destroy
+  has_many :singing_diagnoses, dependent: :destroy
 
   # ストライプ（権限制御）
   def active_subscription
@@ -174,6 +187,34 @@ class Customer < ApplicationRecord
     plan == "premium"
   end
 
+  def singing_diagnosis_monthly_limited?
+    singing_diagnosis_monthly_limit.present?
+  end
+
+  def singing_diagnosis_monthly_limit
+    return nil if admin?
+
+    SINGING_DIAGNOSIS_MONTHLY_LIMITS.fetch(plan, FREE_MONTHLY_SINGING_DIAGNOSIS_LIMIT)
+  end
+
+  def monthly_singing_diagnosis_count(reference_time = Time.current)
+    singing_diagnoses.completed.where(created_at: reference_time.in_time_zone.all_month).count
+  end
+
+  def remaining_singing_diagnosis_quota(reference_time = Time.current)
+    limit = singing_diagnosis_monthly_limit
+    return nil if limit.nil?
+
+    [limit - monthly_singing_diagnosis_count(reference_time), 0].max
+  end
+
+  def can_create_singing_diagnosis?(reference_time = Time.current)
+    limit = singing_diagnosis_monthly_limit
+    return true if limit.nil?
+
+    monthly_singing_diagnosis_count(reference_time) < limit
+  end
+
   def has_feature?(feature_key)
     return true if admin?
 
@@ -227,6 +268,10 @@ class Customer < ApplicationRecord
 
   def learning_user?
     domains.exists?(name: "learning")
+  end
+
+  def singing_user?
+    domains.exists?(name: "singing")
   end
 
   def normalized_domain_name

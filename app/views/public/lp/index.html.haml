@@ -122,10 +122,29 @@
 
   / ===== PRICING =====
   .lp-section.gray#lp-section
+    .lp-singing-plan
+      %p.lp-singing-plan__eyebrow Singing Diagnosis
+      %h2 歌唱・演奏診断を、続ける練習の目印に
+      %p.lp-singing-plan__lead
+        freeでは月1回、Lightでは月5回、Coreでは月20回、Premiumでは回数を気にせず歌声の状態を確認できます。継続して診断すると、スコア・解説・おすすめ練習メニューを見比べながら、次に整えるポイントを見つけやすくなります。
+      .lp-singing-plan__grid
+        .lp-singing-plan__item
+          %strong 変化が見える
+          %p 音程・リズム・表現のバランスを残せるので、前回からの変化を振り返りやすくなります。
+        .lp-singing-plan__item
+          %strong 練習に迷いにくい
+          %p 診断結果に合わせた練習メニューで、「次に何をするか」を決めやすくします。
+        .lp-singing-plan__item
+          %strong 自分のペースで続けられる
+          %p 有料プランなら回数を気にしすぎず、練習前後や本番前の確認に使いやすくなります。
+      .lp-singing-plan__cta
+        = link_to "歌唱・演奏診断LPを見る", public_singing_lp_path(anchor: "lp-section"), class: "lp-btn"
+        %span まずはfreeで月1回。続けたくなったらLight以上へ。
+
     %h2 迷ったら、Lightから始めるのがおすすめ
     %p.lp-section-lead
       月1回セッションに参加するだけで、Lightは1,500円分の割引券により実質無料。損しにくく、仲間づくりを始めやすいプランです。
-    .lp-pricing-grid.lp-pricing-grid-conversion
+    .lp-pricing-grid.lp-pricing-grid-conversion#lp-pricing-plans
 
       .lp-pricing.free
         .plan-head
@@ -134,6 +153,7 @@
           %p.plan-tag まずは雰囲気を見たい
         %p.price ¥0
         %p.plan-copy 参加前の不安を減らし、自分に合いそうな場所を見つける準備ができます。
+        %p.plan-singing-copy 歌唱・演奏診断は月1回。まずは自分の声や演奏の状態を試したい人に。
         %ul
           %li どんな人がいるかを見て安心できる
           %li 気になるイベントやコミュニティを探せる
@@ -151,6 +171,7 @@
           %strong 実質無料
           %span 毎月1,500円分のセッション参加費割引券つき
         %p.plan-copy 支払った分がセッション体験に返ってくるから、損しにくく仲間づくりを始められます。
+        %p.plan-singing-copy 歌唱・演奏診断は月5回。履歴比較を見据えて、練習の変化を定期的に見ていきたい人に。
         %ul
           %li 活動報告を投稿でき、練習や参加の記録から声をかけてもらいやすい
           %li 気になる相手と会話が生まれ、次の参加が楽しみになる
@@ -178,6 +199,7 @@
           %strong 実質無料特典
           %span 毎月1,500円分のセッション参加費割引券つき
         %p.plan-copy 参加する側から、仲間が集まるきっかけをつくる側へ。音楽活動を前に進めたい人向けです。
+        %p.plan-singing-copy 歌唱・演奏診断は月20回。より深い振り返りや、イベント・練習の目標づくりにもつなげたい人に。
         %ul
           %li Lightの内容に加えて、イベントの作成が可能
           %li 自分のやりたい曲やテーマで仲間を集めやすくなる
@@ -205,6 +227,7 @@
           %strong 実質無料特典
           %span 毎月1,500円分のセッション参加費割引券つき
         %p.plan-copy 音楽仲間が集まる場を育て、継続的な活動や関係づくりまで本格的に進めたい人へ。
+        %p.plan-singing-copy 歌唱・演奏診断は無制限。Premium詳細診断・6つの歌声タイプ・AIコメントまで使って、歌や演奏の成長も場づくりも進めたい人に。
         %ul
           %li Coreまでの内容に加えて、コミュニティの作成が可能
           %li 共感するメンバーが集まる場所をつくれる
@@ -269,4 +292,5 @@
 
   %footer.lp-footer
     .footer-inner
+      = render "public/lp/footer_links"
       %p.footer-copy © BeMyStyle

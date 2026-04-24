@@ -88,6 +88,12 @@ module Admin::CustomersHelper
       end
     end
 
+    if customer.singing_user?
+      badges << content_tag(:span, class: "badge me-1", style: "background-color: #7c3aed; color: #ffffff;") do
+        content_tag(:i, "", class: "bi bi-mic me-1") + "歌唱・演奏診断"
+      end
+    end
+
     safe_join(badges)
   end
 

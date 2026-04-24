@@ -9,6 +9,10 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
   let(:event) { FactoryBot.create(:event, :event_with_songs, customer: customer) }
 
   describe 'バリデーションのテスト' do
+    it '登録可能ドメインにsingingを含むこと' do
+      expect(Customer::SIGN_UP_DOMAIN_NAMES).to include("music", "business", "learning", "singing")
+    end
+
     context 'nameカラムが不正' do
       it '空欄でないこと' do
         customer.name = ''
@@ -119,6 +123,152 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
     end
   end
   describe 'モデルのインスタンスメソッドのテスト' do
+    context 'ドメイン判定メソッドのテスト' do
+      let(:domain_customer) { FactoryBot.create(:customer, domain_name: "singing") }
+      let!(:music_domain) { Domain.find_or_create_by!(name: "music") }
+      let!(:business_domain) { Domain.find_or_create_by!(name: "business") }
+      let!(:learning_domain) { Domain.find_or_create_by!(name: "learning") }
+      let!(:singing_domain) { Domain.find_or_create_by!(name: "singing") }
+
+      it 'singing_user?がsingingドメインを判定できること' do
+        CustomerDomain.find_or_create_by!(customer: domain_customer, domain: singing_domain)
+
+        expect(domain_customer.singing_user?).to eq true
+      end
+
+      it '既存domainの判定が維持されること' do
+        CustomerDomain.find_or_create_by!(customer: domain_customer, domain: music_domain)
+        CustomerDomain.find_or_create_by!(customer: domain_customer, domain: business_domain)
+        CustomerDomain.find_or_create_by!(customer: domain_customer, domain: learning_domain)
+
+        expect(domain_customer.music_user?).to eq true
+        expect(domain_customer.business_user?).to eq true
+        expect(domain_customer.learning_user?).to eq true
+      end
+    end
+
+    context '歌唱・演奏診断の月次回数制限' do
+      it 'freeは月1回まで利用できること' do
+        expect(customer.singing_diagnosis_monthly_limit).to eq 1
+      end
+
+      it 'lightは月5回まで利用できること' do
+        customer.create_subscription!(status: "active", plan: "light")
+
+        expect(customer.singing_diagnosis_monthly_limit).to eq 5
+      end
+
+      it 'coreは月20回まで利用できること' do
+        customer.create_subscription!(status: "active", plan: "core")
+
+        expect(customer.singing_diagnosis_monthly_limit).to eq 20
+      end
+
+      it 'premiumは無制限で利用できること' do
+        customer.create_subscription!(status: "active", plan: "premium")
+
+        expect(customer.singing_diagnosis_monthly_limit).to be_nil
+        expect(customer.can_create_singing_diagnosis?).to eq true
+      end
+
+      it 'adminは無制限で利用できること' do
+        customer.update!(is_owner: :admin)
+
+        expect(customer.singing_diagnosis_monthly_limit).to be_nil
+        expect(customer.can_create_singing_diagnosis?).to eq true
+      end
+
+      it '上限に達すると作成不可になること' do
+        customer.create_subscription!(status: "active", plan: "light")
+        FactoryBot.create_list(:singing_diagnosis, 5, customer: customer, status: :completed)
+
+        expect(customer.remaining_singing_diagnosis_quota).to eq 0
+        expect(customer.can_create_singing_diagnosis?).to eq false
+      end
+
+      it 'failedの診断は月次利用回数に含めないこと' do
+        FactoryBot.create(:singing_diagnosis, customer: customer, status: :failed)
+
+        expect(customer.monthly_singing_diagnosis_count).to eq 0
+        expect(customer.remaining_singing_diagnosis_quota).to eq 1
+        expect(customer.can_create_singing_diagnosis?).to eq true
+      end
+
+      it 'queuedとprocessingの診断は月次利用回数に含めないこと' do
+        FactoryBot.create(:singing_diagnosis, customer: customer, status: :queued)
+        FactoryBot.create(:singing_diagnosis, customer: customer, status: :processing)
+
+        expect(customer.monthly_singing_diagnosis_count).to eq 0
+        expect(customer.can_create_singing_diagnosis?).to eq true
+      end
+
+      it 'completedの診断だけ月次利用回数に含めること' do
+        FactoryBot.create(:singing_diagnosis, customer: customer, status: :completed)
+        FactoryBot.create(:singing_diagnosis, customer: customer, status: :failed)
+
+        expect(customer.monthly_singing_diagnosis_count).to eq 1
+        expect(customer.remaining_singing_diagnosis_quota).to eq 0
+        expect(customer.can_create_singing_diagnosis?).to eq false
+      end
+    end
+
+    context '歌唱・演奏診断の機能制御' do
+      it 'FEATURE_RULESにsinging用のkeyを含むこと' do
+        expect(Customer::FEATURE_RULES.keys).to include(
+          :singing_diagnosis_history,
+          :singing_diagnosis_comparison,
+          :singing_diagnosis_advanced_feedback,
+          :singing_diagnosis_priority,
+          :singing_diagnosis_ai_comment
+        )
+      end
+
+      it 'freeは履歴のみ利用対象になること' do
+        expect(customer.has_feature?(:singing_diagnosis_history)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_comparison)).to eq false
+        expect(customer.has_feature?(:singing_diagnosis_advanced_feedback)).to eq false
+        expect(customer.has_feature?(:singing_diagnosis_priority)).to eq false
+      end
+
+      it 'lightは履歴比較まで利用対象になること' do
+        customer.create_subscription!(status: "active", plan: "light")
+
+        expect(customer.has_feature?(:singing_diagnosis_history)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_comparison)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_advanced_feedback)).to eq false
+        expect(customer.has_feature?(:singing_diagnosis_priority)).to eq false
+      end
+
+      it 'coreは詳細フィードバックまで利用対象になること' do
+        customer.create_subscription!(status: "active", plan: "core")
+
+        expect(customer.has_feature?(:singing_diagnosis_history)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_comparison)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_advanced_feedback)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_priority)).to eq false
+      end
+
+      it 'premiumは優先解析とAIコメントまで利用対象になること' do
+        customer.create_subscription!(status: "active", plan: "premium")
+
+        expect(customer.has_feature?(:singing_diagnosis_history)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_comparison)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_advanced_feedback)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_priority)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_ai_comment)).to eq true
+      end
+
+      it 'adminはsinging用の機能をすべて利用対象として扱うこと' do
+        customer.update!(is_owner: :admin)
+
+        expect(customer.has_feature?(:singing_diagnosis_history)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_comparison)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_advanced_feedback)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_priority)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_ai_comment)).to eq true
+      end
+    end
+
     context 'フォロー、アンフォローのメソッドテスト' do
       it 'フォローする' do
         expect(customer.follow(other_customer.id)).to be_valid

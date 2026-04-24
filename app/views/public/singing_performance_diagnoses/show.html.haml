@@ -1,0 +1,42 @@
+= render 'layouts/header_menu'
+
+.singing-diagnosis
+  .singing-diagnosis__inner
+    %p.singing-diagnosis__eyebrow Music Diagnosis
+    %h1 歌唱・演奏診断
+    %p 歌声の状態を見える化し、練習・セッション・イベント前後の振り返りに活用できます。
+    %p 診断の受付、解析、結果表示は既存の歌唱・演奏診断基盤を共通利用します。
+
+    .singing-diagnosis__summary
+      %h2 音楽ドメインでできること
+      %dl
+        %dt 診断
+        %dd 音声ファイルを添付して、歌声のスコア・詳細フィードバック・タイプ診断を確認できます。
+
+        %dt 履歴
+        %dd 過去の診断結果を見返し、練習前後の変化を振り返れます。
+
+        %dt 共通基盤
+        %dd music と singing は別ドメインのまま、診断ロジックは1箇所に集約しています。
+
+    .singing-diagnosis__practice
+      %h2 こんな使い方に
+      %p.singing-diagnosis__practice-lead 歌唱だけでなく、音楽活動の中で「今の状態を知る」ための入口として使えます。
+      .singing-diagnosis__practice-grid
+        .singing-diagnosis__practice-card
+          %span 練習
+          %h3 練習前後の確認
+          %p 同じ曲を定期的に録音し、音程・リズム・表現の変化を見比べられます。
+        .singing-diagnosis__practice-card
+          %span セッション
+          %h3 本番前のチェック
+          %p イベントやセッション前に、声の状態を確認して練習の優先順位を決めやすくします。
+        .singing-diagnosis__practice-card
+          %span 将来拡張
+          %h3 楽器診断への土台
+          %p 将来的にギターやドラムなどの演奏診断へ広げる場合も、導線と診断基盤を分けて拡張できます。
+
+    .singing-diagnosis__actions
+      = link_to "診断を始める", new_singing_diagnosis_path, class: "btn btn-primary"
+      = link_to "診断履歴を見る", singing_diagnoses_path, class: "btn btn-secondary"
+      = link_to "音楽トップへ戻る", public_homes_top_path, class: "btn btn-secondary"
