@@ -43,7 +43,8 @@ document.addEventListener("turbolinks:load", () => {
   }
 
   const reorderUrl = sortableBody.dataset.reorderUrl;
-  const token = document.querySelector("meta[name='csrf-token']")?.content;
+  const csrfMeta = document.querySelector("meta[name='csrf-token']");
+  const token = csrfMeta ? csrfMeta.content : null;
 
   Sortable.create(sortableBody, {
     handle: ".learning-drag-handle",
