@@ -230,6 +230,10 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(customer.has_feature?(:singing_diagnosis_priority)).to eq false
       end
 
+      it 'freeは個別チャットを利用できること' do
+        expect(customer.has_feature?(:music_direct_chat)).to eq true
+      end
+
       it 'lightは履歴比較まで利用対象になること' do
         customer.create_subscription!(status: "active", plan: "light")
 

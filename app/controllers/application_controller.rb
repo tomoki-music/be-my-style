@@ -1,10 +1,10 @@
 class ApplicationController < ActionController::Base
   FEATURE_CATALOG = {
     music_direct_chat: {
-      required_plan: "light",
+      required_plan: "free",
       title: "個別チャット",
-      message: "lightプラン以上で個別チャットが使えます。気になる相手と、もっと深くつながりたい方におすすめです。",
-      cta: "lightへアップグレード",
+      message: "freeプランから個別チャットが使えます。相互フォローの相手と、もっと気軽につながれます。",
+      cta: "無料でチャットを始める",
       upgrade_path: -> { public_lp_path(anchor: "lp-section") }
     },
     music_community_chat: {

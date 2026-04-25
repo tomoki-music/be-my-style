@@ -42,9 +42,9 @@ module ApplicationHelper
 
   def event_sort_options
     [
-      ["開催日が近い順", "start_soon"],
+      ["開催日が古い順", "start_soon"],
       ["新着順", "newest"],
-      ["開催日が遠い順", "start_later"]
+      ["開催日が新しい順", "start_later"]
     ]
   end
 

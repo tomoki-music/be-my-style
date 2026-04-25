@@ -42,7 +42,7 @@ class Public::EventsController < ApplicationController
       when "start_later"
         events.order("events.event_start_time DESC")
       else
-        events.order("events.event_start_time ASC")
+        events.order("events.event_start_time DESC")
       end
 
     @events = events.page(params[:page]).per(5)

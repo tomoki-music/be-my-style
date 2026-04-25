@@ -19,6 +19,36 @@ RSpec.describe "Public::Events", type: :request do
         expect(response.status).to eq 200
       end
     end
+    context "event一覧は開催日の新しい順で表示される" do
+      let!(:older_event) do
+        FactoryBot.create(
+          :event,
+          :event_with_songs,
+          customer: customer,
+          community: community,
+          event_name: "older event",
+          event_start_time: 3.days.from_now,
+          event_end_time: 3.days.from_now + 2.hours
+        )
+      end
+      let!(:newer_event) do
+        FactoryBot.create(
+          :event,
+          :event_with_songs,
+          customer: customer,
+          community: community,
+          event_name: "newer event",
+          event_start_time: 10.days.from_now,
+          event_end_time: 10.days.from_now + 2.hours
+        )
+      end
+
+      it "デフォルトでは開催日の新しい順になること" do
+        get public_events_path
+
+        expect(response.body.index("newer event")).to be < response.body.index("older event")
+      end
+    end
     context "event詳細ページ(show)が正しく表示される" do
       before do
         get public_event_path(event)

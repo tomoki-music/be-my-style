@@ -24,7 +24,7 @@
     = text_field_tag :keyword, params[:keyword], placeholder: "イベント名・場所・コミュニティ名・曲名で検索", class: "directory-search__input"
     = select_tag :community_id, options_from_collection_for_select(@search_communities, :id, :name, params[:community_id]), include_blank: "コミュニティ", class: "directory-search__select"
     = select_tag :status, options_for_select(event_status_options, params[:status].presence || "all"), class: "directory-search__select"
-    = select_tag :sort, options_for_select(event_sort_options, params[:sort].presence || "start_soon"), class: "directory-search__select"
+    = select_tag :sort, options_for_select(event_sort_options, params[:sort].presence || "start_later"), class: "directory-search__select"
     = submit_tag "検索する", class: "btn btn-info directory-search__submit"
     = link_to "リセット", public_events_path, class: "btn btn-outline-secondary directory-search__reset"
 

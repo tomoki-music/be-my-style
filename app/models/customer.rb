@@ -18,7 +18,7 @@ class Customer < ApplicationRecord
   ].freeze
 
   FEATURE_RULES = {
-    music_direct_chat: %w[light core premium],
+    music_direct_chat: %w[free light core premium],
     music_community_chat: %w[light core premium],
     music_activity_create: %w[light core premium],
     music_event_create: %w[core premium],
