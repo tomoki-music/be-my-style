@@ -14,12 +14,35 @@
     .header-inner
       .lp-logo
         %span.logo-main BeMyStyle
-      .lp-singing-nav
+      .lp-singing-nav.lp-singing-nav--desktop
         - if customer_signed_in?
           = link_to "診断を始める", new_singing_diagnosis_path, class: "lp-singing-nav__link lp-singing-nav__link--primary"
           = link_to "診断履歴を見る", singing_diagnoses_path, class: "lp-singing-nav__link"
           = link_to "プランを変更する", "#lp-section", class: "lp-singing-nav__link"
+          = button_to "ログアウト",
+            destroy_customer_session_path,
+            method: :delete,
+            form_class: "lp-singing-nav__form",
+            class: "lp-singing-nav__link lp-singing-nav__button"
         = link_to "BeMyStyleへ", root_path, class: "lp-singing-nav__link"
+
+      %details.lp-singing-mobile-nav
+        %summary.lp-singing-mobile-nav__toggle{ "aria-label": "メニューを開く" }
+          %span.lp-singing-mobile-nav__bar
+          %span.lp-singing-mobile-nav__bar
+          %span.lp-singing-mobile-nav__bar
+        .lp-singing-mobile-nav__panel
+          .lp-singing-nav.lp-singing-nav--mobile
+            - if customer_signed_in?
+              = link_to "診断を始める", new_singing_diagnosis_path, class: "lp-singing-nav__link lp-singing-nav__link--primary"
+              = link_to "診断履歴を見る", singing_diagnoses_path, class: "lp-singing-nav__link"
+              = link_to "プランを変更する", "#lp-section", class: "lp-singing-nav__link"
+              = button_to "ログアウト",
+                destroy_customer_session_path,
+                method: :delete,
+                form_class: "lp-singing-nav__form",
+                class: "lp-singing-nav__link lp-singing-nav__button"
+            = link_to "BeMyStyleへ", root_path, class: "lp-singing-nav__link"
 
   .lp-hero
     .lp-hero-inner
