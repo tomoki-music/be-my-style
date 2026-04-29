@@ -1,0 +1,6 @@
+- if controller_name != "sessions"
+  = link_to "ログインはこちら", public_send(domain_auth_config[:sign_in_route]), class: "domain-auth__sub-link"
+- if devise_mapping.registerable? && controller_name != "registrations"
+  = link_to "新規登録はこちら", public_send(domain_auth_config[:sign_up_route]), data: { turbolinks: false }, class: "domain-auth__sub-link"
+- if devise_mapping.recoverable? && controller_name != "passwords" && controller_name != "registrations"
+  = link_to "パスワードをお忘れですか？", public_send(domain_auth_config[:password_route]), class: "domain-auth__sub-link"

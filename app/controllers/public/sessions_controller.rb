@@ -4,6 +4,7 @@ class Public::SessionsController < Devise::SessionsController
   before_action :configure_permitted_parameters, if: :devise_controller?
 
   def after_sign_in_path_for(resource)
+    session.delete(:customer_sign_out_redirect_to)
 
     return singing_root_path if resource.singing_user?
     return onboarding_step1_path if resource.business_user? && !resource.onboarding_done
@@ -15,7 +16,21 @@ class Public::SessionsController < Devise::SessionsController
 
   end
 
-  def after_sign_out_path_for(resource)
+  def after_sign_out_path_for(_resource)
+    scoped_sign_out_redirect_path || public_homes_top_path
+  end
+
+  private
+
+  def scoped_sign_out_redirect_path
+    referer_path = URI.parse(request.referer.to_s).path
+
+    return new_singing_customer_session_path if referer_path.start_with?("/singing")
+    return new_business_customer_session_path if referer_path.start_with?("/business")
+    return new_learning_customer_session_path if referer_path.start_with?("/learning")
+
+    session.delete(:customer_sign_out_redirect_to)
+  rescue URI::InvalidURIError
     public_homes_top_path
   end
 

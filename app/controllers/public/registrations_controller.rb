@@ -137,7 +137,7 @@ class Public::RegistrationsController < Devise::RegistrationsController
   private
 
   def normalized_requested_domain_name
-    sign_up_params[:domain_name].to_s.strip.downcase.presence
+    Customer::DEFAULT_SIGN_UP_DOMAIN
   end
 
   def attach_profile_image!(customer)

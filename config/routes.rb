@@ -117,6 +117,15 @@ Rails.application.routes.draw do
 
   devise_scope :customer do
     get "verify", :to => "public/registrations#verify"
+
+    %i[singing business learning].each do |domain_name|
+      get  "#{domain_name}/sign_in",      to: "#{domain_name}/sessions#new",         as: :"new_#{domain_name}_customer_session"
+      post "#{domain_name}/sign_in",      to: "#{domain_name}/sessions#create",      as: :"#{domain_name}_customer_session"
+      get  "#{domain_name}/sign_up",      to: "#{domain_name}/registrations#new",    as: :"new_#{domain_name}_customer_registration"
+      post "#{domain_name}/sign_up",      to: "#{domain_name}/registrations#create", as: :"#{domain_name}_customer_registration"
+      get  "#{domain_name}/password/new", to: "#{domain_name}/passwords#new",        as: :"new_#{domain_name}_customer_password"
+      post "#{domain_name}/password",     to: "#{domain_name}/passwords#create",     as: :"#{domain_name}_customer_password"
+    end
   end
 
   # 管理者用
@@ -134,6 +143,8 @@ Rails.application.routes.draw do
   # =====================
   namespace :business do
     root to: 'homes#top'
+    get  "join", to: "joins#show", as: :join
+    post "join", to: "joins#create"
 
     post 'checkout/:plan', to: 'stripe#create_checkout', as: :checkout
     post '/portal', to: 'stripe#portal'
@@ -179,10 +190,14 @@ Rails.application.routes.draw do
   namespace :singing do
     root to: "homes#top"
     resources :diagnoses, only: [:index, :new, :create, :show]
+    get  "join", to: "joins#show",   as: :join
+    post "join", to: "joins#create"
   end
 
   namespace :learning do
     root to: "dashboards#show"
+    get  "join", to: "joins#show", as: :join
+    post "join", to: "joins#create"
 
     resource :dashboard, only: :show, controller: :dashboards
     get "portal/:token", to: "student_portals#show", as: :student_portal

@@ -19,8 +19,8 @@
 
       - unless customer_signed_in?
         .hero-buttons
-          = link_to "新規登録", new_customer_registration_path, class:"btn btn-success hero-btn"
-          = link_to "ログイン", new_customer_session_path, class:"btn btn-primary hero-btn"
+          = link_to "新規登録", new_business_customer_registration_path, class:"btn btn-success hero-btn"
+          = link_to "ログイン", new_business_customer_session_path, class:"btn btn-primary hero-btn"
       - else
         .hero-buttons
           = link_to "投稿を見る", business_posts_path, class:"btn btn-primary hero-btn"
@@ -119,7 +119,7 @@
             - else
               = link_to "ライトで始める", business_checkout_path("light"), method: :post, class: "lp-btn"
           - else
-            = link_to "ライトで始める", new_customer_session_path, class: "lp-btn"
+            = link_to "ライトで始める", new_business_customer_session_path, class: "lp-btn"
         %p.plan-copy 自分から投稿し、コミュニティの中でも発信したい人向け。
         %ul
           %li ビジネス投稿の作成
@@ -142,7 +142,7 @@
             - else
               = link_to "コアで成長する", business_checkout_path("core"), method: :post, class: "lp-btn primary"
           - else
-            = link_to "コアで成長する", new_customer_session_path, class: "lp-btn primary"
+            = link_to "コアで成長する", new_business_customer_session_path, class: "lp-btn primary"
         %p.plan-copy 参加する側から一歩進んで、プロジェクトを立ち上げたい人へ。
         %ul
           %li プロジェクト作成
@@ -165,7 +165,7 @@
             - else
               = link_to "本気で変わる", business_checkout_path("premium"), method: :post, class: "lp-btn"
           - else
-            = link_to "本気で変わる", new_customer_session_path, class: "lp-btn"
+            = link_to "本気で変わる", new_business_customer_session_path, class: "lp-btn"
         %p.plan-copy 新しいテーマで場をつくり、継続的な運営まで進めたい人向け。
         %ul
           %li コミュニティ作成
@@ -182,7 +182,7 @@
         - else
           = link_to "プロフィールでプランを選ぶ", edit_business_customer_path(current_customer), class:"btn btn-primary hero-btn"
       - else
-        = link_to "無料ではじめる", new_customer_registration_path, class:"btn btn-success hero-btn"
+        = link_to "無料ではじめる", new_business_customer_registration_path, class:"btn btn-success hero-btn"
 
 
   / ===== DASHBOARD =====

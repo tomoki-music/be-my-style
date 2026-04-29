@@ -1,0 +1,52 @@
+.domain-auth{ class: domain_auth_config[:theme_class] }
+  .domain-auth__card.domain-auth__card--wide
+    .domain-auth__brand
+      %span.domain-auth__logo BeMyStyle
+      %span.domain-auth__domain= domain_auth_config[:domain_label]
+
+    %h1.domain-auth__title= domain_auth_config[:registration_title]
+    %p.domain-auth__lead= domain_auth_config[:registration_lead]
+
+    = form_with model: resource, url: public_send(domain_auth_config[:registration_route]), local: true, data: { turbolinks: false } do |f|
+      = f.hidden_field :domain_name, value: domain_auth_config[:domain_name]
+
+      - if resource.errors.any?
+        .domain-auth__errors
+          %ul
+            - resource.errors.full_messages.each do |message|
+              %li= message
+
+      .domain-auth__field
+        %label.domain-auth__label ニックネーム
+        = f.text_field :name,
+          class: "domain-auth__input form-control",
+          placeholder: "例：田中 花子"
+
+      .domain-auth__field
+        %label.domain-auth__label メールアドレス
+        = f.email_field :email,
+          autocomplete: "email",
+          class: "domain-auth__input form-control"
+
+      .domain-auth__field
+        %label.domain-auth__label パスワード
+        - if @minimum_password_length
+          %small.domain-auth__hint #{@minimum_password_length}文字以上で入力してください
+        = f.password_field :password,
+          autocomplete: "new-password",
+          class: "domain-auth__input form-control"
+
+      .domain-auth__field
+        %label.domain-auth__label パスワード（確認）
+        = f.password_field :password_confirmation,
+          autocomplete: "new-password",
+          class: "domain-auth__input form-control"
+
+      = f.submit "登録する", class: "domain-auth__submit btn"
+
+    .domain-auth__links
+      = render "shared/domain_auth/links"
+
+    - if domain_auth_config[:back_label].present?
+      .domain-auth__back
+        = link_to domain_auth_config[:back_label], public_send(domain_auth_config[:back_route]), class: "domain-auth__back-link"

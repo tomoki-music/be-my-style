@@ -1,0 +1,20 @@
+.domain-auth{ class: domain_auth_config[:theme_class] }
+  .domain-auth__card.domain-auth__card--wide
+    .domain-auth__brand
+      %span.domain-auth__logo BeMyStyle
+      %span.domain-auth__domain= domain_auth_config[:domain_label]
+
+    %h1.domain-auth__title= domain_auth_config[:join_title]
+    %p.domain-auth__lead= domain_auth_config[:join_lead]
+
+    .domain-join__features
+      - domain_auth_config[:join_features].each do |feature|
+        .domain-join__feature
+          %span.domain-join__feature-icon= feature[:icon]
+          %span.domain-join__feature-text= feature[:text]
+
+    = form_with url: public_send(domain_auth_config[:join_route]), method: :post, local: true do
+      = submit_tag "利用開始する", class: "domain-auth__submit btn"
+
+    .domain-auth__back
+      = link_to "今はやめておく", public_send(domain_auth_config[:join_back_route]), class: "domain-auth__back-link"

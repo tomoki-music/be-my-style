@@ -4,6 +4,8 @@
     %h2.signup-title 新規登録
 
     = form_with model: resource, url: customer_registration_path, local: true do |f|
+      = f.hidden_field :domain_name, value: "music"
+
       - if resource.errors.any?
         #error_explanation
           %ul
@@ -11,7 +13,7 @@
               %li= message
 
       .domain-cards
-        - registration_domains = { "music" => { label: "音楽", desc: "仲間とセッション", icon: "🎸" }, "business" => { label: "ビジネス", desc: "スキルで繋がる", icon: "💼" }, "learning" => { label: "学習", desc: "成長を見える化", icon: "🏫" } }
+        - registration_domains = { "music" => { label: "音楽", desc: "仲間とセッション", icon: "🎸" } }
         - registration_domains.each do |type, config|
 
           %label.domain-card{ class: type }
@@ -92,36 +94,8 @@
             = f.text_field :favorite_artist4, class:"form-control"
             = f.text_field :favorite_artist5, class:"form-control"
 
-      / =========================
-      / 💼 BUSINESS専用
-      / =========================
-      .business-fields
-        %h4.section-title 💼 ビジネスプロフィール
-
-        .form-group
-          %label 職種
-          = f.text_field :job, class:"form-control", placeholder:"例：エンジニア / マーケター"
-
-        .form-group
-          %label スキル
-          = f.text_area :skills, class:"form-control", placeholder:"Ruby / AWS / 営業 など"
-
-        .form-group
-          %label 実績・サービス
-          = f.text_area :achievements, class:"form-control"
-
-        .form-group
-          %label HP / SNS
-          = f.text_field :url, class:"form-control"
-
       .form-group
         %label 自己紹介
         = f.text_area :introduction, class:"form-control"
-
-      .learning-fields
-        .form-card
-          %h4.section-title 🏫 学習向けアカウント
-          %p.mb-2 音楽スクールやコミュニティで、生徒ごとの課題・進捗・目標を管理できます。
-          %p.text-muted.mb-0 登録後はダッシュボードから生徒管理、トレーニング割当、進捗ログ管理を始められます。
 
       = f.submit "登録する", class:"btn btn-primary signup-btn"
