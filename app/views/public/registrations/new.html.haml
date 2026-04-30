@@ -33,7 +33,11 @@
 
       .form-group
         %label パスワード
-        = f.password_field :password, class:"form-control"
+        = f.password_field :password, class:"form-control", autocomplete: "new-password"
+
+      .form-group
+        %label パスワード確認
+        = f.password_field :password_confirmation, class:"form-control", autocomplete: "new-password"
 
       .form-group
         %label ニックネーム

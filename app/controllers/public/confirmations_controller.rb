@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
 class Public::ConfirmationsController < Devise::ConfirmationsController
+  CONFIRMATION_REDIRECT_DOMAIN_PATHS = {
+    "business" => :business_root_path,
+    "learning" => :learning_root_path,
+    "music" => :root_path,
+    "singing" => :singing_root_path
+  }.freeze
+
   # GET /resource/confirmation/new
   # def new
   #   super
@@ -20,16 +27,11 @@ class Public::ConfirmationsController < Devise::ConfirmationsController
 
   # The path used after confirmation.
   def after_confirmation_path_for(resource_name, resource)
-    if signed_in?(resource_name)
-      signed_in_root_path(resource)
-    elsif resource.singing_user?
-      new_singing_customer_session_path
-    elsif resource.business_user?
-      new_business_customer_session_path
-    elsif resource.learning_user?
-      new_learning_customer_session_path
-    else
-      new_session_path(resource_name)
-    end
+    customer = resource.reload
+    path_helper = CONFIRMATION_REDIRECT_DOMAIN_PATHS.find do |domain_name, _|
+      customer.has_domain?(domain_name)
+    end&.last
+
+    path_helper.present? ? public_send(path_helper) : root_path
   end
 end
