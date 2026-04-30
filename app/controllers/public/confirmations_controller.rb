@@ -28,6 +28,8 @@ class Public::ConfirmationsController < Devise::ConfirmationsController
   # The path used after confirmation.
   def after_confirmation_path_for(resource_name, resource)
     customer = resource.reload
+    sign_in(resource_name, customer)
+
     path_helper = CONFIRMATION_REDIRECT_DOMAIN_PATHS.find do |domain_name, _|
       customer.has_domain?(domain_name)
     end&.last
