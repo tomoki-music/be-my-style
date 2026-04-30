@@ -17,6 +17,7 @@ class OnboardingsController < ApplicationController
 
   def step3
     @step = 3
+    session[:onboarding_activity_pending] = true
   end
 
   def complete
