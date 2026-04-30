@@ -7,6 +7,7 @@ RSpec.describe "Public::Activities", type: :request do
 
   describe 'ログイン済み' do
     before do
+      customer.build_subscription(status: "active", plan: "light").save!
       sign_in customer
     end
     context "activity一覧ページ(index)が正しく表示される" do
