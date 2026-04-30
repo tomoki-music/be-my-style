@@ -17,12 +17,12 @@
     .action-buttons
 
       - if current_customer.business_user?
-        - if feature_available?(:business_post_create)
+        - if feature_available?(:business_post_create) || onboarding_activity_exception?(:business)
           = link_to "投稿する", new_business_post_path, class:"btn btn-primary btn-lg"
         - else
           = link_to feature_upgrade_cta(:business_post_create), feature_upgrade_path(:business_post_create), class:"btn btn-primary btn-lg"
       - else
-        - if feature_available?(:music_activity_create)
+        - if feature_available?(:music_activity_create) || onboarding_activity_exception?(:music)
           = link_to "活動を投稿", new_public_activity_path, class:"btn btn-primary btn-lg"
         - else
           = link_to feature_upgrade_cta(:music_activity_create), feature_upgrade_path(:music_activity_create), class:"btn btn-primary btn-lg"

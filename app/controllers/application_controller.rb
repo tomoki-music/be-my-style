@@ -85,6 +85,7 @@ class ApplicationController < ActionController::Base
   helper_method :feature_upgrade_path
   helper_method :feature_required_plan
   helper_method :feature_upgrade_cta
+  helper_method :onboarding_activity_exception?
 
   # ActiveAdmin initializer historically referenced AdminUser helpers.
   # Keep compatibility so custom admin pages under /admin remain stable.
@@ -194,6 +195,24 @@ class ApplicationController < ActionController::Base
       redirect_to_path || feature_upgrade_path(feature_key),
       alert: feature_gate(feature_key)[:message]
     )
+  end
+
+  # music / business オンボーディング中の Free ユーザーに活動報告を1回だけ許可する例外判定。
+  # サーバー側で (1)ドメイン一致 (2)未完了 (3)step3 経由 を複合チェックする。
+  def onboarding_activity_exception?(domain_name)
+    return false unless current_customer.present?
+    return false if current_customer.onboarding_done?
+    return false unless session[:onboarding_activity_pending]
+    current_customer.has_domain?(domain_name.to_s)
+  end
+
+  # オンボーディング導線からの投稿成功時にオンボーディングを完了扱いにする。
+  def complete_onboarding_if_pending!
+    return if current_customer.onboarding_done?
+    return unless session[:onboarding_activity_pending]
+
+    session.delete(:onboarding_activity_pending)
+    current_customer.update!(onboarding_done: true)
   end
 
 end

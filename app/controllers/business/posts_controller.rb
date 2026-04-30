@@ -2,7 +2,9 @@ class Business::PostsController < ApplicationController
   before_action :authenticate_customer!
   before_action :set_post, only: [:show, :edit, :update, :destroy]
   before_action only: [:new, :create] do
-    require_feature!(:business_post_create, redirect_to_path: business_posts_path)
+    unless onboarding_activity_exception?(:business)
+      require_feature!(:business_post_create, redirect_to_path: business_posts_path)
+    end
   end
 
   def index
@@ -52,6 +54,8 @@ class Business::PostsController < ApplicationController
     @post = current_customer.posts.new(post_params.merge(tag_list: tags))
 
     if @post.save
+      complete_onboarding_if_pending!
+
       if current_customer.onboarding_done?
         redirect_to business_posts_path
       else

@@ -3,7 +3,9 @@ class Public::ActivitiesController < ApplicationController
   before_action :ensure_correct_customer, only: [:update, :edit, :destroy]
   before_action :set_activity, only: [:show, :edit, :update, :destroy]
   before_action only: [:new, :create] do
-    require_feature!(:music_activity_create, redirect_to_path: public_activities_path)
+    unless onboarding_activity_exception?(:music)
+      require_feature!(:music_activity_create, redirect_to_path: public_activities_path)
+    end
   end
 
   def index
@@ -82,6 +84,8 @@ class Public::ActivitiesController < ApplicationController
       # =========================
       #  リダイレクト分岐
       # =========================
+      complete_onboarding_if_pending!
+
       if current_customer.onboarding_done?
         redirect_to public_activities_path, notice: "活動報告の投稿が完了しました!"
       else
