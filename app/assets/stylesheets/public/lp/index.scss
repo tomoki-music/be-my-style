@@ -721,6 +721,213 @@
 
 }
 
+/* ===== Step-Up Journey ===== */
+.lp-stepup-journey {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  max-width: 1100px;
+  margin: 32px auto 24px;
+  flex-wrap: wrap;
+}
+
+.lp-stepup-step {
+  flex: 1;
+  min-width: 180px;
+  padding: 24px 20px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(28, 36, 48, 0.08);
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 10px 28px rgba(18, 31, 53, 0.06);
+  transition: 0.3s;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(18, 31, 53, 0.1);
+  }
+
+  &--highlight {
+    background: linear-gradient(180deg, #fff4ed 0%, #ffffff 100%);
+    border: 2px solid #ef6c3f;
+    transform: translateY(-6px) scale(1.03);
+
+    &:hover {
+      transform: translateY(-10px) scale(1.03);
+    }
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1c2430;
+    margin: 10px 0 8px;
+  }
+
+  p {
+    font-size: 0.86rem;
+    color: #445061;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+}
+
+.lp-stepup-step__icon {
+  font-size: 2.2rem;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.lp-stepup-step__plan {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.lp-stepup-step__badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #edf2ff;
+  color: #2347c9;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.lp-stepup-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  font-size: 1.5rem;
+  color: #ef6c3f;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.lp-stepup-future {
+  max-width: 1100px;
+  margin: 0 auto 8px;
+  padding: 18px 22px;
+  background: rgba(248, 249, 250, 0.8);
+  border: 1px solid rgba(28, 36, 48, 0.06);
+  border-radius: 16px;
+}
+
+.lp-stepup-future__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #9ca3af;
+  margin-bottom: 12px;
+}
+
+.lp-stepup-future__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.lp-stepup-future__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(28, 36, 48, 0.08);
+  border-radius: 999px;
+  font-size: 0.82rem;
+
+  span {
+    font-size: 1rem;
+  }
+
+  strong {
+    color: #445061;
+    font-weight: 600;
+  }
+}
+
+/* ===== Plan Reassure ===== */
+.lp-plan-reassure {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 0 auto 24px;
+  max-width: 900px;
+}
+
+.lp-plan-reassure__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(28, 36, 48, 0.07);
+  border-radius: 16px;
+  min-width: 130px;
+  text-align: center;
+
+  p {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #445061;
+  }
+}
+
+.lp-plan-reassure__icon {
+  font-size: 1.4rem;
+}
+
+.lp-plan-pressure-free {
+  max-width: 760px;
+  margin: 0 auto 24px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+/* ===== Media: Step-up journey mobile ===== */
+@media (max-width: 768px) {
+  .lp-stepup-journey {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .lp-stepup-step--highlight {
+    transform: none;
+    order: -1;
+
+    &:hover {
+      transform: translateY(-4px);
+    }
+  }
+
+  .lp-stepup-arrow {
+    transform: rotate(90deg);
+    padding: 0;
+    margin: -6px auto;
+  }
+
+  .lp-plan-reassure {
+    gap: 8px;
+  }
+
+  .lp-plan-reassure__item {
+    min-width: 100px;
+    padding: 10px 14px;
+  }
+}
+
+/* ===== lp-plan-guide ===== */
 .lp-plan-guide {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -1410,5 +1617,128 @@
     .lp-singing-mobile-nav__panel {
       right: -4px;
     }
+  }
+}
+
+/* ===== Hero CTA large variant ===== */
+.lp-btn--hero-cta {
+  font-size: 1.15rem;
+  padding: 18px 44px;
+  box-shadow: 0 16px 40px rgba(217, 76, 48, 0.32);
+  letter-spacing: 0.04em;
+  margin-top: 8px;
+
+  &:hover {
+    box-shadow: 0 20px 48px rgba(217, 76, 48, 0.4);
+  }
+}
+
+/* ===== Singing Plan Status Card ===== */
+.singing-plan-status-card {
+  max-width: 860px;
+  margin: 0 auto 32px;
+  padding: 0 24px;
+
+  &__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    background: #fff;
+    border: 1px solid rgba(239, 108, 63, 0.25);
+    border-radius: 14px;
+    padding: 20px 28px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    flex-wrap: wrap;
+  }
+
+  &__label {
+    font-size: 0.72rem;
+    color: #718096;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 4px;
+  }
+
+  &__plan {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #2d3748;
+    margin: 0 0 4px;
+    letter-spacing: 0.06em;
+  }
+
+  &__quota {
+    font-size: 0.85rem;
+    color: #4a5568;
+    margin: 0;
+
+    strong {
+      color: #c0521a;
+      font-weight: 700;
+    }
+  }
+
+  &__cta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  &__upgrade-link {
+    font-size: 0.78rem;
+    color: #ef6c3f;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover {
+      color: #d94c30;
+    }
+  }
+}
+
+.btn-singing-diagnose {
+  display: inline-block;
+  padding: 14px 32px;
+  background: linear-gradient(135deg, #ef6c3f, #d94c30);
+  color: #fff;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(217, 76, 48, 0.28);
+  transition: 0.25s;
+  white-space: nowrap;
+
+  &:hover {
+    background: linear-gradient(135deg, #f17d54, #de5a3b);
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(217, 76, 48, 0.38);
+  }
+}
+
+@media (max-width: 600px) {
+  .singing-plan-status-card {
+    padding: 0 16px;
+
+    &__inner {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 18px 20px;
+    }
+
+    &__cta {
+      align-items: flex-start;
+      width: 100%;
+    }
+  }
+
+  .btn-singing-diagnose {
+    width: 100%;
+    text-align: center;
   }
 }

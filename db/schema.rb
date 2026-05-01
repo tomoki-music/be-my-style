@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_04_23_090000) do
+ActiveRecord::Schema.define(version: 2026_05_01_100000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -67,6 +67,17 @@ ActiveRecord::Schema.define(version: 2026_04_23_090000) do
     t.text "url"
     t.string "url_comment"
     t.index ["customer_id"], name: "index_activities_on_customer_id"
+  end
+
+  create_table "activity_reactions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "activity_id", null: false
+    t.string "reaction_type", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["activity_id"], name: "index_activity_reactions_on_activity_id"
+    t.index ["customer_id", "activity_id", "reaction_type"], name: "index_activity_reactions_unique", unique: true
+    t.index ["customer_id"], name: "index_activity_reactions_on_customer_id"
   end
 
   create_table "admin_notifications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -721,6 +732,8 @@ ActiveRecord::Schema.define(version: 2026_04_23_090000) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "activities", "customers"
+  add_foreign_key "activity_reactions", "activities"
+  add_foreign_key "activity_reactions", "customers"
   add_foreign_key "admin_notifications", "admins"
   add_foreign_key "admin_notifications", "customers"
   add_foreign_key "chat_messages", "chat_rooms"

@@ -106,5 +106,35 @@ RSpec.describe SingingDiagnoses::AnalyzerClient do
         ).submit(diagnosis)
       end.to raise_error(SingingDiagnoses::AnalyzerClient::RequestError)
     end
+
+    it "接続拒否（ECONNREFUSED）のときはConnectionErrorを発生させること" do
+      diagnosis = FactoryBot.create(:singing_diagnosis)
+      raising_http = SingingAnalyzerFakeHttp.new("example.com", 443)
+      allow(raising_http).to receive(:request).and_raise(Errno::ECONNREFUSED)
+      http_class = class_spy("Net::HTTP")
+      allow(http_class).to receive(:new).and_return(raising_http)
+
+      expect do
+        described_class.new(
+          endpoint_url: "https://example.com/diagnoses",
+          http_class: http_class
+        ).submit(diagnosis)
+      end.to raise_error(SingingDiagnoses::AnalyzerClient::ConnectionError)
+    end
+
+    it "タイムアウト時はTimeoutErrorを発生させること" do
+      diagnosis = FactoryBot.create(:singing_diagnosis)
+      raising_http = SingingAnalyzerFakeHttp.new("example.com", 443)
+      allow(raising_http).to receive(:request).and_raise(Net::OpenTimeout)
+      http_class = class_spy("Net::HTTP")
+      allow(http_class).to receive(:new).and_return(raising_http)
+
+      expect do
+        described_class.new(
+          endpoint_url: "https://example.com/diagnoses",
+          http_class: http_class
+        ).submit(diagnosis)
+      end.to raise_error(SingingDiagnoses::AnalyzerClient::TimeoutError)
+    end
   end
 end

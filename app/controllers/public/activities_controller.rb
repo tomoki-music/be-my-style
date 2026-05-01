@@ -9,7 +9,7 @@ class Public::ActivitiesController < ApplicationController
   end
 
   def index
-    activities = Activity.includes(:customer).left_joins(:favorites)
+    activities = Activity.includes({ customer: :subscription }, :activity_reactions).left_joins(:favorites)
 
     if params[:keyword].present?
       keyword = "%#{params[:keyword].strip}%"
@@ -35,6 +35,17 @@ class Public::ActivitiesController < ApplicationController
       end
 
     @activities = activities.page(params[:page]).per(5)
+
+    customer_ids = @activities.map(&:customer_id).uniq
+    @customer_activity_counts = Activity.where(customer_id: customer_ids).group(:customer_id).count
+
+    @featured_activities = Activity
+      .includes({ customer: :subscription }, :activity_reactions)
+      .joins(customer: :subscription)
+      .where(subscriptions: { plan: %w[light core premium], status: "active" })
+      .where("activities.created_at >= ?", 14.days.ago)
+      .order("activities.created_at DESC")
+      .limit(3)
   end
 
   def new
@@ -143,6 +154,6 @@ class Public::ActivitiesController < ApplicationController
   end
 
   def set_activity
-    @activity = Activity.find(params[:id])
+    @activity = Activity.includes(:activity_reactions).find(params[:id])
   end
 end

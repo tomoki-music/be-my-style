@@ -120,6 +120,59 @@
           %strong 初心者でも入りやすい
           %p 見るだけ、話すだけ、少しだけ参加する。自分のペースで始められます。
 
+  / ===== STEP-UP JOURNEY =====
+  .lp-section
+    %h2 受け身から、発信へ。発信から、場づくりへ。
+    %p.lp-section-lead
+      BeMyStyleは、ステップアップするほど「音楽人生の主役」に近づくプラットフォームです。
+    .lp-stepup-journey
+      .lp-stepup-step
+        .lp-stepup-step__icon 👀
+        .lp-stepup-step__plan free
+        %h3 記録して、活動を始める
+        %p イベント参加・活動ログ投稿・コミュニティ閲覧。まずは気軽に音楽活動を記録できる。
+        .lp-stepup-step__badge Starter
+      .lp-stepup-arrow →
+      .lp-stepup-step.lp-stepup-step--highlight
+        .lp-stepup-step__icon 🔥
+        .lp-stepup-step__plan light
+        %h3 投稿から、応援される存在へ
+        %p 活動バッジ・リアクション・優先表示で「見てもらえる・応援される」体験が広がる。承認が継続の力になる。
+        .lp-stepup-step__badge Popular
+      .lp-stepup-arrow →
+      .lp-stepup-step
+        .lp-stepup-step__icon 🎯
+        .lp-stepup-step__plan core
+        %h3 イベントを企画し、仲間を集める
+        %p 自分がやりたい曲・テーマでイベントを作り、仲間を集める側へ。音楽活動の幅が広がる。
+        .lp-stepup-step__badge Growth
+      .lp-stepup-arrow →
+      .lp-stepup-step
+        .lp-stepup-step__icon 🌟
+        .lp-stepup-step__plan premium
+        %h3 コミュニティを育て、場をつくる
+        %p コミュニティを作り、継続的な音楽の場を育てる。音楽人生のオーナーへ。
+        .lp-stepup-step__badge Owner
+
+    .lp-stepup-future
+      %p.lp-stepup-future__label 将来予定の価値拡張（Premium/Core優先）
+      .lp-stepup-future__grid
+        .lp-stepup-future__item
+          %span 🎟️
+          %strong イベント先行予約
+        .lp-stepup-future__item
+          %span 🎵
+          %strong Premium限定セッション
+        .lp-stepup-future__item
+          %span 🎯
+          %strong 人気イベント優先抽選
+        .lp-stepup-future__item
+          %span 🤝
+          %strong バンドメンバー募集強化
+        .lp-stepup-future__item
+          %span 🏠
+          %strong 練習部屋マッチング
+
   / ===== PRICING =====
   .lp-section.gray#lp-section
     .lp-singing-plan
@@ -141,42 +194,57 @@
         = link_to "歌唱・演奏診断LPを見る", public_singing_lp_path(anchor: "lp-section"), class: "lp-btn"
         %span まずはfreeで月1回。続けたくなったらLight以上へ。
 
+    .lp-plan-reassure
+      .lp-plan-reassure__item
+        %span.lp-plan-reassure__icon 🔓
+        %p いつでも解約可能
+      .lp-plan-reassure__item
+        %span.lp-plan-reassure__icon 🔄
+        %p 必要な時だけプラン変更OK
+      .lp-plan-reassure__item
+        %span.lp-plan-reassure__icon 🎵
+        %p Freeでもイベント参加可能
+      .lp-plan-reassure__item
+        %span.lp-plan-reassure__icon 🚀
+        %p 無料から気軽にスタート
     %h2 迷ったら、Lightから始めるのがおすすめ
     %p.lp-section-lead
       月1回セッションに参加するだけで、Lightは1,500円分の割引券により実質無料。損しにくく、仲間づくりを始めやすいプランです。
+    %p.lp-plan-pressure-free
+      課金は強制ではなく、「活動・挑戦・場づくり」を広げるための選択肢です。まずは無料で始めて、もっと活動したくなったらステップアップを。
     .lp-pricing-grid.lp-pricing-grid-conversion#lp-pricing-plans
 
       .lp-pricing.free
         .plan-head
           %span.plan-badge Starter
           %h3 free
-          %p.plan-tag まずは雰囲気を見たい
+          %p.plan-tag まずは気軽に始めたい
         %p.price ¥0
-        %p.plan-copy 参加前の不安を減らし、自分に合いそうな場所を見つける準備ができます。
+        %p.plan-copy イベント参加・活動ログの記録・コミュニティ閲覧など、音楽活動の第一歩を始められます。
         %p.plan-singing-copy 歌唱・演奏診断は月1回。まずは自分の声や演奏の状態を試したい人に。
         %ul
-          %li どんな人がいるかを見て安心できる
-          %li 気になるイベントやコミュニティを探せる
-          %li 自分に合う音楽の場をゆっくり選べる
-        .plan-note 無料で一歩目を軽くする
+          %li イベントやコミュニティに参加できる
+          %li 活動ログを投稿して記録を残せる
+          %li 音楽仲間を探してみられる
+        .plan-note 無料で音楽活動を記録する
 
       .lp-pricing.recommend.light-plan
         .plan-ribbon 一番おすすめ
         .plan-head
           %span.plan-badge Popular
           %h3 light
-          %p.plan-tag 仲間とつながりたい
+          %p.plan-tag 応援される発信者へ
         %p.price ¥1,500/月
         .plan-value-badge
           %strong 実質無料
           %span 毎月1,500円分のセッション参加費割引券つき
-        %p.plan-copy 支払った分がセッション体験に返ってくるから、損しにくく仲間づくりを始められます。
-        %p.plan-singing-copy 歌唱・演奏診断は月5回。履歴比較を見据えて、練習の変化を定期的に見ていきたい人に。
+        %p.plan-copy 投稿から、応援される活動ログへ。活動バッジ・リアクション・優先表示で「見てもらえる実感」が広がります。
+        %p.plan-singing-copy 歌唱・演奏診断は月5回。履歴比較で練習の変化を定期的に振り返れます。
         %ul
-          %li 活動報告を投稿でき、練習や参加の記録から声をかけてもらいやすい
-          %li 気になる相手と会話が生まれ、次の参加が楽しみになる
-          %li 自分の活動を知ってもらい、誘われるきっかけが増える
-          %li 顔なじみができ、セッションがもっと安心で楽しくなる
+          %li 活動バッジが表示され、仲間に認識されやすくなる
+          %li 応援リアクション・コメントで活動が反応される体験が広がる
+          %li 自分の活動が「見てもらえる・誘われる」きっかけが増える
+          %li LIGHTは「投稿権」ではなく「承認体験」を広げるプランです
         .plan-action
           - if customer_signed_in?
             - if current_customer.plan == "light"
@@ -187,7 +255,7 @@
               = link_to "Lightを契約する", public_checkout_path("light"), method: :post, class: "plan-action__button"
           - else
             = link_to "無料登録してLightへ", new_customer_registration_path, data: { turbolinks: false }, class: "plan-action__button"
-        .plan-note まず選ぶならLight
+        .plan-note 発信から、応援される存在へ
 
       .lp-pricing
         .plan-head

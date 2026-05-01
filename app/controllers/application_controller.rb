@@ -15,10 +15,10 @@ class ApplicationController < ActionController::Base
       upgrade_path: -> { public_lp_path(anchor: "lp-section") }
     },
     music_activity_create: {
-      required_plan: "light",
-      title: "活動報告の投稿",
-      message: "活動報告の投稿はlightプラン以上で利用できます。あなたの活動を仲間に届けましょう。",
-      cta: "lightで投稿を始める",
+      required_plan: "free",
+      title: "活動ログの投稿",
+      message: "Freeプランでも活動ログを投稿できます。まずは気軽に音楽活動を記録しましょう。",
+      cta: "無料で活動を記録する",
       upgrade_path: -> { public_lp_path(anchor: "lp-section") }
     },
     music_event_create: {

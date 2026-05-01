@@ -51,16 +51,16 @@ RSpec.describe "Onboardings - オンボーディング活動報告例外", type:
       end
     end
 
-    context "step3 を経由せず直接 /activities/new にアクセスした場合（セッションフラグなし）" do
-      it "new ページへのアクセスがリダイレクトされる" do
+    context "step3 を経由せず直接 /activities/new にアクセスした場合（Free ユーザーは常時投稿可能）" do
+      it "new ページへのアクセスが200 OKになること" do
         get new_public_activity_path
-        expect(response).to redirect_to(public_activities_path)
+        expect(response.status).to eq 200
       end
 
-      it "POST しても Activity が増えない" do
+      it "POST すると Activity が増えること" do
         expect {
           post public_activities_path, params: activity_params
-        }.not_to change(Activity, :count)
+        }.to change(Activity, :count).by(1)
       end
     end
   end
@@ -103,24 +103,22 @@ RSpec.describe "Onboardings - オンボーディング活動報告例外", type:
   end
 
   # ──────────────────────────────────────────────
-  # 3. オンボーディング完了済み Free ユーザーは通常投稿できない
+  # 3. オンボーディング完了済み music Free ユーザーは通常投稿できる（Free に投稿権あり）
   # ──────────────────────────────────────────────
   describe "onboarding_done 済みの music Free ユーザー" do
     let!(:done_customer) { create(:customer, domain_name: "music", onboarding_done: true, confirmed_at: Time.current) }
 
     before { sign_in done_customer }
 
-    it "step3 経由でも new ページへのアクセスがリダイレクトされる" do
-      get onboarding_step3_path
+    it "new ページへのアクセスが200 OKになること" do
       get new_public_activity_path
-      expect(response).to redirect_to(public_activities_path)
+      expect(response.status).to eq 200
     end
 
-    it "POST しても Activity が増えない" do
-      get onboarding_step3_path
+    it "POST すると Activity が増えること" do
       expect {
         post public_activities_path, params: activity_params
-      }.not_to change(Activity, :count)
+      }.to change(Activity, :count).by(1)
     end
   end
 

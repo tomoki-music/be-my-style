@@ -56,9 +56,31 @@
         %span.lp-chip スコアで見える
         %span.lp-chip 前回比較で続けやすい
         %span.lp-chip PremiumはAIコメント対応
-      = link_to lp_cta_label, lp_primary_cta_path, lp_cta_options
+      = link_to lp_cta_label, lp_primary_cta_path, lp_cta_options.merge(class: "lp-btn lp-btn--hero-cta")
       .lp-hero-back
         = link_to singing_lp_hero_back_label, singing_lp_back_path
+
+  - if customer_signed_in?
+    .singing-plan-status-card
+      .singing-plan-status-card__inner
+        .singing-plan-status-card__info
+          %p.singing-plan-status-card__label 現在のプラン
+          %p.singing-plan-status-card__plan= current_customer.plan.upcase
+          - monthly_limit = current_customer.singing_diagnosis_monthly_limit
+          - if monthly_limit
+            - remaining = current_customer.remaining_singing_diagnosis_quota
+            %p.singing-plan-status-card__quota
+              今月の残り診断数：
+              %strong= "#{remaining} / #{monthly_limit}回"
+          - else
+            %p.singing-plan-status-card__quota
+              %strong 今月の診断：無制限
+        .singing-plan-status-card__cta
+          = link_to "今すぐ診断する", new_singing_diagnosis_path, class: "btn-singing-diagnose"
+          - if current_customer.plan == "free"
+            = link_to "LIGHTで5回/月に増やす", "#lp-section", class: "singing-plan-status-card__upgrade-link"
+          - elsif current_customer.plan == "light"
+            = link_to "COREで20回/月に増やす", "#lp-section", class: "singing-plan-status-card__upgrade-link"
 
   .lp-section
     %h2 なんとなく練習する、から抜け出す
@@ -136,6 +158,21 @@
     %h2 歌唱・演奏診断プラン
     %p.lp-section-lead
       回数制限は現行仕様のまま、freeは月1回、Lightは月5回、Coreは月20回、Premiumは無制限で利用できます。
+    .lp-plan-reassure
+      .lp-plan-reassure__item
+        %span.lp-plan-reassure__icon 🔓
+        %p いつでも解約可能
+      .lp-plan-reassure__item
+        %span.lp-plan-reassure__icon 🔄
+        %p 必要な時だけプラン変更OK
+      .lp-plan-reassure__item
+        %span.lp-plan-reassure__icon 🎵
+        %p Freeでも診断1回試せる
+      .lp-plan-reassure__item
+        %span.lp-plan-reassure__icon 🚀
+        %p 無料から気軽にスタート
+    %p.lp-plan-pressure-free
+      成長を続けたくなったらプランアップを。課金は強制ではなく、「もっと練習したい」と思った時の選択肢です。
     .lp-pricing-grid.lp-pricing-grid-conversion#lp-pricing-plans
 
       .lp-pricing.free

@@ -20,7 +20,7 @@ class Customer < ApplicationRecord
   FEATURE_RULES = {
     music_direct_chat: %w[free light core premium],
     music_community_chat: %w[light core premium],
-    music_activity_create: %w[light core premium],
+    music_activity_create: %w[free light core premium],
     music_event_create: %w[core premium],
     music_community_mail: %w[premium],
     music_community_create: %w[premium],

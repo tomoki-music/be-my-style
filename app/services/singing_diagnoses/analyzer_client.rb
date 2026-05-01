@@ -6,13 +6,18 @@ module SingingDiagnoses
   class AnalyzerClient
     class ConfigurationError < StandardError; end
     class RequestError < StandardError; end
+    class ConnectionError < RequestError; end
+    class TimeoutError < RequestError; end
 
     DEFAULT_TIMEOUT = 10
-    DEFAULT_DEVELOPMENT_ENDPOINT_URL = "http://localhost:8000/diagnoses".freeze
+    DEFAULT_DEVELOPMENT_ENDPOINT_URL = "http://127.0.0.1:8000/diagnoses".freeze
     CONFIGURATION_ERROR_MESSAGE = [
       "singing analyzer endpoint is not configured.",
       "Set SINGING_ANALYZER_DIAGNOSES_URL or credentials singing_analyzer.diagnoses_url."
     ].join(" ").freeze
+
+    USER_FACING_CONNECTION_ERROR = "診断処理に一時的に失敗しました。時間をおいて再度お試しください。".freeze
+    USER_FACING_TIMEOUT_ERROR = "診断処理がタイムアウトしました。時間をおいて再度お試しください。".freeze
 
     def initialize(endpoint_url: nil, open_timeout: nil, read_timeout: nil, http_class: Net::HTTP)
       @endpoint_url = endpoint_url.presence || configured_endpoint_url
@@ -33,13 +38,18 @@ module SingingDiagnoses
 
       diagnosis.audio_file.blob.open do |file|
         request.set_form(form_parts(diagnosis, file), "multipart/form-data")
-
         response = http_for(uri).request(request)
       end
 
       parse_response(response).tap do
         Rails.logger.info("Singing analyzer request succeeded: diagnosis_id=#{diagnosis.id} status=#{response.code}") if defined?(Rails)
       end
+    rescue Errno::ECONNREFUSED, SocketError => e
+      Rails.logger.error("Singing analyzer connection refused: diagnosis_id=#{diagnosis&.id} endpoint=#{endpoint_url} error=#{e.class}: #{e.message}") if defined?(Rails)
+      raise ConnectionError, USER_FACING_CONNECTION_ERROR
+    rescue Net::OpenTimeout, Net::ReadTimeout, ::Timeout::Error => e
+      Rails.logger.error("Singing analyzer timeout: diagnosis_id=#{diagnosis&.id} endpoint=#{endpoint_url} error=#{e.class}: #{e.message}") if defined?(Rails)
+      raise TimeoutError, USER_FACING_TIMEOUT_ERROR
     end
 
     private

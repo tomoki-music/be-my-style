@@ -1,8 +1,43 @@
 .singing-diagnosis{ data: (@polling_required ? { singing_diagnosis_polling: true, singing_diagnosis_polling_interval: 5000 } : {}) }
   .singing-diagnosis__inner
     %p.singing-diagnosis__eyebrow Singing / Performance Diagnosis
-    %h1 診断履歴
-    %p.singing-diagnosis__lead 過去に依頼した歌唱・演奏診断の状態と結果を確認できます。
+    %h1 成長記録
+    %p.singing-diagnosis__lead 診断を重ねるほど、あなたの歌声の変化と成長が見えてきます。
+
+    - completed_count = @diagnoses.select(&:completed?).count
+    - if completed_count > 0
+      .singing-diagnosis__growth-dashboard
+        .singing-diagnosis__growth-stat
+          %span.singing-diagnosis__growth-stat-number= completed_count
+          %span.singing-diagnosis__growth-stat-label 回の診断完了
+        .singing-diagnosis__growth-stat
+          - best_score = @diagnoses.select(&:completed?).filter_map(&:overall_score).max
+          %span.singing-diagnosis__growth-stat-number= best_score || "-"
+          %span.singing-diagnosis__growth-stat-label 最高スコア
+        .singing-diagnosis__growth-stat
+          - activity_level = case completed_count
+            - when 1..2 then { label: "Lv.1", name: "スタート", icon: "🌱" }
+            - when 3..5 then { label: "Lv.2", name: "継続中", icon: "🌿" }
+            - when 6..9 then { label: "Lv.3", name: "成長中", icon: "🌳" }
+            - when 10..19 then { label: "Lv.4", name: "熟練", icon: "⭐" }
+            - else { label: "Lv.5", name: "エキスパート", icon: "🌟" }
+          %span.singing-diagnosis__growth-stat-icon= activity_level[:icon]
+          %span.singing-diagnosis__growth-stat-number= activity_level[:label]
+          %span.singing-diagnosis__growth-stat-label= activity_level[:name]
+        - if completed_count >= 3
+          .singing-diagnosis__growth-badge
+            🏆 継続バッジ獲得中
+      - latest_completed = @diagnoses.select(&:completed?).first
+      - if latest_completed&.overall_score
+        .singing-diagnosis__motivation-banner
+          %p.singing-diagnosis__motivation-text
+            - score = latest_completed.overall_score
+            - if score >= 80
+              直近スコア #{score}点。高水準を維持できています。この調子で続けましょう！
+            - elsif score >= 60
+              直近スコア #{score}点。着実に伸びています。次回も続けると変化が見えてきます。
+            - else
+              直近スコア #{score}点。スコアは伸びしろ。振り返りを続けることが上達への近道です。
 
     .singing-diagnosis__actions
       = link_to "新しい診断を作成", new_singing_diagnosis_path, class: "btn btn-primary"
@@ -21,7 +56,7 @@
           %div 総合スコア
           %div 詳細
 
-        - @diagnoses.each do |diagnosis|
+        - @diagnoses.each_with_index do |diagnosis, idx|
           .singing-diagnosis__history-row
             .singing-diagnosis__history-status
               %span.singing-diagnosis__history-badge{ class: "singing-diagnosis__history-badge--#{diagnosis.status}" }
@@ -32,6 +67,8 @@
 
             .singing-diagnosis__history-title
               = diagnosis.song_title.presence || "未入力"
+              - if diagnosis.completed? && idx == 0
+                %span.singing-diagnosis__latest-badge 最新
               - if diagnosis.completed?
                 %p.singing-diagnosis__history-growth
                   %span.singing-diagnosis__history-growth-label= singing_history_growth_label(diagnosis)
@@ -57,4 +94,5 @@
       .singing-diagnosis__empty
         %h2 まだ診断履歴はありません
         %p 音声ファイルを添付して、最初の歌唱・演奏診断を依頼できます。
+        %p.singing-diagnosis__empty-note 診断を重ねると、スコア推移・成長グラフ・称号が見えてきます。
         = link_to "診断を始める", new_singing_diagnosis_path, class: "btn btn-primary"

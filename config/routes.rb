@@ -68,6 +68,7 @@ Rails.application.routes.draw do
     resources :activities do
       resource :favorites, only: [:create, :destroy]
       resources :comments, only: [:create, :destroy]
+      resources :reactions, only: [:create], controller: "activity_reactions"
     end
 
     # イベント機能

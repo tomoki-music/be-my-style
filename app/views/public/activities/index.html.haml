@@ -2,21 +2,23 @@
 
 .activity-index-head-title
   .directory-page-heading
-    %p.directory-page-heading__eyebrow Activities
-    %h2 みんなの活動報告一覧
+    %p.directory-page-heading__eyebrow Music Activity Log
+    %h2 みんなの音楽活動ログ
     %p.directory-page-heading__lead
-      セッションの記録や練習の気づきを見つけて、音楽仲間との会話のきっかけにしましょう。
-  - if feature_available?(:music_activity_create)
-    .directory-page-action
-      = link_to "活動報告を投稿する", new_public_activity_path, data: { 'turbolinks': false }, class: "btn btn-info activity-index-create-btn"
-  - else
-    .directory-upgrade-panel
-      = render "shared/feature_gate",
-        feature_key: :music_activity_create,
-        title: "活動報告の投稿ボタン",
-        message: "活動報告の投稿はLightプラン契約で解放されます。あなたの活動を仲間に届けましょう。",
-        cta: "lightで投稿を始める",
-        class_name: "feature-gate--inline"
+      練習の気づき・セッションの記録・挑戦の歩みを残し、仲間に見てもらえる場所です。
+    .activity-index-value-chips
+      %span.activity-value-chip 記録が応援になる
+      %span.activity-value-chip 仲間の目に届く
+      %span.activity-value-chip 継続が力になる
+  .directory-page-action
+    = link_to "活動ログを投稿する", new_public_activity_path, data: { 'turbolinks': false }, class: "btn btn-info activity-index-create-btn"
+  - if customer_signed_in? && current_customer.plan == "free"
+    .activity-light-upsell
+      .activity-light-upsell__icon 🌟
+      .activity-light-upsell__body
+        %p.activity-light-upsell__title LIGHTで「応援される活動ログ」へ
+        %p.activity-light-upsell__desc Freeでも活動を記録できます。LIGHTでは活動バッジ・応援リアクションの可視性が上がり、仲間に見てもらいやすくなります。
+        = link_to "LIGHTの詳細を見る", public_lp_path(anchor: "lp-section"), class: "activity-light-upsell__link", data: { turbolinks: false }
 
 .directory-search
   = form_with url: public_activities_path, method: :get, local: true, class: "directory-search__form" do
@@ -25,6 +27,26 @@
     = select_tag :sort, options_for_select(activity_sort_options, params[:sort].presence || "newest"), class: "directory-search__select"
     = submit_tag "検索する", class: "btn btn-info directory-search__submit"
     = link_to "リセット", public_activities_path, class: "btn btn-outline-secondary directory-search__reset"
+- if @featured_activities.present?
+  .activity-featured-section
+    .activity-featured-section__header
+      %span.activity-featured-section__icon ⭐
+      %h3.activity-featured-section__title 注目の活動ログ
+      %span.activity-featured-section__label LIGHT以上のメンバーから
+    .activity-featured-list
+      - @featured_activities.each do |featured|
+        = link_to public_activity_path(featured), class: "activity-featured-card", data: { turbolinks: false } do
+          .activity-featured-card__thumb
+            - if featured.activity_image.present?
+              = image_tag featured.activity_image, class: "activity-featured-card__img"
+            - else
+              .activity-featured-card__no-img 🎵
+          .activity-featured-card__body
+            %p.activity-featured-card__title= featured.title.truncate(20)
+            .activity-featured-card__meta
+              %span.activity-featured-card__author= featured.customer.name
+              %span{ class: customer_plan_badge_class(featured.customer) }= customer_plan_label(featured.customer)
+
 .activities-kaminari
   = paginate @activities
 - if @activities.present?
@@ -40,7 +62,7 @@
   - if @activities.present?
     - @activities.each_with_index do |activity, index|
       - activity_id = activity.id
-      .card.mb-5{id: "activity-#{index}"}
+      .activity-log-card.card.mb-5{id: "activity-#{index}"}
         - if time_ago_in_words(activity.created_at) =~ /分|時間/
           .new_activity
             NEW!!
@@ -51,6 +73,17 @@
             - else
               = image_tag 'no_image'
         .card-body.text-container
+          .activity-card-author-row
+            = link_to public_customer_path(activity.customer), data: { 'turbolinks': false }, class: "activity-card-author-link" do
+              = customer_avatar_tag(activity.customer, class_name: "activity-card-avatar")
+              %span.activity-card-author-name= activity.customer.name
+            - unless activity.customer.plan == "free"
+              %span{ class: customer_plan_badge_class(activity.customer) }= customer_plan_label(activity.customer)
+            - activity_count = @customer_activity_counts[activity.customer_id].to_i
+            - if activity.customer.paid_plan? && activity_count >= 10
+              %span.activity-achievement-badge= "🔥 #{activity_count}投稿"
+            - elsif activity.customer.paid_plan? && activity_count >= 3
+              %span.activity-achievement-badge.activity-achievement-badge--starter= "✨ 活動中"
           %h5.card-title#title-js
             - if activity.title.length > 13
               .title-truncated
@@ -96,16 +129,23 @@
               %br
           %hr
           .activity-show-link-area
-            = link_to "活動報告詳細へ", public_activity_path(activity), class: "btn-info activity-show-link", data: { 'turbolinks': false }
+            = link_to "活動ログを見る", public_activity_path(activity), class: "btn-info activity-show-link", data: { 'turbolinks': false }
           %hr
-          %p.card-text
-            [投稿者]
-            = link_to activity.customer.name, public_customer_path(activity.customer), data: { 'turbolinks': false }
-          %hr
-          [投稿日]
-          = time_ago_in_words(activity.created_at) + "前"
-          %hr
+          .activity-card-footer
+            .activity-card-meta
+              %span.activity-card-date= time_ago_in_words(activity.created_at) + "前"
+            .activity-reaction-row
+              - [["fire", "🔥", "熱い！"], ["clap", "👏", "いいね！"], ["guitar", "🎸", "ギタリスト！"], ["mic", "🎤", "歌声！"]].each do |type, emoji, label|
+                - reaction_count = activity.activity_reactions.count { |r| r.reaction_type == type }
+                - already_reacted = customer_signed_in? && activity.activity_reactions.any? { |r| r.reaction_type == type && r.customer_id == current_customer.id }
+                - reaction_url = public_activity_reactions_path(activity, reaction_type: type)
+                %button.activity-reaction-btn{ title: label, "aria-label": "#{emoji}リアクション", "data-reaction-url": reaction_url, class: (already_reacted ? "activity-reaction-btn--active" : "") }
+                  = emoji
+                  - if reaction_count > 0
+                    %span.reaction-count= reaction_count
           %div{id: "favorite_buttons_#{activity_id}"}
             = render "public/favorites/favorite", activity: activity
   - else
-    まだ投稿記事はありません。
+    .activity-empty-state
+      %p.activity-empty-state__text まだ活動ログはありません。
+      %p.activity-empty-state__sub 最初の活動ログを投稿してみましょう。記録することが、つながりの第一歩です。

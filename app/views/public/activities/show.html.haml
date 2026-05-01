@@ -1,7 +1,7 @@
 = render 'layouts/header_menu'
 
 .activity-show-title
-  %h2 活動報告詳細ページ
+  %h2 音楽活動ログ
   .activity-show-follow
     %div{id: "favorite_buttons_#{@activity.id}"}
       = render "public/favorites/favorite", activity: @activity
@@ -25,13 +25,27 @@
               = @activity.title
             %hr
             %h6.card-subtitle
-              [投稿者]
-              %br
-              = link_to public_customer_path(@activity.customer), data: { 'turbolinks': false } do
-                .activity-owner-img
-                  = customer_avatar_tag(@activity.customer)
-                  .activity-name
-                    = @activity.customer.name
+              .activity-show-author-block
+                = link_to public_customer_path(@activity.customer), data: { 'turbolinks': false } do
+                  .activity-owner-img
+                    = customer_avatar_tag(@activity.customer)
+                    .activity-name
+                      = @activity.customer.name
+                - unless @activity.customer.plan == "free"
+                  %span.activity-show-plan-badge{ class: customer_plan_badge_class(@activity.customer) }
+                    = customer_plan_label(@activity.customer)
+              %hr
+              .activity-show-reaction-row
+                %span.activity-show-reaction-label 応援リアクション
+                .activity-show-reactions
+                  - [["fire", "🔥", "熱い！"], ["clap", "👏", "いいね！"], ["guitar", "🎸", "ギタリスト！"], ["mic", "🎤", "歌声！"]].each do |type, emoji, label|
+                    - reaction_count = @activity.activity_reactions.count { |r| r.reaction_type == type }
+                    - already_reacted = customer_signed_in? && @activity.activity_reactions.any? { |r| r.reaction_type == type && r.customer_id == current_customer.id }
+                    - reaction_url = public_activity_reactions_path(@activity, reaction_type: type)
+                    %button.activity-reaction-btn{ title: label, "data-reaction-url": reaction_url, class: (already_reacted ? "activity-reaction-btn--active" : "") }
+                      = emoji
+                      - if reaction_count > 0
+                        %span.reaction-count= reaction_count
               %hr
               [パート]
               %br
