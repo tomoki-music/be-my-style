@@ -32,7 +32,7 @@ RSpec.describe SingingDiagnoses::ResultPersister do
       expect(diagnosis.pitch_score).to eq 82
       expect(diagnosis.rhythm_score).to eq 90
       expect(diagnosis.expression_score).to eq 84
-      expect(diagnosis.result_payload).to eq payload
+      expect(diagnosis.result_payload.symbolize_keys).to eq payload
       expect(diagnosis.diagnosed_at).to be_present
       expect(diagnosis.failure_reason).to be_blank
     end

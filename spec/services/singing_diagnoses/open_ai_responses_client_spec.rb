@@ -3,8 +3,8 @@ require 'rails_helper'
 RSpec.describe SingingDiagnoses::OpenAiResponsesClient do
   describe "#generate_text" do
     it "Responses APIへリクエストしてoutput_textを返すこと" do
-      response = Net::HTTPOK.new("1.1", "200", "OK")
-      response.body = { output_text: "練習コメントです。" }.to_json
+      response = double("Net::HTTPOK", body: { output_text: "練習コメントです。" }.to_json)
+      allow(response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(true)
       http = instance_double(Net::HTTP, request: response)
       http_class = class_spy("Net::HTTP")
 
@@ -30,8 +30,9 @@ RSpec.describe SingingDiagnoses::OpenAiResponsesClient do
     end
 
     it "OpenAI APIが失敗した場合はRequestErrorにすること" do
-      response = Net::HTTPInternalServerError.new("1.1", "500", "Internal Server Error")
-      response.body = "error"
+      response = double("Net::HTTPInternalServerError", body: "error")
+      allow(response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(false)
+      allow(response).to receive(:code).and_return("500")
       http = instance_double(Net::HTTP, request: response)
       http_class = class_spy("Net::HTTP")
 

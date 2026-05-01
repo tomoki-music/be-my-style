@@ -40,5 +40,44 @@ RSpec.describe SingingDiagnoses::GenerateAiCommentJob, type: :job do
       expect(diagnosis).to be_ai_comment_failed
       expect(diagnosis.ai_comment_failure_reason).to include("boom")
     end
+
+    it "開発環境でAPIキー未設定の場合はフォールバックコメントを保存してcompletedにすること" do
+      customer = FactoryBot.create(:customer, domain_name: "singing")
+      customer.create_subscription!(status: "active", plan: "premium")
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: customer, status: :completed)
+
+      allow(SingingDiagnoses::AiCommentGenerator).to receive(:call).and_raise(
+        SingingDiagnoses::OpenAiResponsesClient::ConfigurationError,
+        "OpenAI API key is not configured."
+      )
+      allow(Rails.env).to receive(:development?).and_return(true)
+
+      described_class.perform_now(diagnosis.id)
+
+      diagnosis.reload
+      expect(diagnosis).to be_completed
+      expect(diagnosis).to be_ai_comment_completed
+      expect(diagnosis.ai_comment).to include("[開発環境]")
+      expect(diagnosis.ai_commented_at).to be_present
+    end
+
+    it "非開発環境でAPIキー未設定の場合はai_comment_failedにすること" do
+      customer = FactoryBot.create(:customer, domain_name: "singing")
+      customer.create_subscription!(status: "active", plan: "premium")
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: customer, status: :completed)
+
+      allow(SingingDiagnoses::AiCommentGenerator).to receive(:call).and_raise(
+        SingingDiagnoses::OpenAiResponsesClient::ConfigurationError,
+        "OpenAI API key is not configured."
+      )
+      allow(Rails.env).to receive(:development?).and_return(false)
+
+      described_class.perform_now(diagnosis.id)
+
+      diagnosis.reload
+      expect(diagnosis).to be_completed
+      expect(diagnosis).to be_ai_comment_failed
+      expect(diagnosis.ai_comment_failure_reason).to include("OpenAI API key is not configured")
+    end
   end
 end
