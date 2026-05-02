@@ -6,14 +6,24 @@ class Public::SessionsController < Devise::SessionsController
   def after_sign_in_path_for(resource)
     session.delete(:customer_sign_out_redirect_to)
 
-    return singing_root_path if resource.singing_user?
-    return onboarding_step1_path if resource.business_user? && !resource.onboarding_done
-    return onboarding_step1_path if resource.music_user? && !resource.onboarding_done
-    return learning_root_path if resource.learning_user?
-
-    return business_root_path if resource.business_user?
-    return root_path
-
+    case detect_login_domain
+    when "singing"
+      singing_root_path
+    when "business"
+      if resource.business_user? && !resource.onboarding_done
+        onboarding_step1_path
+      else
+        business_root_path
+      end
+    when "learning"
+      learning_root_path
+    else
+      if resource.music_user? && !resource.onboarding_done
+        onboarding_step1_path
+      else
+        root_path
+      end
+    end
   end
 
   def after_sign_out_path_for(_resource)
@@ -21,6 +31,14 @@ class Public::SessionsController < Devise::SessionsController
   end
 
   private
+
+  def detect_login_domain
+    path = request.path.to_s
+    return "singing"  if path.start_with?("/singing")
+    return "business" if path.start_with?("/business")
+    return "learning" if path.start_with?("/learning")
+    "music"
+  end
 
   def scoped_sign_out_redirect_path
     referer_path = URI.parse(request.referer.to_s).path

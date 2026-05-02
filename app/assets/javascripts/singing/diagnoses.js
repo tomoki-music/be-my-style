@@ -44,6 +44,10 @@
     });
   }
 
+  function renderChartMessage(target, message) {
+    target.innerHTML = '<p class="singing-diagnosis__chart-message">' + escapeSvgText(message) + '</p>';
+  }
+
   function radarItems(target) {
     if (target.dataset.radarItems) {
       try {
@@ -60,6 +64,9 @@
           });
         }
       } catch (error) {
+        if (window.console && console.warn) {
+          console.warn('[SingingDiagnosisCharts] Failed to parse radar items', error);
+        }
         return [];
       }
     }
@@ -74,7 +81,7 @@
   function buildRadarSvg(target) {
     var items = radarItems(target);
     if (items.length < 3) {
-      target.innerHTML = '';
+      renderChartMessage(target, 'グラフデータを読み込めませんでした。スコアカードは通常どおり確認できます。');
       return;
     }
 
@@ -110,8 +117,16 @@
       return pointAt(center, radius, angle, 33);
     });
 
+    var scoreLabelMarkup = polygonPoints.map(function(point, index) {
+      var score = scores[index];
+      var offsetX = (point.x - center) * 0.18;
+      var offsetY = (point.y - center) * 0.18 - 7;
+      return '<text class="singing-diagnosis__radar-score" x="' + (point.x + offsetX).toFixed(1) + '" y="' + (point.y + offsetY).toFixed(1) + '" text-anchor="middle">' + score + '</text>';
+    }).join('');
+
     target.innerHTML = [
       '<svg class="singing-diagnosis__radar-svg" viewBox="0 0 240 240" role="img" aria-label="' + escapeSvgText(ariaLabel) + '">',
+      '<rect x="0" y="0" width="240" height="240" rx="10" ry="10" fill="transparent"></rect>',
       '<polygon class="singing-diagnosis__radar-grid" points="' + pointsToString(outerPoints) + '"></polygon>',
       '<polygon class="singing-diagnosis__radar-grid" points="' + pointsToString(middlePoints) + '"></polygon>',
       '<polygon class="singing-diagnosis__radar-grid" points="' + pointsToString(innerPoints) + '"></polygon>',
@@ -120,11 +135,12 @@
       }).join(''),
       '<polygon class="singing-diagnosis__radar-area" points="' + pointsToString(polygonPoints) + '"></polygon>',
       polygonPoints.map(function(point) {
-        return '<circle class="singing-diagnosis__radar-point" cx="' + point.x.toFixed(1) + '" cy="' + point.y.toFixed(1) + '" r="4"></circle>';
+        return '<circle class="singing-diagnosis__radar-point" cx="' + point.x.toFixed(1) + '" cy="' + point.y.toFixed(1) + '" r="5"></circle>';
       }).join(''),
       labels.map(function(label) {
         return '<text class="singing-diagnosis__radar-label" x="' + label.x.toFixed(1) + '" y="' + label.y.toFixed(1) + '" text-anchor="middle">' + escapeSvgText(label.text) + '</text>';
       }).join(''),
+      scoreLabelMarkup,
       '</svg>'
     ].join('');
   }
@@ -137,7 +153,7 @@
       if (!Array.isArray(parsedItems)) return [];
 
       return parsedItems.map(function(item) {
-        return {
+        var mappedItem = {
           label: item.label || '',
           overall_score: optionalScore(item.overall_score),
           pitch_score: optionalScore(item.pitch_score),
@@ -161,8 +177,19 @@
           touch_score: optionalScore(item.touch_score),
           harmony_score: optionalScore(item.harmony_score)
         };
+
+        Object.keys(item).forEach(function(key) {
+          if (key === 'label' || Object.prototype.hasOwnProperty.call(mappedItem, key)) return;
+
+          mappedItem[key] = optionalScore(item[key]);
+        });
+
+        return mappedItem;
       });
     } catch (error) {
+      if (window.console && console.warn) {
+        console.warn('[SingingDiagnosisCharts] Failed to parse growth items', error);
+      }
       return [];
     }
   }
@@ -178,6 +205,9 @@
         return series && series.key && series.label && series.color;
       });
     } catch (error) {
+      if (window.console && console.warn) {
+        console.warn('[SingingDiagnosisCharts] Failed to parse growth series', error);
+      }
       return [];
     }
   }
@@ -221,8 +251,8 @@
   function buildGrowthSvg(target) {
     var items = growthItems(target);
     var series = growthSeries(target);
-    if (items.length < 2 || series.length === 0) {
-      target.innerHTML = '';
+    if (items.length === 0 || series.length === 0) {
+      renderChartMessage(target, 'グラフデータを読み込めませんでした。診断結果は通常どおり確認できます。');
       return;
     }
 
@@ -238,19 +268,22 @@
     var lineMarkup = series.map(function(config) {
       var points = linePoints(items, config.key, width, height, padding);
       var segments = pointsToSegments(points);
-      var pointMarkup = points.filter(function(point) {
-        return point.score !== null;
-      }).map(function(point) {
-        return '<circle cx="' + point.x.toFixed(1) + '" cy="' + point.y.toFixed(1) + '" r="3.5" fill="' + config.color + '"></circle>';
-      }).join('');
-      var polylineMarkup = segments.map(function(segment) {
-        return '<polyline class="singing-diagnosis__growth-line" fill="none" stroke="' + config.color + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="' + pointsToString(segment) + '"></polyline>';
+      var validPoints = points.filter(function(point) { return point.score !== null; });
+      var lastPoint = validPoints[validPoints.length - 1] || null;
+
+      var pointMarkup = validPoints.map(function(point) {
+        return '<circle cx="' + point.x.toFixed(1) + '" cy="' + point.y.toFixed(1) + '" r="4" fill="' + config.color + '" stroke="rgba(14,24,41,0.8)" stroke-width="1.5"></circle>';
       }).join('');
 
-      return [
-        polylineMarkup,
-        pointMarkup
-      ].join('');
+      var lastLabelMarkup = lastPoint
+        ? '<text class="singing-diagnosis__growth-point-label" x="' + lastPoint.x.toFixed(1) + '" y="' + (lastPoint.y - 9).toFixed(1) + '" text-anchor="middle" fill="' + config.color + '">' + lastPoint.score + '</text>'
+        : '';
+
+      var polylineMarkup = segments.map(function(segment) {
+        return '<polyline class="singing-diagnosis__growth-line" fill="none" stroke="' + config.color + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="' + pointsToString(segment) + '"></polyline>';
+      }).join('');
+
+      return [polylineMarkup, pointMarkup, lastLabelMarkup].join('');
     }).join('');
 
     var labelMarkup = items.map(function(item, index) {
@@ -278,7 +311,7 @@
   }
 
   function renderRadarCharts() {
-    var targets = document.querySelectorAll('[data-singing-diagnosis-radar="true"]');
+    var targets = document.querySelectorAll('[data-singing-diagnosis-radar]');
 
     Array.prototype.forEach.call(targets, function(target) {
       buildRadarSvg(target);
@@ -286,11 +319,47 @@
   }
 
   function renderGrowthCharts() {
-    var targets = document.querySelectorAll('[data-singing-diagnosis-growth="true"]');
+    var targets = document.querySelectorAll('[data-singing-diagnosis-growth]');
 
     Array.prototype.forEach.call(targets, function(target) {
       buildGrowthSvg(target);
     });
+  }
+
+  var navMenuOpen = false;
+
+  function openSingingNav() {
+    var menu = document.querySelector('[data-singing-nav-mobile]');
+    var toggle = document.querySelector('[data-singing-nav-toggle]');
+    if (!menu || !toggle) return;
+
+    menu.classList.add('singing-nav__mobile-menu--open');
+    toggle.setAttribute('aria-expanded', 'true');
+    navMenuOpen = true;
+  }
+
+  function closeSingingNav() {
+    var menu = document.querySelector('[data-singing-nav-mobile]');
+    var toggle = document.querySelector('[data-singing-nav-toggle]');
+    if (!menu || !toggle) return;
+
+    menu.classList.remove('singing-nav__mobile-menu--open');
+    toggle.setAttribute('aria-expanded', 'false');
+    navMenuOpen = false;
+  }
+
+  function initSingingNav() {
+    var toggle = document.querySelector('[data-singing-nav-toggle]');
+    var overlay = document.querySelector('[data-singing-nav-overlay]');
+    if (!toggle) return;
+
+    toggle.addEventListener('click', function() {
+      navMenuOpen ? closeSingingNav() : openSingingNav();
+    });
+
+    if (overlay) {
+      overlay.addEventListener('click', closeSingingNav);
+    }
   }
 
   function stopPolling() {
@@ -303,7 +372,7 @@
   function startPolling() {
     stopPolling();
 
-    var target = document.querySelector('[data-singing-diagnosis-polling="true"]');
+    var target = document.querySelector('[data-singing-diagnosis-polling]');
     if (!target) return;
 
     var interval = parseInt(target.dataset.singingDiagnosisPollingInterval, 10) || 5000;
@@ -313,11 +382,18 @@
     }, interval);
   }
 
-  document.addEventListener('turbolinks:load', function() {
+  function initDiagnosisCharts() {
     startPolling();
     renderRadarCharts();
     renderGrowthCharts();
+    initSingingNav();
+  }
+
+  document.addEventListener('DOMContentLoaded', initDiagnosisCharts);
+  document.addEventListener('turbolinks:load', initDiagnosisCharts);
+  document.addEventListener('turbolinks:before-cache', function() {
+    stopPolling();
+    closeSingingNav();
   });
-  document.addEventListener('turbolinks:before-cache', stopPolling);
   window.addEventListener('pagehide', stopPolling);
 })();

@@ -587,10 +587,10 @@ RSpec.describe Singing::DiagnosesHelper, type: :helper do
       expect(helper.singing_common_score_cards(diagnosis).map { |card| card[:label] }).to eq ["音程", "リズム", "表現"]
     end
 
-    it "drumsではpitch_scoreを表示対象から外しやすい構造になっていること" do
+    it "drumsでも共通3軸を表示対象にすること" do
       diagnosis = build_diagnosis(performance_type: "drums")
 
-      expect(helper.singing_common_score_cards(diagnosis).map { |card| card[:key] }).to eq [:rhythm_score, :expression_score]
+      expect(helper.singing_common_score_cards(diagnosis).map { |card| card[:key] }).to eq [:pitch_score, :rhythm_score, :expression_score]
     end
 
     it "bandでは調和・リズムの揃い・ダイナミクスを返すこと" do
@@ -633,11 +633,11 @@ RSpec.describe Singing::DiagnosesHelper, type: :helper do
       expect(helper.singing_radar_chart_enabled?(diagnosis)).to eq true
     end
 
-    it "guitarでspecificが不足して3軸未満の場合は表示対象にしないこと" do
+    it "guitarでspecificが不足しても共通3軸で安全に表示対象にすること" do
       diagnosis = build_diagnosis(performance_type: "guitar", result_payload: {})
 
-      expect(helper.singing_radar_chart_data(diagnosis).map { |item| item[:label] }).to eq ["リズム", "表現"]
-      expect(helper.singing_radar_chart_enabled?(diagnosis)).to eq false
+      expect(helper.singing_radar_chart_data(diagnosis).map { |item| item[:label] }).to eq ["ピッチ", "リズム", "表現"]
+      expect(helper.singing_radar_chart_enabled?(diagnosis)).to eq true
     end
 
     it "bassではベース向け5軸のチャートデータを返すこと" do
@@ -663,11 +663,11 @@ RSpec.describe Singing::DiagnosesHelper, type: :helper do
       expect(helper.singing_radar_chart_enabled?(diagnosis)).to eq true
     end
 
-    it "bassでspecificが不足して3軸未満の場合は表示対象にしないこと" do
+    it "bassでspecificが不足しても共通3軸で安全に表示対象にすること" do
       diagnosis = build_diagnosis(performance_type: "bass", result_payload: {})
 
-      expect(helper.singing_radar_chart_data(diagnosis).map { |item| item[:label] }).to eq ["リズム", "表現"]
-      expect(helper.singing_radar_chart_enabled?(diagnosis)).to eq false
+      expect(helper.singing_radar_chart_data(diagnosis).map { |item| item[:label] }).to eq ["ピッチ", "リズム", "表現"]
+      expect(helper.singing_radar_chart_enabled?(diagnosis)).to eq true
     end
 
     it "keyboardではキーボード向け7軸のチャートデータを返すこと" do
@@ -732,11 +732,11 @@ RSpec.describe Singing::DiagnosesHelper, type: :helper do
       expect(helper.singing_radar_chart_enabled?(diagnosis)).to eq true
     end
 
-    it "未対応typeではチャートデータを返さないこと" do
+    it "drumsでは共通3軸でチャートデータを返すこと" do
       diagnosis = build_diagnosis(performance_type: "drums")
 
-      expect(helper.singing_radar_chart_data(diagnosis)).to eq []
-      expect(helper.singing_radar_chart_enabled?(diagnosis)).to eq false
+      expect(helper.singing_radar_chart_data(diagnosis).map { |item| item[:label] }).to eq ["音のまとまり", "リズム", "表現"]
+      expect(helper.singing_radar_chart_enabled?(diagnosis)).to eq true
     end
 
     it "bandではバンド向け7軸のチャートデータを返すこと" do
@@ -1049,7 +1049,7 @@ RSpec.describe Singing::DiagnosesHelper, type: :helper do
     it "1件だけでも安全に動くこと" do
       diagnoses = [build_diagnosis(created_at: Time.zone.parse("2026-04-20 10:00:00"))]
 
-      expect(helper.singing_growth_chart_enabled?(diagnoses)).to eq(false)
+      expect(helper.singing_growth_chart_enabled?(diagnoses)).to eq(true)
       expect(helper.singing_growth_chart_lead(build_diagnosis(performance_type: "guitar"), diagnoses)).to include("次回以降")
       expect(helper.singing_growth_chart_data(diagnoses).size).to eq(1)
     end
@@ -1083,6 +1083,26 @@ RSpec.describe Singing::DiagnosesHelper, type: :helper do
 
       expect(series.map { |item| item[:label] }).to eq(["アタック", "ミュート", "安定感"])
       expect(data.map { |item| item[:attack_score] }).to eq([62, 78])
+      expect(helper.singing_specific_growth_chart_enabled?(diagnoses, diagnosis)).to eq(true)
+    end
+
+    it "bandの別名specificキーをパート別成長推移に使うこと" do
+      diagnosis = build_diagnosis(performance_type: "band")
+      diagnoses = [
+        build_diagnosis(
+          performance_type: "band",
+          result_payload: { "specific" => { "balance" => 62, "tightness" => 64, "groove" => 66, "role_clarity" => 68, "dynamics" => 70, "cohesion" => 72 } },
+          created_at: Time.zone.parse("2026-04-01 10:00:00")
+        )
+      ]
+
+      series = helper.singing_specific_growth_chart_series(diagnosis, diagnoses)
+      data = helper.singing_specific_growth_chart_data(diagnosis, diagnoses)
+
+      expect(series.map { |item| item[:key] }).to include(:balance, :tightness, :role_clarity, :cohesion)
+      expect(series.map { |item| item[:label] }).to include("音量バランス", "リズムの揃い", "役割理解", "全体のまとまり")
+      expect(data.first[:balance]).to eq(62)
+      expect(data.first[:cohesion]).to eq(72)
       expect(helper.singing_specific_growth_chart_enabled?(diagnoses, diagnosis)).to eq(true)
     end
 

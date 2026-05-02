@@ -87,6 +87,15 @@
         %label メモ
         = f.text_area :memo, class: "form-control", rows: 5, placeholder: "気になる点、診断してほしいポイントなど"
 
+      .singing-diagnosis__ranking-opt-in
+        %h2 ランキング参加
+        %p.singing-diagnosis__ranking-opt-in-note
+          ランキングページで、あなたのベストスコアを公開できます。
+          参加は任意です。いつでも新しい診断で変更できます。
+        .singing-diagnosis__ranking-opt-in-check
+          = f.check_box :ranking_opt_in, class: "singing-diagnosis__ranking-checkbox"
+          = f.label :ranking_opt_in, "ランキングに参加する（名前とスコアが公開されます）", class: "singing-diagnosis__ranking-label"
+
       .singing-diagnosis__actions
         = f.submit "診断を依頼する", class: "btn btn-primary", disabled: @singing_diagnosis_quota_exceeded
         = link_to "戻る", singing_root_path, class: "btn btn-secondary"

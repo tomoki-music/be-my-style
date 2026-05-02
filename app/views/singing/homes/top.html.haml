@@ -7,10 +7,17 @@
 
     .singing-top__actions
       = link_to "診断を始める", new_singing_diagnosis_path, class: "btn btn-primary"
-      = link_to "診断履歴を見る", singing_diagnoses_path, class: "btn btn-secondary"
+      = link_to "マイページ（成長記録）", singing_diagnoses_path, class: "btn btn-secondary"
+      = link_to "ランキングページへ", singing_rankings_path, class: "btn btn-secondary singing-top__ranking-btn"
       = link_to "BeMyStyleトップへ", root_path, class: "btn btn-secondary"
       = button_to "ログアウト",
         destroy_customer_session_path,
         method: :delete,
         form_class: "d-inline",
         class: "btn btn-outline-secondary"
+
+    = link_to singing_rankings_path, class: "singing-top__ranking-cta" do
+      .singing-top__ranking-cta-badge RANKING
+      %h2.singing-top__ranking-cta-title みんなのランキングを見る
+      %p.singing-top__ranking-cta-message 挑戦者たちのスコアを確認して、成長のモチベーションにしよう。
+      %span.singing-top__ranking-cta-link ランキングページへ &rarr;

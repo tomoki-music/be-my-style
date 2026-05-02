@@ -153,7 +153,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnoses_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("診断履歴")
+      expect(response.body).to include("成長記録")
       expect(response.body).to include("My Singing")
       expect(response.body).to include("ボーカル")
       expect(response.body).to include("88")
@@ -177,7 +177,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnoses_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include('data-singing-diagnosis-polling="true"')
+      expect(response.body).to include('data-singing-diagnosis-polling')
     end
 
     it "完了済みの診断のみの場合は自動更新対象にならないこと" do
@@ -187,7 +187,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnoses_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).not_to include('data-singing-diagnosis-polling="true"')
+      expect(response.body).not_to include('data-singing-diagnosis-polling')
     end
 
     it "musicユーザーも共通診断履歴にアクセスできること" do
@@ -196,7 +196,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnoses_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("診断履歴")
+      expect(response.body).to include("成長記録")
     end
   end
 
@@ -209,7 +209,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
           singing_diagnosis: {
             song_title: "Sample Song",
             memo: "高音を確認したい",
-            audio_file: fixture_file_upload("11megabytes_sample.png", "audio/mpeg")
+            audio_file: fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "audio/mpeg")
           }
         }
       end.to change(SingingDiagnosis, :count).by(1)
@@ -230,7 +230,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
           singing_diagnosis: {
             song_title: "Sample Song",
             memo: "高音を確認したい",
-            audio_file: fixture_file_upload("11megabytes_sample.png", "audio/mpeg")
+            audio_file: fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "audio/mpeg")
           }
         }
       end.to have_enqueued_job(SingingDiagnoses::SubmitToAnalyzerJob)
@@ -244,7 +244,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
           performance_type: "guitar",
           song_title: "Sample Song",
           memo: "ギターのリズムを確認したい",
-          audio_file: fixture_file_upload("11megabytes_sample.png", "audio/mpeg")
+          audio_file: fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "audio/mpeg")
         }
       }
 
@@ -259,7 +259,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
           performance_type: "bass",
           song_title: "Sample Song",
           memo: "ベースを確認したい",
-          audio_file: fixture_file_upload("11megabytes_sample.png", "audio/mpeg")
+          audio_file: fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "audio/mpeg")
         }
       }
 
@@ -274,7 +274,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
           performance_type: "drums",
           song_title: "Sample Song",
           memo: "ドラムを確認したい",
-          audio_file: fixture_file_upload("11megabytes_sample.png", "audio/mpeg")
+          audio_file: fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "audio/mpeg")
         }
       }
 
@@ -289,7 +289,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
           performance_type: "keyboard",
           song_title: "Sample Song",
           memo: "キーボードを確認したい",
-          audio_file: fixture_file_upload("11megabytes_sample.png", "audio/mpeg")
+          audio_file: fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "audio/mpeg")
         }
       }
 
@@ -304,7 +304,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
           performance_type: "band",
           song_title: "Sample Song",
           memo: "バンド全体のまとまりを確認したい",
-          audio_file: fixture_file_upload("11megabytes_sample.png", "audio/mpeg")
+          audio_file: fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "audio/mpeg")
         }
       }
 
@@ -319,7 +319,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
           performance_type: "violin",
           song_title: "Sample Song",
           memo: "未対応楽器の送信",
-          audio_file: fixture_file_upload("11megabytes_sample.png", "audio/mpeg")
+          audio_file: fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "audio/mpeg")
         }
       }
 
@@ -334,12 +334,12 @@ RSpec.describe "Singing::Diagnoses", type: :request do
         singing_diagnosis: {
           song_title: "Sample Song",
           memo: "高音を確認したい",
-          audio_file: fixture_file_upload("11megabytes_sample.png", "audio/mpeg")
+          audio_file: fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "audio/mpeg")
         }
       }
 
       expect(enqueued_jobs.last[:job]).to eq SingingDiagnoses::SubmitToAnalyzerJob
-      expect(enqueued_jobs.last[:priority]).to eq 0
+      expect(enqueued_jobs.last["priority"]).to eq 0
     end
 
     it "freeユーザーが今月の診断回数を使い切っている場合は作成できないこと" do
@@ -351,7 +351,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
           singing_diagnosis: {
             song_title: "Sample Song",
             memo: "高音を確認したい",
-            audio_file: fixture_file_upload("11megabytes_sample.png", "audio/mpeg")
+            audio_file: fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "audio/mpeg")
           }
         }
       end.not_to change(SingingDiagnosis, :count)
@@ -369,7 +369,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
           singing_diagnosis: {
             song_title: "Sample Song",
             memo: "失敗後の再診断",
-            audio_file: fixture_file_upload("11megabytes_sample.png", "audio/mpeg")
+            audio_file: fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "audio/mpeg")
           }
         }
       end.to change(SingingDiagnosis, :count).by(1)
@@ -387,7 +387,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
           singing_diagnosis: {
             song_title: "Sample Song",
             memo: "高音を確認したい",
-            audio_file: fixture_file_upload("11megabytes_sample.png", "audio/mpeg")
+            audio_file: fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "audio/mpeg")
           }
         }
       end.to change(SingingDiagnosis, :count).by(1)
@@ -405,7 +405,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
           singing_diagnosis: {
             song_title: "Sample Song",
             memo: "高音を確認したい",
-            audio_file: fixture_file_upload("11megabytes_sample.png", "audio/mpeg")
+            audio_file: fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "audio/mpeg")
           }
         }
       end.not_to change(SingingDiagnosis, :count)
@@ -424,7 +424,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
           singing_diagnosis: {
             song_title: "Sample Song",
             memo: "高音を確認したい",
-            audio_file: fixture_file_upload("11megabytes_sample.png", "audio/mpeg")
+            audio_file: fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "audio/mpeg")
           }
         }
       end.to change(SingingDiagnosis, :count).by(1)
@@ -465,7 +465,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include('data-singing-diagnosis-polling="true"')
+      expect(response.body).to include('data-singing-diagnosis-polling')
     end
 
     it "premiumユーザーの診断には優先解析表示を出すこと" do
@@ -488,7 +488,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Premium 詳細診断")
+      expect(response.body).to include("歌唱の深掘り診断")
       expect(response.body).to include("歌唱チェック項目")
       expect(response.body).to include("ミックスボイスチェック項目")
       expect(response.body).to include("取り入れると良い歌声タイプ")
@@ -519,7 +519,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("ギター タイプ別詳細診断")
+      expect(response.body).to include("ギター演奏の深掘り診断")
       expect(response.body).to include("発音の輪郭")
       expect(response.body).to include("余韻の整理")
       expect(response.body).to include("演奏の芯")
@@ -547,7 +547,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("ベース タイプ別詳細診断")
+      expect(response.body).to include("ベース演奏の土台診断")
       expect(response.body).to include("ノリの土台")
       expect(response.body).to include("音価コントロール")
       expect(response.body).to include("低音の支え")
@@ -575,7 +575,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("ドラム タイプ別詳細診断")
+      expect(response.body).to include("ドラム演奏のリズム診断")
       expect(response.body).to include("テンポの支え")
       expect(response.body).to include("リズムの芯")
       expect(response.body).to include("展開のまとまり")
@@ -603,7 +603,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("キーボード タイプ別詳細診断")
+      expect(response.body).to include("キーボード演奏の響き診断")
       expect(response.body).to include("和音の安定")
       expect(response.body).to include("音のつながり")
       expect(response.body).to include("タッチと響き")
@@ -617,7 +617,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).not_to include('data-singing-diagnosis-polling="true"')
+      expect(response.body).not_to include('data-singing-diagnosis-polling')
     end
 
     it "完了済みの診断はレーダーチャート表示対象になること" do
@@ -627,10 +627,22 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include('data-singing-diagnosis-radar="true"')
+      expect(response.body).to include('data-singing-diagnosis-radar')
       expect(response.body).to include("音程")
       expect(response.body).to include("リズム")
       expect(response.body).to include("表現")
+    end
+
+    it "診断履歴が1件だけでも成長推移の初回表示を出すこと" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("成長推移")
+      expect(response.body).to include('data-singing-diagnosis-growth')
+      expect(response.body).to include("初回診断データです")
     end
 
     it "specificスコアがある場合は診断タイプ別の補足スコアを表示すること" do
@@ -684,7 +696,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("ミュート")
       expect(response.body).to include("安定感")
       expect(response.body).to include("ギター演奏ならではの補足スコア")
-      expect(response.body).to include('data-singing-diagnosis-radar="true"')
+      expect(response.body).to include('data-singing-diagnosis-radar')
       expect(response.body).to include("ギター演奏の特徴バランス")
       expect(response.body).not_to include("ミックスボイスチェック項目")
       expect(response.body).not_to include("取り入れると良い歌声タイプ")
@@ -715,7 +727,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("音価")
       expect(response.body).to include("安定感")
       expect(response.body).to include("ベース演奏ならではの補足スコア")
-      expect(response.body).to include('data-singing-diagnosis-radar="true"')
+      expect(response.body).to include('data-singing-diagnosis-radar')
       expect(response.body).to include("ベース演奏の特徴バランス")
       expect(response.body).not_to include("ミックスボイスチェック項目")
       expect(response.body).not_to include("取り入れると良い歌声タイプ")
@@ -750,7 +762,8 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("ドラム演奏ならではの補足スコア")
       expect(response.body).to include("Core以上のプランを見る")
       expect(response.body).not_to include("テンポ安定の読み解き")
-      expect(response.body).not_to include('data-singing-diagnosis-radar="true"')
+      expect(response.body).to include('data-singing-diagnosis-radar')
+      expect(response.body).to include("ドラム演奏の特徴バランス")
       expect(response.body).not_to include("ミックスボイスチェック項目")
       expect(response.body).not_to include("取り入れると良い歌声タイプ")
     end
@@ -766,7 +779,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
           "performance_type" => "keyboard",
           "specific" => {
             "chord_stability_score" => 77,
-            "note_connection_score" => 72,
+            "note_connection_score" => 65,
             "touch_score" => 69,
             "harmony_score" => 74
           }
@@ -782,7 +795,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("タッチ")
       expect(response.body).to include("ハーモニー")
       expect(response.body).to include("キーボード演奏ならではの補足スコア")
-      expect(response.body).to include('data-singing-diagnosis-radar="true"')
+      expect(response.body).to include('data-singing-diagnosis-radar')
       expect(response.body).to include("キーボード演奏の特徴バランス")
       expect(response.body).to include("おすすめ練習メニュー")
       expect(response.body).to include("打鍵の粒そろえ練習")
@@ -811,12 +824,12 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include('data-singing-diagnosis-radar="true"')
+      expect(response.body).to include('data-singing-diagnosis-radar')
       expect(response.body).to include("キーボード演奏の特徴バランス")
       expect(response.body).not_to include("コード安定の読み解き")
     end
 
-    it "bassのspecificが不足している場合はレーダーチャートを表示しないこと" do
+    it "bassのspecificが不足している場合も共通3軸でレーダーチャートを表示すること" do
       sign_in singing_customer
       diagnosis = FactoryBot.create(
         :singing_diagnosis,
@@ -829,11 +842,11 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).not_to include('data-singing-diagnosis-radar="true"')
-      expect(response.body).not_to include("ベース演奏の特徴バランス")
+      expect(response.body).to include('data-singing-diagnosis-radar')
+      expect(response.body).to include("ベース演奏の特徴バランス")
     end
 
-    it "guitarのspecificが不足している場合はレーダーチャートを表示しないこと" do
+    it "guitarのspecificが不足している場合も共通3軸でレーダーチャートを表示すること" do
       sign_in singing_customer
       diagnosis = FactoryBot.create(
         :singing_diagnosis,
@@ -846,8 +859,8 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).not_to include('data-singing-diagnosis-radar="true"')
-      expect(response.body).not_to include("ギター演奏の特徴バランス")
+      expect(response.body).to include('data-singing-diagnosis-radar')
+      expect(response.body).to include("ギター演奏の特徴バランス")
     end
 
     it "bandでquality_messageがある場合は注意メッセージを表示すること" do
@@ -1002,7 +1015,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Premium タイプ別詳細診断")
-      expect(response.body).to include("発音の輪郭、余韻の整理、演奏の芯")
+      expect(response.body).to include("発音・ミュート・安定感")
       expect(response.body).to include("Premiumプランを見る")
       expect(response.body).not_to include("ギター タイプ別詳細診断")
     end
@@ -1086,7 +1099,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).not_to include('data-singing-diagnosis-radar="true"')
+      expect(response.body).not_to include('data-singing-diagnosis-radar')
     end
 
     it "featureがないfreeユーザーには比較セクションを表示しないこと" do

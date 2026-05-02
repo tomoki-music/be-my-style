@@ -1,0 +1,64 @@
+%nav.singing-nav{ role: "navigation", "aria-label": "歌唱診断グローバルナビゲーション" }
+  .singing-nav__inner
+    = link_to singing_root_path, class: "singing-nav__logo" do
+      %span.singing-nav__logo-icon ♪
+      %span.singing-nav__logo-text Music Diagnosis
+
+    .singing-nav__links
+      = link_to "診断トップ", singing_root_path, class: "singing-nav__link#{' singing-nav__link--active' if current_page?(singing_root_path)}"
+      = link_to "診断する", new_singing_diagnosis_path, class: "singing-nav__link#{' singing-nav__link--active' if current_page?(new_singing_diagnosis_path)}"
+      = link_to "マイページ", singing_diagnoses_path, class: "singing-nav__link#{' singing-nav__link--active' if current_page?(singing_diagnoses_path)}"
+      = link_to "料金プラン", public_singing_lp_path(anchor: "lp-section"), class: "singing-nav__link"
+
+    .singing-nav__right
+      = link_to singing_rankings_path, class: "singing-nav__cta-btn#{' singing-nav__cta-btn--active' if current_page?(singing_rankings_path)}" do
+        %span.singing-nav__cta-icon ♛
+        ランキング
+
+      - if current_customer
+        .singing-nav__user
+          - if current_customer.profile_image.attached?
+            = image_tag url_for(current_customer.profile_image), class: "singing-nav__avatar", alt: current_customer.name
+          - else
+            .singing-nav__avatar-initials= singing_user_initials(current_customer)
+          %span.singing-nav__username= current_customer.name
+        = button_to "ログアウト",
+          destroy_customer_session_path,
+          method: :delete,
+          form_class: "singing-nav__logout-form",
+          class: "singing-nav__logout-button"
+
+    %button.singing-nav__hamburger{
+      type: "button",
+      "aria-label": "メニューを開く",
+      "aria-expanded": "false",
+      data: { singing_nav_toggle: true }
+    }
+      %span.singing-nav__hamburger-bar
+      %span.singing-nav__hamburger-bar
+      %span.singing-nav__hamburger-bar
+
+  .singing-nav__mobile-menu{ data: { singing_nav_mobile: true } }
+    .singing-nav__mobile-panel
+      - if current_customer
+        .singing-nav__mobile-user
+          - if current_customer.profile_image.attached?
+            = image_tag url_for(current_customer.profile_image), class: "singing-nav__mobile-avatar", alt: current_customer.name
+          - else
+            .singing-nav__mobile-avatar-initials= singing_user_initials(current_customer)
+          %span.singing-nav__mobile-username= current_customer.name
+
+      .singing-nav__mobile-links
+        = link_to "診断トップ", singing_root_path, class: "singing-nav__mobile-link"
+        = link_to "診断する", new_singing_diagnosis_path, class: "singing-nav__mobile-link singing-nav__mobile-link--primary"
+        = link_to "マイページ（成長記録）", singing_diagnoses_path, class: "singing-nav__mobile-link"
+        = link_to "ランキングページへ", singing_rankings_path, class: "singing-nav__mobile-link singing-nav__mobile-link--cta"
+        = link_to "料金プラン", public_singing_lp_path(anchor: "lp-section"), class: "singing-nav__mobile-link"
+        - if current_customer
+          = button_to "ログアウト",
+            destroy_customer_session_path,
+            method: :delete,
+            form_class: "singing-nav__mobile-logout-form",
+            class: "singing-nav__mobile-link singing-nav__mobile-logout-button"
+
+    .singing-nav__mobile-overlay{ data: { singing_nav_overlay: true } }

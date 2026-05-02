@@ -57,7 +57,9 @@ RSpec.describe SingingDiagnoses::GenerateAiCommentJob, type: :job do
       diagnosis.reload
       expect(diagnosis).to be_completed
       expect(diagnosis).to be_ai_comment_completed
-      expect(diagnosis.ai_comment).to include("[開発環境]")
+      expect(diagnosis.ai_comment).to include("今回の")
+      expect(diagnosis.ai_comment).not_to include("APIキー")
+      expect(diagnosis.ai_comment).not_to include("本番用AIコメント")
       expect(diagnosis.ai_commented_at).to be_present
     end
 

@@ -1,4 +1,5 @@
 class Singing::BaseController < ApplicationController
+  layout "singing"
   before_action :ensure_singing_access!
 
   private

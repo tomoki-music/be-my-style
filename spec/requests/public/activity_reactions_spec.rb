@@ -19,17 +19,55 @@ RSpec.describe "Public::ActivityReactions", type: :request do
         expect(ActivityReaction.count).to eq 1
       end
 
+      it "他人の投稿にリアクションすると投稿者に通知を作成すること" do
+        expect do
+          post public_activity_reactions_path(activity, reaction_type: "fire"),
+            headers: { "Accept" => "application/json" }
+        end.to change(Notification, :count).by(1)
+
+        notification = Notification.last
+        expect(notification.visitor).to eq customer
+        expect(notification.visited).to eq activity.customer
+        expect(notification.activity_id).to eq activity.id
+        expect(notification.action).to eq "reaction_fire"
+      end
+
+      it "自分の投稿へのリアクションでは通知しないこと" do
+        own_activity = create(:activity, customer: customer)
+
+        expect do
+          post public_activity_reactions_path(own_activity, reaction_type: "clap"),
+            headers: { "Accept" => "application/json" }
+        end.not_to change(Notification, :count)
+      end
+
       it "同じリアクションを再度POSTするとトグルで削除され count が 0 になること" do
         create(:activity_reaction, customer: customer, activity: activity, reaction_type: "fire")
 
-        post public_activity_reactions_path(activity, reaction_type: "fire"),
-          headers: { "Accept" => "application/json" }
+        expect do
+          post public_activity_reactions_path(activity, reaction_type: "fire"),
+            headers: { "Accept" => "application/json" }
+        end.not_to change(Notification, :count)
 
         expect(response.status).to eq 200
         json = JSON.parse(response.body)
         expect(json["reacted"]).to eq false
         expect(json["count"]).to eq 0
         expect(ActivityReaction.count).to eq 0
+      end
+
+      it "同じ投稿に同じreaction_typeを再作成しても通知を重複作成しないこと" do
+        post public_activity_reactions_path(activity, reaction_type: "fire"),
+          headers: { "Accept" => "application/json" }
+        post public_activity_reactions_path(activity, reaction_type: "fire"),
+          headers: { "Accept" => "application/json" }
+
+        expect do
+          post public_activity_reactions_path(activity, reaction_type: "fire"),
+            headers: { "Accept" => "application/json" }
+        end.not_to change(Notification, :count)
+
+        expect(Notification.where(visitor: customer, visited: activity.customer, activity_id: activity.id, action: "reaction_fire").count).to eq 1
       end
 
       it "異なるreaction_typeは独立して保存されること" do

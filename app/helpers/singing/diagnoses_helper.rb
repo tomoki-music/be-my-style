@@ -42,6 +42,7 @@ module Singing::DiagnosesHelper
       { key: :expression_score, label: "表現", short_label: "Expression" }
     ],
     "drums" => [
+      { key: :pitch_score, label: "音のまとまり", short_label: "Tone" },
       { key: :rhythm_score, label: "リズム", short_label: "Rhythm" },
       { key: :expression_score, label: "表現", short_label: "Expression" }
     ],
@@ -89,6 +90,9 @@ module Singing::DiagnosesHelper
       harmony_score: "ハーモニー"
     },
     "band" => {
+      balance: "音量バランス",
+      tightness: "リズムの揃い",
+      role_clarity: "役割理解",
       ensemble_score: "アンサンブル力",
       harmony_score: "調和",
       role_understanding_score: "役割理解",
@@ -96,7 +100,8 @@ module Singing::DiagnosesHelper
       rhythm_unity_score: "リズムの揃い",
       groove_score: "グルーヴ",
       dynamics_score: "ダイナミクス",
-      cohesion_score: "全体のまとまり"
+      cohesion_score: "全体のまとまり",
+      cohesion: "全体のまとまり"
     }
   }.freeze
 
@@ -1306,7 +1311,7 @@ module Singing::DiagnosesHelper
   end
 
   def singing_growth_chart_enabled?(diagnoses)
-    Array(diagnoses).size >= 2
+    singing_growth_chart_data(diagnoses).any?
   end
 
   def singing_growth_chart_data(diagnoses)
@@ -1316,10 +1321,10 @@ module Singing::DiagnosesHelper
     entries.map do |diagnosis|
       {
         label: growth_chart_label(diagnosis),
-        overall_score: diagnosis.overall_score.to_i,
-        pitch_score: diagnosis.pitch_score.to_i,
-        rhythm_score: diagnosis.rhythm_score.to_i,
-        expression_score: diagnosis.expression_score.to_i
+        overall_score: singing_normalize_score(diagnosis.overall_score),
+        pitch_score: singing_normalize_score(diagnosis.pitch_score),
+        rhythm_score: singing_normalize_score(diagnosis.rhythm_score),
+        expression_score: singing_normalize_score(diagnosis.expression_score)
       }
     end
   end
@@ -1362,15 +1367,16 @@ module Singing::DiagnosesHelper
   end
 
   def singing_specific_growth_chart_enabled?(diagnoses, diagnosis)
-    Array(diagnoses).size >= 2 && singing_specific_growth_chart_series(diagnosis, diagnoses).any?
+    singing_specific_growth_chart_data(diagnosis, diagnoses).any? &&
+      singing_specific_growth_chart_series(diagnosis, diagnoses).any?
   end
 
   def singing_specific_growth_chart_series(diagnosis, diagnoses)
-    keys = SPECIFIC_SCORE_LABELS.fetch(diagnosis.performance_type.to_s, {}).keys
     entries = Array(diagnoses)
+    keys = singing_specific_growth_keys(diagnosis, entries)
 
     keys.filter_map do |key|
-      next unless entries.any? { |entry| singing_specific_scores(entry)[key].present? }
+      next unless entries.any? { |entry| singing_specific_growth_score(entry, key).present? }
 
       {
         key: key,
@@ -1378,6 +1384,26 @@ module Singing::DiagnosesHelper
         color: specific_growth_chart_color(key, diagnosis.performance_type)
       }
     end
+  end
+
+  def singing_specific_growth_keys(diagnosis, diagnoses)
+    configured_keys = if diagnosis.performance_type_band?
+                        BAND_ENSEMBLE_SCORE_CONFIGS.map { |config| config[:key] }
+                      else
+                        SPECIFIC_SCORE_LABELS.fetch(diagnosis.performance_type.to_s, {}).keys
+                      end
+    dynamic_keys = Array(diagnoses).flat_map { |entry| singing_specific_scores(entry).keys }
+
+    (configured_keys + dynamic_keys).uniq
+  end
+
+  def singing_specific_growth_score(diagnosis, key)
+    if diagnosis.performance_type_band?
+      config = BAND_ENSEMBLE_SCORE_CONFIGS.find { |item| item[:key] == key.to_sym }
+      return singing_band_specific_score_value(diagnosis, config[:source_keys]) if config.present?
+    end
+
+    singing_specific_scores(diagnosis)[key.to_sym]
   end
 
   def singing_specific_growth_chart_data(diagnosis, diagnoses)
@@ -1388,7 +1414,7 @@ module Singing::DiagnosesHelper
       item = { label: growth_chart_label(entry) }
 
       series_keys.each do |key|
-        score = singing_specific_scores(entry)[key]
+        score = singing_specific_growth_score(entry, key)
         item[key] = score.present? ? score.to_i : nil
       end
 
@@ -1466,14 +1492,14 @@ module Singing::DiagnosesHelper
     return false if series_keys.blank?
 
     Array(diagnoses).any? do |entry|
-      scores = singing_specific_scores(entry)
-      series_keys.any? { |key| scores[key].blank? }
+      series_keys.any? { |key| singing_specific_growth_score(entry, key).blank? }
     end
   end
 
   def singing_radar_chart_title(diagnosis)
     return "ギター演奏の特徴バランス" if diagnosis.performance_type_guitar?
     return "ベース演奏の特徴バランス" if diagnosis.performance_type_bass?
+    return "ドラム演奏の特徴バランス" if diagnosis.performance_type_drums?
     return "キーボード演奏の特徴バランス" if diagnosis.performance_type_keyboard?
     return "バンド演奏の特徴バランス" if diagnosis.performance_type_band?
 
@@ -1483,6 +1509,7 @@ module Singing::DiagnosesHelper
   def singing_radar_chart_description(diagnosis)
     return "リズム・表現・アタック・ミュート・安定感のバランスを補助的に表示しています。ギター詳細スコアとあわせてご確認ください。" if diagnosis.performance_type_guitar?
     return "リズム・表現・グルーヴ・音価・安定感のバランスを補助的に表示しています。ベース詳細スコアとあわせてご確認ください。" if diagnosis.performance_type_bass?
+    return "音のまとまり・リズム・表現のバランスを補助的に表示しています。ドラム詳細スコアとあわせてご確認ください。" if diagnosis.performance_type_drums?
     return "音程・リズム・表現・コード安定・音のつながり・タッチ・ハーモニーのバランスを補助的に表示しています。キーボード詳細スコアとあわせてご確認ください。" if diagnosis.performance_type_keyboard?
     return "調和・リズムの揃い・ダイナミクス・役割理解・音量バランス・グルーヴ・全体のまとまりのバランスを補助的に表示しています。バンド演奏詳細スコアとあわせてご確認ください。" if diagnosis.performance_type_band?
 
@@ -1493,7 +1520,7 @@ module Singing::DiagnosesHelper
     configs = singing_radar_chart_configs(diagnosis)
     return [] if configs.blank?
 
-    configs.each_with_object([]) do |config, data|
+    data = configs.each_with_object([]) do |config, data|
       score = singing_radar_score(diagnosis, config[:key])
       next if score.blank?
 
@@ -1501,6 +1528,16 @@ module Singing::DiagnosesHelper
         key: config[:key],
         label: config[:label],
         score: score.to_i
+      }
+    end
+
+    return data if data.size >= 3
+
+    singing_common_score_cards(diagnosis).map do |card|
+      {
+        key: card[:key],
+        label: card[:label],
+        score: singing_normalize_score(card[:score]) || 0
       }
     end
   end
@@ -2930,6 +2967,12 @@ module Singing::DiagnosesHelper
         { key: :note_length_score, label: "音価" },
         { key: :stability_score, label: "安定感" }
       ]
+    elsif diagnosis.performance_type_drums?
+      [
+        { key: :pitch_score, label: "音のまとまり" },
+        { key: :rhythm_score, label: "リズム" },
+        { key: :expression_score, label: "表現" }
+      ]
     elsif diagnosis.performance_type_keyboard?
       [
         { key: :pitch_score, label: "音程" },
@@ -3344,5 +3387,26 @@ module Singing::DiagnosesHelper
       target: "リズム",
       description: "メトロノームに合わせて、ピッキングの位置と音の長さを一定に保つ練習をします。"
     }
+  end
+
+  RANKING_TITLES = [
+    { min: 95, label: "Legendary" },
+    { min: 90, label: "Master" },
+    { min: 80, label: "Expert" },
+    { min: 70, label: "Advanced" },
+    { min: 60, label: "Intermediate" },
+    { min:  0, label: "Challenger" }
+  ].freeze
+
+  def singing_ranking_title(score)
+    return nil if score.nil?
+
+    RANKING_TITLES.find { |t| score >= t[:min] }&.fetch(:label)
+  end
+
+  def singing_user_initials(customer)
+    return "?" unless customer&.name.present?
+
+    customer.name.strip.chars.first.upcase
   end
 end

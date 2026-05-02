@@ -9,7 +9,7 @@ class Public::ActivitiesController < ApplicationController
   end
 
   def index
-    activities = Activity.includes({ customer: :subscription }, :activity_reactions).left_joins(:favorites)
+    activities = Activity.with_attached_activity_image.includes({ customer: :subscription }, :activity_reactions).left_joins(:favorites)
 
     if params[:keyword].present?
       keyword = "%#{params[:keyword].strip}%"
@@ -40,6 +40,7 @@ class Public::ActivitiesController < ApplicationController
     @customer_activity_counts = Activity.where(customer_id: customer_ids).group(:customer_id).count
 
     @featured_activities = Activity
+      .with_attached_activity_image
       .includes({ customer: :subscription }, :activity_reactions)
       .joins(customer: :subscription)
       .where(subscriptions: { plan: %w[light core premium], status: "active" })

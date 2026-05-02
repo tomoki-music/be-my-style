@@ -7,6 +7,10 @@
   - activity_id = notification.activity_id
 - if notification.event_id.present?
   - event_id = notification.event_id
+- if notification.action.to_s.start_with?("reaction_")
+  - reaction_type = ActivityReaction.reaction_type_from_notification_action(notification.action)
+  - reaction_emoji = ActivityReaction.emoji_for(reaction_type)
+  - reaction_label = reaction_type == "fire" ? "応援" : "リアクション"
 
 .col-md-6.mx-auto
   .form-inline
@@ -44,6 +48,12 @@
       - when 'favorite' then
         = link_to 'あなたの投稿', public_activity_path(activity_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
         = "にいいねしました"
+      - when /^reaction_/ then
+        - if activity_id.present?
+          = link_to 'あなたの活動ログ', public_activity_path(activity_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
+        - else
+          %strong あなたの活動ログ
+        = "に#{reaction_emoji}#{reaction_label}しました"
       - when 'comment' then
         = link_to 'あなたの投稿', public_activity_path(activity_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
         = "にコメントしました"

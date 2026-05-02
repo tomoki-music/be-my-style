@@ -191,6 +191,7 @@ Rails.application.routes.draw do
   namespace :singing do
     root to: "homes#top"
     resources :diagnoses, only: [:index, :new, :create, :show]
+    resources :rankings, only: [:index]
     get  "join", to: "joins#show",   as: :join
     post "join", to: "joins#create"
   end

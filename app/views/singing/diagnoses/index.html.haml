@@ -43,6 +43,14 @@
       = link_to "新しい診断を作成", new_singing_diagnosis_path, class: "btn btn-primary"
       = link_to "歌唱・演奏診断トップへ", singing_root_path, class: "btn btn-secondary"
 
+    = link_to singing_rankings_path, class: "singing-diagnosis__ranking-banner" do
+      .singing-diagnosis__ranking-banner-left
+        %span.singing-diagnosis__ranking-banner-badge RANKING
+        %strong.singing-diagnosis__ranking-banner-title ランキングに参加して成長を楽しもう
+        %span.singing-diagnosis__ranking-banner-sub 診断時に参加を選ぶと、スコアがランキングに掲載されます
+      .singing-diagnosis__ranking-banner-right
+        %span ランキングを見る &rarr;
+
     - if @polling_required
       %p.singing-diagnosis__polling-note 解析中の診断があるため、自動更新しています。すべて完了または失敗になると更新は止まります。
 

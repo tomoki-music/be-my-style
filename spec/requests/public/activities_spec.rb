@@ -17,6 +17,19 @@ RSpec.describe "Public::Activities", type: :request do
       it 'リクエストは200 OKとなること' do
         expect(response.status).to eq 200
       end
+      it "LIGHT以上の投稿を注目活動ログに表示すること" do
+        expect(response.body).to include("注目の活動ログ")
+        expect(response.body).to include(activity.title)
+      end
+    end
+    context "注目活動ログが空の場合" do
+      before do
+        Activity.destroy_all
+        get public_activities_path
+      end
+      it "空状態を表示すること" do
+        expect(response.body).to include("まだ注目できる活動ログはありません。")
+      end
     end
     context "activity詳細ページ(show)が正しく表示される" do
       before do

@@ -45,7 +45,7 @@ class Singing::DiagnosesController < Singing::BaseController
   end
 
   def diagnosis_params
-    permitted = params.require(:singing_diagnosis).permit(:audio_file, :song_title, :memo, :performance_type)
+    permitted = params.require(:singing_diagnosis).permit(:audio_file, :song_title, :memo, :performance_type, :ranking_opt_in)
     active_types = SingingDiagnosis.performance_type_options.map(&:last)
     permitted[:performance_type] = "vocal" unless active_types.include?(permitted[:performance_type])
     permitted

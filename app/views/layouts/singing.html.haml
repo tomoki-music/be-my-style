@@ -1,0 +1,30 @@
+!!!
+%html
+  %head
+    %meta{:content => "text/haml; charset=UTF-8mb4", "http-equiv" => "Content-Type"}/
+    %meta{:content => "width=device-width,initial-scale=1", :name => "viewport"}/
+    %meta{:content => "好きで繋がった仲間は一生もの。音楽人の為のコミュニティアプリです。", :name => "description"}/
+    %title= content_for?(:title) ? yield(:title) : "BeMyStyle"
+    = favicon_link_tag'favicon.ico'
+    = csrf_meta_tags
+    = csp_meta_tag
+    = include_gon
+    = stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload'
+    %link{
+      rel: "stylesheet",
+      href: "https://use.fontawesome.com/releases/v5.15.4/css/all.css",
+      crossorigin: "anonymous"
+    }
+    %link{rel: "stylesheet", href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"}
+    %link{:href => "//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css", :rel => "stylesheet", :type => "text/css"}/
+    %link{:href => "//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css", :rel => "stylesheet", :type => "text/css"}/
+    = javascript_include_tag 'application', 'data-turbolinks-track': 'reload'
+    %script{:type => "text/javascript", :src => "//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"}
+    %script{:type => "text/javascript", :src => "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"}
+  %body
+    .notifications
+      - flash.each do |key, value|
+        = content_tag(:div, value, class: key)
+    - unless content_for?(:suppress_singing_nav)
+      = render 'singing/shared/header'
+    = yield

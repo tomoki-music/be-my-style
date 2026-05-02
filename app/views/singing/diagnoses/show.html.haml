@@ -112,6 +112,8 @@
               %span
                 %i{ style: "background: #{series[:color]}" }
                 = series[:label]
+          - if Array(@growth_diagnoses).size <= 1
+            %p.singing-diagnosis__growth-note 初回診断データです。次回以降、変化がグラフで表示されます。
         - else
           .singing-diagnosis__growth-empty
             %h3 これからの変化をここで確認できます
@@ -121,10 +123,10 @@
         %h2= singing_specific_growth_chart_title(@diagnosis)
         - if current_customer.has_feature?(:singing_diagnosis_priority)
           %p.singing-diagnosis__growth-lead= singing_specific_growth_chart_lead(@diagnosis, @growth_diagnoses)
-          - if singing_specific_growth_chart_enabled?(@growth_diagnoses, @diagnosis)
-            - specific_growth_chart_data = singing_specific_growth_chart_data(@diagnosis, @growth_diagnoses)
-            - specific_growth_chart_series = singing_specific_growth_chart_series(@diagnosis, @growth_diagnoses)
-            - specific_growth_summary_cards = singing_specific_growth_summary_cards(@diagnosis, @growth_diagnoses)
+          - specific_growth_chart_data = singing_specific_growth_chart_data(@diagnosis, @growth_diagnoses)
+          - specific_growth_chart_series = singing_specific_growth_chart_series(@diagnosis, @growth_diagnoses)
+          - specific_growth_summary_cards = singing_specific_growth_summary_cards(@diagnosis, @growth_diagnoses)
+          - if specific_growth_chart_data.any? && specific_growth_chart_series.any?
             .singing-diagnosis__growth-chart{
               data: {
                 singing_diagnosis_growth: true,
@@ -139,6 +141,8 @@
                   = series[:label]
             - if (specific_growth_note = singing_specific_growth_chart_note(@diagnosis, @growth_diagnoses)).present?
               %p.singing-diagnosis__growth-note= specific_growth_note
+            - if Array(@growth_diagnoses).size <= 1
+              %p.singing-diagnosis__growth-note 初回診断データです。次回以降、補足スコアの変化がグラフで表示されます。
             - if specific_growth_summary_cards.any?
               .singing-diagnosis__growth-summary
                 %p.singing-diagnosis__growth-summary-lead= singing_specific_growth_summary_lead(@diagnosis, @growth_diagnoses)
@@ -150,8 +154,8 @@
                       %p= item[:body]
           - else
             .singing-diagnosis__growth-empty
-              %h3 細かな伸びも、次回以降ここで見えるようになります
-              %p 同じ診断対象での完了済み診断が増えると、パート固有の補足スコア推移を確認できます。
+              %h3 補足スコアはまだありません
+              %p 次回以降、補足スコアが取得できる診断では、パート固有の細かな推移を確認できます。
         - else
           %p.singing-diagnosis__growth-lead= singing_specific_growth_chart_locked_lead(@diagnosis)
           .singing-diagnosis__growth-empty.singing-diagnosis__growth-empty--locked
@@ -521,6 +525,20 @@
         %h2= @diagnosis.processing? ? "解析中" : "解析待ち"
         %p 結果が保存されると、このページにスコアが表示されます。
         %p.singing-diagnosis__polling-note 自動更新中です。完了または失敗になると更新は止まります。
+
+    - if @diagnosis.completed?
+      - if @diagnosis.ranking_opt_in?
+        = link_to singing_rankings_path, class: "singing-diagnosis__ranking-nudge singing-diagnosis__ranking-nudge--joined" do
+          .singing-diagnosis__ranking-nudge-inner
+            %span.singing-diagnosis__ranking-nudge-badge ランキング参加中
+            %strong.singing-diagnosis__ranking-nudge-text 次はランキングにも挑戦しよう
+            %span.singing-diagnosis__ranking-nudge-link ランキングを見る &rarr;
+      - else
+        .singing-diagnosis__ranking-nudge.singing-diagnosis__ranking-nudge--opt-out
+          .singing-diagnosis__ranking-nudge-inner
+            %span.singing-diagnosis__ranking-nudge-badge--muted ランキング非参加
+            %p.singing-diagnosis__ranking-nudge-text この診断はランキング非参加です。次回診断時に「ランキングに参加する」を選ぶとスコアが公開されます。
+            = link_to "ランキングを見る", singing_rankings_path, class: "singing-diagnosis__ranking-nudge-link"
 
     .singing-diagnosis__actions
       = link_to "もう一度診断する", new_singing_diagnosis_path, class: "btn btn-primary"
