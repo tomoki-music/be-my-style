@@ -1,0 +1,122 @@
+.singing-profile
+  .singing-profile__hero
+    .singing-profile__cover
+    .singing-profile__hero-inner
+      .singing-profile__avatar-wrap
+        = customer_avatar_tag(@user, class_name: "singing-profile__avatar", fallback: "no_image")
+      .singing-profile__identity
+        .singing-profile__eyebrow Music Growth Profile
+        %h1.singing-profile__name= @user.name
+        - if @user.singing_profile_comment.present?
+          %p.singing-profile__comment= @user.singing_profile_comment
+        - else
+          %p.singing-profile__comment 音楽の成長を記録しています。
+        .singing-profile__badges
+          %span{ class: customer_plan_badge_class(@user) }= customer_plan_label(@user)
+          - if @activity_count >= 10
+            %span.singing-profile__badge.singing-profile__badge--hot= "🔥 #{@activity_count}投稿"
+          - elsif @activity_count >= 3
+            %span.singing-profile__badge= "✨ 活動中"
+          - if @best_diagnosis.present?
+            %span.singing-profile__badge.singing-profile__badge--rank= "Best #{@best_diagnosis.overall_score}点"
+        .singing-profile__meta
+          %span= @user.parts.any? ? @user.parts.map(&:name).join(" / ") : "担当パート未設定"
+          %span= @user.genres.any? ? @user.genres.map(&:name).join(" / ") : "好きなジャンル未設定"
+      .singing-profile__actions
+        - if current_customer == @user
+          = link_to "プロフィールを編集", edit_singing_user_path(current_customer), class: "singing-profile__edit-link"
+        = link_to "ランキングへ", singing_rankings_path, class: "singing-profile__sub-link"
+
+  .singing-profile__inner
+    .singing-profile__main
+      %section.singing-profile__section
+        .singing-profile__section-head
+          %p.singing-profile__section-kicker Story
+          %h2 この人の音楽ストーリー
+        - if @user.introduction.present?
+          .singing-profile__story.singing-profile__markdown
+            = singing_markdown(@user.introduction)
+        - else
+          .singing-profile__empty
+            %p まだ自己紹介はありません。
+            - if current_customer == @user
+              = link_to "自己紹介を書く", edit_singing_user_path(@user)
+
+      %section.singing-profile__section
+        .singing-profile__section-head
+          %p.singing-profile__section-kicker Growth
+          %h2 最近の成長推移
+        - if @growth_diagnoses.present?
+          .singing-profile__growth
+            - @growth_diagnoses.each do |diagnosis|
+              - score_width = [[diagnosis.overall_score.to_i, 0].max, 100].min
+              .singing-profile__growth-item
+                .singing-profile__growth-meta
+                  %span= diagnosis.diagnosed_at&.strftime("%m/%d") || diagnosis.created_at.strftime("%m/%d")
+                  %strong= "#{diagnosis.overall_score}点"
+                .singing-profile__growth-bar
+                  .singing-profile__growth-fill{ style: "width: #{score_width}%" }
+                %small= diagnosis.performance_type_label
+        - else
+          .singing-profile__empty
+            %p 完了した診断が増えると、成長の軌跡がここに表示されます。
+
+      %section.singing-profile__section
+        .singing-profile__section-head
+          %p.singing-profile__section-kicker Activity
+          %h2 最近の活動報告
+        - if @recent_activities.present?
+          .singing-profile__activity-list
+            - @recent_activities.each do |activity|
+              = link_to public_activity_path(activity), class: "singing-profile__activity-card", data: { turbolinks: false } do
+                .singing-profile__activity-thumb
+                  - if activity.activity_image.attached?
+                    = image_tag activity.activity_image
+                  - else
+                    %span ♪
+                .singing-profile__activity-body
+                  %strong= truncate(activity.title, length: 34)
+                  %p= truncate(activity.introduction.presence || activity.keep, length: 70)
+                  %small= "#{time_ago_in_words(activity.created_at)}前"
+        - else
+          .singing-profile__empty
+            %p 活動報告が投稿されると、練習や挑戦の記録がここに並びます。
+
+    .singing-profile__side
+      %section.singing-profile__side-card
+        %h2 プロフィール
+        %dl.singing-profile__definition
+          %dt 担当
+          %dd= @user.parts.any? ? @user.parts.map(&:name).join(" / ") : "未設定"
+          %dt 好きなジャンル
+          %dd= @user.genres.any? ? @user.genres.map(&:name).join(" / ") : "未設定"
+          %dt SNS / リンク
+          %dd
+            - if @safe_profile_url.present?
+              = link_to @safe_profile_url, @safe_profile_url, target: "_blank", rel: "noopener noreferrer"
+            - else
+              未設定
+
+      %section.singing-profile__side-card
+        %h2 最近の診断
+        - if @recent_diagnoses.present?
+          .singing-profile__diagnosis-list
+            - @recent_diagnoses.each do |diagnosis|
+              .singing-profile__diagnosis-item
+                %span= diagnosis.performance_type_label
+                %strong= diagnosis.overall_score.present? ? "#{diagnosis.overall_score}点" : "-"
+                %small= diagnosis.diagnosed_at&.strftime("%Y/%m/%d") || diagnosis.created_at.strftime("%Y/%m/%d")
+        - else
+          %p.singing-profile__side-empty まだ診断結果はありません。
+
+      %section.singing-profile__side-card.singing-profile__side-card--rank
+        %h2 ランキング実績
+        - if @best_diagnosis.present?
+          .singing-profile__rank-score
+            %span= @best_diagnosis.overall_score
+            点
+          %p= "#{@best_diagnosis.performance_type_label} / #{singing_ranking_title(@best_diagnosis.overall_score)}"
+          - if @ranking_position.present?
+            %p.singing-profile__rank-position= "現在 #{@ranking_position}位"
+        - else
+          %p.singing-profile__side-empty ランキング参加中の診断はまだありません。

@@ -1,0 +1,55 @@
+.singing-profile-edit
+  .singing-profile-edit__inner
+    .singing-profile-edit__head
+      %p.singing-profile-edit__eyebrow Edit Growth Profile
+      %h1 プロフィール編集
+      %p ランキングや活動報告から見に来た人に、あなたの音楽の物語が伝わるように整えましょう。
+
+    = form_with model: @user, url: singing_user_path(@user), method: :patch, local: true, class: "singing-profile-edit__form" do |f|
+      - if @user.errors.any?
+        .singing-profile-edit__errors
+          %strong 入力内容を確認してください
+          %ul
+            - @user.errors.full_messages.each do |message|
+              %li= message
+
+      .singing-profile-edit__grid
+        .singing-profile-edit__panel
+          .singing-profile-edit__avatar-preview
+            = customer_avatar_tag(@user, class_name: "singing-profile-edit__avatar", fallback: "no_image")
+          .singing-profile-edit__field
+            = f.label :profile_image, "プロフィール画像"
+            = f.file_field :profile_image, accept: "image/*"
+          .singing-profile-edit__field
+            = f.label :name, "表示名"
+            = f.text_field :name, maxlength: 20, required: true
+          .singing-profile-edit__field
+            = f.label :singing_profile_comment, "一言コメント"
+            = f.text_field :singing_profile_comment, maxlength: 120, placeholder: "例：高音を安定させる練習中です"
+          .singing-profile-edit__field
+            = f.label :url, "SNSリンク・Webサイト"
+            = f.url_field :url, placeholder: "https://..."
+
+        .singing-profile-edit__panel
+          .singing-profile-edit__field
+            = f.label :introduction, "自己紹介"
+            %p.singing-profile-edit__hint Markdown対応：改行、箇条書き、**太字**、[リンク](https://example.com) が使えます。
+            = f.text_area :introduction, rows: 8, placeholder: "例：\n## 今取り組んでいること\n- 高音の安定\n- リズム練習\n\n[演奏動画](https://example.com)"
+          .singing-profile-edit__field
+            %label 担当パート
+            .singing-profile-edit__checks
+              = f.collection_check_boxes(:part_ids, Part.all, :id, :name) do |tag|
+                = tag.label(class: "singing-profile-edit__check") do
+                  = tag.check_box
+                  %span= tag.text
+          .singing-profile-edit__field
+            %label 好きなジャンル
+            .singing-profile-edit__checks
+              = f.collection_check_boxes(:genre_ids, Genre.all, :id, :name) do |tag|
+                = tag.label(class: "singing-profile-edit__check") do
+                  = tag.check_box
+                  %span= tag.text
+
+      .singing-profile-edit__actions
+        = f.submit "保存する", class: "singing-profile-edit__submit"
+        = link_to "プロフィールへ戻る", singing_user_path(@user), class: "singing-profile-edit__cancel"

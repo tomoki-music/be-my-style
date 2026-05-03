@@ -1,0 +1,46 @@
+- toggle_open_text = local_assigns[:toggle_open_text] || "閉じる"
+- cards = local_assigns[:cards] || []
+- demo = local_assigns[:demo]
+- cta_note = local_assigns[:cta_note]
+
+%details.activity-light-value.plan-upsell{ class: local_assigns[:class_name] }
+  %summary.plan-upsell__summary
+    .activity-light-value__header.plan-upsell__header
+      %span.activity-light-value__badge-label= badge_label
+      %h3.activity-light-value__title= title
+      %p.activity-light-value__lead= lead
+    %span.plan-upsell__toggle
+      %span.plan-upsell__toggle-text.plan-upsell__toggle-text--closed= toggle_closed_text
+      %span.plan-upsell__toggle-text.plan-upsell__toggle-text--open= toggle_open_text
+  .plan-upsell__details
+    .activity-light-value__grid
+      - cards.each do |card|
+        .activity-light-value__card
+          %span.activity-light-value__card-icon= card[:icon]
+          %strong.activity-light-value__card-name= card[:name]
+          %p.activity-light-value__card-note= card[:note]
+    - if demo.present?
+      .activity-light-value__demo
+        .activity-light-value__demo-eyebrow= demo[:eyebrow]
+        .activity-light-value__demo-card
+          .activity-light-value__demo-author
+            .activity-light-value__demo-avatar= demo[:avatar]
+            .activity-light-value__demo-info
+              %strong.activity-light-value__demo-name= demo[:name]
+              %span{ class: demo[:badge_class] }= demo[:badge_text]
+              - if demo[:achievement].present?
+                %span.activity-achievement-badge= demo[:achievement]
+          %p.activity-light-value__demo-title= demo[:title]
+          - if demo[:reactions].present?
+            .activity-light-value__demo-reactions
+              - demo[:reactions].each do |reaction|
+                %span{ class: ["activity-light-value__demo-reaction", reaction[:class_name]].compact }= reaction[:icon]
+                %span.activity-light-value__demo-reaction-count= reaction[:count]
+          - if demo[:comment].present?
+            .activity-light-value__demo-comment
+              %span.activity-light-value__demo-comment-avatar= demo[:comment_avatar]
+              %p.activity-light-value__demo-comment-text= demo[:comment]
+    .activity-light-value__footer
+      = link_to cta_text, cta_path, class: "activity-light-value__cta", data: { turbolinks: false }
+      - if cta_note.present?
+        %span.activity-light-value__cta-note= cta_note

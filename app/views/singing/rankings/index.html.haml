@@ -37,7 +37,9 @@
             .singing-ranking__podium-score
               %span.singing-ranking__podium-score-num= diagnosis.overall_score
               %span.singing-ranking__podium-score-unit 点
-            .singing-ranking__podium-name= diagnosis.customer.name
+            = link_to singing_user_path(diagnosis.customer), class: "singing-ranking__podium-user" do
+              = customer_avatar_tag(diagnosis.customer, class_name: "singing-ranking__podium-avatar", fallback: "no_image")
+              %span.singing-ranking__podium-name= diagnosis.customer.name
             .singing-ranking__podium-type= diagnosis.performance_type_label
             - if diagnosis.diagnosed_at.present?
               .singing-ranking__podium-date= diagnosis.diagnosed_at.strftime("%Y/%m/%d")
@@ -60,7 +62,10 @@
                 - rank = index + 4
                 %tr.singing-ranking__tr
                   %td.singing-ranking__td.singing-ranking__td--rank #{rank}位
-                  %td.singing-ranking__td= diagnosis.customer.name
+                  %td.singing-ranking__td
+                    = link_to singing_user_path(diagnosis.customer), class: "singing-ranking__user-link" do
+                      = customer_avatar_tag(diagnosis.customer, class_name: "singing-ranking__user-avatar", fallback: "no_image")
+                      %span= diagnosis.customer.name
                   %td.singing-ranking__td.singing-ranking__td--score= "#{diagnosis.overall_score}点"
                   %td.singing-ranking__td= diagnosis.performance_type_label
                   %td.singing-ranking__td= diagnosis.diagnosed_at&.strftime("%Y/%m/%d")

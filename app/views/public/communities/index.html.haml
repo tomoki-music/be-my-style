@@ -14,11 +14,15 @@
         class: "btn btn-info community-index-create-btn"
   - else
     .directory-upgrade-panel
-      = render "shared/feature_gate",
-        feature_key: :music_community_create,
-        title: "コミュニティ作成ボタン",
-        message: "コミュニティ作成ボタンはPremiumプラン契約で解放されます。あなたのテーマで新しい場をつくれます。",
-        class_name: "feature-gate--inline"
+      = render "shared/plan_upsell_panel",
+        badge_label: "✦ Premium プラン",
+        title: "自分の音楽活動を育てるコミュニティをつくる",
+        lead: "バンド、セッション、ジャンル別グループなど、継続的に仲間が集まる場所を運営できます。",
+        toggle_closed_text: "Premiumプランのメリットを見る",
+        cards: [{ icon: "🏠", name: "コミュニティ作成", note: "自分のテーマでコミュニティを立ち上げ、音楽仲間が集まる場を作れます" }, { icon: "🎼", name: "活動形態に合わせて運営", note: "バンド、セッション、ジャンル別グループ、練習会など目的に合わせて設計できます" }, { icon: "📣", name: "募集と活動の場づくり", note: "メンバー募集やイベントの土台を整え、活動を継続しやすくできます" }, { icon: "🎙️", name: "拠点として使える", note: "主催者・講師・アーティスト活動の案内や交流の中心にできます" }, { icon: "♾️", name: "診断が無制限", note: "歌唱・演奏診断を回数を気にせず使えて、練習前後の変化も追いやすくなります" }, { icon: "🌱", name: "BeMyStyle内で育てる", note: "投稿、イベント、コミュニティをつなげて、自分の音楽活動を長く育てられます" }],
+        cta_text: "Premiumの詳細を見る →",
+        cta_path: public_lp_path(anchor: "lp-section"),
+        cta_note: "場づくりまで進めたい人向けのプランです"
 
 .directory-search
   = form_with url: public_communities_path, method: :get, local: true, class: "directory-search__form" do
