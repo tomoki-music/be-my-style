@@ -13,11 +13,15 @@
         <i class="fa-solid fa-plus"></i> イベント作成
   - else
     .directory-upgrade-panel
-      = render "shared/feature_gate",
-        feature_key: :music_event_create,
-        title: "イベント作成ボタン",
-        message: "イベント作成ボタンはCoreプラン契約で解放されます。参加する側から、企画する側へ進めます。",
-        class_name: "feature-gate--inline"
+      = render "shared/plan_upsell_panel",
+        badge_label: "✦ Core プラン",
+        title: "イベントを企画して、仲間が集まるきっかけをつくる",
+        lead: "参加するだけでなく、セッション会・練習会・ライブ企画を自分から立ち上げられます。",
+        toggle_closed_text: "Coreプランのメリットを見る",
+        cards: [{ icon: "🗓️", name: "イベント作成", note: "開催日時・場所・募集内容を設定して、コミュニティ内にイベントを公開できます" }, { icon: "🎸", name: "企画の幅が広がる", note: "セッション会、練習会、ライブ企画など、やりたい音楽活動を形にできます" }, { icon: "🙋", name: "参加者募集がしやすい", note: "曲やパート、参加条件を見せながら、興味のある仲間に届きやすくなります" }, { icon: "🤝", name: "音楽仲間との活動化", note: "一緒に演奏したい人との予定をつくり、継続的な活動につなげられます" }, { icon: "⭐", name: "主催者として存在感", note: "企画を立てる人としてコミュニティ内で認識され、声をかけてもらいやすくなります" }, { icon: "🎤", name: "診断は月20回", note: "歌唱・演奏診断を月20回まで使えて、練習や本番前の確認にも活用できます" }],
+        cta_text: "Coreの詳細を見る →",
+        cta_path: public_lp_path(anchor: "lp-section"),
+        cta_note: "イベントを立てたい人向けのプランです"
 
 .directory-search
   = form_with url: public_events_path, method: :get, local: true, class: "directory-search__form" do

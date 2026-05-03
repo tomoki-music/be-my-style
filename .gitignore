@@ -41,6 +41,11 @@ yarn-debug.log*
 .env
 be-my-style.pem
 
+# Remotion video production (lives outside this repo at ../bemystyle-reel)
+/reel/
+/out/
+*.mp4
+
 # Ignore Python virtual environments and caches used by the singing analyzer.
 .venv/
 singing_analyzer/.venv/

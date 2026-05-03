@@ -16,57 +16,16 @@
       活動ログを投稿する
 
   - if customer_signed_in? && current_customer.plan == "free"
-    .activity-light-value
-      .activity-light-value__header
-        %span.activity-light-value__badge-label ✦ LIGHT プラン
-        %h3.activity-light-value__title 活動が「見つけてもらえる場」になる
-        %p.activity-light-value__lead 記録するだけでなく、仲間に認識され、応援が自然と集まります。
-      .activity-light-value__grid
-        .activity-light-value__card
-          %span.activity-light-value__card-icon 🏅
-          %strong.activity-light-value__card-name 活動バッジ表示
-          %p.activity-light-value__card-note 投稿数に応じてバッジ獲得。継続が目に見えるかたちになります
-        .activity-light-value__card
-          %span.activity-light-value__card-icon ⭐
-          %strong.activity-light-value__card-name 注目に選ばれやすい
-          %p.activity-light-value__card-note 「注目の活動ログ」枠への掲載はLIGHT以上のみ
-        .activity-light-value__card
-          %span.activity-light-value__card-icon 🔥
-          %strong.activity-light-value__card-name 応援リアクションが増える
-          %p.activity-light-value__card-note プラン表示で信頼感が上がり、仲間が反応しやすくなります
-        .activity-light-value__card
-          %span.activity-light-value__card-icon 👥
-          %strong.activity-light-value__card-name 仲間に認識されやすい
-          %p.activity-light-value__card-note コミュニティ内での存在感・声かけが自然と増えます
-        .activity-light-value__card
-          %span.activity-light-value__card-icon 🎸
-          %strong.activity-light-value__card-name セッションに誘われやすい
-          %p.activity-light-value__card-note 活動が見えることで、仲間からの誘いが来やすくなります
-      .activity-light-value__demo
-        .activity-light-value__demo-eyebrow 👀 LIGHT メンバーはこんな反応を受けています
-        .activity-light-value__demo-card
-          .activity-light-value__demo-author
-            .activity-light-value__demo-avatar 🎸
-            .activity-light-value__demo-info
-              %strong.activity-light-value__demo-name 田中 タクマ
-              %span.plan-badge-inline.plan-badge-inline--light LIGHT
-              %span.activity-achievement-badge 🔥 15投稿
-          %p.activity-light-value__demo-title "先週のスタジオセッションで音程が安定してきた。次はリズムを磨く週にします"
-          .activity-light-value__demo-reactions
-            %span.activity-light-value__demo-reaction.activity-light-value__demo-reaction--hot 🔥
-            %span.activity-light-value__demo-reaction-count 14
-            %span.activity-light-value__demo-reaction 👏
-            %span.activity-light-value__demo-reaction-count 9
-            %span.activity-light-value__demo-reaction 🎸
-            %span.activity-light-value__demo-reaction-count 21
-            %span.activity-light-value__demo-reaction 🎤
-            %span.activity-light-value__demo-reaction-count 6
-          .activity-light-value__demo-comment
-            %span.activity-light-value__demo-comment-avatar 🎵
-            %p.activity-light-value__demo-comment-text 「今度一緒にセッションしませんか？音程意識してるの伝わりました」
-      .activity-light-value__footer
-        = link_to "LIGHTの詳細を見る →", public_lp_path(anchor: "lp-section"), class: "activity-light-value__cta", data: { turbolinks: false }
-        %span.activity-light-value__cta-note まずはここから始められます
+    = render "shared/plan_upsell_panel",
+      badge_label: "✦ LIGHT プラン",
+      title: "活動が「見つけてもらえる場」になる",
+      lead: "記録するだけでなく、仲間に認識され、応援が自然と集まります。",
+      toggle_closed_text: "LIGHTプランのメリットを見る",
+      cards: [{ icon: "🏅", name: "活動バッジ表示", note: "投稿数に応じてバッジ獲得。継続が目に見えるかたちになります" }, { icon: "⭐", name: "注目に選ばれやすい", note: "「注目の活動ログ」枠への掲載はLIGHT以上のみ" }, { icon: "🔥", name: "応援リアクションが増える", note: "プラン表示で信頼感が上がり、仲間が反応しやすくなります" }, { icon: "👥", name: "仲間に認識されやすい", note: "コミュニティ内での存在感・声かけが自然と増えます" }, { icon: "🎸", name: "セッションに誘われやすい", note: "活動が見えることで、仲間からの誘いが来やすくなります" }],
+      demo: { eyebrow: "👀 LIGHT メンバーはこんな反応を受けています", avatar: "🎸", name: "田中 タクマ", badge_class: "plan-badge-inline plan-badge-inline--light", badge_text: "LIGHT", achievement: "🔥 15投稿", title: "\"先週のスタジオセッションで音程が安定してきた。次はリズムを磨く週にします\"", reactions: [{ icon: "🔥", count: 14, class_name: "activity-light-value__demo-reaction--hot" }, { icon: "👏", count: 9 }, { icon: "🎸", count: 21 }, { icon: "🎤", count: 6 }], comment_avatar: "🎵", comment: "「今度一緒にセッションしませんか？音程意識してるの伝わりました」" },
+      cta_text: "LIGHTの詳細を見る →",
+      cta_path: public_lp_path(anchor: "lp-section"),
+      cta_note: "まずはここから始められます"
 
   - elsif customer_signed_in? && current_customer.paid_plan?
     .activity-light-active-banner
@@ -138,7 +97,7 @@
               = image_tag 'no_image'
         .card-body.text-container
           .activity-card-author-row
-            = link_to public_customer_path(activity.customer), data: { 'turbolinks': false }, class: "activity-card-author-link" do
+            = link_to singing_user_path(activity.customer), data: { 'turbolinks': false }, class: "activity-card-author-link" do
               = customer_avatar_tag(activity.customer, class_name: "activity-card-avatar")
               %span.activity-card-author-name= activity.customer.name
             - unless activity.customer.plan == "free"

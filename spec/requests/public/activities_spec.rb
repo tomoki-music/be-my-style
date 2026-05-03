@@ -21,6 +21,9 @@ RSpec.describe "Public::Activities", type: :request do
         expect(response.body).to include("注目の活動ログ")
         expect(response.body).to include(activity.title)
       end
+      it "投稿者のsingingプロフィールへのリンクを表示すること" do
+        expect(response.body).to include(%(href="#{singing_user_path(activity.customer)}"))
+      end
     end
     context "注目活動ログが空の場合" do
       before do
@@ -37,6 +40,9 @@ RSpec.describe "Public::Activities", type: :request do
       end
       it 'リクエストは200 OKとなること' do
         expect(response.status).to eq 200
+      end
+      it "投稿者のsingingプロフィールへのリンクを表示すること" do
+        expect(response.body).to include(%(href="#{singing_user_path(activity.customer)}"))
       end
     end
     context "activity新規作成ページ(new)が正しく表示される" do

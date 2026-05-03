@@ -28,6 +28,17 @@ RSpec.describe "Singing::Rankings", type: :request do
         expect(response.body).to include("ランキング")
       end
 
+      it "ランキング参加者のプロフィールへのリンクを表示すること" do
+        FactoryBot.create(
+          :singing_diagnosis, :completed, :ranking_participant,
+          customer: other_customer, overall_score: 88
+        )
+
+        get singing_rankings_path
+
+        expect(response.body).to include(%(href="#{singing_user_path(other_customer)}"))
+      end
+
       it "ranking_opt_in=true かつ completed の診断のみ表示すること" do
         FactoryBot.create(
           :singing_diagnosis, :completed, :ranking_participant,

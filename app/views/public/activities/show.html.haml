@@ -26,7 +26,7 @@
             %hr
             %h6.card-subtitle
               .activity-show-author-block
-                = link_to public_customer_path(@activity.customer), data: { 'turbolinks': false } do
+                = link_to singing_user_path(@activity.customer), data: { 'turbolinks': false } do
                   .activity-owner-img
                     = customer_avatar_tag(@activity.customer)
                     .activity-name

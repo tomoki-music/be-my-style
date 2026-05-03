@@ -13,7 +13,7 @@ class Singing::RankingsController < Singing::BaseController
       .completed
       .where(ranking_opt_in: true)
       .where.not(overall_score: nil)
-      .includes(:customer)
+      .includes(customer: { profile_image_attachment: :blob })
       .order(overall_score: :desc, id: :desc)
       .each do |diagnosis|
         next if seen_customers[diagnosis.customer_id]
