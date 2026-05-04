@@ -47,5 +47,58 @@ RSpec.describe SingingDiagnoses::OpenAiResponsesClient do
         client.generate_text(input: "input", instructions: "instructions")
       end.to raise_error(SingingDiagnoses::OpenAiResponsesClient::RequestError)
     end
+
+    it "OpenAI APIがtimeoutした場合はTimeoutErrorにすること" do
+      http = instance_double(Net::HTTP)
+      http_class = class_spy("Net::HTTP")
+
+      allow(http_class).to receive(:new).and_return(http)
+      allow(http).to receive(:use_ssl=)
+      allow(http).to receive(:open_timeout=)
+      allow(http).to receive(:read_timeout=)
+      allow(http).to receive(:request).and_raise(Net::ReadTimeout)
+
+      client = described_class.new(api_key: "test-key", model: "test-model", http_class: http_class)
+
+      expect do
+        client.generate_text(input: "input", instructions: "instructions")
+      end.to raise_error(SingingDiagnoses::OpenAiResponsesClient::TimeoutError)
+    end
+
+    it "OpenAI APIが不正なJSONを返した場合はResponseFormatErrorにすること" do
+      response = double("Net::HTTPOK", body: "{")
+      allow(response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(true)
+      http = instance_double(Net::HTTP, request: response)
+      http_class = class_spy("Net::HTTP")
+
+      allow(http_class).to receive(:new).and_return(http)
+      allow(http).to receive(:use_ssl=)
+      allow(http).to receive(:open_timeout=)
+      allow(http).to receive(:read_timeout=)
+
+      client = described_class.new(api_key: "test-key", model: "test-model", http_class: http_class)
+
+      expect do
+        client.generate_text(input: "input", instructions: "instructions")
+      end.to raise_error(SingingDiagnoses::OpenAiResponsesClient::ResponseFormatError)
+    end
+
+    it "OpenAI APIの応答にtext outputがない場合はResponseFormatErrorにすること" do
+      response = double("Net::HTTPOK", body: { output: [] }.to_json)
+      allow(response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(true)
+      http = instance_double(Net::HTTP, request: response)
+      http_class = class_spy("Net::HTTP")
+
+      allow(http_class).to receive(:new).and_return(http)
+      allow(http).to receive(:use_ssl=)
+      allow(http).to receive(:open_timeout=)
+      allow(http).to receive(:read_timeout=)
+
+      client = described_class.new(api_key: "test-key", model: "test-model", http_class: http_class)
+
+      expect do
+        client.generate_text(input: "input", instructions: "instructions")
+      end.to raise_error(SingingDiagnoses::OpenAiResponsesClient::ResponseFormatError)
+    end
   end
 end
