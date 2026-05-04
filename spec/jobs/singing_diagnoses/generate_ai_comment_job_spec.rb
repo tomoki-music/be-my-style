@@ -80,6 +80,60 @@ RSpec.describe SingingDiagnoses::GenerateAiCommentJob, type: :job do
       expect(diagnosis).to be_completed
       expect(diagnosis).to be_ai_comment_failed
       expect(diagnosis.ai_comment_failure_reason).to include("OpenAI API key is not configured")
+      expect(diagnosis.ai_comment_failure_reason).to include("ai_comment_configuration")
+      expect(diagnosis.result_payload["ai_comment_debug"]).to include(
+        "status" => "failed",
+        "category" => "configuration",
+        "error_class" => "SingingDiagnoses::OpenAiResponsesClient::ConfigurationError"
+      )
+    end
+
+    it "OpenAI timeoutの場合は原因を分類してdebug情報を保存すること" do
+      customer = FactoryBot.create(:customer, domain_name: "singing")
+      customer.create_subscription!(status: "active", plan: "premium")
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis,
+        customer: customer,
+        status: :completed,
+        result_payload: { "common" => { "overall_score" => 75 } }
+      )
+
+      allow(SingingDiagnoses::AiCommentGenerator).to receive(:call).and_raise(
+        SingingDiagnoses::OpenAiResponsesClient::TimeoutError,
+        "OpenAI request timed out: Net::ReadTimeout: Net::ReadTimeout"
+      )
+
+      described_class.perform_now(diagnosis.id)
+
+      diagnosis.reload
+      expect(diagnosis).to be_completed
+      expect(diagnosis).to be_ai_comment_failed
+      expect(diagnosis.ai_comment_failure_reason).to include("ai_comment_timeout")
+      expect(diagnosis.result_payload["common"]).to eq("overall_score" => 75)
+      expect(diagnosis.result_payload["ai_comment_debug"]).to include(
+        "status" => "failed",
+        "category" => "timeout",
+        "error_class" => "SingingDiagnoses::OpenAiResponsesClient::TimeoutError"
+      )
+      expect(diagnosis.result_payload["ai_comment_debug"]["message"]).not_to include("test-key")
+    end
+
+    it "OpenAIレスポンス形式不正の場合は原因を分類して保存すること" do
+      customer = FactoryBot.create(:customer, domain_name: "singing")
+      customer.create_subscription!(status: "active", plan: "premium")
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: customer, status: :completed)
+
+      allow(SingingDiagnoses::AiCommentGenerator).to receive(:call).and_raise(
+        SingingDiagnoses::OpenAiResponsesClient::ResponseFormatError,
+        "OpenAI response did not include text output"
+      )
+
+      described_class.perform_now(diagnosis.id)
+
+      diagnosis.reload
+      expect(diagnosis).to be_ai_comment_failed
+      expect(diagnosis.ai_comment_failure_reason).to include("ai_comment_response_format")
+      expect(diagnosis.result_payload["ai_comment_debug"]["category"]).to eq("response_format")
     end
   end
 end

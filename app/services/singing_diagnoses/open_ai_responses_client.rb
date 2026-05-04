@@ -6,6 +6,8 @@ module SingingDiagnoses
   class OpenAiResponsesClient
     class ConfigurationError < StandardError; end
     class RequestError < StandardError; end
+    class TimeoutError < RequestError; end
+    class ResponseFormatError < RequestError; end
 
     DEFAULT_ENDPOINT_URL = "https://api.openai.com/v1/responses".freeze
     DEFAULT_MODEL = "gpt-4.1-mini".freeze
@@ -35,6 +37,12 @@ module SingingDiagnoses
 
       response = http_for(uri).request(request)
       parse_response(response)
+    rescue URI::InvalidURIError => e
+      raise ConfigurationError, "OpenAI endpoint URL is invalid: #{e.message}"
+    rescue Net::OpenTimeout, Net::ReadTimeout, Timeout::Error => e
+      raise TimeoutError, "OpenAI request timed out: #{e.class}: #{e.message}"
+    rescue SocketError, SystemCallError => e
+      raise RequestError, "OpenAI request connection error: #{e.class}: #{e.message}"
     end
 
     private
@@ -76,9 +84,9 @@ module SingingDiagnoses
       end
 
       body = JSON.parse(response.body)
-      extract_text(body).presence || raise(RequestError, "OpenAI response did not include text output")
+      extract_text(body).presence || raise(ResponseFormatError, "OpenAI response did not include text output")
     rescue JSON::ParserError => e
-      raise RequestError, "OpenAI returned invalid JSON: #{e.message}"
+      raise ResponseFormatError, "OpenAI returned invalid JSON: #{e.message}"
     end
 
     def extract_text(body)

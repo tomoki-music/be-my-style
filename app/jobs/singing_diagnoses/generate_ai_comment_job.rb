@@ -22,7 +22,7 @@ module SingingDiagnoses
         ai_commented_at: Time.current
       )
     rescue OpenAiResponsesClient::ConfigurationError => e
-      Rails.logger.error("[GenerateAiCommentJob] ConfigurationError: diagnosis_id=#{diagnosis_id} error=#{e.message}")
+      Rails.logger.error(ai_comment_error_log(diagnosis_id, e, category: "configuration"))
       if Rails.env.development?
         Rails.logger.info("[GenerateAiCommentJob] Using development fallback ai comment: diagnosis_id=#{diagnosis_id}")
         diagnosis&.update!(
@@ -32,20 +32,55 @@ module SingingDiagnoses
           ai_commented_at: Time.current
         )
       else
-        diagnosis&.update!(
-          ai_comment_status: :ai_comment_failed,
-          ai_comment_failure_reason: e.message.truncate(500)
-        )
+        record_failure(diagnosis, e, category: "configuration")
       end
+    rescue OpenAiResponsesClient::TimeoutError => e
+      Rails.logger.error(ai_comment_error_log(diagnosis_id, e, category: "timeout"))
+      record_failure(diagnosis, e, category: "timeout")
+    rescue OpenAiResponsesClient::ResponseFormatError => e
+      Rails.logger.error(ai_comment_error_log(diagnosis_id, e, category: "response_format"))
+      record_failure(diagnosis, e, category: "response_format")
+    rescue OpenAiResponsesClient::RequestError => e
+      Rails.logger.error(ai_comment_error_log(diagnosis_id, e, category: "request"))
+      record_failure(diagnosis, e, category: "request")
     rescue StandardError => e
-      Rails.logger.error("[GenerateAiCommentJob] Failed: diagnosis_id=#{diagnosis_id} error=#{e.class}: #{e.message}")
-      diagnosis&.update!(
-        ai_comment_status: :ai_comment_failed,
-        ai_comment_failure_reason: "#{e.class}: #{e.message}".truncate(500)
-      )
+      Rails.logger.error(ai_comment_error_log(diagnosis_id, e, category: "unexpected"))
+      record_failure(diagnosis, e, category: "unexpected")
     end
 
     private
+
+    def ai_comment_error_log(diagnosis_id, error, category:)
+      "[GenerateAiCommentJob] Failed: diagnosis_id=#{diagnosis_id} category=#{category} error=#{error.class}: #{error.message}"
+    end
+
+    def record_failure(diagnosis, error, category:)
+      return if diagnosis.blank?
+
+      diagnosis.update!(
+        ai_comment_status: :ai_comment_failed,
+        ai_comment_failure_reason: failure_reason(error, category),
+        result_payload: result_payload_with_ai_comment_debug(diagnosis, error, category)
+      )
+    end
+
+    def failure_reason(error, category)
+      "ai_comment_#{category}: #{error.class}: #{error.message}".truncate(500)
+    end
+
+    def result_payload_with_ai_comment_debug(diagnosis, error, category)
+      payload = diagnosis.result_payload.is_a?(Hash) ? diagnosis.result_payload.deep_dup : {}
+      payload["ai_comment_debug"] = {
+        "status" => "failed",
+        "category" => category,
+        "error_class" => error.class.name,
+        "message" => error.message.to_s.truncate(500),
+        "failed_at" => Time.current.iso8601,
+        "rails_env" => Rails.env.to_s,
+        "queue_adapter" => ActiveJob::Base.queue_adapter.class.name
+      }
+      payload
+    end
 
     def development_fallback_comment(diagnosis)
       scores = {
