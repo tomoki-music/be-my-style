@@ -192,6 +192,7 @@ Rails.application.routes.draw do
     root to: "homes#top"
     resources :diagnoses, only: [:index, :new, :create, :show]
     resources :rankings, only: [:index]
+    resources :ranking_seasons, only: [:index, :show]
     resources :notifications, only: [:index]
     resources :users, only: [:show, :edit, :update] do
       resource :profile_reaction, only: [:create]

@@ -1,0 +1,42 @@
+.singing-season
+  .singing-season__hero
+    .singing-season__hero-inner
+      %p.singing-season__eyebrow SEASON RANKING
+      %h1.singing-season__hero-title= @season.name
+      %p.singing-season__hero-subtitle
+        = @season.starts_on.strftime("%Y/%m/%d")
+        〜
+        = @season.ends_on.strftime("%Y/%m/%d")
+        の記録です。
+
+  .singing-season__inner
+    .singing-season__show-meta
+      %span.singing-season__card-status{ class: "singing-season__card-status--#{@season.status}" }
+        = @season.status == "active" ? "開催中" : (@season.status == "closed" ? "終了" : "準備中")
+      %span.singing-season__card-type= @season.season_type == "monthly" ? "月間シーズン" : @season.season_type
+
+    - if @entries_by_category.empty?
+      .singing-season__empty
+        %p.singing-season__empty-icon ☆
+        %p.singing-season__empty-text
+          このシーズンのエントリーはまだありません。
+          %br
+          - if @season.status == "active"
+            診断でランキング参加をONにして、最初のエントリーを目指しましょう！
+
+    - else
+      - category_labels = { "overall" => "総合ランキング", "pitch" => "音程ランキング", "rhythm" => "リズムランキング", "expression" => "表現力ランキング", "growth" => "成長ランキング" }
+
+      - @entries_by_category.each do |category, entries|
+        .singing-season__category-section
+          %h2.singing-season__category-title= category_labels[category] || category
+          = render "singing/ranking_seasons/entries_table", entries: entries
+
+    .singing-season__back-link
+      = link_to "← シーズン一覧に戻る", singing_ranking_seasons_path
+
+    - if @season.status == "active"
+      .singing-season__cta
+        %p.singing-season__cta-message
+          今月も挑戦しよう。点数だけではなく、挑戦したこと自体があなたの成長です。
+        = link_to "歌唱・演奏診断を始める", new_singing_diagnosis_path, class: "btn btn-primary singing-season__cta-btn"

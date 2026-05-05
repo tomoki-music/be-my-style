@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_05_090000) do
+ActiveRecord::Schema.define(version: 2026_05_05_110001) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -680,6 +680,38 @@ ActiveRecord::Schema.define(version: 2026_05_05_090000) do
     t.index ["target_customer_id"], name: "index_singing_profile_reactions_on_target_customer_id"
   end
 
+  create_table "singing_ranking_seasons", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "name", null: false
+    t.date "starts_on", null: false
+    t.date "ends_on", null: false
+    t.string "status", default: "draft", null: false
+    t.string "season_type", default: "monthly", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["ends_on"], name: "index_singing_ranking_seasons_on_ends_on"
+    t.index ["starts_on"], name: "index_singing_ranking_seasons_on_starts_on"
+    t.index ["status"], name: "index_singing_ranking_seasons_on_status"
+  end
+
+  create_table "singing_season_ranking_entries", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "singing_ranking_season_id", null: false
+    t.bigint "customer_id", null: false
+    t.bigint "singing_diagnosis_id"
+    t.integer "rank", null: false
+    t.integer "score", null: false
+    t.string "category", default: "overall", null: false
+    t.string "title"
+    t.string "badge_key"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["category"], name: "index_singing_season_ranking_entries_on_category"
+    t.index ["customer_id"], name: "index_singing_season_ranking_entries_on_customer_id"
+    t.index ["rank"], name: "index_singing_season_ranking_entries_on_rank"
+    t.index ["singing_diagnosis_id"], name: "index_singing_season_ranking_entries_on_singing_diagnosis_id"
+    t.index ["singing_ranking_season_id", "customer_id", "category"], name: "index_season_ranking_entries_unique", unique: true
+    t.index ["singing_ranking_season_id"], name: "index_season_entries_on_season_id"
+  end
+
   create_table "song_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "song_id", null: false
@@ -819,6 +851,9 @@ ActiveRecord::Schema.define(version: 2026_05_05_090000) do
   add_foreign_key "singing_diagnoses", "customers"
   add_foreign_key "singing_profile_reactions", "customers"
   add_foreign_key "singing_profile_reactions", "customers", column: "target_customer_id"
+  add_foreign_key "singing_season_ranking_entries", "customers"
+  add_foreign_key "singing_season_ranking_entries", "singing_diagnoses"
+  add_foreign_key "singing_season_ranking_entries", "singing_ranking_seasons"
   add_foreign_key "song_customers", "customers"
   add_foreign_key "song_customers", "songs"
   add_foreign_key "songs", "events"

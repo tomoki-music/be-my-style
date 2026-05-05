@@ -1,0 +1,18 @@
+- current_season = SingingRankingSeason.current.first
+.singing-ranking__season-banner
+  - if current_season
+    .singing-ranking__season-banner-inner.singing-ranking__season-banner-inner--active
+      .singing-ranking__season-banner-label
+        %span.singing-ranking__season-banner-dot
+        今月開催中
+      %h3.singing-ranking__season-banner-name= current_season.name
+      %p.singing-ranking__season-banner-period
+        対象期間：
+        = current_season.starts_on.strftime("%Y/%m/%d")
+        〜
+        = current_season.ends_on.strftime("%Y/%m/%d")
+      = link_to singing_ranking_season_path(current_season), class: "singing-ranking__season-banner-link" do
+        シーズン詳細を確認する →
+  - else
+    .singing-ranking__season-banner-inner
+      %p.singing-ranking__season-banner-none 現在開催中のシーズンはありません
