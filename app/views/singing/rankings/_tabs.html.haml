@@ -1,0 +1,15 @@
+-# ranking_type: "overall" | "growth" | "season"
+.singing-ranking__tabs
+  = link_to singing_rankings_path(type: "overall"),
+            class: "singing-ranking__tab-item #{'singing-ranking__tab-item--active' if ranking_type == 'overall'}" do
+    総合ランキング
+  = link_to singing_rankings_path(type: "growth"),
+            class: "singing-ranking__tab-item #{'singing-ranking__tab-item--active' if ranking_type == 'growth'}" do
+    成長ランキング
+    - if ranking_type != "growth"
+      %span.singing-ranking__tab-badge.singing-ranking__tab-badge--new NEW
+  = link_to singing_rankings_path(type: "season"),
+            class: "singing-ranking__tab-item #{'singing-ranking__tab-item--active' if ranking_type == 'season'}" do
+    シーズンランキング
+    - if ranking_type != "season"
+      %span.singing-ranking__tab-badge.singing-ranking__tab-badge--season 今月開催中

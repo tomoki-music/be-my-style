@@ -194,9 +194,272 @@ RSpec.describe "Singing::Rankings", type: :request do
         expect(response.body).to include("まだランキング参加者はいません")
       end
 
+      it "総合ランキングでバッジを表示すること" do
+        FactoryBot.create(
+          :singing_diagnosis, :completed, :ranking_participant,
+          customer: other_customer, overall_score: 88
+        )
+
+        get singing_rankings_path
+
+        expect(response.body).to include("singing-ranking__badge")
+        expect(response.body).to include("総合TOP3")
+      end
+
       it "プライバシー注意書きを表示すること" do
         get singing_rankings_path
         expect(response.body).to include("ランキング参加は任意です")
+      end
+
+      context "タブ構造" do
+        it "総合ランキングタブを表示すること" do
+          get singing_rankings_path
+          expect(response.body).to include("総合ランキング")
+        end
+
+        it "成長ランキングタブを NEW バッジ付きクリック可能リンクとして表示すること" do
+          get singing_rankings_path
+          expect(response.body).to include("成長ランキング")
+          expect(response.body).to include("singing-ranking__tab-badge--new")
+          expect(response.body).to include("NEW")
+        end
+
+        it "シーズンランキングタブを「今月開催中」バッジ付きリンクとして表示すること" do
+          get singing_rankings_path
+          expect(response.body).to include("シーズンランキング")
+          expect(response.body).to include("今月開催中")
+        end
+      end
+
+      context "自分の順位表示" do
+        it "ランキング参加中のユーザーには現在順位を表示すること" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: singing_customer, overall_score: 80
+          )
+
+          get singing_rankings_path
+
+          expect(response.body).to include("あなたの現在順位")
+          expect(response.body).to include("ランキング参加中")
+        end
+
+        it "自分の順位カードにバッジを表示すること" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: singing_customer, overall_score: 80
+          )
+
+        get singing_rankings_path
+
+        expect(response.body).to include("singing-ranking__badges--my-position")
+        expect(response.body).to include("総合TOP3")
+      end
+
+        it "ランキング未参加のユーザーには診断CTAを表示すること" do
+          get singing_rankings_path
+
+          expect(response.body).to include("診断を始める")
+          expect(response.body).to include("ランキング参加をONにすると掲載されます")
+        end
+      end
+
+      context "GET /singing/rankings?type=growth（成長ランキング）" do
+        it "200 OKを返すこと" do
+          get singing_rankings_path(type: "growth")
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "成長ランキングタブがアクティブになること" do
+          get singing_rankings_path(type: "growth")
+          expect(response.body).to include("singing-ranking__tab-item--active")
+          expect(response.body).to include("成長ランキング")
+        end
+
+        it "成長ランキング参加者の成長幅を表示すること" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed,
+            customer: other_customer, overall_score: 60, ranking_opt_in: false,
+            created_at: 2.days.ago
+          )
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: other_customer, overall_score: 80, created_at: 1.day.ago
+          )
+
+          get singing_rankings_path(type: "growth")
+
+          expect(response.body).to include("+20点")
+        end
+
+        it "成長ランキングでバッジを表示すること" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed,
+            customer: other_customer, overall_score: 60, ranking_opt_in: false,
+            created_at: 2.days.ago
+          )
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: other_customer, overall_score: 80, created_at: 1.day.ago
+          )
+
+          get singing_rankings_path(type: "growth")
+
+          expect(response.body).to include("singing-ranking__badge")
+          expect(response.body).to include("成長TOP3")
+        end
+
+        it "成長幅がない（横ばい・下降）ユーザーはランキングに表示しないこと" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed,
+            customer: hidden_customer, overall_score: 90, ranking_opt_in: false,
+            created_at: 2.days.ago
+          )
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: hidden_customer, overall_score: 70, created_at: 1.day.ago
+          )
+
+          get singing_rankings_path(type: "growth")
+
+          expect(response.body).not_to include(hidden_customer.name)
+        end
+
+        it "診断が1件のみのユーザーは表示しないこと" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: hidden_customer, overall_score: 80
+          )
+
+          get singing_rankings_path(type: "growth")
+
+          expect(response.body).not_to include(hidden_customer.name)
+        end
+
+        it "成長ランキング参加中のユーザーには自分の成長幅を表示すること" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed,
+            customer: singing_customer, overall_score: 60, ranking_opt_in: false,
+            created_at: 2.days.ago
+          )
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: singing_customer, overall_score: 80, created_at: 1.day.ago
+          )
+
+          get singing_rankings_path(type: "growth")
+
+          expect(response.body).to include("あなたの成長幅")
+          expect(response.body).to include("成長ランキング参加中")
+        end
+
+        it "診断が1件のみのユーザーには1回CTAメッセージを表示すること" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: singing_customer, overall_score: 80
+          )
+
+          get singing_rankings_path(type: "growth")
+
+          expect(response.body).to include("あと1回の診断で成長ランキングに参加できます")
+        end
+
+        it "診断がないユーザーには初回CTAメッセージを表示すること" do
+          get singing_rankings_path(type: "growth")
+
+          expect(response.body).to include("診断を2回以上受けると成長ランキングに参加できます")
+        end
+
+        it "参加者がいない場合は空状態メッセージを表示すること" do
+          get singing_rankings_path(type: "growth")
+
+          expect(response.body).to include("まだ成長ランキング参加者はいません")
+        end
+      end
+
+      context "GET /singing/rankings?type=season（シーズンランキング）" do
+        it "200 OKを返すこと" do
+          get singing_rankings_path(type: "season")
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "シーズンランキングタブがアクティブになること" do
+          get singing_rankings_path(type: "season")
+          expect(response.body).to include("シーズンランキング")
+          expect(response.body).to match(/singing-ranking__tab-item--active[^>]*>.*?シーズンランキング/m)
+        end
+
+        it "今月の診断のみ表示すること" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: other_customer, overall_score: 80, diagnosed_at: Time.zone.now
+          )
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: hidden_customer, overall_score: 90, diagnosed_at: 1.month.ago
+          )
+
+          get singing_rankings_path(type: "season")
+
+          expect(response.body).to include(other_customer.name)
+          expect(response.body).not_to include(hidden_customer.name)
+        end
+
+        it "シーズンランキングでバッジを表示すること" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: other_customer, overall_score: 80, diagnosed_at: Time.zone.now
+          )
+
+          get singing_rankings_path(type: "season")
+
+          expect(response.body).to include("singing-ranking__badge")
+          expect(response.body).to include("今月の王者")
+        end
+
+        it "先月の診断はランキングに表示しないこと" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: hidden_customer, overall_score: 95, diagnosed_at: 1.month.ago
+          )
+
+          get singing_rankings_path(type: "season")
+
+          expect(response.body).not_to include(hidden_customer.name)
+        end
+
+        it "参加者がいない場合は今月初ランクインCTAを表示すること" do
+          get singing_rankings_path(type: "season")
+          expect(response.body).to include("今月最初のランクインを目指そう")
+        end
+
+        it "今月ランクイン中のユーザーには今月の順位を表示すること" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: singing_customer, overall_score: 80, diagnosed_at: Time.zone.now
+          )
+
+          get singing_rankings_path(type: "season")
+
+          expect(response.body).to include("今月の順位")
+          expect(response.body).to include("今月ランクイン中")
+        end
+
+        it "今月未診断ユーザーにはCTAメッセージを表示すること" do
+          get singing_rankings_path(type: "season")
+          expect(response.body).to include("今月はまだ診断していません")
+        end
+
+        it "既存の総合ランキングに影響しないこと" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: other_customer, overall_score: 80
+          )
+
+          get singing_rankings_path
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("あなたの現在順位").or include("診断を始める")
+        end
       end
     end
 

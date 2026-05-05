@@ -1,0 +1,7 @@
+- visible_badges = Array(badges).first(local_assigns.fetch(:limit, 4))
+- if visible_badges.present?
+  .singing-ranking__badges{ class: local_assigns[:class_name] }
+    - visible_badges.each do |badge|
+      %span.singing-ranking__badge{ class: "singing-ranking__badge--#{badge[:rarity]}", title: badge[:label] }
+        %span.singing-ranking__badge-icon= badge[:icon]
+        %span.singing-ranking__badge-label= badge[:label]

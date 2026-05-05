@@ -3404,6 +3404,19 @@ module Singing::DiagnosesHelper
     RANKING_TITLES.find { |t| score >= t[:min] }&.fetch(:label)
   end
 
+  GROWTH_TITLES = [
+    { min: 20, label: "急成長！" },
+    { min: 10, label: "着実な成長" },
+    { min:  5, label: "一歩前進" },
+    { min:  1, label: "成長中" }
+  ].freeze
+
+  def singing_growth_title(growth_score)
+    return nil if growth_score.nil?
+
+    GROWTH_TITLES.find { |t| growth_score >= t[:min] }&.fetch(:label)
+  end
+
   def singing_user_initials(customer)
     return "?" unless customer&.name.present?
 

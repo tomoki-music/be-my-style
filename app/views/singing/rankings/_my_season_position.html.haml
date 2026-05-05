@@ -1,0 +1,41 @@
+-# my_season_diagnosis: SingingDiagnosis | nil
+-# my_season_position:  Integer | nil
+-# my_season_has_diagnosis_this_month: Boolean | nil (nil when my_season_diagnosis present)
+-# season_range:  Range<Time>
+-# ranking_plan_context: Hash
+
+.singing-ranking__my-position
+  - if my_season_diagnosis.present? && my_season_position.present?
+    .singing-ranking__my-position-card
+      .singing-ranking__my-position-left
+        %p.singing-ranking__my-position-label
+          = season_range.begin.strftime("%Y年%-m月") + " 今月の順位"
+        .singing-ranking__my-position-rank
+          %span.singing-ranking__my-position-rank-num= my_season_position
+          %span.singing-ranking__my-position-rank-unit 位
+        %p.singing-ranking__my-position-score
+          = "#{my_season_diagnosis.overall_score}点 · #{my_season_diagnosis.performance_type_label}"
+          - if my_season_diagnosis.diagnosed_at.present?
+            = " · #{my_season_diagnosis.diagnosed_at.strftime('%-m/%-d')}"
+        = render "singing/rankings/badges", badges: my_badges, limit: 4, class_name: "singing-ranking__badges--my-position"
+      .singing-ranking__my-position-right
+        %span.singing-ranking__my-position-badge
+          %span.singing-ranking__my-position-badge-dot
+          今月ランクイン中
+        -# FUTURE: can_access_season_badges が true のとき、シーズン称号バッジを表示（Core以上）
+  - elsif my_season_has_diagnosis_this_month
+    -# 今月診断済みだが ranking_opt_in=false
+    .singing-ranking__my-position-card.singing-ranking__my-position-card--inactive
+      .singing-ranking__my-position-inactive-text
+        %strong 今月の診断でランキング参加をONにしよう！
+        %br
+        診断結果でランキング参加を選択するとシーズンランキングに掲載されます。
+      = link_to "診断を始める", new_singing_diagnosis_path, class: "singing-ranking__my-position-cta-btn"
+  - else
+    -# 今月未診断
+    .singing-ranking__my-position-card.singing-ranking__my-position-card--inactive
+      .singing-ranking__my-position-inactive-text
+        %strong 今月はまだ診断していません
+        %br
+        毎月リセットされるので、今月の記録を残しておきましょう！
+      = link_to "今月の診断を始める", new_singing_diagnosis_path, class: "singing-ranking__my-position-cta-btn"

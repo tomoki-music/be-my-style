@@ -1,0 +1,46 @@
+-# growth_rankings: Array<Singing::RankingQuery::GrowthEntry>
+-# ranking_plan_context: Hash
+
+-# FUTURE: can_join_growth_ranking=false のユーザーにはアップセルバナーを表示（Core解放時）
+- unless ranking_plan_context[:can_join_growth_ranking]
+  .singing-ranking__plan-nudge
+    %span.singing-ranking__plan-nudge-icon ✦
+    .singing-ranking__plan-nudge-text
+      成長ランキングはCoreプラン以上でフル解放予定です。現在はすべてのユーザーが閲覧できます。
+
+.singing-ranking__growth-intro
+  %p.singing-ranking__growth-intro-text
+    前回の診断からのスコアアップを称えるランキングです。
+    %br
+    順位より「自分の伸び」を楽しみましょう。挑戦するすべての方を応援しています。
+
+- if growth_rankings.empty?
+  .singing-ranking__empty
+    .singing-ranking__empty-icon
+      %span ↑
+    %h2.singing-ranking__empty-title まだ成長ランキング参加者はいません
+    %p.singing-ranking__empty-message
+      診断を2回以上受けてスコアが上がると、ここに名前が刻まれます。
+      %br
+      最初の成長を見せるのは、あなたかもしれません。
+    = link_to "歌唱・演奏診断を始める", new_singing_diagnosis_path, class: "btn btn-primary singing-ranking__empty-btn"
+
+- else
+  .singing-ranking__growth-list
+    - growth_rankings.each_with_index do |entry, index|
+      .singing-ranking__growth-card
+        .singing-ranking__growth-rank
+          %span= "#{index + 1}位"
+        .singing-ranking__growth-user
+          = link_to singing_user_path(entry.customer), class: "singing-ranking__growth-user-link" do
+            = customer_avatar_tag(entry.customer, class_name: "singing-ranking__growth-user-avatar", fallback: "no_image")
+            .singing-ranking__growth-user-info
+              %span.singing-ranking__growth-user-name= entry.customer.name
+              %span.singing-ranking__growth-user-meta= entry.latest_diagnosis.performance_type_label
+              = render "singing/rankings/badges", badges: badges_map[entry.customer.id], limit: 3
+        .singing-ranking__growth-scores
+          .singing-ranking__growth-delta= "+#{entry.growth_score}点"
+          .singing-ranking__growth-score-change
+            = "#{entry.previous_diagnosis.overall_score}点 → #{entry.latest_diagnosis.overall_score}点"
+          - if (title = singing_growth_title(entry.growth_score))
+            %span.singing-ranking__growth-badge= title
