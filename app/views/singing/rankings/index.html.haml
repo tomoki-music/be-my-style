@@ -14,8 +14,13 @@
           挑戦し続ける全ての方を応援しています。
       - when "season"
         %p.singing-ranking__hero-subtitle
+          - if @current_season
+            = @current_season.name
+            &mdash;
           = @season_range.begin.strftime("%Y年%-m月")
-          のランキングです。毎月リセットされるので、何度でも挑戦できます。
+          のランキングです。
+          %br
+          毎月リセットされるので、何度でも挑戦できます。
       - else
         %p.singing-ranking__hero-subtitle
           歌唱・演奏診断を受けたユーザーの中から、
@@ -56,6 +61,7 @@
       = render "singing/rankings/season",
                season_rankings: @season_rankings,
                season_range: @season_range,
+               current_season: @current_season,
                badges_map: @badges_map,
                ranking_plan_context: @ranking_plan_context
     - else
@@ -69,7 +75,8 @@
         診断時に「ランキングに参加する」を選択したユーザーのみ表示されます。
         参加の有無が診断内容や結果に影響することはありません。
 
-    = render "singing/rankings/season_banner"
+    - unless @ranking_type == "season"
+      = render "singing/rankings/season_banner"
 
     .singing-ranking__cta
       %p.singing-ranking__cta-eyebrow NEXT STAGE

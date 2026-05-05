@@ -15,6 +15,7 @@ class Singing::RankingsController < Singing::BaseController
                                               .count
       end
     when "season"
+      @current_season = SingingRankingSeason.current.first
       @season_range = Singing::RankingQuery.current_season_range
       @season_rankings = Singing::RankingQuery.season
       ranking_customers = @season_rankings.map(&:customer)

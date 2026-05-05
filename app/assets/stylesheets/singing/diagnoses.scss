@@ -5559,3 +5559,156 @@ $ranking-accent: #7c4dff;
   font-size: 14px;
   margin: 0;
 }
+
+// =========================================================
+// Season Navigation & Connected Header Additions
+// =========================================================
+
+// --- Season tab: DB connected header variant ---
+
+.singing-ranking__season-header--connected {
+  background: linear-gradient(135deg, #0f1623 0%, #1a2540 60%, #24133d 100%);
+  border: none;
+  border-radius: 14px;
+  padding: 24px 28px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 24px;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 50% at 30% 20%, rgba(124, 77, 255, 0.2) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .singing-ranking__season-badge {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(4px);
+  }
+
+  .singing-ranking__season-title {
+    margin-bottom: 8px;
+  }
+
+  .singing-ranking__season-name {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .singing-ranking__season-period {
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 400;
+    margin-bottom: 10px;
+  }
+
+  .singing-ranking__season-description {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 16px;
+  }
+}
+
+.singing-ranking__season-header-top {
+  margin-bottom: 8px;
+}
+
+.singing-ranking__season-header-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.singing-ranking__season-detail-link {
+  color: $ranking-gold;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+    color: $ranking-gold;
+  }
+}
+
+.singing-ranking__season-premium-teaser {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.singing-ranking__season-premium-badge {
+  background: rgba(245, 200, 66, 0.15);
+  border-radius: 20px;
+  color: $ranking-gold;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+}
+
+// --- Season banner improvements ---
+
+.singing-ranking__season-banner-message {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.singing-ranking__season-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.singing-ranking__season-banner-link--primary {
+  background: linear-gradient(90deg, $ranking-accent, #9b5bff);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 20px;
+  text-decoration: none;
+
+  &:hover {
+    background: linear-gradient(90deg, #6a3de8, $ranking-accent);
+    color: #fff;
+    text-decoration: none;
+  }
+}
+
+// --- Global nav: season indicator dot ---
+
+.singing-nav__link--season {
+  position: relative;
+}
+
+.singing-nav__season-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: $ranking-gold;
+  margin-left: 4px;
+  vertical-align: middle;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+.singing-nav__badge-inline {
+  background: rgba(124, 77, 255, 0.15);
+  border-radius: 20px;
+  color: $ranking-accent;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 6px;
+  padding: 2px 7px;
+  vertical-align: middle;
+}
