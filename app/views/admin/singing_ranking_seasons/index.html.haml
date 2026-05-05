@@ -3,7 +3,17 @@
 .container.py-4
   .d-flex.justify-content-between.align-items-center.mb-3
     %h2.mb-0 歌唱シーズンランキング管理
-    = link_to "新規シーズン作成", new_admin_singing_ranking_season_path, class: "btn btn-primary"
+    .btn-group
+      = button_to "今月シーズンを作成",
+                  ensure_current_admin_singing_ranking_seasons_path,
+                  method: :post,
+                  class: "btn btn-outline-success",
+                  data: { confirm: "今月分のシーズンを作成します。既に同月シーズンがある場合は作成されません。" }
+      = link_to "新規シーズン作成", new_admin_singing_ranking_season_path, class: "btn btn-primary"
+
+  .alert.alert-light.border
+    毎月のシーズン作成漏れを防ぐため、今月分のシーズンを作成できます。
+    既に同月シーズンがある場合は重複作成されません。
 
   - if @seasons.empty?
     .alert.alert-info 登録されたシーズンはありません。

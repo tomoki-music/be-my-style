@@ -35,6 +35,7 @@ Rails.application.routes.draw do
 
     # 歌唱シーズンランキング管理
     resources :singing_ranking_seasons, except: [:destroy] do
+      post :ensure_current, on: :collection
       post :aggregate, on: :member
     end
   end
