@@ -1,6 +1,6 @@
 class Singing::RankingsController < Singing::BaseController
   def index
-    @ranking_type = params[:type].presence_in(%w[overall growth]) || "overall"
+    @ranking_type = params[:type].presence_in(%w[overall growth season]) || "overall"
     @ranking_plan_context = build_ranking_plan_context
 
     case @ranking_type
@@ -12,6 +12,24 @@ class Singing::RankingsController < Singing::BaseController
                                               .completed
                                               .where.not(overall_score: nil)
                                               .count
+      end
+    when "season"
+      @season_range = Singing::RankingQuery.current_season_range
+      @season_rankings = Singing::RankingQuery.season
+      @my_season_diagnosis = current_customer.singing_diagnoses
+                                             .completed
+                                             .where(ranking_opt_in: true)
+                                             .where.not(overall_score: nil)
+                                             .where.not(diagnosed_at: nil)
+                                             .where(diagnosed_at: @season_range)
+                                             .order(overall_score: :desc, diagnosed_at: :desc)
+                                             .first
+      @my_season_position = @my_season_diagnosis ? Singing::RankingQuery.season_position_for(current_customer.id) : nil
+      unless @my_season_diagnosis
+        @my_season_has_diagnosis_this_month = current_customer.singing_diagnoses
+                                                              .completed
+                                                              .where(diagnosed_at: @season_range)
+                                                              .exists?
       end
     else
       @rankings = Singing::RankingQuery.overall
@@ -34,7 +52,11 @@ class Singing::RankingsController < Singing::BaseController
       can_view_rank_history: current_customer.has_feature?(:singing_diagnosis_comparison),
       # FUTURE: core以上で「成長ランキング」本格参加予定
       can_join_growth_ranking: current_customer.has_feature?(:singing_diagnosis_advanced_feedback),
-      # FUTURE: premiumで「シーズンランキング」「称号詳細」解放予定
+      # FUTURE: light以上でシーズンランキング参加予定
+      can_join_season_ranking: current_customer.has_feature?(:singing_diagnosis_comparison),
+      # FUTURE: core以上でシーズン称号対象予定
+      can_access_season_badges: current_customer.has_feature?(:singing_diagnosis_advanced_feedback),
+      # FUTURE: premiumで詳細推移・特別バッジ解放予定
       can_access_premium_features: current_customer.plan == "premium"
     }
   end

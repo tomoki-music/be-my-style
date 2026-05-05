@@ -6,11 +6,16 @@
         みんなの演奏力
         %br
         ランキング
-      - if @ranking_type == "growth"
+      - case @ranking_type
+      - when "growth"
         %p.singing-ranking__hero-subtitle
           前回の診断からスコアが伸びたユーザーを称えるランキングです。
           %br
           挑戦し続ける全ての方を応援しています。
+      - when "season"
+        %p.singing-ranking__hero-subtitle
+          = @season_range.begin.strftime("%Y年%-m月")
+          のランキングです。毎月リセットされるので、何度でも挑戦できます。
       - else
         %p.singing-ranking__hero-subtitle
           歌唱・演奏診断を受けたユーザーの中から、
@@ -18,10 +23,18 @@
           ランキング参加者のベストスコアを公開しています。
 
   .singing-ranking__inner
-    - if @ranking_type == "growth"
+    - case @ranking_type
+    - when "growth"
       = render "singing/rankings/my_growth_position",
                my_growth_entry: @my_growth_entry,
                my_completed_count: @my_completed_count.to_i,
+               ranking_plan_context: @ranking_plan_context
+    - when "season"
+      = render "singing/rankings/my_season_position",
+               my_season_diagnosis: @my_season_diagnosis,
+               my_season_position: @my_season_position,
+               my_season_has_diagnosis_this_month: @my_season_has_diagnosis_this_month,
+               season_range: @season_range,
                ranking_plan_context: @ranking_plan_context
     - else
       = render "singing/rankings/my_position",
@@ -30,9 +43,15 @@
 
     = render "singing/rankings/tabs", ranking_type: @ranking_type
 
-    - if @ranking_type == "growth"
+    - case @ranking_type
+    - when "growth"
       = render "singing/rankings/growth",
                growth_rankings: @growth_rankings,
+               ranking_plan_context: @ranking_plan_context
+    - when "season"
+      = render "singing/rankings/season",
+               season_rankings: @season_rankings,
+               season_range: @season_range,
                ranking_plan_context: @ranking_plan_context
     - else
       = render "singing/rankings/overall", rankings: @rankings

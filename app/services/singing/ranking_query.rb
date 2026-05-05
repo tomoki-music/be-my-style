@@ -17,6 +17,22 @@ module Singing
       new.growth
     end
 
+    def self.season(range = current_season_range)
+      new.season(range)
+    end
+
+    def self.season_position_for(customer_id, range = current_season_range)
+      new.season_position_for(customer_id, range)
+    end
+
+    # Returns the current season range (this calendar month).
+    # Override or extend this method to support quarter/event-based seasons.
+    def self.current_season_range
+      start  = Time.zone.now.beginning_of_month
+      finish = Time.zone.now.next_month.beginning_of_month
+      start...finish
+    end
+
     # Returns ranked diagnoses (one per customer, highest score first).
     # Includes customer associations for view rendering.
     def overall
@@ -98,6 +114,52 @@ module Singing
       end
 
       entries.sort_by { |e| [-e.growth_score, -(e.latest_diagnosis.diagnosed_at&.to_i || 0)] }
+    end
+
+    # Returns ranked diagnoses within the given season range (one per customer,
+    # highest in-season score first). Uses diagnosed_at for season filtering.
+    # Includes customer associations for view rendering.
+    def season(range = self.class.current_season_range)
+      seen = {}
+      result = []
+      SingingDiagnosis
+        .completed
+        .where(ranking_opt_in: true)
+        .where.not(overall_score: nil)
+        .where.not(diagnosed_at: nil)
+        .where(diagnosed_at: range)
+        .includes(customer: { profile_image_attachment: :blob })
+        .order(overall_score: :desc, diagnosed_at: :desc, id: :desc)
+        .each do |diagnosis|
+          next if seen[diagnosis.customer_id]
+          seen[diagnosis.customer_id] = true
+          result << diagnosis
+        end
+      result
+    end
+
+    # Returns 1-based season rank for the given customer, or nil.
+    # Uses pluck to avoid loading unnecessary associations.
+    def season_position_for(customer_id, range = self.class.current_season_range)
+      return nil if customer_id.blank?
+
+      seen = {}
+      rank = 0
+      SingingDiagnosis
+        .completed
+        .where(ranking_opt_in: true)
+        .where.not(overall_score: nil)
+        .where.not(diagnosed_at: nil)
+        .where(diagnosed_at: range)
+        .order(overall_score: :desc, diagnosed_at: :desc, id: :desc)
+        .pluck(:customer_id)
+        .each do |cid|
+          next if seen[cid]
+          seen[cid] = true
+          rank += 1
+          return rank if cid == customer_id
+        end
+      nil
     end
 
     private

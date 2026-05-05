@@ -3954,6 +3954,59 @@ $ranking-accent: #7c4dff;
   padding: 2px 8px;
 }
 
+// --- Season Ranking ---
+
+.singing-ranking__tab-badge--season {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.singing-ranking__season-header {
+  background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  padding: 20px 24px;
+}
+
+.singing-ranking__season-title {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 6px;
+
+  strong {
+    color: #1e3a8a;
+    font-size: 17px;
+    font-weight: 800;
+  }
+}
+
+.singing-ranking__season-badge {
+  background: #1d4ed8;
+  border-radius: 999px;
+  color: #fff;
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 3px 10px;
+}
+
+.singing-ranking__season-period {
+  color: #3b82f6;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.singing-ranking__season-description {
+  color: #1e40af;
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 0;
+}
+
 // =========================================================
 // Ranking Entry Points (CTA / Banner / Nudge)
 // =========================================================
