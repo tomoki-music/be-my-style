@@ -794,13 +794,19 @@ module Singing::DiagnosesHelper
         title: "詳細フィードバック",
         plan_label: "Core以上",
         available: customer.has_feature?(:singing_diagnosis_advanced_feedback),
-        description: "音程・リズム・表現をもう一段深く振り返れる分析枠を準備中です。"
+        description: "音程・リズム・表現をもう一段深く振り返り、6つのボイスタイプ診断で声の個性を見つけられます。"
       },
       {
-        title: "優先解析",
+        title: "6つのボイスタイプ診断",
+        plan_label: "Core以上",
+        available: customer.has_feature?(:singing_diagnosis_voice_type),
+        description: "あなたの声の個性を知り、次に伸ばす方向性を見つけるための診断です。"
+      },
+      {
+        title: "TOMOKIと一緒に伸ばす",
         plan_label: "Premium",
         available: customer.has_feature?(:singing_diagnosis_priority),
-        description: "歌唱・演奏診断リクエストを優先解析対象として受け付けます。"
+        description: "TOMOKI本人による診断、限定イベント、AI深掘り成長分析など、継続伴走の価値を広げていきます。"
       }
     ]
   end
@@ -1033,7 +1039,7 @@ module Singing::DiagnosesHelper
   end
 
   def singing_band_premium_promo
-    "Premiumでは、診断結果に応じて『今週のバンド練習テーマ』『スタジオでやること』『録音チェックポイント』まで確認できます。"
+    "Premiumでは、TOMOKI本人の視点や限定イベントとあわせて、『今週のバンド練習テーマ』『スタジオでやること』『録音チェックポイント』まで深く伴走します。"
   end
 
   def singing_band_analysis_debug_visible?(diagnosis)

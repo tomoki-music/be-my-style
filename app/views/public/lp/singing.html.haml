@@ -143,19 +143,19 @@
       = link_to lp_cta_label, lp_primary_cta_path, lp_cta_options
 
   .lp-section.gray
-    %h2 Premiumでは、より深い振り返りまで
+    %h2 Coreから声の個性を、Premiumで深い伴走を
     %p.lp-section-lead
-      歌唱チェック、ミックスボイスチェック、6つの歌声タイプ、AIコメントまで使って、今の声の特徴を立体的に整理できます。
+      Core以上では6つのボイスタイプ診断で今の声の個性を整理できます。PremiumではTOMOKI本人の視点、限定イベント、AI深掘り成長分析を通じて、さらに深く成長を育てます。
     .lp-grid
       .lp-card
-        %strong 6つの歌声タイプ
-        %p 取り入れると良い歌声タイプを、パワフル・ハイトーン・クリスタルなどの観点で確認できます。
+        %strong Core以上：6つのボイスタイプ診断
+        %p パワフル・ハイトーン・クリスタルなどの観点で、取り入れると良い声の個性を確認できます。
       .lp-card
-        %strong 詳細診断
-        %p 声量、リラックス、発音、声帯の閉鎖など、スコアをもう一段細かく読み解きます。
+        %strong Core以上：詳細診断
+        %p 声量、リラックス、発音、ミックスボイスなど、スコアをもう一段細かく読み解きます。
       .lp-card
-        %strong AIコメント
-        %p 詳細フィードバックと比較結果をもとに、次の練習へつながるコメントを生成します。
+        %strong Premium：TOMOKIと一緒に伸ばす
+        %p 本人診断、月1限定オンラインイベント、AI深掘り成長分析で、次の練習へつながる視点を届けます。
 
   .lp-section.gray#lp-section
     %h2 歌唱・演奏診断プラン
@@ -175,21 +175,22 @@
         %span.lp-plan-reassure__icon 🚀
         %p 無料から気軽にスタート
     %p.lp-plan-pressure-free
-      成長を続けたくなったらプランアップを。課金は強制ではなく、「もっと練習したい」と思った時の選択肢です。
+      成長を続けたくなったらプランアップを。有料プランは、「もっと練習したい」と思った時に深く楽しむための選択肢です。
     .lp-pricing-grid.lp-pricing-grid-conversion#lp-pricing-plans
 
       .lp-pricing.free
         .plan-head
           %span.plan-badge Starter
           %h3 free
-          %p.plan-tag まずは自分の声を知りたい
+          %p.plan-tag まず試す
         %p.price ¥0
-        %p.plan-copy 月1回の診断で、今の歌声の状態を試せます。改善の入口を軽くつかみたい人向けです。
+        %p.plan-copy 月1回の基本診断で、今の歌声や演奏の状態を試せます。まずは雰囲気を知りたい人向けです。
         %p.plan-singing-copy 歌唱・演奏診断 1回／月
         %ul
-          %li 音程・リズム・表現のスコアを確認できる
+          %li 基本診断で音程・リズム・表現のスコアを確認
+          %li ランキング閲覧で参加者の雰囲気を見られる
+          %li 一部プロフィールを閲覧できる
           %li おすすめ練習メニューを見られる
-          %li まずは診断の雰囲気を試せる
         .plan-note 無料で最初の一歩を軽くする
 
       .lp-pricing.recommend.light-plan
@@ -197,14 +198,15 @@
         .plan-head
           %span.plan-badge Popular
           %h3 light
-          %p.plan-tag 練習の変化を見たい
+          %p.plan-tag 気軽に参加
         %p.price ¥1,500/月
-        %p.plan-copy 月5回まで診断できるので、練習前後や週ごとの変化を無理なく振り返れます。
+        %p.plan-copy 月5回まで診断でき、活動ログやリアクション体験を通じて、音楽コミュニティに気軽に参加できます。
         %p.plan-singing-copy 歌唱・演奏診断 5回／月
         %ul
           %li 前回比較で変化を確認しやすい
-          %li 練習の成果を定期的に残せる
-          %li 本番前の声の状態チェックにも使える
+          %li 活動ログで練習の成果を定期的に残せる
+          %li 応援リアクションで参加の手触りが生まれる
+          %li コミュニティ参加の導線が広がる
         .plan-action
           - if customer_signed_in?
             - if current_customer.plan == "light"
@@ -221,14 +223,15 @@
         .plan-head
           %span.plan-badge Growth
           %h3 core
-          %p.plan-tag もっと深く振り返りたい
+          %p.plan-tag 楽しく成長する
         %p.price ¥3,980/月
-        %p.plan-copy 月20回まで診断でき、練習テーマごとに細かく確認できます。詳細フィードバックも使えるプランです。
+        %p.plan-copy 月20回まで診断でき、6つのボイスタイプ診断と成長履歴で、自分の声の個性と伸び方を楽しく追えます。
         %p.plan-singing-copy 歌唱・演奏診断 20回／月
         %ul
-          %li 音程・リズム・表現を深く読み解ける
-          %li 課題別に診断し、練習の方向を決めやすい
-          %li イベントや録音前後の振り返りにも使いやすい
+          %li 6つのボイスタイプ診断で声の個性を確認
+          %li 成長履歴と詳細フィードバックで練習の方向を見つける
+          %li ランキング参加・シーズンランキング称号・バッジを楽しめる
+          %li 応援リアクション通知で継続の手応えが残る
         .plan-action
           - if customer_signed_in?
             - if current_customer.plan == "core"
@@ -245,14 +248,16 @@
         .plan-head
           %span.plan-badge Premium
           %h3 premium
-          %p.plan-tag 本格的に歌声を育てたい
+          %p.plan-tag TOMOKIと一緒に伸ばす
         %p.price ¥9,800/月
-        %p.plan-copy 回数を気にせず診断し、Premium詳細診断・6タイプ診断・AIコメントまで使って改善サイクルを回せます。
+        %p.plan-copy Premiumは、ただ機能が増えるだけのプランではありません。TOMOKI本人の視点・限定イベント・深い成長分析を通じて、あなたの歌の成長を一緒に育てていくプランです。
         %p.plan-singing-copy 歌唱・演奏診断 無制限
         %ul
-          %li 優先解析対象として診断を受け付け
-          %li 6つの歌声タイプとミックスボイス項目を確認
-          %li AIコメントで次の練習ポイントを整理
+          %li TOMOKI本人による歌唱診断
+          %li 月1プレミアム限定オンラインイベント
+          %li AI深掘り成長分析で次の練習ポイントを整理
+          %li Premium限定称号・Premium限定バッジ
+          %li 優先的な成長サポートで継続を伴走
         .plan-action
           - if customer_signed_in?
             - if current_customer.plan == "premium"
@@ -263,7 +268,7 @@
               = link_to "Premiumを契約する", public_checkout_path("premium"), method: :post, class: "plan-action__button"
           - else
             = link_to "無料登録してPremiumへ", new_customer_registration_path, data: { turbolinks: false }, class: "plan-action__button"
-        .plan-note 歌声改善を本格運用する
+        .plan-note TOMOKIと歌の成長を育てる
 
   .lp-section
     %h2 はじめる前の不安を、ここで解消

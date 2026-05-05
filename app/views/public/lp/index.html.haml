@@ -211,7 +211,7 @@
     %p.lp-section-lead
       月1回セッションに参加するだけで、Lightは1,500円分の割引券により実質無料。損しにくく、仲間づくりを始めやすいプランです。
     %p.lp-plan-pressure-free
-      課金は強制ではなく、「活動・挑戦・場づくり」を広げるための選択肢です。まずは無料で始めて、もっと活動したくなったらステップアップを。
+      有料プランは、「活動・挑戦・場づくり」をもっと深く楽しむための選択肢です。まずは無料で始めて、もっと活動したくなったらステップアップを。
     .lp-pricing-grid.lp-pricing-grid-conversion#lp-pricing-plans
 
       .lp-pricing.free
@@ -261,17 +261,18 @@
         .plan-head
           %span.plan-badge Growth
           %h3 core
-          %p.plan-tag 企画を動かしたい
+          %p.plan-tag 楽しく成長する
         %p.price ¥3,980/月
         .plan-value-badge
           %strong 実質無料特典
           %span 毎月1,500円分のセッション参加費割引券つき
-        %p.plan-copy 参加する側から、仲間が集まるきっかけをつくる側へ。音楽活動を前に進めたい人向けです。
-        %p.plan-singing-copy 歌唱・演奏診断は月20回。より深い振り返りや、イベント・練習の目標づくりにもつなげたい人に。
+        %p.plan-copy 参加する側から、仲間が集まるきっかけをつくる側へ。診断では6つのボイスタイプ診断と成長履歴で、自分の声の個性も育てられます。
+        %p.plan-singing-copy 歌唱・演奏診断は月20回。6つのボイスタイプ診断、ランキング参加、称号・バッジまで楽しみたい人に。
         %ul
           %li Lightの内容に加えて、イベントの作成が可能
+          %li 6つのボイスタイプ診断で声の個性を確認できる
+          %li 成長履歴・ランキング参加・シーズン称号を楽しめる
           %li 自分のやりたい曲やテーマで仲間を集めやすくなる
-          %li 企画が動くことで、活動の中心に近づける
           %li 参加費割引券で現場にも出続けやすい
         .plan-action
           - if customer_signed_in?
@@ -289,18 +290,19 @@
         .plan-head
           %span.plan-badge Owner
           %h3 premium
-          %p.plan-tag 場を育てたい
+          %p.plan-tag TOMOKIと一緒に伸ばす
         %p.price ¥9,800/月
         .plan-value-badge
           %strong 実質無料特典
           %span 毎月1,500円分のセッション参加費割引券つき
-        %p.plan-copy 音楽仲間が集まる場を育て、継続的な活動や関係づくりまで本格的に進めたい人へ。
-        %p.plan-singing-copy 歌唱・演奏診断は無制限。Premium詳細診断・6つの歌声タイプ・AIコメントまで使って、歌や演奏の成長も場づくりも進めたい人に。
+        %p.plan-copy 音楽仲間が集まる場を育てながら、TOMOKI本人の視点・限定イベント・深い成長分析で、歌や演奏の成長まで伴走します。
+        %p.plan-singing-copy 歌唱・演奏診断は無制限。TOMOKI本人による診断、月1限定オンラインイベント、AI深掘り成長分析まで楽しみたい人に。
         %ul
           %li Coreまでの内容に加えて、コミュニティの作成が可能
+          %li TOMOKI本人による歌唱診断
+          %li 月1プレミアム限定オンラインイベント
+          %li Premium限定称号・バッジと優先的な成長サポート
           %li 共感するメンバーが集まる場所をつくれる
-          %li 連絡や運営が整い、活動を続けやすくなる
-          %li 参加費割引券で現場とのつながりも保てる
         .plan-action
           - if customer_signed_in?
             - if current_customer.plan == "premium"

@@ -288,13 +288,13 @@
           %p.singing-diagnosis__advanced-feedback-lead= singing_advanced_feedback_locked_lead(@diagnosis)
           = link_to "Core以上のプランを見る", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
 
-      - if current_customer.has_feature?(:singing_diagnosis_priority) && @diagnosis.performance_type_vocal?
+      - if current_customer.has_feature?(:singing_diagnosis_voice_type) && @diagnosis.performance_type_vocal?
         - voice_type = singing_premium_voice_type(@diagnosis)
         .singing-diagnosis__premium-report{ class: "singing-diagnosis__premium-report--#{singing_premium_type_diagnosis_accent_key(@diagnosis)}" }
           .singing-diagnosis__premium-header
             %span.singing-diagnosis__premium-badge
               %span.singing-diagnosis__premium-badge-icon= singing_premium_type_diagnosis_icon(@diagnosis)
-              Premium限定
+              Core以上
             %h2= singing_premium_type_diagnosis_title(@diagnosis)
             %p.singing-diagnosis__premium-report-lead 歌唱チェック、ミックスボイスの状態、歌声タイプを5段階評価で整理します。点数は優劣ではなく、今の声の特徴と練習の方向を見つけるための目安です。
 
@@ -338,6 +338,15 @@
                 %div{ class: point_class.join(" ") }
                   %strong= type[:title]
                   %span= type[:short_description]
+      - elsif @diagnosis.performance_type_vocal?
+        .singing-diagnosis__premium-report.singing-diagnosis__premium-report--locked{ class: "singing-diagnosis__premium-report--#{singing_premium_type_diagnosis_accent_key(@diagnosis)}" }
+          .singing-diagnosis__premium-header
+            %span.singing-diagnosis__premium-badge
+              %span.singing-diagnosis__premium-badge-icon= singing_premium_type_diagnosis_icon(@diagnosis)
+              Core以上
+            %h2 6つのボイスタイプ診断
+            %p.singing-diagnosis__premium-report-lead 6つのボイスタイプ診断はCoreプラン以上で解放されます。あなたの声の個性を知り、成長の方向性を見つけましょう。
+          = link_to "Core以上のプランを見る", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
       - elsif @diagnosis.performance_type.to_s != "vocal"
         .singing-diagnosis__premium-report{ class: "singing-diagnosis__premium-report--#{singing_premium_type_diagnosis_accent_key(@diagnosis)}" }
           - if current_customer.has_feature?(:singing_diagnosis_priority)
@@ -465,8 +474,8 @@
               %p= menu[:description]
 
       .singing-diagnosis__plan-features
-        %h2 プラン別の解放予定
-        %p.singing-diagnosis__plan-features-lead 回数制限とは別に、振り返りや分析を深める機能差分を少しずつ追加していく予定です。
+        %h2 プラン別に深まる楽しみ
+        %p.singing-diagnosis__plan-features-lead Coreでは自分の声の個性と成長履歴を、PremiumではTOMOKI本人の視点や限定イベントを通じた深い伴走を楽しめます。
         .singing-diagnosis__plan-feature-grid
           - singing_plan_feature_cards(current_customer).each do |feature|
             - feature_card_class = ["singing-diagnosis__plan-feature-card"]
