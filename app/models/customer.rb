@@ -460,6 +460,26 @@ class Customer < ApplicationRecord
     end
   end
 
+  def create_notification_singing_profile_reaction(current_customer, reaction_type)
+    return if current_customer.blank? || current_customer.id == id
+
+    action = SingingProfileReaction.notification_action_for(reaction_type)
+    return if action.blank?
+
+    temp = Notification.where(
+      visitor_id: current_customer.id,
+      visited_id: id,
+      action: action
+    )
+    if temp.blank?
+      notification = current_customer.active_notifications.new(
+        visited_id: id,
+        action: action
+      )
+      notification.save if notification.valid?
+    end
+  end
+
   def create_notification_comment(current_customer, activity_id)
     notification = current_customer.active_notifications.new(
       visited_id: id,

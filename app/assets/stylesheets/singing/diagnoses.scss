@@ -4547,10 +4547,13 @@ $ranking-accent: #7c4dff;
 }
 
 .singing-nav__link {
+  align-items: center;
   border-radius: 6px;
   color: rgba(226, 232, 240, 0.75);
+  display: inline-flex;
   font-size: 13px;
   font-weight: 500;
+  gap: 6px;
   padding: 6px 12px;
   text-decoration: none;
   transition: background 0.15s, color 0.15s;
@@ -4567,6 +4570,20 @@ $ranking-accent: #7c4dff;
     color: #a78bfa;
     font-weight: 600;
   }
+}
+
+.singing-nav__badge {
+  align-items: center;
+  background: #ef4444;
+  border-radius: 999px;
+  color: #fff;
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 800;
+  justify-content: center;
+  line-height: 1;
+  min-width: 18px;
+  padding: 4px 6px;
 }
 
 .singing-nav__right {
@@ -4772,11 +4789,14 @@ $ranking-accent: #7c4dff;
 }
 
 .singing-nav__mobile-link {
+  align-items: center;
   border-radius: 8px;
   color: rgba(226, 232, 240, 0.8);
-  display: block;
+  display: flex;
   font-size: 15px;
   font-weight: 500;
+  gap: 8px;
+  justify-content: space-between;
   padding: 12px 16px;
   text-decoration: none;
   transition: background 0.15s, color 0.15s;
@@ -4814,6 +4834,59 @@ $ranking-accent: #7c4dff;
       opacity: 0.92;
     }
   }
+}
+
+.singing-notifications {
+  background: #f5f7fb;
+  min-height: calc(100vh - 56px);
+  padding: 40px 20px 64px;
+}
+
+.singing-notifications__inner {
+  margin: 0 auto;
+  max-width: 920px;
+}
+
+.singing-notifications__head {
+  margin-bottom: 24px;
+}
+
+.singing-notifications__eyebrow {
+  color: #7c4dff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.singing-notifications__head h1 {
+  color: #111827;
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.singing-notifications__list {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  padding: 24px 18px;
+}
+
+.singing-notifications__pager {
+  margin-bottom: 18px;
+}
+
+.singing-notifications__empty {
+  color: #6b7280;
+  padding: 28px 12px;
+  text-align: center;
+}
+
+.singing-notifications__empty p {
+  margin: 0;
 }
 
 .singing-nav__mobile-logout-form {
