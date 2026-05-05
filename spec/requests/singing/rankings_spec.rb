@@ -428,9 +428,9 @@ RSpec.describe "Singing::Rankings", type: :request do
           expect(response.body).not_to include(hidden_customer.name)
         end
 
-        it "参加者がいない場合は今月初ランクインCTAを表示すること" do
+        it "参加者がいない場合は挑戦促進CTAを表示すること" do
           get singing_rankings_path(type: "season")
-          expect(response.body).to include("今月最初のランクインを目指そう")
+          expect(response.body).to include("今月最初の挑戦者になろう")
         end
 
         it "今月ランクイン中のユーザーには今月の順位を表示すること" do
@@ -459,6 +459,62 @@ RSpec.describe "Singing::Rankings", type: :request do
           get singing_rankings_path
           expect(response).to have_http_status(:ok)
           expect(response.body).to include("あなたの現在順位").or include("診断を始める")
+        end
+
+        context "current season が DB に存在する場合" do
+          let!(:current_season) { FactoryBot.create(:singing_ranking_season, :current) }
+
+          it "シーズン名を表示すること" do
+            get singing_rankings_path(type: "season")
+            expect(response.body).to include(current_season.name)
+          end
+
+          it "シーズン詳細ページへのリンクを含むこと" do
+            get singing_rankings_path(type: "season")
+            expect(response.body).to include(singing_ranking_season_path(current_season))
+          end
+
+          it "Premium導線テキストをnon-premiumユーザーに表示すること" do
+            get singing_rankings_path(type: "season")
+            expect(response.body).to include("AI深掘り分析")
+          end
+
+          it "season タブ内で season_banner を表示しないこと（重複防止）" do
+            get singing_rankings_path(type: "season")
+            # bannerはseasaonタブ以外にのみ表示
+            body = response.body
+            # season-banner クラスが出現しないこと
+            expect(body).not_to include("singing-ranking__season-banner")
+          end
+        end
+
+        context "current season が DB に存在しない場合" do
+          it "200 OK を返すこと（落ちないこと）" do
+            get singing_rankings_path(type: "season")
+            expect(response).to have_http_status(:ok)
+          end
+        end
+      end
+
+      context "シーズンタブ以外では season banner を表示すること" do
+        let!(:current_season) { FactoryBot.create(:singing_ranking_season, :current) }
+
+        it "総合タブで season banner を表示すること" do
+          get singing_rankings_path
+          expect(response.body).to include("singing-ranking__season-banner")
+          expect(response.body).to include(current_season.name)
+        end
+
+        it "成長タブで season banner を表示すること" do
+          get singing_rankings_path(type: "growth")
+          expect(response.body).to include("singing-ranking__season-banner")
+        end
+      end
+
+      context "共通ナビ" do
+        it "シーズンランキングへのリンクを含むこと" do
+          get singing_rankings_path
+          expect(response.body).to include(singing_ranking_seasons_path)
         end
       end
     end

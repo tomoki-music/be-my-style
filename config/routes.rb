@@ -32,6 +32,11 @@ Rails.application.routes.draw do
       resources :songs, only: [:create, :destroy]
       delete "delete" => "events#delete"
     end
+
+    # 歌唱シーズンランキング管理
+    resources :singing_ranking_seasons, except: [:destroy] do
+      post :aggregate, on: :member
+    end
   end
   
   namespace :public do
@@ -192,6 +197,7 @@ Rails.application.routes.draw do
     root to: "homes#top"
     resources :diagnoses, only: [:index, :new, :create, :show]
     resources :rankings, only: [:index]
+    resources :ranking_seasons, only: [:index, :show]
     resources :notifications, only: [:index]
     resources :users, only: [:show, :edit, :update] do
       resource :profile_reaction, only: [:create]

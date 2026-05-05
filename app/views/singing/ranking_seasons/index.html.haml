@@ -1,0 +1,57 @@
+.singing-season
+  .singing-season__hero
+    .singing-season__hero-inner
+      %p.singing-season__eyebrow SEASON RANKING
+      %h1.singing-season__hero-title
+        シーズン
+        %br
+        ランキング
+      %p.singing-season__hero-subtitle
+        月ごとにリセットされるランキングです。
+        %br
+        何度でも挑戦できるので、初心者の方も気軽に参加してください。
+
+  .singing-season__inner
+    - if @current_season
+      .singing-season__active-banner
+        .singing-season__active-banner-label
+          %span.singing-season__active-dot
+          今月開催中
+        %h2.singing-season__active-name= @current_season.name
+        %p.singing-season__active-period
+          対象期間：
+          = @current_season.starts_on.strftime("%Y/%m/%d")
+          〜
+          = @current_season.ends_on.strftime("%Y/%m/%d")
+        .singing-season__active-message
+          点数だけではなく、挑戦したこと自体があなたの成長です。
+        = link_to singing_ranking_season_path(@current_season), class: "btn singing-season__active-btn" do
+          今月のシーズンを確認する
+    - else
+      .singing-season__no-active
+        %p.singing-season__no-active-icon ☆
+        %p.singing-season__no-active-text 現在開催中のシーズンはありません
+
+    - if @seasons.present?
+      .singing-season__list-section
+        %h2.singing-season__list-title シーズン一覧
+        .singing-season__list
+          - @seasons.each do |season|
+            = link_to singing_ranking_season_path(season), class: "singing-season__card" do
+              .singing-season__card-header
+                %span.singing-season__card-status{ class: "singing-season__card-status--#{season.status}" }
+                  = season.status == "active" ? "開催中" : "終了"
+                %span.singing-season__card-type= season.season_type == "monthly" ? "月間" : season.season_type
+              %h3.singing-season__card-name= season.name
+              %p.singing-season__card-period
+                = season.starts_on.strftime("%Y/%m/%d")
+                〜
+                = season.ends_on.strftime("%Y/%m/%d")
+    - else
+      .singing-season__empty
+        %p.singing-season__empty-text まだシーズンが登録されていません。
+
+    .singing-season__cta
+      %p.singing-season__cta-message
+        ランキングは競争のためだけではなく、自分の変化を楽しむための仕組みです。
+      = link_to "歌唱・演奏診断を始める", new_singing_diagnosis_path, class: "btn btn-primary singing-season__cta-btn"

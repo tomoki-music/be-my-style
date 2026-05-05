@@ -1,0 +1,8 @@
+= render 'layouts/admin_header_menu'
+
+.container.py-4
+  .d-flex.justify-content-between.align-items-center.mb-3
+    %h2.mb-0 新規シーズン作成
+    = link_to "一覧へ", admin_singing_ranking_seasons_path, class: "btn btn-outline-dark"
+
+  = render "form"

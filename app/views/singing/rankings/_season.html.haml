@@ -1,30 +1,56 @@
--# season_rankings: Array<SingingDiagnosis>
--# season_range:    Range<Time>
+-# season_rankings:  Array<SingingDiagnosis>
+-# season_range:     Range<Time>
+-# current_season:   SingingRankingSeason | nil
+-# badges_map:       Hash
 -# ranking_plan_context: Hash
 
 -# FUTURE: can_access_season_badges=true のとき、シーズン称号・特別バッジを表示（Core以上）
-.singing-ranking__season-header
-  .singing-ranking__season-title
-    %span.singing-ranking__season-badge 今月開催中
-    %strong= season_range.begin.strftime("%Y年%-m月") + " シーズン"
-  %p.singing-ranking__season-period
-    = season_range.begin.strftime("%Y/%m/%d")
-    〜
-    = (season_range.end - 1.day).strftime("%Y/%m/%d")
-  %p.singing-ranking__season-description
-    今月の診断でランキング参加をONにしたユーザーのベストスコアを表示しています。
-    %br
-    毎月1日にリセットされるので、毎月新たな挑戦ができます。
+
+- if current_season
+  .singing-ranking__season-header.singing-ranking__season-header--connected
+    .singing-ranking__season-header-top
+      .singing-ranking__season-title
+        %span.singing-ranking__season-badge 今月開催中
+        %strong.singing-ranking__season-name= current_season.name
+      %p.singing-ranking__season-period
+        対象期間：
+        = current_season.starts_on.strftime("%Y/%m/%d")
+        〜
+        = current_season.ends_on.strftime("%Y/%m/%d")
+    %p.singing-ranking__season-description
+      順位だけじゃない。継続も、挑戦も、立派な実績です。
+      %br
+      今月の診断でランキング参加をONにしたユーザーのベストスコアを公開しています。
+    .singing-ranking__season-header-footer
+      = link_to singing_ranking_season_path(current_season), class: "singing-ranking__season-detail-link" do
+        シーズン詳細・過去の記録を見る →
+      - unless ranking_plan_context[:can_access_premium_features]
+        %span.singing-ranking__season-premium-teaser
+          Premium: AI深掘り分析・限定称号
+          %span.singing-ranking__season-premium-badge 対応予定
+- else
+  .singing-ranking__season-header
+    .singing-ranking__season-title
+      %span.singing-ranking__season-badge 今月開催中
+      %strong= season_range.begin.strftime("%Y年%-m月") + " シーズン"
+    %p.singing-ranking__season-period
+      = season_range.begin.strftime("%Y/%m/%d")
+      〜
+      = (season_range.end - 1.day).strftime("%Y/%m/%d")
+    %p.singing-ranking__season-description
+      今月の診断でランキング参加をONにしたユーザーのベストスコアを表示しています。
+      %br
+      毎月1日にリセットされるので、毎月新たな挑戦ができます。
 
 - if season_rankings.empty?
   .singing-ranking__empty
     .singing-ranking__empty-icon
       %span ☆
-    %h2.singing-ranking__empty-title 今月最初のランクインを目指そう！
+    %h2.singing-ranking__empty-title 今月最初の挑戦者になろう！
     %p.singing-ranking__empty-message
       今月の診断でランキング参加をONにすると、ここに名前が刻まれます。
       %br
-      毎月リセットされるチャンス。あなたが最初の挑戦者になりませんか？
+      毎月リセットされるので、初めての方も同じスタートラインに立てます。
     = link_to "今月の診断を始める", new_singing_diagnosis_path, class: "btn btn-primary singing-ranking__empty-btn"
 
 - else

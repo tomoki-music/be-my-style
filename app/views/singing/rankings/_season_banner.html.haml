@@ -1,0 +1,22 @@
+- current_season = SingingRankingSeason.current.first
+- if current_season
+  .singing-ranking__season-banner
+    .singing-ranking__season-banner-inner.singing-ranking__season-banner-inner--active
+      .singing-ranking__season-banner-label
+        %span.singing-ranking__season-banner-dot
+        今月開催中
+      %h3.singing-ranking__season-banner-name= current_season.name
+      %p.singing-ranking__season-banner-period
+        対象期間：
+        = current_season.starts_on.strftime("%Y/%m/%d")
+        〜
+        = current_season.ends_on.strftime("%Y/%m/%d")
+      %p.singing-ranking__season-banner-message
+        今月も挑戦してみませんか？
+        %br
+        あなたの「成長」が、次のランキングになります。
+      .singing-ranking__season-banner-actions
+        = link_to singing_rankings_path(type: "season"), class: "singing-ranking__season-banner-link singing-ranking__season-banner-link--primary" do
+          今月のシーズンランキングを見る
+        = link_to singing_ranking_season_path(current_season), class: "singing-ranking__season-banner-link" do
+          シーズン詳細 →

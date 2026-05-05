@@ -1,0 +1,105 @@
+= render 'layouts/admin_header_menu'
+
+.container.py-4
+  .d-flex.justify-content-between.align-items-center.mb-3
+    %h2.mb-0= @season.name
+    .btn-group
+      = link_to "編集", edit_admin_singing_ranking_season_path(@season), class: "btn btn-outline-secondary"
+      = link_to "一覧へ", admin_singing_ranking_seasons_path, class: "btn btn-outline-dark"
+
+  .row.mb-4
+    .col-md-6
+      .card.shadow-sm
+        .card-body
+          %h5.card-title シーズン情報
+          %table.table.table-sm.mb-0
+            %tbody
+              %tr
+                %th.text-nowrap シーズン名
+                %td= @season.name
+              %tr
+                %th.text-nowrap 開始日
+                %td= @season.starts_on.strftime("%Y/%m/%d (%a)")
+              %tr
+                %th.text-nowrap 終了日
+                %td= @season.ends_on.strftime("%Y/%m/%d (%a)")
+              %tr
+                %th.text-nowrap ステータス
+                %td
+                  - case @season.status
+                  - when "active"
+                    %span.badge.badge-success 開催中
+                  - when "draft"
+                    %span.badge.badge-secondary 準備中
+                  - when "closed"
+                    %span.badge.badge-dark 終了
+              %tr
+                %th.text-nowrap 種別
+                %td= @season.season_type == "monthly" ? "月間" : @season.season_type
+              %tr
+                %th.text-nowrap Entries数
+                %td
+                  %strong= @entries.count
+                  件
+              %tr
+                %th.text-nowrap 作成日
+                %td= l(@season.created_at, format: :short)
+              %tr
+                %th.text-nowrap 更新日
+                %td= l(@season.updated_at, format: :short)
+
+    .col-md-6
+      .card.shadow-sm
+        .card-body
+          %h5.card-title ユーザー向けリンク
+          %p.text-muted
+            本番サイトでシーズン状況を確認できます。
+          = link_to singing_ranking_season_path(@season), target: "_blank", class: "btn btn-outline-info btn-block" do
+            ユーザー向けシーズンページを開く
+          = link_to singing_ranking_seasons_path, target: "_blank", class: "btn btn-outline-secondary btn-block mt-2" do
+            ユーザー向けシーズン一覧を開く
+
+  .card.shadow-sm.mb-4
+    .card-body
+      %h5.card-title 再集計
+      %p.text-muted.mb-2
+        対象期間内の診断結果からランキングを作り直します。
+      %p.text-muted.mb-3
+        既存の overall/pitch/rhythm/expression entries は置き換えられます。
+      = button_to "再集計する",
+                  aggregate_admin_singing_ranking_season_path(@season),
+                  method: :post,
+                  class: "btn btn-warning",
+                  data: { confirm: "このシーズンのランキングを再集計します。よろしいですか？" }
+
+  - if @entries.empty?
+    .alert.alert-secondary
+      このシーズンのエントリーはまだありません。
+      %br
+      エントリーは自動集計バッチによって登録されます。
+
+  - else
+    .card.shadow-sm
+      .card-header
+        %strong Entries 一覧（#{@entries.count}件）
+      .card-body.p-0
+        .table-responsive
+          %table.table.table-sm.table-striped.mb-0
+            %thead.thead-light
+              %tr
+                %th 順位
+                %th ユーザー
+                %th カテゴリ
+                %th スコア
+                %th 称号
+                %th バッジキー
+            %tbody
+              - @entries.each do |entry|
+                %tr
+                  %td= "#{entry.rank}位"
+                  %td= entry.customer.name
+                  %td= entry.category
+                  %td= entry.score
+                  %td= entry.title.presence || "-"
+                  %td
+                    %code= entry.badge_key.presence || "-"
