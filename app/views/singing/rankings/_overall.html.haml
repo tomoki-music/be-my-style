@@ -25,6 +25,7 @@
         = link_to singing_user_path(diagnosis.customer), class: "singing-ranking__podium-user" do
           = customer_avatar_tag(diagnosis.customer, class_name: "singing-ranking__podium-avatar", fallback: "no_image")
           %span.singing-ranking__podium-name= diagnosis.customer.name
+        = render "singing/rankings/badges", badges: badges_map[diagnosis.customer_id], limit: 3, class_name: "singing-ranking__badges--podium"
         .singing-ranking__podium-type= diagnosis.performance_type_label
         - if diagnosis.diagnosed_at.present?
           .singing-ranking__podium-date= diagnosis.diagnosed_at.strftime("%Y/%m/%d")
@@ -50,7 +51,9 @@
               %td.singing-ranking__td
                 = link_to singing_user_path(diagnosis.customer), class: "singing-ranking__user-link" do
                   = customer_avatar_tag(diagnosis.customer, class_name: "singing-ranking__user-avatar", fallback: "no_image")
-                  %span= diagnosis.customer.name
+                  .singing-ranking__user-info
+                    %span.singing-ranking__user-name= diagnosis.customer.name
+                    = render "singing/rankings/badges", badges: badges_map[diagnosis.customer_id], limit: 3
               %td.singing-ranking__td.singing-ranking__td--score= "#{diagnosis.overall_score}点"
               %td.singing-ranking__td= diagnosis.performance_type_label
               %td.singing-ranking__td= diagnosis.diagnosed_at&.strftime("%Y/%m/%d")

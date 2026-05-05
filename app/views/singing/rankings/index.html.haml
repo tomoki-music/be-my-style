@@ -28,18 +28,21 @@
       = render "singing/rankings/my_growth_position",
                my_growth_entry: @my_growth_entry,
                my_completed_count: @my_completed_count.to_i,
+               my_badges: @my_badges,
                ranking_plan_context: @ranking_plan_context
     - when "season"
       = render "singing/rankings/my_season_position",
                my_season_diagnosis: @my_season_diagnosis,
                my_season_position: @my_season_position,
                my_season_has_diagnosis_this_month: @my_season_has_diagnosis_this_month,
+               my_badges: @my_badges,
                season_range: @season_range,
                ranking_plan_context: @ranking_plan_context
     - else
       = render "singing/rankings/my_position",
                my_position: @my_position,
-               my_best_diagnosis: @my_best_diagnosis
+               my_best_diagnosis: @my_best_diagnosis,
+               my_badges: @my_badges
 
     = render "singing/rankings/tabs", ranking_type: @ranking_type
 
@@ -47,14 +50,16 @@
     - when "growth"
       = render "singing/rankings/growth",
                growth_rankings: @growth_rankings,
+               badges_map: @badges_map,
                ranking_plan_context: @ranking_plan_context
     - when "season"
       = render "singing/rankings/season",
                season_rankings: @season_rankings,
                season_range: @season_range,
+               badges_map: @badges_map,
                ranking_plan_context: @ranking_plan_context
     - else
-      = render "singing/rankings/overall", rankings: @rankings
+      = render "singing/rankings/overall", rankings: @rankings, badges_map: @badges_map
 
     .singing-ranking__privacy-notice
       .singing-ranking__privacy-icon

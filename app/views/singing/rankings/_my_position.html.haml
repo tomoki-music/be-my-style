@@ -8,6 +8,7 @@
           %span.singing-ranking__my-position-rank-unit 位
         %p.singing-ranking__my-position-score
           = "スコア #{my_best_diagnosis.overall_score}点 · #{my_best_diagnosis.performance_type_label}"
+        = render "singing/rankings/badges", badges: my_badges, limit: 4, class_name: "singing-ranking__badges--my-position"
       .singing-ranking__my-position-right
         %span.singing-ranking__my-position-badge
           %span.singing-ranking__my-position-badge-dot

@@ -12,6 +12,7 @@
           %span.singing-ranking__my-position-rank-unit 点
         %p.singing-ranking__my-position-score
           = "#{my_growth_entry.previous_diagnosis.overall_score}点 → #{my_growth_entry.latest_diagnosis.overall_score}点 · #{my_growth_entry.latest_diagnosis.performance_type_label}"
+        = render "singing/rankings/badges", badges: my_badges, limit: 4, class_name: "singing-ranking__badges--my-position"
       .singing-ranking__my-position-right
         %span.singing-ranking__my-position-badge
           %span.singing-ranking__my-position-badge-dot

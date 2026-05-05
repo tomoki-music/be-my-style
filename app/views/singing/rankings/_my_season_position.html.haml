@@ -17,6 +17,7 @@
           = "#{my_season_diagnosis.overall_score}点 · #{my_season_diagnosis.performance_type_label}"
           - if my_season_diagnosis.diagnosed_at.present?
             = " · #{my_season_diagnosis.diagnosed_at.strftime('%-m/%-d')}"
+        = render "singing/rankings/badges", badges: my_badges, limit: 4, class_name: "singing-ranking__badges--my-position"
       .singing-ranking__my-position-right
         %span.singing-ranking__my-position-badge
           %span.singing-ranking__my-position-badge-dot

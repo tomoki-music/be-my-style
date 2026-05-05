@@ -37,6 +37,7 @@
             .singing-ranking__growth-user-info
               %span.singing-ranking__growth-user-name= entry.customer.name
               %span.singing-ranking__growth-user-meta= entry.latest_diagnosis.performance_type_label
+              = render "singing/rankings/badges", badges: badges_map[entry.customer.id], limit: 3
         .singing-ranking__growth-scores
           .singing-ranking__growth-delta= "+#{entry.growth_score}点"
           .singing-ranking__growth-score-change

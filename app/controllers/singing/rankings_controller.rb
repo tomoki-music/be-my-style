@@ -6,6 +6,7 @@ class Singing::RankingsController < Singing::BaseController
     case @ranking_type
     when "growth"
       @growth_rankings = Singing::RankingQuery.growth
+      ranking_customers = @growth_rankings.map(&:customer)
       @my_growth_entry = @growth_rankings.find { |e| e.customer.id == current_customer.id }
       unless @my_growth_entry
         @my_completed_count = current_customer.singing_diagnoses
@@ -16,6 +17,7 @@ class Singing::RankingsController < Singing::BaseController
     when "season"
       @season_range = Singing::RankingQuery.current_season_range
       @season_rankings = Singing::RankingQuery.season
+      ranking_customers = @season_rankings.map(&:customer)
       @my_season_diagnosis = current_customer.singing_diagnoses
                                              .completed
                                              .where(ranking_opt_in: true)
@@ -33,6 +35,7 @@ class Singing::RankingsController < Singing::BaseController
       end
     else
       @rankings = Singing::RankingQuery.overall
+      ranking_customers = @rankings.map(&:customer)
       @my_best_diagnosis = current_customer.singing_diagnoses
                                            .completed
                                            .where(ranking_opt_in: true)
@@ -41,6 +44,10 @@ class Singing::RankingsController < Singing::BaseController
                                            .first
       @my_position = @my_best_diagnosis ? Singing::RankingQuery.position_for(current_customer.id) : nil
     end
+
+    badge_customers = Array(ranking_customers) + [current_customer]
+    @badges_map = Singing::RankingBadgeService.badges_for_bulk(badge_customers)
+    @my_badges = @badges_map[current_customer.id] || []
   end
 
   private

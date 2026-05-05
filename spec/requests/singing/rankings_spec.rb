@@ -194,6 +194,18 @@ RSpec.describe "Singing::Rankings", type: :request do
         expect(response.body).to include("まだランキング参加者はいません")
       end
 
+      it "総合ランキングでバッジを表示すること" do
+        FactoryBot.create(
+          :singing_diagnosis, :completed, :ranking_participant,
+          customer: other_customer, overall_score: 88
+        )
+
+        get singing_rankings_path
+
+        expect(response.body).to include("singing-ranking__badge")
+        expect(response.body).to include("総合TOP3")
+      end
+
       it "プライバシー注意書きを表示すること" do
         get singing_rankings_path
         expect(response.body).to include("ランキング参加は任意です")
@@ -232,6 +244,18 @@ RSpec.describe "Singing::Rankings", type: :request do
           expect(response.body).to include("ランキング参加中")
         end
 
+        it "自分の順位カードにバッジを表示すること" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: singing_customer, overall_score: 80
+          )
+
+        get singing_rankings_path
+
+        expect(response.body).to include("singing-ranking__badges--my-position")
+        expect(response.body).to include("総合TOP3")
+      end
+
         it "ランキング未参加のユーザーには診断CTAを表示すること" do
           get singing_rankings_path
 
@@ -266,6 +290,23 @@ RSpec.describe "Singing::Rankings", type: :request do
           get singing_rankings_path(type: "growth")
 
           expect(response.body).to include("+20点")
+        end
+
+        it "成長ランキングでバッジを表示すること" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed,
+            customer: other_customer, overall_score: 60, ranking_opt_in: false,
+            created_at: 2.days.ago
+          )
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: other_customer, overall_score: 80, created_at: 1.day.ago
+          )
+
+          get singing_rankings_path(type: "growth")
+
+          expect(response.body).to include("singing-ranking__badge")
+          expect(response.body).to include("成長TOP3")
         end
 
         it "成長幅がない（横ばい・下降）ユーザーはランキングに表示しないこと" do
@@ -362,6 +403,18 @@ RSpec.describe "Singing::Rankings", type: :request do
 
           expect(response.body).to include(other_customer.name)
           expect(response.body).not_to include(hidden_customer.name)
+        end
+
+        it "シーズンランキングでバッジを表示すること" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: other_customer, overall_score: 80, diagnosed_at: Time.zone.now
+          )
+
+          get singing_rankings_path(type: "season")
+
+          expect(response.body).to include("singing-ranking__badge")
+          expect(response.body).to include("今月の王者")
         end
 
         it "先月の診断はランキングに表示しないこと" do

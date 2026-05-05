@@ -2877,11 +2877,93 @@ $ranking-accent: #7c4dff;
   }
 }
 
+.singing-ranking__user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.singing-ranking__user-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .singing-ranking__user-avatar {
   border-radius: 50%;
   height: 32px;
   object-fit: cover;
   width: 32px;
+}
+
+.singing-ranking__badges {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.singing-ranking__badges--podium {
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.singing-ranking__badges--my-position {
+  margin-top: 10px;
+}
+
+.singing-ranking__badge {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  color: #4b5563;
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 700;
+  gap: 4px;
+  line-height: 1.2;
+  max-width: 100%;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.singing-ranking__badge-icon {
+  color: #6b7280;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.singing-ranking__badge-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.singing-ranking__badge--common {
+  background: #f8fafc;
+  border-color: #e5e7eb;
+  color: #4b5563;
+}
+
+.singing-ranking__badge--rare {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.singing-ranking__badge--epic {
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+  color: #6d28d9;
+}
+
+.singing-ranking__badge--legend {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
 }
 
 // =========================================================
