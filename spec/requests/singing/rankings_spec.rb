@@ -474,6 +474,29 @@ RSpec.describe "Singing::Rankings", type: :request do
             expect(response.body).to include(singing_ranking_season_path(current_season))
           end
 
+          it "集計済みentryの称号バッジを表示すること" do
+            diagnosis = FactoryBot.create(
+              :singing_diagnosis, :completed, :ranking_participant,
+              customer: other_customer, overall_score: 94, diagnosed_at: Time.zone.now
+            )
+            FactoryBot.create(
+              :singing_season_ranking_entry,
+              singing_ranking_season: current_season,
+              customer: other_customer,
+              singing_diagnosis: diagnosis,
+              rank: 1,
+              score: 94,
+              category: "overall",
+              title: "今月のトップシンガー",
+              badge_key: "monthly_overall_top_1"
+            )
+
+            get singing_rankings_path(type: "season")
+
+            expect(response.body).to include("今月のトップシンガー")
+            expect(response.body).to include("月間トップシンガー")
+          end
+
           it "Premium導線テキストをnon-premiumユーザーに表示すること" do
             get singing_rankings_path(type: "season")
             expect(response.body).to include("AI深掘り分析")

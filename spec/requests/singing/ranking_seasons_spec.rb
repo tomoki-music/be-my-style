@@ -104,7 +104,7 @@ RSpec.describe "Singing::RankingSeasons", type: :request do
                           singing_ranking_season: season,
                           customer: other1,
                           rank: 1, score: 95, category: "overall",
-                          title: "月間TOPシンガー", badge_key: "monthly_top_1")
+                          title: "月間TOPシンガー", badge_key: "monthly_overall_top_1")
       end
       let!(:entry2)  do
         FactoryBot.create(:singing_season_ranking_entry,
@@ -132,6 +132,12 @@ RSpec.describe "Singing::RankingSeasons", type: :request do
       it "称号を表示すること" do
         get singing_ranking_season_path(season)
         expect(response.body).to include("月間TOPシンガー")
+      end
+
+      it "badge_key に応じたバッジを表示すること" do
+        get singing_ranking_season_path(season)
+        expect(response.body).to include("月間トップシンガー")
+        expect(response.body).to include("🏆")
       end
 
       it "カテゴリラベルを表示すること" do

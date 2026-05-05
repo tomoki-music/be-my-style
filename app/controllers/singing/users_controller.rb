@@ -13,6 +13,7 @@ class Singing::UsersController < Singing::BaseController
     @diagnosis_count = @user.singing_diagnoses.completed.where.not(overall_score: nil).count
     @ranking_position = Singing::RankingQuery.position_for(@user.id)
     @season_position = Singing::RankingQuery.season_position_for(@user.id)
+    @season_achievement_entries = season_achievement_entries
     @ranking_badges = Singing::RankingBadgeService.badges_for(@user)
     @growth_entries = Singing::RankingQuery.growth
     @growth_index = @growth_entries.index { |entry| entry.customer.id == @user.id }
@@ -67,5 +68,15 @@ class Singing::UsersController < Singing::BaseController
     return uri.to_s if uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
   rescue URI::InvalidURIError
     nil
+  end
+
+  def season_achievement_entries
+    SingingSeasonRankingEntry
+      .includes(:singing_ranking_season)
+      .joins(:singing_ranking_season)
+      .where(customer: @user)
+      .where("singing_season_ranking_entries.title IS NOT NULL OR singing_season_ranking_entries.badge_key IS NOT NULL")
+      .order("singing_ranking_seasons.starts_on DESC, singing_season_ranking_entries.rank ASC, singing_season_ranking_entries.id DESC")
+      .limit(5)
   end
 end

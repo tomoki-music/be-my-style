@@ -1,6 +1,7 @@
 -# season_rankings:  Array<SingingDiagnosis>
 -# season_range:     Range<Time>
 -# current_season:   SingingRankingSeason | nil
+-# season_entries_by_diagnosis: Hash<Integer, SingingSeasonRankingEntry>
 -# badges_map:       Hash
 -# ranking_plan_context: Hash
 
@@ -60,6 +61,7 @@
   .singing-ranking__podium
     - [[top3[1], 2], [top3[0], 1], [top3[2], 3]].each do |diagnosis, rank|
       - next unless diagnosis
+      - season_entry = season_entries_by_diagnosis[diagnosis.id]
       - rank_label = { 1 => "1st", 2 => "2nd", 3 => "3rd" }[rank]
       .singing-ranking__podium-card{ class: "singing-ranking__podium-card--rank-#{rank}" }
         .singing-ranking__podium-rank-badge= rank_label
@@ -74,6 +76,8 @@
         - if diagnosis.diagnosed_at.present?
           .singing-ranking__podium-date= diagnosis.diagnosed_at.strftime("%Y/%m/%d")
         .singing-ranking__podium-title-badge= singing_ranking_title(diagnosis.overall_score)
+        - if season_entry.present?
+          = render "singing/shared/season_badge", entry: season_entry, compact: true
         .singing-ranking__podium-step{ class: "singing-ranking__podium-step--rank-#{rank}" }
           = rank_label
 
@@ -87,9 +91,11 @@
             %th.singing-ranking__th スコア
             %th.singing-ranking__th 診断タイプ
             %th.singing-ranking__th 診断日
+            %th.singing-ranking__th シーズン実績
         %tbody
           - rest.each_with_index do |diagnosis, index|
             - rank = index + 4
+            - season_entry = season_entries_by_diagnosis[diagnosis.id]
             %tr.singing-ranking__tr
               %td.singing-ranking__td.singing-ranking__td--rank #{rank}位
               %td.singing-ranking__td
@@ -101,3 +107,8 @@
               %td.singing-ranking__td.singing-ranking__td--score= "#{diagnosis.overall_score}点"
               %td.singing-ranking__td= diagnosis.performance_type_label
               %td.singing-ranking__td= diagnosis.diagnosed_at&.strftime("%Y/%m/%d")
+              %td.singing-ranking__td
+                - if season_entry.present?
+                  = render "singing/shared/season_badge", entry: season_entry, compact: true
+                - else
+                  %span.singing-ranking__muted -
