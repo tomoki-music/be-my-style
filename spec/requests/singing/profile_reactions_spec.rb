@@ -18,6 +18,32 @@ RSpec.describe "Singing::ProfileReactions", type: :request do
       expect(SingingProfileReaction.count).to eq 1
     end
 
+    it "プロフィールに応援リアクションすると対象ユーザーに通知を作成すること" do
+      expect do
+        post singing_user_profile_reaction_path(target_customer, reaction_type: "cheer"),
+          headers: { "Accept" => "application/json" }
+      end.to change(Notification, :count).by(1)
+
+      notification = Notification.last
+      expect(notification.visitor).to eq customer
+      expect(notification.visited).to eq target_customer
+      expect(notification.action).to eq "singing_profile_reaction_cheer"
+    end
+
+    it "同じプロフィールリアクションの通知を重複作成しないこと" do
+      post singing_user_profile_reaction_path(target_customer, reaction_type: "cheer"),
+        headers: { "Accept" => "application/json" }
+      post singing_user_profile_reaction_path(target_customer, reaction_type: "cheer"),
+        headers: { "Accept" => "application/json" }
+
+      expect do
+        post singing_user_profile_reaction_path(target_customer, reaction_type: "cheer"),
+          headers: { "Accept" => "application/json" }
+      end.not_to change(Notification, :count)
+
+      expect(Notification.where(visitor: customer, visited: target_customer, action: "singing_profile_reaction_cheer").count).to eq 1
+    end
+
     it "同じリアクションを再度POSTすると取り消せること" do
       create(:singing_profile_reaction, customer: customer, target_customer: target_customer, reaction_type: "cheer")
 
@@ -47,6 +73,7 @@ RSpec.describe "Singing::ProfileReactions", type: :request do
 
       expect(response).to have_http_status(:forbidden)
       expect(SingingProfileReaction.count).to eq 0
+      expect(Notification.count).to eq 0
     end
 
     it "無効なリアクション種別は422を返すこと" do

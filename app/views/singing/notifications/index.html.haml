@@ -1,0 +1,15 @@
+.singing-notifications
+  .singing-notifications__inner
+    .singing-notifications__head
+      %p.singing-notifications__eyebrow Notifications
+      %h1 通知一覧
+
+    .singing-notifications__list
+      .singing-notifications__pager
+        = paginate @notifications
+      - notifications = @notifications.where.not(visitor_id: current_customer.id)
+      - if notifications.exists?
+        = render partial: "public/notifications/notification", collection: notifications, as: :notification
+      - else
+        .singing-notifications__empty
+          %p 通知はありません
