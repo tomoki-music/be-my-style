@@ -1,0 +1,47 @@
+= render 'layouts/admin_header_menu'
+
+.container.py-4
+  .d-flex.justify-content-between.align-items-center.mb-3
+    %h2.mb-0 歌唱シーズンランキング管理
+    = link_to "新規シーズン作成", new_admin_singing_ranking_season_path, class: "btn btn-primary"
+
+  - if @seasons.empty?
+    .alert.alert-info 登録されたシーズンはありません。
+
+  - else
+    .table-responsive
+      %table.table.table-striped.table-bordered
+        %thead.thead-dark
+          %tr
+            %th ID
+            %th シーズン名
+            %th 期間
+            %th ステータス
+            %th 種別
+            %th Entries
+            %th ユーザー向け
+            %th 操作
+        %tbody
+          - @seasons.each do |season|
+            %tr
+              %td= season.id
+              %td
+                = link_to season.name, admin_singing_ranking_season_path(season)
+              %td.text-nowrap
+                = season.starts_on.strftime("%Y/%m/%d")
+                〜
+                = season.ends_on.strftime("%Y/%m/%d")
+              %td
+                - case season.status
+                - when "active"
+                  %span.badge.badge-success 開催中
+                - when "draft"
+                  %span.badge.badge-secondary 準備中
+                - when "closed"
+                  %span.badge.badge-dark 終了
+              %td= season.season_type == "monthly" ? "月間" : season.season_type
+              %td.text-center= season.singing_season_ranking_entries.size
+              %td
+                = link_to "ユーザー画面", singing_ranking_season_path(season), target: "_blank", class: "btn btn-sm btn-outline-info"
+              %td
+                = link_to "編集", edit_admin_singing_ranking_season_path(season), class: "btn btn-sm btn-outline-secondary"

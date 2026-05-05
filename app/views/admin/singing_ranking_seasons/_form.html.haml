@@ -1,0 +1,48 @@
+= form_with model: [:admin, @season], local: true do |f|
+  - if @season.errors.any?
+    .alert.alert-danger
+      %ul.mb-0
+        - @season.errors.full_messages.each do |message|
+          %li= message
+
+  .card.shadow-sm
+    .card-body
+      .form-group
+        = f.label :name, "シーズン名"
+        = f.text_field :name, class: "form-control", placeholder: "例: 2026年5月シーズン"
+
+      .form-row
+        .form-group.col-md-6
+          = f.label :starts_on, "開始日"
+          = f.date_field :starts_on, class: "form-control"
+        .form-group.col-md-6
+          = f.label :ends_on, "終了日"
+          = f.date_field :ends_on, class: "form-control"
+
+      .form-row
+        .form-group.col-md-6
+          = f.label :status, "ステータス"
+          = f.select :status,
+                     SingingRankingSeason::STATUSES.map { |s| [t("admin.singing_ranking_season.status.#{s}", default: s), s] },
+                     {},
+                     class: "form-control"
+          %small.form-text.text-muted
+            draft: 準備中（ユーザーには見えません）
+            active: 開催中（ユーザーに表示）
+            closed: 終了
+
+        .form-group.col-md-6
+          = f.label :season_type, "シーズン種別"
+          = f.select :season_type,
+                     SingingRankingSeason::SEASON_TYPES.map { |t| [t, t] },
+                     {},
+                     class: "form-control"
+
+      .alert.alert-warning.small
+        %strong 注意:
+        active にすると既存の active シーズンと期間が重複する可能性があります。
+        同時に複数の active シーズンを設定できますが、ユーザー画面では最初の 1件のみ「開催中」として表示されます。
+
+  .mt-3
+    = f.submit "保存する", class: "btn btn-primary"
+    = link_to "キャンセル", admin_singing_ranking_seasons_path, class: "btn btn-secondary ml-2"

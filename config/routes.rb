@@ -32,6 +32,11 @@ Rails.application.routes.draw do
       resources :songs, only: [:create, :destroy]
       delete "delete" => "events#delete"
     end
+
+    # 歌唱シーズンランキング管理
+    resources :singing_ranking_seasons, except: [:destroy] do
+      post :aggregate, on: :member
+    end
   end
   
   namespace :public do
