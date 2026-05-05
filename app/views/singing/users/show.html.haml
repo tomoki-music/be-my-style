@@ -44,9 +44,28 @@
 
       %section.singing-profile__section
         .singing-profile__section-head
+          %p.singing-profile__section-kicker Achievements
+          %h2 獲得した称号
+        - if @ranking_badges.present?
+          .singing-profile__achievement-panel
+            = render "singing/rankings/badges", badges: @ranking_badges, limit: 12, class_name: "singing-profile__achievement-badges"
+          %p.singing-profile__achievement-note 診断回数、成長幅、ランキング実績に応じて称号が増えていきます。
+        - else
+          .singing-profile__empty
+            %p 最初の診断が完了すると、ここに称号が表示されます。
+            - if current_customer == @user
+              = link_to "診断に挑戦する", new_singing_diagnosis_path
+
+      %section.singing-profile__section
+        .singing-profile__section-head
           %p.singing-profile__section-kicker Growth
-          %h2 最近の成長推移
+          %h2 成長の記録
         - if @growth_diagnoses.present?
+          - if @growth_entry.present?
+            .singing-profile__growth-story
+              %span.singing-profile__growth-story-label= "成長ランキング #{@growth_position}位"
+              %strong= "+#{@growth_entry.growth_score}点"
+              %small= "#{@growth_entry.previous_diagnosis.overall_score}点から#{@growth_entry.latest_diagnosis.overall_score}点へ更新"
           .singing-profile__growth
             - @growth_diagnoses.each do |diagnosis|
               - score_width = [[diagnosis.overall_score.to_i, 0].max, 100].min
@@ -111,12 +130,23 @@
 
       %section.singing-profile__side-card.singing-profile__side-card--rank
         %h2 ランキング実績
+        .singing-profile__achievement-stats
+          .singing-profile__achievement-stat
+            %span 最高スコア
+            %strong= @best_diagnosis.present? ? "#{@best_diagnosis.overall_score}点" : "-"
+          .singing-profile__achievement-stat
+            %span 診断回数
+            %strong= "#{@diagnosis_count}回"
+          .singing-profile__achievement-stat
+            %span 総合ランキング
+            %strong= @ranking_position.present? ? "#{@ranking_position}位" : "-"
+          .singing-profile__achievement-stat
+            %span 今月のシーズン
+            %strong= @season_position.present? ? "#{@season_position}位" : "-"
+          .singing-profile__achievement-stat
+            %span 成長ランキング
+            %strong= @growth_entry.present? ? "#{@growth_position}位 / +#{@growth_entry.growth_score}点" : "-"
         - if @best_diagnosis.present?
-          .singing-profile__rank-score
-            %span= @best_diagnosis.overall_score
-            点
-          %p= "#{@best_diagnosis.performance_type_label} / #{singing_ranking_title(@best_diagnosis.overall_score)}"
-          - if @ranking_position.present?
-            %p.singing-profile__rank-position= "現在 #{@ranking_position}位"
+          %p.singing-profile__rank-title= "#{@best_diagnosis.performance_type_label} / #{singing_ranking_title(@best_diagnosis.overall_score)}"
         - else
           %p.singing-profile__side-empty ランキング参加中の診断はまだありません。
