@@ -3606,6 +3606,185 @@ $ranking-accent: #7c4dff;
   }
 }
 
+// --- My Position Card ---
+
+.singing-ranking__my-position {
+  margin-bottom: 24px;
+}
+
+.singing-ranking__my-position-card {
+  background: linear-gradient(135deg, #0f1623 0%, #1e2a45 60%, #24133d 100%);
+  border-radius: 14px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 18px rgba(15, 22, 35, 0.18);
+
+  &--inactive {
+    background: #f9fafb;
+    border: 1px dashed #d1d5db;
+    color: #374151;
+    display: block;
+    padding: 20px 24px;
+    text-align: center;
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+.singing-ranking__my-position-label {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.singing-ranking__my-position-rank {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  line-height: 1;
+}
+
+.singing-ranking__my-position-rank-num {
+  font-size: 42px;
+  font-weight: 800;
+  color: $ranking-gold;
+}
+
+.singing-ranking__my-position-rank-unit {
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.singing-ranking__my-position-score {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.singing-ranking__my-position-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  white-space: nowrap;
+}
+
+.singing-ranking__my-position-badge-dot {
+  background: #4ade80;
+  border-radius: 50%;
+  display: inline-block;
+  height: 7px;
+  width: 7px;
+}
+
+.singing-ranking__my-position-inactive-text {
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 14px;
+
+  strong {
+    color: #374151;
+    display: block;
+    margin-bottom: 4px;
+  }
+}
+
+.singing-ranking__my-position-cta-btn {
+  background: $ranking-accent;
+  border-radius: 8px;
+  color: #fff;
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 20px;
+  text-decoration: none;
+  transition: background 0.2s;
+
+  &:hover {
+    background: darken($ranking-accent, 8%);
+    color: #fff;
+    text-decoration: none;
+  }
+}
+
+// --- Tabs ---
+
+.singing-ranking__tabs {
+  border-bottom: 2px solid #e5e7eb;
+  display: flex;
+  gap: 0;
+  margin-bottom: 32px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  // スクロールバー非表示（モバイル）
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.singing-ranking__tab-item {
+  align-items: center;
+  color: #9ca3af;
+  cursor: default;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 8px;
+  padding: 12px 20px;
+  position: relative;
+  white-space: nowrap;
+
+  &--active {
+    color: $ranking-accent;
+
+    &::after {
+      background: $ranking-accent;
+      bottom: -2px;
+      content: "";
+      height: 2px;
+      left: 0;
+      position: absolute;
+      right: 0;
+    }
+  }
+
+  &--coming-soon {
+    color: #d1d5db;
+    cursor: not-allowed;
+  }
+}
+
+.singing-ranking__tab-badge {
+  background: #e5e7eb;
+  border-radius: 4px;
+  color: #9ca3af;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+}
+
 // =========================================================
 // Ranking Entry Points (CTA / Banner / Nudge)
 // =========================================================

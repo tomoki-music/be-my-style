@@ -1,0 +1,22 @@
+.singing-ranking__my-position
+  - if my_best_diagnosis.present? && my_position.present?
+    .singing-ranking__my-position-card
+      .singing-ranking__my-position-left
+        %p.singing-ranking__my-position-label あなたの現在順位
+        .singing-ranking__my-position-rank
+          %span.singing-ranking__my-position-rank-num= my_position
+          %span.singing-ranking__my-position-rank-unit 位
+        %p.singing-ranking__my-position-score
+          = "スコア #{my_best_diagnosis.overall_score}点 · #{my_best_diagnosis.performance_type_label}"
+      .singing-ranking__my-position-right
+        %span.singing-ranking__my-position-badge
+          %span.singing-ranking__my-position-badge-dot
+          ランキング参加中
+        -# FUTURE: can_view_rank_history が true のとき順位推移グラフを追加（light以上）
+  - else
+    .singing-ranking__my-position-card.singing-ranking__my-position-card--inactive
+      .singing-ranking__my-position-inactive-text
+        %strong 診断結果でランキング参加をONにすると掲載されます
+        %br
+        まずは歌唱・演奏診断にチャレンジしてみましょう！
+      = link_to "診断を始める", new_singing_diagnosis_path, class: "singing-ranking__my-position-cta-btn"

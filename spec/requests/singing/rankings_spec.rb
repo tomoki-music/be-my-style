@@ -198,6 +198,45 @@ RSpec.describe "Singing::Rankings", type: :request do
         get singing_rankings_path
         expect(response.body).to include("ランキング参加は任意です")
       end
+
+      context "タブ構造" do
+        it "総合ランキングタブを表示すること" do
+          get singing_rankings_path
+          expect(response.body).to include("総合ランキング")
+        end
+
+        it "成長ランキング（Coming Soon）タブを表示すること" do
+          get singing_rankings_path
+          expect(response.body).to include("成長ランキング")
+          expect(response.body).to include("COMING SOON")
+        end
+
+        it "シーズンランキング（Coming Soon）タブを表示すること" do
+          get singing_rankings_path
+          expect(response.body).to include("シーズンランキング")
+        end
+      end
+
+      context "自分の順位表示" do
+        it "ランキング参加中のユーザーには現在順位を表示すること" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: singing_customer, overall_score: 80
+          )
+
+          get singing_rankings_path
+
+          expect(response.body).to include("あなたの現在順位")
+          expect(response.body).to include("ランキング参加中")
+        end
+
+        it "ランキング未参加のユーザーには診断CTAを表示すること" do
+          get singing_rankings_path
+
+          expect(response.body).to include("診断を始める")
+          expect(response.body).to include("ランキング参加をONにすると掲載されます")
+        end
+      end
     end
 
     context "未ログインの場合" do

@@ -1,0 +1,56 @@
+- if rankings.empty?
+  .singing-ranking__empty
+    .singing-ranking__empty-icon
+      %span ♪
+    %h2.singing-ranking__empty-title まだランキング参加者はいません
+    %p.singing-ranking__empty-message
+      最初の一歩を刻むのは、あなたかもしれません。
+      %br
+      診断を受けて、ランキングに名前を刻みましょう。
+    = link_to "歌唱・演奏診断を始める", new_singing_diagnosis_path, class: "btn btn-primary singing-ranking__empty-btn"
+
+- else
+  - top3 = rankings.first(3)
+  - rest  = rankings.drop(3)
+
+  .singing-ranking__podium
+    - [[top3[1], 2], [top3[0], 1], [top3[2], 3]].each do |diagnosis, rank|
+      - next unless diagnosis
+      - rank_label = { 1 => "1st", 2 => "2nd", 3 => "3rd" }[rank]
+      .singing-ranking__podium-card{ class: "singing-ranking__podium-card--rank-#{rank}" }
+        .singing-ranking__podium-rank-badge= rank_label
+        .singing-ranking__podium-score
+          %span.singing-ranking__podium-score-num= diagnosis.overall_score
+          %span.singing-ranking__podium-score-unit 点
+        = link_to singing_user_path(diagnosis.customer), class: "singing-ranking__podium-user" do
+          = customer_avatar_tag(diagnosis.customer, class_name: "singing-ranking__podium-avatar", fallback: "no_image")
+          %span.singing-ranking__podium-name= diagnosis.customer.name
+        .singing-ranking__podium-type= diagnosis.performance_type_label
+        - if diagnosis.diagnosed_at.present?
+          .singing-ranking__podium-date= diagnosis.diagnosed_at.strftime("%Y/%m/%d")
+        .singing-ranking__podium-title-badge= singing_ranking_title(diagnosis.overall_score)
+        .singing-ranking__podium-step{ class: "singing-ranking__podium-step--rank-#{rank}" }
+          = rank_label
+
+  - if rest.present?
+    .singing-ranking__list
+      %table.singing-ranking__table
+        %thead
+          %tr
+            %th.singing-ranking__th 順位
+            %th.singing-ranking__th ユーザー
+            %th.singing-ranking__th スコア
+            %th.singing-ranking__th 診断タイプ
+            %th.singing-ranking__th 診断日
+        %tbody
+          - rest.each_with_index do |diagnosis, index|
+            - rank = index + 4
+            %tr.singing-ranking__tr
+              %td.singing-ranking__td.singing-ranking__td--rank #{rank}位
+              %td.singing-ranking__td
+                = link_to singing_user_path(diagnosis.customer), class: "singing-ranking__user-link" do
+                  = customer_avatar_tag(diagnosis.customer, class_name: "singing-ranking__user-avatar", fallback: "no_image")
+                  %span= diagnosis.customer.name
+              %td.singing-ranking__td.singing-ranking__td--score= "#{diagnosis.overall_score}点"
+              %td.singing-ranking__td= diagnosis.performance_type_label
+              %td.singing-ranking__td= diagnosis.diagnosed_at&.strftime("%Y/%m/%d")
