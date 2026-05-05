@@ -34,6 +34,13 @@ RSpec.describe "Admin::SingingRankingSeasons", type: :request do
         get admin_singing_ranking_seasons_path
         expect(response.body).to include(new_admin_singing_ranking_season_path)
       end
+
+      it "今月シーズン作成導線と説明を表示すること" do
+        get admin_singing_ranking_seasons_path
+        expect(response.body).to include("今月シーズンを作成")
+        expect(response.body).to include("毎月のシーズン作成漏れを防ぐため")
+        expect(response.body).to include("既に同月シーズンがある場合は重複作成されません")
+      end
     end
 
     describe "GET /admin/singing_ranking_seasons/:id (show)" do
@@ -186,6 +193,42 @@ RSpec.describe "Admin::SingingRankingSeasons", type: :request do
         expect(response.body).to include("シーズンランキングを再集計しました")
       end
     end
+
+    describe "POST /admin/singing_ranking_seasons/ensure_current" do
+      it "今月シーズンを作成して index にリダイレクトすること" do
+        SingingRankingSeason.where(
+          starts_on: Date.current.beginning_of_month,
+          ends_on: Date.current.end_of_month,
+          season_type: "monthly"
+        ).delete_all
+
+        expect {
+          post ensure_current_admin_singing_ranking_seasons_path
+        }.to change(SingingRankingSeason, :count).by(1)
+
+        expect(response).to redirect_to(admin_singing_ranking_seasons_path)
+        follow_redirect!
+        expect(response.body).to include("今月のシーズンを作成しました")
+      end
+
+      it "今月シーズンが既に存在する場合は重複作成しないこと" do
+        existing = FactoryBot.create(
+          :singing_ranking_season,
+          starts_on: Date.current.beginning_of_month,
+          ends_on: Date.current.end_of_month,
+          season_type: "monthly"
+        )
+
+        expect {
+          post ensure_current_admin_singing_ranking_seasons_path
+        }.not_to change(SingingRankingSeason, :count)
+
+        expect(response).to redirect_to(admin_singing_ranking_seasons_path)
+        follow_redirect!
+        expect(response.body).to include("今月のシーズンは既に存在します")
+        expect(SingingRankingSeason.find(existing.id)).to be_present
+      end
+    end
   end
 
   describe "非管理者のアクセス" do
@@ -250,6 +293,13 @@ RSpec.describe "Admin::SingingRankingSeasons", type: :request do
         expect {
           post aggregate_admin_singing_ranking_season_path(season)
         }.not_to change(SingingSeasonRankingEntry, :count)
+        expect(response).not_to have_http_status(:ok)
+      end
+
+      it "ensure_current できないこと" do
+        expect {
+          post ensure_current_admin_singing_ranking_seasons_path
+        }.not_to change(SingingRankingSeason, :count)
         expect(response).not_to have_http_status(:ok)
       end
     end

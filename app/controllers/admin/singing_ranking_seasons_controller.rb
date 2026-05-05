@@ -32,6 +32,12 @@ class Admin::SingingRankingSeasonsController < ApplicationController
     end
   end
 
+  def ensure_current
+    result = Singing::EnsureCurrentRankingSeasonJob.perform_now(Date.current)
+    message = result[:created] ? "今月のシーズンを作成しました。" : "今月のシーズンは既に存在します。"
+    redirect_to admin_singing_ranking_seasons_path, notice: message
+  end
+
   def edit; end
 
   def update
