@@ -102,6 +102,49 @@ RSpec.describe "Singing::Users", type: :request do
       expect(story_html).not_to include("<script")
       expect(story_html).not_to include("javascript:")
     end
+
+    it "獲得バッジを表示すること" do
+      sign_in other_customer
+      create_list(:singing_diagnosis, 3, :completed, :ranking_participant, customer: singing_customer, overall_score: 82)
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("獲得した称号")
+      expect(response.body).to include("3回診断達成")
+      expect(response.body).to include("初診断")
+    end
+
+    it "バッジがないユーザーでもプロフィールが表示できること" do
+      sign_in singing_customer
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("最初の診断が完了すると、ここに称号が表示されます。")
+      expect(response.body).to include("診断に挑戦する")
+    end
+
+    it "ランキング順位とシーズン順位と成長実績を表示すること" do
+      sign_in other_customer
+      now = Time.zone.now
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: other_customer, overall_score: 95, diagnosed_at: now)
+      create(:singing_diagnosis, :completed, customer: singing_customer, overall_score: 75, diagnosed_at: 2.days.ago, created_at: 2.days.ago)
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 90, diagnosed_at: now, created_at: now)
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("最高スコア")
+      expect(response.body).to include("90点")
+      expect(response.body).to include("診断回数")
+      expect(response.body).to include("2回")
+      expect(response.body).to include("総合ランキング")
+      expect(response.body).to include("2位")
+      expect(response.body).to include("今月のシーズン")
+      expect(response.body).to include("成長ランキング 1位")
+      expect(response.body).to include("+15点")
+    end
   end
 
   describe "GET /singing/users/:id/edit" do

@@ -8,7 +8,14 @@ class Singing::UsersController < Singing::BaseController
     @recent_activities = @user.activities.with_attached_activity_image.includes(:activity_reactions).order(created_at: :desc).limit(3)
     @activity_count = @user.activities.count
     @best_diagnosis = @user.singing_diagnoses.completed.where(ranking_opt_in: true).where.not(overall_score: nil).order(overall_score: :desc, id: :desc).first
+    @diagnosis_count = @user.singing_diagnoses.completed.where.not(overall_score: nil).count
     @ranking_position = Singing::RankingQuery.position_for(@user.id)
+    @season_position = Singing::RankingQuery.season_position_for(@user.id)
+    @ranking_badges = Singing::RankingBadgeService.badges_for(@user)
+    @growth_entries = Singing::RankingQuery.growth
+    @growth_index = @growth_entries.index { |entry| entry.customer.id == @user.id }
+    @growth_entry = @growth_index.present? ? @growth_entries[@growth_index] : nil
+    @growth_position = @growth_index.present? ? @growth_index + 1 : nil
     @safe_profile_url = safe_external_url(@user.url)
   end
 
