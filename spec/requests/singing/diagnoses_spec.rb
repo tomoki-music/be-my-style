@@ -480,8 +480,8 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("解析種別")
     end
 
-    it "premiumユーザーの完了診断には詳細診断と歌声タイプを表示すること" do
-      singing_customer.create_subscription!(status: "active", plan: "premium")
+    it "coreユーザーの完了vocal診断には6つのボイスタイプ診断を表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "core")
       sign_in singing_customer
       diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed)
 
@@ -496,6 +496,44 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("パワフルボイス")
       expect(response.body).to include("ハイトーンボイス")
       expect(response.body).to include("クリスタルボイス")
+      expect(response.body).to include("Core以上")
+    end
+
+    it "premiumユーザーの完了vocal診断にも6つのボイスタイプ診断を表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "premium")
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("6つの歌声タイプマップ")
+      expect(response.body).to include("パワフルボイス")
+    end
+
+    it "lightユーザーの完了vocal診断には6つのボイスタイプ診断のCore導線を表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "light")
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("6つのボイスタイプ診断はCoreプラン以上で解放されます")
+      expect(response.body).to include("Core以上のプランを見る")
+      expect(response.body).not_to include("6つの歌声タイプマップ")
+    end
+
+    it "freeユーザーの完了vocal診断には6つのボイスタイプ診断のCore導線を表示すること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("6つのボイスタイプ診断はCoreプラン以上で解放されます")
+      expect(response.body).to include("Core以上のプランを見る")
+      expect(response.body).not_to include("6つの歌声タイプマップ")
     end
 
     it "premiumユーザーのguitar診断にはタイプ別詳細診断を表示すること" do

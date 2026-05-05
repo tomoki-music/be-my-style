@@ -31,6 +31,7 @@ class Customer < ApplicationRecord
     singing_diagnosis_history: %w[free light core premium],
     singing_diagnosis_comparison: %w[light core premium],
     singing_diagnosis_advanced_feedback: %w[core premium],
+    singing_diagnosis_voice_type: %w[core premium],
     singing_diagnosis_priority: %w[premium],
     singing_diagnosis_ai_comment: %w[premium]
   }.freeze

@@ -218,6 +218,7 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
           :singing_diagnosis_history,
           :singing_diagnosis_comparison,
           :singing_diagnosis_advanced_feedback,
+          :singing_diagnosis_voice_type,
           :singing_diagnosis_priority,
           :singing_diagnosis_ai_comment
         )
@@ -227,6 +228,7 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(customer.has_feature?(:singing_diagnosis_history)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_comparison)).to eq false
         expect(customer.has_feature?(:singing_diagnosis_advanced_feedback)).to eq false
+        expect(customer.has_feature?(:singing_diagnosis_voice_type)).to eq false
         expect(customer.has_feature?(:singing_diagnosis_priority)).to eq false
       end
 
@@ -240,24 +242,27 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(customer.has_feature?(:singing_diagnosis_history)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_comparison)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_advanced_feedback)).to eq false
+        expect(customer.has_feature?(:singing_diagnosis_voice_type)).to eq false
         expect(customer.has_feature?(:singing_diagnosis_priority)).to eq false
       end
 
-      it 'coreは詳細フィードバックまで利用対象になること' do
+      it 'coreは詳細フィードバックと6つのボイスタイプ診断まで利用対象になること' do
         customer.create_subscription!(status: "active", plan: "core")
 
         expect(customer.has_feature?(:singing_diagnosis_history)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_comparison)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_advanced_feedback)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_voice_type)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_priority)).to eq false
       end
 
-      it 'premiumは優先解析とAIコメントまで利用対象になること' do
+      it 'premiumは6つのボイスタイプ診断、優先解析、AIコメントまで利用対象になること' do
         customer.create_subscription!(status: "active", plan: "premium")
 
         expect(customer.has_feature?(:singing_diagnosis_history)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_comparison)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_advanced_feedback)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_voice_type)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_priority)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_ai_comment)).to eq true
       end
@@ -268,6 +273,7 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(customer.has_feature?(:singing_diagnosis_history)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_comparison)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_advanced_feedback)).to eq true
+        expect(customer.has_feature?(:singing_diagnosis_voice_type)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_priority)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_ai_comment)).to eq true
       end
