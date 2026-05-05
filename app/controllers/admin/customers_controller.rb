@@ -4,8 +4,9 @@ class Admin::CustomersController < ApplicationController
   before_action :set_member_profile, only: [:edit, :update]
 
   def edit
-    # @customer は before_action で取得済み
-    # @member_profile も取得済み
+    @singing_diagnoses = @customer.singing_diagnoses
+      .order(created_at: :desc)
+      .limit(20)
   end
 
   def update

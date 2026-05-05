@@ -169,6 +169,58 @@
                 = mp.label :admin_memo, "管理メモ"
                 = mp.text_area :admin_memo, rows: 4, class: "form-control"
 
+  %hr
+
+  .container.mb-5
+    .row.justify-content-center
+      .col-md-12
+        %h3.mb-3.text-center.card-header.bg-info.text-white 歌声・演奏診断履歴（最新20件）
+        .card.mb-4
+          .card-body
+            - if @singing_diagnoses.empty?
+              %p.text-muted 診断履歴はありません。
+            - else
+              .table-responsive
+                %table.table.table-sm.table-bordered.table-striped
+                  %thead.thead-light
+                    %tr
+                      %th ID
+                      %th 作成日時
+                      %th 演奏タイプ
+                      %th 総合
+                      %th ピッチ
+                      %th リズム
+                      %th 表現力
+                      %th AIコメント
+                      %th AI失敗理由
+                      %th 詳細
+                  %tbody
+                    - @singing_diagnoses.each do |d|
+                      %tr
+                        %td= d.id
+                        %td= d.created_at.strftime("%Y/%m/%d %H:%M")
+                        %td= d.performance_type_label
+                        %td= d.overall_score.presence || "-"
+                        %td= d.pitch_score.presence || "-"
+                        %td= d.rhythm_score.presence || "-"
+                        %td= d.expression_score.presence || "-"
+                        %td
+                          - if d.ai_comment.present?
+                            %span.badge.bg-success あり
+                          - else
+                            %span.badge.bg-secondary なし
+                        %td
+                          - if d.ai_comment_failure_reason.present?
+                            %span.badge.bg-danger あり
+                          - else
+                            %span.badge.bg-secondary なし
+                        %td
+                          = link_to "詳細",
+                            singing_diagnosis_path(d),
+                            class: "btn btn-sm btn-outline-primary",
+                            target: "_blank",
+                            rel: "noopener"
+
   .fixed-save-button
     = link_to "キャンセル",
       admin_homes_top_path,
