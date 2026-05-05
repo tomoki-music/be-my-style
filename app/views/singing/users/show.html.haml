@@ -22,6 +22,20 @@
         .singing-profile__meta
           %span= @user.parts.any? ? @user.parts.map(&:name).join(" / ") : "担当パート未設定"
           %span= @user.genres.any? ? @user.genres.map(&:name).join(" / ") : "好きなジャンル未設定"
+        .singing-profile__reactions
+          %span.singing-profile__reactions-label 応援リアクション
+          .singing-profile__reaction-buttons
+            - SingingProfileReaction::REACTION_TYPES.each do |type|
+              - label = SingingProfileReaction.label_for(type)
+              - emoji = SingingProfileReaction.emoji_for(type)
+              - reaction_count = @profile_reaction_counts[type].to_i
+              - already_reacted = @current_customer_profile_reactions.include?(type)
+              - reaction_url = singing_user_profile_reaction_path(@user, reaction_type: type)
+              %button.activity-reaction-btn.singing-profile__reaction-btn{ type: "button", title: label, "aria-label": label, "data-reaction-url": reaction_url, disabled: (current_customer.blank? || current_customer == @user), class: (already_reacted ? "activity-reaction-btn--active" : "") }
+                %span.singing-profile__reaction-emoji= emoji
+                %span.singing-profile__reaction-text= label
+                - if reaction_count > 0
+                  %span.reaction-count= reaction_count
       .singing-profile__actions
         - if current_customer == @user
           = link_to "プロフィールを編集", edit_singing_user_path(current_customer), class: "singing-profile__edit-link"

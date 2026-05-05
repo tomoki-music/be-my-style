@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_03_120000) do
+ActiveRecord::Schema.define(version: 2026_05_05_090000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -668,6 +668,18 @@ ActiveRecord::Schema.define(version: 2026_05_03_120000) do
     t.index ["status"], name: "index_singing_diagnoses_on_status"
   end
 
+  create_table "singing_profile_reactions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "target_customer_id", null: false
+    t.string "reaction_type", limit: 40, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id", "target_customer_id", "reaction_type"], name: "index_singing_profile_reactions_unique", unique: true
+    t.index ["customer_id"], name: "index_singing_profile_reactions_on_customer_id"
+    t.index ["target_customer_id", "reaction_type"], name: "index_singing_profile_reactions_on_target_and_type"
+    t.index ["target_customer_id"], name: "index_singing_profile_reactions_on_target_customer_id"
+  end
+
   create_table "song_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "song_id", null: false
@@ -805,6 +817,8 @@ ActiveRecord::Schema.define(version: 2026_05_03_120000) do
   add_foreign_key "requests", "customers"
   add_foreign_key "requests", "events"
   add_foreign_key "singing_diagnoses", "customers"
+  add_foreign_key "singing_profile_reactions", "customers"
+  add_foreign_key "singing_profile_reactions", "customers", column: "target_customer_id"
   add_foreign_key "song_customers", "customers"
   add_foreign_key "song_customers", "songs"
   add_foreign_key "songs", "events"

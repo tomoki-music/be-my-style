@@ -35,7 +35,31 @@ RSpec.describe "Singing::Users", type: :request do
       expect(response.body).to include("Rock")
       expect(response.body).to include("91点")
       expect(response.body).to include("ライブ前の練習")
+      expect(response.body).to include("応援リアクション")
+      expect(response.body).to include("応援してます！")
       expect(response.body).not_to include(singing_customer.email)
+    end
+
+    it "プロフィールの応援リアクション数と自分のリアクション状態を表示すること" do
+      sign_in other_customer
+      create(:singing_profile_reaction, customer: other_customer, target_customer: singing_customer, reaction_type: "cheer")
+      create(:singing_profile_reaction, target_customer: singing_customer, reaction_type: "growth")
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("応援してます！")
+      expect(response.body).to include("成長ナイス！")
+      expect(response.body).to include("activity-reaction-btn--active")
+    end
+
+    it "未ログインでもプロフィールを閲覧でき、リアクションボタンは押せないこと" do
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Vocal User")
+      expect(response.body).to include("応援リアクション")
+      expect(response.body).to include("disabled")
     end
 
     it "本人のプロフィールには編集ボタンを表示すること" do

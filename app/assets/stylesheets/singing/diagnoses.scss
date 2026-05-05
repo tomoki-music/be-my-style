@@ -3083,6 +3083,74 @@ $ranking-accent: #7c4dff;
   margin-top: 10px;
 }
 
+.singing-profile__reactions {
+  margin-top: 18px;
+}
+
+.singing-profile__reactions-label {
+  color: rgba(255, 255, 255, 0.68);
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.singing-profile__reaction-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.singing-profile__reaction-btn {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: #fff;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 6px;
+  min-height: 36px;
+  padding: 8px 12px;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.singing-profile__reaction-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.36);
+  transform: translateY(-1px);
+}
+
+.singing-profile__reaction-btn:disabled {
+  cursor: default;
+  opacity: 0.64;
+  transform: none;
+}
+
+.singing-profile__reaction-btn.activity-reaction-btn--active {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
+}
+
+.singing-profile__reaction-emoji,
+.singing-profile__reaction-text,
+.singing-profile__reaction-btn .reaction-count {
+  line-height: 1;
+}
+
+.singing-profile__reaction-btn .reaction-count {
+  background: rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  font-size: 12px;
+  min-width: 20px;
+  padding: 4px 6px;
+  text-align: center;
+}
+
 .singing-profile__actions {
   align-items: stretch;
   display: flex;

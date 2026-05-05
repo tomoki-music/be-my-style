@@ -192,7 +192,9 @@ Rails.application.routes.draw do
     root to: "homes#top"
     resources :diagnoses, only: [:index, :new, :create, :show]
     resources :rankings, only: [:index]
-    resources :users, only: [:show, :edit, :update]
+    resources :users, only: [:show, :edit, :update] do
+      resource :profile_reaction, only: [:create]
+    end
     get  "join", to: "joins#show",   as: :join
     post "join", to: "joins#create"
   end

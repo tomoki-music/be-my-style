@@ -1,4 +1,6 @@
 class Singing::UsersController < Singing::BaseController
+  skip_before_action :authenticate_customer!, only: [:show]
+  skip_before_action :ensure_singing_access!, only: [:show]
   before_action :set_user
   before_action :ensure_correct_user, only: [:edit, :update]
 
@@ -17,6 +19,12 @@ class Singing::UsersController < Singing::BaseController
     @growth_entry = @growth_index.present? ? @growth_entries[@growth_index] : nil
     @growth_position = @growth_index.present? ? @growth_index + 1 : nil
     @safe_profile_url = safe_external_url(@user.url)
+    @profile_reaction_counts = @user.received_singing_profile_reactions.group(:reaction_type).count
+    @current_customer_profile_reactions = if current_customer.present?
+      current_customer.singing_profile_reactions.where(target_customer: @user).pluck(:reaction_type)
+    else
+      []
+    end
   end
 
   def edit
