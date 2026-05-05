@@ -25,11 +25,9 @@
             診断でランキング参加をONにして、最初のエントリーを目指しましょう！
 
     - else
-      - category_labels = { "overall" => "総合ランキング", "pitch" => "音程ランキング", "rhythm" => "リズムランキング", "expression" => "表現力ランキング", "growth" => "成長ランキング" }
-
       - @entries_by_category.each do |category, entries|
         .singing-season__category-section
-          %h2.singing-season__category-title= category_labels[category] || category
+          %h2.singing-season__category-title= season_category_label(category)
           = render "singing/ranking_seasons/entries_table", entries: entries
 
     .singing-season__back-link

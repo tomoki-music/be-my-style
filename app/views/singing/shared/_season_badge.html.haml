@@ -1,0 +1,12 @@
+-# entry: SingingSeasonRankingEntry
+-# compact: Boolean
+- title_text = entry.title.presence
+- badge_text = entry.badge_key.present? ? season_badge_text(entry) : nil
+- show_title = title_text.present? && title_text != badge_text
+
+- if badge_text.present? || show_title
+  .singing-season-badge{ class: (local_assigns[:compact] ? "singing-season-badge--compact" : nil) }
+    - if show_title
+      %span.singing-season-badge__title= title_text
+    - if badge_text.present?
+      %span.singing-season-badge__key{ data: { badge: entry.badge_key } }= badge_text

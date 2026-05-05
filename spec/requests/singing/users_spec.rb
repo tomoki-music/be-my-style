@@ -146,7 +146,32 @@ RSpec.describe "Singing::Users", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("最初の診断が完了すると、ここに称号が表示されます。")
+      expect(response.body).to include("まだシーズン実績はありません")
       expect(response.body).to include("診断に挑戦する")
+    end
+
+    it "最新シーズン実績と非Premium向け案内を表示すること" do
+      sign_in other_customer
+      season = create(:singing_ranking_season, name: "2026年5月シーズン")
+      create(
+        :singing_season_ranking_entry,
+        singing_ranking_season: season,
+        customer: singing_customer,
+        category: "pitch",
+        rank: 1,
+        score: 92,
+        title: "Pitchリーダー",
+        badge_key: "monthly_pitch_top_1"
+      )
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("シーズン実績")
+      expect(response.body).to include("2026年5月シーズン")
+      expect(response.body).to include("Pitchリーダー")
+      expect(response.body).to include("🎯")
+      expect(response.body).to include("TOMOKIコメント付きのシーズン振り返り")
     end
 
     it "ランキング順位とシーズン順位と成長実績を表示すること" do

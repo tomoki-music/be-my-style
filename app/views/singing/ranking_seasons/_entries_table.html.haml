@@ -19,10 +19,7 @@
           = link_to singing_user_path(entry.customer), class: "singing-season__podium-user" do
             = customer_avatar_tag(entry.customer, class_name: "singing-season__podium-avatar", fallback: "no_image")
             %span.singing-season__podium-name= entry.customer.name
-          - if entry.title.present?
-            %span.singing-season__podium-title-badge= entry.title
-          - if entry.badge_key.present?
-            %span.singing-season__podium-badge-key{ data: { badge: entry.badge_key } }
+          = render "singing/shared/season_badge", entry: entry
           .singing-season__podium-step{ class: "singing-season__podium-step--rank-#{rank}" }
             = rank_label
 
@@ -34,6 +31,7 @@
             %th.singing-season__th 順位
             %th.singing-season__th ユーザー
             %th.singing-season__th スコア
+            %th.singing-season__th カテゴリ
             %th.singing-season__th 称号
         %tbody
           - rest.each do |entry|
@@ -44,4 +42,6 @@
                   = customer_avatar_tag(entry.customer, class_name: "singing-season__user-avatar", fallback: "no_image")
                   %span.singing-season__user-name= entry.customer.name
               %td.singing-season__td.singing-season__td--score= "#{entry.score}点"
-              %td.singing-season__td= entry.title
+              %td.singing-season__td= season_category_label(entry.category)
+              %td.singing-season__td
+                = render "singing/shared/season_badge", entry: entry, compact: true

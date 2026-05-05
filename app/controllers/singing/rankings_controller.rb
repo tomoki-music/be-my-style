@@ -18,6 +18,7 @@ class Singing::RankingsController < Singing::BaseController
       @current_season = SingingRankingSeason.current.first
       @season_range = Singing::RankingQuery.current_season_range
       @season_rankings = Singing::RankingQuery.season
+      @season_entries_by_diagnosis = season_entries_by_diagnosis(@current_season)
       ranking_customers = @season_rankings.map(&:customer)
       @my_season_diagnosis = current_customer.singing_diagnoses
                                              .completed
@@ -67,5 +68,15 @@ class Singing::RankingsController < Singing::BaseController
       # FUTURE: premiumで詳細推移・特別バッジ解放予定
       can_access_premium_features: current_customer.plan == "premium"
     }
+  end
+
+  def season_entries_by_diagnosis(season)
+    return {} if season.blank?
+
+    season.singing_season_ranking_entries
+          .where(category: "overall")
+          .where.not(singing_diagnosis_id: nil)
+          .where("title IS NOT NULL OR badge_key IS NOT NULL")
+          .index_by(&:singing_diagnosis_id)
   end
 end
