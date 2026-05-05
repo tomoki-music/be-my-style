@@ -193,7 +193,6 @@
                       %th 表現力
                       %th AIコメント
                       %th AI失敗理由
-                      %th 詳細
                   %tbody
                     - @singing_diagnoses.each do |d|
                       %tr
@@ -214,12 +213,6 @@
                             %span.badge.bg-danger あり
                           - else
                             %span.badge.bg-secondary なし
-                        %td
-                          = link_to "詳細",
-                            singing_diagnosis_path(d),
-                            class: "btn btn-sm btn-outline-primary",
-                            target: "_blank",
-                            rel: "noopener"
 
   .fixed-save-button
     = link_to "キャンセル",
