@@ -1,0 +1,43 @@
+-# my_growth_entry: Singing::RankingQuery::GrowthEntry | nil
+-# my_completed_count: Integer (0 when my_growth_entry is present)
+-# ranking_plan_context: Hash
+
+.singing-ranking__my-position
+  - if my_growth_entry.present?
+    .singing-ranking__my-position-card
+      .singing-ranking__my-position-left
+        %p.singing-ranking__my-position-label あなたの成長幅
+        .singing-ranking__my-position-rank
+          %span.singing-ranking__my-position-rank-num= "+#{my_growth_entry.growth_score}"
+          %span.singing-ranking__my-position-rank-unit 点
+        %p.singing-ranking__my-position-score
+          = "#{my_growth_entry.previous_diagnosis.overall_score}点 → #{my_growth_entry.latest_diagnosis.overall_score}点 · #{my_growth_entry.latest_diagnosis.performance_type_label}"
+      .singing-ranking__my-position-right
+        %span.singing-ranking__my-position-badge
+          %span.singing-ranking__my-position-badge-dot
+          成長ランキング参加中
+        -# FUTURE: can_view_rank_history が true のとき成長推移グラフを追加（light以上）
+  - elsif my_completed_count >= 2
+    -# 2回以上診断済みだが成長していない（横ばい or 下降）
+    .singing-ranking__my-position-card.singing-ranking__my-position-card--inactive
+      .singing-ranking__my-position-inactive-text
+        %strong 次回の診断で伸びしろを刻もう！
+        %br
+        スコアが前回より上がると成長ランキングに参加できます。焦らず続けましょう！
+      = link_to "診断を始める", new_singing_diagnosis_path, class: "singing-ranking__my-position-cta-btn"
+  - elsif my_completed_count == 1
+    -# 診断1回のみ
+    .singing-ranking__my-position-card.singing-ranking__my-position-card--inactive
+      .singing-ranking__my-position-inactive-text
+        %strong あと1回の診断で成長ランキングに参加できます！
+        %br
+        2回目の診断でスコアが上がると、あなたの成長がここに刻まれます。
+      = link_to "診断を始める", new_singing_diagnosis_path, class: "singing-ranking__my-position-cta-btn"
+  - else
+    -# 診断なし
+    .singing-ranking__my-position-card.singing-ranking__my-position-card--inactive
+      .singing-ranking__my-position-inactive-text
+        %strong 診断を2回以上受けると成長ランキングに参加できます
+        %br
+        まずは歌唱・演奏診断にチャレンジしてみましょう！
+      = link_to "診断を始める", new_singing_diagnosis_path, class: "singing-ranking__my-position-cta-btn"

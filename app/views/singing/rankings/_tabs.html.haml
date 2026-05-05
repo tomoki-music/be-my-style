@@ -1,10 +1,13 @@
+-# ranking_type: "overall" | "growth"
 .singing-ranking__tabs
-  %span.singing-ranking__tab-item.singing-ranking__tab-item--active
+  = link_to singing_rankings_path(type: "overall"),
+            class: "singing-ranking__tab-item #{'singing-ranking__tab-item--active' if ranking_type == 'overall'}" do
     総合ランキング
-  -# FUTURE: 成長ランキング（core以上で参加・閲覧予定）
-  %span.singing-ranking__tab-item.singing-ranking__tab-item--coming-soon{ title: "近日公開予定" }
+  = link_to singing_rankings_path(type: "growth"),
+            class: "singing-ranking__tab-item #{'singing-ranking__tab-item--active' if ranking_type == 'growth'}" do
     成長ランキング
-    %span.singing-ranking__tab-badge COMING SOON
+    - if ranking_type != "growth"
+      %span.singing-ranking__tab-badge.singing-ranking__tab-badge--new NEW
   -# FUTURE: シーズンランキング（premium解放予定）
   %span.singing-ranking__tab-item.singing-ranking__tab-item--coming-soon{ title: "近日公開予定" }
     シーズンランキング

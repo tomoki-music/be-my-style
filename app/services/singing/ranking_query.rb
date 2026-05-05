@@ -1,11 +1,20 @@
 module Singing
   class RankingQuery
+    GrowthEntry = Struct.new(
+      :customer, :latest_diagnosis, :previous_diagnosis, :growth_score,
+      keyword_init: true
+    )
+
     def self.overall
       new.overall
     end
 
     def self.position_for(customer_id)
       new.position_for(customer_id)
+    end
+
+    def self.growth
+      new.growth
     end
 
     # Returns ranked diagnoses (one per customer, highest score first).
@@ -37,6 +46,58 @@ module Singing
         return rank if cid == customer_id
       end
       nil
+    end
+
+    # Returns GrowthEntry list sorted by score improvement (desc).
+    # Only includes customers whose latest ranking_opt_in diagnosis improved
+    # over their immediately preceding completed diagnosis.
+    # Uses exactly 2 SQL queries (N+1 safe).
+    def growth
+      # Query 1: latest ranking_opt_in diagnosis per customer (with associations)
+      latest_by_customer = {}
+      SingingDiagnosis
+        .completed
+        .where(ranking_opt_in: true)
+        .where.not(overall_score: nil)
+        .includes(customer: { profile_image_attachment: :blob })
+        .order(created_at: :desc, id: :desc)
+        .each do |d|
+          latest_by_customer[d.customer_id] ||= d
+        end
+
+      return [] if latest_by_customer.empty?
+
+      # Query 2: all completed diagnoses for qualifying customers (for prev lookup)
+      all_by_customer = SingingDiagnosis
+        .completed
+        .where.not(overall_score: nil)
+        .where(customer_id: latest_by_customer.keys)
+        .order(created_at: :desc, id: :desc)
+        .group_by(&:customer_id)
+
+      entries = []
+      latest_by_customer.each_value do |latest|
+        diagnoses = all_by_customer[latest.customer_id] || []
+
+        previous = diagnoses.find do |d|
+          d.created_at < latest.created_at ||
+            (d.created_at == latest.created_at && d.id < latest.id)
+        end
+
+        next unless previous
+
+        growth_score = latest.overall_score - previous.overall_score
+        next unless growth_score > 0
+
+        entries << GrowthEntry.new(
+          customer: latest.customer,
+          latest_diagnosis: latest,
+          previous_diagnosis: previous,
+          growth_score: growth_score
+        )
+      end
+
+      entries.sort_by { |e| [-e.growth_score, -(e.latest_diagnosis.diagnosed_at&.to_i || 0)] }
     end
 
     private

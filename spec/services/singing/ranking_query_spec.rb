@@ -93,4 +93,114 @@ RSpec.describe Singing::RankingQuery, type: :service do
       expect(described_class.position_for(customer_a.id)).to eq(2)
     end
   end
+
+  describe ".growth" do
+    it "成長幅の大きい順に返すこと" do
+      customer_a = create_singing_customer
+      customer_b = create_singing_customer
+
+      FactoryBot.create(:singing_diagnosis, :completed, customer: customer_a,
+                        overall_score: 60, ranking_opt_in: false, created_at: 2.days.ago)
+      FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant,
+                        customer: customer_a, overall_score: 75, created_at: 1.day.ago)
+
+      FactoryBot.create(:singing_diagnosis, :completed, customer: customer_b,
+                        overall_score: 50, ranking_opt_in: false, created_at: 2.days.ago)
+      FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant,
+                        customer: customer_b, overall_score: 80, created_at: 1.day.ago)
+
+      result = described_class.growth
+      expect(result.map(&:growth_score)).to eq([30, 15])
+      expect(result.first.customer.id).to eq(customer_b.id)
+    end
+
+    it "スコアが前回より下がったユーザーは除外すること" do
+      customer = create_singing_customer
+
+      FactoryBot.create(:singing_diagnosis, :completed, customer: customer,
+                        overall_score: 90, ranking_opt_in: false, created_at: 2.days.ago)
+      FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant,
+                        customer: customer, overall_score: 70, created_at: 1.day.ago)
+
+      expect(described_class.growth).to be_empty
+    end
+
+    it "前回と同スコアのユーザーは除外すること" do
+      customer = create_singing_customer
+
+      FactoryBot.create(:singing_diagnosis, :completed, customer: customer,
+                        overall_score: 75, ranking_opt_in: false, created_at: 2.days.ago)
+      FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant,
+                        customer: customer, overall_score: 75, created_at: 1.day.ago)
+
+      expect(described_class.growth).to be_empty
+    end
+
+    it "診断が1件のみのユーザーは除外すること" do
+      customer = create_singing_customer
+      FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant,
+                        customer: customer, overall_score: 80)
+
+      expect(described_class.growth).to be_empty
+    end
+
+    it "ranking_opt_in=false の最新診断しか持たないユーザーは除外すること" do
+      customer = create_singing_customer
+
+      FactoryBot.create(:singing_diagnosis, :completed, customer: customer,
+                        overall_score: 60, ranking_opt_in: false, created_at: 2.days.ago)
+      FactoryBot.create(:singing_diagnosis, :completed, customer: customer,
+                        overall_score: 80, ranking_opt_in: false, created_at: 1.day.ago)
+
+      expect(described_class.growth).to be_empty
+    end
+
+    it "GrowthEntry に customer / latest_diagnosis / previous_diagnosis / growth_score が含まれること" do
+      customer = create_singing_customer
+
+      prev_d = FactoryBot.create(:singing_diagnosis, :completed, customer: customer,
+                                 overall_score: 60, ranking_opt_in: false, created_at: 2.days.ago)
+      latest_d = FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant,
+                                   customer: customer, overall_score: 80, created_at: 1.day.ago)
+
+      result = described_class.growth
+      expect(result.size).to eq(1)
+      entry = result.first
+      expect(entry.customer.id).to eq(customer.id)
+      expect(entry.latest_diagnosis.id).to eq(latest_d.id)
+      expect(entry.previous_diagnosis.id).to eq(prev_d.id)
+      expect(entry.growth_score).to eq(20)
+    end
+
+    it "customer のアソシエーションをプリロードすること（N+1なし）" do
+      customer = create_singing_customer
+      FactoryBot.create(:singing_diagnosis, :completed, customer: customer,
+                        overall_score: 60, ranking_opt_in: false, created_at: 2.days.ago)
+      FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant,
+                        customer: customer, overall_score: 80, created_at: 1.day.ago)
+
+      result = described_class.growth
+      expect(result.first.customer.association(:profile_image_attachment)).to be_loaded
+    end
+
+    it "同成長幅の場合、最新診断日が新しい順に並ぶこと" do
+      customer_a = create_singing_customer
+      customer_b = create_singing_customer
+
+      FactoryBot.create(:singing_diagnosis, :completed, customer: customer_a,
+                        overall_score: 60, ranking_opt_in: false, created_at: 3.days.ago)
+      FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant,
+                        customer: customer_a, overall_score: 80, created_at: 2.days.ago,
+                        diagnosed_at: 2.days.ago)
+
+      FactoryBot.create(:singing_diagnosis, :completed, customer: customer_b,
+                        overall_score: 60, ranking_opt_in: false, created_at: 3.days.ago)
+      FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant,
+                        customer: customer_b, overall_score: 80, created_at: 1.day.ago,
+                        diagnosed_at: 1.day.ago)
+
+      result = described_class.growth
+      expect(result.first.customer.id).to eq(customer_b.id)
+    end
+  end
 end

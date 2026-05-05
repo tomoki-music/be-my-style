@@ -6,19 +6,36 @@
         みんなの演奏力
         %br
         ランキング
-      %p.singing-ranking__hero-subtitle
-        歌唱・演奏診断を受けたユーザーの中から、
-        %br
-        ランキング参加者のベストスコアを公開しています。
+      - if @ranking_type == "growth"
+        %p.singing-ranking__hero-subtitle
+          前回の診断からスコアが伸びたユーザーを称えるランキングです。
+          %br
+          挑戦し続ける全ての方を応援しています。
+      - else
+        %p.singing-ranking__hero-subtitle
+          歌唱・演奏診断を受けたユーザーの中から、
+          %br
+          ランキング参加者のベストスコアを公開しています。
 
   .singing-ranking__inner
-    = render "singing/rankings/my_position",
-             my_position: @my_position,
-             my_best_diagnosis: @my_best_diagnosis
+    - if @ranking_type == "growth"
+      = render "singing/rankings/my_growth_position",
+               my_growth_entry: @my_growth_entry,
+               my_completed_count: @my_completed_count.to_i,
+               ranking_plan_context: @ranking_plan_context
+    - else
+      = render "singing/rankings/my_position",
+               my_position: @my_position,
+               my_best_diagnosis: @my_best_diagnosis
 
-    = render "singing/rankings/tabs"
+    = render "singing/rankings/tabs", ranking_type: @ranking_type
 
-    = render "singing/rankings/overall", rankings: @rankings
+    - if @ranking_type == "growth"
+      = render "singing/rankings/growth",
+               growth_rankings: @growth_rankings,
+               ranking_plan_context: @ranking_plan_context
+    - else
+      = render "singing/rankings/overall", rankings: @rankings
 
     .singing-ranking__privacy-notice
       .singing-ranking__privacy-icon
