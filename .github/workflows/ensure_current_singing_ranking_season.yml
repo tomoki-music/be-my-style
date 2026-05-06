@@ -41,7 +41,7 @@ jobs:
 
             cd "${DEPLOY_PATH}"
             RAILS_ENV=production ~/.rbenv/shims/bundle exec rails runner \
-              "Singing::EnsureCurrentRankingSeasonJob.perform_now"
+              "Singing::EnsureCurrentRankingSeasonJob.perform_now(Date.current)"
 
             echo "EnsureCurrentRankingSeasonJob completed successfully."
           EOF
