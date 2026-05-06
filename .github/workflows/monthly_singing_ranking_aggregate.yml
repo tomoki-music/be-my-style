@@ -1,0 +1,50 @@
+name: Monthly Singing Ranking Aggregate
+
+on:
+  schedule:
+    # 毎月28〜31日 14:55 UTC = 23:55 JST に実行し、Job内で月末か判定する
+    - cron: '55 14 28-31 * *'
+  workflow_dispatch:
+
+jobs:
+  aggregate-season:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: SSH into EC2 and run AggregateSeasonRankingJob on month-end
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY || secrets.PRIVATE_KEY }}
+          EC2_USER: ${{ secrets.EC2_USER || 'ec2-user' }}
+          EC2_HOST: ${{ secrets.EC2_HOST || '13.113.0.43' }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/home/ec2-user/be-my-style' }}
+        run: |
+          set -euo pipefail
+
+          test -n "$EC2_SSH_KEY"
+          test -n "$EC2_USER"
+          test -n "$EC2_HOST"
+          test -n "$DEPLOY_PATH"
+
+          echo "$EC2_SSH_KEY" > private_key
+          chmod 600 private_key
+
+          ssh \
+            -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=10 \
+            -i private_key \
+            "${EC2_USER}@${EC2_HOST}" "DEPLOY_PATH='${DEPLOY_PATH}' bash -s" << 'EOF'
+            set -euo pipefail
+
+            echo "Host: $(hostname)"
+            echo "Deploy path: ${DEPLOY_PATH}"
+            echo "Running monthly aggregate check at $(date '+%Y-%m-%d %H:%M:%S %Z')"
+
+            cd "${DEPLOY_PATH}"
+            RAILS_ENV=production ~/.rbenv/shims/bundle exec rails runner \
+              'if Date.current.end_of_month == Date.current; Singing::AggregateSeasonRankingJob.perform_now(Date.current); puts "AggregateSeasonRankingJob completed."; else; puts "Not month-end (#{Date.current}), skipping."; end'
+
+            echo "Monthly aggregate check finished."
+          EOF
+
+          rm -f private_key
