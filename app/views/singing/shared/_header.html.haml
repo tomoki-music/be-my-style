@@ -8,10 +8,6 @@
       = link_to "診断トップ", singing_root_path, class: "singing-nav__link#{' singing-nav__link--active' if current_page?(singing_root_path)}"
       = link_to "診断する", new_singing_diagnosis_path, class: "singing-nav__link#{' singing-nav__link--active' if current_page?(new_singing_diagnosis_path)}"
       = link_to "成長記録", singing_diagnoses_path, class: "singing-nav__link#{' singing-nav__link--active' if current_page?(singing_diagnoses_path)}"
-      = link_to singing_ranking_seasons_path, class: "singing-nav__link singing-nav__link--season#{' singing-nav__link--active' if request.path.start_with?(singing_ranking_seasons_path)}" do
-        シーズン
-        - if SingingRankingSeason.current.exists?
-          %span.singing-nav__season-dot
       - if current_customer
         = link_to "プロフィール", singing_user_path(current_customer), class: "singing-nav__link#{' singing-nav__link--active' if current_page?(singing_user_path(current_customer))}"
         = link_to singing_notifications_path, class: "singing-nav__link singing-nav__link--with-badge#{' singing-nav__link--active' if current_page?(singing_notifications_path)}" do
@@ -66,10 +62,6 @@
         = link_to "診断トップ", singing_root_path, class: "singing-nav__mobile-link"
         = link_to "診断する", new_singing_diagnosis_path, class: "singing-nav__mobile-link singing-nav__mobile-link--primary"
         = link_to "成長記録", singing_diagnoses_path, class: "singing-nav__mobile-link"
-        = link_to singing_ranking_seasons_path, class: "singing-nav__mobile-link" do
-          シーズンランキング
-          - if SingingRankingSeason.current.exists?
-            %span.singing-nav__badge-inline 開催中
         - if current_customer
           = link_to "プロフィール", singing_user_path(current_customer), class: "singing-nav__mobile-link"
           = link_to singing_notifications_path, class: "singing-nav__mobile-link" do
@@ -77,7 +69,7 @@
             - unchecked_count = current_customer.passive_notifications.where(checked: false).count
             - if unchecked_count.positive?
               %span.singing-nav__badge= unchecked_count
-        = link_to "ランキングページへ", singing_rankings_path, class: "singing-nav__mobile-link singing-nav__mobile-link--cta"
+        = link_to "ランキング", singing_rankings_path, class: "singing-nav__mobile-link singing-nav__mobile-link--cta"
         = link_to "BeMyStyleへ", root_path, class: "singing-nav__mobile-link singing-nav__mobile-link--cta"
         = link_to "料金プラン", public_singing_lp_path(anchor: "lp-section"), class: "singing-nav__mobile-link"
         - if current_customer
