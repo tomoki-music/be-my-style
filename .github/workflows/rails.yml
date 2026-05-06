@@ -7,7 +7,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
     - uses: actions/setup-node@v4
     - name: Deploy 
@@ -53,10 +55,6 @@ jobs:
           echo "Starting bundle install..."
           ~/.rbenv/shims/bundle install --jobs 4 --retry 3
           echo "Bundle install finished."
-
-          echo "Starting yarn install..."
-          yarn install
-          echo "Yarn install finished."
 
           echo "Starting assets precompile..."
           RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:precompile
