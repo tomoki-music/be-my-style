@@ -8,7 +8,7 @@
     .singing-top__actions
       = link_to "診断を始める", new_singing_diagnosis_path, class: "btn btn-primary"
       = link_to "成長記録", singing_diagnoses_path, class: "btn btn-secondary"
-      = link_to "ランキングページへ", singing_rankings_path, class: "btn btn-secondary singing-top__ranking-btn"
+      = link_to "ランキング", singing_rankings_path, class: "btn btn-secondary singing-top__ranking-btn"
       = link_to "BeMyStyleトップへ", root_path, class: "btn btn-secondary"
       = button_to "ログアウト",
         destroy_customer_session_path,

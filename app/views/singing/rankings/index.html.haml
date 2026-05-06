@@ -2,10 +2,11 @@
   .singing-ranking__hero
     .singing-ranking__hero-inner
       %p.singing-ranking__eyebrow RANKING
-      %h1.singing-ranking__hero-title
-        みんなの演奏力
+      %h1.singing-ranking__hero-title ランキング
+      %p.singing-ranking__hero-intro
+        診断に参加したみんなのチャレンジ結果を確認できます。
         %br
-        ランキング
+        総合ランキングとシーズンランキングを切り替えて楽しめます。
       - case @ranking_type
       - when "growth"
         %p.singing-ranking__hero-subtitle
@@ -14,18 +15,12 @@
           挑戦し続ける全ての方を応援しています。
       - when "season"
         %p.singing-ranking__hero-subtitle
-          - if @current_season
-            = @current_season.name
-            &mdash;
-          = @season_range.begin.strftime("%Y年%-m月")
-          のランキングです。
+          今月の診断結果をもとにした期間限定ランキングです。
           %br
-          毎月リセットされるので、何度でも挑戦できます。
+          毎月リセットされるため、誰でも上位を目指しやすいランキングです。
       - else
         %p.singing-ranking__hero-subtitle
-          歌唱・演奏診断を受けたユーザーの中から、
-          %br
-          ランキング参加者のベストスコアを公開しています。
+          これまでの診断結果の中で、各ユーザーの最高スコアをもとにしたランキングです。
 
   .singing-ranking__inner
     - case @ranking_type

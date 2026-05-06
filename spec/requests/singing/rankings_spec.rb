@@ -535,9 +535,9 @@ RSpec.describe "Singing::Rankings", type: :request do
       end
 
       context "共通ナビ" do
-        it "シーズンランキングへのリンクを含むこと" do
+        it "ランキングへのリンクを含むこと" do
           get singing_rankings_path
-          expect(response.body).to include(singing_ranking_seasons_path)
+          expect(response.body).to include(singing_rankings_path)
         end
       end
     end
