@@ -98,6 +98,7 @@
                   %small.singing-diagnosis__season-badge-season= singing_badge_season_name(badge)
                 - if singing_badge_new?(badge)
                   %span.singing-diagnosis__season-badge-new NEW
+          = link_to "すべてのバッジを見る →", singing_badges_path, class: "singing-diagnosis__badges-link"
 
       .singing-diagnosis__score-guides
         %h2 スコアの見方

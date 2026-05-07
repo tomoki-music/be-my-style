@@ -1,0 +1,48 @@
+- content_for :title, "バッジ一覧 | BeMyStyle"
+
+.singing-badges
+  .singing-badges__inner
+    .singing-badges__header
+      %p.singing-badges__eyebrow Badges
+      %h1 あなたのバッジ
+      %p.singing-badges__lead 診断への取り組みで獲得した称号と、シーズンの実績バッジを確認できます。
+
+    %section.singing-badges__section
+      .singing-badges__section-head
+        %p.singing-badges__section-kicker Achievement
+        %h2 実績バッジ
+        %p.singing-badges__section-desc 診断回数やランキング成績で獲得できるバッジです。未獲得のバッジを目標にしてみましょう。
+      .singing-badges__ranking-grid
+        - @all_ranking_definitions.each do |definition|
+          - earned = @earned_badge_keys.include?(definition[:key])
+          - rarity = definition[:rarity].to_s
+          .singing-badges__ranking-badge{ class: [
+              "singing-badges__ranking-badge--#{rarity}",
+              ("singing-badges__ranking-badge--unearned" unless earned)
+            ].compact.join(" ") }
+            .singing-badges__ranking-badge-icon= definition[:icon]
+            .singing-badges__ranking-badge-label= definition[:label]
+            - unless earned
+              %span.singing-badges__ranking-badge-lock 未獲得
+
+    %section.singing-badges__section
+      .singing-badges__section-head
+        %p.singing-badges__section-kicker Season
+        %h2 シーズンバッジ
+        %p.singing-badges__section-desc シーズン終了時の実績に応じて付与されるバッジです。
+      - if @season_badges.any?
+        .singing-badges__season-list
+          - @season_badges.each do |badge|
+            .singing-badges__season-badge{ class: (singing_badge_new?(badge) ? "singing-badges__season-badge--new" : "") }
+              %span.singing-badges__season-badge-emoji= singing_badge_emoji(badge)
+              .singing-badges__season-badge-body
+                %strong.singing-badges__season-badge-label= singing_badge_label(badge)
+                %small.singing-badges__season-badge-season= singing_badge_season_name(badge)
+                %small.singing-badges__season-badge-date= badge.awarded_at.strftime("%-m月%-d日 獲得")
+              - if singing_badge_new?(badge)
+                %span.singing-badges__season-badge-new NEW
+      - else
+        .singing-badges__empty
+          %p シーズンバッジはまだありません。
+          %p.singing-badges__empty-note シーズンが終了すると、ランキング上位者や継続参加者にバッジが付与されます。
+          = link_to "ランキングに参加する", singing_rankings_path, class: "btn btn-primary singing-badges__cta"
