@@ -4305,6 +4305,26 @@ $ranking-accent: #7c4dff;
   padding: 2px 8px;
 }
 
+.singing-ranking__growth-cta {
+  margin-top: 8px;
+  padding: 28px 24px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.singing-ranking__growth-cta-message {
+  color: #166534;
+  font-size: 14px;
+  line-height: 1.8;
+  margin: 0 0 16px;
+}
+
+.singing-ranking__growth-cta-btn {
+  display: inline-block;
+}
+
 // --- Season Ranking ---
 
 .singing-ranking__tab-badge--season {

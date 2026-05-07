@@ -375,6 +375,28 @@ RSpec.describe "Singing::Rankings", type: :request do
 
           expect(response.body).to include("まだ成長ランキング参加者はいません")
         end
+
+        it "参加者がいない場合は下部CTAを表示しないこと" do
+          get singing_rankings_path(type: "growth")
+
+          expect(response.body).not_to include("あなたも次回の診断でランクインできるかもしれません")
+        end
+
+        it "参加者がいる場合は下部CTAを表示すること" do
+          FactoryBot.create(
+            :singing_diagnosis, :completed,
+            customer: other_customer, overall_score: 60, ranking_opt_in: false,
+            created_at: 2.days.ago
+          )
+          FactoryBot.create(
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: other_customer, overall_score: 80, created_at: 1.day.ago
+          )
+
+          get singing_rankings_path(type: "growth")
+
+          expect(response.body).to include("あなたも次回の診断でランクインできるかもしれません")
+        end
       end
 
       context "GET /singing/rankings?type=season（シーズンランキング）" do
