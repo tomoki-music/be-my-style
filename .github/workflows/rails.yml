@@ -64,7 +64,7 @@ jobs:
           ASSETS_CHANGED=false
           if [ "${PREV_COMMIT}" != "${NEW_COMMIT}" ]; then
             if git diff --name-only "${PREV_COMMIT}" "${NEW_COMMIT}" | \
-               grep -qE '^(app/assets/|app/javascript/|config/webpack/|yarn\.lock|package\.json|Gemfile\.lock)'; then
+               grep -qE '^(app/assets/|app/assets/stylesheets/|app/javascript/|app/views/|config/webpack/|yarn\.lock|package\.json|Gemfile\.lock)|\.(scss|scss\.erb|css|css\.erb)$'; then
               ASSETS_CHANGED=true
             fi
           fi
