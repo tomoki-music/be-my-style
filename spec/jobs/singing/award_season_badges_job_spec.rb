@@ -1,18 +1,91 @@
 require "rails_helper"
 
 RSpec.describe Singing::AwardSeasonBadgesJob, type: :job do
+  let(:season) do
+    FactoryBot.create(
+      :singing_ranking_season,
+      starts_on: Date.new(2026, 5, 1),
+      ends_on: Date.new(2026, 5, 31),
+      status: "closed"
+    )
+  end
+
+  def create_overall_entry(rank:)
+    FactoryBot.create(
+      :singing_season_ranking_entry,
+      singing_ranking_season: season,
+      customer: FactoryBot.create(:customer, domain_name: "singing"),
+      category: "overall",
+      rank: rank,
+      score: 100 - rank
+    )
+  end
+
+  def badge_types_for(entry)
+    season.singing_badges.where(customer: entry.customer).pluck(:badge_type)
+  end
+
   describe "#perform" do
-    it "season_id を渡すと SeasonBadgeAwarder が呼ばれること" do
-      season = FactoryBot.create(:singing_ranking_season)
-      expect(Singing::SeasonBadgeAwarder).to receive(:call).with(season)
+    it "1位に monthly_champion が付与されること" do
+      entry = create_overall_entry(rank: 1)
 
       described_class.perform_now(season.id)
+
+      expect(badge_types_for(entry)).to include("monthly_champion")
     end
 
-    it "存在しない season_id は ActiveRecord::RecordNotFound になること" do
+    it "2位に monthly_runner_up が付与されること" do
+      entry = create_overall_entry(rank: 2)
+
+      described_class.perform_now(season.id)
+
+      expect(badge_types_for(entry)).to include("monthly_runner_up")
+    end
+
+    it "3位以内に monthly_top_3 が付与されること" do
+      entries = [1, 2, 3].map { |rank| create_overall_entry(rank: rank) }
+
+      described_class.perform_now(season.id)
+
+      entries.each do |entry|
+        expect(badge_types_for(entry)).to include("monthly_top_3")
+      end
+    end
+
+    it "10位以内に monthly_top_10 が付与されること" do
+      entries = [1, 2, 3, 10].map { |rank| create_overall_entry(rank: rank) }
+
+      described_class.perform_now(season.id)
+
+      entries.each do |entry|
+        expect(badge_types_for(entry)).to include("monthly_top_10")
+      end
+    end
+
+    it "参加者全員に season_participant が付与されること" do
+      entries = [1, 2, 3, 10, 11].map { |rank| create_overall_entry(rank: rank) }
+
+      described_class.perform_now(season.id)
+
+      entries.each do |entry|
+        expect(badge_types_for(entry)).to include("season_participant")
+      end
+    end
+
+    it "同じJobを2回実行しても重複付与されないこと" do
+      entry = create_overall_entry(rank: 1)
+
+      described_class.perform_now(season.id)
+
+      expect {
+        described_class.perform_now(season.id)
+      }.not_to change { season.singing_badges.where(customer: entry.customer).count }
+    end
+
+    it "存在しない season_id でも致命的エラーにならないこと" do
       expect {
         described_class.perform_now(-1)
-      }.to raise_error(ActiveRecord::RecordNotFound)
+      }.not_to raise_error
     end
   end
 end
