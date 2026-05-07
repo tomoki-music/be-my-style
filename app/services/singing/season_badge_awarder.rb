@@ -22,6 +22,7 @@ module Singing
     # 総合ランキング上位に順位バッジを付与
     def award_ranking_badges
       season.singing_season_ranking_entries
+            .includes(:customer)
             .where(category: "overall")
             .order(:rank)
             .each do |entry|
@@ -48,9 +49,8 @@ module Singing
         [customer_id, growth] if growth.positive?
       end.to_h
 
-      growths.sort_by { |_, g| -g }.first(3).each do |customer_id, _|
-        award(Customer.find(customer_id), "rapid_growth")
-      end
+      top3_ids = growths.sort_by { |_, g| -g }.first(3).map(&:first)
+      Customer.where(id: top3_ids).each { |customer| award(customer, "rapid_growth") }
     end
 
     # 前シーズンにも参加したユーザー全員に継続バッジを付与
