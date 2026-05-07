@@ -4,6 +4,36 @@ module Singing
 
     TITLE_DEFINITIONS = [
       {
+        key: :monthly_champion,
+        label: "今月の王者",
+        description: "シーズン1位に輝いたトップシンガー",
+        icon: "🥇"
+      },
+      {
+        key: :monthly_runner_up,
+        label: "準優勝シンガー",
+        description: "シーズン2位に輝いた実力者",
+        icon: "🥈"
+      },
+      {
+        key: :monthly_top_3,
+        label: "TOP3シンガー",
+        description: "シーズントップ3入りを果たした実力者",
+        icon: "🥉"
+      },
+      {
+        key: :monthly_top_10,
+        label: "TOP10シンガー",
+        description: "シーズントップ10に入った実力者",
+        icon: "🎯"
+      },
+      {
+        key: :season_participant,
+        label: "継続チャレンジャー",
+        description: "シーズンに参加して挑戦を積み上げた証",
+        icon: "🔥"
+      },
+      {
         key: :season_1st,
         label: "今月の王者",
         description: "シーズン1位に輝いたトップシンガー",

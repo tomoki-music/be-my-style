@@ -16,10 +16,13 @@ RSpec.describe Singing::AggregateSeasonRankingJob, type: :job do
         diagnosed_at: Time.zone.local(2026, 5, 10, 12, 0, 0),
         overall_score: 88
       )
+      allow(Singing::AwardSeasonBadgesJob).to receive(:perform_later)
 
       expect {
         described_class.perform_now(season.id)
       }.to change(SingingSeasonRankingEntry, :count).by(4)
+
+      expect(Singing::AwardSeasonBadgesJob).to have_received(:perform_later).with(season.id)
     end
 
     it "存在しない season id は ActiveRecord::RecordNotFound になること" do
