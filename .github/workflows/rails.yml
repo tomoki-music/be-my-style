@@ -8,11 +8,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-    - uses: actions/setup-node@v4
-    - name: Deploy 
+    - name: Deploy
       env:
         EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY || secrets.PRIVATE_KEY }}
         EC2_USER: ${{ secrets.EC2_USER || 'ec2-user' }}
@@ -39,35 +36,57 @@ jobs:
 
           echo "Host: $(hostname)"
           echo "Deploy path: ${DEPLOY_PATH}"
+          echo "[deploy] START: $(date '+%H:%M:%S')"
 
           cd "${DEPLOY_PATH}"
 
-          echo "Before deploy: $(git rev-parse --short HEAD)"
+          PREV_COMMIT=$(git rev-parse HEAD)
+          echo "[deploy] Before: ${PREV_COMMIT}"
+
+          echo "[deploy] git fetch start: $(date '+%H:%M:%S')"
           git fetch origin main
           git reset --hard origin/main
-          echo "After deploy: $(git rev-parse --short HEAD)"
+          echo "[deploy] git fetch finished: $(date '+%H:%M:%S')"
 
-          echo "Starting bundle config..."
+          NEW_COMMIT=$(git rev-parse HEAD)
+          echo "[deploy] After: ${NEW_COMMIT}"
+
+          echo "[deploy] bundle config start: $(date '+%H:%M:%S')"
           ~/.rbenv/shims/bundle config set deployment 'true'
           ~/.rbenv/shims/bundle config set without 'development test'
-          echo "Bundle config finished."
+          echo "[deploy] bundle config finished: $(date '+%H:%M:%S')"
 
-          echo "Starting bundle install..."
+          echo "[deploy] bundle install start: $(date '+%H:%M:%S')"
           ~/.rbenv/shims/bundle install --jobs 4 --retry 3
-          echo "Bundle install finished."
+          echo "[deploy] bundle install finished: $(date '+%H:%M:%S')"
 
-          echo "Starting assets precompile..."
-          RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:precompile
-          echo "Assets precompile finished."
+          # フロントエンド関連ファイルの変更有無を確認し assets:precompile をスキップ
+          ASSETS_CHANGED=false
+          if [ "${PREV_COMMIT}" != "${NEW_COMMIT}" ]; then
+            if git diff --name-only "${PREV_COMMIT}" "${NEW_COMMIT}" | \
+               grep -qE '^(app/assets/|app/javascript/|config/webpack/|yarn\.lock|package\.json|Gemfile\.lock)'; then
+              ASSETS_CHANGED=true
+            fi
+          fi
 
-          echo "Starting db migrate..."
+          if [ "${ASSETS_CHANGED}" = "true" ]; then
+            echo "[deploy] assets:precompile start (frontend files changed): $(date '+%H:%M:%S')"
+            RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:precompile
+            echo "[deploy] assets:precompile finished: $(date '+%H:%M:%S')"
+          else
+            echo "[deploy] assets:precompile SKIPPED (no frontend files changed): $(date '+%H:%M:%S')"
+          fi
+
+          echo "[deploy] db:migrate start: $(date '+%H:%M:%S')"
           RAILS_ENV=production ~/.rbenv/shims/bundle exec rails db:migrate
-          echo "DB migrate finished."
+          echo "[deploy] db:migrate finished: $(date '+%H:%M:%S')"
 
-          echo "Restarting puma..."
+          echo "[deploy] puma restart start: $(date '+%H:%M:%S')"
           sudo systemctl restart puma
-          echo "Puma restart finished. Checking status..."
+          echo "[deploy] puma restart finished: $(date '+%H:%M:%S')"
           sudo systemctl status puma --no-pager --lines=20
+
+          echo "[deploy] END: $(date '+%H:%M:%S')"
           echo "Deploy completed successfully."
         EOF
 
