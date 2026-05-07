@@ -70,6 +70,10 @@ jobs:
           fi
 
           if [ "${ASSETS_CHANGED}" = "true" ]; then
+            echo "[deploy] assets:clobber start (frontend files changed): $(date '+%H:%M:%S')"
+            RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:clobber
+            echo "[deploy] assets:clobber finished: $(date '+%H:%M:%S')"
+
             echo "[deploy] assets:precompile start (frontend files changed): $(date '+%H:%M:%S')"
             RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:precompile
             echo "[deploy] assets:precompile finished: $(date '+%H:%M:%S')"
