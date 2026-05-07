@@ -18,6 +18,14 @@ module Singing
         end
       end
 
+      growth_singers.each do |result|
+        award_count += 1 if award(result.customer, "growth_singer")
+      end
+
+      consecutive_entries.each do |result|
+        award_count += 1 if award(result.customer, "consecutive_entry")
+      end
+
       award_count
     end
 
@@ -45,6 +53,14 @@ module Singing
       else
         %w[season_participant]
       end
+    end
+
+    def growth_singers
+      Singing::GrowthCalculator.call(season.id)
+    end
+
+    def consecutive_entries
+      Singing::ConsecutiveEntryCalculator.call(season.id)
     end
 
     def award(customer, badge_type)

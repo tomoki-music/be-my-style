@@ -32,6 +32,8 @@ RSpec.describe SingingBadge, type: :model do
       expect(FactoryBot.build(:singing_badge, badge_type: "season_1st").label).to eq "今月の王者"
       expect(FactoryBot.build(:singing_badge, badge_type: "rapid_growth").label).to eq "急成長シンガー"
       expect(FactoryBot.build(:singing_badge, badge_type: "consecutive_participation").label).to eq "継続の証"
+      expect(FactoryBot.build(:singing_badge, badge_type: "growth_singer").label).to eq "急成長シンガー"
+      expect(FactoryBot.build(:singing_badge, badge_type: "consecutive_entry").label).to eq "連続参加"
     end
   end
 
@@ -40,6 +42,8 @@ RSpec.describe SingingBadge, type: :model do
       expect(FactoryBot.build(:singing_badge, badge_type: "season_1st").emoji).to eq "🥇"
       expect(FactoryBot.build(:singing_badge, badge_type: "season_2nd").emoji).to eq "🥈"
       expect(FactoryBot.build(:singing_badge, badge_type: "rapid_growth").emoji).to eq "📈"
+      expect(FactoryBot.build(:singing_badge, badge_type: "growth_singer").emoji).to eq "📈"
+      expect(FactoryBot.build(:singing_badge, badge_type: "consecutive_entry").emoji).to eq "🔥"
     end
   end
 
