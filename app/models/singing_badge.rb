@@ -14,6 +14,8 @@ class SingingBadge < ApplicationRecord
     season_top10
     rapid_growth
     consecutive_participation
+    growth_singer
+    consecutive_entry
   ].freeze
 
   BADGE_LABELS = {
@@ -27,7 +29,9 @@ class SingingBadge < ApplicationRecord
     "season_top3"              => "TOP3",
     "season_top10"             => "TOP10入り",
     "rapid_growth"             => "急成長シンガー",
-    "consecutive_participation" => "継続の証"
+    "consecutive_participation" => "継続の証",
+    "growth_singer"            => "急成長シンガー",
+    "consecutive_entry"        => "連続参加"
   }.freeze
 
   BADGE_EMOJIS = {
@@ -41,7 +45,9 @@ class SingingBadge < ApplicationRecord
     "season_top3"              => "🥉",
     "season_top10"             => "🎯",
     "rapid_growth"             => "📈",
-    "consecutive_participation" => "🔥"
+    "consecutive_participation" => "🔥",
+    "growth_singer"            => "📈",
+    "consecutive_entry"        => "🔥"
   }.freeze
 
   validates :badge_type, presence: true, inclusion: { in: BADGE_TYPES }
