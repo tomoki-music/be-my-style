@@ -111,6 +111,7 @@ class Customer < ApplicationRecord
   has_many :learning_band_memberships, through: :learning_bands
   has_many :learning_band_trainings, dependent: :destroy
   has_many :singing_diagnoses, dependent: :destroy
+  has_many :singing_badges, dependent: :destroy
   has_many :singing_profile_reactions, dependent: :destroy
   has_many :received_singing_profile_reactions,
            class_name: "SingingProfileReaction",

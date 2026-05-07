@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_05_110001) do
+ActiveRecord::Schema.define(version: 2026_05_07_130000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -640,6 +640,18 @@ ActiveRecord::Schema.define(version: 2026_05_05_110001) do
     t.index ["event_id"], name: "index_requests_on_event_id"
   end
 
+  create_table "singing_badges", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "singing_ranking_season_id", null: false
+    t.string "badge_type", null: false
+    t.datetime "awarded_at", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id", "singing_ranking_season_id", "badge_type"], name: "index_singing_badges_unique", unique: true
+    t.index ["customer_id"], name: "index_singing_badges_on_customer_id"
+    t.index ["singing_ranking_season_id"], name: "index_singing_badges_on_season_id"
+  end
+
   create_table "singing_diagnoses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.string "song_title"
@@ -848,6 +860,8 @@ ActiveRecord::Schema.define(version: 2026_05_05_110001) do
   add_foreign_key "projects", "customers"
   add_foreign_key "requests", "customers"
   add_foreign_key "requests", "events"
+  add_foreign_key "singing_badges", "customers"
+  add_foreign_key "singing_badges", "singing_ranking_seasons"
   add_foreign_key "singing_diagnoses", "customers"
   add_foreign_key "singing_profile_reactions", "customers"
   add_foreign_key "singing_profile_reactions", "customers", column: "target_customer_id"

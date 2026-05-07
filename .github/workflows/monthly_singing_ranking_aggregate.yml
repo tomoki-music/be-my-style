@@ -42,7 +42,19 @@ jobs:
 
             cd "${DEPLOY_PATH}"
             RAILS_ENV=production ~/.rbenv/shims/bundle exec rails runner \
-              'if Date.current.end_of_month == Date.current; Singing::AggregateSeasonRankingJob.perform_now(Date.current); puts "AggregateSeasonRankingJob completed."; else; puts "Not month-end (#{Date.current}), skipping."; end'
+              'if Date.current.end_of_month == Date.current
+                 season = SingingRankingSeason.current.first
+                 if season
+                   Singing::AggregateSeasonRankingJob.perform_now(season.id)
+                   puts "AggregateSeasonRankingJob completed."
+                   Singing::AwardSeasonBadgesJob.perform_now(season.id)
+                   puts "AwardSeasonBadgesJob completed."
+                 else
+                   puts "No current season found for #{Date.current}, skipping."
+                 end
+               else
+                 puts "Not month-end (#{Date.current}), skipping."
+               end'
 
             echo "Monthly aggregate check finished."
           EOF
