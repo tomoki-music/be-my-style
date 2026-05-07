@@ -7,6 +7,26 @@
       %h1 あなたのバッジ
       %p.singing-badges__lead 診断への取り組みで獲得した称号と、シーズンの実績バッジを確認できます。
 
+    - if @next_badges.present?
+      %section.singing-badges__section.singing-badges__section--next-target
+        .singing-badges__section-head
+          %p.singing-badges__section-kicker Next Target
+          %h2 次に狙えるバッジ
+          %p.singing-badges__section-desc あと少しで手が届くバッジです。目標にして、もう一度診断に挑戦してみましょう。
+        .singing-badges__next-list
+          - @next_badges.each do |hint|
+            - emoji = Singing::NextBadgeService::BADGE_EMOJI[hint.key] || "🎯"
+            .singing-badges__next-item
+              %span.singing-badges__next-item-emoji= emoji
+              .singing-badges__next-item-body
+                %strong.singing-badges__next-item-label= hint.label
+                %p.singing-badges__next-item-description= hint.description
+        .singing-badges__next-actions
+          = link_to new_singing_diagnosis_path, class: "btn btn-primary singing-badges__next-cta" do
+            もう一度診断する →
+          = link_to singing_rankings_path, class: "singing-badges__next-ranking-link" do
+            ランキングを見る →
+
     %section.singing-badges__section
       .singing-badges__section-head
         %p.singing-badges__section-kicker Achievement

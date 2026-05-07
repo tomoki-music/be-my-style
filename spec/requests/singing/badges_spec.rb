@@ -134,6 +134,39 @@ RSpec.describe "Singing::Badges", type: :request do
         expect(response.body).to include("今月の王者")
         expect(response.body).to include("準優勝")
       end
+
+      context "次に狙えるバッジ" do
+        it "診断未実施の場合、次に狙えるバッジセクションが表示されること" do
+          get singing_badges_path
+
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("次に狙えるバッジ")
+          expect(response.body).to include("あと")
+          expect(response.body).to include("もう一度診断する")
+          expect(response.body).to include("ランキングを見る")
+        end
+
+        it "次に狙えるバッジのヒントにバッジ名と進捗メッセージが含まれること" do
+          get singing_badges_path
+
+          hints = Singing::NextBadgeService.call(customer)
+          expect(hints).not_to be_empty
+          hints.each do |hint|
+            expect(response.body).to include(hint.label)
+            expect(response.body).to include(hint.description)
+          end
+        end
+
+        it "NextBadgeService が空を返す場合、次に狙えるバッジセクションが表示されないこと" do
+          allow(Singing::NextBadgeService).to receive(:call).and_return([])
+
+          get singing_badges_path
+
+          expect(response).to have_http_status(:ok)
+          expect(response.body).not_to include("次に狙えるバッジ")
+          expect(response.body).not_to include("もう一度診断する")
+        end
+      end
     end
   end
 end
