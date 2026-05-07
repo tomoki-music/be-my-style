@@ -1,12 +1,12 @@
 -# growth_rankings: Array<Singing::RankingQuery::GrowthEntry>
 -# ranking_plan_context: Hash
 
--# FUTURE: can_join_growth_ranking=false のユーザーにはアップセルバナーを表示（Core解放時）
+-# FUTURE: can_join_growth_ranking=true になったタイミングでこのブロックを削除し、プレミアム向け追加機能に差し替える
 - unless ranking_plan_context[:can_join_growth_ranking]
   .singing-ranking__plan-nudge
     %span.singing-ranking__plan-nudge-icon ✦
     .singing-ranking__plan-nudge-text
-      成長ランキングはCoreプラン以上でフル解放予定です。現在はすべてのユーザーが閲覧できます。
+      スコアが上がるたびにランキングに反映されます。今すぐ診断してあなたの成長を刻みましょう！
 
 .singing-ranking__growth-intro
   %p.singing-ranking__growth-intro-text
@@ -44,3 +44,10 @@
             = "#{entry.previous_diagnosis.overall_score}点 → #{entry.latest_diagnosis.overall_score}点"
           - if (title = singing_growth_title(entry.growth_score))
             %span.singing-ranking__growth-badge= title
+
+  .singing-ranking__growth-cta
+    %p.singing-ranking__growth-cta-message
+      あなたも次回の診断でランクインできるかもしれません。
+      %br
+      スコアが伸びた分だけ、ランキングに刻まれます。
+    = link_to "今すぐ診断する", new_singing_diagnosis_path, class: "btn btn-primary singing-ranking__growth-cta-btn"
