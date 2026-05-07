@@ -247,3 +247,25 @@
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   }
 }
+
+.singing-badges__nav {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(30, 41, 59, 0.08);
+  text-align: center;
+}
+
+.singing-badges__nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+
+  &:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+  }
+}

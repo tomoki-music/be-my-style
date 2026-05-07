@@ -1,0 +1,435 @@
+// -----------------------------------------------
+// Singing Season History Page
+// -----------------------------------------------
+
+$history-bg:           #f7f8fb;
+$history-card-bg:      #ffffff;
+$history-border:       rgba(30, 41, 59, 0.08);
+$history-text-primary: #1f2937;
+$history-text-muted:   #6b7280;
+$history-active-color: #2563eb;
+$history-active-bg:    rgba(37, 99, 235, 0.07);
+$history-closed-color: #64748b;
+$history-accent:       #f97316;
+
+.singing-history {
+  background: $history-bg;
+  min-height: calc(100vh - 80px);
+  padding-bottom: 64px;
+}
+
+// ---- Hero ----
+.singing-history__hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1e293b 100%);
+  padding: 64px 16px 56px;
+  text-align: center;
+  color: #fff;
+}
+
+.singing-history__hero-inner {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.singing-history__eyebrow {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.singing-history__hero-title {
+  margin: 0 0 14px;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.singing-history__hero-lead {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+// ---- Inner ----
+.singing-history__inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 16px 0;
+}
+
+// ---- Card list ----
+.singing-history__list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+// ---- Card base ----
+.singing-history__card {
+  background: $history-card-bg;
+  border-radius: 16px;
+  border: 1px solid $history-border;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.10);
+  }
+
+  &--active {
+    border-color: rgba(37, 99, 235, 0.28);
+    box-shadow:
+      0 2px 12px rgba(15, 23, 42, 0.06),
+      0 0 0 1px rgba(37, 99, 235, 0.12);
+  }
+}
+
+// ---- Card head ----
+.singing-history__card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px 0;
+}
+
+.singing-history__status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+
+  &--active {
+    background: $history-active-bg;
+    color: $history-active-color;
+
+    &::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: $history-active-color;
+      margin-right: 5px;
+      animation: historyPulse 1.6s ease-in-out infinite;
+    }
+  }
+
+  &--closed {
+    background: rgba(100, 116, 139, 0.1);
+    color: $history-closed-color;
+  }
+}
+
+@keyframes historyPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.singing-history__season-type {
+  font-size: 11px;
+  color: $history-text-muted;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+// ---- Season name & period ----
+.singing-history__season-name {
+  margin: 8px 20px 2px;
+  font-size: 20px;
+  font-weight: 700;
+  color: $history-text-primary;
+  letter-spacing: -0.01em;
+}
+
+.singing-history__period {
+  margin: 0 20px 16px;
+  font-size: 13px;
+  color: $history-text-muted;
+}
+
+// ---- Body ----
+.singing-history__body {
+  padding: 0 20px 16px;
+}
+
+.singing-history__challenge-note {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: $history-active-color;
+}
+
+// ---- Result grid ----
+.singing-history__result {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.singing-history__result-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 80px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: $history-bg;
+  border: 1px solid $history-border;
+}
+
+.singing-history__result-label {
+  font-size: 11px;
+  color: $history-text-muted;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.singing-history__result-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: $history-text-primary;
+  line-height: 1.2;
+}
+
+.singing-history__result-pending {
+  font-size: 13px;
+  font-weight: 600;
+  color: $history-text-muted;
+}
+
+// ---- Badges ----
+.singing-history__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.singing-history__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fff8e1, #fef3c7);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: #78350f;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(251, 191, 36, 0.2);
+}
+
+// ---- No entry ----
+.singing-history__no-entry {
+  padding: 20px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border: 1px dashed rgba(30, 41, 59, 0.16);
+  text-align: center;
+}
+
+.singing-history__no-entry-text {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: $history-text-primary;
+}
+
+.singing-history__no-entry-sub {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: $history-text-muted;
+  line-height: 1.6;
+}
+
+.singing-history__entry-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 20px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, $history-accent, #ea580c);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.28);
+  transition: box-shadow 0.2s, transform 0.15s;
+
+  &:hover {
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(249, 115, 22, 0.36);
+  }
+}
+
+// ---- Card footer ----
+.singing-history__card-footer {
+  border-top: 1px solid $history-border;
+  padding: 12px 20px;
+}
+
+.singing-history__season-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: $history-active-color;
+  text-decoration: none;
+  transition: color 0.15s;
+
+  &:hover {
+    color: darken($history-active-color, 10%);
+    text-decoration: none;
+  }
+}
+
+.singing-history__season-link-arrow {
+  font-size: 16px;
+  transition: transform 0.15s;
+
+  .singing-history__season-link:hover & {
+    transform: translateX(3px);
+  }
+}
+
+// ---- Empty state ----
+.singing-history__empty {
+  padding: 64px 24px;
+  text-align: center;
+  background: $history-card-bg;
+  border-radius: 16px;
+  border: 1px solid $history-border;
+}
+
+.singing-history__empty-icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+}
+
+.singing-history__empty-title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: $history-text-primary;
+}
+
+.singing-history__empty-text {
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: $history-text-muted;
+  line-height: 1.8;
+}
+
+.singing-history__empty-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 28px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, $history-accent, #ea580c);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
+
+  &:hover {
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+}
+
+// ---- Bottom nav ----
+.singing-history__nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid $history-border;
+}
+
+.singing-history__nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid $history-border;
+  color: $history-text-primary;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  transition: box-shadow 0.2s, transform 0.15s;
+
+  &:hover {
+    color: $history-text-primary;
+    text-decoration: none;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.10);
+    transform: translateY(-1px);
+  }
+
+  &--primary {
+    background: linear-gradient(135deg, $history-accent, #ea580c);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 6px 16px rgba(249, 115, 22, 0.28);
+
+    &:hover {
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(249, 115, 22, 0.36);
+    }
+  }
+}
+
+.singing-history__nav-icon {
+  font-size: 15px;
+}
+
+// ---- Responsive ----
+@media (max-width: 640px) {
+  .singing-history__hero {
+    padding: 48px 16px 40px;
+  }
+
+  .singing-history__hero-title {
+    font-size: 28px;
+  }
+
+  .singing-history__result {
+    flex-wrap: wrap;
+  }
+
+  .singing-history__result-item {
+    flex: 1 1 auto;
+  }
+
+  .singing-history__nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .singing-history__nav-link {
+    justify-content: center;
+  }
+}

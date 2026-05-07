@@ -199,6 +199,7 @@ Rails.application.routes.draw do
     resources :diagnoses, only: [:index, :new, :create, :show]
     resources :rankings, only: [:index]
     resources :ranking_seasons, only: [:index, :show]
+    resources :season_histories, only: [:index]
     resources :notifications, only: [:index]
     resources :badges, only: [:index]
     resources :users, only: [:show, :edit, :update] do

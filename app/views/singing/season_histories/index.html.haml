@@ -1,0 +1,101 @@
+- content_for :title, "シーズン履歴 | BeMyStyle"
+
+.singing-history
+  .singing-history__hero
+    .singing-history__hero-inner
+      %p.singing-history__eyebrow SEASON HISTORY
+      %h1.singing-history__hero-title あなたのシーズン履歴
+      %p.singing-history__hero-lead
+        月ごとの成績を振り返り、成長の軌跡を確認できます。
+        %br
+        挑戦し続けることが、あなた自身の物語になります。
+
+  .singing-history__inner
+    - if @season_histories.present?
+      .singing-history__list
+        - @season_histories.each do |h|
+          .singing-history__card{ class: "singing-history__card--#{h.season.status}" }
+
+            .singing-history__card-head
+              %span.singing-history__status-badge{ class: "singing-history__status-badge--#{h.season.status}" }
+                - if h.active?
+                  開催中
+                - else
+                  終了
+              %span.singing-history__season-type= h.season.season_type == "monthly" ? "月間" : h.season.season_type
+
+            %h2.singing-history__season-name= h.season.name
+            %p.singing-history__period
+              = h.season.starts_on.strftime("%Y/%m/%d")
+              〜
+              = h.season.ends_on.strftime("%Y/%m/%d")
+
+            .singing-history__body
+              - if h.participated?
+                - if h.active?
+                  %p.singing-history__challenge-note 今月のランキングに挑戦中
+                - else
+                  %p.singing-history__challenge-note 参加済み
+
+                .singing-history__result
+                  .singing-history__result-item
+                    %span.singing-history__result-label 順位
+                    %span.singing-history__result-value
+                      - if h.rank.present?
+                        %strong= "#{h.rank}位"
+                      - else
+                        %span.singing-history__result-pending 集計中
+                  .singing-history__result-item
+                    %span.singing-history__result-label スコア
+                    %span.singing-history__result-value
+                      - if h.score.present?
+                        %strong= h.score
+                      - else
+                        %span.singing-history__result-pending 集計中
+
+                - if h.badges.any?
+                  .singing-history__badges
+                    - h.badges.each do |badge|
+                      %span.singing-history__badge{ title: badge.label }
+                        = badge.emoji
+                        = badge.label
+
+              - else
+                .singing-history__no-entry
+                  %p.singing-history__no-entry-text まだ参加していません
+                  %p.singing-history__no-entry-sub
+                    - if h.active?
+                      今月まだ間に合います。診断してランキングに参加しましょう。
+                    - else
+                      このシーズンは参加しませんでした。次のシーズンで挑戦してみましょう。
+                  - if h.active?
+                    = link_to "今月の診断を始める", new_singing_diagnosis_path, class: "btn singing-history__entry-btn"
+
+            .singing-history__card-footer
+              = link_to singing_ranking_season_path(h.season), class: "singing-history__season-link" do
+                - if h.active?
+                  今月のシーズンを確認する
+                - else
+                  このシーズンの結果を見る
+                %span.singing-history__season-link-arrow →
+
+    - else
+      .singing-history__empty
+        %p.singing-history__empty-icon ☆
+        %p.singing-history__empty-title まだシーズンが開催されていません
+        %p.singing-history__empty-text
+          シーズンが始まったら、ここに成績が記録されていきます。
+          %br
+          まずは診断を受けてみましょう。
+        = link_to "歌唱・演奏診断を始める", new_singing_diagnosis_path, class: "btn btn-primary singing-history__empty-btn"
+
+    .singing-history__nav
+      = link_to singing_badges_path, class: "singing-history__nav-link" do
+        %span.singing-history__nav-icon 🏅
+        バッジ一覧を見る
+      = link_to singing_rankings_path, class: "singing-history__nav-link" do
+        %span.singing-history__nav-icon ♛
+        ランキングへ
+      = link_to new_singing_diagnosis_path, class: "singing-history__nav-link singing-history__nav-link--primary" do
+        %span.singing-history__nav-icon ♪
+        診断する
