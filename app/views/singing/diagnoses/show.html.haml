@@ -118,6 +118,22 @@
                   %span.singing-diagnosis__season-badge-new NEW
           = link_to "すべてのバッジを見る →", singing_badges_path, class: "singing-diagnosis__badges-link"
 
+      - if @next_badges.present?
+        .singing-diagnosis__next-badges
+          .singing-diagnosis__next-badges-header
+            %span.singing-diagnosis__next-badges-icon 🎯
+            %h2.singing-diagnosis__next-badges-title 次に狙えるバッジ
+          .singing-diagnosis__next-badges-list
+            - @next_badges.each do |hint|
+              - emoji = Singing::NextBadgeService::BADGE_EMOJI[hint.key] || "🎯"
+              .singing-diagnosis__next-badge-item
+                %span.singing-diagnosis__next-badge-emoji= emoji
+                .singing-diagnosis__next-badge-body
+                  %strong.singing-diagnosis__next-badge-label= hint.label
+                  %p.singing-diagnosis__next-badge-description= hint.description
+          .singing-diagnosis__next-badges-action
+            = link_to "もう一度診断する →", new_singing_diagnosis_path, class: "singing-diagnosis__next-badges-cta"
+
       .singing-diagnosis__score-guides
         %h2 スコアの見方
         %p.singing-diagnosis__score-note この診断は現時点の音声から見た目安です。絶対的な評価ではなく、練習や振り返りのヒントとしてご活用ください。

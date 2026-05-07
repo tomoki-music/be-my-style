@@ -43,6 +43,7 @@ class Singing::DiagnosesController < Singing::BaseController
         @ranking_rank            = Singing::RankingQuery.position_for(current_customer.id)
         @ranking_top10_threshold = top10_score_threshold
       end
+      @next_badges = Singing::NextBadgeService.call(current_customer)
     end
   end
 
