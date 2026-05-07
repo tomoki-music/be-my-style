@@ -38,6 +38,7 @@ class Singing::DiagnosesController < Singing::BaseController
     if @diagnosis.completed?
       @growth_diagnoses = growth_diagnoses_for(@diagnosis)
       @diagnosis_season_badges = latest_season_badges_for(current_customer)
+      @new_season_badges = @diagnosis_season_badges.select { |b| b.awarded_at >= 7.days.ago }
       if @diagnosis.ranking_opt_in? && @diagnosis.overall_score.present?
         @ranking_rank            = Singing::RankingQuery.position_for(current_customer.id)
         @ranking_top10_threshold = top10_score_threshold

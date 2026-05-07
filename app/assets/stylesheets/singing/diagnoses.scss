@@ -5937,6 +5937,94 @@ $ranking-accent: #7c4dff;
   vertical-align: middle;
 }
 
+// ─── バッジ獲得祝福カード（診断結果画面）────────────────────────────────
+.singing-diagnosis__badge-celebration {
+  background: linear-gradient(135deg, #fffbea 0%, #fef3c7 100%);
+  border: 1.5px solid #f5c842;
+  border-left: 5px solid #f59e0b;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  padding: 22px 22px 18px;
+}
+
+.singing-diagnosis__badge-celebration-header {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.singing-diagnosis__badge-celebration-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.singing-diagnosis__badge-celebration-title {
+  color: #92400e;
+  font-size: 17px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.singing-diagnosis__badge-celebration-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.singing-diagnosis__badge-celebration-item {
+  align-items: center;
+  animation: singing-badge-new-pulse 1.6s ease-in-out 3;
+  background: #fff;
+  border: 1px solid #f5c842;
+  border-radius: 10px;
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+}
+
+.singing-diagnosis__badge-celebration-emoji {
+  flex-shrink: 0;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.singing-diagnosis__badge-celebration-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.singing-diagnosis__badge-celebration-label {
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.singing-diagnosis__badge-celebration-season {
+  color: #92400e;
+  font-size: 12px;
+}
+
+.singing-diagnosis__badge-celebration-new {
+  background: linear-gradient(135deg, #f59e0b, #ef8b00);
+  border-radius: 999px;
+  color: #fff;
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+}
+
+.singing-diagnosis__badge-celebration-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 // ─── シーズンバッジ（診断結果画面）───────────────────────────────────
 @keyframes singing-badge-new-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(255, 200, 0, 0.4); }
