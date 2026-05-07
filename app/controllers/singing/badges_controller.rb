@@ -8,5 +8,6 @@ class Singing::BadgesController < Singing::BaseController
     @all_ranking_definitions = Singing::RankingBadgeService::BADGE_PRIORITY.map do |key|
       Singing::RankingBadgeService::BADGE_DEFINITIONS[key].merge(key: key)
     end
+    @next_badges = Singing::NextBadgeService.call(current_customer)
   end
 end

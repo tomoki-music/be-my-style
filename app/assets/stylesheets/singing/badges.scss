@@ -70,6 +70,76 @@
   margin-bottom: 0;
 }
 
+// 次に狙えるバッジセクション
+.singing-badges__section--next-target {
+  background: linear-gradient(145deg, #f0f4ff, #faf5ff);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+.singing-badges__next-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.singing-badges__next-item {
+  align-items: center;
+  background: #fff;
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  border-radius: 12px;
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+}
+
+.singing-badges__next-item-emoji {
+  flex-shrink: 0;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.singing-badges__next-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.singing-badges__next-item-label {
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.singing-badges__next-item-description {
+  color: #6b7280;
+  font-size: 13px;
+  margin: 0;
+}
+
+.singing-badges__next-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.singing-badges__next-cta {
+  font-size: 14px;
+}
+
+.singing-badges__next-ranking-link {
+  color: #4b6af0;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    color: #3b5bd9;
+    text-decoration: underline;
+  }
+}
+
 // 実績バッジグリッド
 .singing-badges__ranking-grid {
   display: grid;
