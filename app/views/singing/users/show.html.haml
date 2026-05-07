@@ -110,9 +110,13 @@
                   %span.singing-profile__season-badge-new NEW
           - if @season_badges.count > 6
             %p.singing-profile__season-badge-more= "他 #{@season_badges.count - 6} 件のバッジを獲得しています。"
+          - if @user == current_customer
+            = link_to "バッジ一覧を見る →", singing_badges_path, class: "singing-profile__season-badge-link"
         - else
           .singing-profile__empty
             %p バッジはまだありません。シーズンが終了すると、実績に応じてバッジが付与されます。
+          - if @user == current_customer
+            = link_to "バッジ・実績を確認する →", singing_badges_path, class: "singing-profile__season-badge-link"
 
       %section.singing-profile__section
         .singing-profile__section-head
