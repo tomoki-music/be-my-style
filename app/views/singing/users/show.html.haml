@@ -96,6 +96,26 @@
 
       %section.singing-profile__section
         .singing-profile__section-head
+          %p.singing-profile__section-kicker Badges
+          %h2 シーズンバッジ
+        - if @season_badges.any?
+          .singing-profile__season-badge-list
+            - @season_badges.first(6).each do |badge|
+              .singing-profile__season-badge-item{ class: (singing_badge_new?(badge) ? "singing-profile__season-badge-item--new" : "") }
+                %span.singing-profile__season-badge-emoji= singing_badge_emoji(badge)
+                .singing-profile__season-badge-body
+                  %strong.singing-profile__season-badge-label= singing_badge_label(badge)
+                  %small.singing-profile__season-badge-season= singing_badge_season_name(badge)
+                - if singing_badge_new?(badge)
+                  %span.singing-profile__season-badge-new NEW
+          - if @season_badges.count > 6
+            %p.singing-profile__season-badge-more= "他 #{@season_badges.count - 6} 件のバッジを獲得しています。"
+        - else
+          .singing-profile__empty
+            %p バッジはまだありません。シーズンが終了すると、実績に応じてバッジが付与されます。
+
+      %section.singing-profile__section
+        .singing-profile__section-head
           %p.singing-profile__section-kicker Growth
           %h2 成長の記録
         - if @growth_diagnoses.present?

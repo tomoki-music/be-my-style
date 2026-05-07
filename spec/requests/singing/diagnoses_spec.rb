@@ -1521,5 +1521,49 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("総合スコア")
       expect(response.body).to include("AIコメントの生成に失敗しました")
     end
+
+    it "最新 closed シーズンのバッジを「今回のあなたの実績」に表示すること" do
+      sign_in singing_customer
+      closed_season = FactoryBot.create(
+        :singing_ranking_season,
+        name: "2026年4月シーズン",
+        status: "closed",
+        starts_on: Date.new(2026, 4, 1),
+        ends_on: Date.new(2026, 4, 30)
+      )
+      FactoryBot.create(
+        :singing_badge,
+        customer: singing_customer,
+        singing_ranking_season: closed_season,
+        badge_type: "season_1st",
+        awarded_at: 3.days.ago
+      )
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis, :completed, :ranking_participant,
+        customer: singing_customer, overall_score: 90
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("今回のあなたの実績")
+      expect(response.body).to include("今月の王者")
+      expect(response.body).to include("🥇")
+      expect(response.body).to include("2026年4月シーズン")
+      expect(response.body).to include("NEW")
+    end
+
+    it "バッジがない場合は「今回のあなたの実績」セクションを表示しないこと" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis, :completed, :ranking_participant,
+        customer: singing_customer, overall_score: 80
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("今回のあなたの実績")
+    end
   end
 end
