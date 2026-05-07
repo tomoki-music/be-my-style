@@ -15,6 +15,7 @@
           - unchecked_count = current_customer.passive_notifications.where(checked: false).count
           - if unchecked_count.positive?
             %span.singing-nav__badge= unchecked_count
+      = link_to "シーズン履歴", singing_season_histories_path, class: "singing-nav__link#{' singing-nav__link--active' if current_page?(singing_season_histories_path)}"
       = link_to "料金プラン", public_singing_lp_path(anchor: "lp-section"), class: "singing-nav__link"
 
     .singing-nav__right
@@ -70,6 +71,7 @@
             - if unchecked_count.positive?
               %span.singing-nav__badge= unchecked_count
         = link_to "ランキング", singing_rankings_path, class: "singing-nav__mobile-link singing-nav__mobile-link--cta"
+        = link_to "シーズン履歴", singing_season_histories_path, class: "singing-nav__mobile-link"
         = link_to "BeMyStyleへ", root_path, class: "singing-nav__mobile-link singing-nav__mobile-link--cta"
         = link_to "料金プラン", public_singing_lp_path(anchor: "lp-section"), class: "singing-nav__mobile-link"
         - if current_customer

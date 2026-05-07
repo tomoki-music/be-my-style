@@ -3911,6 +3911,21 @@ $ranking-accent: #7c4dff;
   z-index: 1;
 }
 
+.singing-ranking__history-link {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.95);
+    text-decoration: underline;
+  }
+}
+
 // --- Responsive ---
 
 @media (max-width: 768px) {
