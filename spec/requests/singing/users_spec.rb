@@ -262,6 +262,66 @@ RSpec.describe "Singing::Users", type: :request do
       expect(response.body).to include("TOMOKIコメント付きのシーズン振り返り")
     end
 
+    it "season_1st バッジを持つユーザーのプロフィールに「今月の王者」称号を表示すること" do
+      sign_in other_customer
+      season = create(
+        :singing_ranking_season,
+        name: "2026年4月シーズン",
+        status: "closed",
+        starts_on: Date.new(2026, 4, 1),
+        ends_on: Date.new(2026, 4, 30)
+      )
+      create(
+        :singing_badge,
+        customer: singing_customer,
+        singing_ranking_season: season,
+        badge_type: "season_1st",
+        awarded_at: 3.days.ago
+      )
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("今月の王者")
+      expect(response.body).to include("🥇")
+      expect(response.body).to include("singing-profile__title-card")
+    end
+
+    it "バッジがないユーザーのプロフィールに「挑戦者」称号を表示すること" do
+      sign_in other_customer
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("挑戦者")
+      expect(response.body).to include("🎵")
+      expect(response.body).to include("singing-profile__title-card")
+    end
+
+    it "rapid_growth バッジを持つユーザーのプロフィールに「急成長シンガー」称号を表示すること" do
+      sign_in other_customer
+      season = create(
+        :singing_ranking_season,
+        name: "2026年4月シーズン",
+        status: "closed",
+        starts_on: Date.new(2026, 4, 1),
+        ends_on: Date.new(2026, 4, 30)
+      )
+      create(
+        :singing_badge,
+        customer: singing_customer,
+        singing_ranking_season: season,
+        badge_type: "rapid_growth",
+        awarded_at: 5.days.ago
+      )
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("急成長シンガー")
+      expect(response.body).to include("📈")
+    end
+
     it "ランキング順位とシーズン順位と成長実績を表示すること" do
       sign_in other_customer
       now = Time.zone.now
