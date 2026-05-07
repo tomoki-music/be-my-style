@@ -4579,6 +4579,104 @@ $ranking-accent: #7c4dff;
 }
 
 // ============================================================
+// TOP10 progress card
+// ============================================================
+
+.singing-diagnosis__top10-card {
+  border-radius: 10px;
+  margin-bottom: 20px;
+  overflow: hidden;
+
+  &--top10 {
+    background: linear-gradient(135deg, #1a1240 0%, #2d1b69 100%);
+    box-shadow: 0 4px 16px rgba(124, 77, 255, 0.2);
+  }
+
+  &--close {
+    background: linear-gradient(135deg, #0a2e1a 0%, #14532d 100%);
+    box-shadow: 0 4px 16px rgba(20, 83, 45, 0.2);
+  }
+
+  &--far,
+  &--unranked,
+  &--no_score {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+  }
+
+  &--opt-out {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+  }
+}
+
+.singing-diagnosis__top10-card-inner {
+  padding: 20px 22px;
+}
+
+.singing-diagnosis__top10-label {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+
+  .singing-diagnosis__top10-card--top10 &,
+  .singing-diagnosis__top10-card--close & {
+    color: #f5c842;
+  }
+
+  .singing-diagnosis__top10-card--far &,
+  .singing-diagnosis__top10-card--unranked &,
+  .singing-diagnosis__top10-card--no_score &,
+  .singing-diagnosis__top10-card--opt-out & {
+    color: #4b5563;
+  }
+}
+
+.singing-diagnosis__top10-rank {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 4px 0 8px;
+  line-height: 1.2;
+
+  .singing-diagnosis__top10-card--top10 &,
+  .singing-diagnosis__top10-card--close & {
+    color: #fff;
+  }
+
+  .singing-diagnosis__top10-card--far &,
+  .singing-diagnosis__top10-card--unranked &,
+  .singing-diagnosis__top10-card--no_score & {
+    color: #1f2937;
+  }
+}
+
+.singing-diagnosis__top10-message {
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 0 0 16px;
+
+  .singing-diagnosis__top10-card--top10 &,
+  .singing-diagnosis__top10-card--close & {
+    color: rgba(255, 255, 255, 0.88);
+  }
+
+  .singing-diagnosis__top10-card--far &,
+  .singing-diagnosis__top10-card--unranked &,
+  .singing-diagnosis__top10-card--no_score &,
+  .singing-diagnosis__top10-card--opt-out & {
+    color: #4b5563;
+  }
+}
+
+.singing-diagnosis__top10-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+// ============================================================
 // Global singing navigation
 // ============================================================
 

@@ -551,18 +551,45 @@
         %p.singing-diagnosis__polling-note 自動更新中です。完了または失敗になると更新は止まります。
 
     - if @diagnosis.completed?
-      - if @diagnosis.ranking_opt_in?
-        = link_to singing_rankings_path, class: "singing-diagnosis__ranking-nudge singing-diagnosis__ranking-nudge--joined" do
-          .singing-diagnosis__ranking-nudge-inner
-            %span.singing-diagnosis__ranking-nudge-badge ランキング参加中
-            %strong.singing-diagnosis__ranking-nudge-text 次はランキングにも挑戦しよう
-            %span.singing-diagnosis__ranking-nudge-link ランキングを見る &rarr;
+      - if @diagnosis.ranking_opt_in? && @diagnosis.overall_score.present?
+        - progress = singing_ranking_progress(@ranking_rank, @ranking_top10_threshold, @diagnosis.overall_score)
+        .singing-diagnosis__top10-card{ class: "singing-diagnosis__top10-card--#{progress[:status]}" }
+          .singing-diagnosis__top10-card-inner
+            - case progress[:status]
+            - when :top10
+              %span.singing-diagnosis__top10-label 🎉 TOP10 達成！
+              %p.singing-diagnosis__top10-rank 現在 #{progress[:rank]} 位
+              %p.singing-diagnosis__top10-message TOP10入りおめでとうございます！バッジも確認してみましょう。
+              .singing-diagnosis__top10-actions
+                = link_to "ランキングを見る", singing_rankings_path, class: "btn btn-primary"
+                = link_to "バッジを見る", singing_badges_path, class: "btn btn-secondary"
+            - when :close
+              %span.singing-diagnosis__top10-label 📈 あと少しでTOP10！
+              %p.singing-diagnosis__top10-rank 現在 #{progress[:rank]} 位
+              - if progress[:gap]
+                %p.singing-diagnosis__top10-message あと #{progress[:gap]} 点でTOP10入りです。もう一度挑戦してみましょう！
+              - else
+                %p.singing-diagnosis__top10-message もう少しでTOP10です。もう一度挑戦してみましょう！
+              .singing-diagnosis__top10-actions
+                = link_to "もう一度診断する", new_singing_diagnosis_path, class: "btn btn-primary"
+                = link_to "ランキングを見る", singing_rankings_path, class: "btn btn-secondary"
+                = link_to "バッジを見る", singing_badges_path, class: "btn btn-secondary"
+            - else
+              %span.singing-diagnosis__top10-label 🎯 TOP10を目指そう
+              - if progress[:rank]
+                %p.singing-diagnosis__top10-rank 現在 #{progress[:rank]} 位
+              %p.singing-diagnosis__top10-message コツコツ練習して、ランキングTOP10を目指しましょう！
+              .singing-diagnosis__top10-actions
+                = link_to "もう一度診断する", new_singing_diagnosis_path, class: "btn btn-primary"
+                = link_to "ランキングを見る", singing_rankings_path, class: "btn btn-secondary"
       - else
-        .singing-diagnosis__ranking-nudge.singing-diagnosis__ranking-nudge--opt-out
-          .singing-diagnosis__ranking-nudge-inner
-            %span.singing-diagnosis__ranking-nudge-badge--muted ランキング非参加
-            %p.singing-diagnosis__ranking-nudge-text この診断はランキング非参加です。次回診断時に「ランキングに参加する」を選ぶとスコアが公開されます。
-            = link_to "ランキングを見る", singing_rankings_path, class: "singing-diagnosis__ranking-nudge-link"
+        .singing-diagnosis__top10-card.singing-diagnosis__top10-card--opt-out
+          .singing-diagnosis__top10-card-inner
+            %span.singing-diagnosis__top10-label 📊 ランキング参加でバッジ獲得を目指そう
+            %p.singing-diagnosis__top10-message 次回の診断でランキングに参加すると、順位に応じてバッジを獲得できます。
+            .singing-diagnosis__top10-actions
+              = link_to "ランキングを見る", singing_rankings_path, class: "btn btn-secondary"
+              = link_to "バッジを見る", singing_badges_path, class: "btn btn-secondary"
 
     .singing-diagnosis__actions
       = link_to "もう一度診断する", new_singing_diagnosis_path, class: "btn btn-primary"

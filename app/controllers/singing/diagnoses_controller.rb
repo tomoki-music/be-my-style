@@ -38,6 +38,10 @@ class Singing::DiagnosesController < Singing::BaseController
     if @diagnosis.completed?
       @growth_diagnoses = growth_diagnoses_for(@diagnosis)
       @diagnosis_season_badges = latest_season_badges_for(current_customer)
+      if @diagnosis.ranking_opt_in? && @diagnosis.overall_score.present?
+        @ranking_rank            = Singing::RankingQuery.position_for(current_customer.id)
+        @ranking_top10_threshold = top10_score_threshold
+      end
     end
   end
 
@@ -99,5 +103,25 @@ class Singing::DiagnosesController < Singing::BaseController
             .includes(:singing_ranking_season)
             .where(singing_ranking_season: latest_season)
             .order(awarded_at: :desc)
+  end
+
+  # 総合ランキング10位のスコアを返す。10人未満なら nil。
+  # pluck 1クエリで完結し N+1 を起こさない。
+  def top10_score_threshold
+    seen  = {}
+    count = 0
+    SingingDiagnosis
+      .completed
+      .where(ranking_opt_in: true)
+      .where.not(overall_score: nil)
+      .order(overall_score: :desc, id: :desc)
+      .pluck(:customer_id, :overall_score)
+      .each do |cid, score|
+        next if seen[cid]
+        seen[cid] = true
+        count += 1
+        return score if count == 10
+      end
+    nil
   end
 end
