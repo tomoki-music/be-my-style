@@ -85,6 +85,24 @@
               %small= card[:short_label]
               %p= card[:comment]
 
+      - if @new_season_badges.present?
+        .singing-diagnosis__badge-celebration
+          .singing-diagnosis__badge-celebration-header
+            %span.singing-diagnosis__badge-celebration-icon 🎉
+            %h2.singing-diagnosis__badge-celebration-title 新しいバッジを獲得しました！
+          .singing-diagnosis__badge-celebration-list
+            - @new_season_badges.each do |badge|
+              .singing-diagnosis__badge-celebration-item
+                %span.singing-diagnosis__badge-celebration-emoji= singing_badge_emoji(badge)
+                .singing-diagnosis__badge-celebration-body
+                  %strong.singing-diagnosis__badge-celebration-label= singing_badge_label(badge)
+                  %small.singing-diagnosis__badge-celebration-season= singing_badge_season_name(badge)
+                %span.singing-diagnosis__badge-celebration-new NEW
+          .singing-diagnosis__badge-celebration-links
+            = link_to "バッジ一覧を見る", singing_badges_path, class: "btn btn-primary"
+            = link_to "シーズン履歴を見る", singing_season_histories_path, class: "btn btn-secondary"
+            = link_to "もう一度診断する", new_singing_diagnosis_path, class: "btn btn-secondary"
+
       - if @diagnosis_season_badges.present?
         .singing-diagnosis__season-badges
           %h2 今回のあなたの実績

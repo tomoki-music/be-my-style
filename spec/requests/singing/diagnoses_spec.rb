@@ -1553,6 +1553,63 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("NEW")
     end
 
+    it "7日以内に獲得したバッジがある場合はバッジ獲得祝福カードを表示すること" do
+      sign_in singing_customer
+      closed_season = FactoryBot.create(
+        :singing_ranking_season,
+        name: "2026年4月シーズン",
+        status: "closed",
+        starts_on: Date.new(2026, 4, 1),
+        ends_on: Date.new(2026, 4, 30)
+      )
+      FactoryBot.create(
+        :singing_badge,
+        customer: singing_customer,
+        singing_ranking_season: closed_season,
+        badge_type: "season_1st",
+        awarded_at: 3.days.ago
+      )
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis, :completed, :ranking_participant,
+        customer: singing_customer, overall_score: 90
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("新しいバッジを獲得しました！")
+      expect(response.body).to include("バッジ一覧を見る")
+      expect(response.body).to include("シーズン履歴を見る")
+      expect(response.body).to include("もう一度診断する")
+    end
+
+    it "7日より前に獲得したバッジのみの場合はバッジ獲得祝福カードを表示しないこと" do
+      sign_in singing_customer
+      closed_season = FactoryBot.create(
+        :singing_ranking_season,
+        name: "2026年4月シーズン",
+        status: "closed",
+        starts_on: Date.new(2026, 4, 1),
+        ends_on: Date.new(2026, 4, 30)
+      )
+      FactoryBot.create(
+        :singing_badge,
+        customer: singing_customer,
+        singing_ranking_season: closed_season,
+        badge_type: "season_1st",
+        awarded_at: 8.days.ago
+      )
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis, :completed, :ranking_participant,
+        customer: singing_customer, overall_score: 90
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("新しいバッジを獲得しました！")
+    end
+
     it "バッジがない場合は「今回のあなたの実績」セクションを表示しないこと" do
       sign_in singing_customer
       diagnosis = FactoryBot.create(
