@@ -1,6 +1,78 @@
 require 'rails_helper'
 
 RSpec.describe Singing::DiagnosesHelper, type: :helper do
+  describe "#singing_ranking_progress" do
+    context "overall_score が nil の場合" do
+      it ":no_score を返すこと" do
+        expect(helper.singing_ranking_progress(1, 80, nil)).to eq({ status: :no_score })
+      end
+    end
+
+    context "ランキング圏外（rank が nil）の場合" do
+      it ":unranked を返すこと" do
+        expect(helper.singing_ranking_progress(nil, 80, 70)).to eq({ status: :unranked })
+      end
+    end
+
+    context "1〜10位の場合" do
+      it "1位のとき :top10 と rank を返すこと" do
+        expect(helper.singing_ranking_progress(1, 90, 95)).to eq({ status: :top10, rank: 1 })
+      end
+
+      it "10位のとき :top10 と rank を返すこと" do
+        expect(helper.singing_ranking_progress(10, 80, 80)).to eq({ status: :top10, rank: 10 })
+      end
+    end
+
+    context "11〜20位（:close）の場合" do
+      it "スコア差分 gap を返すこと" do
+        result = helper.singing_ranking_progress(11, 85, 78)
+
+        expect(result[:status]).to eq :close
+        expect(result[:rank]).to eq 11
+        expect(result[:gap]).to eq 7
+      end
+
+      it "20位のとき :close を返すこと" do
+        result = helper.singing_ranking_progress(20, 85, 60)
+
+        expect(result[:status]).to eq :close
+        expect(result[:rank]).to eq 20
+        expect(result[:gap]).to eq 25
+      end
+
+      it "同点で押し出されている場合（gap=0）は gap=1 を返すこと" do
+        result = helper.singing_ranking_progress(11, 80, 80)
+
+        expect(result[:status]).to eq :close
+        expect(result[:gap]).to eq 1
+      end
+    end
+
+    context "21位以降（:far）の場合" do
+      it ":far と rank と gap を返すこと" do
+        result = helper.singing_ranking_progress(21, 85, 50)
+
+        expect(result[:status]).to eq :far
+        expect(result[:rank]).to eq 21
+        expect(result[:gap]).to eq 35
+      end
+    end
+
+    context "top10_threshold が nil（ランキング参加者が10人未満）の場合" do
+      it "rank が 1〜10 なら :top10 を返すこと" do
+        expect(helper.singing_ranking_progress(5, nil, 75)[:status]).to eq :top10
+      end
+
+      it "rank が 11 以上なら gap が nil のまま :far/:close を返すこと" do
+        result = helper.singing_ranking_progress(11, nil, 60)
+
+        expect(result[:status]).to eq :close
+        expect(result[:gap]).to be_nil
+      end
+    end
+  end
+
   describe "#singing_score_guide" do
     it "スコア説明文を返すこと" do
       guide = helper.singing_score_guide(:pitch)

@@ -1753,6 +1753,39 @@ module Singing::DiagnosesHelper
     "singing-diagnosis__reference-badge singing-diagnosis__reference-badge--#{suffix}"
   end
 
+  # TOP10 進捗データを返す。view に計算を持ち込まないようにここで完結させる。
+  #
+  # rank            : Singing::RankingQuery.position_for の戻り値（Integer or nil）
+  # top10_threshold : 総合ランキング10位のスコア（Integer or nil。10人未満のとき nil）
+  # score           : 今回診断の overall_score（Integer or nil）
+  #
+  # 戻り値:
+  #   { status: :top10,    rank: Integer }
+  #   { status: :close,    rank: Integer, gap: Integer }  # 11〜20位
+  #   { status: :far,      rank: Integer or nil, gap: Integer or nil }
+  #   { status: :unranked }  # ランキング圏外（同点・後発で押し出された等）
+  #   { status: :no_score }  # overall_score が nil
+  def singing_ranking_progress(rank, top10_threshold, score)
+    return { status: :no_score } if score.nil?
+
+    if rank.nil?
+      return { status: :unranked }
+    end
+
+    if rank <= 10
+      return { status: :top10, rank: rank }
+    end
+
+    # rank > 10 のとき、top10_threshold は必ず存在するが nil ガードも入れる
+    gap = if top10_threshold
+              diff = top10_threshold - score
+              # 同点で押し出されている場合 diff=0 → 最低1点表示
+              [diff, 1].max
+            end
+
+    { status: rank <= 20 ? :close : :far, rank: rank, gap: gap }
+  end
+
   private
 
   def comparison_delta_value(values)
