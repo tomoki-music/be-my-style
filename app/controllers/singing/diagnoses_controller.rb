@@ -35,7 +35,10 @@ class Singing::DiagnosesController < Singing::BaseController
 
   def show
     @polling_required = @diagnosis.queued? || @diagnosis.processing?
-    @growth_diagnoses = growth_diagnoses_for(@diagnosis) if @diagnosis.completed?
+    if @diagnosis.completed?
+      @growth_diagnoses = growth_diagnoses_for(@diagnosis)
+      @diagnosis_season_badges = latest_season_badges_for(current_customer)
+    end
   end
 
   private
@@ -86,5 +89,15 @@ class Singing::DiagnosesController < Singing::BaseController
       .limit(8)
       .to_a
       .reverse
+  end
+
+  def latest_season_badges_for(customer)
+    latest_season = SingingRankingSeason.closed.order(ends_on: :desc).first
+    return [] unless latest_season
+
+    customer.singing_badges
+            .includes(:singing_ranking_season)
+            .where(singing_ranking_season: latest_season)
+            .order(awarded_at: :desc)
   end
 end

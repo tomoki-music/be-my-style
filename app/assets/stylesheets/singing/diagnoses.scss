@@ -5803,3 +5803,150 @@ $ranking-accent: #7c4dff;
   padding: 2px 7px;
   vertical-align: middle;
 }
+
+// ─── シーズンバッジ（診断結果画面）───────────────────────────────────
+@keyframes singing-badge-new-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 200, 0, 0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(255, 200, 0, 0); }
+}
+
+.singing-diagnosis__season-badges {
+  margin: 32px 0;
+  padding: 24px;
+  background: linear-gradient(135deg, #fffbea 0%, #fff8e1 100%);
+  border: 1px solid #f5c842;
+  border-radius: 12px;
+
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+}
+
+.singing-diagnosis__season-badges-lead {
+  font-size: 13px;
+  color: #777;
+  margin: 0 0 16px;
+}
+
+.singing-diagnosis__season-badge-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.singing-diagnosis__season-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #e8d88a;
+  border-radius: 8px;
+  padding: 10px 14px;
+  position: relative;
+
+  &--new {
+    animation: singing-badge-new-pulse 1.6s ease-in-out 3;
+    border-color: #f5c842;
+  }
+}
+
+.singing-diagnosis__season-badge-emoji {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.singing-diagnosis__season-badge-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.singing-diagnosis__season-badge-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2c2c2c;
+}
+
+.singing-diagnosis__season-badge-season {
+  font-size: 11px;
+  color: #888;
+}
+
+.singing-diagnosis__season-badge-new {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #f5c842;
+  color: #2c2c2c;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+// ─── シーズンバッジ（プロフィール画面）──────────────────────────────
+.singing-profile__season-badge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.singing-profile__season-badge-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 10px 14px;
+  position: relative;
+
+  &--new {
+    border-color: #f5c842;
+    animation: singing-badge-new-pulse 1.6s ease-in-out 3;
+  }
+}
+
+.singing-profile__season-badge-emoji {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.singing-profile__season-badge-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.singing-profile__season-badge-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2c2c2c;
+}
+
+.singing-profile__season-badge-season {
+  font-size: 12px;
+  color: #888;
+}
+
+.singing-profile__season-badge-new {
+  margin-left: auto;
+  background: #f5c842;
+  color: #2c2c2c;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.singing-profile__season-badge-more {
+  font-size: 13px;
+  color: #777;
+  margin-top: 8px;
+}

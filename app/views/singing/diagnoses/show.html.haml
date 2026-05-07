@@ -85,6 +85,20 @@
               %small= card[:short_label]
               %p= card[:comment]
 
+      - if @diagnosis_season_badges.present?
+        .singing-diagnosis__season-badges
+          %h2 今回のあなたの実績
+          %p.singing-diagnosis__season-badges-lead 直近シーズンで獲得したバッジです。
+          .singing-diagnosis__season-badge-list
+            - @diagnosis_season_badges.each do |badge|
+              .singing-diagnosis__season-badge{ class: (singing_badge_new?(badge) ? "singing-diagnosis__season-badge--new" : "") }
+                %span.singing-diagnosis__season-badge-emoji= singing_badge_emoji(badge)
+                .singing-diagnosis__season-badge-body
+                  %strong.singing-diagnosis__season-badge-label= singing_badge_label(badge)
+                  %small.singing-diagnosis__season-badge-season= singing_badge_season_name(badge)
+                - if singing_badge_new?(badge)
+                  %span.singing-diagnosis__season-badge-new NEW
+
       .singing-diagnosis__score-guides
         %h2 スコアの見方
         %p.singing-diagnosis__score-note この診断は現時点の音声から見た目安です。絶対的な評価ではなく、練習や振り返りのヒントとしてご活用ください。

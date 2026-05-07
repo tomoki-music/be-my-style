@@ -150,6 +150,94 @@ RSpec.describe "Singing::Users", type: :request do
       expect(response.body).to include("診断に挑戦する")
     end
 
+    it "獲得した SingingBadge をシーズンバッジセクションに表示すること" do
+      sign_in other_customer
+      season = create(
+        :singing_ranking_season,
+        name: "2026年4月シーズン",
+        status: "closed",
+        starts_on: Date.new(2026, 4, 1),
+        ends_on: Date.new(2026, 4, 30)
+      )
+      create(
+        :singing_badge,
+        customer: singing_customer,
+        singing_ranking_season: season,
+        badge_type: "season_1st",
+        awarded_at: 3.days.ago
+      )
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("シーズンバッジ")
+      expect(response.body).to include("今月の王者")
+      expect(response.body).to include("🥇")
+      expect(response.body).to include("2026年4月シーズン")
+      expect(response.body).to include("NEW")
+    end
+
+    it "バッジが7日より古い場合 NEW を表示しないこと" do
+      sign_in other_customer
+      season = create(
+        :singing_ranking_season,
+        name: "2026年3月シーズン",
+        status: "closed",
+        starts_on: Date.new(2026, 3, 1),
+        ends_on: Date.new(2026, 3, 31)
+      )
+      create(
+        :singing_badge,
+        customer: singing_customer,
+        singing_ranking_season: season,
+        badge_type: "rapid_growth",
+        awarded_at: 10.days.ago
+      )
+
+      get singing_user_path(singing_customer)
+
+      expect(response.body).to include("急成長シンガー")
+      expect(response.body).not_to include("NEW")
+    end
+
+    it "バッジが6件を超える場合に「他X件」を表示すること" do
+      sign_in other_customer
+      season_a = create(
+        :singing_ranking_season,
+        name: "2026年4月シーズン",
+        status: "closed",
+        starts_on: Date.new(2026, 4, 1),
+        ends_on: Date.new(2026, 4, 30)
+      )
+      season_b = create(
+        :singing_ranking_season,
+        name: "2026年3月シーズン",
+        status: "closed",
+        starts_on: Date.new(2026, 3, 1),
+        ends_on: Date.new(2026, 3, 31)
+      )
+      SingingBadge::BADGE_TYPES.each do |badge_type|
+        create(:singing_badge, customer: singing_customer, singing_ranking_season: season_a,
+                               badge_type: badge_type, awarded_at: 30.days.ago)
+      end
+      create(:singing_badge, customer: singing_customer, singing_ranking_season: season_b,
+                             badge_type: "season_1st", awarded_at: 60.days.ago)
+
+      get singing_user_path(singing_customer)
+
+      expect(response.body).to include("他")
+      expect(response.body).to include("件のバッジを獲得しています。")
+    end
+
+    it "バッジがないユーザーのプロフィールでバッジセクションの空状態を表示すること" do
+      sign_in other_customer
+
+      get singing_user_path(singing_customer)
+
+      expect(response.body).to include("シーズンバッジ")
+      expect(response.body).to include("バッジはまだありません。")
+    end
+
     it "最新シーズン実績と非Premium向け案内を表示すること" do
       sign_in other_customer
       season = create(:singing_ranking_season, name: "2026年5月シーズン")
