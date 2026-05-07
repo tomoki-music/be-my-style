@@ -1,5 +1,6 @@
 class SingingRankingSeason < ApplicationRecord
   has_many :singing_season_ranking_entries, dependent: :destroy
+  has_many :singing_badges, dependent: :destroy
 
   STATUSES = %w[draft active closed].freeze
   SEASON_TYPES = %w[monthly].freeze
