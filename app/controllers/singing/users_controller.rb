@@ -17,6 +17,7 @@ class Singing::UsersController < Singing::BaseController
     @season_badges = @user.singing_badges
                           .includes(:singing_ranking_season)
                           .order(awarded_at: :desc)
+    @profile_title = Singing::ProfileTitleService.call(@season_badges)
     @ranking_badges = Singing::RankingBadgeService.badges_for(@user)
     @growth_entries = Singing::RankingQuery.growth
     @growth_index = @growth_entries.index { |entry| entry.customer.id == @user.id }

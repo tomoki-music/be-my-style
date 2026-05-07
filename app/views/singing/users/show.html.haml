@@ -7,6 +7,12 @@
       .singing-profile__identity
         .singing-profile__eyebrow Music Growth Profile
         %h1.singing-profile__name= @user.name
+        .singing-profile__title-card
+          %span.singing-profile__title-icon= @profile_title.icon
+          .singing-profile__title-body
+            %strong.singing-profile__title-label= @profile_title.label
+            %span.singing-profile__title-desc= @profile_title.description
+          = link_to "バッジ一覧 →", singing_badges_path, class: "singing-profile__title-link"
         - if @user.singing_profile_comment.present?
           %p.singing-profile__comment= @user.singing_profile_comment
         - else
