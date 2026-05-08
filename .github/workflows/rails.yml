@@ -3,6 +3,16 @@ name: Rails CI/CD
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_assets_clobber:
+        description: '本番assetsをclobberしてからprecompileする（古いassets残留でデザイン崩れが起きた場合のみ使用）'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 jobs:
   build:
@@ -15,6 +25,7 @@ jobs:
         EC2_USER: ${{ secrets.EC2_USER || 'ec2-user' }}
         EC2_HOST: ${{ secrets.EC2_HOST || '13.113.0.43' }}
         DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/home/ec2-user/be-my-style' }}
+        FORCE_ASSETS_CLOBBER: ${{ github.event.inputs.force_assets_clobber || 'false' }}
       run: |
         set -euo pipefail
 
@@ -31,12 +42,13 @@ jobs:
           -o ServerAliveInterval=30 \
           -o ServerAliveCountMax=20 \
           -i private_key \
-          "${EC2_USER}@${EC2_HOST}" "DEPLOY_PATH='${DEPLOY_PATH}' bash -s" << 'EOF'
+          "${EC2_USER}@${EC2_HOST}" "DEPLOY_PATH='${DEPLOY_PATH}' FORCE_ASSETS_CLOBBER='${FORCE_ASSETS_CLOBBER}' bash -s" << 'EOF'
           set -euo pipefail
 
           echo "Host: $(hostname)"
           echo "Deploy path: ${DEPLOY_PATH}"
           echo "[deploy] START: $(date '+%H:%M:%S')"
+          echo "[deploy] FORCE_ASSETS_CLOBBER: ${FORCE_ASSETS_CLOBBER:-false}"
 
           cd "${DEPLOY_PATH}"
 
@@ -60,6 +72,21 @@ jobs:
           ~/.rbenv/shims/bundle install --jobs 4 --retry 3
           echo "[deploy] bundle install finished: $(date '+%H:%M:%S')"
 
+          BACKUP_DIR="/tmp/be-my-style-assets-backup-$(date +%Y%m%d%H%M%S)"
+          FORCE_CLOBBER="${FORCE_ASSETS_CLOBBER:-false}"
+
+          if [ "$FORCE_CLOBBER" = "true" ]; then
+            echo "[deploy] FORCE_ASSETS_CLOBBER=true: backing up assets before clobber"
+            mkdir -p "$BACKUP_DIR"
+            [ -d public/assets ] && cp -a public/assets "$BACKUP_DIR/assets"
+            [ -d public/packs ] && cp -a public/packs "$BACKUP_DIR/packs"
+            echo "[deploy] assets backup finished: $BACKUP_DIR"
+
+            echo "[deploy] assets:clobber start: $(date '+%H:%M:%S')"
+            RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:clobber
+            echo "[deploy] assets:clobber finished: $(date '+%H:%M:%S')"
+          fi
+
           echo "[deploy] assets:precompile start: $(date '+%H:%M:%S')"
           (RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:precompile) &
           PRECOMPILE_PID=$!
@@ -67,10 +94,24 @@ jobs:
             echo "[deploy] assets:precompile still running: $(date '+%H:%M:%S')"
             sleep 30
           done
+
           if wait "$PRECOMPILE_PID"; then
             echo "[deploy] assets:precompile finished: $(date '+%H:%M:%S')"
+            if [ "$FORCE_CLOBBER" = "true" ] && [ -d "$BACKUP_DIR" ]; then
+              rm -rf "$BACKUP_DIR"
+              echo "[deploy] assets backup deleted"
+            fi
           else
-            echo "[deploy] ERROR: assets:precompile FAILED. Existing assets preserved. Aborting deploy."
+            echo "[deploy] ERROR: assets:precompile FAILED. Aborting deploy."
+            if [ "$FORCE_CLOBBER" = "true" ] && [ -d "$BACKUP_DIR" ]; then
+              echo "[deploy] Restoring assets from backup: $BACKUP_DIR"
+              rm -rf public/assets public/packs
+              [ -d "$BACKUP_DIR/assets" ] && cp -a "$BACKUP_DIR/assets" public/assets
+              [ -d "$BACKUP_DIR/packs" ] && cp -a "$BACKUP_DIR/packs" public/packs
+              echo "[deploy] Assets restored. Existing assets preserved."
+            else
+              echo "[deploy] Existing assets preserved."
+            fi
             exit 1
           fi
 
