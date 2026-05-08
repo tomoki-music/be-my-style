@@ -22,16 +22,24 @@
             %th 割当数
             %th 操作
         %tbody
-          - @students.each do |student|
+          - if @students.any?
+            - @students.each do |student|
+              %tr
+                %td= link_to student.name, learning_student_path(student)
+                %td= student.learning_school_group&.name || "未所属"
+                %td= student.displayed_parts.map { |part| learning_part_label(part) }.join(" / ")
+                %td= student.grade.presence || "-"
+                %td= learning_student_status_label(student.status)
+                %td= student.learning_student_trainings.size
+                %td.learning-table__actions
+                  = link_to "詳細", learning_student_path(student), class: "learning-text-link"
+                  = link_to "編集", edit_learning_student_path(student), class: "learning-text-link"
+                  = link_to "割当", learning_student_student_trainings_path(student), class: "learning-text-link"
+                  = link_to "削除", learning_student_path(student), method: :delete, data: { confirm: "削除しますか？" }, class: "learning-text-link learning-text-link--danger"
+          - else
             %tr
-              %td= link_to student.name, learning_student_path(student)
-              %td= student.learning_school_group&.name || "未所属"
-              %td= student.displayed_parts.map { |part| learning_part_label(part) }.join(" / ")
-              %td= student.grade.presence || "-"
-              %td= learning_student_status_label(student.status)
-              %td= student.learning_student_trainings.size
-              %td.learning-table__actions
-                = link_to "詳細", learning_student_path(student), class: "learning-text-link"
-                = link_to "編集", edit_learning_student_path(student), class: "learning-text-link"
-                = link_to "割当", learning_student_student_trainings_path(student), class: "learning-text-link"
-                = link_to "削除", learning_student_path(student), method: :delete, data: { confirm: "削除しますか？" }, class: "learning-text-link learning-text-link--danger"
+              %td{ colspan: 7 }
+                .learning-empty.learning-empty--action
+                  %strong 生徒登録から始めましょう
+                  %p 生徒を登録すると、個別ポータルURL・トレーニング割当・努力ポイントの土台ができます。
+                  = link_to "生徒を追加", new_learning_student_path, class: "learning-button"

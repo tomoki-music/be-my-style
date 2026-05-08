@@ -21,14 +21,25 @@
             %th コメント
             %th 操作
         %tbody
-          - @progress_logs.each do |log|
+          - if @progress_logs.any?
+            - @progress_logs.each do |log|
+              %tr
+                %td= l(log.practiced_on)
+                %td= log.learning_student.name
+                %td= learning_part_label(log.part)
+                %td= log.training_title
+                %td= learning_mark_label(log.achievement_mark)
+                %td= truncate(log.comment, length: 70)
+                %td.learning-table__actions
+                  = link_to "編集", edit_learning_progress_log_path(log), class: "learning-text-link"
+                  = link_to "削除", learning_progress_log_path(log), method: :delete, data: { confirm: "削除しますか？" }, class: "learning-text-link learning-text-link--danger"
+          - else
             %tr
-              %td= l(log.practiced_on)
-              %td= log.learning_student.name
-              %td= learning_part_label(log.part)
-              %td= log.training_title
-              %td= learning_mark_label(log.achievement_mark)
-              %td= truncate(log.comment, length: 70)
-              %td.learning-table__actions
-                = link_to "編集", edit_learning_progress_log_path(log), class: "learning-text-link"
-                = link_to "削除", learning_progress_log_path(log), method: :delete, data: { confirm: "削除しますか？" }, class: "learning-text-link learning-text-link--danger"
+              %td{ colspan: 7 }
+                .learning-empty.learning-empty--action
+                  %strong 進捗ログはこれから増えていきます
+                  %p 生徒が練習に取り組んだら、日付・内容・達成マークを残すと、顧問ダッシュボードの成長表示に反映されます。
+                  - if params[:student_id].present?
+                    = link_to "ログを追加", new_learning_student_progress_log_path(params[:student_id]), class: "learning-button"
+                  - else
+                    = link_to "生徒を選んでログを追加", learning_students_path, class: "learning-button"

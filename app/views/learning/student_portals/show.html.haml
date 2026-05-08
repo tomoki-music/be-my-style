@@ -5,7 +5,8 @@
       .portal-tutorial__step{ data: { step: "1" } }
         %h2.portal-tutorial__title ようこそ！
         %p ここはあなただけの練習ポータルです。
-        %p 課題をこなすたびに
+        %p
+          課題をこなすたびに
           %strong 努力ポイント
           がもらえます。
         %button.learning-button.portal-tutorial__next{ data: { action: "next" } } 次へ
@@ -15,7 +16,8 @@
           %strong 練習記録をつけると5PT
         %p
           %strong 課題を達成すると20PT
-        %p 毎週連続でアクセスすると
+        %p
+          毎週連続でアクセスすると
           %strong ボーナスポイント
           ももらえます！
         %button.learning-button.portal-tutorial__done{ data: { action: "complete" } } はじめる！
@@ -30,6 +32,22 @@
           = [@student.learning_school_group&.name, @student.grade.presence].compact.join(" / ").presence || "今週の目標と進捗を確認できます。"
 
     .learning-content
+      - if @first_action_training.present?
+        .learning-first-action{ style: learning_progress_style(@first_action_training.part) }
+          .learning-first-action__body
+            %span.learning-first-action__eyebrow 今日のおすすめ練習
+            %h2 まずは1つ練習を完了してみよう
+            %p
+              = @first_action_training.title
+              から始めると、今日やることがはっきりします。練習記録や達成が増えると努力ポイントが貯まり、継続した分がランキングや成長率にも反映されます。
+          = link_to "おすすめ練習を見る", "#training-#{@first_action_training.id}", class: "learning-button"
+      - else
+        .learning-first-action.learning-first-action--empty
+          .learning-first-action__body
+            %span.learning-first-action__eyebrow 今日のおすすめ練習
+            %h2 先生が準備中です
+            %p 課題が届いたらここに表示されます。今は部活で決まっている基礎練習や曲の確認を続けておけば大丈夫です。
+
       .learning-stat-grid
         .learning-stat-card{ style: learning_progress_style(@student.main_part) }
           %span.learning-stat-card__label 進捗率
@@ -73,7 +91,7 @@
           .learning-section__header
             %h2 次にやる課題
           .learning-stack
-            - upcoming_trainings = @current_trainings.reject(&:star?).first(4)
+            - upcoming_trainings = @current_trainings.reject { |training| training.status == "achieved" || training.star? }.first(4)
             - if upcoming_trainings.any?
               - upcoming_trainings.each do |training|
                 .learning-training-card{ style: learning_progress_style(training.part) }
@@ -84,20 +102,26 @@
                   %small= "#{training.period} / #{training.level}"
             - else
               .learning-empty
-                %p 今の課題はよく進んでいます。この調子で続けよう。
+                %strong 今の課題はよく進んでいます
+                %p 次の課題が追加されるまで、できた練習を先生に伝えながらこの調子で続けよう。
 
       .learning-two-column
         .learning-section
           .learning-section__header
             %h2 取り組み中のメニュー
           .learning-stack
-            - @current_trainings.each do |training|
-              .learning-training-card{ style: learning_progress_style(training.part) }
-                .learning-training-card__header
-                  %strong= training.title
-                  %span= learning_mark_label(training.achievement_mark)
-                %p= training.description
-                %small= "#{training.period} / #{training.level} / #{training.frequency.presence || '頻度未設定'}"
+            - if @current_trainings.any?
+              - @current_trainings.each do |training|
+                .learning-training-card{ id: "training-#{training.id}", style: learning_progress_style(training.part) }
+                  .learning-training-card__header
+                    %strong= training.title
+                    %span= learning_mark_label(training.achievement_mark)
+                  %p= training.description
+                  %small= "#{training.period} / #{training.level} / #{training.frequency.presence || '頻度未設定'}"
+            - else
+              .learning-empty.learning-empty--action
+                %strong 課題は先生が準備中です
+                %p 最初の課題が届くと、ここに練習内容・目標・先生からのコメントが表示されます。
 
         .learning-section
           .learning-section__header
@@ -113,4 +137,5 @@
                   %small= log.comment.presence || "コメントなし"
             - else
               .learning-empty
-                %p これからの記録がここに増えていきます。
+                %strong 最初の記録を楽しみにしています
+                %p 練習記録が増えると、努力ポイントや成長率に少しずつ反映されます。まずは今日のおすすめ練習から始めよう。

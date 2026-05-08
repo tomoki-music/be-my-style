@@ -22,15 +22,21 @@
       %h2 成長ロードマップ
       %small= "#{learning_part_label(@student.main_part)} の全体スケジュール"
     .learning-roadmap
-      - @training_schedule.each do |entry|
-        .learning-roadmap__card{ class: "is-#{entry[:state]}" }
-          .learning-roadmap__period= entry[:period]
-          .learning-roadmap__levels= entry[:levels].join(" / ")
-          %strong.learning-roadmap__count= "#{entry[:count]}メニュー"
-          %small.learning-muted= "達成 #{entry[:completed_count]} / #{entry[:count]}"
-          %p.learning-roadmap__titles= entry[:titles].first(3).join(" / ")
-          - if entry[:titles].size > 3
-            %small.learning-muted= "ほか #{entry[:titles].size - 3} 件"
+      - if @training_schedule.any?
+        - @training_schedule.each do |entry|
+          .learning-roadmap__card{ class: "is-#{entry[:state]}" }
+            .learning-roadmap__period= entry[:period]
+            .learning-roadmap__levels= entry[:levels].join(" / ")
+            %strong.learning-roadmap__count= "#{entry[:count]}メニュー"
+            %small.learning-muted= "達成 #{entry[:completed_count]} / #{entry[:count]}"
+            %p.learning-roadmap__titles= entry[:titles].first(3).join(" / ")
+            - if entry[:titles].size > 3
+              %small.learning-muted= "ほか #{entry[:titles].size - 3} 件"
+      - else
+        .learning-empty.learning-empty--action
+          %strong ロードマップはマスター登録後に表示されます
+          %p= "#{@student.name} さんのパートに合うトレーニングマスターを登録すると、期間ごとの育成計画が見えるようになります。"
+          = link_to "マスターを追加", new_learning_training_master_path, class: "learning-button learning-button--ghost"
 
   .learning-two-column
     .learning-section
@@ -104,20 +110,27 @@
             %th コメント
             %th 操作
         %tbody{ data: { learning_sortable: true, reorder_url: reorder_learning_student_student_trainings_path(@student) } }
-          - @student_trainings.each do |training|
-            %tr{ data: { training_id: training.id } }
-              %td.learning-drag-handle ↕
-              %td
-                %strong= training.title
-                %div.learning-muted= "#{learning_part_label(training.part)} / #{training.period} / #{training.level}"
-                %div.learning-muted= truncate(training.description, length: 80)
-              %td= learning_training_status_label(training.status)
-              %td
-                .learning-mark-buttons
-                  - LearningCatalog::ACHIEVEMENT_MARKS.each do |mark, label|
-                    = button_to label, mark_learning_student_training_path(training, achievement_mark: mark), method: :patch, class: "learning-mark-button #{'is-active' if training.achievement_mark == mark}"
-              %td= training.weekly_goal.presence || "-"
-              %td= training.teacher_comment.presence || "-"
-              %td.learning-table__actions
-                = link_to "編集", edit_learning_student_training_path(training), class: "learning-text-link"
-                = link_to "削除", learning_student_training_path(training), method: :delete, data: { confirm: "削除しますか？" }, class: "learning-text-link learning-text-link--danger"
+          - if @student_trainings.any?
+            - @student_trainings.each do |training|
+              %tr{ data: { training_id: training.id } }
+                %td.learning-drag-handle ↕
+                %td
+                  %strong= training.title
+                  %div.learning-muted= "#{learning_part_label(training.part)} / #{training.period} / #{training.level}"
+                  %div.learning-muted= truncate(training.description, length: 80)
+                %td= learning_training_status_label(training.status)
+                %td
+                  .learning-mark-buttons
+                    - LearningCatalog::ACHIEVEMENT_MARKS.each do |mark, label|
+                      = button_to label, mark_learning_student_training_path(training, achievement_mark: mark), method: :patch, class: "learning-mark-button #{'is-active' if training.achievement_mark == mark}"
+                %td= training.weekly_goal.presence || "-"
+                %td= training.teacher_comment.presence || "-"
+                %td.learning-table__actions
+                  = link_to "編集", edit_learning_student_training_path(training), class: "learning-text-link"
+                  = link_to "削除", learning_student_training_path(training), method: :delete, data: { confirm: "削除しますか？" }, class: "learning-text-link learning-text-link--danger"
+          - else
+            %tr
+              %td{ colspan: 7 }
+                .learning-empty.learning-empty--action
+                  %strong 最初のトレーニングを1つ割り当てましょう
+                  %p 割当があると、生徒ポータルに「今日やること」が表示され、努力ポイントや成長率の運用を始められます。
