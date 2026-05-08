@@ -201,6 +201,83 @@ RSpec.describe "Singing::SeasonHistories", type: :request do
           expect(response.body).to include(singing_rankings_path)
         end
       end
+
+      context "成長エントリが存在する場合" do
+        let!(:closed_season) do
+          create(:singing_ranking_season, :closed, name: "2026年4月シーズン")
+        end
+        let!(:entry) do
+          create(:singing_season_ranking_entry,
+                 singing_ranking_season: closed_season,
+                 customer: customer,
+                 category: "overall",
+                 rank: 3,
+                 score: 80)
+        end
+        let!(:growth_entry) do
+          create(:singing_season_ranking_entry,
+                 singing_ranking_season: closed_season,
+                 customer: customer,
+                 category: "growth",
+                 rank: 2,
+                 score: 12)
+        end
+
+        it "成長幅スコアが表示されること" do
+          get singing_season_histories_path
+
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("成長幅")
+          expect(response.body).to include("+12")
+        end
+      end
+
+      context "参加回数が1回以上ある場合" do
+        let!(:active_season) do
+          create(:singing_ranking_season, :current, name: "2026年5月シーズン")
+        end
+        let!(:entry) do
+          create(:singing_season_ranking_entry,
+                 singing_ranking_season: active_season,
+                 customer: customer,
+                 category: "overall",
+                 rank: 5,
+                 score: 75)
+        end
+
+        before do
+          create(:singing_diagnosis, :completed, :ranking_participant,
+                 customer: customer,
+                 diagnosed_at: active_season.starts_on + 1.day)
+          create(:singing_diagnosis, :completed, :ranking_participant,
+                 customer: customer,
+                 diagnosed_at: active_season.starts_on + 3.days)
+        end
+
+        it "参加回数が表示されること" do
+          get singing_season_histories_path
+
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("参加回数")
+        end
+      end
+
+      context "CTAセクション" do
+        it "今月の積み重ねを促すCTAメッセージが表示されること" do
+          get singing_season_histories_path
+
+          expect(response.body).to include("過去の積み重ねが、次の称号につながります")
+          expect(response.body).to include("今月も診断して")
+        end
+
+        it "診断・ランキング・バッジへのCTAリンクが含まれること" do
+          get singing_season_histories_path
+
+          expect(response.body).to include(new_singing_diagnosis_path)
+          expect(response.body).to include(singing_rankings_path)
+          expect(response.body).to include(singing_badges_path)
+        end
+      end
     end
   end
 end

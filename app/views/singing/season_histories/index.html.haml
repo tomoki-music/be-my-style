@@ -52,13 +52,25 @@
                         %strong= h.score
                       - else
                         %span.singing-history__result-pending 集計中
+                  - if h.growth_score.present?
+                    .singing-history__result-item.singing-history__result-item--growth
+                      %span.singing-history__result-label 成長幅
+                      %span.singing-history__result-value
+                        %strong= "+#{h.growth_score}"
+                        %small 点
+                  - if h.diagnosis_count > 0
+                    .singing-history__result-item
+                      %span.singing-history__result-label 参加回数
+                      %span.singing-history__result-value
+                        %strong= h.diagnosis_count
+                        %small 回
 
                 - if h.badges.any?
                   .singing-history__badges
                     - h.badges.each do |badge|
-                      %span.singing-history__badge{ title: badge.label }
-                        = badge.emoji
-                        = badge.label
+                      .singing-history__badge{ title: badge.label }
+                        %span.singing-history__badge-emoji= badge.emoji
+                        %span.singing-history__badge-label= badge.label
 
               - else
                 .singing-history__no-entry
@@ -88,6 +100,16 @@
           %br
           まずは診断を受けてみましょう。
         = link_to "歌唱・演奏診断を始める", new_singing_diagnosis_path, class: "btn btn-primary singing-history__empty-btn"
+
+    .singing-history__cta
+      %p.singing-history__cta-message
+        過去の積み重ねが、次の称号につながります。
+        %br
+        今月も診断して、新しい実績を増やしましょう。
+      .singing-history__cta-buttons
+        = link_to "もう一度診断する", new_singing_diagnosis_path, class: "btn btn-primary"
+        = link_to "今月のランキングを見る", singing_rankings_path, class: "btn btn-secondary"
+        = link_to "バッジ一覧を見る", singing_badges_path, class: "btn btn-secondary"
 
     .singing-history__nav
       = link_to singing_badges_path, class: "singing-history__nav-link" do
