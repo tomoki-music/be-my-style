@@ -6228,6 +6228,8 @@ $ranking-accent: #7c4dff;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
+  width: 100%;
 }
 
 .singing-diagnosis__next-badge-label {
@@ -6240,6 +6242,34 @@ $ranking-accent: #7c4dff;
   color: #0369a1;
   font-size: 12px;
   margin: 0;
+}
+
+.singing-diagnosis__next-badge-progress {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(80px, 1fr) auto;
+  margin-top: 6px;
+}
+
+.singing-diagnosis__next-badge-progress-track {
+  background: #e0f2fe;
+  border-radius: 999px;
+  height: 7px;
+  overflow: hidden;
+}
+
+.singing-diagnosis__next-badge-progress-fill {
+  background: linear-gradient(90deg, #0ea5e9, #22c55e);
+  border-radius: inherit;
+  height: 100%;
+}
+
+.singing-diagnosis__next-badge-progress-label {
+  color: #0c4a6e;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .singing-diagnosis__next-badges-action {
@@ -6255,4 +6285,89 @@ $ranking-accent: #7c4dff;
   &:hover {
     text-decoration: underline;
   }
+}
+
+.singing-profile__next-badges {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-top: 16px;
+  padding: 14px;
+}
+
+.singing-profile__next-badges h3 {
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 800;
+  margin: 0 0 10px;
+}
+
+.singing-profile__next-badge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.singing-profile__next-badge-item {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.singing-profile__next-badge-emoji {
+  flex-shrink: 0;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.singing-profile__next-badge-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  width: 100%;
+}
+
+.singing-profile__next-badge-label {
+  color: #111827;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.singing-profile__next-badge-description {
+  color: #4b5563;
+  font-size: 12px;
+  margin: 0;
+}
+
+.singing-profile__next-badge-progress {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(72px, 1fr) auto;
+  margin-top: 5px;
+}
+
+.singing-profile__next-badge-progress-track {
+  background: #e5e7eb;
+  border-radius: 999px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.singing-profile__next-badge-progress-fill {
+  background: linear-gradient(90deg, #0ea5e9, #22c55e);
+  border-radius: inherit;
+  height: 100%;
+}
+
+.singing-profile__next-badge-progress-label {
+  color: #374151;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
 }

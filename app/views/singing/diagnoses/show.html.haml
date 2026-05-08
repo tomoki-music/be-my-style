@@ -125,12 +125,17 @@
             %h2.singing-diagnosis__next-badges-title 次に狙えるバッジ
           .singing-diagnosis__next-badges-list
             - @next_badges.each do |hint|
-              - emoji = Singing::NextBadgeService::BADGE_EMOJI[hint.key] || "🎯"
+              - emoji = hint.respond_to?(:icon) && hint.icon.present? ? hint.icon : (Singing::NextBadgeService::BADGE_EMOJI[hint.key] || "🎯")
               .singing-diagnosis__next-badge-item
                 %span.singing-diagnosis__next-badge-emoji= emoji
                 .singing-diagnosis__next-badge-body
                   %strong.singing-diagnosis__next-badge-label= hint.label
                   %p.singing-diagnosis__next-badge-description= hint.description
+                  - if hint.respond_to?(:progress_label) && hint.progress_label.present?
+                    .singing-diagnosis__next-badge-progress
+                      .singing-diagnosis__next-badge-progress-track
+                        .singing-diagnosis__next-badge-progress-fill{ style: "width: #{hint.progress_percent.to_i.clamp(0, 100)}%" }
+                      %span.singing-diagnosis__next-badge-progress-label= hint.progress_label
           .singing-diagnosis__next-badges-action
             = link_to "もう一度診断する →", new_singing_diagnosis_path, class: "singing-diagnosis__next-badges-cta"
 

@@ -19,6 +19,7 @@ class Singing::UsersController < Singing::BaseController
                           .order(awarded_at: :desc)
     @profile_title = Singing::ProfileTitleService.call(@season_badges)
     @ranking_badges = Singing::RankingBadgeService.badges_for(@user)
+    @next_badges = current_customer == @user ? Singing::NextBadgeService.call(@user) : []
     @growth_entries = Singing::RankingQuery.growth
     @growth_index = @growth_entries.index { |entry| entry.customer.id == @user.id }
     @growth_entry = @growth_index.present? ? @growth_entries[@growth_index] : nil
