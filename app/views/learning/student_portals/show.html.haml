@@ -32,6 +32,23 @@
           = [@student.learning_school_group&.name, @student.grade.presence].compact.join(" / ").presence || "今週の目標と進捗を確認できます。"
 
     .learning-content
+      .learning-start-guide
+        .learning-start-guide__header
+          .learning-start-guide__title
+            %span.learning-start-guide__eyebrow 7日間スタートガイド
+            %h2= @start_guide.completed? ? "1週間達成！" : "あと#{@start_guide.remaining_days}日で達成"
+            %p= @start_guide.current_step.body
+          .learning-start-guide__meter
+            %strong= "#{@start_guide.completed_days} / 7"
+            %span 日完了
+        .learning-progress.learning-start-guide__progress{ style: learning_progress_style(@student.main_part) }
+          .learning-progress__bar{ style: "width: #{learning_progress_bar_width(@start_guide.progress_percent)}%" }
+        .learning-start-guide__steps
+          - @start_guide.steps.each do |step|
+            .learning-start-guide-step{ class: "#{'is-complete' if step.completed} #{'is-current' if step.current}" }
+              %span= "Day#{step.day}"
+              %strong= step.title
+
       - if @today_task.present? && !@today_task.empty?
         .learning-first-action{ style: learning_progress_style(@today_task.training.part) }
           .learning-first-action__body
@@ -39,6 +56,10 @@
             %h2
               = @today_task.title
               %small= "（#{@today_task.duration_label}）"
+            .learning-first-action__meta
+              %span= "優先度: #{@today_task.priority_label}"
+              %span= "連続日数: #{@current_streak}日"
+              %span= @yesterday_training_title.present? ? "昨日: #{@yesterday_training_title}" : "昨日: 記録なし"
             %p
               = @today_task.reason
               。まずこの1つをやると、今日の練習が前に進みます。
@@ -54,7 +75,14 @@
         .learning-section.learning-student-nudge
           .learning-section__header
             %h2 今のあなたへの一言
-          %p.learning-student-nudge__text= @student_feedback
+          %p.learning-student-nudge__text= @student_feedback.headline
+          .learning-feedback-list
+            %p
+              %strong 前回との変化
+              = @student_feedback.change
+            %p
+              %strong 次にやるべきこと
+              = @student_feedback.next_action
 
         .learning-section.learning-student-nudge
           .learning-section__header
@@ -62,6 +90,15 @@
           .learning-inline-tags
             - @part_recommendations.each do |recommendation|
               %span.learning-part-tag= recommendation
+
+      .learning-section.learning-badge-panel
+        .learning-section__header
+          %h2 継続バッジ
+        .learning-badge-list
+          - @student_badges.each do |badge|
+            .learning-retention-badge{ class: ("is-earned" if badge.earned) }
+              %span= badge.earned ? "✓" : "○"
+              %strong= badge.label
 
       .learning-stat-grid
         .learning-stat-card{ style: learning_progress_style(@student.main_part) }

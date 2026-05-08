@@ -27,7 +27,11 @@ class Learning::StudentPortalsController < ApplicationController
     @show_tutorial   = !@student.tutorial_completed?
     @ranking         = @student.rank_within_group
     @today_task      = Learning::FirstDayExperience.today_task(@student)
-    @student_feedback = Learning::FirstDayExperience.feedback(@student, streak_count: @current_streak)
+    start_guide_service = Learning::StartGuideService.new(@student)
+    @start_guide = start_guide_service.guide
+    @student_feedback = start_guide_service.feedback
+    @student_badges = start_guide_service.badges
+    @yesterday_training_title = start_guide_service.yesterday_summary
     @part_recommendations = Learning::FirstDayExperience.recommendations_for(@student)
   end
 

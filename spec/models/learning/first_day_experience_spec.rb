@@ -107,6 +107,7 @@ RSpec.describe Learning::FirstDayExperience do
       expect(task.title).to eq("基礎リズム練習")
       expect(task.duration_label).to eq("5分")
       expect(task.reason).to include("安定")
+      expect(task.priority_label).to eq("最優先")
     end
 
     it "割当がない場合は準備中を返すこと" do

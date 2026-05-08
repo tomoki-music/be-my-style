@@ -15,6 +15,7 @@ class Learning::TeacherDashboardsController < Learning::BaseController
     @teacher_next_action = Learning::FirstDayExperience.teacher_action(current_customer, routes: self)
     @weekly_growth = build_weekly_growth
     @weekly_progress_points = Learning::FirstDayExperience.weekly_progress_points(current_customer)
+    @weekly_review = Learning::WeeklyReviewService.new(current_customer, students: @students).build
     @last_practiced_on_by_student = current_customer.learning_progress_logs
       .where(learning_student_id: @students.map(&:id))
       .group(:learning_student_id)
