@@ -57,6 +57,28 @@
 
   .learning-section
     .learning-section__header
+      %h2 今、声かけしたい生徒
+      = link_to "生徒一覧を見る", learning_students_path, class: "learning-button learning-button--ghost learning-button--sm"
+    - if @weekly_review.stagnant_students.any?
+      .learning-voice-list
+        - @weekly_review.stagnant_students.each do |item|
+          .learning-voice-item
+            .learning-voice-item__head
+              .learning-voice-item__student
+                %strong= item.student.display_name
+                %span= item.last_practiced_on ? "最終実施日: #{l(item.last_practiced_on, format: :short)}" : "最終実施日: まだ記録なし"
+              %span.learning-voice-item__status= item.status_label
+            .learning-voice-item__template
+              %label 声かけテンプレ
+              %textarea.learning-copy-textarea{ readonly: true, rows: 2 }= item.template
+            = link_to "詳細を見る", learning_student_path(item.student), class: "learning-button learning-button--ghost learning-button--sm"
+    - else
+      .learning-empty
+        %strong 今すぐ声かけが必要な生徒はいません
+        %p 3日以上止まった生徒や記録がない生徒が出ると、ここにテンプレ付きで表示されます。
+
+  .learning-section
+    .learning-section__header
       %h2 今週のまとめ
       = link_to "声かけしましょう", learning_students_path, class: "learning-button learning-button--ghost learning-button--sm"
     .learning-review-grid

@@ -67,4 +67,16 @@ RSpec.describe Learning::StartGuideService do
       expect(described_class.new(student).yesterday_summary).to eq("リズム確認")
     end
   end
+
+  describe "#comeback?" do
+    it "3日以上未実施なら復帰メッセージ対象にすること" do
+      create(:learning_progress_log, customer: customer, learning_student: student,
+                                    practiced_on: 3.days.ago.to_date)
+
+      service = described_class.new(student)
+
+      expect(service.idle_days).to eq(3)
+      expect(service).to be_comeback
+    end
+  end
 end

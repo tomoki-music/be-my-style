@@ -32,6 +32,15 @@
           = [@student.learning_school_group&.name, @student.grade.presence].compact.join(" / ").presence || "今週の目標と進捗を確認できます。"
 
     .learning-content
+      - if @show_comeback_message
+        .learning-comeback
+          .learning-comeback__body
+            %span.learning-comeback__eyebrow おかえりなさい
+            %h2 ここから再スタートできます
+            %p= "#{@idle_days}日空いていても大丈夫です。今日やることを1つだけ選べば、また流れに戻れます。"
+          - unless @today_task.empty?
+            = link_to "今日やることへ", "##{@today_task.cta_anchor}", class: "learning-button"
+
       .learning-start-guide
         .learning-start-guide__header
           .learning-start-guide__title
@@ -99,6 +108,10 @@
             .learning-retention-badge{ class: ("is-earned" if badge.earned) }
               %span= badge.earned ? "✓" : "○"
               %strong= badge.label
+
+      .learning-community-pulse
+        %strong= "今週は#{@weekly_active_student_count}人が練習しています"
+        %span ひとりで頑張るより、少し戻りやすい流れを部活全体で作っています。
 
       .learning-stat-grid
         .learning-stat-card{ style: learning_progress_style(@student.main_part) }
