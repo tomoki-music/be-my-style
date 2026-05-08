@@ -29,7 +29,7 @@ jobs:
         ssh \
           -o StrictHostKeyChecking=no \
           -o ServerAliveInterval=30 \
-          -o ServerAliveCountMax=10 \
+          -o ServerAliveCountMax=20 \
           -i private_key \
           "${EC2_USER}@${EC2_HOST}" "DEPLOY_PATH='${DEPLOY_PATH}' bash -s" << 'EOF'
           set -euo pipefail
@@ -65,7 +65,13 @@ jobs:
           echo "[deploy] assets:clobber finished: $(date '+%H:%M:%S')"
 
           echo "[deploy] assets:precompile start: $(date '+%H:%M:%S')"
-          RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:precompile
+          (RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:precompile) &
+          PRECOMPILE_PID=$!
+          while kill -0 "$PRECOMPILE_PID" 2>/dev/null; do
+            echo "[deploy] assets:precompile still running: $(date '+%H:%M:%S')"
+            sleep 30
+          done
+          wait "$PRECOMPILE_PID"
           echo "[deploy] assets:precompile finished: $(date '+%H:%M:%S')"
 
           echo "[deploy] db:migrate start: $(date '+%H:%M:%S')"
