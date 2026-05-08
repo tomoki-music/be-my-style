@@ -1,0 +1,75 @@
+= render "learning/shared/page", title: "顧問ダッシュボード", subtitle: "生徒の進捗・努力ポイントを一覧確認できます。" do
+
+  -# 月次サマリー
+  - report = @monthly_report
+  .learning-stat-grid
+    .learning-stat-card
+      %span.learning-stat-card__label 在籍生徒数
+      %strong.learning-stat-card__value= @students.count
+      %p.learning-stat-card__sub アクティブな生徒
+    .learning-stat-card
+      %span.learning-stat-card__label 今月の練習記録
+      %strong.learning-stat-card__value= report.persisted? ? report.total_progress_logs : "-"
+      %p.learning-stat-card__sub= report.persisted? ? report.month_label : "未集計"
+    .learning-stat-card
+      %span.learning-stat-card__label 平均達成率
+      %strong.learning-stat-card__value= report.persisted? ? "#{report.avg_achievement_rate}%" : "-"
+      %p.learning-stat-card__sub 今月の全体平均
+    .learning-stat-card
+      %span.learning-stat-card__label 今月の課題達成
+      %strong.learning-stat-card__value= report.persisted? ? report.total_achieved_trainings : "-"
+      %p.learning-stat-card__sub ⭐ に更新された件数
+
+  -# グループフィルタ + CSVエクスポート
+  .learning-section
+    .learning-section__header
+      %h2 生徒一覧
+      = link_to "CSVエクスポート",
+                export_csv_learning_teacher_dashboard_path,
+                class: "learning-button learning-button--ghost",
+                data: { turbo: false }
+
+    - if @school_groups.any?
+      .learning-filter-form
+        %span.learning-filter-form__label グループで絞り込む:
+        = link_to "全員",
+                  learning_teacher_dashboard_path,
+                  class: "learning-button #{'learning-button--ghost' unless params[:group_id].nil?}"
+        - @school_groups.each do |group|
+          = link_to group.name,
+                    learning_teacher_dashboard_path(group_id: group.id),
+                    class: "learning-button #{'learning-button--ghost' unless params[:group_id].to_s == group.id.to_s}"
+
+    .learning-table-wrap
+      %table.learning-table
+        %thead
+          %tr
+            %th 名前
+            %th ニックネーム
+            %th パート
+            %th 学年
+            %th グループ
+            %th.text-right 達成率
+            %th.text-right 努力PT
+            %th 最終練習日
+            %th
+        %tbody
+          - @students.each do |student|
+            - last_log = student.learning_progress_logs.maximum(:practiced_on)
+            %tr
+              %td
+                = link_to student.name, learning_student_path(student)
+              %td.text-muted= student.nickname.presence || "-"
+              %td= learning_part_label(student.main_part)
+              %td= student.grade.presence || "-"
+              %td= student.learning_school_group&.name || "未所属"
+              %td.text-right
+                .learning-progress.learning-progress--compact{ style: learning_progress_style(student.main_part) }
+                  .learning-progress__bar{ style: "width: #{learning_progress_bar_width(student.achievement_rate)}%" }
+                %small= "#{student.achievement_rate}%"
+              %td.text-right
+                %strong= student.total_effort_points
+                %small PT
+              %td= last_log ? l(last_log, format: :short) : "-"
+              %td
+                = link_to "詳細", learning_student_path(student), class: "learning-button learning-button--ghost learning-button--sm"

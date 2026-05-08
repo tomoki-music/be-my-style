@@ -215,7 +215,11 @@ Rails.application.routes.draw do
     post "join", to: "joins#create"
 
     resource :dashboard, only: :show, controller: :dashboards
+    resource :teacher_dashboard, only: :show, controller: :teacher_dashboards do
+      get :export_csv, on: :collection
+    end
     get "portal/:token", to: "student_portals#show", as: :student_portal
+    post "portal/:token/complete_tutorial", to: "student_portals#complete_tutorial", as: :student_portal_complete_tutorial
     resources :school_groups
     resources :students do
       member do

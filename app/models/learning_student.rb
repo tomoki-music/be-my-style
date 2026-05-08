@@ -6,8 +6,11 @@ class LearningStudent < ApplicationRecord
   has_many :learning_progress_logs, dependent: :destroy
   has_many :learning_band_memberships, dependent: :destroy
   has_many :learning_bands, through: :learning_band_memberships
+  has_many :learning_effort_points, dependent: :destroy
+  has_many :learning_portal_accesses, dependent: :destroy
 
   validates :name, presence: true, length: { maximum: 50 }
+  validates :nickname, length: { maximum: 30 }, allow_blank: true
   validates :main_part, presence: true, inclusion: { in: LearningCatalog::PARTS.keys }
   validates :status, presence: true, inclusion: { in: LearningCatalog::STUDENT_STATUSES.keys }
   validates :grade, length: { maximum: 50 }
@@ -15,6 +18,7 @@ class LearningStudent < ApplicationRecord
     format: { with: URI::MailTo::EMAIL_REGEXP, message: "はメールアドレス形式で入力してください" }
 
   scope :ordered, -> { order(:name) }
+  scope :active, -> { where(status: "active") }
   scope :with_filters, lambda { |params|
     scope = all
     scope = scope.where(status: params[:status]) if params[:status].present?
@@ -28,6 +32,28 @@ class LearningStudent < ApplicationRecord
   }
 
   before_validation :ensure_public_access_token
+
+  def display_name
+    nickname.present? ? nickname : name
+  end
+
+  def achievement_rate
+    total = learning_student_trainings.count
+    return 0.0 if total.zero?
+
+    achieved = learning_student_trainings.where(status: "achieved").count
+    (achieved.to_f / total * 100).round(1)
+  end
+
+  def rank_within_group
+    return nil unless learning_school_group
+
+    siblings = learning_school_group.learning_students.active
+                                    .order(total_effort_points: :desc)
+                                    .pluck(:id)
+    pos = siblings.index(id)
+    pos ? pos + 1 : nil
+  end
 
   def displayed_parts
     codes = learning_student_parts.order(primary: :desc, part: :asc).pluck(:part)

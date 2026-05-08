@@ -10,6 +10,7 @@ class LearningProgressLog < ApplicationRecord
   validates :comment, length: { maximum: 1000 }
 
   before_validation :copy_training_fields, if: -> { learning_student_training.present? && training_title.blank? }
+  after_create :award_progress_log_point
 
   scope :recent_first, -> { order(practiced_on: :desc, created_at: :desc) }
   scope :with_filters, lambda { |params|
@@ -32,5 +33,26 @@ class LearningProgressLog < ApplicationRecord
   def copy_training_fields
     self.part = learning_student_training.part
     self.training_title = learning_student_training.title
+  end
+
+  def award_progress_log_point
+    # 同日の同じ課題への重複付与は防止する
+    already_awarded = LearningEffortPoint.exists?(
+      learning_student_id: learning_student_id,
+      point_type: "progress_log",
+      earned_on: practiced_on
+    )
+    return if already_awarded
+
+    LearningEffortPoint.create!(
+      customer_id: customer_id,
+      learning_student_id: learning_student_id,
+      point_type: "progress_log",
+      points: LearningEffortPoint::POINT_TYPES["progress_log"][:points],
+      description: "練習記録: #{training_title}",
+      earned_on: practiced_on
+    )
+    learning_student.increment!(:total_effort_points,
+                                LearningEffortPoint::POINT_TYPES["progress_log"][:points])
   end
 end
