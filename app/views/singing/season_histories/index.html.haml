@@ -32,45 +32,54 @@
 
             .singing-history__body
               - if h.participated?
-                - if h.active?
-                  %p.singing-history__challenge-note 今月のランキングに挑戦中
-                - else
-                  %p.singing-history__challenge-note 参加済み
+                - if h.ranking_participant?
+                  - if h.active?
+                    %p.singing-history__challenge-note 今月のランキングに挑戦中
+                  - else
+                    %p.singing-history__challenge-note 参加済み
 
-                .singing-history__result
-                  .singing-history__result-item
-                    %span.singing-history__result-label 順位
-                    %span.singing-history__result-value
-                      - if h.rank.present?
-                        %strong= "#{h.rank}位"
-                      - else
-                        %span.singing-history__result-pending 集計中
-                  .singing-history__result-item
-                    %span.singing-history__result-label スコア
-                    %span.singing-history__result-value
-                      - if h.score.present?
-                        %strong= h.score
-                      - else
-                        %span.singing-history__result-pending 集計中
-                  - if h.growth_score.present?
-                    .singing-history__result-item.singing-history__result-item--growth
-                      %span.singing-history__result-label 成長幅
+                  .singing-history__result
+                    .singing-history__result-item
+                      %span.singing-history__result-label 順位
                       %span.singing-history__result-value
-                        %strong= "+#{h.growth_score}"
-                        %small 点
-                  - if h.diagnosis_count > 0
+                        - if h.rank.present?
+                          %strong= "#{h.rank}位"
+                        - else
+                          %span.singing-history__result-pending 集計中
+                    .singing-history__result-item
+                      %span.singing-history__result-label スコア
+                      %span.singing-history__result-value
+                        - if h.score.present?
+                          %strong= h.score
+                        - else
+                          %span.singing-history__result-pending 集計中
+                    - if h.growth_score.present?
+                      .singing-history__result-item.singing-history__result-item--growth
+                        %span.singing-history__result-label 成長幅
+                        %span.singing-history__result-value
+                          %strong= "+#{h.growth_score}"
+                          %small 点
                     .singing-history__result-item
                       %span.singing-history__result-label 参加回数
                       %span.singing-history__result-value
                         %strong= h.diagnosis_count
                         %small 回
 
-                - if h.badges.any?
-                  .singing-history__badges
-                    - h.badges.each do |badge|
-                      .singing-history__badge{ title: badge.label }
-                        %span.singing-history__badge-emoji= badge.emoji
-                        %span.singing-history__badge-label= badge.label
+                  - if h.badges.any?
+                    .singing-history__badges
+                      - h.badges.each do |badge|
+                        .singing-history__badge{ title: badge.label }
+                          %span.singing-history__badge-emoji= badge.emoji
+                          %span.singing-history__badge-label= badge.label
+
+                - else
+                  %p.singing-history__challenge-note 診断実績あり
+                  .singing-history__result
+                    .singing-history__result-item
+                      %span.singing-history__result-label 参加回数
+                      %span.singing-history__result-value
+                        %strong= h.diagnosis_count
+                        %small 回
 
               - else
                 .singing-history__no-entry

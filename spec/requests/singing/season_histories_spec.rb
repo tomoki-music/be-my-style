@@ -62,6 +62,12 @@ RSpec.describe "Singing::SeasonHistories", type: :request do
                  score: 85)
         end
 
+        before do
+          create(:singing_diagnosis, :completed, :ranking_participant,
+                 customer: customer,
+                 diagnosed_at: active_season.starts_on + 1.day)
+        end
+
         it "順位とスコアが表示されること" do
           get singing_season_histories_path
 
@@ -91,6 +97,12 @@ RSpec.describe "Singing::SeasonHistories", type: :request do
                  singing_ranking_season: closed_season,
                  badge_type: "season_1st",
                  awarded_at: 10.days.ago)
+        end
+
+        before do
+          create(:singing_diagnosis, :completed, :ranking_participant,
+                 customer: customer,
+                 diagnosed_at: closed_season.starts_on + 1.day)
         end
 
         it "順位・スコア・バッジが表示されること" do
@@ -127,7 +139,12 @@ RSpec.describe "Singing::SeasonHistories", type: :request do
       end
 
       context "複数シーズンが存在する場合（N+1 チェック）" do
-        let!(:season_a) { create(:singing_ranking_season, :closed, name: "2026年3月シーズン") }
+        # season_a と season_b の日付範囲が重複しないよう、season_a は2ヶ月前に設定
+        let!(:season_a) do
+          create(:singing_ranking_season, :closed, name: "2026年3月シーズン",
+                 starts_on: 2.months.ago.to_date.beginning_of_month,
+                 ends_on: 2.months.ago.to_date.end_of_month)
+        end
         let!(:season_b) { create(:singing_ranking_season, :closed, name: "2026年4月シーズン") }
         let!(:season_c) { create(:singing_ranking_season, :current, name: "2026年5月シーズン") }
 
@@ -141,6 +158,12 @@ RSpec.describe "Singing::SeasonHistories", type: :request do
           create(:singing_season_ranking_entry,
                  singing_ranking_season: season_c, customer: customer,
                  category: "overall", rank: 2, score: 88)
+          create(:singing_diagnosis, :completed, :ranking_participant,
+                 customer: customer,
+                 diagnosed_at: season_a.starts_on + 1.day)
+          create(:singing_diagnosis, :completed, :ranking_participant,
+                 customer: customer,
+                 diagnosed_at: season_c.starts_on + 1.day)
         end
 
         it "全シーズンが正常に表示されること" do
@@ -223,6 +246,12 @@ RSpec.describe "Singing::SeasonHistories", type: :request do
                  score: 12)
         end
 
+        before do
+          create(:singing_diagnosis, :completed, :ranking_participant,
+                 customer: customer,
+                 diagnosed_at: closed_season.starts_on + 1.day)
+        end
+
         it "成長幅スコアが表示されること" do
           get singing_season_histories_path
 
@@ -259,6 +288,51 @@ RSpec.describe "Singing::SeasonHistories", type: :request do
 
           expect(response).to have_http_status(:ok)
           expect(response.body).to include("参加回数")
+        end
+      end
+
+      context "ランキング未参加でも完了診断がある場合" do
+        let!(:active_season) do
+          create(:singing_ranking_season, :current, name: "2026年5月シーズン")
+        end
+
+        before do
+          create(:singing_diagnosis, :completed,
+                 customer: customer,
+                 ranking_opt_in: false,
+                 diagnosed_at: active_season.starts_on + 1.day)
+        end
+
+        it "「診断実績あり」が表示されること" do
+          get singing_season_histories_path
+
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("診断実績あり")
+        end
+
+        it "「まだ参加していません」が表示されないこと" do
+          get singing_season_histories_path
+
+          expect(response.body).not_to include("まだ参加していません")
+        end
+
+        it "参加回数が表示されること" do
+          get singing_season_histories_path
+
+          expect(response.body).to include("参加回数")
+        end
+
+        it "順位・スコアが表示されないこと" do
+          get singing_season_histories_path
+
+          expect(response.body).not_to include("順位")
+          expect(response.body).not_to include("スコア")
+        end
+
+        it "今月の診断を始めるCTAが表示されないこと" do
+          get singing_season_histories_path
+
+          expect(response.body).not_to include("今月の診断を始める")
         end
       end
 
