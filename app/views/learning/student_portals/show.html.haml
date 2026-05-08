@@ -58,6 +58,11 @@
               %span= "Day#{step.day}"
               %strong= step.title
 
+      - if @reminder&.active?
+        .learning-student-reminder{ class: "learning-student-reminder--#{@reminder.level}" }
+          %strong 最近少し空いています
+          %span= @reminder.message
+
       - if @today_task.present? && !@today_task.empty?
         .learning-first-action{ style: learning_progress_style(@today_task.training.part) }
           .learning-first-action__body

@@ -27,6 +27,10 @@ class Learning::StudentPortalsController < ApplicationController
     @show_tutorial   = !@student.tutorial_completed?
     @ranking         = @student.rank_within_group
     @today_task      = Learning::FirstDayExperience.today_task(@student)
+    @reminder        = Learning::ReminderService.for_student(
+      @student,
+      last_practiced_on: @student.learning_progress_logs.maximum(:practiced_on)
+    )
     start_guide_service = Learning::StartGuideService.new(@student)
     @start_guide = start_guide_service.guide
     @student_feedback = start_guide_service.feedback

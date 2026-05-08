@@ -11,21 +11,29 @@ RSpec.describe Learning::ReminderService do
       expect(reminder).to be_active
       expect(reminder.stage).to eq(2)
       expect(reminder.tone).to eq("light")
+      expect(reminder.level).to eq("light")
       expect(reminder.message).to eq("少し間が空いています！1つだけやってみよう")
+      expect(reminder.recommended_action).to eq("今日やることを1つだけ開く")
+      expect(reminder.notification_type).to eq("2日")
+      expect(reminder.generated_at).to be_present
     end
 
     it "3日未実施は少し強めのリマインドを返すこと" do
       reminder = described_class.for_student(student, last_practiced_on: 3.days.ago.to_date)
 
       expect(reminder.stage).to eq(3)
+      expect(reminder.level).to eq("normal")
       expect(reminder.message).to eq("ここで戻ると差がつきます")
+      expect(reminder.recommended_action).to eq("短い練習を選んで再開する")
     end
 
     it "5日以上未実施は強めのリマインドを返すこと" do
       reminder = described_class.for_student(student, last_practiced_on: 8.days.ago.to_date)
 
       expect(reminder.stage).to eq(5)
+      expect(reminder.level).to eq("strong")
       expect(reminder.message).to eq("もう一度始めてみよう")
+      expect(reminder.recommended_action).to eq("先生から声かけして再スタートする")
     end
 
     it "1日以内または記録なしは対象外にすること" do

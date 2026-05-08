@@ -58,7 +58,9 @@
   .learning-section
     .learning-section__header
       %h2 今、声かけしたい生徒
-      = link_to "生徒一覧を見る", learning_students_path, class: "learning-button learning-button--ghost learning-button--sm"
+      .learning-section__actions
+        = link_to "通知ログを見る", learning_notifications_path, class: "learning-button learning-button--ghost learning-button--sm"
+        = link_to "生徒一覧を見る", learning_students_path, class: "learning-button learning-button--ghost learning-button--sm"
     - if @weekly_review.stagnant_students.any?
       .learning-voice-list
         - @weekly_review.stagnant_students.each do |item|
@@ -71,7 +73,14 @@
             .learning-voice-item__template
               %label 声かけテンプレ
               %textarea.learning-copy-textarea{ readonly: true, rows: 2 }= item.template
-            = link_to "詳細を見る", learning_student_path(item.student), class: "learning-button learning-button--ghost learning-button--sm"
+            .learning-voice-item__actions
+              %button.learning-button.learning-button--sm.learning-copy-button{ type: "button", data: { learning_copy_text: item.template } }
+                コピー
+              %span.learning-copy-status{ role: "status", aria: { live: "polite" } }
+              .learning-send-links{ hidden: true }
+                = link_to "LINEで送る", "https://line.me/R/msg/text/?#{u(item.template)}", class: "learning-button learning-button--ghost learning-button--sm", target: "_blank", rel: "noopener"
+                = mail_to "", "メールで送る", subject: "練習の声かけ", body: item.template, class: "learning-button learning-button--ghost learning-button--sm"
+              = link_to "詳細を見る", learning_student_path(item.student), class: "learning-button learning-button--ghost learning-button--sm"
     - else
       .learning-empty
         %strong 今すぐ声かけが必要な生徒はいません

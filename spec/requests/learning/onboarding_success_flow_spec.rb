@@ -32,6 +32,29 @@ RSpec.describe "Learning onboarding success flow", type: :request do
       expect(response.body).to include("ギターさん")
       expect(response.body).to include("停滞中")
       expect(response.body).to include("最近どう？少しだけでもやってみよう！")
+      expect(response.body).to include("コピー")
+      expect(response.body).to include("通知ログを見る")
+      expect(response.body).to include("LINEで送る")
+      expect(response.body).to include("メールで送る")
+    end
+  end
+
+  describe "GET /learning/notifications" do
+    before { sign_in teacher }
+
+    it "shows generated notification candidates without persistence" do
+      student = create(:learning_student, customer: teacher, nickname: "ギターさん")
+      create(:learning_progress_log, customer: teacher, learning_student: student,
+                                    practiced_on: 5.days.ago.to_date)
+
+      get learning_notifications_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("通知ログ")
+      expect(response.body).to include("ギターさん")
+      expect(response.body).to include("5日")
+      expect(response.body).to include("もう一度始めてみよう")
+      expect(response.body).to include("先生から声かけして再スタートする")
     end
   end
 
@@ -77,6 +100,7 @@ RSpec.describe "Learning onboarding success flow", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("おかえりなさい")
       expect(response.body).to include("ここから再スタートできます")
+      expect(response.body).to include("最近少し空いています")
     end
   end
 end
