@@ -6371,3 +6371,50 @@ $ranking-accent: #7c4dff;
   font-weight: 700;
   white-space: nowrap;
 }
+
+.singing-diagnosis__next-badges-message {
+  color: #0369a1;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.6;
+  margin: 0 0 12px;
+}
+
+.singing-diagnosis__next-badges-buttons {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.singing-profile__next-badge-cta {
+  border-top: 1px solid #e2e8f0;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.singing-profile__next-badge-cta-message {
+  color: #374151;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 10px;
+}
+
+.singing-profile__next-badge-cta-buttons {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 600px) {
+  .singing-diagnosis__next-badges-buttons,
+  .singing-profile__next-badge-cta-buttons {
+    flex-direction: column;
+    align-items: stretch;
+
+    .btn {
+      text-align: center;
+    }
+  }
+}

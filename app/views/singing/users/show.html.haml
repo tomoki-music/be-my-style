@@ -75,7 +75,7 @@
             %p 最初の診断が完了すると、ここに称号が表示されます。
             - if current_customer == @user
               = link_to "診断に挑戦する", new_singing_diagnosis_path
-        - if @next_badges.present?
+        - if @next_badges.present? && current_customer == @user
           .singing-profile__next-badges
             %h3 次に狙える称号
             .singing-profile__next-badge-list
@@ -91,6 +91,12 @@
                         .singing-profile__next-badge-progress-track
                           .singing-profile__next-badge-progress-fill{ style: "width: #{hint.progress_percent.to_i.clamp(0, 100)}%" }
                         %span.singing-profile__next-badge-progress-label= hint.progress_label
+            .singing-profile__next-badge-cta
+              %p.singing-profile__next-badge-cta-message 診断を重ねて、次の称号に近づきましょう。
+              .singing-profile__next-badge-cta-buttons
+                = link_to "診断に挑戦する", new_singing_diagnosis_path, class: "btn btn-primary"
+                = link_to "ランキングを見る", singing_rankings_path, class: "btn btn-secondary"
+                = link_to "バッジ一覧を見る", singing_badges_path, class: "btn btn-secondary"
 
       %section.singing-profile__section
         .singing-profile__section-head
