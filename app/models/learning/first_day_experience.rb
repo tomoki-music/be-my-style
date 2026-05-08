@@ -1,7 +1,8 @@
 module Learning
   class FirstDayExperience
     TeacherAction = Struct.new(:key, :title, :body, :cta_label, :cta_path, keyword_init: true)
-    TodayTask = Struct.new(:training, :title, :duration_label, :reason, :cta_anchor, :empty, keyword_init: true) do
+    TodayTask = Struct.new(:training, :title, :duration_label, :reason, :cta_anchor,
+                           :priority_label, :empty, keyword_init: true) do
       def empty?
         empty
       end
@@ -133,6 +134,7 @@ module Learning
         duration_label: duration_for(training),
         reason: PART_REASONS.fetch(training.part.to_s, "今日の練習が次の成長につながります"),
         cta_anchor: "training-#{training.id}",
+        priority_label: priority_for(training),
         empty: false
       )
     end
@@ -213,8 +215,16 @@ module Learning
         duration_label: nil,
         reason: "課題が届いたら、ここに今日やる練習が表示されます",
         cta_anchor: nil,
+        priority_label: "待機中",
         empty: true
       )
+    end
+
+    def priority_for(training)
+      return "最優先" if training.status == "not_started"
+      return "仕上げ" if training.achievement_mark == "triangle"
+
+      "継続"
     end
   end
 end

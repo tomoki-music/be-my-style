@@ -57,6 +57,42 @@
 
   .learning-section
     .learning-section__header
+      %h2 今週のまとめ
+      = link_to "声かけしましょう", learning_students_path, class: "learning-button learning-button--ghost learning-button--sm"
+    .learning-review-grid
+      .learning-review-card
+        %span.learning-review-card__label 今週の頑張った生徒
+        - if @weekly_review.top_students.any?
+          .learning-stack
+            - @weekly_review.top_students.each do |item|
+              = link_to learning_student_path(item.student), class: "learning-review-row" do
+                %strong= item.student.display_name
+                %span= item.label
+        - else
+          %p.learning-review-card__empty まだ今週の記録はありません。最初の記録が入ると上位3名が表示されます。
+      .learning-review-card
+        %span.learning-review-card__label 成長率上昇した生徒
+        - if @weekly_review.growth_students.any?
+          .learning-stack
+            - @weekly_review.growth_students.each do |item|
+              = link_to learning_student_path(item.student), class: "learning-review-row" do
+                %strong= item.student.display_name
+                %span= item.label
+        - else
+          %p.learning-review-card__empty 先週より記録が増えた生徒がここに表示されます。
+      .learning-review-card
+        %span.learning-review-card__label 停滞している生徒
+        - if @weekly_review.stagnant_students.any?
+          .learning-stack
+            - @weekly_review.stagnant_students.each do |item|
+              = link_to learning_student_path(item.student), class: "learning-review-row learning-review-row--alert" do
+                %strong= item.student.display_name
+                %span= item.last_practiced_on ? "#{item.days_idle}日未実施" : "記録なし"
+        - else
+          %p.learning-review-card__empty 3日以上止まっている生徒はいません。この調子で見守れます。
+
+  .learning-section
+    .learning-section__header
       %h2 今週の成長
       %small= "#{Date.current.beginning_of_week.strftime('%-m/%-d')} - #{Date.current.end_of_week.strftime('%-m/%-d')}"
     - if @weekly_growth[:progress_log_count].positive? || @weekly_growth[:completed_training_count].positive?
