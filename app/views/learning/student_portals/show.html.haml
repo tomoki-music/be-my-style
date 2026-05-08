@@ -1,9 +1,31 @@
+- if @show_tutorial
+  #portal-tutorial.portal-tutorial{ data: { complete_url: learning_student_portal_complete_tutorial_path(@student.public_access_token) } }
+    .portal-tutorial__backdrop
+    .portal-tutorial__card
+      .portal-tutorial__step{ data: { step: "1" } }
+        %h2.portal-tutorial__title ようこそ！
+        %p ここはあなただけの練習ポータルです。
+        %p 課題をこなすたびに
+          %strong 努力ポイント
+          がもらえます。
+        %button.learning-button.portal-tutorial__next{ data: { action: "next" } } 次へ
+      .portal-tutorial__step{ data: { step: "2" }, style: "display:none" }
+        %h2.portal-tutorial__title ポイントをためよう
+        %p
+          %strong 練習記録をつけると5PT
+        %p
+          %strong 課題を達成すると20PT
+        %p 毎週連続でアクセスすると
+          %strong ボーナスポイント
+          ももらえます！
+        %button.learning-button.portal-tutorial__done{ data: { action: "complete" } } はじめる！
+
 .learning-shell.learning-shell--portal
   .learning-main.learning-main--portal
     .learning-topbar
       .learning-topbar__text
         %p.learning-topbar__eyebrow Student Page
-        %h1= "#{@student.name} さんのトレーニング"
+        %h1= "#{@student.display_name} さんのトレーニング"
         %p.learning-topbar__subtitle
           = [@student.learning_school_group&.name, @student.grade.presence].compact.join(" / ").presence || "今週の目標と進捗を確認できます。"
 
@@ -18,6 +40,15 @@
           %span.learning-stat-card__label 達成数
           %strong.learning-stat-card__value= @summary[:achievement_count]
           %p.learning-stat-card__sub= "全 #{@summary[:total_count]} 件"
+        .learning-stat-card
+          %span.learning-stat-card__label 努力ポイント
+          %strong.learning-stat-card__value= "#{@effort_points}PT"
+          - if @ranking
+            %p.learning-stat-card__sub= "グループ #{@ranking}位"
+        .learning-stat-card
+          %span.learning-stat-card__label 連続アクセス
+          %strong.learning-stat-card__value= "#{@current_streak}日"
+          %p.learning-stat-card__sub= @current_streak >= 7 ? "すごい！続けてます" : "毎日チェックしよう"
         .learning-stat-card
           %span.learning-stat-card__label 今週の目標
           %strong.learning-stat-card__value= @summary[:weekly_goal].presence || "確認しよう"
