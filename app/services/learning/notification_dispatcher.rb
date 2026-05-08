@@ -10,10 +10,14 @@ module Learning
     end
 
     def preview
+      return [] unless notification_setting.reminder_enabled?
+
       reminders
     end
 
     def dispatch
+      return [] unless notification_setting.reminder_enabled?
+
       channels = @channels & CHANNELS
       return [] if channels.empty?
 
@@ -28,6 +32,10 @@ module Learning
 
     def reminders
       @reminders ||= ReminderService.for_customer(@customer)
+    end
+
+    def notification_setting
+      @notification_setting ||= NotificationSetting.effective_for(@customer)
     end
   end
 end

@@ -34,6 +34,8 @@ RSpec.describe "Learning onboarding success flow", type: :request do
       expect(response.body).to include("最近どう？少しだけでもやってみよう！")
       expect(response.body).to include("コピー")
       expect(response.body).to include("通知ログを見る")
+      expect(response.body).to include("通知設定：手動コピー")
+      expect(response.body).to include("通知設定を変更")
       expect(response.body).to include("LINEで送る")
       expect(response.body).to include("メールで送る")
     end

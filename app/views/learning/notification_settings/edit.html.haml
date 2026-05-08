@@ -1,0 +1,48 @@
+= render "learning/shared/page", title: "通知設定", subtitle: "LINE/メール連携の前に、顧問が通知方針を管理できるようにします。" do
+  .learning-section
+    .learning-section__header
+      %h2 通知方針
+      = link_to "通知ログを見る", learning_notifications_path, class: "learning-button learning-button--ghost learning-button--sm"
+
+    = form_with model: @notification_setting, url: learning_notification_settings_path, method: :patch, local: true, class: "learning-form learning-notification-settings-form" do |f|
+      .learning-setting-list
+        %label.learning-setting-toggle
+          .learning-setting-toggle__body
+            %strong 生徒リマインド通知
+            %span 2日/3日/5日空いた生徒を通知ログに表示します。
+          = f.check_box :reminder_enabled
+
+        %label.learning-setting-toggle
+          .learning-setting-toggle__body
+            %strong 顧問向け週次まとめ
+            %span 今後、週次サマリー配信に使う予定の設定です。
+          = f.check_box :teacher_summary_enabled
+
+        %label.learning-setting-toggle
+          .learning-setting-toggle__body
+            %strong 生徒復帰通知
+            %span 生徒が戻ってきた時の通知に使う予定の設定です。
+          = f.check_box :student_reactivation_enabled
+
+      .learning-form-group
+        %label 配信方法
+        .learning-channel-options
+          %label.learning-channel-option.is-active
+            = f.radio_button :delivery_channel, "manual"
+            .learning-channel-option__body
+              %strong 手動コピー
+              %span コピーUIから顧問が必要なタイミングで声かけします。
+          %label.learning-channel-option.is-disabled
+            = f.radio_button :delivery_channel, "email", disabled: true
+            .learning-channel-option__body
+              %strong メール：準備中
+              %span 実配信はまだ行いません。
+          %label.learning-channel-option.is-disabled
+            = f.radio_button :delivery_channel, "line", disabled: true
+            .learning-channel-option__body
+              %strong LINE：準備中
+              %span LINE連携前の安全な準備段階です。
+
+      .learning-inline-actions
+        = f.submit "保存する", class: "learning-button"
+        = link_to "顧問ダッシュボードへ", learning_teacher_dashboard_path, class: "learning-button learning-button--ghost"

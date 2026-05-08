@@ -226,6 +226,7 @@ Rails.application.routes.draw do
       get :export_csv, on: :collection
     end
     resources :notifications, only: :index
+    resource :notification_settings, only: [:edit, :update], controller: :notification_settings
     get "portal/:token", to: "student_portals#show", as: :student_portal
     post "portal/:token/complete_tutorial", to: "student_portals#complete_tutorial", as: :student_portal_complete_tutorial
     resources :school_groups

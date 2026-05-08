@@ -15,6 +15,14 @@ RSpec.describe Learning::NotificationDispatcher do
       expect(notifications.first.student).to eq(student)
       expect(notifications.first.level).to eq("normal")
     end
+
+    it "生徒リマインド通知OFFなら通知候補を返さないこと" do
+      create(:learning_notification_setting, customer: customer, reminder_enabled: false)
+      create(:learning_progress_log, customer: customer, learning_student: student,
+                                    practiced_on: 3.days.ago.to_date)
+
+      expect(described_class.new(customer).preview).to eq([])
+    end
   end
 
   describe "#dispatch" do

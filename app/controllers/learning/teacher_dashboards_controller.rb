@@ -11,6 +11,7 @@ class Learning::TeacherDashboardsController < Learning::BaseController
     @students = @students
                                 .ordered
     @monthly_report = LearningMonthlyReport.for_month(current_customer)
+    @notification_setting = Learning::NotificationSetting.effective_for(current_customer)
     @onboarding_status = Learning::OnboardingStatus.new(current_customer, routes: self)
     @teacher_next_action = Learning::FirstDayExperience.teacher_action(current_customer, routes: self)
     @weekly_growth = build_weekly_growth
