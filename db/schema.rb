@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_07_130000) do
+ActiveRecord::Schema.define(version: 2026_05_08_010001) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -404,6 +404,45 @@ ActiveRecord::Schema.define(version: 2026_05_07_130000) do
     t.index ["customer_id"], name: "index_learning_bands_on_customer_id"
   end
 
+  create_table "learning_effort_points", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "learning_student_id", null: false
+    t.string "point_type", null: false
+    t.integer "points", default: 0, null: false
+    t.string "description", limit: 100
+    t.date "earned_on", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_learning_effort_points_on_customer_id"
+    t.index ["learning_student_id", "earned_on"], name: "index_learning_effort_points_on_student_and_date"
+    t.index ["learning_student_id", "point_type", "earned_on"], name: "index_learning_effort_points_on_student_type_date"
+    t.index ["learning_student_id"], name: "index_learning_effort_points_on_learning_student_id"
+  end
+
+  create_table "learning_monthly_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.date "report_month", null: false
+    t.integer "total_students", default: 0, null: false
+    t.integer "total_progress_logs", default: 0, null: false
+    t.integer "total_achieved_trainings", default: 0, null: false
+    t.decimal "avg_achievement_rate", precision: 5, scale: 2, default: "0.0"
+    t.string "status", default: "generated", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id", "report_month"], name: "index_learning_monthly_reports_on_customer_and_month", unique: true
+    t.index ["customer_id"], name: "index_learning_monthly_reports_on_customer_id"
+  end
+
+  create_table "learning_portal_accesses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "learning_student_id", null: false
+    t.date "accessed_on", null: false
+    t.integer "streak_count", default: 1, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["learning_student_id", "accessed_on"], name: "index_learning_portal_accesses_unique_daily", unique: true
+    t.index ["learning_student_id"], name: "index_learning_portal_accesses_on_learning_student_id"
+  end
+
   create_table "learning_progress_logs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "learning_student_id", null: false
@@ -422,13 +461,29 @@ ActiveRecord::Schema.define(version: 2026_05_07_130000) do
     t.index ["learning_student_training_id"], name: "index_learning_progress_logs_on_learning_student_training_id"
   end
 
+  create_table "learning_school_applications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "school_name", limit: 100, null: false
+    t.string "advisor_name", limit: 50, null: false
+    t.string "email", null: false
+    t.integer "student_count"
+    t.text "message"
+    t.string "status", default: "pending", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["email"], name: "index_learning_school_applications_on_email"
+    t.index ["status"], name: "index_learning_school_applications_on_status"
+  end
+
   create_table "learning_school_groups", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.string "name", null: false
     t.text "memo"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "school_code", limit: 20
+    t.string "advisor_name", limit: 100
     t.index ["customer_id", "name"], name: "index_learning_school_groups_on_customer_id_and_name", unique: true
+    t.index ["customer_id", "school_code"], name: "index_learning_school_groups_on_customer_and_code", unique: true
     t.index ["customer_id"], name: "index_learning_school_groups_on_customer_id"
   end
 
@@ -479,6 +534,9 @@ ActiveRecord::Schema.define(version: 2026_05_07_130000) do
     t.bigint "learning_school_group_id"
     t.string "email"
     t.string "public_access_token"
+    t.string "nickname", limit: 30
+    t.boolean "tutorial_completed", default: false, null: false
+    t.integer "total_effort_points", default: 0, null: false
     t.index ["customer_id", "email"], name: "index_learning_students_on_customer_id_and_email"
     t.index ["customer_id", "learning_school_group_id"], name: "index_learning_students_on_customer_and_school_group"
     t.index ["customer_id", "name"], name: "index_learning_students_on_customer_id_and_name"
@@ -833,6 +891,10 @@ ActiveRecord::Schema.define(version: 2026_05_07_130000) do
   add_foreign_key "learning_band_trainings", "learning_bands"
   add_foreign_key "learning_band_trainings", "learning_training_masters"
   add_foreign_key "learning_bands", "customers"
+  add_foreign_key "learning_effort_points", "customers"
+  add_foreign_key "learning_effort_points", "learning_students"
+  add_foreign_key "learning_monthly_reports", "customers"
+  add_foreign_key "learning_portal_accesses", "learning_students"
   add_foreign_key "learning_progress_logs", "customers"
   add_foreign_key "learning_progress_logs", "learning_student_trainings"
   add_foreign_key "learning_progress_logs", "learning_students"

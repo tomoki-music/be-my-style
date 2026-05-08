@@ -1,0 +1,116 @@
+- content_for :title, "生徒向けスタートガイド"
+
+.lp-page-hero.lp-page-hero--student
+  .container
+    %p.lp-page-hero__eyebrow 部員のみなさんへ
+    %h1.lp-page-hero__title 練習を楽しく続けよう
+    %p.lp-page-hero__sub ポイントを貯めて、自分の成長を目で確認しながら練習できます。
+
+.lp-section
+  .container
+
+    -# ━━━━━━━━━━━━━━━━━━━━
+    -# 使い方
+    -# ━━━━━━━━━━━━━━━━━━━━
+    %h2.lp-section__title 使い方はとても簡単
+    .lp-steps
+      .lp-step
+        .lp-step__number 1
+        .lp-step__body
+          %h3.lp-step__title 顧問の先生からURLをもらう
+          %p.lp-step__desc
+            先生からLINEやメールでポータルURLが届きます。
+            ブックマークしておくと便利です。
+          .lp-step__note アカウント登録は不要です
+
+      .lp-step
+        .lp-step__number 2
+        .lp-step__body
+          %h3.lp-step__title 自分の課題を確認する
+          %p.lp-step__desc
+            ポータルを開くと、先生が設定してくれた課題と
+            達成マーク（⭐️△×）が表示されます。
+          .lp-step__note 「次にやること」が一目でわかります
+
+      .lp-step
+        .lp-step__number 3
+        .lp-step__body
+          %h3.lp-step__title 練習したら記録をつける
+          %p.lp-step__desc
+            練習したら記録ボタンを押してコメントを入れるだけ。
+            記録するたびにポイントがもらえます。
+          .lp-step__note 1回の記録で5ポイント！
+
+    -# ━━━━━━━━━━━━━━━━━━━━
+    -# ポイント説明
+    -# ━━━━━━━━━━━━━━━━━━━━
+    %h2.lp-section__title.mt-5 努力ポイントのルール
+    .lp-point-grid
+      .lp-point-card
+        .lp-point-card__icon 📝
+        %h3.lp-point-card__title 練習記録
+        .lp-point-card__value +5 PT
+        %p.lp-point-card__desc 練習したら記録するだけ。毎日でも貯まります。
+      .lp-point-card
+        .lp-point-card__icon ⭐
+        %h3.lp-point-card__title 課題達成
+        .lp-point-card__value +20 PT
+        %p.lp-point-card__desc 課題が⭐️になったらボーナス。大きく稼げます。
+      .lp-point-card
+        .lp-point-card__icon 🔥
+        %h3.lp-point-card__title 連続アクセス
+        .lp-point-card__value +10 PT
+        %p.lp-point-card__desc 7日連続でポータルを開くとボーナスポイント。
+
+    -# ━━━━━━━━━━━━━━━━━━━━
+    -# 練習の流れ
+    -# ━━━━━━━━━━━━━━━━━━━━
+    %h2.lp-section__title.mt-5 練習の流れ
+    .lp-flow
+      .lp-flow__item
+        .lp-flow__icon 📱
+        .lp-flow__body
+          %strong ポータルを開く
+          %p 今日やる課題を確認する
+      .lp-flow__arrow →
+      .lp-flow__item
+        .lp-flow__icon 🎸
+        .lp-flow__body
+          %strong 課題を練習する
+          %p 目標・達成基準を意識して取り組む
+      .lp-flow__arrow →
+      .lp-flow__item
+        .lp-flow__icon 📝
+        .lp-flow__body
+          %strong 記録する
+          %p コメントを残してポイントゲット
+      .lp-flow__arrow →
+      .lp-flow__item
+        .lp-flow__icon 📈
+        .lp-flow__body
+          %strong 成長を確認
+          %p 達成率・ランキングで自分の成長を実感
+
+    -# ━━━━━━━━━━━━━━━━━━━━
+    -# FAQ（生徒向け）
+    -# ━━━━━━━━━━━━━━━━━━━━
+    %h2.lp-section__title.mt-5 よくある質問
+    .lp-faq
+      .lp-faq__item
+        %p.lp-faq__q ポータルURLはどこでもらえますか？
+        %p.lp-faq__a 顧問の先生からLINEまたはメールで送ってもらえます。
+      .lp-faq__item
+        %p.lp-faq__q 課題の内容を自分で変えられますか？
+        %p.lp-faq__a 課題の追加・変更は先生のみ行えます。希望があれば先生に相談しましょう。
+      .lp-faq__item
+        %p.lp-faq__q ポイントはどこで確認できますか？
+        %p.lp-faq__a ポータルのトップに「努力ポイント」が表示されます。
+      .lp-faq__item
+        %p.lp-faq__q スマホを機種変更したらURLは変わりますか？
+        %p.lp-faq__a URLは変わりません。ブックマークを新しいスマホに移せばそのまま使えます。
+
+.lp-section.lp-section--light
+  .container.text-center
+    %h2.lp-section__title まずは先生にお願いしてみよう
+    %p.mb-4 このページを先生に見せるだけで、導入の第一歩になります。
+    = link_to "学校向け紹介ページを見る →", learning_school_path, class: "lp-btn lp-btn--primary lp-btn--lg"

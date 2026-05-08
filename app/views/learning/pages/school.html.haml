@@ -1,0 +1,211 @@
+- content_for :title, "学校向け紹介"
+- content_for :meta_description, "軽音部顧問のための練習管理プラットフォーム。生徒が自走できる仕組みを、無料でお試しいただけます。"
+
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-# HERO
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+.lp-hero
+  .container
+    .lp-hero__inner
+      .lp-hero__text
+        %p.lp-hero__eyebrow 🏫 高校軽音部向け
+        %h1.lp-hero__title
+          生徒が
+          %span.lp-hero__accent 自分で動ける
+          軽音部をつくろう
+        %p.lp-hero__lead
+          「次に何を練習すればいい？」と聞いてくる生徒を減らし、
+          %br
+          顧問の負担を下げながら部員の成長を可視化します。
+        .lp-hero__actions
+          %a.lp-btn.lp-btn--primary.lp-btn--lg{ href: learning_apply_path }
+            無料モニターに申し込む
+            %span.lp-btn__arrow →
+          %a.lp-btn.lp-btn--ghost{ href: learning_guide_path } 顧問ガイドを見る
+        .lp-hero__note 申し込み5分・費用ゼロ・いつでも退会OK
+      .lp-hero__visual
+        .lp-mock
+          .lp-mock__header
+            .lp-mock__dot
+            .lp-mock__dot
+            .lp-mock__dot
+          .lp-mock__body
+            .lp-mock__stat
+              %span.lp-mock__label 達成率
+              %strong.lp-mock__value 68%
+              .lp-mock__bar
+                .lp-mock__bar-fill{ style: "width:68%" }
+            .lp-mock__stat
+              %span.lp-mock__label 努力ポイント
+              %strong.lp-mock__value 240 PT
+            .lp-mock__card
+              %strong コード進行をマスター
+              %span.lp-mock__badge ⭐ 達成
+            .lp-mock__card
+              %strong リズムキープ練習
+              %span.lp-mock__badge.lp-mock__badge--wip 進行中
+
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-# 課題提起
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+.lp-section.lp-section--light
+  .container
+    %h2.lp-section__title こんな悩み、ありませんか？
+    .lp-pain-grid
+      .lp-pain-card
+        %span.lp-pain-card__icon 😰
+        %p.lp-pain-card__text 「次何を練習すればいい？」と聞かれ続ける
+      .lp-pain-card
+        %span.lp-pain-card__icon 📋
+        %p.lp-pain-card__text 生徒の進捗をノートや口頭で管理している
+      .lp-pain-card
+        %span.lp-pain-card__icon 😔
+        %p.lp-pain-card__text 頑張っている生徒が報われているか分からない
+      .lp-pain-card
+        %span.lp-pain-card__icon ⏰
+        %p.lp-pain-card__text 部活以外の時間に個別フォローできない
+
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-# 解決策
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+.lp-section
+  .container
+    %h2.lp-section__title BeMyStyle Learningが解決します
+    .lp-solution-grid
+      .lp-solution-card
+        .lp-solution-card__icon 📱
+        %h3.lp-solution-card__title 生徒専用ポータル
+        %p.lp-solution-card__body
+          URLを渡すだけで、生徒が自分の課題・コメントをいつでも確認できます。
+          登録不要で今日から使えます。
+      .lp-solution-card
+        .lp-solution-card__icon 🏆
+        %h3.lp-solution-card__title 努力ポイント＆ランキング
+        %p.lp-solution-card__body
+          練習記録のたびにポイント付与。グループ内ランキングで、
+          自分の成長が目に見えてわかります。
+      .lp-solution-card
+        .lp-solution-card__icon 📊
+        %h3.lp-solution-card__title 顧問ダッシュボード
+        %p.lp-solution-card__body
+          全生徒の達成率・最終練習日・努力ポイントを一覧表示。
+          CSVエクスポートで記録も残せます。
+      .lp-solution-card
+        .lp-solution-card__icon ✉️
+        %h3.lp-solution-card__title 週1リマインド通知
+        %p.lp-solution-card__body
+          メールアドレスを登録した生徒に、今週の目標と課題を
+          自動で送信します。
+
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-# 導入メリット（数字）
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+.lp-section.lp-section--accent
+  .container
+    %h2.lp-section__title.lp-section__title--white 導入で期待できる変化
+    .lp-number-grid
+      .lp-number-card
+        %strong.lp-number-card__value 5分
+        %p.lp-number-card__label 毎日の練習確認にかかる時間
+      .lp-number-card
+        %strong.lp-number-card__value 3ステップ
+        %p.lp-number-card__label 導入完了まで（最短15分）
+      .lp-number-card
+        %strong.lp-number-card__value ¥0
+        %p.lp-number-card__label モニター期間中の費用
+
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-# 機能一覧
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+.lp-section.lp-section--light
+  .container
+    %h2.lp-section__title 主な機能
+    .lp-feature-table
+      .lp-feature-row
+        .lp-feature-row__icon ✅
+        .lp-feature-row__body
+          %strong 個人課題管理
+          %span パート・レベル・期間別に課題を設定。達成マーク（⭐️△×）で進捗管理
+      .lp-feature-row
+        .lp-feature-row__icon ✅
+        .lp-feature-row__body
+          %strong バンド合わせ管理
+          %span バンド単位でも課題設定可能。メンバー全員の進捗を把握
+      .lp-feature-row
+        .lp-feature-row__icon ✅
+        .lp-feature-row__body
+          %strong 練習記録
+          %span 生徒が毎日の練習内容をログに残せる（コメント付き）
+      .lp-feature-row
+        .lp-feature-row__icon ✅
+        .lp-feature-row__body
+          %strong 努力ポイント自動付与
+          %span 記録するたびにポイントが貯まる。継続ボーナスも
+      .lp-feature-row
+        .lp-feature-row__icon ✅
+        .lp-feature-row__body
+          %strong グループ・ランキング
+          %span 高校単位でグルーピング。ポイントランキングで切磋琢磨
+      .lp-feature-row
+        .lp-feature-row__icon ✅
+        .lp-feature-row__body
+          %strong CSVエクスポート
+          %span 全生徒の達成率・ポイントをCSVで出力。記録提出にも活用可能
+
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-# モニター案内
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+.lp-section
+  .container
+    .lp-monitor-box
+      .lp-monitor-box__badge 無料モニター募集中
+      %h2.lp-monitor-box__title 2025年度、5校限定で無料モニターを募集しています
+      %p.lp-monitor-box__body
+        導入から運用まで開発チームが伴走します。
+        %br
+        フィードバックをいただくことで、よりよいサービスにしていきます。
+      .lp-monitor-box__list
+        %li ✅ 初期費用・月額費用すべて無料
+        %li ✅ データ移行・初期設定サポートあり
+        %li ✅ 担当者が導入をお手伝い
+        %li ✅ いつでも退会・データ削除可能
+      %a.lp-btn.lp-btn--primary.lp-btn--lg{ href: learning_apply_path }
+        無料モニターに申し込む
+        %span.lp-btn__arrow →
+      %p.lp-monitor-box__note
+        お申し込み後、2営業日以内にメールでご連絡します。
+
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-# FAQ
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+.lp-section.lp-section--light
+  .container
+    %h2.lp-section__title よくある質問
+    .lp-faq
+      .lp-faq__item
+        %p.lp-faq__q 生徒はアカウント登録が必要ですか？
+        %p.lp-faq__a URLを渡すだけで使えます。生徒側のアカウント登録は不要です。
+      .lp-faq__item
+        %p.lp-faq__q 個人情報の管理は安全ですか？
+        %p.lp-faq__a 生徒はニックネームのみで利用でき、実名・メールアドレスの登録は任意です。
+      .lp-faq__item
+        %p.lp-faq__q スマートフォンから使えますか？
+        %p.lp-faq__a はい。生徒ポータルはスマートフォンに最適化されています。
+      .lp-faq__item
+        %p.lp-faq__q 顧問が複数いる場合は？
+        %p.lp-faq__a 現在は1顧問1アカウントで運用いただいています。複数対応はロードマップに含まれています。
+
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-# 最終CTA
+-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+.lp-section.lp-cta-final
+  .container
+    %h2.lp-cta-final__title まずは無料でお試しください
+    %p.lp-cta-final__body 申し込みはメールアドレスだけ。5分で完了します。
+    %a.lp-btn.lp-btn--primary.lp-btn--xl{ href: learning_apply_path }
+      無料モニターに申し込む
+      %span.lp-btn__arrow →
+    .lp-cta-final__sub
+      %a{ href: learning_guide_path } 顧問ガイドを先に見る
+      %span ｜
+      %a{ href: learning_student_start_path } 生徒向けガイドを見る

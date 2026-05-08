@@ -1,0 +1,111 @@
+- content_for :title, "顧問向け操作ガイド"
+
+.lp-page-hero.lp-page-hero--guide
+  .container
+    %p.lp-page-hero__eyebrow 顧問の先生へ
+    %h1.lp-page-hero__title 導入から運用まで、3ステップで完結
+    %p.lp-page-hero__sub ほぼすべての操作はスマートフォンからできます。難しい設定は一切ありません。
+
+.lp-section
+  .container
+
+    -# ━━━━━━━━━━━━━━━━━━━━
+    -# 3ステップ
+    -# ━━━━━━━━━━━━━━━━━━━━
+    %h2.lp-section__title 導入手順（最短15分）
+    .lp-steps
+      .lp-step
+        .lp-step__number 1
+        .lp-step__body
+          %h3.lp-step__title アカウントを作成する
+          %p.lp-step__desc
+            メールアドレスとパスワードだけで登録できます。
+            %br
+            学校名・グループ名（「○○高校軽音部」など）を設定してください。
+          .lp-step__note
+            %strong 所要時間: 約3分
+
+      .lp-step
+        .lp-step__number 2
+        .lp-step__body
+          %h3.lp-step__title 生徒と課題を登録する
+          %p.lp-step__desc
+            生徒リストに部員を追加し、各自のパートに合わせた課題を割り当てます。
+            %br
+            課題テンプレートも用意していますので、最初から作る必要はありません。
+          .lp-step__note
+            %strong 所要時間: 1人あたり約2分（10人で20分目安）
+
+      .lp-step
+        .lp-step__number 3
+        .lp-step__body
+          %h3.lp-step__title ポータルURLを生徒に渡す
+          %p.lp-step__desc
+            生徒ごとに専用URLが自動生成されます。
+            %br
+            LINEやクラスルームで送れば、生徒はすぐに自分の課題を確認できます。
+          .lp-step__note
+            %strong メールアドレス登録で週1リマインドも自動送信
+
+    -# ━━━━━━━━━━━━━━━━━━━━
+    -# 運用方法
+    -# ━━━━━━━━━━━━━━━━━━━━
+    %h2.lp-section__title.mt-5 日々の運用方法
+    .lp-guide-cards
+      .lp-guide-card
+        .lp-guide-card__icon 📅
+        %h3.lp-guide-card__title 週1回（5分）
+        %p.lp-guide-card__body
+          ダッシュボードで全生徒の達成率・最終練習日を一覧確認。
+          %br
+          停滞している生徒にコメントを入れる。
+      .lp-guide-card
+        .lp-guide-card__icon 🗓️
+        %h3.lp-guide-card__title 月1回（10分）
+        %p.lp-guide-card__body
+          月次レポートを確認し、達成が多い生徒を表彰。
+          %br
+          CSVエクスポートで部活動記録として保存。
+      .lp-guide-card
+        .lp-guide-card__icon ⭐
+        %h3.lp-guide-card__title 課題達成時
+        %p.lp-guide-card__body
+          生徒が課題を達成したら、コメント欄で一言フィードバック。
+          %br
+          次の課題を追加して成長をつなぎます。
+
+    -# ━━━━━━━━━━━━━━━━━━━━
+    -# FAQ
+    -# ━━━━━━━━━━━━━━━━━━━━
+    %h2.lp-section__title.mt-5 よくある質問
+    .lp-faq
+      .lp-faq__item
+        %p.lp-faq__q 生徒が直接課題を編集することはできますか？
+        %p.lp-faq__a
+          いいえ。課題の追加・変更は顧問のみが行えます。
+          生徒は練習記録の登録と閲覧のみです。
+      .lp-faq__item
+        %p.lp-faq__q 部活を引退した生徒のデータは？
+        %p.lp-faq__a
+          ステータスを「卒業」に変更すると一覧から非表示になります。
+          データは保持されますのでCSVで取り出せます。
+      .lp-faq__item
+        %p.lp-faq__q 複数の顧問で使えますか？
+        %p.lp-faq__a
+          現在は1アカウントでの運用を想定しています。
+          複数顧問対応はロードマップに含まれています。
+      .lp-faq__item
+        %p.lp-faq__q バンド合わせの管理もできますか？
+        %p.lp-faq__a
+          はい。バンドを登録してメンバーを追加すると、バンド単位で課題を設定できます。
+      .lp-faq__item
+        %p.lp-faq__q データのバックアップ方法は？
+        %p.lp-faq__a
+          顧問ダッシュボードからCSVエクスポートができます。
+          月1回ダウンロードすることをおすすめします。
+
+.lp-section.lp-section--light
+  .container.text-center
+    %h2.lp-section__title 導入してみませんか？
+    %p.mb-4 まずは無料モニターで試してください。設定でお困りの際は担当者がサポートします。
+    = link_to "無料モニターに申し込む →", learning_apply_path, class: "lp-btn lp-btn--primary lp-btn--lg"
