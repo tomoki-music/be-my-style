@@ -71,6 +71,28 @@ RSpec.describe "Singing::Users", type: :request do
       expect(response.body).to include(%(href="#{edit_singing_user_path(singing_customer)}"))
     end
 
+    it "本人のプロフィールに次に狙える称号ヒントを表示すること" do
+      sign_in singing_customer
+      allow(Singing::NextBadgeService).to receive(:call).with(singing_customer).and_return([
+        Singing::NextBadgeService::Hint.new(
+          key: :consecutive_entry,
+          label: "連続参加まであと少し",
+          description: "あと1回参加で3シーズン連続参加！",
+          badge_type: "consecutive_entry",
+          icon: "🔥",
+          progress_label: "2 / 3 シーズン",
+          progress_percent: 66
+        )
+      ])
+
+      get singing_user_path(singing_customer)
+
+      expect(response.body).to include("次に狙える称号")
+      expect(response.body).to include("連続参加まであと少し")
+      expect(response.body).to include("あと1回参加で3シーズン連続参加！")
+      expect(response.body).to include("2 / 3 シーズン")
+    end
+
     it "ヘッダーにはプロフィールのみを表示し、プロフィール編集メニューは表示しないこと" do
       sign_in singing_customer
 
@@ -88,6 +110,14 @@ RSpec.describe "Singing::Users", type: :request do
 
       expect(response.body).not_to include("プロフィールを編集")
       expect(response.body).not_to include(%(href="#{edit_singing_user_path(singing_customer)}"))
+    end
+
+    it "他人のプロフィールには次に狙える称号ヒントを表示しないこと" do
+      sign_in other_customer
+
+      get singing_user_path(singing_customer)
+
+      expect(response.body).not_to include("次に狙える称号")
     end
 
     it "危険なURLをプロフィールリンクとして表示しないこと" do

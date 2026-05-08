@@ -75,6 +75,22 @@
             %p 最初の診断が完了すると、ここに称号が表示されます。
             - if current_customer == @user
               = link_to "診断に挑戦する", new_singing_diagnosis_path
+        - if @next_badges.present?
+          .singing-profile__next-badges
+            %h3 次に狙える称号
+            .singing-profile__next-badge-list
+              - @next_badges.each do |hint|
+                - emoji = hint.respond_to?(:icon) && hint.icon.present? ? hint.icon : (Singing::NextBadgeService::BADGE_EMOJI[hint.key] || "🎯")
+                .singing-profile__next-badge-item
+                  %span.singing-profile__next-badge-emoji= emoji
+                  .singing-profile__next-badge-body
+                    %strong.singing-profile__next-badge-label= hint.label
+                    %p.singing-profile__next-badge-description= hint.description
+                    - if hint.respond_to?(:progress_label) && hint.progress_label.present?
+                      .singing-profile__next-badge-progress
+                        .singing-profile__next-badge-progress-track
+                          .singing-profile__next-badge-progress-fill{ style: "width: #{hint.progress_percent.to_i.clamp(0, 100)}%" }
+                        %span.singing-profile__next-badge-progress-label= hint.progress_label
 
       %section.singing-profile__section
         .singing-profile__section-head

@@ -15,12 +15,17 @@
           %p.singing-badges__section-desc あと少しで手が届くバッジです。目標にして、もう一度診断に挑戦してみましょう。
         .singing-badges__next-list
           - @next_badges.each do |hint|
-            - emoji = Singing::NextBadgeService::BADGE_EMOJI[hint.key] || "🎯"
+            - emoji = hint.respond_to?(:icon) && hint.icon.present? ? hint.icon : (Singing::NextBadgeService::BADGE_EMOJI[hint.key] || "🎯")
             .singing-badges__next-item
               %span.singing-badges__next-item-emoji= emoji
               .singing-badges__next-item-body
                 %strong.singing-badges__next-item-label= hint.label
                 %p.singing-badges__next-item-description= hint.description
+                - if hint.respond_to?(:progress_label) && hint.progress_label.present?
+                  .singing-badges__next-item-progress
+                    .singing-badges__next-item-progress-track
+                      .singing-badges__next-item-progress-fill{ style: "width: #{hint.progress_percent.to_i.clamp(0, 100)}%" }
+                    %span.singing-badges__next-item-progress-label= hint.progress_label
         .singing-badges__next-actions
           = link_to new_singing_diagnosis_path, class: "btn btn-primary singing-badges__next-cta" do
             もう一度診断する →

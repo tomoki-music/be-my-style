@@ -13,6 +13,31 @@ RSpec.describe Singing::NextBadgeService, type: :service do
     described_class.call(customer).map(&:key)
   end
 
+  def hint_badge_types(customer)
+    described_class.call(customer).map(&:badge_type)
+  end
+
+  def create_monthly_season(starts_on:, status: "closed")
+    FactoryBot.create(
+      :singing_ranking_season,
+      name: "#{starts_on.year}年#{starts_on.month}月シーズン",
+      starts_on: starts_on,
+      ends_on: starts_on.end_of_month,
+      status: status
+    )
+  end
+
+  def create_overall_entry(season, customer, rank:, score:)
+    FactoryBot.create(
+      :singing_season_ranking_entry,
+      singing_ranking_season: season,
+      customer: customer,
+      rank: rank,
+      score: score,
+      category: "overall"
+    )
+  end
+
   before do
     allow(Singing::RankingQuery).to receive(:position_for).and_return(nil)
     allow(Singing::RankingQuery).to receive(:season_position_for).and_return(nil)
@@ -33,6 +58,12 @@ RSpec.describe Singing::NextBadgeService, type: :service do
       allow(Singing::RankingQuery).to receive(:position_for).and_return(20)
 
       expect(described_class.call(customer).size).to be <= 3
+    end
+
+    it "データ不足時にエラーにならないこと" do
+      customer = create_singing_customer
+
+      expect { described_class.call(customer) }.not_to raise_error
     end
 
     it "Hint 構造体を返すこと" do
@@ -170,6 +201,82 @@ RSpec.describe Singing::NextBadgeService, type: :service do
         keys = hint_keys(customer)
         expect(keys).not_to include(:season_top_10, :season_top_1)
       end
+    end
+  end
+
+  describe "シーズン称号ヒント" do
+    let!(:previous_season) { create_monthly_season(starts_on: 1.month.ago.to_date.beginning_of_month) }
+    let!(:current_season) { create_monthly_season(starts_on: Date.current.beginning_of_month, status: "active") }
+
+    it "連続参加ヒントが表示されること" do
+      customer = create_singing_customer
+      create_overall_entry(previous_season, customer, rank: 20, score: 70)
+      create_overall_entry(current_season, customer, rank: 20, score: 72)
+
+      hint = described_class.call(customer).find { |h| h.badge_type == "consecutive_entry" }
+
+      expect(hint).to be_present
+      expect(hint.description).to include("あと1回参加")
+      expect(hint.progress_label).to eq("2 / 3 シーズン")
+      expect(hint.progress_percent).to eq(66)
+    end
+
+    it "連続参加達成済みなら過剰表示されないこと" do
+      customer = create_singing_customer
+      create_overall_entry(previous_season, customer, rank: 20, score: 70)
+      create_overall_entry(current_season, customer, rank: 20, score: 72)
+      FactoryBot.create(
+        :singing_badge,
+        customer: customer,
+        singing_ranking_season: current_season,
+        badge_type: "consecutive_entry"
+      )
+
+      expect(hint_badge_types(customer)).not_to include("consecutive_entry")
+    end
+
+    it "急成長TOP5までの差分が表示されること" do
+      customer = create_singing_customer
+      create_overall_entry(previous_season, customer, rank: 20, score: 70)
+      create_overall_entry(current_season, customer, rank: 20, score: 76)
+
+      [14, 13, 12, 11, 9].each_with_index do |growth, index|
+        rival = create_singing_customer
+        create_overall_entry(previous_season, rival, rank: index + 1, score: 60)
+        create_overall_entry(current_season, rival, rank: index + 1, score: 60 + growth)
+      end
+
+      hint = described_class.call(customer).find { |h| h.badge_type == "growth_singer" }
+
+      expect(hint).to be_present
+      expect(hint.description).to include("急成長TOP5まであと3.0点")
+      expect(hint.progress_label).to eq("あと3.0点")
+    end
+
+    it "ranking TOP10までの差分が表示されること" do
+      customer = create_singing_customer
+      create_overall_entry(current_season, customer, rank: 12, score: 78)
+
+      hint = described_class.call(customer).find { |h| h.badge_type == "monthly_top_10" }
+
+      expect(hint).to be_present
+      expect(hint.description).to include("TOP10まであと2人")
+      expect(hint.progress_label).to eq("12位 / TOP10")
+    end
+
+    it "ヒント件数が最大数以内に制限されること" do
+      customer = create_singing_customer
+      create_overall_entry(previous_season, customer, rank: 4, score: 70)
+      create_overall_entry(current_season, customer, rank: 4, score: 76)
+
+      [14, 13, 12, 11, 9].each_with_index do |growth, index|
+        rival = create_singing_customer
+        create_overall_entry(previous_season, rival, rank: index + 1, score: 60)
+        create_overall_entry(current_season, rival, rank: index + 1, score: 60 + growth)
+      end
+      allow(Singing::RankingQuery).to receive(:position_for).and_return(5)
+
+      expect(described_class.call(customer).size).to be <= Singing::NextBadgeService::MAX_HINTS
     end
   end
 
