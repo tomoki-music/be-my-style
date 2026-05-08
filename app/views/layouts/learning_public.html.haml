@@ -1,0 +1,47 @@
+!!!
+%html{ lang: "ja" }
+  %head
+    %meta{ content: "text/html; charset=UTF-8", "http-equiv": "Content-Type" }/
+    %meta{ content: "width=device-width,initial-scale=1", name: "viewport" }/
+    %meta{ content: yield(:meta_description).presence || "軽音部の自走を支える学習プラットフォーム | BeMyStyle Learning", name: "description" }/
+    %title= content_for?(:title) ? "#{yield(:title)} | BeMyStyle Learning" : "BeMyStyle Learning"
+    = favicon_link_tag "favicon.ico"
+    = csrf_meta_tags
+    = csp_meta_tag
+    = stylesheet_link_tag "application", media: "all", "data-turbolinks-track": "reload"
+    %link{ rel: "stylesheet", href: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" }
+    = javascript_include_tag "application", "data-turbolinks-track": "reload"
+
+  %body.lp-body
+    %header.lp-header
+      .lp-header__inner
+        %a.lp-header__brand{ href: learning_school_path }
+          %span.lp-header__brand-icon 🎸
+          %span.lp-header__brand-name
+            BeMyStyle
+            %small Learning
+        %nav.lp-header__nav
+          = link_to "特徴", learning_school_path, class: "lp-header__nav-link"
+          = link_to "顧問ガイド", learning_guide_path, class: "lp-header__nav-link"
+          = link_to "生徒向け", learning_student_start_path, class: "lp-header__nav-link"
+        %a.lp-header__cta{ href: learning_apply_path } 無料モニターに申し込む
+
+    - flash.each do |key, value|
+      .container.mt-3
+        .alert{ class: "alert-#{key == 'notice' ? 'success' : 'danger'}" }= value
+
+    = yield
+
+    %footer.lp-footer
+      .lp-footer__inner
+        .lp-footer__brand
+          %span.lp-footer__icon 🎸
+          %strong BeMyStyle Learning
+          %p 高校軽音部の自走を支える、練習管理プラットフォーム
+        .lp-footer__links
+          = link_to "学校向けLP", learning_school_path
+          = link_to "顧問ガイド", learning_guide_path
+          = link_to "モニター申し込み", learning_apply_path
+          = link_to "生徒向けガイド", learning_student_start_path
+      .lp-footer__copy
+        %small © 2025 BeMyStyle Learning. All rights reserved.

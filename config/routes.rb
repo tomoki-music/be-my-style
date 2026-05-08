@@ -214,6 +214,13 @@ Rails.application.routes.draw do
     get  "join", to: "joins#show", as: :join
     post "join", to: "joins#create"
 
+    # 学校導入導線ページ（認証不要）
+    get  "school",        to: "pages#school",        as: :school
+    get  "guide",         to: "pages#guide",          as: :guide
+    get  "apply",         to: "pages#apply",          as: :apply
+    post "apply",         to: "pages#create_apply",   as: :create_apply
+    get  "student-start", to: "pages#student_start",  as: :student_start
+
     resource :dashboard, only: :show, controller: :dashboards
     resource :teacher_dashboard, only: :show, controller: :teacher_dashboards do
       get :export_csv, on: :collection

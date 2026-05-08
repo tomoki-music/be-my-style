@@ -1,0 +1,87 @@
+- content_for :title, "無料モニター申し込み"
+
+.lp-page-hero.lp-page-hero--apply
+  .container
+    %p.lp-page-hero__eyebrow 無料モニター募集中
+    %h1.lp-page-hero__title お申し込みフォーム
+    %p.lp-page-hero__sub 入力は3項目のみ。お申し込み後2営業日以内にご連絡します。
+
+.lp-section
+  .container
+    .lp-apply-wrap
+      .lp-apply-info
+        %h3.lp-apply-info__title モニター特典
+        %ul.lp-apply-info__list
+          %li
+            %span.lp-apply-info__check ✅
+            費用ゼロ（モニター期間中ずっと無料）
+          %li
+            %span.lp-apply-info__check ✅
+            担当者による導入サポート
+          %li
+            %span.lp-apply-info__check ✅
+            フィードバックを反映した機能改善
+          %li
+            %span.lp-apply-info__check ✅
+            いつでも退会・データ削除可能
+        .lp-apply-info__note
+          %p
+            %strong 現在の募集状況:
+            残り3校（2025年5月時点）
+          %p.text-muted お早めにお申し込みください。
+
+      .lp-apply-form-wrap
+        = form_with model: @application, url: learning_create_apply_path, local: true, class: "lp-apply-form" do |f|
+          - if @application.errors.any?
+            .alert.alert-danger
+              %ul.mb-0
+                - @application.errors.full_messages.each do |msg|
+                  %li= msg
+
+          .mb-4
+            = f.label :school_name, "学校名", class: "lp-form-label"
+            %span.lp-form-label__required 必須
+            = f.text_field :school_name,
+                           placeholder: "○○高等学校",
+                           class: "lp-form-input #{'is-invalid' if @application.errors[:school_name].any?}",
+                           maxlength: 100
+
+          .mb-4
+            = f.label :advisor_name, "顧問のお名前", class: "lp-form-label"
+            %span.lp-form-label__required 必須
+            = f.text_field :advisor_name,
+                           placeholder: "山田 太郎",
+                           class: "lp-form-input #{'is-invalid' if @application.errors[:advisor_name].any?}",
+                           maxlength: 50
+
+          .mb-4
+            = f.label :email, "メールアドレス", class: "lp-form-label"
+            %span.lp-form-label__required 必須
+            = f.email_field :email,
+                            placeholder: "example@school.ac.jp",
+                            class: "lp-form-input #{'is-invalid' if @application.errors[:email].any?}"
+            %p.lp-form-note このアドレスに確認メールを送ります
+
+          .mb-4
+            = f.label :student_count, "部員数（おおよそ）", class: "lp-form-label"
+            %span.lp-form-label__optional 任意
+            = f.number_field :student_count,
+                             placeholder: "20",
+                             min: 1, max: 300,
+                             class: "lp-form-input lp-form-input--short"
+
+          .mb-4
+            = f.label :message, "一言メッセージ・気になること", class: "lp-form-label"
+            %span.lp-form-label__optional 任意
+            = f.text_area :message,
+                          placeholder: "例：ドラムとギターで別々に管理したい、など",
+                          rows: 4,
+                          class: "lp-form-input",
+                          maxlength: 1000
+
+          .lp-form-submit
+            = f.submit "申し込む →", class: "lp-btn lp-btn--primary lp-btn--lg lp-btn--block"
+          %p.lp-form-privacy
+            送信することで
+            = link_to "プライバシーポリシー", public_privacy_path
+            に同意したものとみなします。

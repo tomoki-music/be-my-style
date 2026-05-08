@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_08_000005) do
+ActiveRecord::Schema.define(version: 2026_05_08_010001) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -459,6 +459,19 @@ ActiveRecord::Schema.define(version: 2026_05_08_000005) do
     t.index ["learning_student_id", "practiced_on"], name: "index_learning_progress_logs_on_student_and_date"
     t.index ["learning_student_id"], name: "index_learning_progress_logs_on_learning_student_id"
     t.index ["learning_student_training_id"], name: "index_learning_progress_logs_on_learning_student_training_id"
+  end
+
+  create_table "learning_school_applications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "school_name", limit: 100, null: false
+    t.string "advisor_name", limit: 50, null: false
+    t.string "email", null: false
+    t.integer "student_count"
+    t.text "message"
+    t.string "status", default: "pending", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["email"], name: "index_learning_school_applications_on_email"
+    t.index ["status"], name: "index_learning_school_applications_on_status"
   end
 
   create_table "learning_school_groups", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
