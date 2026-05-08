@@ -95,8 +95,8 @@ RSpec.describe "Singing::RankingSeasons", type: :request do
       end
     end
 
-    context "エントリーが存在するシーズン" do
-      let!(:season)  { FactoryBot.create(:singing_ranking_season) }
+    context "エントリーが存在するシーズン（終了済み）" do
+      let!(:season)  { FactoryBot.create(:singing_ranking_season, :closed) }
       let!(:other1)  { FactoryBot.create(:customer, domain_name: "singing") }
       let!(:other2)  { FactoryBot.create(:customer, domain_name: "singing") }
       let!(:entry1)  do
@@ -152,8 +152,8 @@ RSpec.describe "Singing::RankingSeasons", type: :request do
       end
     end
 
-    context "category が複数あるシーズン" do
-      let!(:season)   { FactoryBot.create(:singing_ranking_season) }
+    context "category が複数あるシーズン（終了済み）" do
+      let!(:season)   { FactoryBot.create(:singing_ranking_season, :closed) }
       let!(:customer1) { FactoryBot.create(:customer, domain_name: "singing") }
       let!(:customer2) { FactoryBot.create(:customer, domain_name: "singing") }
 
@@ -172,6 +172,60 @@ RSpec.describe "Singing::RankingSeasons", type: :request do
         get singing_ranking_season_path(season)
         expect(response.body).to include("総合ランキング")
         expect(response.body).to include("成長ランキング")
+      end
+    end
+
+    context "アクティブシーズンにランキング参加診断がある場合" do
+      let!(:season)    { FactoryBot.create(:singing_ranking_season, :current, name: "2026年5月シーズン") }
+      let!(:other1)    { FactoryBot.create(:customer, domain_name: "singing") }
+      let!(:other2)    { FactoryBot.create(:customer, domain_name: "singing") }
+
+      before do
+        CustomerDomain.find_or_create_by!(customer: other1, domain: singing_domain)
+        CustomerDomain.find_or_create_by!(customer: other2, domain: singing_domain)
+        FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant,
+                          customer: other1,
+                          overall_score: 95,
+                          diagnosed_at: season.starts_on + 1.day)
+        FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant,
+                          customer: other2,
+                          overall_score: 88,
+                          diagnosed_at: season.starts_on + 3.days)
+      end
+
+      it "200 OK を返すこと" do
+        get singing_ranking_season_path(season)
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "SingingDiagnosis のスコアがリアルタイムで表示されること" do
+        get singing_ranking_season_path(season)
+        expect(response.body).to include("95")
+        expect(response.body).to include("88")
+      end
+
+      it "総合ランキングのカテゴリラベルが表示されること" do
+        get singing_ranking_season_path(season)
+        expect(response.body).to include("総合ランキング")
+      end
+
+      it "「このシーズンのエントリーはまだありません」が表示されないこと" do
+        get singing_ranking_season_path(season)
+        expect(response.body).not_to include("このシーズンのエントリーはまだありません")
+      end
+
+      it "ranking_opt_in=false の診断は表示されないこと" do
+        FactoryBot.create(:singing_diagnosis, :completed,
+                          customer: singing_customer,
+                          ranking_opt_in: false,
+                          overall_score: 99,
+                          diagnosed_at: season.starts_on + 1.day)
+
+        get singing_ranking_season_path(season)
+        # 99点の診断は ranking_opt_in=false のため表示されない
+        # （95, 88 はランキング参加なので表示される）
+        expect(response.body).to include("95")
+        expect(response.body).to include("88")
       end
     end
 
