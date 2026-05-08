@@ -137,7 +137,11 @@
                         .singing-diagnosis__next-badge-progress-fill{ style: "width: #{hint.progress_percent.to_i.clamp(0, 100)}%" }
                       %span.singing-diagnosis__next-badge-progress-label= hint.progress_label
           .singing-diagnosis__next-badges-action
-            = link_to "もう一度診断する →", new_singing_diagnosis_path, class: "singing-diagnosis__next-badges-cta"
+            %p.singing-diagnosis__next-badges-message 次の称号まで、あと少し！もう一度診断して、今月の実績を伸ばしてみましょう。
+            .singing-diagnosis__next-badges-buttons
+              = link_to "もう一度診断する", new_singing_diagnosis_path, class: "btn btn-primary"
+              = link_to "今月のランキングを見る", singing_rankings_path, class: "btn btn-secondary"
+              = link_to "自分のプロフィールで実績を見る", singing_user_path(current_customer), class: "btn btn-secondary"
 
       .singing-diagnosis__score-guides
         %h2 スコアの見方

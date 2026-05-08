@@ -72,6 +72,12 @@
           %p.singing-badges__empty-note シーズンが終了すると、ランキング上位者や継続参加者にバッジが付与されます。
           = link_to "ランキングに参加する", singing_rankings_path, class: "btn btn-primary singing-badges__cta"
 
+    .singing-badges__cta-section
+      %p.singing-badges__cta-message 診断を重ねて、実績とコレクションを育てましょう。
+      .singing-badges__cta-buttons
+        = link_to "診断に挑戦する", new_singing_diagnosis_path, class: "btn btn-primary"
+        = link_to "ランキングに参加する", singing_rankings_path, class: "btn btn-secondary"
+
     .singing-badges__nav
       = link_to singing_season_histories_path, class: "singing-badges__nav-link" do
         過去のシーズン成績を見る →
