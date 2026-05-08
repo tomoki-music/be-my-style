@@ -1,0 +1,33 @@
+= render "learning/shared/page", title: "通知ログ", subtitle: "ReminderService が今この瞬間に返す通知候補を確認できます。DB保存はせず、その場で生成しています。" do
+  .learning-section
+    .learning-section__header
+      %h2 通知候補
+      = link_to "顧問ダッシュボードへ", learning_teacher_dashboard_path, class: "learning-button learning-button--ghost learning-button--sm"
+
+    .learning-table-wrap
+      %table.learning-table
+        %thead
+          %tr
+            %th 対象生徒
+            %th 通知種別
+            %th レベル
+            %th メッセージ内容
+            %th 推奨アクション
+            %th 生成日時
+        %tbody
+          - if @notifications.any?
+            - @notifications.each do |notification|
+              %tr
+                %td= link_to notification.student.display_name, learning_student_path(notification.student)
+                %td= notification.notification_type
+                %td
+                  %span.learning-notification-level{ class: "learning-notification-level--#{notification.level}" }= notification.level
+                %td= notification.message
+                %td= notification.recommended_action
+                %td= l(notification.generated_at, format: :short)
+          - else
+            %tr
+              %td{ colspan: 6 }
+                .learning-empty
+                  %strong 今すぐ通知が必要な生徒はいません
+                  %p 2日以上練習記録が空いた生徒が出ると、ここに通知候補が表示されます。

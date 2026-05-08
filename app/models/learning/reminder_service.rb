@@ -1,15 +1,34 @@
 module Learning
   class ReminderService
-    Reminder = Struct.new(:student, :stage, :days_idle, :message, :tone, keyword_init: true) do
+    Reminder = Struct.new(:student, :stage, :days_idle, :message, :tone, :level,
+                          :recommended_action, :generated_at, keyword_init: true) do
       def active?
         stage.present?
+      end
+
+      def notification_type
+        return nil unless stage
+
+        "#{stage}日"
       end
     end
 
     STAGES = {
-      2 => { tone: "light", message: "少し間が空いています！1つだけやってみよう" },
-      3 => { tone: "medium", message: "ここで戻ると差がつきます" },
-      5 => { tone: "strong", message: "もう一度始めてみよう" }
+      2 => {
+        level: "light",
+        message: "少し間が空いています！1つだけやってみよう",
+        recommended_action: "今日やることを1つだけ開く"
+      },
+      3 => {
+        level: "normal",
+        message: "ここで戻ると差がつきます",
+        recommended_action: "短い練習を選んで再開する"
+      },
+      5 => {
+        level: "strong",
+        message: "もう一度始めてみよう",
+        recommended_action: "先生から声かけして再スタートする"
+      }
     }.freeze
 
     def self.for_student(student, last_practiced_on: nil)
@@ -43,7 +62,10 @@ module Learning
         stage: stage,
         days_idle: days_idle,
         message: payload&.fetch(:message),
-        tone: payload&.fetch(:tone)
+        tone: payload&.fetch(:level),
+        level: payload&.fetch(:level),
+        recommended_action: payload&.fetch(:recommended_action),
+        generated_at: Time.current
       )
     end
 
