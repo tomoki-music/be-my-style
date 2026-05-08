@@ -21,12 +21,14 @@ class Learning::StudentPortalsController < ApplicationController
       teacher_comment: trainings.map(&:teacher_comment).find(&:present?)
     }
     @current_trainings = trainings.first(8)
-    @first_action_training = trainings.find { |training| training.status != "achieved" && !training.star? }
     @recent_logs = recent_logs
     @current_streak  = LearningPortalAccess.current_streak(@student)
     @effort_points   = @student.total_effort_points
     @show_tutorial   = !@student.tutorial_completed?
     @ranking         = @student.rank_within_group
+    @today_task      = Learning::FirstDayExperience.today_task(@student)
+    @student_feedback = Learning::FirstDayExperience.feedback(@student, streak_count: @current_streak)
+    @part_recommendations = Learning::FirstDayExperience.recommendations_for(@student)
   end
 
   def complete_tutorial

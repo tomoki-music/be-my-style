@@ -12,7 +12,9 @@ class Learning::TeacherDashboardsController < Learning::BaseController
                                 .ordered
     @monthly_report = LearningMonthlyReport.for_month(current_customer)
     @onboarding_status = Learning::OnboardingStatus.new(current_customer, routes: self)
+    @teacher_next_action = Learning::FirstDayExperience.teacher_action(current_customer, routes: self)
     @weekly_growth = build_weekly_growth
+    @weekly_progress_points = Learning::FirstDayExperience.weekly_progress_points(current_customer)
     @last_practiced_on_by_student = current_customer.learning_progress_logs
       .where(learning_student_id: @students.map(&:id))
       .group(:learning_student_id)

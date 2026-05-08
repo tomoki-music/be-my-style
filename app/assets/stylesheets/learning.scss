@@ -619,6 +619,7 @@
 
 .learning-onboarding,
 .learning-first-action,
+.learning-next-action,
 .learning-ready-banner,
 .learning-assurance {
   border-radius: 24px;
@@ -633,6 +634,7 @@
 
 .learning-onboarding__header,
 .learning-ready-banner,
+.learning-next-action,
 .learning-first-action {
   display: flex;
   justify-content: space-between;
@@ -641,6 +643,7 @@
 }
 
 .learning-onboarding__eyebrow,
+.learning-next-action__eyebrow,
 .learning-first-action__eyebrow {
   color: #8a4d1d;
   font-size: 13px;
@@ -648,12 +651,14 @@
 }
 
 .learning-onboarding__title h2,
+.learning-next-action h2,
 .learning-first-action h2 {
   margin: 4px 0 8px;
   color: #182033;
 }
 
 .learning-onboarding__title p,
+.learning-next-action p,
 .learning-first-action p,
 .learning-assurance p {
   margin: 0;
@@ -718,6 +723,7 @@
 }
 
 .learning-onboarding-step__body strong,
+.learning-next-action__body strong,
 .learning-ready-banner__body strong,
 .learning-assurance strong {
   display: block;
@@ -732,9 +738,25 @@
 }
 
 .learning-ready-banner,
+.learning-next-action,
 .learning-first-action,
 .learning-assurance {
   padding: 20px 22px;
+}
+
+.learning-next-action {
+  background: linear-gradient(135deg, #ffffff, #fff4eb);
+  align-items: center;
+}
+
+.learning-next-action__body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.learning-next-action__body strong {
+  font-size: 20px;
 }
 
 .learning-ready-banner__body {
@@ -753,12 +775,72 @@
   background: linear-gradient(135deg, #fff, var(--learning-soft));
 }
 
+.learning-first-action h2 small {
+  color: #5f6878;
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .learning-first-action--empty {
   background: linear-gradient(135deg, #ffffff, #f4f6fa);
 }
 
 .learning-first-action__body {
   max-width: 760px;
+}
+
+.learning-two-column--balanced {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.learning-student-nudge__text {
+  margin: 0;
+  color: #182033;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.learning-growth-chart {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+  height: 180px;
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 20px;
+  background: #f8fafc;
+  border: 1px solid #e5ebf3;
+}
+
+.learning-growth-chart__item {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 8px;
+  height: 100%;
+  min-width: 0;
+}
+
+.learning-growth-chart__bar {
+  align-self: end;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 24px;
+  border-radius: 12px 12px 6px 6px;
+  background: linear-gradient(180deg, #5a8ed6, #9cc6a2);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  padding-top: 6px;
+}
+
+.learning-growth-chart__item small {
+  color: #64748b;
+  font-size: 12px;
+  text-align: center;
 }
 
 .learning-assurance {
@@ -790,6 +872,7 @@
   .learning-section__header,
   .learning-onboarding__header,
   .learning-ready-banner,
+  .learning-next-action,
   .learning-first-action {
     flex-direction: column;
     align-items: flex-start;
@@ -816,6 +899,15 @@
   .learning-stat-grid,
   .learning-form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .learning-two-column--balanced {
+    grid-template-columns: 1fr;
+  }
+
+  .learning-growth-chart {
+    gap: 8px;
+    padding: 14px;
   }
 
   .learning-section,
