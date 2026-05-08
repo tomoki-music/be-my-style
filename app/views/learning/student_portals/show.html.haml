@@ -32,21 +32,36 @@
           = [@student.learning_school_group&.name, @student.grade.presence].compact.join(" / ").presence || "今週の目標と進捗を確認できます。"
 
     .learning-content
-      - if @first_action_training.present?
-        .learning-first-action{ style: learning_progress_style(@first_action_training.part) }
+      - if @today_task.present? && !@today_task.empty?
+        .learning-first-action{ style: learning_progress_style(@today_task.training.part) }
           .learning-first-action__body
-            %span.learning-first-action__eyebrow 今日のおすすめ練習
-            %h2 まずは1つ練習を完了してみよう
+            %span.learning-first-action__eyebrow 今日やること
+            %h2
+              = @today_task.title
+              %small= "（#{@today_task.duration_label}）"
             %p
-              = @first_action_training.title
-              から始めると、今日やることがはっきりします。練習記録や達成が増えると努力ポイントが貯まり、継続した分がランキングや成長率にも反映されます。
-          = link_to "おすすめ練習を見る", "#training-#{@first_action_training.id}", class: "learning-button"
+              = @today_task.reason
+              。まずこの1つをやると、今日の練習が前に進みます。
+          = link_to "今すぐやる", "##{@today_task.cta_anchor}", class: "learning-button"
       - else
         .learning-first-action.learning-first-action--empty
           .learning-first-action__body
-            %span.learning-first-action__eyebrow 今日のおすすめ練習
+            %span.learning-first-action__eyebrow 今日やること
             %h2 先生が準備中です
-            %p 課題が届いたらここに表示されます。今は部活で決まっている基礎練習や曲の確認を続けておけば大丈夫です。
+            %p 課題が届いたらここに今日やる練習が表示されます。今は部活で決まっている基礎練習や曲の確認を続けておけば大丈夫です。
+
+      .learning-two-column.learning-two-column--balanced
+        .learning-section.learning-student-nudge
+          .learning-section__header
+            %h2 今のあなたへの一言
+          %p.learning-student-nudge__text= @student_feedback
+
+        .learning-section.learning-student-nudge
+          .learning-section__header
+            %h2 あなたにおすすめの練習
+          .learning-inline-tags
+            - @part_recommendations.each do |recommendation|
+              %span.learning-part-tag= recommendation
 
       .learning-stat-grid
         .learning-stat-card{ style: learning_progress_style(@student.main_part) }

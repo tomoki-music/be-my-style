@@ -11,6 +11,8 @@ RSpec.describe "Learning onboarding success flow", type: :request do
       get learning_teacher_dashboard_path
 
       expect(response).to have_http_status(:ok)
+      expect(response.body).to include("使い方ナビ")
+      expect(response.body).to include("生徒を登録しよう")
       expect(response.body).to include("初日セットアップ")
       expect(response.body).to include("生徒を登録する")
       expect(response.body).to include("今週の成長")
@@ -26,6 +28,8 @@ RSpec.describe "Learning onboarding success flow", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("先生が準備中です")
+      expect(response.body).to include("今のあなたへの一言")
+      expect(response.body).to include("まずは1つやってみよう！")
       expect(response.body).to include("課題は先生が準備中です")
     end
 
@@ -36,9 +40,10 @@ RSpec.describe "Learning onboarding success flow", type: :request do
       get learning_student_portal_path(student.public_access_token)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("今日のおすすめ練習")
+      expect(response.body).to include("今日やること")
       expect(response.body).to include("コード練習")
-      expect(response.body).to include("おすすめ練習を見る")
+      expect(response.body).to include("今すぐやる")
+      expect(response.body).to include("あなたにおすすめの練習")
     end
   end
 end

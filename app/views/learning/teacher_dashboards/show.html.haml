@@ -1,4 +1,12 @@
 = render "learning/shared/page", title: "顧問ダッシュボード", subtitle: "生徒の進捗・努力ポイントを一覧確認できます。" do
+  - next_action = @teacher_next_action
+  .learning-next-action
+    .learning-next-action__body
+      %span.learning-next-action__eyebrow 使い方ナビ
+      %h2 次にやること
+      %strong= next_action.title
+      %p= next_action.body
+    = link_to next_action.cta_label, next_action.cta_path, class: "learning-button"
 
   -# 初回オンボーディング
   - if @onboarding_status.completed?
@@ -69,6 +77,14 @@
           %span.learning-stat-card__label 先週比
           %strong.learning-stat-card__value= @weekly_growth[:log_count_delta].positive? ? "+#{@weekly_growth[:log_count_delta]}" : @weekly_growth[:log_count_delta]
           %p.learning-stat-card__sub 練習記録数の差分
+      - max_count = @weekly_progress_points.map { |point| point[:count] }.max.to_i
+      .learning-growth-chart{ role: "img", aria: { label: "直近7日の進捗数推移" } }
+        - @weekly_progress_points.each do |point|
+          - height = max_count.positive? ? [((point[:count].to_f / max_count) * 100).round, 8].max : 8
+          .learning-growth-chart__item
+            .learning-growth-chart__bar{ style: "height: #{height}%" }
+              %span= point[:count]
+            %small= point[:label]
     - else
       .learning-empty.learning-empty--action
         %strong 今週の成長はこれから表示されます
