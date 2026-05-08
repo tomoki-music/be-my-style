@@ -60,10 +60,6 @@ jobs:
           ~/.rbenv/shims/bundle install --jobs 4 --retry 3
           echo "[deploy] bundle install finished: $(date '+%H:%M:%S')"
 
-          echo "[deploy] assets:clobber start: $(date '+%H:%M:%S')"
-          RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:clobber
-          echo "[deploy] assets:clobber finished: $(date '+%H:%M:%S')"
-
           echo "[deploy] assets:precompile start: $(date '+%H:%M:%S')"
           (RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:precompile) &
           PRECOMPILE_PID=$!
@@ -71,8 +67,12 @@ jobs:
             echo "[deploy] assets:precompile still running: $(date '+%H:%M:%S')"
             sleep 30
           done
-          wait "$PRECOMPILE_PID"
-          echo "[deploy] assets:precompile finished: $(date '+%H:%M:%S')"
+          if wait "$PRECOMPILE_PID"; then
+            echo "[deploy] assets:precompile finished: $(date '+%H:%M:%S')"
+          else
+            echo "[deploy] ERROR: assets:precompile FAILED. Existing assets preserved. Aborting deploy."
+            exit 1
+          fi
 
           echo "[deploy] db:migrate start: $(date '+%H:%M:%S')"
           RAILS_ENV=production ~/.rbenv/shims/bundle exec rails db:migrate
