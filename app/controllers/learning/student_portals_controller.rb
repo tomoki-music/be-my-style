@@ -32,6 +32,12 @@ class Learning::StudentPortalsController < ApplicationController
     @student_feedback = start_guide_service.feedback
     @student_badges = start_guide_service.badges
     @yesterday_training_title = start_guide_service.yesterday_summary
+    @idle_days = start_guide_service.idle_days
+    @show_comeback_message = start_guide_service.comeback?
+    @weekly_active_student_count = @student.customer.learning_progress_logs
+      .where(practiced_on: Date.current.all_week)
+      .distinct
+      .count(:learning_student_id)
     @part_recommendations = Learning::FirstDayExperience.recommendations_for(@student)
   end
 

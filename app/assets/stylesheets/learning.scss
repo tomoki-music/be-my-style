@@ -619,6 +619,8 @@
 
 .learning-onboarding,
 .learning-first-action,
+.learning-comeback,
+.learning-community-pulse,
 .learning-next-action,
 .learning-start-guide,
 .learning-ready-banner,
@@ -636,6 +638,7 @@
 .learning-onboarding__header,
 .learning-ready-banner,
 .learning-next-action,
+.learning-comeback,
 .learning-start-guide__header,
 .learning-first-action {
   display: flex;
@@ -646,6 +649,7 @@
 
 .learning-onboarding__eyebrow,
 .learning-next-action__eyebrow,
+.learning-comeback__eyebrow,
 .learning-start-guide__eyebrow,
 .learning-first-action__eyebrow {
   color: #8a4d1d;
@@ -655,6 +659,7 @@
 
 .learning-onboarding__title h2,
 .learning-next-action h2,
+.learning-comeback h2,
 .learning-start-guide h2,
 .learning-first-action h2 {
   margin: 4px 0 8px;
@@ -663,6 +668,7 @@
 
 .learning-onboarding__title p,
 .learning-next-action p,
+.learning-comeback p,
 .learning-start-guide p,
 .learning-first-action p,
 .learning-assurance p {
@@ -744,6 +750,7 @@
 
 .learning-ready-banner,
 .learning-next-action,
+.learning-comeback,
 .learning-start-guide,
 .learning-first-action,
 .learning-assurance {
@@ -763,6 +770,14 @@
 
 .learning-next-action__body strong {
   font-size: 20px;
+}
+
+.learning-comeback {
+  background: linear-gradient(135deg, #ffffff, #eef5ff);
+}
+
+.learning-comeback__body {
+  min-width: 0;
 }
 
 .learning-ready-banner__body {
@@ -991,6 +1006,91 @@
   color: #b23d4c;
 }
 
+.learning-voice-list {
+  display: grid;
+  gap: 14px;
+}
+
+.learning-voice-item {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 20px;
+  background: #f8fafc;
+  border: 1px solid #e5ebf3;
+}
+
+.learning-voice-item__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.learning-voice-item__student {
+  display: grid;
+  gap: 4px;
+}
+
+.learning-voice-item__student strong {
+  color: #182033;
+}
+
+.learning-voice-item__student span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.learning-voice-item__status {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #fff1f1;
+  color: #b23d4c;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.learning-voice-item__template {
+  display: grid;
+  gap: 6px;
+}
+
+.learning-voice-item__template label {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.learning-copy-textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid #d7ddea;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #fff;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.learning-community-pulse {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, #ffffff, #fff5eb);
+}
+
+.learning-community-pulse strong {
+  color: #182033;
+}
+
+.learning-community-pulse span {
+  color: #5f6878;
+  line-height: 1.6;
+}
+
 .learning-growth-chart {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -1062,6 +1162,8 @@
   .learning-onboarding__header,
   .learning-ready-banner,
   .learning-next-action,
+  .learning-comeback,
+  .learning-community-pulse,
   .learning-start-guide__header,
   .learning-first-action {
     flex-direction: column;
@@ -1098,6 +1200,10 @@
   .learning-start-guide__steps,
   .learning-review-grid {
     grid-template-columns: 1fr;
+  }
+
+  .learning-voice-item__head {
+    flex-direction: column;
   }
 
   .learning-growth-chart {

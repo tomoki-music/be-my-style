@@ -33,6 +33,8 @@ RSpec.describe Learning::WeeklyReviewService do
       expect(review.top_students.first.count).to eq(3)
       expect(review.growth_students.map(&:student)).to include(active_student, growth_student)
       expect(review.stagnant_students.map(&:student)).to include(stagnant_student)
+      expect(review.stagnant_students.find { |item| item.student == stagnant_student }.status_label).to eq("停滞中")
+      expect(review.stagnant_students.find { |item| item.student == stagnant_student }.template).to include("最近どう？")
     end
 
     it "記録がない生徒も介入対象に含めること" do
@@ -40,6 +42,7 @@ RSpec.describe Learning::WeeklyReviewService do
 
       expect(review.stagnant_students.map(&:student)).to match_array(students)
       expect(review.stagnant_students.first.last_practiced_on).to be_nil
+      expect(review.stagnant_students.first.status_label).to eq("記録なし")
     end
   end
 end

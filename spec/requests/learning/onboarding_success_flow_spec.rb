@@ -15,9 +15,23 @@ RSpec.describe "Learning onboarding success flow", type: :request do
       expect(response.body).to include("生徒を登録しよう")
       expect(response.body).to include("初日セットアップ")
       expect(response.body).to include("生徒を登録する")
+      expect(response.body).to include("今、声かけしたい生徒")
       expect(response.body).to include("今週のまとめ")
       expect(response.body).to include("今週の成長")
       expect(response.body).to include("まずは生徒を1人登録しましょう")
+    end
+
+    it "shows voice prompt templates for stagnant students" do
+      student = create(:learning_student, customer: teacher, nickname: "ギターさん")
+      create(:learning_progress_log, customer: teacher, learning_student: student,
+                                    practiced_on: 3.days.ago.to_date)
+
+      get learning_teacher_dashboard_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("ギターさん")
+      expect(response.body).to include("停滞中")
+      expect(response.body).to include("最近どう？少しだけでもやってみよう！")
     end
   end
 
@@ -33,6 +47,7 @@ RSpec.describe "Learning onboarding success flow", type: :request do
       expect(response.body).to include("今のあなたへの一言")
       expect(response.body).to include("まずは1つやってみよう！")
       expect(response.body).to include("継続バッジ")
+      expect(response.body).to include("今週は0人が練習しています")
       expect(response.body).to include("課題は先生が準備中です")
     end
 
@@ -49,6 +64,19 @@ RSpec.describe "Learning onboarding success flow", type: :request do
       expect(response.body).to include("連続日数")
       expect(response.body).to include("今すぐやる")
       expect(response.body).to include("あなたにおすすめの練習")
+    end
+
+    it "shows a comeback message when the student has been idle for 3 days" do
+      student = create(:learning_student, customer: teacher, nickname: "ギターさん")
+      create(:learning_student_training, customer: teacher, learning_student: student, title: "コード練習")
+      create(:learning_progress_log, customer: teacher, learning_student: student,
+                                    practiced_on: 3.days.ago.to_date)
+
+      get learning_student_portal_path(student.public_access_token)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("おかえりなさい")
+      expect(response.body).to include("ここから再スタートできます")
     end
   end
 end

@@ -1,7 +1,8 @@
 module Learning
   class WeeklyReviewService
     StudentHighlight = Struct.new(:student, :count, :label, keyword_init: true)
-    Intervention = Struct.new(:student, :last_practiced_on, :days_idle, keyword_init: true)
+    Intervention = Struct.new(:student, :last_practiced_on, :days_idle, :status_label,
+                              :template, keyword_init: true)
     Review = Struct.new(:top_students, :growth_students, :stagnant_students, keyword_init: true)
 
     def initialize(customer, students:)
@@ -52,7 +53,13 @@ module Learning
         .map do |student|
           last_date = last_practiced_on_by_student[student.id]
           days_idle = last_date ? (Date.current - last_date).to_i : nil
-          Intervention.new(student: student, last_practiced_on: last_date, days_idle: days_idle)
+          Intervention.new(
+            student: student,
+            last_practiced_on: last_date,
+            days_idle: days_idle,
+            status_label: status_label_for(days_idle),
+            template: template_for(student, days_idle)
+          )
         end
         .select { |item| item.last_practiced_on.nil? || item.days_idle >= 3 }
         .sort_by { |item| [item.last_practiced_on ? 1 : 0, item.last_practiced_on || Date.new(1900, 1, 1)] }
@@ -86,6 +93,23 @@ module Learning
           .where(learning_student_id: @student_ids)
           .group(:learning_student_id)
           .maximum(:practiced_on)
+      end
+    end
+
+    def status_label_for(days_idle)
+      return "記録なし" unless days_idle
+      return "再スタート支援" if days_idle >= 5
+
+      "停滞中"
+    end
+
+    def template_for(student, days_idle)
+      if days_idle.nil? || days_idle >= 5
+        "#{student.display_name}さん、もう一度ここから始めてみよう。一緒に頑張ろう！"
+      elsif days_idle >= 3
+        "#{student.display_name}さん、最近どう？少しだけでもやってみよう！"
+      else
+        "#{student.display_name}さん、いいペースだったから、また戻ってきてね！"
       end
     end
   end

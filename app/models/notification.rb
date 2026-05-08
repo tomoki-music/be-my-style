@@ -1,4 +1,10 @@
 class Notification < ApplicationRecord
+  LEARNING_ACTION_TYPES = {
+    reminder: "learning_reminder",
+    teacher_action: "learning_teacher_action",
+    weekly_summary: "learning_weekly_summary"
+  }.freeze
+
   default_scope -> { order(created_at: :desc) }
   belongs_to :event, optional: true
   belongs_to :comment, optional: true

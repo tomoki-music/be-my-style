@@ -81,6 +81,16 @@ module Learning
       log&.training_title
     end
 
+    def idle_days
+      return nil unless last_log
+
+      (Date.current - last_log.practiced_on).to_i
+    end
+
+    def comeback?
+      idle_days.to_i >= 3
+    end
+
     private
 
     def headline
