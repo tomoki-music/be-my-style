@@ -18,11 +18,28 @@
     - if @entries_by_category.empty?
       .singing-season__empty
         %p.singing-season__empty-icon ☆
-        %p.singing-season__empty-text
-          このシーズンのエントリーはまだありません。
-          %br
-          - if @season.status == "active"
-            診断でランキング参加をONにして、最初のエントリーを目指しましょう！
+        - if @my_diagnosis_count > 0
+          %p.singing-season__empty-text
+            - if @season.status == "active"
+              診断実績はありますが、ランキングにはまだ参加していません。
+              %br
+              ランキング参加をONにして診断すると、このシーズンにエントリーされます。
+            - else
+              このシーズンでは診断しましたが、ランキングへの参加なしでした。
+          %p.singing-season__empty-diagnosis-count
+            このシーズンの診断回数：
+            %strong= @my_diagnosis_count
+            回
+          .singing-season__empty-actions
+            - if @season.status == "active"
+              = link_to "ランキング参加して診断する", new_singing_diagnosis_path, class: "btn btn-primary"
+            = link_to "シーズン履歴を見る", singing_season_histories_path, class: "btn btn-secondary"
+        - else
+          %p.singing-season__empty-text
+            このシーズンのエントリーはまだありません。
+            %br
+            - if @season.status == "active"
+              診断でランキング参加をONにして、最初のエントリーを目指しましょう！
 
     - else
       - @entries_by_category.each do |category, entries|

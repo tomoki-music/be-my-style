@@ -182,5 +182,83 @@ RSpec.describe "Singing::RankingSeasons", type: :request do
         }.to raise_error(ActiveRecord::RecordNotFound)
       end
     end
+
+    context "ランキング未参加でも診断実績がある場合（開催中シーズン）" do
+      let!(:season) { FactoryBot.create(:singing_ranking_season, :current, name: "2026年5月シーズン") }
+
+      before do
+        FactoryBot.create(:singing_diagnosis, :completed,
+                          customer: singing_customer,
+                          ranking_opt_in: false,
+                          diagnosed_at: season.starts_on + 1.day)
+        FactoryBot.create(:singing_diagnosis, :completed,
+                          customer: singing_customer,
+                          ranking_opt_in: false,
+                          diagnosed_at: season.starts_on + 3.days)
+      end
+
+      it "「診断実績はありますが」メッセージが表示されること" do
+        get singing_ranking_season_path(season)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("診断実績はありますが、ランキングにはまだ参加していません")
+      end
+
+      it "「このシーズンのエントリーはまだありません」が表示されないこと" do
+        get singing_ranking_season_path(season)
+
+        expect(response.body).not_to include("このシーズンのエントリーはまだありません")
+      end
+
+      it "このシーズンの診断回数が表示されること" do
+        get singing_ranking_season_path(season)
+
+        expect(response.body).to include("このシーズンの診断回数")
+        expect(response.body).to include("2")
+      end
+
+      it "「ランキング参加して診断する」CTAが表示されること" do
+        get singing_ranking_season_path(season)
+
+        expect(response.body).to include("ランキング参加して診断する")
+      end
+
+      it "「シーズン履歴を見る」リンクが表示されること" do
+        get singing_ranking_season_path(season)
+
+        expect(response.body).to include("シーズン履歴を見る")
+        expect(response.body).to include(singing_season_histories_path)
+      end
+    end
+
+    context "ランキング未参加でも診断実績がある場合（終了済みシーズン）" do
+      let!(:season) { FactoryBot.create(:singing_ranking_season, :closed, name: "2026年4月シーズン") }
+
+      before do
+        FactoryBot.create(:singing_diagnosis, :completed,
+                          customer: singing_customer,
+                          ranking_opt_in: false,
+                          diagnosed_at: season.starts_on + 1.day)
+      end
+
+      it "「このシーズンでは診断しましたが」メッセージが表示されること" do
+        get singing_ranking_season_path(season)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("このシーズンでは診断しましたが、ランキングへの参加なしでした")
+      end
+
+      it "「ランキング参加して診断する」CTAは表示されないこと（終了済み）" do
+        get singing_ranking_season_path(season)
+
+        expect(response.body).not_to include("ランキング参加して診断する")
+      end
+
+      it "「シーズン履歴を見る」リンクが表示されること" do
+        get singing_ranking_season_path(season)
+
+        expect(response.body).to include("シーズン履歴を見る")
+      end
+    end
   end
 end
