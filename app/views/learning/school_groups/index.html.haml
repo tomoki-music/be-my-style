@@ -7,18 +7,24 @@
       = link_to "リセット", learning_school_groups_path, class: "learning-button learning-button--ghost"
 
   .learning-dashboard-cards
-    - @school_groups.each do |school_group|
-      - student_count = school_group.learning_students.size
-      - total_trainings = school_group.learning_students.sum { |student| student.learning_student_trainings.size }
-      .learning-student-card{ style: learning_progress_style("band") }
-        .learning-student-card__header
-          .learning-student-card__title
-            %h3= school_group.name
-        .learning-student-card__metrics
-          %span= "生徒数 #{student_count}人"
-          %span= "割当数 #{total_trainings}件"
-        .learning-student-card__body
-          %p= school_group.memo.presence || "メモはまだありません。"
-        .learning-student-card__footer
-          = link_to "詳細を見る", learning_school_group_path(school_group), class: "learning-button learning-button--ghost"
-          = link_to "編集", edit_learning_school_group_path(school_group), class: "learning-button"
+    - if @school_groups.any?
+      - @school_groups.each do |school_group|
+        - student_count = school_group.learning_students.size
+        - total_trainings = school_group.learning_students.sum { |student| student.learning_student_trainings.size }
+        .learning-student-card{ style: learning_progress_style("band") }
+          .learning-student-card__header
+            .learning-student-card__title
+              %h3= school_group.name
+          .learning-student-card__metrics
+            %span= "生徒数 #{student_count}人"
+            %span= "割当数 #{total_trainings}件"
+          .learning-student-card__body
+            %p= school_group.memo.presence || "メモはまだありません。"
+          .learning-student-card__footer
+            = link_to "詳細を見る", learning_school_group_path(school_group), class: "learning-button learning-button--ghost"
+            = link_to "編集", edit_learning_school_group_path(school_group), class: "learning-button"
+    - else
+      .learning-empty.learning-empty--action
+        %strong 学校・学年のグループを作成しましょう
+        %p グループがあると、生徒一覧の整理やランキング確認がしやすくなります。最初は「○○高校軽音部」だけで十分です。
+        = link_to "高校グループを追加", new_learning_school_group_path, class: "learning-button"

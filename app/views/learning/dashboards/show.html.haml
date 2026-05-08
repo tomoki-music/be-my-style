@@ -39,72 +39,83 @@
   .learning-section
     .learning-section__header
       %h2 生徒カード
-    .learning-dashboard-cards
-      - @dashboard.student_rows.each do |row|
-        .learning-student-card{ style: learning_progress_style(row.student.main_part) }
-          .learning-student-card__header
-            .learning-student-card__title
-              %h3= row.student.name
-              .learning-inline-tags
-                - row.parts.each do |part|
-                  %span.learning-part-tag= learning_part_label(part)
-            .learning-badges
-              - if row.mvp
-                %span.learning-badge.learning-badge--mvp 🏆 MVP
-              - if row.weekly_mvp
-                %span.learning-badge.learning-badge--weekly 今週MVP
-          .learning-rank
-            %span.learning-rank__label 順位
-            %strong= "#{row.rank}位"
-          .learning-progress
-            .learning-progress__bar{ style: "width: #{learning_progress_bar_width(row.progress_rate)}%" }
-          .learning-student-card__metrics
-            %span= "進捗率 #{row.progress_rate}%"
-            %span= "達成数 #{row.achievement_count} / #{row.total_count}"
-          .learning-student-card__body
-            %p
-              %strong 今週の目標:
-              = row.weekly_goal.presence || "未設定"
-            %p
-              %strong コメント:
-              = row.comment.presence || "先生からのコメントはまだありません。"
-          .learning-student-card__footer
-            = link_to "詳細を見る", learning_student_path(row.student), class: "learning-button learning-button--ghost"
-            = link_to "割当を管理", learning_student_student_trainings_path(row.student), class: "learning-button"
+    - if @dashboard.student_rows.any?
+      .learning-dashboard-cards
+        - @dashboard.student_rows.each do |row|
+          .learning-student-card{ style: learning_progress_style(row.student.main_part) }
+            .learning-student-card__header
+              .learning-student-card__title
+                %h3= row.student.name
+                .learning-inline-tags
+                  - row.parts.each do |part|
+                    %span.learning-part-tag= learning_part_label(part)
+              .learning-badges
+                - if row.mvp
+                  %span.learning-badge.learning-badge--mvp 🏆 MVP
+                - if row.weekly_mvp
+                  %span.learning-badge.learning-badge--weekly 今週MVP
+            .learning-rank
+              %span.learning-rank__label 順位
+              %strong= "#{row.rank}位"
+            .learning-progress
+              .learning-progress__bar{ style: "width: #{learning_progress_bar_width(row.progress_rate)}%" }
+            .learning-student-card__metrics
+              %span= "進捗率 #{row.progress_rate}%"
+              %span= "達成数 #{row.achievement_count} / #{row.total_count}"
+            .learning-student-card__body
+              %p
+                %strong 今週の目標:
+                = row.weekly_goal.presence || "未設定"
+              %p
+                %strong コメント:
+                = row.comment.presence || "先生からのコメントはまだありません。"
+            .learning-student-card__footer
+              = link_to "詳細を見る", learning_student_path(row.student), class: "learning-button learning-button--ghost"
+              = link_to "割当を管理", learning_student_student_trainings_path(row.student), class: "learning-button"
+    - else
+      .learning-empty.learning-empty--action
+        %strong ダッシュボードは生徒登録後に育ち始めます
+        %p 最初の生徒を登録し、トレーニングを1つ割り当てると、達成率・努力ポイント・最近のがんばりがここに表示されます。
+        = link_to "生徒を追加", new_learning_student_path, class: "learning-button"
 
   .learning-two-column
     .learning-section
       .learning-section__header
         %h2 ランキング一覧
       .learning-table-wrap
-        %table.learning-table
-          %thead
-            %tr
-              %th 順位
-              %th 名前
-              %th 高校
-              %th パート
-              %th 進捗率
-              %th 達成数
-              %th 今週の目標
-              %th コメント
-          %tbody
-            - @dashboard.student_rows.each do |row|
+        - if @dashboard.student_rows.any?
+          %table.learning-table
+            %thead
               %tr
-                %td
-                  = row.rank
-                  - if row.mvp
-                    %span.learning-table__icon 🏆
-                %td= link_to row.student.name, learning_student_path(row.student)
-                %td= row.student.learning_school_group&.name || "未所属"
-                %td= row.parts.map { |part| learning_part_label(part) }.join(" / ")
-                %td
-                  .learning-progress.learning-progress--compact{ style: learning_progress_style(row.student.main_part) }
-                    .learning-progress__bar{ style: "width: #{learning_progress_bar_width(row.progress_rate)}%" }
-                  = "#{row.progress_rate}%"
-                %td= row.achievement_count
-                %td= row.weekly_goal.presence || "未設定"
-                %td= row.comment.presence || "-"
+                %th 順位
+                %th 名前
+                %th 高校
+                %th パート
+                %th 進捗率
+                %th 達成数
+                %th 今週の目標
+                %th コメント
+            %tbody
+              - @dashboard.student_rows.each do |row|
+                %tr
+                  %td
+                    = row.rank
+                    - if row.mvp
+                      %span.learning-table__icon 🏆
+                  %td= link_to row.student.name, learning_student_path(row.student)
+                  %td= row.student.learning_school_group&.name || "未所属"
+                  %td= row.parts.map { |part| learning_part_label(part) }.join(" / ")
+                  %td
+                    .learning-progress.learning-progress--compact{ style: learning_progress_style(row.student.main_part) }
+                      .learning-progress__bar{ style: "width: #{learning_progress_bar_width(row.progress_rate)}%" }
+                    = "#{row.progress_rate}%"
+                  %td= row.achievement_count
+                  %td= row.weekly_goal.presence || "未設定"
+                  %td= row.comment.presence || "-"
+        - else
+          .learning-empty
+            %strong ランキングは生徒登録後に表示されます
+            %p 努力ポイントや達成率は、比較よりも継続のきっかけとして使います。
 
     .learning-section
       .learning-section__header
@@ -134,12 +145,20 @@
             %th 達成
             %th コメント
         %tbody
-          - @dashboard.recent_logs.each do |log|
+          - if @dashboard.recent_logs.any?
+            - @dashboard.recent_logs.each do |log|
+              %tr
+                %td= l(log.practiced_on)
+                %td= log.learning_student.name
+                %td= log.learning_student.learning_school_group&.name || "未所属"
+                %td= learning_part_label(log.part)
+                %td= log.training_title
+                %td= learning_mark_label(log.achievement_mark)
+                %td= log.comment.presence || "-"
+          - else
             %tr
-              %td= l(log.practiced_on)
-              %td= log.learning_student.name
-              %td= log.learning_student.learning_school_group&.name || "未所属"
-              %td= learning_part_label(log.part)
-              %td= log.training_title
-              %td= learning_mark_label(log.achievement_mark)
-              %td= log.comment.presence || "-"
+              %td{ colspan: 7 }
+                .learning-empty.learning-empty--action
+                  %strong 進捗ログはまだありません
+                  %p 練習記録が入ると、最近のがんばりや週間MVPを確認できるようになります。
+                  = link_to "生徒を選んでログを追加", learning_students_path, class: "learning-button learning-button--ghost"

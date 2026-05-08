@@ -413,6 +413,71 @@ $lp-shadow-lg:  0 8px 40px rgba(79, 126, 248, 0.16);
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ASSURANCE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+.lp-assurance {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 40px;
+  border-radius: 24px;
+  background: $lp-light-bg;
+  border: 1px solid $lp-border;
+  box-shadow: $lp-shadow;
+
+  &--guide {
+    background: linear-gradient(135deg, #f6f8ff, #fff8f3);
+  }
+
+  @media (max-width: 640px) { padding: 28px 20px; }
+}
+
+.lp-assurance__eyebrow {
+  margin: 0 0 8px;
+  color: $lp-primary;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.lp-assurance__title {
+  max-width: 680px;
+  margin: 0 0 24px;
+  color: $lp-dark;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.45;
+
+  @media (max-width: 640px) { font-size: 20px; }
+}
+
+.lp-assurance__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  @media (max-width: 768px) { grid-template-columns: 1fr; }
+}
+
+.lp-assurance__item {
+  padding: 18px;
+  border-radius: $lp-radius;
+  background: $lp-white;
+  border: 1px solid rgba($lp-primary, 0.12);
+
+  strong {
+    display: block;
+    margin-bottom: 6px;
+    color: $lp-dark;
+    font-size: 15px;
+  }
+
+  span {
+    color: $lp-muted;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MONITOR BOX
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 .lp-monitor-box {

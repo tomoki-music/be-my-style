@@ -1,5 +1,32 @@
 = render "learning/shared/page", title: "顧問ダッシュボード", subtitle: "生徒の進捗・努力ポイントを一覧確認できます。" do
 
+  -# 初回オンボーディング
+  - if @onboarding_status.completed?
+    .learning-ready-banner
+      .learning-ready-banner__icon ✓
+      .learning-ready-banner__body
+        %strong 運用準備完了
+        %span 生徒登録・グループ・割当・案内・初回記録まで進んでいます。このまま週1回の確認を続けましょう。
+  - else
+    .learning-onboarding
+      .learning-onboarding__header
+        .learning-onboarding__title
+          %span.learning-onboarding__eyebrow 初日セットアップ
+          %h2 次にやること
+          %p まずは1つずつ進めれば、生徒が自分の課題を確認できる状態になります。
+        .learning-onboarding__progress
+          %strong= "#{@onboarding_status.completed_count} / #{@onboarding_status.total_count}"
+          %span 完了
+      .learning-onboarding__steps
+        - @onboarding_status.steps.each_with_index do |step, index|
+          .learning-onboarding-step{ class: ("is-complete" if step.completed) }
+            .learning-onboarding-step__marker= step.completed ? "✓" : index + 1
+            .learning-onboarding-step__body
+              %strong= step.title
+              %p= step.body
+            - unless step.completed
+              = link_to step.cta_label, step.cta_path, class: "learning-button learning-button--sm"
+
   -# 月次サマリー
   - report = @monthly_report
   .learning-stat-grid
@@ -19,6 +46,34 @@
       %span.learning-stat-card__label 今月の課題達成
       %strong.learning-stat-card__value= report.persisted? ? report.total_achieved_trainings : "-"
       %p.learning-stat-card__sub ⭐ に更新された件数
+
+  .learning-section
+    .learning-section__header
+      %h2 今週の成長
+      %small= "#{Date.current.beginning_of_week.strftime('%-m/%-d')} - #{Date.current.end_of_week.strftime('%-m/%-d')}"
+    - if @weekly_growth[:progress_log_count].positive? || @weekly_growth[:completed_training_count].positive?
+      .learning-stat-grid.learning-stat-grid--compact
+        .learning-stat-card
+          %span.learning-stat-card__label 今週取り組んだ生徒数
+          %strong.learning-stat-card__value= "#{@weekly_growth[:active_student_count]}人"
+          %p.learning-stat-card__sub 練習記録があった生徒
+        .learning-stat-card
+          %span.learning-stat-card__label 今週完了された練習数
+          %strong.learning-stat-card__value= "#{@weekly_growth[:completed_training_count]}件"
+          %p.learning-stat-card__sub 達成に更新された割当
+        .learning-stat-card
+          %span.learning-stat-card__label 平均達成率
+          %strong.learning-stat-card__value= @weekly_growth[:average_achievement_rate] ? "#{@weekly_growth[:average_achievement_rate]}%" : "-"
+          %p.learning-stat-card__sub 全割当から算出
+        .learning-stat-card
+          %span.learning-stat-card__label 先週比
+          %strong.learning-stat-card__value= @weekly_growth[:log_count_delta].positive? ? "+#{@weekly_growth[:log_count_delta]}" : @weekly_growth[:log_count_delta]
+          %p.learning-stat-card__sub 練習記録数の差分
+    - else
+      .learning-empty.learning-empty--action
+        %strong 今週の成長はこれから表示されます
+        %p 生徒がポータルを見て練習記録を残すと、取り組んだ人数や達成数がここにまとまります。
+        = link_to "生徒にポータルURLを案内する", learning_students_path, class: "learning-button learning-button--ghost"
 
   -# グループフィルタ + CSVエクスポート
   .learning-section
@@ -54,22 +109,35 @@
             %th 最終練習日
             %th
         %tbody
-          - @students.each do |student|
-            - last_log = student.learning_progress_logs.maximum(:practiced_on)
+          - if @students.any?
+            - @students.each do |student|
+              - last_log = @last_practiced_on_by_student[student.id]
+              - achievement_rate = @achievement_rate_by_student[student.id] || 0
+              %tr
+                %td
+                  = link_to student.name, learning_student_path(student)
+                %td.text-muted= student.nickname.presence || "-"
+                %td= learning_part_label(student.main_part)
+                %td= student.grade.presence || "-"
+                %td= student.learning_school_group&.name || "未所属"
+                %td.text-right
+                  .learning-progress.learning-progress--compact{ style: learning_progress_style(student.main_part) }
+                    .learning-progress__bar{ style: "width: #{learning_progress_bar_width(achievement_rate)}%" }
+                  %small= "#{achievement_rate}%"
+                %td.text-right
+                  %strong= student.total_effort_points
+                  %small PT
+                %td= last_log ? l(last_log, format: :short) : "-"
+                %td
+                  = link_to "詳細", learning_student_path(student), class: "learning-button learning-button--ghost learning-button--sm"
+          - else
             %tr
-              %td
-                = link_to student.name, learning_student_path(student)
-              %td.text-muted= student.nickname.presence || "-"
-              %td= learning_part_label(student.main_part)
-              %td= student.grade.presence || "-"
-              %td= student.learning_school_group&.name || "未所属"
-              %td.text-right
-                .learning-progress.learning-progress--compact{ style: learning_progress_style(student.main_part) }
-                  .learning-progress__bar{ style: "width: #{learning_progress_bar_width(student.achievement_rate)}%" }
-                %small= "#{student.achievement_rate}%"
-              %td.text-right
-                %strong= student.total_effort_points
-                %small PT
-              %td= last_log ? l(last_log, format: :short) : "-"
-              %td
-                = link_to "詳細", learning_student_path(student), class: "learning-button learning-button--ghost learning-button--sm"
+              %td{ colspan: 9 }
+                .learning-empty.learning-empty--action
+                  %strong まずは生徒を1人登録しましょう
+                  %p 生徒を登録すると、専用ポータルURL・課題割当・努力ポイントの運用を始められます。
+                  = link_to "生徒を追加", new_learning_student_path, class: "learning-button"
+
+  .learning-assurance
+    %strong 安心して運用するために
+    %p 生徒はニックネームで運用できます。ランキングは個人を責めるためではなく、努力・継続・成長を部活動全体で見守るための仕組みです。

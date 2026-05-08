@@ -21,6 +21,7 @@ class Learning::StudentPortalsController < ApplicationController
       teacher_comment: trainings.map(&:teacher_comment).find(&:present?)
     }
     @current_trainings = trainings.first(8)
+    @first_action_training = trainings.find { |training| training.status != "achieved" && !training.star? }
     @recent_logs = recent_logs
     @current_streak  = LearningPortalAccess.current_streak(@student)
     @effort_points   = @student.total_effort_points
