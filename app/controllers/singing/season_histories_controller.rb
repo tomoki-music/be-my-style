@@ -1,6 +1,10 @@
 class Singing::SeasonHistoriesController < Singing::BaseController
   SeasonHistoryEntry = Struct.new(:season, :entry, :growth_entry, :badges, :diagnosis_count, keyword_init: true) do
     def participated?
+      diagnosis_count > 0
+    end
+
+    def ranking_participant?
       entry.present?
     end
 
