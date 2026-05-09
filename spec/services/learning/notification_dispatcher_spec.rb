@@ -90,5 +90,19 @@ RSpec.describe Learning::NotificationDispatcher do
       expect(logs.first.status).to eq("queued")
       expect(logs.first.delivery_channel).to eq("line")
     end
+
+    it "LINE設定ではadapterを呼ぶがsentにはしないこと" do
+      create(:learning_notification_setting, customer: customer, delivery_channel: "line")
+      create(:learning_progress_log, customer: customer, learning_student: student,
+                                    practiced_on: 5.days.ago.to_date)
+      line_adapter = instance_double(Learning::LineNotificationAdapter)
+      allow(line_adapter).to receive(:deliver)
+
+      logs = described_class.new(customer, line_adapter: line_adapter).dispatch
+
+      expect(line_adapter).to have_received(:deliver).with(logs.first)
+      expect(logs.first.reload.status).to eq("queued")
+      expect(logs.first.sent_at).to be_nil
+    end
   end
 end

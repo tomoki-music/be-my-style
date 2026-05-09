@@ -229,6 +229,7 @@ Rails.application.routes.draw do
       post :persist_preview, on: :collection
     end
     resource :notification_settings, only: [:edit, :update], controller: :notification_settings
+    # LINE連携は後続フェーズで /learning/line/webhook と /learning/line/callback を追加予定。
     get "portal/:token", to: "student_portals#show", as: :student_portal
     post "portal/:token/complete_tutorial", to: "student_portals#complete_tutorial", as: :student_portal_complete_tutorial
     resources :school_groups

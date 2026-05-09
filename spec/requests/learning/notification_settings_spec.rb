@@ -18,6 +18,9 @@ RSpec.describe "Learning notification settings", type: :request do
       expect(response.body).to include("手動コピー")
       expect(response.body).to include("メール：準備中")
       expect(response.body).to include("LINE：準備中")
+      expect(response.body).to include("LINE通知：準備中")
+      expect(response.body).to include("現在は手動コピーのみ利用可能")
+      expect(response.body).to include("生徒ごとのLINE連携に対応予定")
       expect(response.body).to include('disabled="disabled"')
     end
   end
