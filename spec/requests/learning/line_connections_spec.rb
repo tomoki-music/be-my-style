@@ -1,9 +1,17 @@
+require "cgi"
 require "rails_helper"
 
 RSpec.describe "Learning line connections", type: :request do
   let!(:learning_domain) { Domain.find_or_create_by!(name: "learning") }
   let(:teacher) { create(:customer, domain_name: "learning", confirmed_at: Time.current) }
   let(:student) { create(:learning_student, customer: teacher, nickname: "ギターさん") }
+
+  around do |example|
+    original_line_id = ENV["LINE_OFFICIAL_ACCOUNT_ID"]
+    ENV.delete("LINE_OFFICIAL_ACCOUNT_ID")
+    example.run
+    ENV["LINE_OFFICIAL_ACCOUNT_ID"] = original_line_id
+  end
 
   before { sign_in teacher }
 
@@ -66,7 +74,23 @@ RSpec.describe "Learning line connections", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("LINE連携はこちら")
       expect(response.body).to include("token=#{connection.connect_token}")
+      expect(response.body).to include("LINE公式アカウントIDが未設定")
       expect(connection.reload).not_to be_connected
+    end
+
+    it "LINE_OFFICIAL_ACCOUNT_ID設定時はBot直送deep linkを表示すること" do
+      ENV["LINE_OFFICIAL_ACCOUNT_ID"] = "@testbot"
+      post learning_student_line_connection_path(student)
+      connection = Learning::LineConnection.last
+      encoded_text = CGI.escape("BeMyStyle LINE連携 token=#{connection.connect_token}")
+
+      get learning_line_connect_path(token: connection.connect_token)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("https://line.me/R/oaMessage/%40testbot/?#{encoded_text}")
+      expect(response.body).to include("メッセージが自動入力")
+      expect(response.body).not_to include("https://line.me/R/share?text=")
+      expect(response.body).not_to include("https://line.me/R/msg/text/")
     end
 
     it "無効なトークンならエラー表示すること" do

@@ -31,8 +31,6 @@ class Learning::LineConnectionsController < Learning::BaseController
     if @line_connection
       @student = @line_connection.learning_student
       @connect_token = @line_connection.connect_token
-      @line_message_text = "BeMyStyle LINE連携 token=#{@connect_token}"
-      @line_share_url = "https://line.me/R/msg/text/?#{ERB::Util.url_encode(@line_message_text)}"
     else
       render :invalid, status: :unprocessable_entity
     end
