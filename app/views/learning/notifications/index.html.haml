@@ -1,11 +1,18 @@
-= render "learning/shared/page", title: "通知ログ", subtitle: "ReminderService が今この瞬間に返す通知候補を確認できます。DB保存はせず、その場で生成しています。" do
+= render "learning/shared/page", title: "通知ログ", subtitle: "LINE/メール実配信前に、通知候補と保存済み履歴を確認できます。実送信はまだ行いません。" do
   .learning-section
     .learning-section__header
-      %h2 通知候補
+      %h2 今日の通知候補
       .learning-section__actions
         %span.learning-notification-current= "現在の通知方式：#{@notification_setting.delivery_channel_label}"
+        = button_to "今日の通知候補を履歴に保存",
+                    persist_preview_learning_notifications_path,
+                    method: :post,
+                    class: "learning-button learning-button--sm"
         = link_to "通知設定を変更", edit_learning_notification_settings_path, class: "learning-button learning-button--ghost learning-button--sm"
         = link_to "顧問ダッシュボードへ", learning_teacher_dashboard_path, class: "learning-button learning-button--ghost learning-button--sm"
+    .learning-empty
+      %strong 実送信はまだ行いません
+      %p LINE/メール送信は準備中です。ここでは通知候補を履歴に保存し、手動コピーで安全に運用できます。
 
     .learning-table-wrap
       %table.learning-table
@@ -38,3 +45,45 @@
                   - else
                     %strong 生徒リマインド通知はOFFです
                     %p 通知設定をONにすると、対象生徒の通知候補がここに表示されます。
+
+  .learning-section
+    .learning-section__header
+      %h2 保存済み通知履歴
+      %small= "最新#{@notification_logs.size}件"
+
+    .learning-table-wrap
+      %table.learning-table
+        %thead
+          %tr
+            %th 対象生徒
+            %th 種別
+            %th レベル
+            %th ステータス
+            %th メッセージ
+            %th 推奨アクション
+            %th 生成日時
+        %tbody
+          - if @notification_logs.any?
+            - @notification_logs.each do |log|
+              %tr
+                %td
+                  - if log.learning_student
+                    = link_to log.learning_student.display_name, learning_student_path(log.learning_student)
+                  - else
+                    = "-"
+                %td= log.notification_type
+                %td
+                  - if log.level.present?
+                    %span.learning-notification-level{ class: "learning-notification-level--#{log.level}" }= log.level
+                  - else
+                    = "-"
+                %td= log.status
+                %td= log.message
+                %td= log.recommended_action.presence || "-"
+                %td= l(log.generated_at, format: :short)
+          - else
+            %tr
+              %td{ colspan: 7 }
+                .learning-empty
+                  %strong 保存済み通知履歴はまだありません
+                  %p 今日の通知候補を履歴に保存すると、ここに追跡用のログが表示されます。

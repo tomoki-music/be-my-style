@@ -1,8 +1,6 @@
 module Learning
   class NotificationDispatcher
-    Delivery = Struct.new(:reminder, :channel, :status, keyword_init: true)
-
-    CHANNELS = %i[line email app].freeze
+    CHANNELS = %i[line email manual].freeze
 
     def initialize(customer, channels: [])
       @customer = customer
@@ -15,16 +13,21 @@ module Learning
       reminders
     end
 
+    def persist_preview!
+      return [] unless notification_setting.reminder_enabled?
+
+      reminders.filter_map { |reminder| find_or_create_log(reminder) }
+    end
+
     def dispatch
       return [] unless notification_setting.reminder_enabled?
 
-      channels = @channels & CHANNELS
-      return [] if channels.empty?
+      channels = (@channels.presence || [notification_setting.delivery_channel]).map(&:to_sym) & CHANNELS
+      selected_channel = (channels.first || notification_setting.delivery_channel).to_s
+      status = %w[email line].include?(selected_channel) ? "queued" : "skipped"
 
-      reminders.flat_map do |reminder|
-        channels.map do |channel|
-          Delivery.new(reminder: reminder, channel: channel, status: :planned)
-        end
+      persist_preview!.each do |log|
+        log.update!(status: status, delivery_channel: selected_channel)
       end
     end
 
@@ -36,6 +39,36 @@ module Learning
 
     def notification_setting
       @notification_setting ||= NotificationSetting.effective_for(@customer)
+    end
+
+    def find_or_create_log(reminder)
+      existing_log = Learning::NotificationLog
+        .where(
+          customer: @customer,
+          learning_student: reminder.student,
+          notification_type: "reminder"
+        )
+        .where(generated_at: Time.zone.today.all_day)
+        .first
+      return existing_log if existing_log
+
+      Learning::NotificationLog.create!(
+        customer: @customer,
+        learning_student: reminder.student,
+        notification_type: "reminder",
+        level: reminder.level,
+        delivery_channel: notification_setting.delivery_channel,
+        status: "previewed",
+        title: "#{reminder.student.display_name}さんへの通知候補",
+        message: reminder.message,
+        recommended_action: reminder.recommended_action,
+        generated_at: reminder.generated_at,
+        metadata: {
+          stage: reminder.stage,
+          days_idle: reminder.days_idle,
+          source: "Learning::ReminderService"
+        }
+      )
     end
   end
 end

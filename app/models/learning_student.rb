@@ -8,6 +8,9 @@ class LearningStudent < ApplicationRecord
   has_many :learning_bands, through: :learning_band_memberships
   has_many :learning_effort_points, dependent: :destroy
   has_many :learning_portal_accesses, dependent: :destroy
+  has_many :learning_notification_logs,
+           class_name: "Learning::NotificationLog",
+           dependent: :nullify
 
   validates :name, presence: true, length: { maximum: 50 }
   validates :nickname, length: { maximum: 30 }, allow_blank: true
