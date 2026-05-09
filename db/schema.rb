@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_09_130000) do
+ActiveRecord::Schema.define(version: 2026_05_09_143000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -422,7 +422,7 @@ ActiveRecord::Schema.define(version: 2026_05_09_130000) do
   create_table "learning_line_connections", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "learning_student_id"
-    t.string "line_user_id", null: false
+    t.string "line_user_id"
     t.string "display_name"
     t.string "status", default: "pending", null: false
     t.datetime "connected_at"
@@ -430,7 +430,11 @@ ActiveRecord::Schema.define(version: 2026_05_09_130000) do
     t.json "metadata"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "connect_token"
+    t.datetime "expires_at"
+    t.index ["connect_token"], name: "index_learning_line_connections_on_connect_token", unique: true
     t.index ["customer_id"], name: "index_learning_line_connections_on_customer_id"
+    t.index ["expires_at"], name: "index_learning_line_connections_on_expires_at"
     t.index ["learning_student_id"], name: "index_learning_line_connections_on_learning_student_id"
     t.index ["line_user_id"], name: "index_learning_line_connections_on_line_user_id"
     t.index ["status"], name: "index_learning_line_connections_on_status"

@@ -86,3 +86,4 @@ gem 'acts-as-taggable-on'
 gem 'redcarpet'
 gem 'sanitize'
 gem 'stripe'
+gem "rqrcode", "~> 3.1"

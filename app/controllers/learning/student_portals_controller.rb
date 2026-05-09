@@ -43,6 +43,7 @@ class Learning::StudentPortalsController < ApplicationController
       .distinct
       .count(:learning_student_id)
     @part_recommendations = Learning::FirstDayExperience.recommendations_for(@student)
+    @line_connected = @student.line_connected?
   end
 
   def complete_tutorial

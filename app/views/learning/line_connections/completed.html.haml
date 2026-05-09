@@ -1,0 +1,11 @@
+%main.lp-main.learning-line-public
+  .learning-line-result
+    %span.learning-line-result__eyebrow BeMyStyle Learning
+    %h1 LINE連携完了！
+    - if @student
+      %p= "#{@student.display_name} さんのLINE連携が完了しました。"
+    - else
+      %p LINE連携が完了しました。
+    %p 次回から、練習のリマインドや大事なお知らせを受け取りやすくなります。
+    - if @student
+      = link_to "トレーニング画面へ", learning_student_portal_path(@student.public_access_token), class: "learning-button"

@@ -1,0 +1,44 @@
+- action = link_to("生徒詳細へ戻る", learning_student_path(@student), class: "learning-button learning-button--ghost")
+= render "learning/shared/page", title: "#{@student.display_name} さんのLINE連携", subtitle: "生徒ごとの専用QRを発行して、リマインド通知の送信先を紐付けます。", action: action do
+  .learning-two-column.learning-two-column--balanced
+    .learning-section.learning-line-panel
+      .learning-section__header
+        %h2 連携ステータス
+      .learning-detail-card
+        %p
+          %strong 状態
+          = learning_line_connection_label(@line_connection)
+        - if @line_connection&.connected?
+          %p
+            %strong 連携日時
+            = l(@line_connection.connected_at, format: :long)
+          %p LINE連携は完了しています。次フェーズのMessaging API接続後、この生徒へ自動リマインドを送れるようになります。
+        - elsif @line_connection&.token_active?
+          %p
+            %strong 有効期限
+            = l(@line_connection.expires_at, format: :long)
+          %p 生徒にスマホでQRを読み取ってもらい、LINE公式アカウントへ連携メッセージを送ると完了します。
+        - else
+          %p まだ有効なLINE連携QRはありません。24時間有効な専用QRを発行してください。
+
+        - unless @line_connection&.connected?
+          = button_to "LINE連携QRを発行", learning_student_line_connection_path(@student), method: :post, class: "learning-button"
+
+    .learning-section.learning-line-panel
+      .learning-section__header
+        %h2 LINE連携QR
+      - if @line_connection&.connected?
+        .learning-line-complete
+          %strong 連携済み
+          %p 顧問画面ではこの生徒を「連携済み」として確認できます。
+      - elsif @connect_url.present?
+        .learning-line-qr
+          .learning-line-qr__image
+            = learning_line_qr_svg(@connect_url)
+          %strong LINE連携はこちら
+          %p 生徒のスマホで読み取ってください。連携完了後、このURLは無効になります。
+          %code.learning-line-qr__url= @connect_url
+      - else
+        .learning-empty
+          %strong QR未発行
+          %p 左のボタンから専用QRを発行できます。
