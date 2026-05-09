@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_09_010000) do
+ActiveRecord::Schema.define(version: 2026_05_09_120000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -431,6 +431,30 @@ ActiveRecord::Schema.define(version: 2026_05_09_010000) do
     t.datetime "updated_at", precision: 6, null: false
     t.index ["customer_id", "report_month"], name: "index_learning_monthly_reports_on_customer_and_month", unique: true
     t.index ["customer_id"], name: "index_learning_monthly_reports_on_customer_id"
+  end
+
+  create_table "learning_notification_logs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "learning_student_id"
+    t.string "notification_type", null: false
+    t.string "level"
+    t.string "delivery_channel", default: "manual", null: false
+    t.string "status", default: "previewed", null: false
+    t.string "title"
+    t.text "message", null: false
+    t.string "recommended_action"
+    t.datetime "generated_at", null: false
+    t.datetime "sent_at"
+    t.text "error_message"
+    t.json "metadata"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id", "learning_student_id", "notification_type", "generated_at"], name: "index_learning_notification_logs_on_daily_dedupe_lookup"
+    t.index ["customer_id"], name: "index_learning_notification_logs_on_customer_id"
+    t.index ["generated_at"], name: "index_learning_notification_logs_on_generated_at"
+    t.index ["learning_student_id"], name: "index_learning_notification_logs_on_learning_student_id"
+    t.index ["notification_type"], name: "index_learning_notification_logs_on_notification_type"
+    t.index ["status"], name: "index_learning_notification_logs_on_status"
   end
 
   create_table "learning_notification_settings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -905,6 +929,8 @@ ActiveRecord::Schema.define(version: 2026_05_09_010000) do
   add_foreign_key "learning_effort_points", "customers"
   add_foreign_key "learning_effort_points", "learning_students"
   add_foreign_key "learning_monthly_reports", "customers"
+  add_foreign_key "learning_notification_logs", "customers"
+  add_foreign_key "learning_notification_logs", "learning_students"
   add_foreign_key "learning_notification_settings", "customers"
   add_foreign_key "learning_portal_accesses", "learning_students"
   add_foreign_key "learning_progress_logs", "customers"

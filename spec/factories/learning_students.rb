@@ -68,4 +68,18 @@ FactoryBot.define do
     student_reactivation_enabled { true }
     delivery_channel { "manual" }
   end
+
+  factory :learning_notification_log, class: "Learning::NotificationLog" do
+    customer
+    learning_student
+    notification_type { "reminder" }
+    level { "normal" }
+    delivery_channel { "manual" }
+    status { "previewed" }
+    title { "通知候補" }
+    message { "ここで戻ると差がつきます" }
+    recommended_action { "短い練習を選んで再開する" }
+    generated_at { Time.current }
+    metadata { { stage: 3, days_idle: 3 } }
+  end
 end

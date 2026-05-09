@@ -225,7 +225,9 @@ Rails.application.routes.draw do
     resource :teacher_dashboard, only: :show, controller: :teacher_dashboards do
       get :export_csv, on: :collection
     end
-    resources :notifications, only: :index
+    resources :notifications, only: :index do
+      post :persist_preview, on: :collection
+    end
     resource :notification_settings, only: [:edit, :update], controller: :notification_settings
     get "portal/:token", to: "student_portals#show", as: :student_portal
     post "portal/:token/complete_tutorial", to: "student_portals#complete_tutorial", as: :student_portal_complete_tutorial

@@ -113,6 +113,9 @@ class Customer < ApplicationRecord
   has_one :learning_notification_setting,
           class_name: "Learning::NotificationSetting",
           dependent: :destroy
+  has_many :learning_notification_logs,
+           class_name: "Learning::NotificationLog",
+           dependent: :destroy
   has_many :singing_diagnoses, dependent: :destroy
   has_many :singing_badges, dependent: :destroy
   has_many :singing_profile_reactions, dependent: :destroy
