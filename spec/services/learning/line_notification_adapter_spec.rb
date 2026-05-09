@@ -10,10 +10,6 @@ RSpec.describe Learning::LineNotificationAdapter do
     ENV["LINE_CHANNEL_ACCESS_TOKEN"] = original
   end
 
-  before do
-    allow(Rails.application.credentials).to receive(:dig).with(:line, :channel_access_token).and_return(nil)
-  end
-
   describe "#enabled?" do
     it "LINE設定がなければ false を返すこと" do
       adapter = described_class.new
@@ -26,9 +22,22 @@ RSpec.describe Learning::LineNotificationAdapter do
     it "通知ログからLINE用payloadを組み立てること" do
       payload = described_class.new.build_payload(notification_log)
 
-      expect(payload[:to]).to eq(notification_log.learning_student_id)
+      expect(payload[:to]).to be_nil
       expect(payload[:messages].first[:type]).to eq("text")
       expect(payload[:messages].first[:text]).to include(notification_log.message)
+    end
+
+    it "連携済みLINE userIdを宛先にすること" do
+      create(:learning_line_connection,
+             customer: notification_log.customer,
+             learning_student: notification_log.learning_student,
+             line_user_id: "UrealLineUserId",
+             status: "connected",
+             connected_at: Time.current)
+
+      payload = described_class.new.build_payload(notification_log)
+
+      expect(payload[:to]).to eq("UrealLineUserId")
     end
   end
 
@@ -38,9 +47,77 @@ RSpec.describe Learning::LineNotificationAdapter do
 
       expect(result.status).to eq(:adapter_disabled)
       expect(result.success?).to eq(false)
-      expect(notification_log.reload.status).to eq("queued")
+      expect(notification_log.reload.status).to eq("skipped")
       expect(notification_log.sent_at).to be_nil
       expect(notification_log.error_message).to eq("LINE adapter is not configured")
     end
+
+    it "設定済みでもLINE未連携ならno-opで安全に失敗すること" do
+      ENV["LINE_CHANNEL_ACCESS_TOKEN"] = "test-token"
+
+      result = described_class.new.deliver(notification_log)
+
+      expect(result.status).to eq(:no_recipient)
+      expect(notification_log.reload.status).to eq("skipped")
+      expect(notification_log.reload.error_message).to eq("LINE recipient is not connected")
+    end
+
+    it "設定済みかつLINE連携済みならLINE push messageを送信してsentにすること" do
+      ENV["LINE_CHANNEL_ACCESS_TOKEN"] = "test-token"
+      create(:learning_line_connection,
+             customer: notification_log.customer,
+             learning_student: notification_log.learning_student,
+             line_user_id: "UrealLineUserId",
+             status: "connected",
+             connected_at: Time.current)
+      http_client = fake_http_client(response: Net::HTTPOK.new("1.1", "200", "OK"))
+
+      result = described_class.new(http_client: http_client).deliver(notification_log)
+
+      expect(result.status).to eq(:ok)
+      expect(result.payload[:to]).to eq("UrealLineUserId")
+      expect(notification_log.reload.status).to eq("sent")
+      expect(notification_log.sent_at).to be_present
+      expect(http_client.request["Authorization"]).to eq("Bearer test-token")
+      expect(JSON.parse(http_client.request.body)["to"]).to eq("UrealLineUserId")
+    end
+
+    it "HTTP失敗時はfailedと失敗理由を保存すること" do
+      ENV["LINE_CHANNEL_ACCESS_TOKEN"] = "test-token"
+      create(:learning_line_connection,
+             customer: notification_log.customer,
+             learning_student: notification_log.learning_student,
+             line_user_id: "UrealLineUserId",
+             status: "connected",
+             connected_at: Time.current)
+      response = Net::HTTPBadRequest.new("1.1", "400", "Bad Request")
+      allow(response).to receive(:body).and_return("invalid request")
+
+      result = described_class.new(http_client: fake_http_client(response: response)).deliver(notification_log)
+
+      expect(result.status).to eq(:http_error)
+      expect(notification_log.reload.status).to eq("failed")
+      expect(notification_log.error_message).to include("status=400")
+    end
+  end
+
+  def fake_http_client(response:)
+    Class.new do
+      attr_reader :request
+
+      define_method(:initialize) do
+        @response = response
+      end
+
+      define_method(:start) do |_host, _port, _options, &block|
+        http = Object.new
+        parent = self
+        http.define_singleton_method(:request) do |request|
+          parent.instance_variable_set(:@request, request)
+          response
+        end
+        block.call(http)
+      end
+    end.new
   end
 end

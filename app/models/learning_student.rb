@@ -14,6 +14,10 @@ class LearningStudent < ApplicationRecord
   has_many :learning_line_connections,
            class_name: "Learning::LineConnection",
            dependent: :nullify
+  has_one :current_learning_line_connection,
+          -> { order(created_at: :desc) },
+          class_name: "Learning::LineConnection",
+          inverse_of: :learning_student
 
   validates :name, presence: true, length: { maximum: 50 }
   validates :nickname, length: { maximum: 30 }, allow_blank: true
@@ -77,6 +81,10 @@ class LearningStudent < ApplicationRecord
 
   def portal_url
     Rails.application.routes.url_helpers.learning_student_portal_url(public_access_token)
+  end
+
+  def line_connected?
+    learning_line_connections.connected.exists?
   end
 
   def sync_parts!(parts)

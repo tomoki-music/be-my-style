@@ -19,6 +19,7 @@
             %th パート
             %th 学年
             %th ステータス
+            %th LINE
             %th 割当数
             %th 操作
         %tbody
@@ -30,6 +31,11 @@
                 %td= student.displayed_parts.map { |part| learning_part_label(part) }.join(" / ")
                 %td= student.grade.presence || "-"
                 %td= learning_student_status_label(student.status)
+                %td
+                  - if student.line_connected?
+                    %span.learning-line-status.learning-line-status--connected 連携済み
+                  - else
+                    = link_to "QR発行", learning_student_line_connection_path(student), class: "learning-text-link"
                 %td= student.learning_student_trainings.size
                 %td.learning-table__actions
                   = link_to "詳細", learning_student_path(student), class: "learning-text-link"
@@ -38,7 +44,7 @@
                   = link_to "削除", learning_student_path(student), method: :delete, data: { confirm: "削除しますか？" }, class: "learning-text-link learning-text-link--danger"
           - else
             %tr
-              %td{ colspan: 7 }
+              %td{ colspan: 8 }
                 .learning-empty.learning-empty--action
                   %strong 生徒登録から始めましょう
                   %p 生徒を登録すると、個別ポータルURL・トレーニング割当・努力ポイントの土台ができます。

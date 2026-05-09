@@ -79,7 +79,7 @@ RSpec.describe Learning::NotificationDispatcher do
       expect(logs.first.status).to eq("skipped")
     end
 
-    it "LINE/メール設定では将来送信用に queued にすること" do
+    it "LINE未連携ならadapter no-opで skipped にすること" do
       create(:learning_notification_setting, customer: customer, delivery_channel: "line")
       create(:learning_progress_log, customer: customer, learning_student: student,
                                     practiced_on: 5.days.ago.to_date)
@@ -87,7 +87,7 @@ RSpec.describe Learning::NotificationDispatcher do
       logs = described_class.new(customer).dispatch
 
       expect(logs.size).to eq(1)
-      expect(logs.first.status).to eq("queued")
+      expect(logs.first.reload.status).to eq("skipped")
       expect(logs.first.delivery_channel).to eq("line")
     end
 
@@ -103,6 +103,28 @@ RSpec.describe Learning::NotificationDispatcher do
       expect(line_adapter).to have_received(:deliver).with(logs.first)
       expect(logs.first.reload.status).to eq("queued")
       expect(logs.first.sent_at).to be_nil
+    end
+
+    it "同日同種同生徒で送信済みの通知は再送しないこと" do
+      create(:learning_notification_setting, customer: customer, delivery_channel: "line")
+      create(:learning_progress_log, customer: customer, learning_student: student,
+                                    practiced_on: 5.days.ago.to_date)
+      sent_log = create(:learning_notification_log,
+                        customer: customer,
+                        learning_student: student,
+                        notification_type: "reminder",
+                        delivery_channel: "line",
+                        status: "sent",
+                        sent_at: 1.hour.ago,
+                        generated_at: Time.current)
+      line_adapter = instance_double(Learning::LineNotificationAdapter)
+      allow(line_adapter).to receive(:deliver)
+
+      logs = described_class.new(customer, channels: [:line], line_adapter: line_adapter).dispatch
+
+      expect(logs).to eq([sent_log])
+      expect(line_adapter).not_to have_received(:deliver)
+      expect(sent_log.reload.status).to eq("sent")
     end
   end
 end

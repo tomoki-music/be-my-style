@@ -28,6 +28,8 @@ module Learning
       status = %w[email line].include?(selected_channel) ? "queued" : "skipped"
 
       persist_preview!.each do |log|
+        next log if delivered_today?(log)
+
         log.update!(status: status, delivery_channel: selected_channel)
         @line_adapter.deliver(log) if selected_channel == "line"
         log
@@ -72,6 +74,12 @@ module Learning
           source: "Learning::ReminderService"
         }
       )
+    end
+
+    def delivered_today?(log)
+      log.persisted? &&
+        log.generated_at.to_date == Time.zone.today &&
+        %w[sent failed skipped].include?(log.status)
     end
   end
 end

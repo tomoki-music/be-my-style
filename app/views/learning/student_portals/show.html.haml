@@ -63,6 +63,14 @@
           %strong 最近少し空いています
           %span= @reminder.message
 
+      - unless @line_connected
+        .learning-line-nudge
+          .learning-line-nudge__body
+            %span.learning-line-nudge__eyebrow LINE連携
+            %h2 LINE連携すると便利
+            %p リマインドが届くので、練習を忘れにくくなります。続けやすい流れをスマホにも作れます。
+          %span.learning-line-status 未連携
+
       - if @today_task.present? && !@today_task.empty?
         .learning-first-action{ style: learning_progress_style(@today_task.training.part) }
           .learning-first-action__body

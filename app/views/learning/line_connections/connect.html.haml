@@ -1,0 +1,12 @@
+%main.lp-main.learning-line-public
+  .learning-line-result
+    %span.learning-line-result__eyebrow BeMyStyle Learning
+    %h1 LINE連携はこちら
+    - if @student
+      %p= "#{@student.display_name} さんのLINE連携を開始します。"
+    %p 下のボタンからLINEを開き、表示されたメッセージを公式アカウントへ送ってください。
+    %code.learning-line-qr__url= @line_message_text
+    = link_to "LINEで連携メッセージを送る", @line_share_url, class: "learning-button", target: "_blank", rel: "noopener"
+    - unless Rails.env.production?
+      %p.learning-line-note 顧問の先生が開発確認する場合のみ、仮Callbackで完了できます。
+      = link_to "開発用Callbackで完了", learning_line_callback_path(token: @connect_token), class: "learning-text-link"

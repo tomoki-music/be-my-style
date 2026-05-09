@@ -4,7 +4,7 @@ class Learning::StudentsController < Learning::BaseController
   def index
     @school_groups = current_customer.learning_school_groups.ordered
     @students = current_customer.learning_students
-      .includes(:learning_student_parts, :learning_student_trainings, :learning_school_group)
+      .includes(:learning_student_parts, :learning_student_trainings, :learning_school_group, :learning_line_connections)
       .with_filters(filter_params)
       .ordered
   end
@@ -20,6 +20,11 @@ class Learning::StudentsController < Learning::BaseController
       achievement_count: achievement_count,
       progress_rate: trainings.count.zero? ? 0 : ((achievement_count.to_f / trainings.count) * 100).round
     }
+    @line_connection = @student.learning_line_connections.order(created_at: :desc).first
+    @last_line_notification_log = @student.learning_notification_logs
+      .where(delivery_channel: "line", status: "sent")
+      .order(sent_at: :desc, generated_at: :desc)
+      .first
     @student_trainings = trainings.first(8)
     @recent_logs = logs.limit(8)
   end

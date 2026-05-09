@@ -229,7 +229,10 @@ Rails.application.routes.draw do
       post :persist_preview, on: :collection
     end
     resource :notification_settings, only: [:edit, :update], controller: :notification_settings
-    # LINE連携は後続フェーズで /learning/line/webhook と /learning/line/callback を追加予定。
+    get "line/connect", to: "line_connections#connect", as: :line_connect
+    post "line/webhook", to: "line_connections#webhook", as: :line_webhook
+    # 開発確認用の仮callback。本番のLINEユーザーID保存は webhook 経由に寄せる。
+    get "line/callback", to: "line_connections#callback", as: :line_callback
     get "portal/:token", to: "student_portals#show", as: :student_portal
     post "portal/:token/complete_tutorial", to: "student_portals#complete_tutorial", as: :student_portal_complete_tutorial
     resources :school_groups
@@ -237,6 +240,8 @@ Rails.application.routes.draw do
       member do
         post :send_portal_mail
       end
+      resource :line_connection, only: [:show, :create], controller: :line_connections
+      resource :line_test_message, only: :create, controller: :line_test_messages
       resources :student_trainings, only: [:index, :create] do
         collection do
           patch :reorder

@@ -22,6 +22,10 @@
       %span.learning-stat-card__label ステータス
       %strong.learning-stat-card__value= learning_student_status_label(@student.status)
       %p.learning-stat-card__sub= @student.grade.presence || "学年未設定"
+    .learning-stat-card
+      %span.learning-stat-card__label LINE連携
+      %strong.learning-stat-card__value= learning_line_connection_label(@line_connection)
+      %p.learning-stat-card__sub= @last_line_notification_log&.sent_at ? "最終通知: #{l(@last_line_notification_log.sent_at, format: :short)}" : (@student.line_connected? ? "通知送信先を確認済み" : "QRから紐付けできます")
 
   .learning-two-column
     .learning-section
@@ -44,6 +48,8 @@
           = link_to "トレーニング割当を管理", learning_student_student_trainings_path(@student), class: "learning-button"
           = link_to "進捗ログを追加", new_learning_student_progress_log_path(@student), class: "learning-button learning-button--ghost"
           = link_to "生徒ページを見る", learning_student_portal_path(@student.public_access_token), class: "learning-button learning-button--ghost", target: "_blank", rel: "noopener"
+          = link_to "LINE連携QRを発行", learning_student_line_connection_path(@student), class: "learning-button learning-button--ghost"
+          = button_to "LINEテスト送信", learning_student_line_test_message_path(@student), method: :post, class: "learning-button learning-button--ghost"
           = button_to "生徒へメール送信", send_portal_mail_learning_student_path(@student), method: :post, class: "learning-button"
 
     .learning-section

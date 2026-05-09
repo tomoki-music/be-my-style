@@ -1,4 +1,4 @@
-= render "learning/shared/page", title: "通知ログ", subtitle: "LINE/メール実配信前に、通知候補と保存済み履歴を確認できます。実送信はまだ行いません。" do
+= render "learning/shared/page", title: "通知ログ", subtitle: "通知候補と保存済み履歴を確認できます。LINEは連携済み生徒へ送信され、結果がsent/skipped/failedで残ります。" do
   .learning-section
     .learning-section__header
       %h2 今日の通知候補
@@ -11,8 +11,8 @@
         = link_to "通知設定を変更", edit_learning_notification_settings_path, class: "learning-button learning-button--ghost learning-button--sm"
         = link_to "顧問ダッシュボードへ", learning_teacher_dashboard_path, class: "learning-button learning-button--ghost learning-button--sm"
     .learning-empty
-      %strong 実送信はまだ行いません
-      %p LINE配信は準備中です。現在は通知履歴保存と手動コピーのみ利用できます。
+      %strong LINEリマインド運用中
+      %p LINE連携済みの生徒には、定期実行taskから自動リマインドを送れます。未連携やENV未設定の場合はskippedとして記録されます。
 
     .learning-table-wrap
       %table.learning-table
@@ -77,7 +77,8 @@
                     %span.learning-notification-level{ class: "learning-notification-level--#{log.level}" }= log.level
                   - else
                     = "-"
-                %td= log.status
+                %td
+                  %span.learning-notification-status{ class: "learning-notification-status--#{log.status}" }= log.status
                 %td= log.message
                 %td= log.recommended_action.presence || "-"
                 %td= l(log.generated_at, format: :short)
