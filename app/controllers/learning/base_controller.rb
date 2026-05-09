@@ -1,4 +1,7 @@
 class Learning::BaseController < ApplicationController
+  helper LearningHelper
+  helper Learning::LineConnectionsHelper
+
   before_action :ensure_learning_access!
 
   private

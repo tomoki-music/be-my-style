@@ -1,4 +1,6 @@
 class Learning::StudentPortalsController < ApplicationController
+  helper LearningHelper
+
   skip_before_action :authenticate_customer!
 
   def show
