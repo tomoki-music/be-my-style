@@ -59,6 +59,8 @@
     .learning-section__header
       %h2 今、声かけしたい生徒
       .learning-section__actions
+        %span.learning-notification-current= "通知設定：#{@notification_setting.delivery_channel_label}"
+        = link_to "通知設定を変更", edit_learning_notification_settings_path, class: "learning-button learning-button--ghost learning-button--sm"
         = link_to "通知ログを見る", learning_notifications_path, class: "learning-button learning-button--ghost learning-button--sm"
         = link_to "生徒一覧を見る", learning_students_path, class: "learning-button learning-button--ghost learning-button--sm"
     - if @weekly_review.stagnant_students.any?

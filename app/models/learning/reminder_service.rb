@@ -36,6 +36,8 @@ module Learning
     end
 
     def self.for_customer(customer)
+      return [] unless NotificationSetting.reminder_enabled_for?(customer)
+
       students = customer.learning_students.active.to_a
       last_practiced_on_by_student = customer.learning_progress_logs
         .where(learning_student_id: students.map(&:id))

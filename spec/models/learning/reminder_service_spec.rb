@@ -55,5 +55,22 @@ RSpec.describe Learning::ReminderService do
 
       expect(reminders.map(&:student)).to eq([active_student])
     end
+
+    it "設定がない場合はデフォルトONとして通知候補を返すこと" do
+      active_student = create(:learning_student, customer: customer)
+      create(:learning_progress_log, customer: customer, learning_student: active_student,
+                                    practiced_on: 3.days.ago.to_date)
+
+      expect(described_class.for_customer(customer).map(&:student)).to eq([active_student])
+    end
+
+    it "生徒リマインド通知OFFなら通知候補を返さないこと" do
+      create(:learning_notification_setting, customer: customer, reminder_enabled: false)
+      active_student = create(:learning_student, customer: customer)
+      create(:learning_progress_log, customer: customer, learning_student: active_student,
+                                    practiced_on: 3.days.ago.to_date)
+
+      expect(described_class.for_customer(customer)).to eq([])
+    end
   end
 end

@@ -60,4 +60,12 @@ FactoryBot.define do
     status { "not_started" }
     achievement_mark { "cross" }
   end
+
+  factory :learning_notification_setting, class: "Learning::NotificationSetting" do
+    customer
+    reminder_enabled { true }
+    teacher_summary_enabled { true }
+    student_reactivation_enabled { true }
+    delivery_channel { "manual" }
+  end
 end

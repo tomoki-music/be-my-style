@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_08_010001) do
+ActiveRecord::Schema.define(version: 2026_05_09_010000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -431,6 +431,17 @@ ActiveRecord::Schema.define(version: 2026_05_08_010001) do
     t.datetime "updated_at", precision: 6, null: false
     t.index ["customer_id", "report_month"], name: "index_learning_monthly_reports_on_customer_and_month", unique: true
     t.index ["customer_id"], name: "index_learning_monthly_reports_on_customer_id"
+  end
+
+  create_table "learning_notification_settings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.boolean "reminder_enabled", default: true, null: false
+    t.boolean "teacher_summary_enabled", default: true, null: false
+    t.boolean "student_reactivation_enabled", default: true, null: false
+    t.string "delivery_channel", default: "manual", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_learning_notification_settings_on_customer_id", unique: true
   end
 
   create_table "learning_portal_accesses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -894,6 +905,7 @@ ActiveRecord::Schema.define(version: 2026_05_08_010001) do
   add_foreign_key "learning_effort_points", "customers"
   add_foreign_key "learning_effort_points", "learning_students"
   add_foreign_key "learning_monthly_reports", "customers"
+  add_foreign_key "learning_notification_settings", "customers"
   add_foreign_key "learning_portal_accesses", "learning_students"
   add_foreign_key "learning_progress_logs", "customers"
   add_foreign_key "learning_progress_logs", "learning_student_trainings"

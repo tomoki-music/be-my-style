@@ -193,6 +193,12 @@
   justify-content: flex-end;
 }
 
+.learning-notification-current {
+  color: #5f6878;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .learning-section__header h2 {
   margin: 0;
   font-size: 22px;
@@ -1116,6 +1122,56 @@
 .learning-notification-level--strong {
   background: #fff1f1;
   color: #b23d4c;
+}
+
+.learning-setting-list,
+.learning-channel-options {
+  display: grid;
+  gap: 12px;
+}
+
+.learning-setting-toggle,
+.learning-channel-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #dfe6f0;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.learning-setting-toggle__body,
+.learning-channel-option__body {
+  display: grid;
+  gap: 4px;
+}
+
+.learning-setting-toggle strong,
+.learning-channel-option strong {
+  color: #182033;
+}
+
+.learning-setting-toggle span,
+.learning-channel-option span {
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.learning-setting-toggle input,
+.learning-channel-option input {
+  flex: 0 0 auto;
+}
+
+.learning-channel-option.is-active {
+  border-color: #bfd3ff;
+  background: #f5f8ff;
+}
+
+.learning-channel-option.is-disabled {
+  opacity: 0.58;
+  background: #f8fafc;
 }
 
 .learning-student-reminder {
