@@ -16,7 +16,7 @@ module LearningHelper
   end
 
   def learning_school_group_options(school_groups)
-    school_groups.map { |group| [group.name, group.id] }
+    Array(school_groups).map { |group| [group.name, group.id] }
   end
 
   def learning_training_status_options
@@ -56,7 +56,8 @@ module LearningHelper
     [[rate.to_i, 0].max, 100].min
   end
 
-  def learning_nav_active?(prefix)
-    request.path.start_with?(prefix)
+  def learning_nav_active?(path)
+    current_path = request.path
+    current_path == path || current_path.start_with?("#{path}/")
   end
 end

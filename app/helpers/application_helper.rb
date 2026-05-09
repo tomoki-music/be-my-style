@@ -113,6 +113,15 @@ module ApplicationHelper
       public_portal_path
     end
   end
+
+  def learning_nav_active?(path)
+    current_path = request.path
+    current_path == path || current_path.start_with?("#{path}/")
+  end
+
+  def learning_school_group_options(school_groups)
+    Array(school_groups).map { |group| [group.name, group.id] }
+  end
   
   def enum_filter_options(enum_hash, i18n_scope)
     [["全て", ""]] +

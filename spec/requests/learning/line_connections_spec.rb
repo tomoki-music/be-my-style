@@ -15,6 +15,18 @@ RSpec.describe "Learning line connections", type: :request do
       expect(response.body).to include("ギターさん さんのLINE連携")
       expect(response.body).to include("LINE連携QRを発行")
     end
+
+    it "有効なトークンがある場合はQR SVGを表示すること" do
+      connection = create(:learning_line_connection, customer: teacher, learning_student: student, line_user_id: nil)
+      connection.issue_connect_token!
+
+      get learning_student_line_connection_path(student)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("learning-line-qr__svg")
+      expect(response.body).to include("LINE連携QRコード")
+      expect(response.body).to include(connection.connect_token)
+    end
   end
 
   describe "POST /learning/students/:student_id/line_connection" do

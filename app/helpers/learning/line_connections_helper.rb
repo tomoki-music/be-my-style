@@ -1,3 +1,5 @@
+require "rqrcode"
+
 module Learning::LineConnectionsHelper
   def learning_line_qr_svg(url)
     RQRCode::QRCode
