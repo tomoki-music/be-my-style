@@ -82,4 +82,13 @@ FactoryBot.define do
     generated_at { Time.current }
     metadata { { stage: 3, days_idle: 3 } }
   end
+
+  factory :learning_line_connection, class: "Learning::LineConnection" do
+    customer
+    learning_student
+    sequence(:line_user_id) { |n| "U#{n.to_s.rjust(32, '0')}" }
+    display_name { "LINE生徒" }
+    status { "pending" }
+    metadata { { source: "spec" } }
+  end
 end

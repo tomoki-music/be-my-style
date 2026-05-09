@@ -11,6 +11,9 @@ class LearningStudent < ApplicationRecord
   has_many :learning_notification_logs,
            class_name: "Learning::NotificationLog",
            dependent: :nullify
+  has_many :learning_line_connections,
+           class_name: "Learning::LineConnection",
+           dependent: :nullify
 
   validates :name, presence: true, length: { maximum: 50 }
   validates :nickname, length: { maximum: 30 }, allow_blank: true

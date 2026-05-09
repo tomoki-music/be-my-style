@@ -2,9 +2,10 @@ module Learning
   class NotificationDispatcher
     CHANNELS = %i[line email manual].freeze
 
-    def initialize(customer, channels: [])
+    def initialize(customer, channels: [], line_adapter: LineNotificationAdapter.new)
       @customer = customer
       @channels = Array(channels).map(&:to_sym)
+      @line_adapter = line_adapter
     end
 
     def preview
@@ -28,6 +29,8 @@ module Learning
 
       persist_preview!.each do |log|
         log.update!(status: status, delivery_channel: selected_channel)
+        @line_adapter.deliver(log) if selected_channel == "line"
+        log
       end
     end
 

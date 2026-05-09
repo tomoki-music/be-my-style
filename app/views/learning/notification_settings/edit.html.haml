@@ -43,6 +43,13 @@
               %strong LINE：準備中
               %span LINE連携前の安全な準備段階です。
 
+      .learning-section
+        .learning-section__header
+          %h2 LINE通知
+        .learning-empty
+          %strong LINE通知：準備中
+          %p 現在は手動コピーのみ利用可能です。今後、生徒ごとのLINE連携に対応予定です。
+
       .learning-inline-actions
         = f.submit "保存する", class: "learning-button"
         = link_to "顧問ダッシュボードへ", learning_teacher_dashboard_path, class: "learning-button learning-button--ghost"
