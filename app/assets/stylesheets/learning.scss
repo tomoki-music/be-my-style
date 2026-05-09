@@ -1125,6 +1125,17 @@
   font-size: 12px;
 }
 
+.learning-line-warning {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff7e8;
+  color: #9a5b11;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.6;
+}
+
 .learning-line-result--invalid .learning-line-result__eyebrow {
   color: #b23d4c;
 }

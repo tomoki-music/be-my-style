@@ -4,9 +4,15 @@
     %h1 LINE連携はこちら
     - if @student
       %p= "#{@student.display_name} さんのLINE連携を開始します。"
-    %p 下のボタンからLINEを開き、表示されたメッセージを公式アカウントへ送ってください。
-    %code.learning-line-qr__url= @line_message_text
-    = link_to "LINEで連携メッセージを送る", @line_share_url, class: "learning-button", target: "_blank", rel: "noopener"
+    %p ボタンを押すとLINE公式アカウントのトーク画面が開きます。メッセージが自動入力されるので、そのまま送信してください。
+    %code.learning-line-qr__url= learning_line_message_text(@connect_token)
+    - line_message_url = learning_line_message_url(@connect_token)
+    - if line_message_url.present?
+      = link_to "LINEで連携メッセージを送る", line_message_url, class: "learning-button", target: "_blank", rel: "noopener"
+      %p.learning-line-note トーク画面が開かない場合は、先にLINE公式アカウントを友だち追加してください。
+    - else
+      .learning-line-warning
+        LINE公式アカウントIDが未設定のため、連携メッセージを送信できません。
     - unless Rails.env.production?
       %p.learning-line-note 顧問の先生が開発確認する場合のみ、仮Callbackで完了できます。
       = link_to "開発用Callbackで完了", learning_line_callback_path(token: @connect_token), class: "learning-text-link"

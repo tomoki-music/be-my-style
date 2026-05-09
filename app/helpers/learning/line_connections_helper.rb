@@ -1,3 +1,4 @@
+require "cgi"
 require "rqrcode"
 
 module Learning::LineConnectionsHelper
@@ -16,6 +17,19 @@ module Learning::LineConnectionsHelper
         }
       )
       .html_safe
+  end
+
+  def learning_line_message_text(token)
+    "BeMyStyle LINE連携 token=#{token}"
+  end
+
+  def learning_line_message_url(token)
+    line_id = ENV["LINE_OFFICIAL_ACCOUNT_ID"].to_s.strip
+    return nil if line_id.blank? || token.blank?
+
+    encoded_line_id = CGI.escape(line_id)
+    encoded_text = CGI.escape(learning_line_message_text(token))
+    "https://line.me/R/oaMessage/#{encoded_line_id}/?#{encoded_text}"
   end
 
   def learning_line_connection_label(connection)
