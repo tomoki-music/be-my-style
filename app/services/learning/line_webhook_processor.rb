@@ -14,6 +14,7 @@ module Learning
       teacher_action
       teacher_bulk_message
       teacher_message
+      followup_message
       assignment_created
     ].freeze
 

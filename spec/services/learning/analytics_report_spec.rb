@@ -132,6 +132,44 @@ RSpec.describe Learning::AnalyticsReport do
     end
   end
 
+  describe "#at_risk_students" do
+    it "提出率30%未満または7日以上未反応の生徒を返すこと" do
+      low_completion = create(:learning_student, customer: customer, name: "低提出")
+      inactive = create(:learning_student, customer: customer, name: "未反応")
+      healthy = create(:learning_student, customer: customer, name: "順調")
+      create(:learning_assignment, customer: customer, learning_student: low_completion,
+                                   status: "pending", created_at: reference_time)
+      create(:learning_assignment, customer: customer, learning_student: low_completion,
+                                   status: "pending", created_at: reference_time)
+      create(:learning_notification_log, customer: customer, learning_student: low_completion,
+                                         delivery_channel: "line", status: "sent",
+                                         generated_at: reference_time,
+                                         reaction_received: true,
+                                         reacted_at: 1.day.ago(reference_time))
+      create(:learning_assignment, customer: customer, learning_student: inactive,
+                                   status: "completed", completed_at: reference_time)
+      create(:learning_notification_log, customer: customer, learning_student: inactive,
+                                         delivery_channel: "line", status: "sent",
+                                         generated_at: reference_time,
+                                         reaction_received: true,
+                                         reacted_at: 7.days.ago(reference_time) - 1.minute)
+      create(:learning_assignment, customer: customer, learning_student: healthy,
+                                   status: "completed", completed_at: reference_time)
+      create(:learning_notification_log, customer: customer, learning_student: healthy,
+                                         delivery_channel: "line", status: "sent",
+                                         generated_at: reference_time,
+                                         reaction_received: true,
+                                         reacted_at: 1.day.ago(reference_time))
+
+      result = report.at_risk_students
+
+      expect(result.map(&:student)).to match_array([low_completion, inactive])
+      expect(result.find { |item| item.student == low_completion }.completion_rate).to eq(0)
+      expect(result.find { |item| item.student == low_completion }.pending_assignments).to eq(2)
+      expect(result.find { |item| item.student == inactive }.inactive_days).to eq(7)
+    end
+  end
+
   describe "#period_label" do
     it "periodに応じて期間を切り替えること" do
       last_week_report = described_class.new(customer, period: "last_week", reference_time: reference_time)

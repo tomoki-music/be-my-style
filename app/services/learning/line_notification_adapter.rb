@@ -94,6 +94,8 @@ module Learning
         teacher_message_text(notification_log)
       when "teacher_bulk_message"
         teacher_bulk_message_text(notification_log)
+      when "followup_message"
+        followup_message_text(notification_log)
       when "assignment_created"
         assignment_created_text(notification_log)
       when "teacher_action"
@@ -148,6 +150,17 @@ module Learning
         "▼ 生徒ページを見る",
         student_portal_url(student),
         "練習できたら「やった！」と返信してね。"
+      ].compact.join("\n")
+    end
+
+    def followup_message_text(notification_log)
+      student = notification_log.learning_student
+      [
+        "先生から応援メッセージが届いています！",
+        notification_log.message,
+        "▼ 生徒ページを見る",
+        student_portal_url(student),
+        "終わったら「やった！」と返信してね。"
       ].compact.join("\n")
     end
 

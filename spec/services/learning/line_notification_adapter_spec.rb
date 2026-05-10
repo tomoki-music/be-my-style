@@ -37,6 +37,22 @@ RSpec.describe Learning::LineNotificationAdapter do
       expect(text).to include("やった")
     end
 
+    it "followup_message用の応援文面を組み立てること" do
+      notification_log.update!(
+        notification_type: "followup_message",
+        title: "先生からの応援メッセージ",
+        message: "5分だけでもOKなので、まずは一歩だけやってみよう"
+      )
+
+      payload = described_class.new.build_payload(notification_log)
+      text = payload[:messages].first[:text]
+
+      expect(text).to include("先生から応援メッセージが届いています！")
+      expect(text).to include("5分だけでもOK")
+      expect(text).to include(notification_log.learning_student.public_access_token)
+      expect(text).to include("やった")
+    end
+
     it "継続日数に応じた文面を入れること" do
       3.downto(1) do |days_ago|
         create(:learning_progress_log,

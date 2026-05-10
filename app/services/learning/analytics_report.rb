@@ -47,6 +47,16 @@ module Learning
       keyword_init: true
     )
 
+    AtRiskStudent = Struct.new(
+      :student,
+      :completion_rate,
+      :inactive_days,
+      :pending_assignments,
+      :last_reaction_at,
+      :line_connected,
+      keyword_init: true
+    )
+
     attr_reader :customer, :period, :date_range, :time_range
 
     def initialize(customer, period: "this_week", reference_time: Time.current, students: nil)
@@ -106,6 +116,12 @@ module Learning
         .values
         .map { |group| build_assignment_summary(group) }
         .sort_by { |item| [-item.completion_rate, item.title.to_s] }
+    end
+
+    def at_risk_students
+      @at_risk_students ||= student_summaries
+        .select { |item| item.submission_rate < 30 || stale_reaction?(item.last_reaction_at) }
+        .map { |item| build_at_risk_student(item) }
     end
 
     private
@@ -206,6 +222,19 @@ module Learning
       )
     end
 
+    def build_at_risk_student(item)
+      student_assignments = assignments_by_student_id.fetch(item.student.id, [])
+
+      AtRiskStudent.new(
+        student: item.student,
+        completion_rate: item.submission_rate,
+        inactive_days: inactive_days(item.last_reaction_at),
+        pending_assignments: student_assignments.count { |assignment| open_assignment?(assignment) },
+        last_reaction_at: item.last_reaction_at,
+        line_connected: item.student.line_connected?
+      )
+    end
+
     def student_status(submission_rate, last_reaction_at)
       return :follow_up if stale_reaction?(last_reaction_at) || submission_rate < 30
       return :good if submission_rate >= 70
@@ -215,6 +244,12 @@ module Learning
 
     def stale_reaction?(last_reaction_at)
       last_reaction_at.blank? || last_reaction_at < 7.days.ago(@reference_time)
+    end
+
+    def inactive_days(last_reaction_at)
+      return nil if last_reaction_at.blank?
+
+      ((@reference_time.to_date - last_reaction_at.to_date).to_i).clamp(0, Float::INFINITY)
     end
 
     def status_label(status)
