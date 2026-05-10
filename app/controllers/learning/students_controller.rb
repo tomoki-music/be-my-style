@@ -69,7 +69,7 @@ class Learning::StudentsController < Learning::BaseController
 
   def send_portal_mail
     if @student.email.blank?
-      return redirect_to learning_student_path(@student), alert: "生徒メールアドレスを登録すると送信できます。"
+      return redirect_to learning_student_path(@student), alert: "この生徒はメールアドレス未登録です。生徒情報を編集してから送信してください。"
     end
 
     LearningMailer.with(teacher: current_customer, student: @student).student_portal_mail.deliver_now

@@ -546,6 +546,12 @@
   color: #263248;
 }
 
+.learning-button--disabled {
+  background: #f1f3f6;
+  color: #7a8597;
+  cursor: not-allowed;
+}
+
 .learning-button--sm {
   padding: 9px 12px;
   border-radius: 12px;

@@ -48,9 +48,13 @@
           = link_to "トレーニング割当を管理", learning_student_student_trainings_path(@student), class: "learning-button"
           = link_to "進捗ログを追加", new_learning_student_progress_log_path(@student), class: "learning-button learning-button--ghost"
           = link_to "生徒ページを見る", learning_student_portal_path(@student.public_access_token), class: "learning-button learning-button--ghost", target: "_blank", rel: "noopener"
+          %button.learning-button.learning-button--ghost{ type: "button", data: { copy_url: learning_student_portal_url(@student.public_access_token) } } URLをコピー
           = link_to "LINE連携QRを発行", learning_student_line_connection_path(@student), class: "learning-button learning-button--ghost"
           = button_to "LINEテスト送信", learning_student_line_test_message_path(@student), method: :post, class: "learning-button learning-button--ghost"
-          = button_to "生徒へメール送信", send_portal_mail_learning_student_path(@student), method: :post, class: "learning-button"
+          - if @student.email.present?
+            = button_to "生徒へメール送信", send_portal_mail_learning_student_path(@student), method: :post, class: "learning-button"
+          - else
+            %span.learning-button.learning-button--disabled メール未設定
 
     .learning-section
       .learning-section__header
@@ -64,10 +68,6 @@
         %p
           %strong 先生コメント
           = teacher_comment.presence || "先生コメントはまだありません。"
-        %p
-          %strong 生徒向けページURL
-          %br
-          = link_to learning_student_portal_url(@student.public_access_token), learning_student_portal_url(@student.public_access_token), target: "_blank", rel: "noopener"
 
   .learning-two-column
     .learning-section
