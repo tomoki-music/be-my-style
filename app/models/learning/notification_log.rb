@@ -6,6 +6,8 @@ module Learning
       reminder
       teacher_action
       teacher_message
+      teacher_bulk_message
+      assignment_created
       weekly_summary
       student_reactivation
     ].freeze

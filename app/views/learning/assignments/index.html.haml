@@ -1,0 +1,54 @@
+- action = link_to("新しい課題を配布", learning_students_path, class: "learning-button")
+= render "learning/shared/page", title: "課題進捗", subtitle: "配布した課題ごとの提出率・未提出者・期限超過を確認できます。", action: action do
+  .learning-section
+    .learning-section__header
+      %h2 課題一覧
+      = link_to "未提出者を確認", learning_assignments_path, class: "learning-button learning-button--ghost learning-button--sm"
+    .learning-table-wrap
+      %table.learning-table
+        %thead
+          %tr
+            %th 課題
+            %th 期限
+            %th 提出率
+            %th 完了
+            %th 進行中
+            %th 未提出
+            %th 期限超過
+            %th 作成日時
+            %th
+        %tbody
+          - if @assignment_summaries.any?
+            - @assignment_summaries.each do |summary|
+              - assignment = summary.representative
+              %tr
+                %td
+                  %strong= link_to summary.title, learning_assignment_path(assignment)
+                  - if summary.description.present?
+                    %p.learning-muted= truncate(summary.description, length: 60)
+                %td
+                  - if summary.due_on
+                    = summary.due_on.strftime("%Y/%-m/%-d")
+                  - else
+                    %span.learning-muted 未設定
+                %td
+                  .learning-progress.learning-progress--compact
+                    .learning-progress__bar{ style: "width: #{learning_progress_bar_width(summary.completion_rate)}%" }
+                  %strong= "#{summary.completion_rate}%"
+                %td= "#{summary.completed_count}人"
+                %td= "#{summary.in_progress_count}人"
+                %td= "#{summary.unsubmitted_count}人"
+                %td
+                  - if summary.overdue_count.positive?
+                    %span.learning-assignment-status.learning-assignment-status--overdue= "#{summary.overdue_count}人"
+                  - else
+                    %span.learning-muted 0人
+                %td= l(summary.created_at, format: :short)
+                %td= link_to "詳細", learning_assignment_path(assignment), class: "learning-button learning-button--ghost learning-button--sm"
+          - else
+            %tr
+              %td{ colspan: 9 }
+                .learning-empty.learning-empty--action
+                  %strong まだ配布済み課題はありません
+                  %p 生徒一覧から今週の課題を一括配布すると、提出率と未提出者がここにまとまります。
+                  = link_to "課題を配布", learning_students_path, class: "learning-button"

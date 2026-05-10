@@ -93,6 +93,30 @@
             %h2 先生が準備中です
             %p 課題が届いたらここに今日やる練習が表示されます。今は部活で決まっている基礎練習や曲の確認を続けておけば大丈夫です。
 
+      .learning-section
+        .learning-section__header
+          %h2 今週の課題
+          - if @current_assignments.any?
+            %span.learning-notification-current 未提出の課題があります
+        .learning-stack
+          - if @current_assignments.any?
+            - @current_assignments.each do |assignment|
+              .learning-assignment-card
+                .learning-assignment-card__head
+                  .learning-assignment-card__title
+                    %strong= assignment.title
+                    - if assignment.due_on
+                      %small= "期限：#{assignment.due_on.strftime('%-m/%-d')}"
+                  %span.learning-assignment-status{ class: "learning-assignment-status--#{assignment.status}" }= assignment.status_label
+                  - if assignment.overdue?
+                    %span.learning-assignment-status.learning-assignment-status--overdue 提出期限を過ぎています
+                - if assignment.description.present?
+                  = simple_format(assignment.description)
+          - else
+            .learning-empty
+              %strong 今週の課題はまだありません
+              %p 先生から課題が届いたらここに表示されます。終わったらLINEで「やった！」と返信できます。
+
       .learning-two-column.learning-two-column--balanced
         .learning-section.learning-student-nudge
           .learning-section__header

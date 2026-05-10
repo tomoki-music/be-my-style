@@ -95,6 +95,46 @@ RSpec.describe Learning::LineNotificationAdapter do
       expect(text).to include(teacher_message_log.learning_student.public_access_token)
       expect(text).to include("やった")
     end
+
+    it "teacher_bulk_messageは一括送信用のLINE文面を組み立てること" do
+      teacher_bulk_message_log = create(:learning_notification_log,
+                                        notification_type: "teacher_bulk_message",
+                                        delivery_channel: "line",
+                                        status: "queued",
+                                        title: "先生からの一括メッセージ",
+                                        message: "ライブまであと1週間！今日も5分だけ練習してみよう",
+                                        recommended_action: "先生からの一括メッセージです。")
+
+      payload = described_class.new.build_payload(teacher_bulk_message_log)
+      text = payload[:messages].first[:text]
+
+      expect(text).to include("先生からのメッセージです。")
+      expect(text).to include("ライブまであと1週間！今日も5分だけ練習してみよう")
+      expect(text).to include("▼ 生徒ページを見る")
+      expect(text).to include(teacher_bulk_message_log.learning_student.public_access_token)
+      expect(text).to include("やった！")
+    end
+
+    it "assignment_createdは課題配布用のLINE文面を組み立てること" do
+      assignment_log = create(:learning_notification_log,
+                              notification_type: "assignment_created",
+                              delivery_channel: "line",
+                              status: "queued",
+                              title: "ライブ前基礎練習",
+                              message: "・クロマチック\n・8ビート",
+                              recommended_action: "期限: 2026/05/20")
+
+      payload = described_class.new.build_payload(assignment_log)
+      text = payload[:messages].first[:text]
+
+      expect(text).to include("新しい課題が届きました")
+      expect(text).to include("ライブ前基礎練習")
+      expect(text).to include("・クロマチック")
+      expect(text).to include("期限: 2026/05/20")
+      expect(text).to include("▼ 生徒ページを見る")
+      expect(text).to include(assignment_log.learning_student.public_access_token)
+      expect(text).to include("やった！")
+    end
   end
 
   describe "#deliver" do

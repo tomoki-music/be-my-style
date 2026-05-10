@@ -994,6 +994,99 @@
   color: #26724a;
 }
 
+.learning-bulk-line-form,
+.learning-assignment-form {
+  display: grid;
+  gap: 18px;
+}
+
+.learning-bulk-line-summary,
+.learning-assignment-summary {
+  border: 1px solid #dbe4f0;
+  border-radius: 16px;
+  background: #f8fafc;
+  color: #263248;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 14px;
+}
+
+.learning-bulk-line-message,
+.learning-assignment-description {
+  max-width: 760px;
+}
+
+.learning-bulk-line-actions,
+.learning-assignment-actions {
+  justify-content: flex-start;
+}
+
+.learning-bulk-line-checkbox,
+.learning-assignment-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #162034;
+}
+
+.learning-assignment-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #dbe4f0;
+  border-radius: 18px;
+  padding: 16px;
+  background: #fff;
+}
+
+.learning-assignment-card__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.learning-assignment-card__title {
+  display: grid;
+  gap: 4px;
+}
+
+.learning-assignment-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #fff4db;
+  color: #8a5b12;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.learning-assignment-status--in_progress {
+  background: #e8f0ff;
+  color: #3156a3;
+}
+
+.learning-assignment-status--completed {
+  background: #e7f8ed;
+  color: #26724a;
+}
+
+.learning-assignment-status--overdue {
+  background: #fff1f1;
+  color: #b23d4c;
+}
+
+.learning-assignment-reminder-form {
+  display: grid;
+  gap: 16px;
+}
+
+.learning-table-row--warning {
+  background: #fffafa;
+}
+
 .learning-line-panel .learning-detail-card {
   display: grid;
   gap: 14px;

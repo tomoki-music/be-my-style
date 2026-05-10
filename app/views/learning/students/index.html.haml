@@ -1,5 +1,7 @@
 - action = link_to("生徒を追加", new_learning_student_path, class: "learning-button")
 = render "learning/shared/page", title: "生徒一覧", subtitle: "担当パートや在籍ステータスを確認しながら、生徒ごとの育成状況へすぐ移動できます。", action: action do
+  - connected_count = @students.count(&:line_connected?)
+  - unconnected_count = @students.size - connected_count
   .learning-section
     = form_with url: learning_students_path, method: :get, local: true, class: "learning-filter-form" do
       = text_field_tag :keyword, params[:keyword], placeholder: "名前・メモで検索", class: "learning-input"
@@ -10,42 +12,124 @@
       = link_to "リセット", learning_students_path, class: "learning-button learning-button--ghost"
 
   .learning-section
-    .learning-table-wrap
-      %table.learning-table
-        %thead
-          %tr
-            %th 名前
-            %th 高校
-            %th パート
-            %th 学年
-            %th ステータス
-            %th LINE
-            %th 割当数
-            %th 操作
-        %tbody
-          - if @students.any?
-            - @students.each do |student|
-              %tr
-                %td= link_to student.name, learning_student_path(student)
-                %td= student.learning_school_group&.name || "未所属"
-                %td= student.displayed_parts.map { |part| learning_part_label(part) }.join(" / ")
-                %td= student.grade.presence || "-"
-                %td= learning_student_status_label(student.status)
-                %td
-                  - if student.line_connected?
-                    %span.learning-line-status.learning-line-status--connected 連携済み
-                  - else
-                    = link_to "QR発行", learning_student_line_connection_path(student), class: "learning-text-link"
-                %td= student.learning_student_trainings.size
-                %td.learning-table__actions
-                  = link_to "詳細", learning_student_path(student), class: "learning-text-link"
-                  = link_to "編集", edit_learning_student_path(student), class: "learning-text-link"
-                  = link_to "割当", learning_student_student_trainings_path(student), class: "learning-text-link"
-                  = link_to "削除", learning_student_path(student), method: :delete, data: { confirm: "削除しますか？" }, class: "learning-text-link learning-text-link--danger"
-          - else
+    = form_with url: learning_assignments_path, method: :post, local: true, class: "learning-assignment-form", data: { assignment_form: true } do
+      .learning-section__header
+        %div
+          %h2 今週の課題を配布
+          %p.learning-muted= "表示中の生徒：#{@students.size}名 / LINE連携済み：#{connected_count}名"
+        .learning-section__actions
+          %button.learning-button.learning-button--ghost.learning-button--sm{ type: "button", data: { assignment_select: "all" } } 全員選択
+          %button.learning-button.learning-button--ghost.learning-button--sm{ type: "button", data: { assignment_select: "connected" } } LINE連携済みのみ選択
+      .learning-assignment-summary{ data: { assignment_summary: true } }
+        選択中：0名 / LINE連携済み：0名 / 未連携：0名。未連携の生徒にも課題は配布され、LINE通知だけスキップされます。
+      .learning-form-grid
+        .learning-form-group
+          = label_tag :learning_assignment_title, "タイトル"
+          = text_field_tag "learning_assignment[title]", nil, id: "learning_assignment_title", class: "learning-input", maxlength: 100, placeholder: "ライブ前基礎練習"
+        .learning-form-group
+          = label_tag :learning_assignment_due_on, "期限"
+          = date_field_tag "learning_assignment[due_on]", nil, id: "learning_assignment_due_on", class: "learning-input"
+      .learning-form-group.learning-assignment-description
+        = label_tag :learning_assignment_description, "内容"
+        = text_area_tag "learning_assignment[description]", nil, id: "learning_assignment_description", class: "learning-textarea", maxlength: 1000, placeholder: "・クロマチック\n・8ビート\n・コードチェンジ", data: { assignment_description: true }
+        %p.learning-muted
+          %span{ data: { assignment_remaining: true } } 残り1000文字
+          %span  / 1000文字以内
+      .learning-section__actions.learning-assignment-actions
+        = submit_tag "一括配布", class: "learning-button", data: { confirm: "選択した生徒に課題を一括配布します。よろしいですか？" }
+      .learning-table-wrap
+        %table.learning-table
+          %thead
             %tr
-              %td{ colspan: 8 }
-                .learning-empty.learning-empty--action
-                  %strong 生徒登録から始めましょう
-                  %p 生徒を登録すると、個別ポータルURL・トレーニング割当・努力ポイントの土台ができます。
-                  = link_to "生徒を追加", new_learning_student_path, class: "learning-button"
+              %th 選択
+              %th 名前
+              %th 高校
+              %th パート
+              %th 学年
+              %th LINE
+          %tbody
+            - if @students.any?
+              - @students.each do |student|
+                - line_connected = student.line_connected?
+                %tr
+                  %td
+                    = check_box_tag "student_ids[]", student.id, false, class: "learning-assignment-checkbox", data: { assignment_checkbox: true, line_connected: line_connected }
+                  %td= link_to student.name, learning_student_path(student)
+                  %td= student.learning_school_group&.name || "未所属"
+                  %td= student.displayed_parts.map { |part| learning_part_label(part) }.join(" / ")
+                  %td= student.grade.presence || "-"
+                  %td
+                    - if line_connected
+                      %span.learning-line-status.learning-line-status--connected 連携済み
+                    - else
+                      %span.learning-line-status 未連携
+            - else
+              %tr
+                %td{ colspan: 6 }
+                  .learning-empty
+                    %strong 配布できる生徒がまだいません
+                    %p 生徒を登録すると、ここから今週の課題をまとめて配布できます。
+
+  .learning-section
+    = form_with url: bulk_line_message_learning_students_path, method: :post, local: true, class: "learning-bulk-line-form", data: { bulk_line_form: true } do
+      .learning-section__header
+        %div
+          %h2 一括LINE送信
+          %p.learning-muted= "LINE連携済み：#{connected_count}名 / 未連携：#{unconnected_count}名"
+        .learning-section__actions
+          %button.learning-button.learning-button--ghost.learning-button--sm{ type: "button", data: { bulk_line_select: "all" } } 全員選択
+          %button.learning-button.learning-button--ghost.learning-button--sm{ type: "button", data: { bulk_line_select: "connected" } } LINE連携済みのみ選択
+      .learning-bulk-line-summary{ data: { bulk_line_summary: true } }
+        選択中：0名 / LINE連携済み：0名 / 未連携：0名。送信対象はLINE連携済みの0名です。
+      .learning-form-group.learning-bulk-line-message
+        = label_tag :bulk_line_message_message, "メッセージ"
+        = text_area_tag "bulk_line_message[message]", "今日も5分だけ練習してみよう！終わったら「やった！」と返信してね。", id: "bulk_line_message_message", class: "learning-textarea", maxlength: 500, data: { bulk_line_message: true }
+        %p.learning-muted
+          %span{ data: { bulk_line_remaining: true } } 残り500文字
+          %span  / 500文字以内
+      .learning-section__actions.learning-bulk-line-actions
+        = submit_tag "選択した生徒にLINE送信", class: "learning-button", data: { confirm: "選択した生徒に同じLINEメッセージを送信します。よろしいですか？" }
+      .learning-table-wrap
+        %table.learning-table
+          %thead
+            %tr
+              %th 選択
+              %th 名前
+              %th 高校
+              %th パート
+              %th 学年
+              %th ステータス
+              %th LINE
+              %th 割当数
+              %th 操作
+          %tbody
+            - if @students.any?
+              - @students.each do |student|
+                - line_connected = student.line_connected?
+                %tr
+                  %td
+                    = check_box_tag "student_ids[]", student.id, false, class: "learning-bulk-line-checkbox", data: { bulk_line_checkbox: true, line_connected: line_connected }
+                  %td= link_to student.name, learning_student_path(student)
+                  %td= student.learning_school_group&.name || "未所属"
+                  %td= student.displayed_parts.map { |part| learning_part_label(part) }.join(" / ")
+                  %td= student.grade.presence || "-"
+                  %td= learning_student_status_label(student.status)
+                  %td
+                    - if line_connected
+                      %span.learning-line-status.learning-line-status--connected 連携済み
+                    - else
+                      = link_to "QR発行", learning_student_line_connection_path(student), class: "learning-text-link"
+                      %span.learning-line-status 未連携
+                  %td= student.learning_student_trainings.size
+                  %td.learning-table__actions
+                    = link_to "詳細", learning_student_path(student), class: "learning-text-link"
+                    = link_to "編集", edit_learning_student_path(student), class: "learning-text-link"
+                    = link_to "割当", learning_student_student_trainings_path(student), class: "learning-text-link"
+                    = link_to "削除", learning_student_path(student), method: :delete, data: { confirm: "削除しますか？" }, class: "learning-text-link learning-text-link--danger"
+            - else
+              %tr
+                %td{ colspan: 9 }
+                  .learning-empty.learning-empty--action
+                    %strong 生徒登録から始めましょう
+                    %p 生徒を登録すると、個別ポータルURL・トレーニング割当・努力ポイントの土台ができます。
+                    = link_to "生徒を追加", new_learning_student_path, class: "learning-button"

@@ -12,7 +12,9 @@ module Learning
     REACTION_NOTIFICATION_TYPES = %w[
       reminder
       teacher_action
+      teacher_bulk_message
       teacher_message
+      assignment_created
     ].freeze
 
     def initialize(channel_secret: ENV["LINE_CHANNEL_SECRET"].to_s)
@@ -101,6 +103,7 @@ module Learning
           reacted_at: Time.current,
           reaction_message: text.truncate(255)
         )
+        complete_latest_pending_assignment!(student)
         create_progress_log_from_reaction!(student, text)
         student.update!(last_learning_action_at: Time.current)
       end
@@ -172,6 +175,14 @@ module Learning
         achievement_mark: "triangle",
         comment: "LINE返信から自動記録: #{text}"
       )
+    end
+
+    def complete_latest_pending_assignment!(student)
+      assignment = student.learning_assignments
+        .where(status: "pending")
+        .order(created_at: :desc, id: :desc)
+        .first
+      assignment&.complete!
     end
 
     def log_webhook_event(event, text:, reaction:)
