@@ -215,6 +215,96 @@
   grid-template-columns: repeat(4, minmax(180px, 1fr));
 }
 
+.learning-analytics-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr);
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.learning-analytics-panel {
+  min-width: 0;
+  padding: 18px;
+  border-radius: 20px;
+  background: #f8fafc;
+  border: 1px solid #e5ebf3;
+}
+
+.learning-analytics-panel .learning-section__header {
+  margin-bottom: 14px;
+}
+
+.learning-analytics-panel h3 {
+  margin: 0;
+  color: #182033;
+  font-size: 18px;
+}
+
+.learning-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 78px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef2f8;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.learning-status-pill--good {
+  background: #e8f7ed;
+  color: #2f7a44;
+}
+
+.learning-status-pill--watch {
+  background: #fff7e8;
+  color: #9a5b11;
+}
+
+.learning-status-pill--follow-up {
+  background: #fff1f3;
+  color: #b23d4c;
+}
+
+.learning-assignment-summary-list {
+  display: grid;
+  gap: 14px;
+}
+
+.learning-assignment-summary {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #e9edf4;
+}
+
+.learning-assignment-summary__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.learning-assignment-summary__head strong {
+  min-width: 0;
+  color: #182033;
+}
+
+.learning-assignment-summary__head span {
+  color: #31548a;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.learning-assignment-summary small {
+  color: #5f6878;
+  line-height: 1.5;
+}
+
 .learning-stat-card {
   padding: 22px;
 }
@@ -1570,7 +1660,8 @@
 
 @media (max-width: 1100px) {
   .learning-shell,
-  .learning-two-column {
+  .learning-two-column,
+  .learning-analytics-grid {
     grid-template-columns: 1fr;
   }
 
