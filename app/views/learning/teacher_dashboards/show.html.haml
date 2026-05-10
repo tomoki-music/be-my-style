@@ -92,6 +92,27 @@
 
   .learning-section
     .learning-section__header
+      %h2 最近リアクションした生徒
+      = link_to "通知ログを見る", learning_notifications_path, class: "learning-button learning-button--ghost learning-button--sm"
+    - if @recent_reaction_logs.any?
+      .learning-stack
+        - @recent_reaction_logs.each do |log|
+          - student = log.learning_student
+          - if student
+            = link_to learning_student_path(student), class: "learning-review-row" do
+              %strong= student.display_name
+              %span= "#{time_ago_in_words(log.reacted_at)}前 / #{log.reaction_message}"
+          - else
+            .learning-review-row
+              %strong 削除済みの生徒
+              %span= "#{time_ago_in_words(log.reacted_at)}前 / #{log.reaction_message}"
+    - else
+      .learning-empty
+        %strong まだLINE返信はありません
+        %p 生徒が通知に「やった」「完了」などと返信すると、ここに最新の反応が表示されます。
+
+  .learning-section
+    .learning-section__header
       %h2 今週のまとめ
       = link_to "声かけしましょう", learning_students_path, class: "learning-button learning-button--ghost learning-button--sm"
     .learning-review-grid

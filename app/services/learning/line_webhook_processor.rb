@@ -1,6 +1,6 @@
 module Learning
   class LineWebhookProcessor
-    Result = Struct.new(:status, :message, :processed_count, :connected_count, keyword_init: true) do
+    Result = Struct.new(:status, :message, :processed_count, :connected_count, :reaction_count, keyword_init: true) do
       def success?
         status == :ok
       end
@@ -19,15 +19,16 @@ module Learning
     end
 
     def process(raw_body:, signature:)
-      return Result.new(status: :not_configured, message: NOT_CONFIGURED_MESSAGE, processed_count: 0, connected_count: 0) unless configured?
-      return Result.new(status: :invalid_signature, message: INVALID_SIGNATURE_MESSAGE, processed_count: 0, connected_count: 0) unless valid_signature?(raw_body, signature)
+      return empty_result(:not_configured, NOT_CONFIGURED_MESSAGE) unless configured?
+      return empty_result(:invalid_signature, INVALID_SIGNATURE_MESSAGE) unless valid_signature?(raw_body, signature)
 
       events = JSON.parse(raw_body).fetch("events", [])
       connected_count = events.count { |event| connect_from_event(event) }
+      reaction_count = events.count { |event| record_reaction_from_event(event) }
 
-      Result.new(status: :ok, message: "ok", processed_count: events.size, connected_count: connected_count)
+      Result.new(status: :ok, message: "ok", processed_count: events.size, connected_count: connected_count, reaction_count: reaction_count)
     rescue JSON::ParserError
-      Result.new(status: :invalid_payload, message: INVALID_JSON_MESSAGE, processed_count: 0, connected_count: 0)
+      empty_result(:invalid_payload, INVALID_JSON_MESSAGE)
     end
 
     def valid_signature?(raw_body, signature)
@@ -40,6 +41,12 @@ module Learning
     end
 
     private
+
+    REACTION_PATTERN = /\A(やった|練習した|ok|完了|できた|おわった|終わった|done)\z/i.freeze
+
+    def empty_result(status, message)
+      Result.new(status: status, message: message, processed_count: 0, connected_count: 0, reaction_count: 0)
+    end
 
     def connect_from_event(event)
       line_user_id = event.dig("source", "userId").to_s
@@ -56,6 +63,32 @@ module Learning
       true
     end
 
+    def record_reaction_from_event(event)
+      text = text_message(event)
+      return false unless reaction_message?(text)
+
+      connection = LineConnection.connected
+        .includes(:learning_student)
+        .where(line_user_id: event.dig("source", "userId").to_s)
+        .order(connected_at: :desc)
+        .first
+      student = connection&.learning_student
+      return false unless student
+
+      ActiveRecord::Base.transaction do
+        notification_log = latest_unreacted_notification_for(student)
+        notification_log&.update!(
+          reaction_received: true,
+          reacted_at: Time.current,
+          reaction_message: text.truncate(255)
+        )
+        create_progress_log_from_reaction!(student, text)
+        student.update!(last_learning_action_at: Time.current)
+      end
+
+      true
+    end
+
     def token_from_event(event)
       token_from_postback(event) || token_from_message(event)
     end
@@ -68,11 +101,43 @@ module Learning
     end
 
     def token_from_message(event)
+      text = text_message(event)
+      return unless text
+
+      text[/token=([A-Za-z0-9\-_]+)/, 1] || text[/\A[A-Za-z0-9\-_]{20,}\z/]
+    end
+
+    def text_message(event)
       return unless event["type"] == "message"
       return unless event.dig("message", "type") == "text"
 
-      text = event.dig("message", "text").to_s
-      text[/token=([A-Za-z0-9\-_]+)/, 1] || text[/\A[A-Za-z0-9\-_]{20,}\z/]
+      event.dig("message", "text").to_s.strip
+    end
+
+    def reaction_message?(text)
+      text.present? && text.match?(REACTION_PATTERN)
+    end
+
+    def latest_unreacted_notification_for(student)
+      student.learning_notification_logs
+        .where(delivery_channel: "line", status: "sent", reaction_received: false)
+        .order(sent_at: :desc, created_at: :desc)
+        .first
+    end
+
+    def create_progress_log_from_reaction!(student, text)
+      return if student.learning_progress_logs.exists?(practiced_on: Date.current)
+
+      training = student.learning_student_trainings.ordered.first
+      student.learning_progress_logs.create!(
+        customer: student.customer,
+        learning_student_training: training,
+        part: training&.part || student.main_part,
+        training_title: training&.title || "LINE返信で練習報告",
+        practiced_on: Date.current,
+        achievement_mark: "triangle",
+        comment: "LINE返信から自動記録: #{text}"
+      )
     end
 
     def secure_compare(expected, actual)

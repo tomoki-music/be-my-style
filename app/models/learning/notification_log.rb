@@ -22,5 +22,7 @@ module Learning
     validates :status, presence: true, inclusion: { in: STATUSES }
     validates :message, presence: true
     validates :generated_at, presence: true
+
+    scope :recent_reactions, -> { where(reaction_received: true).where.not(reacted_at: nil).order(reacted_at: :desc) }
   end
 end

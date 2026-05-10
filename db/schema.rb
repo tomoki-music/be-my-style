@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_09_143000) do
+ActiveRecord::Schema.define(version: 2026_05_10_000001) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -468,13 +468,18 @@ ActiveRecord::Schema.define(version: 2026_05_09_143000) do
     t.datetime "sent_at"
     t.text "error_message"
     t.json "metadata"
+    t.boolean "reaction_received", default: false, null: false
+    t.datetime "reacted_at"
+    t.string "reaction_message"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["customer_id", "learning_student_id", "notification_type", "generated_at"], name: "index_learning_notification_logs_on_daily_dedupe_lookup"
     t.index ["customer_id"], name: "index_learning_notification_logs_on_customer_id"
     t.index ["generated_at"], name: "index_learning_notification_logs_on_generated_at"
     t.index ["learning_student_id"], name: "index_learning_notification_logs_on_learning_student_id"
+    t.index ["learning_student_id", "reaction_received", "sent_at"], name: "index_learning_notification_logs_on_student_reaction"
     t.index ["notification_type"], name: "index_learning_notification_logs_on_notification_type"
+    t.index ["reacted_at"], name: "index_learning_notification_logs_on_reacted_at"
     t.index ["status"], name: "index_learning_notification_logs_on_status"
   end
 
@@ -593,11 +598,13 @@ ActiveRecord::Schema.define(version: 2026_05_09_143000) do
     t.string "nickname", limit: 30
     t.boolean "tutorial_completed", default: false, null: false
     t.integer "total_effort_points", default: 0, null: false
+    t.datetime "last_learning_action_at"
     t.index ["customer_id", "email"], name: "index_learning_students_on_customer_id_and_email"
     t.index ["customer_id", "learning_school_group_id"], name: "index_learning_students_on_customer_and_school_group"
     t.index ["customer_id", "name"], name: "index_learning_students_on_customer_id_and_name"
     t.index ["customer_id", "status"], name: "index_learning_students_on_customer_id_and_status"
     t.index ["customer_id"], name: "index_learning_students_on_customer_id"
+    t.index ["last_learning_action_at"], name: "index_learning_students_on_last_learning_action_at"
     t.index ["learning_school_group_id"], name: "index_learning_students_on_learning_school_group_id"
     t.index ["public_access_token"], name: "index_learning_students_on_public_access_token", unique: true
   end

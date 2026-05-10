@@ -91,6 +91,29 @@ class LearningStudent < ApplicationRecord
     learning_line_connections.connected.exists?
   end
 
+  def learning_streak_days(reference_date: Date.current)
+    practiced_dates = learning_progress_logs
+      .where("practiced_on <= ?", reference_date)
+      .distinct
+      .order(practiced_on: :desc)
+      .pluck(:practiced_on)
+
+    return 0 if practiced_dates.blank?
+
+    start_date = practiced_dates.include?(reference_date) ? reference_date : reference_date - 1
+    streak = 0
+    date = start_date
+
+    while practiced_dates.include?(date)
+      streak += 1
+      date -= 1
+    end
+
+    streak
+  end
+
+  alias practice_streak_days learning_streak_days
+
   def sync_parts!(parts)
     normalized_parts = Array(parts).map(&:presence).compact.uniq
     normalized_parts.unshift(main_part) unless normalized_parts.include?(main_part)

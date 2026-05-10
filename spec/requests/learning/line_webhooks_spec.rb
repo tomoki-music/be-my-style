@@ -102,6 +102,168 @@ RSpec.describe "Learning line webhooks", type: :request do
       expect(JSON.parse(response.body)["connected"]).to eq(0)
       expect(connection.reload.line_user_id).to eq("UfirstLineUserId")
     end
+
+    it "やった系の返信から通知リアクションと簡易練習記録を保存すること" do
+      ENV["LINE_CHANNEL_SECRET"] = channel_secret
+      create(:learning_line_connection,
+             customer: teacher,
+             learning_student: student,
+             line_user_id: "UreactionLineUserId",
+             status: "connected",
+             connected_at: Time.current)
+      create(:learning_student_training,
+             customer: teacher,
+             learning_student: student,
+             title: "リズム練習")
+      notification_log = create(:learning_notification_log,
+                                customer: teacher,
+                                learning_student: student,
+                                delivery_channel: "line",
+                                status: "sent",
+                                sent_at: 10.minutes.ago,
+                                reaction_received: false)
+      body = webhook_body(reaction_event("やった", user_id: "UreactionLineUserId"))
+
+      expect {
+        post learning_line_webhook_path,
+             params: body,
+             headers: { "CONTENT_TYPE" => "application/json", "X-Line-Signature" => signature_for(body) }
+      }.to change(LearningProgressLog, :count).by(1)
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["reactions"]).to eq(1)
+      expect(notification_log.reload).to be_reaction_received
+      expect(notification_log.reaction_message).to eq("やった")
+      expect(notification_log.reacted_at).to be_present
+      expect(student.reload.last_learning_action_at).to be_present
+      expect(LearningProgressLog.last.training_title).to eq("リズム練習")
+      expect(LearningProgressLog.last.comment).to include("LINE返信から自動記録")
+    end
+
+    it "同じ日に複数回返信しても練習記録は重複作成しないこと" do
+      ENV["LINE_CHANNEL_SECRET"] = channel_secret
+      create(:learning_line_connection,
+             customer: teacher,
+             learning_student: student,
+             line_user_id: "UduplicateReactionUserId",
+             status: "connected",
+             connected_at: Time.current)
+      create(:learning_progress_log, customer: teacher, learning_student: student, practiced_on: Date.current)
+      notification_log = create(:learning_notification_log,
+                                customer: teacher,
+                                learning_student: student,
+                                delivery_channel: "line",
+                                status: "sent",
+                                sent_at: 10.minutes.ago,
+                                reaction_received: false)
+      body = webhook_body(reaction_event("完了", user_id: "UduplicateReactionUserId"))
+
+      expect {
+        post learning_line_webhook_path,
+             params: body,
+             headers: { "CONTENT_TYPE" => "application/json", "X-Line-Signature" => signature_for(body) }
+      }.not_to change(LearningProgressLog, :count)
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["reactions"]).to eq(1)
+      expect(notification_log.reload.reaction_message).to eq("完了")
+    end
+
+    it "不明メッセージでは練習記録を作らないこと" do
+      ENV["LINE_CHANNEL_SECRET"] = channel_secret
+      create(:learning_line_connection,
+             customer: teacher,
+             learning_student: student,
+             line_user_id: "UunknownMessageUserId",
+             status: "connected",
+             connected_at: Time.current)
+      body = webhook_body(reaction_event("またあとで", user_id: "UunknownMessageUserId"))
+
+      expect {
+        post learning_line_webhook_path,
+             params: body,
+             headers: { "CONTENT_TYPE" => "application/json", "X-Line-Signature" => signature_for(body) }
+      }.not_to change(LearningProgressLog, :count)
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["reactions"]).to eq(0)
+    end
+
+    it "token連携メッセージはreaction扱いしないこと" do
+      ENV["LINE_CHANNEL_SECRET"] = channel_secret
+      connection = create(:learning_line_connection, customer: teacher, learning_student: student, line_user_id: nil)
+      connection.issue_connect_token!
+      body = webhook_body(message_event(connection.connect_token, user_id: "UtokenOnlyUserId"))
+
+      expect {
+        post learning_line_webhook_path,
+             params: body,
+             headers: { "CONTENT_TYPE" => "application/json", "X-Line-Signature" => signature_for(body) }
+      }.not_to change(LearningProgressLog, :count)
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)).to include("connected" => 1, "reactions" => 0)
+    end
+
+    it "reaction済み通知は再返信で上書きしないこと" do
+      ENV["LINE_CHANNEL_SECRET"] = channel_secret
+      create(:learning_line_connection,
+             customer: teacher,
+             learning_student: student,
+             line_user_id: "UalreadyReactedUserId",
+             status: "connected",
+             connected_at: Time.current)
+      notification_log = create(:learning_notification_log,
+                                customer: teacher,
+                                learning_student: student,
+                                delivery_channel: "line",
+                                status: "sent",
+                                sent_at: 10.minutes.ago,
+                                reaction_received: true,
+                                reacted_at: 5.minutes.ago,
+                                reaction_message: "やった")
+      body = webhook_body(reaction_event("完了", user_id: "UalreadyReactedUserId"))
+
+      post learning_line_webhook_path,
+           params: body,
+           headers: { "CONTENT_TYPE" => "application/json", "X-Line-Signature" => signature_for(body) }
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["reactions"]).to eq(1)
+      expect(notification_log.reload.reaction_message).to eq("やった")
+    end
+
+    it "同じline_user_idの複数連携がある場合は最新のconnected生徒へ紐付けること" do
+      ENV["LINE_CHANNEL_SECRET"] = channel_secret
+      older_student = create(:learning_student, customer: teacher, nickname: "古い生徒")
+      create(:learning_line_connection,
+             customer: teacher,
+             learning_student: older_student,
+             line_user_id: "UsharedLineUserId",
+             status: "connected",
+             connected_at: 2.days.ago)
+      create(:learning_line_connection,
+             customer: teacher,
+             learning_student: student,
+             line_user_id: "UsharedLineUserId",
+             status: "connected",
+             connected_at: Time.current)
+      create(:learning_notification_log,
+             customer: teacher,
+             learning_student: student,
+             delivery_channel: "line",
+             status: "sent",
+             sent_at: 10.minutes.ago)
+      body = webhook_body(reaction_event("OK", user_id: "UsharedLineUserId"))
+
+      post learning_line_webhook_path,
+           params: body,
+           headers: { "CONTENT_TYPE" => "application/json", "X-Line-Signature" => signature_for(body) }
+
+      expect(response).to have_http_status(:ok)
+      expect(LearningProgressLog.last.learning_student).to eq(student)
+      expect(older_student.learning_progress_logs).to be_empty
+    end
   end
 
   def webhook_body(*events)
@@ -128,6 +290,14 @@ RSpec.describe "Learning line webhooks", type: :request do
     {
       type: "follow",
       source: { type: "user", userId: user_id }
+    }
+  end
+
+  def reaction_event(text, user_id:)
+    {
+      type: "message",
+      source: { type: "user", userId: user_id },
+      message: { type: "text", text: text }
     }
   end
 
