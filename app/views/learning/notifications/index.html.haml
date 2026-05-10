@@ -61,6 +61,7 @@
             %th ステータス
             %th メッセージ
             %th 推奨アクション
+            %th リアクション
             %th 生成日時
         %tbody
           - if @notification_logs.any?
@@ -81,10 +82,18 @@
                   %span.learning-notification-status{ class: "learning-notification-status--#{log.status}" }= log.status
                 %td= log.message
                 %td= log.recommended_action.presence || "-"
+                %td
+                  - if log.reaction_received?
+                    %strong 受信
+                    %small= log.reacted_at ? l(log.reacted_at, format: :short) : "-"
+                    %br
+                    %span= log.reaction_message
+                  - else
+                    = "-"
                 %td= l(log.generated_at, format: :short)
           - else
             %tr
-              %td{ colspan: 7 }
+              %td{ colspan: 8 }
                 .learning-empty
                   %strong 保存済み通知履歴はまだありません
                   %p 今日の通知候補を履歴に保存すると、ここに追跡用のログが表示されます。

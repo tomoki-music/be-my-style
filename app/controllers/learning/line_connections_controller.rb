@@ -59,7 +59,12 @@ class Learning::LineConnectionsController < Learning::BaseController
       signature: request.headers["X-Line-Signature"]
     )
 
-    render json: { status: result.status, processed: result.processed_count, connected: result.connected_count },
+    render json: {
+      status: result.status,
+      processed: result.processed_count,
+      connected: result.connected_count,
+      reactions: result.reaction_count
+    },
            status: webhook_status_for(result)
   end
 

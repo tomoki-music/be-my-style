@@ -20,11 +20,47 @@ RSpec.describe Learning::LineNotificationAdapter do
 
   describe "#build_payload" do
     it "通知ログからLINE用payloadを組み立てること" do
+      create(:learning_student_training,
+             customer: notification_log.customer,
+             learning_student: notification_log.learning_student,
+             title: "コードチェンジ練習")
+
       payload = described_class.new.build_payload(notification_log)
+      text = payload[:messages].first[:text]
 
       expect(payload[:to]).to be_nil
       expect(payload[:messages].first[:type]).to eq("text")
-      expect(payload[:messages].first[:text]).to include(notification_log.message)
+      expect(text).to include(notification_log.message)
+      expect(text).to include("▼ 今日やることを見る")
+      expect(text).to include(notification_log.learning_student.public_access_token)
+      expect(text).to include("コードチェンジ練習")
+      expect(text).to include("やった")
+    end
+
+    it "継続日数に応じた文面を入れること" do
+      3.downto(1) do |days_ago|
+        create(:learning_progress_log,
+               customer: notification_log.customer,
+               learning_student: notification_log.learning_student,
+               practiced_on: Date.current - days_ago.days)
+      end
+
+      payload = described_class.new.build_payload(notification_log)
+
+      expect(payload[:messages].first[:text]).to include("3日継続中！いい流れです")
+    end
+
+    it "7日継続の文面を入れること" do
+      7.downto(1) do |days_ago|
+        create(:learning_progress_log,
+               customer: notification_log.customer,
+               learning_student: notification_log.learning_student,
+               practiced_on: Date.current - days_ago.days)
+      end
+
+      payload = described_class.new.build_payload(notification_log)
+
+      expect(payload[:messages].first[:text]).to include("1週間継続達成！かなり良い習慣になってきています")
     end
 
     it "連携済みLINE userIdを宛先にすること" do

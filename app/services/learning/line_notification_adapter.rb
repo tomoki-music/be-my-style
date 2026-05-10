@@ -87,11 +87,75 @@ module Learning
     end
 
     def notification_text(notification_log)
+      case notification_log.notification_type
+      when "reminder"
+        reminder_text(notification_log)
+      when "teacher_action"
+        action_text(notification_log)
+      else
+        default_text(notification_log)
+      end
+    end
+
+    def reminder_text(notification_log)
+      student = notification_log.learning_student
+      [
+        "今日の練習リマインドです！",
+        streak_message_for(student),
+        training_lines_for(student),
+        notification_log.message,
+        notification_log.recommended_action.presence && "おすすめ: #{notification_log.recommended_action}",
+        "▼ 今日やることを見る",
+        student_portal_url(student),
+        "終わったらLINEで「やった」と返信してね。"
+      ].flatten.compact.join("\n")
+    end
+
+    def action_text(notification_log)
+      student = notification_log.learning_student
       [
         notification_log.title,
         notification_log.message,
-        notification_log.recommended_action.presence && "おすすめ: #{notification_log.recommended_action}"
+        notification_log.recommended_action.presence,
+        "▼ 生徒ページを開く",
+        student_portal_url(student)
       ].compact.join("\n")
+    end
+
+    def default_text(notification_log)
+      [
+        notification_log.title,
+        notification_log.message,
+        notification_log.recommended_action.presence && "おすすめ: #{notification_log.recommended_action}",
+        notification_log.learning_student && "▼ 生徒ページを開く",
+        student_portal_url(notification_log.learning_student)
+      ].compact.join("\n")
+    end
+
+    def training_lines_for(student)
+      return nil unless student
+
+      trainings = student.learning_student_trainings.ordered.limit(2).pluck(:title)
+      return nil if trainings.blank?
+
+      trainings.map { |title| "・#{title}" }
+    end
+
+    def streak_message_for(student)
+      return "まずは5分だけでもOK！" unless student
+
+      streak = student.learning_streak_days
+      if streak >= 7
+        "1週間継続達成！かなり良い習慣になってきています"
+      elsif streak >= 3
+        "#{streak}日継続中！いい流れです"
+      else
+        "まずは5分だけでもOK！"
+      end
+    end
+
+    def student_portal_url(student)
+      student&.portal_url
     end
 
     def channel_access_token
