@@ -42,7 +42,17 @@ module Learning
 
     private
 
-    REACTION_PATTERN = /\A(やった|練習した|ok|完了|できた|おわった|終わった|done)\z/i.freeze
+    REACTION_KEYWORDS = %w[
+      やった
+      練習した
+      練習しました
+      ok
+      完了
+      できた
+      おわった
+      終わった
+      done
+    ].freeze
 
     def empty_result(status, message)
       Result.new(status: status, message: message, processed_count: 0, connected_count: 0, reaction_count: 0)
@@ -65,18 +75,22 @@ module Learning
 
     def record_reaction_from_event(event)
       text = text_message(event)
-      return false unless reaction_message?(text)
+      reaction = reaction_message?(text)
+      log_webhook_event(event, text: text, reaction: reaction)
+      return false unless reaction
 
       connection = LineConnection.connected
         .includes(:learning_student)
         .where(line_user_id: event.dig("source", "userId").to_s)
         .order(connected_at: :desc)
         .first
+      log_reaction_lookup(connection_found: connection.present?)
       student = connection&.learning_student
       return false unless student
 
       ActiveRecord::Base.transaction do
         notification_log = latest_unreacted_notification_for(student)
+        log_target_notification(notification_log)
         notification_log&.update!(
           reaction_received: true,
           reacted_at: Time.current,
@@ -115,18 +129,32 @@ module Learning
     end
 
     def reaction_message?(text)
-      text.present? && text.match?(REACTION_PATTERN)
+      normalized_text = text.to_s.strip
+      return false if normalized_text.blank?
+      return false if normalized_text.match?(/token=/i)
+
+      comparable_text = normalized_text.downcase
+      REACTION_KEYWORDS.sort_by { |keyword| -keyword.length }.any? do |keyword|
+        next false unless comparable_text.start_with?(keyword)
+
+        reaction_suffix?(comparable_text.delete_prefix(keyword))
+      end
+    end
+
+    def reaction_suffix?(suffix)
+      suffix.blank? || suffix.match?(/\A[\s\p{P}\p{S}ー〜\u200d\ufe0f]*\z/)
     end
 
     def latest_unreacted_notification_for(student)
       student.learning_notification_logs
-        .where(delivery_channel: "line", status: "sent", reaction_received: false)
+        .where(delivery_channel: "line", status: "sent")
+        .where(reaction_received: [false, nil])
         .order(sent_at: :desc, created_at: :desc)
         .first
     end
 
     def create_progress_log_from_reaction!(student, text)
-      return if student.learning_progress_logs.exists?(practiced_on: Date.current)
+      return if student.learning_progress_logs.exists?(practiced_on: Time.zone.today)
 
       training = student.learning_student_trainings.ordered.first
       student.learning_progress_logs.create!(
@@ -134,10 +162,31 @@ module Learning
         learning_student_training: training,
         part: training&.part || student.main_part,
         training_title: training&.title || "LINE返信で練習報告",
-        practiced_on: Date.current,
+        practiced_on: Time.zone.today,
         achievement_mark: "triangle",
         comment: "LINE返信から自動記録: #{text}"
       )
+    end
+
+    def log_webhook_event(event, text:, reaction:)
+      Rails.logger.info(
+        "[Learning::LineWebhookProcessor] event_type=#{event['type']} " \
+        "message_text=#{safe_log_text(text).inspect} reaction=#{reaction}"
+      )
+    end
+
+    def safe_log_text(text)
+      text.to_s.gsub(/token=([A-Za-z0-9\-_]+)/, "token=[FILTERED]").truncate(50)
+    end
+
+    def log_reaction_lookup(connection_found:)
+      Rails.logger.info("[Learning::LineWebhookProcessor] connection_found=#{connection_found}")
+    end
+
+    def log_target_notification(notification_log)
+      details = []
+      details << "target_notification_log_id=#{notification_log&.id || 'nil'}"
+      Rails.logger.info("[Learning::LineWebhookProcessor] #{details.join(' ')}")
     end
 
     def secure_compare(expected, actual)
