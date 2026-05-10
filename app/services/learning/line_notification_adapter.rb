@@ -90,6 +90,8 @@ module Learning
       case notification_log.notification_type
       when "reminder"
         reminder_text(notification_log)
+      when "teacher_message"
+        teacher_message_text(notification_log)
       when "teacher_action"
         action_text(notification_log)
       else
@@ -119,6 +121,18 @@ module Learning
         notification_log.recommended_action.presence,
         "▼ 生徒ページを開く",
         student_portal_url(student)
+      ].compact.join("\n")
+    end
+
+    def teacher_message_text(notification_log)
+      student = notification_log.learning_student
+      [
+        notification_log.title.presence || "先生からのメッセージです",
+        notification_log.message,
+        notification_log.recommended_action.presence,
+        "▼ 生徒ページを開く",
+        student_portal_url(student),
+        "終わったらLINEで「やった」と返信してね。"
       ].compact.join("\n")
     end
 

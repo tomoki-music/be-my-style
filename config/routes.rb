@@ -241,6 +241,7 @@ Rails.application.routes.draw do
         post :send_portal_mail
       end
       resource :line_connection, only: [:show, :create], controller: :line_connections
+      resource :line_message, only: :create, controller: :line_messages
       resource :line_test_message, only: :create, controller: :line_test_messages
       resources :student_trainings, only: [:index, :create] do
         collection do

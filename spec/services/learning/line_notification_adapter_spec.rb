@@ -75,6 +75,26 @@ RSpec.describe Learning::LineNotificationAdapter do
 
       expect(payload[:to]).to eq("UrealLineUserId")
     end
+
+    it "teacher_messageは先生の本文を中心にLINE文面を組み立てること" do
+      teacher_message_log = create(:learning_notification_log,
+                                   notification_type: "teacher_message",
+                                   delivery_channel: "line",
+                                   status: "queued",
+                                   title: "先生からのメッセージ",
+                                   message: "今日の練習、5分だけでもOK！",
+                                   recommended_action: "先生からのメッセージです。")
+
+      payload = described_class.new.build_payload(teacher_message_log)
+      text = payload[:messages].first[:text]
+
+      expect(text).to include("先生からのメッセージ")
+      expect(text).to include("今日の練習、5分だけでもOK！")
+      expect(text).to include("先生からのメッセージです。")
+      expect(text).to include("▼ 生徒ページを開く")
+      expect(text).to include(teacher_message_log.learning_student.public_access_token)
+      expect(text).to include("やった")
+    end
   end
 
   describe "#deliver" do

@@ -9,6 +9,11 @@ module Learning
     NOT_CONFIGURED_MESSAGE = "LINE webhook secret is not configured".freeze
     INVALID_SIGNATURE_MESSAGE = "LINE webhook signature is invalid".freeze
     INVALID_JSON_MESSAGE = "LINE webhook payload is invalid".freeze
+    REACTION_NOTIFICATION_TYPES = %w[
+      reminder
+      teacher_action
+      teacher_message
+    ].freeze
 
     def initialize(channel_secret: ENV["LINE_CHANNEL_SECRET"].to_s)
       @channel_secret = channel_secret
@@ -148,6 +153,7 @@ module Learning
     def latest_unreacted_notification_for(student)
       student.learning_notification_logs
         .where(delivery_channel: "line", status: "sent")
+        .where(notification_type: REACTION_NOTIFICATION_TYPES)
         .where(reaction_received: [false, nil])
         .order(sent_at: :desc, created_at: :desc)
         .first

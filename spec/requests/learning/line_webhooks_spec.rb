@@ -199,6 +199,37 @@ RSpec.describe "Learning line webhooks", type: :request do
       expect(notification_log.reacted_at).to be_present
     end
 
+    it "teacher_message通知にもreactionを保存すること" do
+      ENV["LINE_CHANNEL_SECRET"] = channel_secret
+      create(:learning_line_connection,
+             customer: teacher,
+             learning_student: student,
+             line_user_id: "UteacherMessageUserId",
+             status: "connected",
+             connected_at: Time.current)
+      notification_log = create(:learning_notification_log,
+                                customer: teacher,
+                                learning_student: student,
+                                notification_type: "teacher_message",
+                                delivery_channel: "line",
+                                status: "sent",
+                                sent_at: 1.minute.ago,
+                                reaction_received: false,
+                                title: "先生からのメッセージ",
+                                message: "今日の練習、5分だけでもOK！")
+      body = webhook_body(reaction_event("やった", user_id: "UteacherMessageUserId"))
+
+      post learning_line_webhook_path,
+           params: body,
+           headers: { "CONTENT_TYPE" => "application/json", "X-Line-Signature" => signature_for(body) }
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["reactions"]).to eq(1)
+      expect(notification_log.reload).to be_reaction_received
+      expect(notification_log.reaction_message).to eq("やった")
+      expect(notification_log.reacted_at).to be_present
+    end
+
     it "やった！で最新sent通知にreactionを保存し元メッセージを残すこと" do
       ENV["LINE_CHANNEL_SECRET"] = channel_secret
       create(:learning_line_connection,
