@@ -5,6 +5,7 @@ module Learning
     NOTIFICATION_TYPES = %w[
       reminder
       teacher_action
+      teacher_message
       weekly_summary
       student_reactivation
     ].freeze

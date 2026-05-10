@@ -50,11 +50,24 @@
           = link_to "生徒ページを見る", learning_student_portal_path(@student.public_access_token), class: "learning-button learning-button--ghost", target: "_blank", rel: "noopener"
           %button.learning-button.learning-button--ghost{ type: "button", data: { copy_url: learning_student_portal_url(@student.public_access_token) } } URLをコピー
           = link_to "LINE連携QRを発行", learning_student_line_connection_path(@student), class: "learning-button learning-button--ghost"
-          = button_to "LINEテスト送信", learning_student_line_test_message_path(@student), method: :post, class: "learning-button learning-button--ghost"
+          = button_to "LINEテスト送信（疎通確認用）", learning_student_line_test_message_path(@student), method: :post, class: "learning-button learning-button--ghost"
           - if @student.email.present?
             = button_to "生徒へメール送信", send_portal_mail_learning_student_path(@student), method: :post, class: "learning-button"
           - else
             %span.learning-button.learning-button--disabled メール未設定
+
+      .learning-detail-card
+        %h3 LINEメッセージ送信
+        - if @student.line_connected?
+          %p 先生から生徒へ個別メッセージを送れます。
+          = form_with url: learning_student_line_message_path(@student), scope: :line_message, local: true do |f|
+            .learning-form-field
+              = f.label :message, "LINEメッセージ"
+              = f.text_area :message, rows: 4, maxlength: Learning::LineMessagesController::MESSAGE_MAX_LENGTH, placeholder: "今日の練習、5分だけでもOKなのでやってみよう！"
+              %small= "#{Learning::LineMessagesController::MESSAGE_MAX_LENGTH}文字以内"
+            = f.submit "LINE送信", class: "learning-button"
+        - else
+          %p LINE未連携のため送信できません。先にLINE連携QRを発行して、生徒に連携してもらってください。
 
     .learning-section
       .learning-section__header
