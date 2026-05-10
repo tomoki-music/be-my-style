@@ -79,8 +79,12 @@ class LearningStudent < ApplicationRecord
       .select { |training| (training.related_parts_list & displayed_parts).present? || training.related_parts_list.blank? }
   end
 
-  def portal_url
-    Rails.application.routes.url_helpers.learning_student_portal_url(public_access_token)
+  def portal_url(host: nil)
+    Rails.application.routes.url_helpers.learning_student_portal_url(
+      public_access_token,
+      host: host.presence || Rails.application.config.action_mailer.default_url_options[:host],
+      port: Rails.application.config.action_mailer.default_url_options[:port]
+    )
   end
 
   def line_connected?

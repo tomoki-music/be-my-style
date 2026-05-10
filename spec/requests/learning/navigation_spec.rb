@@ -14,6 +14,7 @@ RSpec.describe "Learning navigation", type: :request do
       [learning_school_groups_path, "高校グループ"],
       [learning_students_path, "生徒一覧"],
       [learning_student_path(student), student.name],
+      [learning_student_portal_path(student.public_access_token), "#{student.display_name} さんのトレーニング"],
       [learning_student_line_connection_path(student), "LINE連携"],
       [learning_notifications_path, "通知ログ"],
       [learning_training_masters_path, "トレーニングマスター"],
