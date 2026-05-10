@@ -5,7 +5,8 @@ class Learning::TeacherDashboardsController < Learning::BaseController
     @students = current_customer.learning_students
                                 .includes(:learning_school_group,
                                           :learning_student_trainings,
-                                          :learning_progress_logs)
+                                          :learning_progress_logs,
+                                          :learning_line_connections)
                                 .active
     @students = @students.where(learning_school_group_id: @selected_school_group.id) if @selected_school_group.present?
     @students = @students

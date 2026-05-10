@@ -238,6 +238,7 @@ Rails.application.routes.draw do
     resources :assignments, only: [:index, :show, :create] do
       post :bulk_reminder, on: :member
     end
+    resources :followup_line_messages, only: :create
     resources :school_groups
     resources :students do
       collection do

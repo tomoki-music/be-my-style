@@ -56,6 +56,9 @@
       %p.learning-stat-card__sub ⭐ に更新された件数
 
   - analytics_summary = @analytics_report.summary
+  - at_risk_students = @analytics_report.at_risk_students
+  - at_risk_connected_count = at_risk_students.count(&:line_connected)
+  - at_risk_unconnected_count = at_risk_students.size - at_risk_connected_count
   .learning-section
     .learning-section__header
       %h2= "#{@analytics_report.period_label}のLearningレポート"
@@ -132,6 +135,59 @@
           .learning-empty
             %strong 課題データはまだありません
             %p 課題を配布すると、止まりやすい課題や反応の良い課題が見えてきます。
+
+  .learning-section
+    = form_with url: learning_followup_line_messages_path, method: :post, local: true, class: "learning-bulk-line-form", data: { bulk_line_form: true } do
+      = hidden_field_tag :period, @analytics_report.period
+      = hidden_field_tag :group_id, params[:group_id] if params[:group_id].present?
+      .learning-section__header
+        %div
+          %h2 要フォロー生徒
+          %p.learning-muted= "要フォロー対象：#{at_risk_students.size}名 / LINE連携済み：#{at_risk_connected_count}名 / 未連携：#{at_risk_unconnected_count}名"
+        - if at_risk_students.any?
+          .learning-section__actions
+            %button.learning-button.learning-button--ghost.learning-button--sm{ type: "button", data: { bulk_line_select: "all" } } 全員選択
+            %button.learning-button.learning-button--ghost.learning-button--sm{ type: "button", data: { bulk_line_select: "connected" } } LINE連携済みのみ選択
+      - if at_risk_students.any?
+        .learning-bulk-line-summary{ data: { bulk_line_summary: true } }
+          選択中：0名 / LINE連携済み：0名 / 未連携：0名。送信対象はLINE連携済みの0名です。
+        .learning-form-group.learning-bulk-line-message
+          = label_tag :followup_line_message_message, "フォローLINE文面"
+          = text_area_tag "followup_line_message[message]", Learning::FollowupLineMessagesController::DEFAULT_MESSAGE, id: "followup_line_message_message", class: "learning-textarea", maxlength: 500, data: { bulk_line_message: true }
+          %p.learning-muted
+            %span{ data: { bulk_line_remaining: true } } 残り500文字
+            %span  / 500文字以内
+        .learning-section__actions.learning-bulk-line-actions
+          = submit_tag "要フォロー生徒へ一括LINE", class: "learning-button", data: { confirm: "選択した要フォロー生徒にLINEメッセージを送信します。よろしいですか？" }
+        .learning-table-wrap
+          %table.learning-table
+            %thead
+              %tr
+                %th 選択
+                %th 生徒
+                %th.text-right 提出率
+                %th 最終反応
+                %th.text-right 未提出
+                %th LINE
+            %tbody
+              - at_risk_students.each do |item|
+                %tr
+                  %td
+                    = check_box_tag "student_ids[]", item.student.id, true, class: "learning-bulk-line-checkbox", data: { bulk_line_checkbox: true, line_connected: item.line_connected }
+                  %td= link_to item.student.display_name, learning_student_path(item.student)
+                  %td.text-right= "#{item.completion_rate}%"
+                  %td= item.inactive_days ? "#{item.inactive_days}日未反応" : "反応なし"
+                  %td.text-right= "#{item.pending_assignments}件"
+                  %td
+                    - if item.line_connected
+                      %span.learning-line-status.learning-line-status--connected 連携済み
+                    - else
+                      = link_to "QR発行", learning_student_line_connection_path(item.student), class: "learning-text-link"
+                      %span.learning-line-status 未連携
+      - else
+        .learning-empty
+          %strong 要フォロー生徒はいません
+          %p 提出率30%以上、または直近7日以内にLINE反応がある生徒はフォロー対象から外れます。
 
   .learning-section
     .learning-section__header

@@ -492,6 +492,33 @@ RSpec.describe "Learning line webhooks", type: :request do
       expect(latest_reacted_log.reload.reaction_message).to eq("完了")
     end
 
+    it "followup_messageへの返信でもreaction_receivedを付与すること" do
+      ENV["LINE_CHANNEL_SECRET"] = channel_secret
+      create(:learning_line_connection,
+             customer: teacher,
+             learning_student: student,
+             line_user_id: "UfollowupReactionUserId",
+             status: "connected",
+             connected_at: Time.current)
+      notification_log = create(:learning_notification_log,
+                                customer: teacher,
+                                learning_student: student,
+                                notification_type: "followup_message",
+                                delivery_channel: "line",
+                                status: "sent",
+                                sent_at: 10.minutes.ago,
+                                reaction_received: false)
+      body = webhook_body(reaction_event("やった！", user_id: "UfollowupReactionUserId"))
+
+      post learning_line_webhook_path,
+           params: body,
+           headers: { "CONTENT_TYPE" => "application/json", "X-Line-Signature" => signature_for(body) }
+
+      expect(response).to have_http_status(:ok)
+      expect(notification_log.reload).to be_reaction_received
+      expect(notification_log.reaction_message).to eq("やった！")
+    end
+
     it "不明メッセージでは練習記録を作らないこと" do
       ENV["LINE_CHANNEL_SECRET"] = channel_secret
       create(:learning_line_connection,
