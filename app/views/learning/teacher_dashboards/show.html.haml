@@ -55,6 +55,84 @@
       %strong.learning-stat-card__value= report.persisted? ? report.total_achieved_trainings : "-"
       %p.learning-stat-card__sub ⭐ に更新された件数
 
+  - analytics_summary = @analytics_report.summary
+  .learning-section
+    .learning-section__header
+      %h2= "#{@analytics_report.period_label}のLearningレポート"
+      .learning-section__actions
+        - Learning::AnalyticsReport::PERIODS.each do |period_key, label|
+          = link_to label,
+                    learning_teacher_dashboard_path(period: period_key, group_id: params[:group_id]),
+                    class: "learning-button learning-button--sm #{'learning-button--ghost' unless @analytics_report.period == period_key}"
+    .learning-stat-grid.learning-stat-grid--compact
+      .learning-stat-card
+        %span.learning-stat-card__label 課題提出率
+        %strong.learning-stat-card__value= "#{analytics_summary.assignment_submission_rate}%"
+        %p.learning-stat-card__sub= "対象 #{analytics_summary.assignment_count}件"
+      .learning-stat-card
+        %span.learning-stat-card__label LINE反応率
+        %strong.learning-stat-card__value= "#{analytics_summary.line_reaction_rate}%"
+        %p.learning-stat-card__sub= "反応 #{analytics_summary.line_reaction_count} / 送信 #{analytics_summary.line_sent_count}"
+      .learning-stat-card
+        %span.learning-stat-card__label 練習記録
+        %strong.learning-stat-card__value= "#{analytics_summary.progress_log_count}件"
+        %p.learning-stat-card__sub= @analytics_report.period_label
+      .learning-stat-card
+        %span.learning-stat-card__label 未提出
+        %strong.learning-stat-card__value= "#{analytics_summary.unsubmitted_count}名"
+        %p.learning-stat-card__sub 未着手・進行中
+      .learning-stat-card
+        %span.learning-stat-card__label 7日以上未反応
+        %strong.learning-stat-card__value= "#{analytics_summary.inactive_student_count}名"
+        %p.learning-stat-card__sub 要フォロー候補
+
+    .learning-analytics-grid
+      .learning-analytics-panel
+        .learning-section__header
+          %h3 生徒別の状況
+        - if @analytics_report.student_summaries.any?
+          .learning-table-wrap
+            %table.learning-table
+              %thead
+                %tr
+                  %th 生徒
+                  %th.text-right 提出率
+                  %th.text-right 反応率
+                  %th 最終反応
+                  %th 状態
+              %tbody
+                - @analytics_report.student_summaries.each do |item|
+                  %tr
+                    %td= link_to item.student.display_name, learning_student_path(item.student)
+                    %td.text-right= "#{item.submission_rate}%"
+                    %td.text-right= "#{item.reaction_rate}%"
+                    %td= item.last_reaction_at ? "#{time_ago_in_words(item.last_reaction_at)}前" : "反応なし"
+                    %td
+                      %span.learning-status-pill{ class: "learning-status-pill--#{item.status.to_s.dasherize}" }= item.status_label
+        - else
+          .learning-empty
+            %strong 生徒データはまだありません
+            %p 生徒を登録すると、提出率・反応率・フォロー対象がここに表示されます。
+
+      .learning-analytics-panel
+        .learning-section__header
+          %h3 課題別の完了率
+          = link_to "課題進捗を見る", learning_assignments_path, class: "learning-button learning-button--ghost learning-button--sm"
+        - if @analytics_report.assignment_summaries.any?
+          .learning-assignment-summary-list
+            - @analytics_report.assignment_summaries.each do |item|
+              .learning-assignment-summary
+                .learning-assignment-summary__head
+                  %strong= item.title
+                  %span= "#{item.completion_rate}%"
+                .learning-progress
+                  .learning-progress__bar{ style: "width: #{learning_progress_bar_width(item.completion_rate)}%" }
+                %small= "完了 #{item.completed_count} / 対象 #{item.total_count} ・ 未提出 #{item.unsubmitted_count}"
+        - else
+          .learning-empty
+            %strong 課題データはまだありません
+            %p 課題を配布すると、止まりやすい課題や反応の良い課題が見えてきます。
+
   .learning-section
     .learning-section__header
       %h2 今、声かけしたい生徒
