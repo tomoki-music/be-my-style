@@ -42,7 +42,17 @@ module Learning
 
     private
 
-    REACTION_PATTERN = /\A(やった|練習した|ok|完了|できた|おわった|終わった|done)\z/i.freeze
+    REACTION_KEYWORDS = %w[
+      やった
+      練習した
+      練習しました
+      ok
+      完了
+      できた
+      おわった
+      終わった
+      done
+    ].freeze
 
     def empty_result(status, message)
       Result.new(status: status, message: message, processed_count: 0, connected_count: 0, reaction_count: 0)
@@ -119,7 +129,20 @@ module Learning
     end
 
     def reaction_message?(text)
-      text.present? && text.match?(REACTION_PATTERN)
+      normalized_text = text.to_s.strip
+      return false if normalized_text.blank?
+      return false if normalized_text.match?(/token=/i)
+
+      comparable_text = normalized_text.downcase
+      REACTION_KEYWORDS.sort_by { |keyword| -keyword.length }.any? do |keyword|
+        next false unless comparable_text.start_with?(keyword)
+
+        reaction_suffix?(comparable_text.delete_prefix(keyword))
+      end
+    end
+
+    def reaction_suffix?(suffix)
+      suffix.blank? || suffix.match?(/\A[\s\p{P}\p{S}ー〜\u200d\ufe0f]*\z/)
     end
 
     def latest_unreacted_notification_for(student)
