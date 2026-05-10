@@ -92,6 +92,10 @@ module Learning
         reminder_text(notification_log)
       when "teacher_message"
         teacher_message_text(notification_log)
+      when "teacher_bulk_message"
+        teacher_bulk_message_text(notification_log)
+      when "assignment_created"
+        assignment_created_text(notification_log)
       when "teacher_action"
         action_text(notification_log)
       else
@@ -133,6 +137,30 @@ module Learning
         "▼ 生徒ページを開く",
         student_portal_url(student),
         "終わったらLINEで「やった」と返信してね。"
+      ].compact.join("\n")
+    end
+
+    def teacher_bulk_message_text(notification_log)
+      student = notification_log.learning_student
+      [
+        "先生からのメッセージです。",
+        notification_log.message,
+        "▼ 生徒ページを見る",
+        student_portal_url(student),
+        "練習できたら「やった！」と返信してね。"
+      ].compact.join("\n")
+    end
+
+    def assignment_created_text(notification_log)
+      student = notification_log.learning_student
+      [
+        "📘 新しい課題が届きました！",
+        notification_log.title,
+        notification_log.message,
+        notification_log.recommended_action.presence,
+        "▼ 生徒ページを見る",
+        student_portal_url(student),
+        "終わったら「やった！」と返信してね。"
       ].compact.join("\n")
     end
 

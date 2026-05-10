@@ -235,8 +235,14 @@ Rails.application.routes.draw do
     get "line/callback", to: "line_connections#callback", as: :line_callback
     get "portal/:token", to: "student_portals#show", as: :student_portal
     post "portal/:token/complete_tutorial", to: "student_portals#complete_tutorial", as: :student_portal_complete_tutorial
+    resources :assignments, only: [:index, :show, :create] do
+      post :bulk_reminder, on: :member
+    end
     resources :school_groups
     resources :students do
+      collection do
+        post :bulk_line_message, to: "bulk_line_messages#create"
+      end
       member do
         post :send_portal_mail
       end

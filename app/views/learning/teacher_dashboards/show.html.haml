@@ -113,6 +113,51 @@
 
   .learning-section
     .learning-section__header
+      %h2 最近完了した課題
+      .learning-section__actions
+        = link_to "課題進捗を見る", learning_assignments_path, class: "learning-button learning-button--ghost learning-button--sm"
+        = link_to "課題を配布", learning_students_path, class: "learning-button learning-button--ghost learning-button--sm"
+    - if @recent_completed_assignments.any?
+      .learning-stack
+        - @recent_completed_assignments.each do |assignment|
+          - student = assignment.learning_student
+          - if student
+            = link_to learning_student_path(student), class: "learning-review-row" do
+              %strong= student.display_name
+              %span= "#{assignment.title} / #{time_ago_in_words(assignment.completed_at || assignment.updated_at)}前"
+          - else
+            .learning-review-row
+              %strong 削除済みの生徒
+              %span= "#{assignment.title} / #{time_ago_in_words(assignment.completed_at || assignment.updated_at)}前"
+    - else
+      .learning-empty
+        %strong 完了した課題はまだありません
+        %p 生徒がLINEで「やった！」と返信すると、最新の未着手課題が完了になりここへ表示されます。
+
+  .learning-section
+    .learning-section__header
+      %h2 今週の課題状況
+      = link_to "課題進捗を見る", learning_assignments_path, class: "learning-button learning-button--ghost learning-button--sm"
+    .learning-stat-grid.learning-stat-grid--compact
+      .learning-stat-card
+        %span.learning-stat-card__label 提出率
+        %strong.learning-stat-card__value= "#{@weekly_assignment_status[:completion_rate]}%"
+        %p.learning-stat-card__sub= "対象 #{@weekly_assignment_status[:total_count]}件"
+      .learning-stat-card
+        %span.learning-stat-card__label 完了
+        %strong.learning-stat-card__value= "#{@weekly_assignment_status[:completed_count]}人"
+        %p.learning-stat-card__sub LINE返信で自動完了
+      .learning-stat-card
+        %span.learning-stat-card__label 未提出
+        %strong.learning-stat-card__value= "#{@weekly_assignment_status[:unsubmitted_count]}人"
+        %p.learning-stat-card__sub 未着手・進行中
+      .learning-stat-card
+        %span.learning-stat-card__label 期限超過
+        %strong.learning-stat-card__value= "#{@weekly_assignment_status[:overdue_count]}人"
+        %p.learning-stat-card__sub 今日時点
+
+  .learning-section
+    .learning-section__header
       %h2 今週のまとめ
       = link_to "声かけしましょう", learning_students_path, class: "learning-button learning-button--ghost learning-button--sm"
     .learning-review-grid

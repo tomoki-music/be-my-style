@@ -107,6 +107,7 @@ class Customer < ApplicationRecord
   has_many :learning_training_masters, dependent: :destroy
   has_many :learning_student_trainings, dependent: :destroy
   has_many :learning_progress_logs, dependent: :destroy
+  has_many :learning_assignments, dependent: :destroy
   has_many :learning_bands, dependent: :destroy
   has_many :learning_band_memberships, through: :learning_bands
   has_many :learning_band_trainings, dependent: :destroy

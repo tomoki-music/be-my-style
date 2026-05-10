@@ -1,0 +1,93 @@
+- summary = @assignment_summary
+- action = link_to("課題一覧へ", learning_assignments_path, class: "learning-button learning-button--ghost")
+= render "learning/shared/page", title: @assignment.title, subtitle: "提出状況と未提出者フォローを確認できます。", action: action do
+  .learning-section
+    .learning-section__header
+      %div
+        %h2 課題情報
+        - if @assignment.due_on
+          %p.learning-muted= "期限：#{@assignment.due_on.strftime('%Y/%-m/%-d')}"
+        - else
+          %p.learning-muted 期限：未設定
+      - if summary.overdue_count.positive?
+        %span.learning-assignment-status.learning-assignment-status--overdue 期限超過あり
+    - if @assignment.description.present?
+      .learning-detail-card
+        = simple_format(@assignment.description)
+
+  .learning-stat-grid
+    .learning-stat-card
+      %span.learning-stat-card__label 提出率
+      %strong.learning-stat-card__value= "#{summary.completion_rate}%"
+      .learning-progress
+        .learning-progress__bar{ style: "width: #{learning_progress_bar_width(summary.completion_rate)}%" }
+    .learning-stat-card
+      %span.learning-stat-card__label 完了
+      %strong.learning-stat-card__value= "#{summary.completed_count}人"
+      %p.learning-stat-card__sub= "全 #{summary.total_count}人"
+    .learning-stat-card
+      %span.learning-stat-card__label 進行中
+      %strong.learning-stat-card__value= "#{summary.in_progress_count}人"
+      %p.learning-stat-card__sub 自動完了待ち
+    .learning-stat-card
+      %span.learning-stat-card__label 未提出
+      %strong.learning-stat-card__value= "#{summary.unsubmitted_count}人"
+      %p.learning-stat-card__sub= summary.overdue_count.positive? ? "期限超過 #{summary.overdue_count}人" : "期限内"
+
+  .learning-section
+    .learning-section__header
+      %h2 未提出者へ一括LINE
+      %span.learning-notification-current= "対象：未着手・進行中 #{summary.unsubmitted_count}人"
+    = form_with url: bulk_reminder_learning_assignment_path(@assignment), method: :post, local: true, class: "learning-assignment-reminder-form" do
+      .learning-form-group.learning-bulk-line-message
+        = label_tag :assignment_reminder_message, "メッセージ"
+        = text_area_tag "assignment_reminder[message]", @reminder_message, id: "assignment_reminder_message", class: "learning-textarea", maxlength: 500
+      .learning-section__actions.learning-assignment-actions
+        = submit_tag "未提出者へ一括LINE", class: "learning-button", data: { confirm: "未提出者にLINEを一括送信します。よろしいですか？" }
+
+  .learning-section
+    .learning-section__header
+      %h2 生徒別の提出状況
+      .learning-section__actions
+        = link_to "全員", learning_assignment_path(@assignment), class: "learning-button learning-button--ghost learning-button--sm"
+        = link_to "未提出のみ", learning_assignment_path(@assignment, status: "unsubmitted"), class: "learning-button learning-button--ghost learning-button--sm"
+        = link_to "LINE未連携のみ", learning_assignment_path(@assignment, line: "unconnected"), class: "learning-button learning-button--ghost learning-button--sm"
+        = link_to "3日以上未反応", learning_assignment_path(@assignment, inactive: "1"), class: "learning-button learning-button--ghost learning-button--sm"
+    .learning-table-wrap
+      %table.learning-table
+        %thead
+          %tr
+            %th 生徒
+            %th 状態
+            %th 期限
+            %th 最終反応
+            %th LINE
+            %th
+        %tbody
+          - if @student_progresses.any?
+            - @student_progresses.each do |progress|
+              - student = progress.student
+              %tr{ class: ("learning-table-row--warning" if progress.overdue?) }
+                %td= link_to student.display_name, learning_student_path(student)
+                %td
+                  %span.learning-assignment-status{ class: "learning-assignment-status--#{progress.status}" }= progress.status_label
+                  - if progress.overdue?
+                    %span.learning-assignment-status.learning-assignment-status--overdue 期限超過
+                %td= progress.assignment.due_on ? progress.assignment.due_on.strftime("%-m/%-d") : "-"
+                %td
+                  - if progress.last_reaction_log
+                    = "#{time_ago_in_words(progress.last_reaction_log.reacted_at)}前"
+                  - else
+                    %span.learning-muted 反応なし
+                %td
+                  - if progress.line_connected?
+                    %span.learning-line-status.learning-line-status--connected 連携済み
+                  - else
+                    %span.learning-line-status 未連携
+                %td= link_to "詳細", learning_student_path(student), class: "learning-button learning-button--ghost learning-button--sm"
+          - else
+            %tr
+              %td{ colspan: 6 }
+                .learning-empty
+                  %strong 条件に合う生徒はいません
+                  %p フィルタを変えると、提出状況を別の角度で確認できます。

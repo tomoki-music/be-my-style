@@ -230,6 +230,140 @@ RSpec.describe "Learning line webhooks", type: :request do
       expect(notification_log.reacted_at).to be_present
     end
 
+    it "teacher_bulk_message通知にもreactionを保存すること" do
+      ENV["LINE_CHANNEL_SECRET"] = channel_secret
+      create(:learning_line_connection,
+             customer: teacher,
+             learning_student: student,
+             line_user_id: "UteacherBulkMessageUserId",
+             status: "connected",
+             connected_at: Time.current)
+      notification_log = create(:learning_notification_log,
+                                customer: teacher,
+                                learning_student: student,
+                                notification_type: "teacher_bulk_message",
+                                delivery_channel: "line",
+                                status: "sent",
+                                sent_at: 1.minute.ago,
+                                reaction_received: false,
+                                title: "先生からの一括メッセージ",
+                                message: "ライブまであと1週間！")
+      body = webhook_body(reaction_event("やった！", user_id: "UteacherBulkMessageUserId"))
+
+      post learning_line_webhook_path,
+           params: body,
+           headers: { "CONTENT_TYPE" => "application/json", "X-Line-Signature" => signature_for(body) }
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["reactions"]).to eq(1)
+      expect(notification_log.reload).to be_reaction_received
+      expect(notification_log.reaction_message).to eq("やった！")
+      expect(notification_log.reacted_at).to be_present
+    end
+
+    it "やった！返信で最新のpending assignmentをcompletedにすること" do
+      ENV["LINE_CHANNEL_SECRET"] = channel_secret
+      create(:learning_line_connection,
+             customer: teacher,
+             learning_student: student,
+             line_user_id: "UassignmentCompletedUserId",
+             status: "connected",
+             connected_at: Time.current)
+      older_assignment = create(:learning_assignment,
+                                customer: teacher,
+                                learning_student: student,
+                                title: "古い課題",
+                                status: "pending",
+                                created_at: 2.hours.ago)
+      latest_assignment = create(:learning_assignment,
+                                 customer: teacher,
+                                 learning_student: student,
+                                 title: "ライブ前基礎練習",
+                                 status: "pending",
+                                 created_at: 1.hour.ago)
+      notification_log = create(:learning_notification_log,
+                                customer: teacher,
+                                learning_student: student,
+                                notification_type: "assignment_created",
+                                delivery_channel: "line",
+                                status: "sent",
+                                sent_at: 10.minutes.ago,
+                                reaction_received: false)
+      body = webhook_body(reaction_event("やった！", user_id: "UassignmentCompletedUserId"))
+
+      post learning_line_webhook_path,
+           params: body,
+           headers: { "CONTENT_TYPE" => "application/json", "X-Line-Signature" => signature_for(body) }
+
+      expect(response).to have_http_status(:ok)
+      expect(notification_log.reload).to be_reaction_received
+      expect(latest_assignment.reload.status).to eq("completed")
+      expect(latest_assignment.completed_at).to be_present
+      expect(older_assignment.reload.status).to eq("pending")
+    end
+
+    it "completed assignmentは再更新しないこと" do
+      ENV["LINE_CHANNEL_SECRET"] = channel_secret
+      completed_at = 1.day.ago
+      create(:learning_line_connection,
+             customer: teacher,
+             learning_student: student,
+             line_user_id: "UassignmentAlreadyCompletedUserId",
+             status: "connected",
+             connected_at: Time.current)
+      assignment = create(:learning_assignment,
+                          customer: teacher,
+                          learning_student: student,
+                          status: "completed",
+                          completed_at: completed_at)
+      create(:learning_notification_log,
+             customer: teacher,
+             learning_student: student,
+             notification_type: "assignment_created",
+             delivery_channel: "line",
+             status: "sent",
+             sent_at: 10.minutes.ago,
+             reaction_received: false)
+      body = webhook_body(reaction_event("やった！", user_id: "UassignmentAlreadyCompletedUserId"))
+
+      post learning_line_webhook_path,
+           params: body,
+           headers: { "CONTENT_TYPE" => "application/json", "X-Line-Signature" => signature_for(body) }
+
+      expect(response).to have_http_status(:ok)
+      expect(assignment.reload.status).to eq("completed")
+      expect(assignment.completed_at.to_i).to eq(completed_at.to_i)
+    end
+
+    it "assignmentがない場合もreactionと練習記録の既存処理は維持すること" do
+      ENV["LINE_CHANNEL_SECRET"] = channel_secret
+      create(:learning_line_connection,
+             customer: teacher,
+             learning_student: student,
+             line_user_id: "UnoAssignmentUserId",
+             status: "connected",
+             connected_at: Time.current)
+      notification_log = create(:learning_notification_log,
+                                customer: teacher,
+                                learning_student: student,
+                                notification_type: "assignment_created",
+                                delivery_channel: "line",
+                                status: "sent",
+                                sent_at: 10.minutes.ago,
+                                reaction_received: false)
+      body = webhook_body(reaction_event("やった！", user_id: "UnoAssignmentUserId"))
+
+      expect {
+        post learning_line_webhook_path,
+             params: body,
+             headers: { "CONTENT_TYPE" => "application/json", "X-Line-Signature" => signature_for(body) }
+      }.to change(LearningProgressLog, :count).by(1)
+
+      expect(response).to have_http_status(:ok)
+      expect(notification_log.reload).to be_reaction_received
+      expect(student.learning_assignments).to be_empty
+    end
+
     it "やった！で最新sent通知にreactionを保存し元メッセージを残すこと" do
       ENV["LINE_CHANNEL_SECRET"] = channel_secret
       create(:learning_line_connection,

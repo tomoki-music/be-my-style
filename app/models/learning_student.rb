@@ -4,6 +4,7 @@ class LearningStudent < ApplicationRecord
   has_many :learning_student_parts, dependent: :destroy
   has_many :learning_student_trainings, dependent: :destroy
   has_many :learning_progress_logs, dependent: :destroy
+  has_many :learning_assignments, dependent: :destroy
   has_many :learning_band_memberships, dependent: :destroy
   has_many :learning_bands, through: :learning_band_memberships
   has_many :learning_effort_points, dependent: :destroy

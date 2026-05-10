@@ -49,6 +49,16 @@ FactoryBot.define do
     achievement_mark { "triangle" }
   end
 
+  factory :learning_assignment do
+    customer
+    learning_student { association :learning_student, customer: customer }
+    title { "ライブ前基礎練習" }
+    description { "・クロマチック\n・8ビート\n・コードチェンジ" }
+    status { "pending" }
+    due_on { Date.current + 7.days }
+    sequence(:assignment_group_key) { |n| "assignment-group-#{n}" }
+  end
+
   factory :learning_student_training do
     customer
     learning_student

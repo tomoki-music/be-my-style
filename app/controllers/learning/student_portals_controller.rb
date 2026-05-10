@@ -6,7 +6,8 @@ class Learning::StudentPortalsController < ApplicationController
   def show
     @student = LearningStudent
       .includes(:learning_school_group, :learning_student_parts,
-                :learning_student_trainings, :learning_progress_logs)
+                :learning_student_trainings, :learning_progress_logs,
+                :learning_assignments)
       .find_by!(public_access_token: params[:token])
 
     LearningPortalAccess.record_access!(@student)
@@ -23,6 +24,8 @@ class Learning::StudentPortalsController < ApplicationController
       teacher_comment: trainings.map(&:teacher_comment).find(&:present?)
     }
     @current_trainings = trainings.first(8)
+    @current_assignments = @student.learning_assignments.active.recent_first.limit(5)
+    @has_overdue_assignments = @current_assignments.any?(&:overdue?)
     @recent_logs = recent_logs
     @current_streak  = LearningPortalAccess.current_streak(@student)
     @effort_points   = @student.total_effort_points

@@ -17,12 +17,18 @@ class Learning::TeacherDashboardsController < Learning::BaseController
     @onboarding_status = Learning::OnboardingStatus.new(current_customer, routes: self)
     @teacher_next_action = Learning::FirstDayExperience.teacher_action(current_customer, routes: self)
     @weekly_growth = build_weekly_growth
+    @weekly_assignment_status = build_weekly_assignment_status
     @weekly_progress_points = Learning::FirstDayExperience.weekly_progress_points(current_customer)
     @weekly_review = Learning::WeeklyReviewService.new(current_customer, students: @students).build
     @recent_reaction_logs = current_customer.learning_notification_logs
       .includes(:learning_student)
       .where(learning_student_id: @students.map(&:id))
       .recent_reactions
+      .limit(5)
+    @recent_completed_assignments = current_customer.learning_assignments
+      .includes(:learning_student)
+      .where(learning_student_id: @students.map(&:id))
+      .completed_recent_first
       .limit(5)
     @last_practiced_on_by_student = current_customer.learning_progress_logs
       .where(learning_student_id: @students.map(&:id))
@@ -64,6 +70,31 @@ class Learning::TeacherDashboardsController < Learning::BaseController
       average_achievement_rate: total_trainings.zero? ? nil : ((achieved_trainings.to_f / total_trainings) * 100).round,
       progress_log_count: current_log_count,
       log_count_delta: current_log_count - last_week_log_count
+    }
+  end
+
+  def build_weekly_assignment_status
+    current_week = Date.current.all_week
+    weekly_assignments = current_customer.learning_assignments
+      .where("created_at BETWEEN ? AND ? OR completed_at BETWEEN ? AND ? OR status IN (?)",
+             current_week.begin, current_week.end,
+             current_week.begin, current_week.end,
+             LearningAssignment::OPEN_STATUSES)
+    group_keys = weekly_assignments.where.not(assignment_group_key: nil).distinct.pluck(:assignment_group_key)
+    sibling_assignments = group_keys.any? ? current_customer.learning_assignments.where(assignment_group_key: group_keys) : current_customer.learning_assignments.none
+    assignments = current_customer.learning_assignments.where(id: weekly_assignments.select(:id)).or(sibling_assignments)
+    assignments = current_customer.learning_assignments.active if assignments.none?
+    total_count = assignments.count
+    completed_count = assignments.where(status: "completed").count
+    unsubmitted_count = assignments.where(status: LearningAssignment::OPEN_STATUSES).count
+    overdue_count = assignments.overdue.count
+
+    {
+      total_count: total_count,
+      completed_count: completed_count,
+      unsubmitted_count: unsubmitted_count,
+      overdue_count: overdue_count,
+      completion_rate: total_count.zero? ? 0 : ((completed_count.to_f / total_count) * 100).round
     }
   end
 end
