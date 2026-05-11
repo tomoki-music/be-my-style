@@ -6418,3 +6418,185 @@ $ranking-accent: #7c4dff;
     }
   }
 }
+
+// ── 歌声タイプ: メイン+サブ表示 ──────────────────────
+.singing-diagnosis__voice-type-main {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.singing-diagnosis__voice-type-label {
+  background: #0ea5e9;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+}
+
+.singing-diagnosis__voice-type-sub {
+  align-items: center;
+  display: flex;
+  font-size: 13px;
+  gap: 4px;
+  color: #64748b;
+  margin-top: 4px;
+
+  strong {
+    color: #0f172a;
+    font-weight: 600;
+  }
+}
+
+.singing-diagnosis__voice-type-advice {
+  background: #f0fdf4;
+  border-left: 3px solid #22c55e;
+  border-radius: 0 6px 6px 0;
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 8px 0;
+  padding: 8px 12px;
+}
+
+.singing-diagnosis__voice-type-song {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #475569;
+  margin: 4px 0 8px;
+}
+
+.singing-diagnosis__voice-type-hidden {
+  align-items: flex-start;
+  background: #fefce8;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 10px 0;
+  padding: 10px 14px;
+
+  span {
+    color: #92400e;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  strong {
+    color: #0f172a;
+    font-size: 14px;
+  }
+
+  small {
+    color: #78350f;
+    font-size: 12px;
+  }
+}
+
+// ── 歌声タイプ: スコア一覧バー ────────────────────────
+.singing-diagnosis__voice-type-scores {
+  margin-top: 24px;
+}
+
+.singing-diagnosis__voice-type-scores h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.singing-diagnosis__voice-type-scores-lead {
+  color: #64748b;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.singing-diagnosis__voice-type-score-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.singing-diagnosis__voice-type-score-item {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 2fr 36px;
+}
+
+.singing-diagnosis__voice-type-score-label {
+  align-items: center;
+  display: flex;
+  font-size: 13px;
+  gap: 4px;
+
+  small {
+    background: #e0f2fe;
+    border-radius: 3px;
+    color: #0369a1;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 5px;
+  }
+}
+
+.singing-diagnosis__voice-type-score-item--main .singing-diagnosis__voice-type-score-label {
+  font-weight: 700;
+}
+
+.singing-diagnosis__voice-type-score-item--sub .singing-diagnosis__voice-type-score-label small {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.singing-diagnosis__voice-type-score-bar-wrap {
+  background: #e2e8f0;
+  border-radius: 4px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.singing-diagnosis__voice-type-score-bar {
+  background: #94a3b8;
+  border-radius: 4px;
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.singing-diagnosis__voice-type-score-item--main .singing-diagnosis__voice-type-score-bar {
+  background: #0ea5e9;
+}
+
+.singing-diagnosis__voice-type-score-item--sub .singing-diagnosis__voice-type-score-bar {
+  background: #38bdf8;
+}
+
+.singing-diagnosis__voice-type-score-num {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.singing-diagnosis__voice-type-reasoning {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.7;
+  margin-top: 14px;
+  padding: 10px 14px;
+}
+
+.singing-diagnosis__voice-hex-point--sub {
+  opacity: 0.75;
+
+  strong {
+    color: #0369a1;
+  }
+}
