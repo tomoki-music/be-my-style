@@ -36,7 +36,7 @@ class LearningStudentTraining < ApplicationRecord
   end
 
   def open_assignment
-    learning_assignments.active.recent_first.first
+    learning_assignments.where(status: LearningAssignment::INCOMPLETE_STATUSES).recent_first.first
   end
 
   def check_method
@@ -113,7 +113,7 @@ class LearningStudentTraining < ApplicationRecord
 
   def duplicate_open_assignment?
     learning_student.learning_assignments
-      .active
+      .where(status: LearningAssignment::INCOMPLETE_STATUSES)
       .where(learning_student_training_id: id)
       .exists?
   end

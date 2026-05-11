@@ -9,6 +9,7 @@ module Learning
     NOT_CONFIGURED_MESSAGE = "LINE webhook secret is not configured".freeze
     INVALID_SIGNATURE_MESSAGE = "LINE webhook signature is invalid".freeze
     INVALID_JSON_MESSAGE = "LINE webhook payload is invalid".freeze
+    TEACHER_REVIEW_REPLY_MESSAGE = "報告ありがとう！このトレーニングは先生確認が必要です。先生の確認後に完了になります。".freeze
     REACTION_NOTIFICATION_TYPES = %w[
       reminder
       teacher_action
@@ -20,8 +21,9 @@ module Learning
       auto_assignment_overdue_reminder
     ].freeze
 
-    def initialize(channel_secret: ENV["LINE_CHANNEL_SECRET"].to_s)
+    def initialize(channel_secret: ENV["LINE_CHANNEL_SECRET"].to_s, line_adapter: LineNotificationAdapter.new)
       @channel_secret = channel_secret
+      @line_adapter = line_adapter
     end
 
     def configured?
@@ -98,6 +100,7 @@ module Learning
       student = connection&.learning_student
       return false unless student
 
+      reply_message = nil
       ActiveRecord::Base.transaction do
         notification_log = latest_unreacted_notification_for(student)
         log_target_notification(notification_log)
@@ -106,10 +109,12 @@ module Learning
           reacted_at: Time.current,
           reaction_message: text.truncate(255)
         )
-        completed_assignment = complete_reacted_assignment!(student, notification_log)
-        create_progress_log_from_reaction!(student, text, completed_assignment: completed_assignment)
+        reacted_assignment = handle_reacted_assignment!(student, notification_log, text)
+        create_progress_log_from_reaction!(student, text, completed_assignment: reacted_assignment) unless reacted_assignment&.pending_review?
+        reply_message = TEACHER_REVIEW_REPLY_MESSAGE if reacted_assignment&.pending_review?
         student.update!(last_learning_action_at: Time.current)
       end
+      deliver_reaction_reply(event, reply_message) if reply_message.present?
 
       true
     end
@@ -156,6 +161,14 @@ module Learning
       suffix.blank? || suffix.match?(/\A[\s\p{P}\p{S}ー〜\u200d\ufe0f]*\z/)
     end
 
+    def deliver_reaction_reply(event, message)
+      reply_token = event["replyToken"].to_s.presence
+      return if reply_token.blank?
+
+      result = @line_adapter.reply(reply_token: reply_token, text: message)
+      Rails.logger.info("[Learning::LineWebhookProcessor] teacher_review_reply=#{result.status}")
+    end
+
     def latest_unreacted_notification_for(student)
       student.learning_notification_logs
         .where(delivery_channel: "line", status: "sent")
@@ -180,11 +193,15 @@ module Learning
       )
     end
 
-    def complete_reacted_assignment!(student, notification_log)
+    def handle_reacted_assignment!(student, notification_log, text)
       assignment = assignment_from_notification(student, notification_log) || latest_open_assignment(student)
-      # 将来的には確認者に応じて、self はLINE返信で達成、peer はペア確認後、
-      # teacher は先生承認後に達成、という分岐へ拡張する。
-      assignment&.complete!
+      return unless assignment
+
+      if assignment.teacher_review_required?
+        assignment.mark_submitted_for_review!(message: text)
+      else
+        assignment.complete!
+      end
       assignment
     end
 

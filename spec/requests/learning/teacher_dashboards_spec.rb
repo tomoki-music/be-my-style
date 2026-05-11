@@ -39,4 +39,28 @@ RSpec.describe "Learning teacher dashboards", type: :request do
     expect(response.body).to include("先生確認が必要")
     expect(response.body).to include("8小節を止まらず演奏できるか確認")
   end
+
+  it "承認待ちの先生確認課題を表示すること" do
+    student = create(:learning_student, customer: teacher)
+    master = create(:learning_training_master,
+                    customer: teacher,
+                    check_method: "8小節を止まらず演奏できるか確認",
+                    achievement_criteria: "テンポを崩さず最後までできたら達成",
+                    judge_type: "teacher")
+    training = create(:learning_student_training,
+                      customer: teacher,
+                      learning_student: student,
+                      learning_training_master: master,
+                      title: nil)
+    assignment = training.learning_assignments.first
+    assignment.update!(status: "pending_review", submitted_at: Time.current)
+
+    get learning_teacher_dashboard_path
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("先生確認待ち")
+    expect(response.body).to include(student.display_name)
+    expect(response.body).to include("承認")
+    expect(response.body).to include("テンポを崩さず最後までできたら達成")
+  end
 end

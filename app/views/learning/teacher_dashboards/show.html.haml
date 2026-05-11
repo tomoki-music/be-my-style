@@ -129,6 +129,10 @@
         %strong.learning-stat-card__value= "#{analytics_summary.unsubmitted_count}名"
         %p.learning-stat-card__sub 未着手・進行中
       .learning-stat-card
+        %span.learning-stat-card__label 先生確認待ち
+        %strong.learning-stat-card__value= "#{analytics_summary.pending_review_count}件"
+        %p.learning-stat-card__sub 承認後に完了
+      .learning-stat-card
         %span.learning-stat-card__label 7日以上未反応
         %strong.learning-stat-card__value= "#{analytics_summary.inactive_student_count}名"
         %p.learning-stat-card__sub 要フォロー候補
@@ -283,6 +287,33 @@
 
   .learning-section
     .learning-section__header
+      %h2 先生確認待ち
+      %span.learning-notification-current= "承認待ち：#{@pending_review_assignments.size}件"
+    - if @pending_review_assignments.any?
+      .learning-stack
+        - @pending_review_assignments.each do |assignment|
+          - training = assignment.learning_student_training
+          .learning-review-row
+            %div
+              %strong= "#{assignment.learning_student.display_name} / #{training&.title || assignment.title}"
+              %span
+                = assignment.submitted_at ? "報告日時: #{l(assignment.submitted_at, format: :short)}" : "報告日時: -"
+                - if training&.judge_type_label.present?
+                  = " / #{training.judge_type_label}"
+              - if training&.check_method.present?
+                %span= "確認方法: #{training.check_method}"
+              - if training&.achievement_criteria.present?
+                %span= "達成の目安: #{training.achievement_criteria}"
+            = form_with url: approve_review_learning_assignment_path(assignment), method: :patch, local: true, class: "learning-inline-form" do
+              = text_field_tag :review_comment, nil, class: "learning-input", placeholder: "コメント任意"
+              = submit_tag "承認", class: "learning-button learning-button--sm", data: { confirm: "この課題を承認して完了にします。よろしいですか？" }
+    - else
+      .learning-empty
+        %strong 承認待ちの提出はありません
+        %p 生徒が先生確認のトレーニングを報告すると、ここに表示されます。
+
+  .learning-section
+    .learning-section__header
       %h2 先生が確認するトレーニング
       %span.learning-notification-current= "対象：#{@teacher_check_assignments.size}件"
     - if @teacher_check_assignments.any?
@@ -358,7 +389,11 @@
       .learning-stat-card
         %span.learning-stat-card__label 完了
         %strong.learning-stat-card__value= "#{@weekly_assignment_status[:completed_count]}人"
-        %p.learning-stat-card__sub LINE返信で自動完了
+        %p.learning-stat-card__sub LINE返信または先生承認
+      .learning-stat-card
+        %span.learning-stat-card__label 先生確認待ち
+        %strong.learning-stat-card__value= "#{@weekly_assignment_status[:pending_review_count]}人"
+        %p.learning-stat-card__sub 生徒は報告済み
       .learning-stat-card
         %span.learning-stat-card__label 未提出
         %strong.learning-stat-card__value= "#{@weekly_assignment_status[:unsubmitted_count]}人"

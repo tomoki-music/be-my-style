@@ -94,6 +94,31 @@ RSpec.describe "Learning assignment show", type: :request do
       expect(response.body).to include("テンポを崩さず最後までできたら達成")
     end
 
+    it "pending_review の課題に先生確認待ちを表示すること" do
+      assignment = create_teacher_review_assignment(status: "pending_review",
+                                                    submitted_at: 30.minutes.ago,
+                                                    reaction_message: "練習しました")
+
+      get learning_assignment_path(assignment)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("先生確認待ち")
+      expect(response.body).to include("報告日時")
+    end
+
+    it "先生確認済みの課題に確認日時とコメントを表示すること" do
+      assignment = create_teacher_review_assignment(status: "completed",
+                                                    completed_at: Time.current,
+                                                    reviewed_at: Time.current,
+                                                    review_comment: "よくできています")
+
+      get learning_assignment_path(assignment)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("先生確認済み")
+      expect(response.body).to include("よくできています")
+    end
+
     it "他顧問のassignmentは閲覧できないこと" do
       other_teacher = create(:customer, domain_name: "learning", confirmed_at: Time.current)
       assignment = create(:learning_assignment, customer: other_teacher)
@@ -101,6 +126,44 @@ RSpec.describe "Learning assignment show", type: :request do
       expect {
         get learning_assignment_path(assignment)
       }.to raise_error(ActiveRecord::RecordNotFound)
+    end
+  end
+
+  describe "PATCH /learning/assignments/:id/approve_review" do
+    it "先生確認待ち課題を承認するとcompletedになりProgressLogを作成すること" do
+      assignment = create_teacher_review_assignment(status: "pending_review",
+                                                    submitted_at: Time.current,
+                                                    reaction_message: "やった")
+
+      expect {
+        patch approve_review_learning_assignment_path(assignment),
+              params: { review_comment: "確認しました" }
+      }.to change(LearningProgressLog, :count).by(1)
+
+      assignment.reload
+      expect(response).to redirect_to(learning_teacher_dashboard_path)
+      expect(assignment.status).to eq("completed")
+      expect(assignment.reviewed_by).to eq(teacher)
+      expect(assignment.review_comment).to eq("確認しました")
+      expect(assignment.reviewed_at).to be_present
+    end
+
+    it "他顧問のassignmentは承認できないこと" do
+      other_teacher = create(:customer, domain_name: "learning", confirmed_at: Time.current)
+      other_student = create(:learning_student, customer: other_teacher)
+      other_master = create(:learning_training_master, customer: other_teacher, judge_type: "teacher")
+      other_training = create(:learning_student_training,
+                              customer: other_teacher,
+                              learning_student: other_student,
+                              learning_training_master: other_master,
+                              title: nil)
+      assignment = other_training.learning_assignments.first
+      assignment.update!(status: "pending_review", submitted_at: Time.current)
+
+      expect {
+        patch approve_review_learning_assignment_path(assignment)
+      }.to raise_error(ActiveRecord::RecordNotFound)
+      expect(assignment.reload.status).to eq("pending_review")
     end
   end
 
@@ -178,5 +241,20 @@ RSpec.describe "Learning assignment show", type: :request do
       Learning::LineNotificationAdapter::Result.new(status: :ok, message: "sent", payload: {})
     end
     adapter
+  end
+
+  def create_teacher_review_assignment(attributes = {})
+    master = create(:learning_training_master,
+                    customer: teacher,
+                    check_method: "8小節を止まらず演奏できるか確認",
+                    achievement_criteria: "テンポを崩さず最後までできたら達成",
+                    judge_type: "teacher")
+    training = create(:learning_student_training,
+                      customer: teacher,
+                      learning_training_master: master,
+                      title: nil)
+    assignment = training.learning_assignments.first
+    assignment.update!(attributes) if attributes.present?
+    assignment
   end
 end

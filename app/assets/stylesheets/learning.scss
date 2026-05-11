@@ -1302,9 +1302,21 @@
   color: #26724a;
 }
 
+.learning-assignment-status--pending_review {
+  background: #eef6ff;
+  color: #28648f;
+}
+
 .learning-assignment-status--overdue {
   background: #fff1f1;
   color: #b23d4c;
+}
+
+.learning-inline-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .learning-assignment-reminder-form {

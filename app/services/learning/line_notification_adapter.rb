@@ -3,6 +3,7 @@ require "net/http"
 module Learning
   class LineNotificationAdapter
     PUSH_ENDPOINT = URI("https://api.line.me/v2/bot/message/push").freeze
+    REPLY_ENDPOINT = URI("https://api.line.me/v2/bot/message/reply").freeze
 
     Result = Struct.new(:status, :message, :payload, keyword_init: true) do
       def success?
@@ -39,6 +40,33 @@ module Learning
       push_message(notification_log, payload)
     end
 
+    def reply(reply_token:, text:)
+      payload = {
+        replyToken: reply_token,
+        messages: [
+          {
+            type: "text",
+            text: text
+          }
+        ]
+      }
+
+      return Result.new(status: :adapter_disabled, message: NOT_CONFIGURED_MESSAGE, payload: payload) unless enabled?
+      return Result.new(status: :no_recipient, message: NO_RECIPIENT_MESSAGE, payload: payload) if reply_token.blank?
+
+      response = @http_client.start(REPLY_ENDPOINT.host, REPLY_ENDPOINT.port, use_ssl: true) do |http|
+        http.request(build_request(payload, endpoint: REPLY_ENDPOINT))
+      end
+
+      if response.is_a?(Net::HTTPSuccess)
+        Result.new(status: :ok, message: "LINE reply message sent", payload: payload)
+      else
+        Result.new(status: :http_error, message: "#{HTTP_ERROR_MESSAGE}: status=#{response.code}", payload: payload)
+      end
+    rescue StandardError => e
+      Result.new(status: :http_error, message: "#{HTTP_ERROR_MESSAGE}: #{e.class.name}", payload: payload)
+    end
+
     def build_payload(notification_log)
       {
         to: line_user_id_for(notification_log.learning_student),
@@ -72,8 +100,8 @@ module Learning
       Result.new(status: :http_error, message: message, payload: payload)
     end
 
-    def build_request(payload)
-      request = Net::HTTP::Post.new(PUSH_ENDPOINT)
+    def build_request(payload, endpoint: PUSH_ENDPOINT)
+      request = Net::HTTP::Post.new(endpoint)
       request["Content-Type"] = "application/json"
       request["Authorization"] = "Bearer #{channel_access_token}"
       request.body = payload.to_json

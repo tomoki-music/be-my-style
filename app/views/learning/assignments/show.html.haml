@@ -46,6 +46,10 @@
       %strong.learning-stat-card__value= "#{summary.in_progress_count}人"
       %p.learning-stat-card__sub 自動完了待ち
     .learning-stat-card
+      %span.learning-stat-card__label 先生確認待ち
+      %strong.learning-stat-card__value= "#{summary.pending_review_count}人"
+      %p.learning-stat-card__sub 承認後に完了
+    .learning-stat-card
       %span.learning-stat-card__label 未提出
       %strong.learning-stat-card__value= "#{summary.unsubmitted_count}人"
       %p.learning-stat-card__sub= summary.overdue_count.positive? ? "期限超過 #{summary.overdue_count}人" : "期限内"
@@ -91,6 +95,14 @@
                     %span.learning-assignment-status.learning-assignment-status--overdue 期限超過
                   - if progress.assignment.learning_student_training&.teacher_judged?
                     %span.learning-assignment-status.learning-assignment-status--overdue 先生確認
+                  - if progress.assignment.pending_review?
+                    %div.learning-muted
+                      = "報告日時: #{l(progress.assignment.submitted_at, format: :short)}" if progress.assignment.submitted_at
+                  - if progress.assignment.reviewed_at.present?
+                    %div.learning-muted
+                      = "先生確認済み: #{l(progress.assignment.reviewed_at, format: :short)}"
+                    - if progress.assignment.review_comment.present?
+                      %div.learning-muted= "コメント: #{progress.assignment.review_comment}"
                 %td= progress.assignment.due_on ? progress.assignment.due_on.strftime("%-m/%-d") : "-"
                 %td
                   - if progress.last_reaction_log

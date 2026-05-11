@@ -35,6 +35,12 @@ class Learning::TeacherDashboardsController < Learning::BaseController
       .where(learning_student_id: @students.map(&:id))
       .completed_recent_first
       .limit(5)
+    @pending_review_assignments = current_customer.learning_assignments
+      .includes(:learning_student, learning_student_training: :learning_training_master)
+      .where(learning_student_id: @students.map(&:id))
+      .where(status: "pending_review")
+      .select { |assignment| assignment.learning_student_training&.teacher_judged? }
+      .first(6)
     @teacher_check_assignments = current_customer.learning_assignments
       .includes(:learning_student, learning_student_training: :learning_training_master)
       .where(learning_student_id: @students.map(&:id))
@@ -90,7 +96,7 @@ class Learning::TeacherDashboardsController < Learning::BaseController
       .where("created_at BETWEEN ? AND ? OR completed_at BETWEEN ? AND ? OR status IN (?)",
              current_week.begin, current_week.end,
              current_week.begin, current_week.end,
-             LearningAssignment::OPEN_STATUSES)
+             LearningAssignment::INCOMPLETE_STATUSES)
     group_keys = weekly_assignments.where.not(assignment_group_key: nil).distinct.pluck(:assignment_group_key)
     sibling_assignments = group_keys.any? ? current_customer.learning_assignments.where(assignment_group_key: group_keys) : current_customer.learning_assignments.none
     assignments = current_customer.learning_assignments.where(id: weekly_assignments.select(:id)).or(sibling_assignments)
@@ -98,12 +104,14 @@ class Learning::TeacherDashboardsController < Learning::BaseController
     total_count = assignments.count
     completed_count = assignments.where(status: "completed").count
     unsubmitted_count = assignments.where(status: LearningAssignment::OPEN_STATUSES).count
+    pending_review_count = assignments.where(status: "pending_review").count
     overdue_count = assignments.overdue.count
 
     {
       total_count: total_count,
       completed_count: completed_count,
       unsubmitted_count: unsubmitted_count,
+      pending_review_count: pending_review_count,
       overdue_count: overdue_count,
       completion_rate: total_count.zero? ? 0 : ((completed_count.to_f / total_count) * 100).round
     }
