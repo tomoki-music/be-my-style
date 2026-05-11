@@ -74,6 +74,26 @@ RSpec.describe "Learning assignment show", type: :request do
       expect(response.body).to include("期限超過")
     end
 
+    it "先生確認が必要なトレーニング課題を目立たせること" do
+      master = create(:learning_training_master,
+                      customer: teacher,
+                      check_method: "8小節を止まらず演奏できるか確認",
+                      achievement_criteria: "テンポを崩さず最後までできたら達成",
+                      judge_type: "teacher")
+      training = create(:learning_student_training,
+                        customer: teacher,
+                        learning_training_master: master,
+                        title: nil)
+      assignment = training.learning_assignments.first
+
+      get learning_assignment_path(assignment)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("先生確認が必要")
+      expect(response.body).to include("8小節を止まらず演奏できるか確認")
+      expect(response.body).to include("テンポを崩さず最後までできたら達成")
+    end
+
     it "他顧問のassignmentは閲覧できないこと" do
       other_teacher = create(:customer, domain_name: "learning", confirmed_at: Time.current)
       assignment = create(:learning_assignment, customer: other_teacher)

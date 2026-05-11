@@ -182,6 +182,8 @@ module Learning
 
     def complete_reacted_assignment!(student, notification_log)
       assignment = assignment_from_notification(student, notification_log) || latest_open_assignment(student)
+      # 将来的には確認者に応じて、self はLINE返信で達成、peer はペア確認後、
+      # teacher は先生承認後に達成、という分岐へ拡張する。
       assignment&.complete!
       assignment
     end

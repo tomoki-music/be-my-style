@@ -30,8 +30,16 @@
     = f.text_area :description, rows: 5, class: "learning-textarea"
 
   .learning-form-group
+    = f.label :check_method, "チェック方法"
+    = f.text_area :check_method, rows: 3, class: "learning-textarea", placeholder: "例: メトロノーム80で8小節止まらず演奏できるか確認"
+
+  .learning-form-group
     = f.label :achievement_criteria, "達成基準"
-    = f.text_area :achievement_criteria, rows: 4, class: "learning-textarea"
+    = f.text_area :achievement_criteria, rows: 4, class: "learning-textarea", placeholder: "例: 3回中2回、テンポを崩さず最後まで演奏できたら達成"
+
+  .learning-form-group
+    = f.label :judge_type, "確認者"
+    = f.select :judge_type, LearningTrainingMaster::JUDGE_TYPE_LABELS.map { |value, label| [label, value] }, {}, class: "learning-select"
 
   .learning-form-group
     %label.learning-switch

@@ -6,7 +6,7 @@ class Learning::StudentPortalsController < ApplicationController
   def show
     @student = LearningStudent
       .includes(:learning_school_group, :learning_student_parts,
-                :learning_student_trainings, :learning_progress_logs,
+                { learning_student_trainings: :learning_training_master }, :learning_progress_logs,
                 :learning_assignments)
       .find_by!(public_access_token: params[:token])
 
@@ -25,7 +25,7 @@ class Learning::StudentPortalsController < ApplicationController
     }
     @current_trainings = trainings.first(8)
     @weekly_training_assignments = @student.learning_assignments
-      .includes(:learning_student_training)
+      .includes(learning_student_training: :learning_training_master)
       .active
       .where.not(learning_student_training_id: nil)
       .recent_first

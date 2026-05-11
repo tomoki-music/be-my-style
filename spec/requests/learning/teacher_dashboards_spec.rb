@@ -18,4 +18,25 @@ RSpec.describe "Learning teacher dashboards", type: :request do
     expect(response.body).to include("自動リマインドをプレビューする")
     expect(response.body).to include("ONにしない限り自動送信されないので安心です")
   end
+
+  it "先生確認が必要な未完了トレーニングを表示すること" do
+    student = create(:learning_student, customer: teacher)
+    master = create(:learning_training_master,
+                    customer: teacher,
+                    check_method: "8小節を止まらず演奏できるか確認",
+                    achievement_criteria: "テンポを崩さず最後までできたら達成",
+                    judge_type: "teacher")
+    create(:learning_student_training,
+           customer: teacher,
+           learning_student: student,
+           learning_training_master: master,
+           title: nil)
+
+    get learning_teacher_dashboard_path
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("先生が確認するトレーニング")
+    expect(response.body).to include("先生確認が必要")
+    expect(response.body).to include("8小節を止まらず演奏できるか確認")
+  end
 end

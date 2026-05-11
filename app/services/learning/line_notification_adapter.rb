@@ -150,13 +150,14 @@ module Learning
 
     def teacher_bulk_message_text(notification_log)
       student = notification_log.learning_student
-      [
+      truncate_line_text([
         "先生からのメッセージです。",
         notification_log.message,
+        training_check_lines(notification_log),
         "▼ 生徒ページを見る",
         student_portal_url(student),
         "練習できたら「やった！」と返信してね。"
-      ].compact.join("\n")
+      ].flatten.compact.join("\n"))
     end
 
     def followup_message_text(notification_log)
@@ -172,15 +173,16 @@ module Learning
 
     def assignment_created_text(notification_log)
       student = notification_log.learning_student
-      [
+      truncate_line_text([
         "📘 新しい課題が届きました！",
         notification_log.title,
         notification_log.message,
+        training_check_lines(notification_log),
         notification_log.recommended_action.presence,
         "▼ 生徒ページを見る",
         student_portal_url(student),
         "終わったら「やった！」と返信してね。"
-      ].compact.join("\n")
+      ].flatten.compact.join("\n"))
     end
 
     def auto_inactive_reminder_text(notification_log)
@@ -197,28 +199,30 @@ module Learning
 
     def auto_assignment_due_reminder_text(notification_log)
       student = notification_log.learning_student
-      [
+      truncate_line_text([
         "課題の期限が近づいています。",
         notification_log.title,
         notification_log.message,
+        training_check_lines(notification_log),
         notification_log.recommended_action.presence,
         "▼ 生徒ページを見る",
         student_portal_url(student),
         "終わったらLINEで「やった」と返信してね。"
-      ].compact.join("\n")
+      ].flatten.compact.join("\n"))
     end
 
     def auto_assignment_overdue_reminder_text(notification_log)
       student = notification_log.learning_student
-      [
+      truncate_line_text([
         "未完了の課題があります。",
         notification_log.title,
         notification_log.message,
+        training_check_lines(notification_log),
         notification_log.recommended_action.presence,
         "▼ 生徒ページを見る",
         student_portal_url(student),
         "終わったらLINEで「やった」と返信してね。"
-      ].compact.join("\n")
+      ].flatten.compact.join("\n"))
     end
 
     def default_text(notification_log)
@@ -238,6 +242,30 @@ module Learning
       return nil if trainings.blank?
 
       trainings.map { |title| "・#{title}" }
+    end
+
+    def training_check_lines(notification_log)
+      training = assignment_for(notification_log)&.learning_student_training
+      return nil unless training
+
+      [
+        training.check_method.present? && "確認方法: #{training.check_method}",
+        training.achievement_criteria.present? && "達成の目安: #{training.achievement_criteria}",
+        "誰に見てもらうか: #{training.judge_type_label}"
+      ].compact
+    end
+
+    def assignment_for(notification_log)
+      assignment_id = notification_log.metadata.to_h["learning_assignment_id"] ||
+                      notification_log.metadata.to_h["assignment_id"]
+      return if assignment_id.blank?
+
+      LearningAssignment.includes(learning_student_training: :learning_training_master)
+        .find_by(id: assignment_id, learning_student_id: notification_log.learning_student_id)
+    end
+
+    def truncate_line_text(text)
+      text.to_s.truncate(500)
     end
 
     def streak_message_for(student)

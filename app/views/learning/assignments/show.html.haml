@@ -14,6 +14,22 @@
     - if @assignment.description.present?
       .learning-detail-card
         = simple_format(@assignment.description)
+    - training = @assignment.learning_student_training
+    - if training
+      .learning-detail-card
+        %p
+          %strong 誰に見てもらうか
+          = training.judge_type_label
+          - if training.teacher_judged?
+            %span.learning-assignment-status.learning-assignment-status--overdue 先生確認が必要
+        - if training.check_method.present?
+          %p
+            %strong 確認方法
+            = training.check_method
+        - if training.achievement_criteria.present?
+          %p
+            %strong 達成の目安
+            = training.achievement_criteria
 
   .learning-stat-grid
     .learning-stat-card
@@ -73,6 +89,8 @@
                   %span.learning-assignment-status{ class: "learning-assignment-status--#{progress.status}" }= progress.status_label
                   - if progress.overdue?
                     %span.learning-assignment-status.learning-assignment-status--overdue 期限超過
+                  - if progress.assignment.learning_student_training&.teacher_judged?
+                    %span.learning-assignment-status.learning-assignment-status--overdue 先生確認
                 %td= progress.assignment.due_on ? progress.assignment.due_on.strftime("%-m/%-d") : "-"
                 %td
                   - if progress.last_reaction_log

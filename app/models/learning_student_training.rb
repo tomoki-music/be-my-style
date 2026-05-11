@@ -39,6 +39,22 @@ class LearningStudentTraining < ApplicationRecord
     learning_assignments.active.recent_first.first
   end
 
+  def check_method
+    learning_training_master&.check_method
+  end
+
+  def judge_type
+    learning_training_master&.judge_type || "self"
+  end
+
+  def judge_type_label
+    learning_training_master&.judge_type_label || LearningTrainingMaster::JUDGE_TYPE_LABELS.fetch("self")
+  end
+
+  def teacher_judged?
+    learning_training_master&.teacher_judged? || false
+  end
+
   private
 
   def copy_master_fields

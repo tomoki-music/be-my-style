@@ -4,7 +4,7 @@ class Learning::TeacherDashboardsController < Learning::BaseController
     @selected_school_group = current_customer.learning_school_groups.find_by(id: params[:group_id])
     @students = current_customer.learning_students
                                 .includes(:learning_school_group,
-                                          :learning_student_trainings,
+                                          { learning_student_trainings: :learning_training_master },
                                           :learning_progress_logs,
                                           :learning_line_connections)
                                 .active
@@ -35,6 +35,12 @@ class Learning::TeacherDashboardsController < Learning::BaseController
       .where(learning_student_id: @students.map(&:id))
       .completed_recent_first
       .limit(5)
+    @teacher_check_assignments = current_customer.learning_assignments
+      .includes(:learning_student, learning_student_training: :learning_training_master)
+      .where(learning_student_id: @students.map(&:id))
+      .where(status: LearningAssignment::OPEN_STATUSES)
+      .select { |assignment| assignment.learning_student_training&.teacher_judged? }
+      .first(6)
     @last_practiced_on_by_student = current_customer.learning_progress_logs
       .where(learning_student_id: @students.map(&:id))
       .group(:learning_student_id)

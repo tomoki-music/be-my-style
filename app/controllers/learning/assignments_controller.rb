@@ -78,7 +78,9 @@ class Learning::AssignmentsController < Learning::BaseController
   end
 
   def show
-    @assignment = current_customer.learning_assignments.includes(:learning_student).find(params[:id])
+    @assignment = current_customer.learning_assignments
+      .includes(:learning_student, learning_student_training: :learning_training_master)
+      .find(params[:id])
     @assignments = assignment_group_for(@assignment)
     @assignment_summary = AssignmentSummary.new(representative: @assignment, assignments: @assignments)
     @student_progresses = filtered_student_progresses(@assignments)
@@ -247,7 +249,7 @@ class Learning::AssignmentsController < Learning::BaseController
   end
 
   def assignment_group_for(assignment)
-    scope = current_customer.learning_assignments.includes(:learning_student)
+    scope = current_customer.learning_assignments.includes(:learning_student, learning_student_training: :learning_training_master)
     if assignment.assignment_group_key.present?
       scope.where(assignment_group_key: assignment.assignment_group_key).order(:created_at, :id).to_a
     else

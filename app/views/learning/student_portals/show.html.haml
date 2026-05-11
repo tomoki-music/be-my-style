@@ -112,6 +112,19 @@
                   - if assignment.overdue?
                     %span.learning-assignment-status.learning-assignment-status--overdue 提出期限を過ぎています
                 %p= training&.description.presence || assignment.description
+                - if training
+                  .learning-detail-card
+                    - if training.check_method.present?
+                      %p
+                        %strong 確認方法
+                        = training.check_method
+                    - if training.achievement_criteria.present?
+                      %p
+                        %strong 達成の目安
+                        = training.achievement_criteria
+                    %p
+                      %strong 誰に見てもらうか
+                      = training.judge_type_label
                 .learning-first-action__meta
                   %span= "完了reaction: #{assignment.completed_at.present? ? '受信済み' : '未受信'}"
                   %span= "連続日数: #{@current_streak}日"
@@ -219,6 +232,12 @@
                     %strong= training.title
                     %span= learning_mark_label(training.achievement_mark)
                   %p= training.description
+                  - if training.check_method.present? || training.achievement_criteria.present?
+                    - check_items = []
+                    - check_items << "確認方法: #{training.check_method}" if training.check_method.present?
+                    - check_items << "達成の目安: #{training.achievement_criteria}" if training.achievement_criteria.present?
+                    - check_items << "誰に見てもらうか: #{training.judge_type_label}"
+                    %small= check_items.join(" / ")
                   %small= "#{training.period} / #{training.level}"
             - else
               .learning-empty
@@ -237,6 +256,12 @@
                     %strong= training.title
                     %span= learning_mark_label(training.achievement_mark)
                   %p= training.description
+                  - if training.check_method.present? || training.achievement_criteria.present?
+                    - check_items = []
+                    - check_items << "確認方法: #{training.check_method}" if training.check_method.present?
+                    - check_items << "達成の目安: #{training.achievement_criteria}" if training.achievement_criteria.present?
+                    - check_items << "誰に見てもらうか: #{training.judge_type_label}"
+                    %small= check_items.join(" / ")
                   %small= "#{training.period} / #{training.level} / #{training.frequency.presence || '頻度未設定'}"
             - else
               .learning-empty.learning-empty--action
