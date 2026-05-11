@@ -1,0 +1,29 @@
+- action = link_to("テンプレを追加", new_learning_line_message_template_path, class: "learning-button")
+= render "learning/shared/page", title: "LINEテンプレート", subtitle: "フォローや未提出リマインドの文面を保存して、送信前にすばやく呼び出せます。", action: action do
+  .learning-section
+    .learning-table-wrap
+      %table.learning-table
+        %thead
+          %tr
+            %th カテゴリ
+            %th テンプレ名
+            %th 本文
+            %th 表示
+            %th 操作
+        %tbody
+          - if @templates.any?
+            - @templates.each do |template|
+              %tr
+                %td= template.category_label
+                %td
+                  %strong= template.title
+                %td= truncate(template.body, length: 80)
+                %td= template.active? ? "表示中" : "非表示"
+                %td.learning-table__actions
+                  = link_to "編集", edit_learning_line_message_template_path(template), class: "learning-text-link"
+          - else
+            %tr
+              %td{ colspan: 5 }
+                .learning-empty
+                  %strong LINEテンプレートはまだありません
+                  %p よく使う文面を登録すると、一括送信時に本文へ自動反映できます。

@@ -1,0 +1,8 @@
+- templates = Array(local_assigns[:templates])
+- target_id = local_assigns.fetch(:target_id)
+.learning-form-group.learning-line-template-selector
+  = label_tag "#{target_id}_template", "テンプレ選択"
+  - options = [["テンプレを選択", ""]] + templates.map { |template| ["#{template.category_label}：#{template.title}", template.id, { data: { template_body: template.body } }] }
+  = select_tag "#{target_id}_template", options_for_select(options), class: "learning-select", data: { line_template_select: true, line_template_target: target_id }
+  %p.learning-muted
+    = link_to "テンプレ管理", learning_line_message_templates_path, class: "learning-text-link"

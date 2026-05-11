@@ -101,4 +101,12 @@ FactoryBot.define do
     status { "pending" }
     metadata { { source: "spec" } }
   end
+
+  factory :learning_line_message_template do
+    customer
+    title { "要フォロー" }
+    category { "followup" }
+    body { "最近の練習状況が少し止まっているみたいです！" }
+    active { true }
+  end
 end

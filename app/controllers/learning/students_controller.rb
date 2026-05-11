@@ -7,6 +7,12 @@ class Learning::StudentsController < Learning::BaseController
       .includes(:learning_student_parts, :learning_student_trainings, :learning_school_group, :learning_line_connections)
       .with_filters(filter_params)
       .ordered
+    @line_message_templates = current_customer.learning_line_message_templates.active.ordered
+    @recent_bulk_line_student_ids = current_customer.learning_notification_logs
+      .recently_sent_line(24.hours.ago)
+      .where(notification_type: "teacher_bulk_message", learning_student_id: @students.map(&:id))
+      .distinct
+      .pluck(:learning_student_id)
   end
 
   def show

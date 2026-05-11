@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_11_010000) do
+ActiveRecord::Schema.define(version: 2026_05_11_020000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -458,6 +458,19 @@ ActiveRecord::Schema.define(version: 2026_05_11_010000) do
     t.index ["learning_student_id"], name: "index_learning_line_connections_on_learning_student_id"
     t.index ["line_user_id"], name: "index_learning_line_connections_on_line_user_id"
     t.index ["status"], name: "index_learning_line_connections_on_status"
+  end
+
+  create_table "learning_line_message_templates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "title", null: false
+    t.string "category", null: false
+    t.text "body", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id", "active"], name: "idx_learning_line_templates_on_customer_active"
+    t.index ["customer_id", "category"], name: "idx_learning_line_templates_on_customer_category"
+    t.index ["customer_id"], name: "index_learning_line_message_templates_on_customer_id"
   end
 
   create_table "learning_monthly_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -980,6 +993,7 @@ ActiveRecord::Schema.define(version: 2026_05_11_010000) do
   add_foreign_key "learning_effort_points", "learning_students"
   add_foreign_key "learning_line_connections", "customers"
   add_foreign_key "learning_line_connections", "learning_students"
+  add_foreign_key "learning_line_message_templates", "customers"
   add_foreign_key "learning_monthly_reports", "customers"
   add_foreign_key "learning_notification_logs", "customers"
   add_foreign_key "learning_notification_logs", "learning_students"

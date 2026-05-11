@@ -1084,6 +1084,14 @@
   color: #26724a;
 }
 
+.learning-line-duplicate-warning {
+  margin-top: 6px;
+  color: #9a3412;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
 .learning-bulk-line-form,
 .learning-assignment-form {
   display: grid;
@@ -1102,7 +1110,8 @@
 }
 
 .learning-bulk-line-message,
-.learning-assignment-description {
+.learning-assignment-description,
+.learning-line-template-selector {
   max-width: 760px;
 }
 

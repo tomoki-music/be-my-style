@@ -53,6 +53,7 @@ module Learning
       :inactive_days,
       :pending_assignments,
       :last_reaction_at,
+      :last_followup_sent_at,
       :line_connected,
       keyword_init: true
     )
@@ -231,8 +232,24 @@ module Learning
         inactive_days: inactive_days(item.last_reaction_at),
         pending_assignments: student_assignments.count { |assignment| open_assignment?(assignment) },
         last_reaction_at: item.last_reaction_at,
+        last_followup_sent_at: last_followup_sent_at_by_student_id[item.student.id],
         line_connected: item.student.line_connected?
       )
+    end
+
+    def last_followup_sent_at_by_student_id
+      @last_followup_sent_at_by_student_id ||= customer.learning_notification_logs
+        .where(learning_student_id: active_student_ids,
+               notification_type: "followup_message",
+               delivery_channel: "line",
+               status: "sent")
+        .pluck(:learning_student_id, :sent_at, :generated_at)
+        .each_with_object({}) do |(student_id, sent_at, generated_at), memo|
+          delivered_at = sent_at || generated_at
+          next if delivered_at.blank?
+
+          memo[student_id] = [memo[student_id], delivered_at].compact.max
+        end
     end
 
     def student_status(submission_rate, last_reaction_at)
