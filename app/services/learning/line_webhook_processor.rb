@@ -19,6 +19,7 @@ module Learning
       assignment_created
       auto_assignment_due_reminder
       auto_assignment_overdue_reminder
+      teacher_revision_request
     ].freeze
 
     def initialize(channel_secret: ENV["LINE_CHANNEL_SECRET"].to_s, line_adapter: LineNotificationAdapter.new)
@@ -211,13 +212,13 @@ module Learning
       return if assignment_id.blank?
 
       student.learning_assignments
-        .where(status: LearningAssignment::OPEN_STATUSES)
+        .where(status: LearningAssignment::ACTION_REQUIRED_STATUSES)
         .find_by(id: assignment_id)
     end
 
     def latest_open_assignment(student)
       student.learning_assignments
-        .where(status: LearningAssignment::OPEN_STATUSES)
+        .where(status: LearningAssignment::ACTION_REQUIRED_STATUSES)
         .order(created_at: :desc, id: :desc)
         .first
     end

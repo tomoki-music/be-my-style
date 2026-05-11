@@ -119,6 +119,20 @@ RSpec.describe "Learning assignment show", type: :request do
       expect(response.body).to include("よくできています")
     end
 
+    it "差し戻し課題に再チャレンジ表示と先生コメントを表示すること" do
+      assignment = create_teacher_review_assignment(status: "needs_revision",
+                                                    reviewed_at: Time.current,
+                                                    review_comment: "メトロノーム80で再チャレンジしてみよう")
+
+      get learning_assignment_path(assignment)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("もう一度チャレンジ")
+      expect(response.body).to include("先生からのコメント")
+      expect(response.body).to include("メトロノーム80で再チャレンジしてみよう")
+      expect(response.body).not_to include("先生確認済み")
+    end
+
     it "他顧問のassignmentは閲覧できないこと" do
       other_teacher = create(:customer, domain_name: "learning", confirmed_at: Time.current)
       assignment = create(:learning_assignment, customer: other_teacher)
@@ -162,6 +176,51 @@ RSpec.describe "Learning assignment show", type: :request do
 
       expect {
         patch approve_review_learning_assignment_path(assignment)
+      }.to raise_error(ActiveRecord::RecordNotFound)
+      expect(assignment.reload.status).to eq("pending_review")
+    end
+  end
+
+  describe "PATCH /learning/assignments/:id/request_revision" do
+    it "先生確認待ち課題を差し戻すとneeds_revisionになりProgressLogを作成しないこと" do
+      assignment = create_teacher_review_assignment(status: "pending_review",
+                                                    submitted_at: Time.current,
+                                                    reaction_message: "やった")
+      successful_adapter
+      create_connected_line(assignment.learning_student, "Uphase33Revision")
+
+      expect {
+        expect {
+          patch request_revision_learning_assignment_path(assignment),
+                params: { review_comment: "テンポ80で再チャレンジしてみよう" }
+        }.to change(Learning::NotificationLog, :count).by(1)
+      }.not_to change(LearningProgressLog, :count)
+
+      assignment.reload
+      expect(response).to redirect_to(learning_teacher_dashboard_path)
+      expect(assignment.status).to eq("needs_revision")
+      expect(assignment.reviewed_by).to eq(teacher)
+      expect(assignment.review_comment).to eq("テンポ80で再チャレンジしてみよう")
+      expect(assignment.reviewed_at).to be_present
+      expect(Learning::NotificationLog.last.notification_type).to eq("teacher_revision_request")
+    end
+
+    it "他顧問のassignmentは差し戻しできないこと" do
+      other_teacher = create(:customer, domain_name: "learning", confirmed_at: Time.current)
+      other_student = create(:learning_student, customer: other_teacher)
+      other_master = create(:learning_training_master, customer: other_teacher, judge_type: "teacher")
+      other_training = create(:learning_student_training,
+                              customer: other_teacher,
+                              learning_student: other_student,
+                              learning_training_master: other_master,
+                              title: nil)
+      assignment = other_training.learning_assignments.first
+      assignment.update!(status: "pending_review", submitted_at: Time.current)
+      expect(Learning::LineNotificationAdapter).not_to receive(:new)
+
+      expect {
+        patch request_revision_learning_assignment_path(assignment),
+              params: { review_comment: "もう一度" }
       }.to raise_error(ActiveRecord::RecordNotFound)
       expect(assignment.reload.status).to eq("pending_review")
     end

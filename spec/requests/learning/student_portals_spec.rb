@@ -26,4 +26,24 @@ RSpec.describe "Learning student portals", type: :request do
     expect(response.body).to include("誰に見てもらうか")
     expect(response.body).to include("生徒同士で確認")
   end
+
+  it "差し戻し課題を今週やることに再チャレンジとして表示すること" do
+    training = create(:learning_student_training,
+                      customer: teacher,
+                      learning_student: student)
+    assignment = training.learning_assignments.first
+    assignment.update!(
+      status: "needs_revision",
+      reviewed_at: Time.current,
+      review_comment: "テンポ80で再チャレンジしてみよう"
+    )
+
+    get learning_student_portal_path(student.public_access_token)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("もう一度チャレンジ！")
+    expect(response.body).to include("先生からのコメント")
+    expect(response.body).to include("テンポ80で再チャレンジしてみよう")
+    expect(response.body).to include("できたらLINEで「やった」と返信しよう")
+  end
 end

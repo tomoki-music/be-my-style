@@ -112,6 +112,15 @@
                   - if assignment.overdue?
                     %span.learning-assignment-status.learning-assignment-status--overdue 提出期限を過ぎています
                 %p= training&.description.presence || assignment.description
+                - if assignment.needs_revision?
+                  .learning-detail-card
+                    %p
+                      %strong もう一度チャレンジ！
+                      = assignment.review_comment.present? ? "先生からのコメント：#{assignment.review_comment}" : "先生から再チャレンジの連絡が届いています。"
+                    %p できたらLINEで「やった」と返信しよう
+                - elsif assignment.pending_review?
+                  .learning-detail-card
+                    %p 先生確認待ちです
                 - if training
                   .learning-detail-card
                     - if training.check_method.present?
@@ -143,6 +152,12 @@
                     %span.learning-assignment-status.learning-assignment-status--overdue 提出期限を過ぎています
                 - if assignment.description.present?
                   = simple_format(assignment.description)
+                - if assignment.needs_revision?
+                  .learning-detail-card
+                    %p
+                      %strong もう一度チャレンジ！
+                      = assignment.review_comment.present? ? "先生からのコメント：#{assignment.review_comment}" : "先生から再チャレンジの連絡が届いています。"
+                    %p できたらLINEで「やった」と返信しよう
           - else
             .learning-empty
               %strong 今週やることはまだありません

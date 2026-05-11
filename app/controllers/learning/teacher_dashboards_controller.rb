@@ -44,7 +44,7 @@ class Learning::TeacherDashboardsController < Learning::BaseController
     @teacher_check_assignments = current_customer.learning_assignments
       .includes(:learning_student, learning_student_training: :learning_training_master)
       .where(learning_student_id: @students.map(&:id))
-      .where(status: LearningAssignment::OPEN_STATUSES)
+      .where(status: LearningAssignment::ACTION_REQUIRED_STATUSES)
       .select { |assignment| assignment.learning_student_training&.teacher_judged? }
       .first(6)
     @last_practiced_on_by_student = current_customer.learning_progress_logs
@@ -103,8 +103,9 @@ class Learning::TeacherDashboardsController < Learning::BaseController
     assignments = current_customer.learning_assignments.active if assignments.none?
     total_count = assignments.count
     completed_count = assignments.where(status: "completed").count
-    unsubmitted_count = assignments.where(status: LearningAssignment::OPEN_STATUSES).count
+    unsubmitted_count = assignments.where(status: LearningAssignment::ACTION_REQUIRED_STATUSES).count
     pending_review_count = assignments.where(status: "pending_review").count
+    needs_revision_count = assignments.where(status: "needs_revision").count
     overdue_count = assignments.overdue.count
 
     {
@@ -112,6 +113,7 @@ class Learning::TeacherDashboardsController < Learning::BaseController
       completed_count: completed_count,
       unsubmitted_count: unsubmitted_count,
       pending_review_count: pending_review_count,
+      needs_revision_count: needs_revision_count,
       overdue_count: overdue_count,
       completion_rate: total_count.zero? ? 0 : ((completed_count.to_f / total_count) * 100).round
     }

@@ -190,6 +190,25 @@ RSpec.describe Learning::LineNotificationAdapter do
       expect(text).to include("誰に見てもらうか: 先生が確認")
       expect(text.length).to be <= 500
     end
+
+    it "teacher_revision_requestは再チャレンジ文面を組み立てること" do
+      revision_log = create(:learning_notification_log,
+                            notification_type: "teacher_revision_request",
+                            delivery_channel: "line",
+                            status: "queued",
+                            title: "もう一度チャレンジ",
+                            message: "テンポ80で再チャレンジしてみよう",
+                            recommended_action: "先生からのコメントを確認して、もう一度チャレンジしてみましょう！")
+
+      payload = described_class.new.build_payload(revision_log)
+      text = payload[:messages].first[:text]
+
+      expect(text).to include("先生から再チャレンジのコメントが届きました。")
+      expect(text).to include("テンポ80で再チャレンジしてみよう")
+      expect(text).to include("▼ 生徒ページを見る")
+      expect(text).to include(revision_log.learning_student.public_access_token)
+      expect(text).to include("もう一度「やった」と返信")
+    end
   end
 
   describe "#deliver" do

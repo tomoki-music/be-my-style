@@ -12,6 +12,7 @@ module Learning
       auto_inactive_reminder
       auto_assignment_due_reminder
       auto_assignment_overdue_reminder
+      teacher_revision_request
       weekly_summary
       student_reactivation
     ].freeze

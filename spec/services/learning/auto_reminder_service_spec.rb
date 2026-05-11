@@ -153,6 +153,31 @@ RSpec.describe Learning::AutoReminderService do
       expect(results.map { |result| result.candidate.notification_type }).not_to include("auto_assignment_due_reminder")
     end
 
+    it "差し戻し課題は再チャレンジ文面でリマインド対象になること" do
+      student = connected_student
+      create(:learning_notification_log,
+             customer: customer,
+             learning_student: student,
+             delivery_channel: "line",
+             status: "sent",
+             reaction_received: true,
+             reacted_at: 1.hour.ago,
+             generated_at: 1.hour.ago)
+      assignment = create(:learning_assignment,
+                          customer: customer,
+                          learning_student: student,
+                          due_on: Date.current.tomorrow,
+                          status: "needs_revision",
+                          reviewed_at: Time.current)
+
+      results = described_class.new(customer, line_adapter: line_adapter).call
+
+      result = results.detect { |item| item.candidate.assignment == assignment }
+      expect(result.candidate.notification_type).to eq("auto_assignment_due_reminder")
+      expect(result.candidate.message).to include("もう一度チャレンジ")
+      expect(result.status).to eq("sent")
+    end
+
     it "期限超過課題が対象になること" do
       student = connected_student
       create(:learning_notification_log,
