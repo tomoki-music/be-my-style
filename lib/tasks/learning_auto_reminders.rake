@@ -1,6 +1,30 @@
 # frozen_string_literal: true
 
 namespace :learning do
+  namespace :auto_reminders do
+    desc "Learning自動リマインドtaskの使い方を表示する"
+    task help: :environment do
+      puts <<~HELP
+        [learning:auto_reminders] help
+
+        DRY_RUNで候補確認のみ:
+          RAILS_ENV=production DISABLE_SPRING=1 bundle exec rails learning:auto_reminders DRY_RUN=1
+
+        特定顧問だけ確認:
+          RAILS_ENV=production DISABLE_SPRING=1 bundle exec rails learning:auto_reminders DRY_RUN=1 CUSTOMER_ID=123
+
+        特定顧問へ手動送信:
+          RAILS_ENV=production DISABLE_SPRING=1 bundle exec rails learning:auto_reminders CUSTOMER_ID=123 CONFIRM_AUTO_REMINDER_SEND=1
+
+        誤送信防止:
+          - DRY_RUNなしの実送信には CONFIRM_AUTO_REMINDER_SEND=1 が必須です。
+          - auto_reminder_enabled=false の顧問は送信対象外です。
+          - auto_reminder_send_hour が現在時刻の hour と一致しない顧問は送信対象外です。
+          - DRY_RUNでは NotificationLog を作らず、LINE送信もしません。
+      HELP
+    end
+  end
+
   desc "Learning自動フォロー・自動リマインドを送信する。DRY_RUN=1で候補確認のみ、CUSTOMER_ID=123で対象限定"
   task auto_reminders: :environment do
     dry_run = ENV["DRY_RUN"].present?
@@ -21,6 +45,12 @@ namespace :learning do
 
     puts "[learning:auto_reminders] #{dry_run ? 'DRY-RUN ' : ''}start"
     puts "  customers=#{customers.size}"
+    if customer_id
+      target_customer_names = customers.map { |customer| "#{customer.id}:#{customer.name}" }
+      puts "  target_customer=#{target_customer_names.presence&.join(', ') || 'not_found'}"
+    else
+      puts "  target_scope=all_learning_customers"
+    end
     puts "  line_token_configured=#{ENV['LINE_CHANNEL_ACCESS_TOKEN'].to_s.length.positive?}"
 
     customers.each do |customer|
