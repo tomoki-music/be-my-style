@@ -114,6 +114,15 @@
                       = "先生確認済み: #{l(progress.assignment.reviewed_at, format: :short)}"
                     - if progress.assignment.review_comment.present?
                       %div.learning-muted= "コメント: #{progress.assignment.review_comment}"
+                  - histories = progress.assignment.review_histories.sort_by(&:created_at)
+                  - if histories.any?
+                    .learning-review-timeline
+                      - histories.each do |history|
+                        .learning-review-timeline__item{ class: "learning-review-timeline__item--#{history.action.dasherize}" }
+                          %span.learning-review-timeline__date= l(history.created_at, format: :short)
+                          %span.learning-review-timeline__label= history.action_label
+                          - if history.comment.present?
+                            %span.learning-review-timeline__comment= history.comment
                 %td= progress.assignment.due_on ? progress.assignment.due_on.strftime("%-m/%-d") : "-"
                 %td
                   - if progress.last_reaction_log

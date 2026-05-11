@@ -148,9 +148,13 @@ module Learning
     end
 
     def assignment_reminder_message(assignment, student, notification_type)
-      return FALLBACK_MESSAGES.fetch("needs_revision") if assignment.needs_revision?
-
-      template_body_for(student, notification_type) || FALLBACK_MESSAGES.fetch(notification_type)
+      if assignment.needs_revision?
+        base = FALLBACK_MESSAGES.fetch("needs_revision")
+        last_comment = assignment.last_revision_comment
+        last_comment.present? ? "#{base}\n先生コメント：#{last_comment.truncate(100)}" : base
+      else
+        template_body_for(student, notification_type) || FALLBACK_MESSAGES.fetch(notification_type)
+      end
     end
 
     def build_candidate(student:, notification_type:, reason:, title:, message:, recommended_action:, level:, assignment: nil)
@@ -234,6 +238,7 @@ module Learning
 
     def open_assignments
       @open_assignments ||= @customer.learning_assignments
+        .includes(:review_histories)
         .where(status: LearningAssignment::ACTION_REQUIRED_STATUSES, learning_student_id: line_connected_students.map(&:id))
     end
 

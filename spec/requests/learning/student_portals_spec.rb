@@ -46,4 +46,23 @@ RSpec.describe "Learning student portals", type: :request do
     expect(response.body).to include("テンポ80で再チャレンジしてみよう")
     expect(response.body).to include("できたらLINEで「やった」と返信しよう")
   end
+
+  it "複数のレビュー履歴がある課題にチャレンジ履歴を表示すること" do
+    training = create(:learning_student_training,
+                      customer: teacher,
+                      learning_student: student)
+    assignment = training.learning_assignments.first
+    assignment.update!(status: "needs_revision", review_comment: "メトロノームで再チャレンジ")
+    assignment.review_histories.create!(action: "submitted", created_at: 3.days.ago)
+    assignment.review_histories.create!(action: "revision_requested",
+                                        comment: "メトロノームで再チャレンジ",
+                                        created_at: 2.days.ago)
+
+    get learning_student_portal_path(student.public_access_token)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("チャレンジ履歴")
+    expect(response.body).to include("生徒が提出")
+    expect(response.body).to include("先生が差し戻し")
+  end
 end

@@ -90,7 +90,7 @@ class Learning::AssignmentsController < Learning::BaseController
     @assignment = current_customer.learning_assignments
       .includes(:learning_student, learning_student_training: :learning_training_master)
       .find(params[:id])
-    @assignments = assignment_group_for(@assignment)
+    @assignments = assignment_group_for(@assignment, includes_review_histories: true)
     @assignment_summary = AssignmentSummary.new(representative: @assignment, assignments: @assignments)
     @student_progresses = filtered_student_progresses(@assignments)
     @reminder_message = DEFAULT_REMINDER_MESSAGE
@@ -284,8 +284,10 @@ class Learning::AssignmentsController < Learning::BaseController
       .reverse
   end
 
-  def assignment_group_for(assignment)
-    scope = current_customer.learning_assignments.includes(:learning_student, learning_student_training: :learning_training_master)
+  def assignment_group_for(assignment, includes_review_histories: false)
+    base_includes = [:learning_student, { learning_student_training: :learning_training_master }]
+    base_includes << :review_histories if includes_review_histories
+    scope = current_customer.learning_assignments.includes(base_includes)
     if assignment.assignment_group_key.present?
       scope.where(assignment_group_key: assignment.assignment_group_key).order(:created_at, :id).to_a
     else

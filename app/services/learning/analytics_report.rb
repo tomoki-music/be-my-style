@@ -18,6 +18,8 @@ module Learning
       :needs_revision_count,
       :line_sent_count,
       :line_reaction_count,
+      :revision_request_count,
+      :average_revision_count,
       keyword_init: true
     )
 
@@ -90,7 +92,9 @@ module Learning
         pending_review_count: assignments.count { |assignment| assignment.status == "pending_review" },
         needs_revision_count: assignments.count { |assignment| assignment.status == "needs_revision" },
         line_sent_count: line_sent_logs.count,
-        line_reaction_count: line_reaction_logs.count
+        line_reaction_count: line_reaction_logs.count,
+        revision_request_count: revision_request_count,
+        average_revision_count: average_revision_count
       )
     end
 
@@ -307,6 +311,24 @@ module Learning
         watch: "様子見",
         follow_up: "要フォロー"
       }.fetch(status)
+    end
+
+    def revision_request_count
+      @revision_request_count ||= LearningAssignmentReviewHistory
+        .where(learning_assignment_id: assignments.map(&:id), action: "revision_requested")
+        .count
+    end
+
+    def average_revision_count
+      @average_revision_count ||= begin
+        assignment_ids_with_revision = LearningAssignmentReviewHistory
+          .where(learning_assignment_id: assignments.map(&:id), action: "revision_requested")
+          .distinct
+          .pluck(:learning_assignment_id)
+        return 0.0 if assignment_ids_with_revision.empty?
+
+        (revision_request_count.to_f / assignment_ids_with_revision.size).round(1)
+      end
     end
 
     def percentage(numerator, denominator)

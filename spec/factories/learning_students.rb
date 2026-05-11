@@ -117,6 +117,12 @@ FactoryBot.define do
     metadata { { source: "spec" } }
   end
 
+  factory :learning_assignment_review_history do
+    learning_assignment
+    action { "submitted" }
+    comment { nil }
+  end
+
   factory :learning_line_message_template do
     customer
     title { "要フォロー" }

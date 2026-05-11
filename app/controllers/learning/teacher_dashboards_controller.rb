@@ -36,7 +36,7 @@ class Learning::TeacherDashboardsController < Learning::BaseController
       .completed_recent_first
       .limit(5)
     @pending_review_assignments = current_customer.learning_assignments
-      .includes(:learning_student, learning_student_training: :learning_training_master)
+      .includes(:learning_student, :review_histories, learning_student_training: :learning_training_master)
       .where(learning_student_id: @students.map(&:id))
       .where(status: "pending_review")
       .select { |assignment| assignment.learning_student_training&.teacher_judged? }
