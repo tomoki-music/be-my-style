@@ -20,6 +20,7 @@ class Learning::TeacherDashboardsController < Learning::BaseController
     @onboarding_checklist = Learning::OnboardingChecklist.new(current_customer, routes: self)
     @teacher_next_action = Learning::FirstDayExperience.teacher_action(current_customer, routes: self)
     @analytics_report = Learning::AnalyticsReport.new(current_customer, period: params[:period], students: @students)
+    @revision_analysis = Learning::RevisionAnalysisReport.new(current_customer)
     @line_message_templates = current_customer.learning_line_message_templates.active.ordered
     @weekly_growth = build_weekly_growth
     @weekly_assignment_status = build_weekly_assignment_status
