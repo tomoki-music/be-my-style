@@ -1568,18 +1568,41 @@ module Singing::DiagnosesHelper
   end
 
   def singing_premium_voice_type(diagnosis)
-    scores = singing_premium_voice_type_scores(diagnosis)
-    key = scores.max_by { |_type, score| score }&.first || :artistic
-    PREMIUM_VOICE_TYPE_PROFILES.fetch(key).merge(key: key, score: scores[key])
+    result = singing_premium_voice_type_result(diagnosis)
+    key    = result[:main_type]
+    PREMIUM_VOICE_TYPE_PROFILES.fetch(key).merge(
+      key:       key,
+      score:     result[:scores][key],
+      sub_type:  result[:sub_type],
+      sub_title: SingingDiagnoses::VoiceTypeAnalyzer::VOICE_TYPE_LABELS[result[:sub_type]],
+      scores:    result[:scores],
+      reasoning: result[:reasoning],
+      advice:    SingingDiagnoses::VoiceTypeAnalyzer::VOICE_TYPE_ADVICE[key],
+      song_tendency: SingingDiagnoses::VoiceTypeAnalyzer::VOICE_TYPE_SONG_TENDENCY[key],
+      hidden_potential: result[:hidden_potential],
+      hidden_title: result[:hidden_potential] ? SingingDiagnoses::VoiceTypeAnalyzer::VOICE_TYPE_LABELS[result[:hidden_potential]] : nil
+    )
+  end
+
+  def singing_premium_voice_type_result(diagnosis)
+    @voice_type_result_cache ||= {}
+    @voice_type_result_cache[diagnosis.id] ||= SingingDiagnoses::VoiceTypeAnalyzer.call(diagnosis)
   end
 
   def singing_premium_voice_type_map(diagnosis)
-    selected_type = singing_premium_voice_type(diagnosis)
+    result       = singing_premium_voice_type_result(diagnosis)
+    main_type    = result[:main_type]
+    sub_type     = result[:sub_type]
+    scores       = result[:scores]
 
-    PREMIUM_VOICE_TYPE_PROFILES.map do |key, profile|
+    SingingDiagnoses::VoiceTypeAnalyzer::VOICE_TYPE_LABELS.map do |key, label|
+      profile = PREMIUM_VOICE_TYPE_PROFILES[key] || {}
       profile.merge(
-        key: key,
-        selected: key == selected_type[:key],
+        key:               key,
+        title:             label,
+        selected:          key == main_type,
+        is_sub:            key == sub_type,
+        score:             scores[key],
         short_description: singing_premium_voice_type_short_description(key)
       )
     end
@@ -3272,24 +3295,7 @@ module Singing::DiagnosesHelper
   end
 
   def singing_premium_voice_type_scores(diagnosis)
-    pitch = diagnosis.pitch_score.to_i
-    rhythm = diagnosis.rhythm_score.to_i
-    expression = diagnosis.expression_score.to_i
-    overall = diagnosis.overall_score.to_i
-    volume = premium_average_score(overall, expression)
-    relax = premium_average_score(pitch, rhythm)
-    pronunciation = premium_average_score(pitch, rhythm, expression)
-    closure = premium_average_score(overall, expression)
-    tension = premium_average_score(pitch, overall)
-
-    {
-      powerful: premium_average_score(volume, overall, expression),
-      high_tone: premium_average_score(pitch, tension, overall),
-      crystal: premium_average_score(pitch, relax, pronunciation),
-      wild: premium_average_score(closure, volume, expression),
-      artistic: premium_average_score(expression, rhythm, pronunciation),
-      charisma: premium_average_score(expression, overall, rhythm)
-    }
+    singing_premium_voice_type_result(diagnosis)[:scores]
   end
 
   def singing_premium_voice_type_short_description(type_key)

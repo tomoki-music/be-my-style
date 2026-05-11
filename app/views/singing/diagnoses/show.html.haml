@@ -379,11 +379,49 @@
                   %em= item[:comment]
 
           .singing-diagnosis__voice-type
-            %span 取り入れると良い歌声タイプ
-            %h3= voice_type[:title]
+            %span あなたの歌声タイプ診断
+            .singing-diagnosis__voice-type-main
+              .singing-diagnosis__voice-type-label メイン
+              %h3= voice_type[:title]
+              - if voice_type[:sub_type]
+                .singing-diagnosis__voice-type-sub
+                  %span サブ:
+                  %strong= voice_type[:sub_title]
             %p.singing-diagnosis__voice-type-examples= "参考イメージ: #{voice_type[:examples]}"
             %p= voice_type[:description]
+            - if voice_type[:advice]
+              %p.singing-diagnosis__voice-type-advice
+                %strong 伸ばすと良いポイント:
+                = voice_type[:advice]
+            - if voice_type[:song_tendency]
+              %p.singing-diagnosis__voice-type-song
+                %strong 相性の良い楽曲傾向:
+                = voice_type[:song_tendency]
+            - if voice_type[:hidden_potential]
+              .singing-diagnosis__voice-type-hidden
+                %span ひそかな可能性
+                %strong= voice_type[:hidden_title]
+                %small スコアが30〜60の範囲にあり、練習次第で伸びやすいタイプです。
             %small ※タイプ分けは診断結果から見た一例です。声の魅力を固定するものではなく、練習や選曲のヒントとしてご活用ください。
+
+          .singing-diagnosis__voice-type-scores
+            %h3 6タイプ スコア一覧
+            %p.singing-diagnosis__voice-type-scores-lead 6つのタイプそれぞれに対するスコアです。高いほどその特徴が出やすい声質です。
+            .singing-diagnosis__voice-type-score-list
+              - singing_premium_voice_type_map(@diagnosis).each do |type|
+                - score_val = type[:score].to_i
+                .singing-diagnosis__voice-type-score-item{ class: type[:selected] ? "singing-diagnosis__voice-type-score-item--main" : (type[:is_sub] ? "singing-diagnosis__voice-type-score-item--sub" : "") }
+                  .singing-diagnosis__voice-type-score-label
+                    %span= type[:title]
+                    - if type[:selected]
+                      %small メイン
+                    - elsif type[:is_sub]
+                      %small サブ
+                  .singing-diagnosis__voice-type-score-bar-wrap
+                    .singing-diagnosis__voice-type-score-bar{ style: "width: #{score_val}%" }
+                  %span.singing-diagnosis__voice-type-score-num= score_val
+            - if voice_type[:reasoning]
+              %p.singing-diagnosis__voice-type-reasoning= voice_type[:reasoning]
 
           .singing-diagnosis__voice-type-map
             %h3 6つの歌声タイプマップ
@@ -393,6 +431,7 @@
               - singing_premium_voice_type_map(@diagnosis).each do |type|
                 - point_class = ["singing-diagnosis__voice-hex-point", "singing-diagnosis__voice-hex-point--#{type[:key]}"]
                 - point_class << "singing-diagnosis__voice-hex-point--selected" if type[:selected]
+                - point_class << "singing-diagnosis__voice-hex-point--sub" if type[:is_sub]
                 %div{ class: point_class.join(" ") }
                   %strong= type[:title]
                   %span= type[:short_description]

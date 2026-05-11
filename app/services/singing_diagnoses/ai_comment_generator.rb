@@ -4,7 +4,10 @@ module SingingDiagnoses
     PERFORMANCE_TYPE_INSTRUCTIONS = {
       "vocal" => [
         "vocalでは、歌唱指導寄りに、音程・リズム・表現・声量・発音・リラックス・ミックスボイスを必要に応じて扱ってください。",
-        "歌声タイプがある場合は、本人の魅力を固定せず、取り入れると良い方向性として表現してください。"
+        "premium_diagnosisにvoice_typeがある場合は、main_label（メインタイプ）とsub_label（サブタイプ）を自然文で紹介し、" \
+          "reasoning（判定理由）・advice（練習アドバイス）・song_tendency（相性の良い楽曲傾向）を参考にコメントしてください。",
+        "hidden_labelがある場合は、隠れた可能性として一文添えてください。",
+        "歌声タイプは本人の魅力を固定せず、成長の方向性として表現してください。"
       ],
       "guitar" => [
         "guitarでは、ギター演奏のコーチとして、アタック、ミュート、安定感、フレーズの輪郭、演奏のまとまりを中心にコメントしてください。",
@@ -181,10 +184,22 @@ module SingingDiagnoses
       data[:band_context] = band_context if diagnosis.performance_type_band?
 
       if diagnosis.priority_analysis?
+        vt = helper.singing_premium_voice_type_result(diagnosis)
         data[:premium_diagnosis] = {
-          voice_check_items: helper.singing_premium_voice_check_items(diagnosis),
+          voice_check_items:     helper.singing_premium_voice_check_items(diagnosis),
           mix_voice_check_items: helper.singing_premium_mix_voice_check_items(diagnosis),
-          voice_type: helper.singing_premium_voice_type(diagnosis)
+          voice_type: {
+            main_type:        vt[:main_type],
+            main_label:       SingingDiagnoses::VoiceTypeAnalyzer::VOICE_TYPE_LABELS[vt[:main_type]],
+            sub_type:         vt[:sub_type],
+            sub_label:        SingingDiagnoses::VoiceTypeAnalyzer::VOICE_TYPE_LABELS[vt[:sub_type]],
+            scores:           vt[:scores],
+            hidden_potential: vt[:hidden_potential],
+            hidden_label:     vt[:hidden_potential] ? SingingDiagnoses::VoiceTypeAnalyzer::VOICE_TYPE_LABELS[vt[:hidden_potential]] : nil,
+            reasoning:        vt[:reasoning],
+            advice:           SingingDiagnoses::VoiceTypeAnalyzer::VOICE_TYPE_ADVICE[vt[:main_type]],
+            song_tendency:    SingingDiagnoses::VoiceTypeAnalyzer::VOICE_TYPE_SONG_TENDENCY[vt[:main_type]]
+          }
         }
       end
 
