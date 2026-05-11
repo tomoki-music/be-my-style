@@ -121,6 +121,18 @@
                 - elsif assignment.pending_review?
                   .learning-detail-card
                     %p 先生確認待ちです
+                - histories = assignment.review_histories.sort_by(&:created_at)
+                - if histories.size > 1
+                  .learning-detail-card
+                    %p
+                      %strong チャレンジ履歴
+                    .learning-review-timeline.learning-review-timeline--compact
+                      - histories.each do |history|
+                        .learning-review-timeline__item{ class: "learning-review-timeline__item--#{history.action.dasherize}" }
+                          %span.learning-review-timeline__date= history.created_at.strftime("%-m/%-d")
+                          %span.learning-review-timeline__label= history.action_label
+                          - if history.comment.present?
+                            %span.learning-review-timeline__comment= history.comment
                 - if training
                   .learning-detail-card
                     - if training.check_method.present?

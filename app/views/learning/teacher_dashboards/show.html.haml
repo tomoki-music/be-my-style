@@ -297,6 +297,8 @@
       .learning-stack
         - @pending_review_assignments.each do |assignment|
           - training = assignment.learning_student_training
+          - revision_cnt = assignment.revision_count
+          - last_rev_comment = assignment.last_revision_comment
           .learning-review-row
             %div
               %strong= "#{assignment.learning_student.display_name} / #{training&.title || assignment.title}"
@@ -304,6 +306,8 @@
                 = assignment.submitted_at ? "報告日時: #{l(assignment.submitted_at, format: :short)}" : "報告日時: -"
                 - if training&.judge_type_label.present?
                   = " / #{training.judge_type_label}"
+              - if revision_cnt.positive?
+                %span.learning-muted= "差し戻し #{revision_cnt}回 / 前回コメント: #{last_rev_comment.presence || 'なし'}"
               - if training&.check_method.present?
                 %span= "確認方法: #{training.check_method}"
               - if training&.achievement_criteria.present?

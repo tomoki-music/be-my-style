@@ -153,6 +153,7 @@ RSpec.describe "Learning assignment show", type: :request do
         patch approve_review_learning_assignment_path(assignment),
               params: { review_comment: "確認しました" }
       }.to change(LearningProgressLog, :count).by(1)
+           .and change(LearningAssignmentReviewHistory, :count).by(1)
 
       assignment.reload
       expect(response).to redirect_to(learning_teacher_dashboard_path)
@@ -160,6 +161,11 @@ RSpec.describe "Learning assignment show", type: :request do
       expect(assignment.reviewed_by).to eq(teacher)
       expect(assignment.review_comment).to eq("確認しました")
       expect(assignment.reviewed_at).to be_present
+
+      history = LearningAssignmentReviewHistory.last
+      expect(history.action).to eq("approved")
+      expect(history.reviewer).to eq(teacher)
+      expect(history.comment).to eq("確認しました")
     end
 
     it "他顧問のassignmentは承認できないこと" do
@@ -194,6 +200,7 @@ RSpec.describe "Learning assignment show", type: :request do
           patch request_revision_learning_assignment_path(assignment),
                 params: { review_comment: "テンポ80で再チャレンジしてみよう" }
         }.to change(Learning::NotificationLog, :count).by(1)
+           .and change(LearningAssignmentReviewHistory, :count).by(1)
       }.not_to change(LearningProgressLog, :count)
 
       assignment.reload
@@ -203,6 +210,11 @@ RSpec.describe "Learning assignment show", type: :request do
       expect(assignment.review_comment).to eq("テンポ80で再チャレンジしてみよう")
       expect(assignment.reviewed_at).to be_present
       expect(Learning::NotificationLog.last.notification_type).to eq("teacher_revision_request")
+
+      history = LearningAssignmentReviewHistory.last
+      expect(history.action).to eq("revision_requested")
+      expect(history.reviewer).to eq(teacher)
+      expect(history.comment).to eq("テンポ80で再チャレンジしてみよう")
     end
 
     it "他顧問のassignmentは差し戻しできないこと" do

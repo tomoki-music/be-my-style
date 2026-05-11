@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_11_060000) do
+ActiveRecord::Schema.define(version: 2026_05_11_143322) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -358,6 +358,20 @@ ActiveRecord::Schema.define(version: 2026_05_11_060000) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["song_id"], name: "index_join_parts_on_song_id"
+  end
+
+  create_table "learning_assignment_review_histories", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "learning_assignment_id", null: false
+    t.bigint "reviewer_id"
+    t.string "action", null: false
+    t.text "comment"
+    t.datetime "submitted_at"
+    t.datetime "reviewed_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["learning_assignment_id", "created_at"], name: "idx_review_hist_on_assignment_and_created_at"
+    t.index ["learning_assignment_id"], name: "idx_review_hist_on_assignment_id"
+    t.index ["reviewer_id"], name: "idx_review_hist_on_reviewer_id"
   end
 
   create_table "learning_assignments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -995,6 +1009,8 @@ ActiveRecord::Schema.define(version: 2026_05_11_060000) do
   add_foreign_key "join_part_customers", "customers"
   add_foreign_key "join_part_customers", "join_parts"
   add_foreign_key "join_parts", "songs"
+  add_foreign_key "learning_assignment_review_histories", "customers", column: "reviewer_id"
+  add_foreign_key "learning_assignment_review_histories", "learning_assignments"
   add_foreign_key "learning_assignments", "customers"
   add_foreign_key "learning_assignments", "customers", column: "reviewed_by_id"
   add_foreign_key "learning_assignments", "learning_student_trainings"

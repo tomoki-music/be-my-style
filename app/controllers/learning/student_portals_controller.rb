@@ -25,12 +25,13 @@ class Learning::StudentPortalsController < ApplicationController
     }
     @current_trainings = trainings.first(8)
     @weekly_training_assignments = @student.learning_assignments
-      .includes(learning_student_training: :learning_training_master)
+      .includes(:review_histories, learning_student_training: :learning_training_master)
       .where(status: LearningAssignment::ACTION_REQUIRED_STATUSES)
       .where.not(learning_student_training_id: nil)
       .recent_first
       .limit(8)
     @current_assignments = @student.learning_assignments
+      .includes(:review_histories)
       .where(status: LearningAssignment::ACTION_REQUIRED_STATUSES)
       .recent_first
       .limit(5)

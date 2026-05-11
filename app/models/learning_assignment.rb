@@ -8,6 +8,7 @@ class LearningAssignment < ApplicationRecord
   belongs_to :learning_student
   belongs_to :learning_student_training, optional: true
   belongs_to :reviewed_by, class_name: "Customer", optional: true
+  has_many :review_histories, class_name: "LearningAssignmentReviewHistory", dependent: :destroy
 
   validates :title, presence: true, length: { maximum: 100 }
   validates :description, length: { maximum: 1000 }, allow_blank: true
@@ -70,11 +71,14 @@ class LearningAssignment < ApplicationRecord
   end
 
   def mark_submitted_for_review!(message: nil, time: Time.current)
-    update!(
-      status: "pending_review",
-      submitted_at: time,
-      reaction_message: message.to_s.presence&.truncate(255)
-    )
+    transaction do
+      update!(
+        status: "pending_review",
+        submitted_at: time,
+        reaction_message: message.to_s.presence&.truncate(255)
+      )
+      add_review_history!(action: "submitted", submitted_at: time)
+    end
   end
 
   def approve_review!(reviewer:, comment: nil, time: Time.current)
@@ -92,6 +96,7 @@ class LearningAssignment < ApplicationRecord
         review_comment: comment.to_s.presence
       )
       create_progress_log_from_review!
+      add_review_history!(action: "approved", reviewer: reviewer, comment: comment.to_s.presence, reviewed_at: time)
     end
   end
 
@@ -101,11 +106,32 @@ class LearningAssignment < ApplicationRecord
       raise ActiveRecord::RecordInvalid, self
     end
 
-    update!(
-      status: "needs_revision",
-      reviewed_at: time,
-      reviewed_by: reviewer,
-      review_comment: comment.to_s.presence
+    transaction do
+      update!(
+        status: "needs_revision",
+        reviewed_at: time,
+        reviewed_by: reviewer,
+        review_comment: comment.to_s.presence
+      )
+      add_review_history!(action: "revision_requested", reviewer: reviewer, comment: comment.to_s.presence, reviewed_at: time)
+    end
+  end
+
+  def revision_count
+    review_histories.where(action: "revision_requested").count
+  end
+
+  def last_revision_comment
+    review_histories.where(action: "revision_requested").order(created_at: :desc).first&.comment
+  end
+
+  def add_review_history!(action:, reviewer: nil, comment: nil, submitted_at: nil, reviewed_at: nil)
+    review_histories.create!(
+      action: action,
+      reviewer: reviewer,
+      comment: comment,
+      submitted_at: submitted_at,
+      reviewed_at: reviewed_at
     )
   end
 

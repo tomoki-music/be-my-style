@@ -92,6 +92,27 @@ RSpec.describe Learning::AnalyticsReport do
       expect(report.summary.unsubmitted_count).to eq(1)
       expect(report.summary.needs_revision_count).to eq(1)
     end
+
+    it "差し戻し回数と平均差し戻し回数を算出できること" do
+      assignment1 = create(:learning_assignment, customer: customer, learning_student: student,
+                                                 status: "completed", completed_at: reference_time)
+      assignment2 = create(:learning_assignment, customer: customer, learning_student: student,
+                                                 status: "needs_revision", created_at: reference_time)
+      assignment1.review_histories.create!(action: "revision_requested", created_at: reference_time - 1.day)
+      assignment1.review_histories.create!(action: "revision_requested", created_at: reference_time - 12.hours)
+      assignment2.review_histories.create!(action: "revision_requested", created_at: reference_time)
+
+      expect(report.summary.revision_request_count).to eq(3)
+      expect(report.summary.average_revision_count).to eq(1.5)
+    end
+
+    it "差し戻し履歴なしの場合は0を返すこと" do
+      create(:learning_assignment, customer: customer, learning_student: student,
+                                   status: "completed", completed_at: reference_time)
+
+      expect(report.summary.revision_request_count).to eq(0)
+      expect(report.summary.average_revision_count).to eq(0.0)
+    end
   end
 
   describe "#student_summaries" do
