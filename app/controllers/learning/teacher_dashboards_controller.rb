@@ -17,6 +17,7 @@ class Learning::TeacherDashboardsController < Learning::BaseController
     @auto_reminder_summary = Learning::AutoReminderService.new(current_customer, dry_run: true).summary
     @notification_logs_count = current_customer.learning_notification_logs.count
     @onboarding_status = Learning::OnboardingStatus.new(current_customer, routes: self)
+    @onboarding_checklist = Learning::OnboardingChecklist.new(current_customer, routes: self)
     @teacher_next_action = Learning::FirstDayExperience.teacher_action(current_customer, routes: self)
     @analytics_report = Learning::AnalyticsReport.new(current_customer, period: params[:period], students: @students)
     @line_message_templates = current_customer.learning_line_message_templates.active.ordered

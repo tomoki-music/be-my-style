@@ -728,6 +728,8 @@
 }
 
 .learning-onboarding,
+.learning-start-package,
+.learning-onboarding-checklist,
 .learning-first-action,
 .learning-comeback,
 .learning-community-pulse,
@@ -745,7 +747,13 @@
   padding: 24px;
 }
 
+.learning-start-package,
+.learning-onboarding-checklist {
+  padding: 24px;
+}
+
 .learning-onboarding__header,
+.learning-start-package,
 .learning-ready-banner,
 .learning-next-action,
 .learning-comeback,
@@ -758,6 +766,8 @@
 }
 
 .learning-onboarding__eyebrow,
+.learning-start-package__eyebrow,
+.learning-onboarding-checklist__eyebrow,
 .learning-next-action__eyebrow,
 .learning-comeback__eyebrow,
 .learning-start-guide__eyebrow,
@@ -768,6 +778,8 @@
 }
 
 .learning-onboarding__title h2,
+.learning-start-package h2,
+.learning-onboarding-checklist h2,
 .learning-next-action h2,
 .learning-comeback h2,
 .learning-start-guide h2,
@@ -777,6 +789,8 @@
 }
 
 .learning-onboarding__title p,
+.learning-start-package p,
+.learning-onboarding-checklist p,
 .learning-next-action p,
 .learning-comeback p,
 .learning-start-guide p,
@@ -793,6 +807,122 @@
   padding: 14px;
   border-radius: 18px;
   background: #f6f8fb;
+}
+
+.learning-start-package {
+  background: linear-gradient(135deg, #ffffff, #eef5ff);
+}
+
+.learning-start-package__intro {
+  min-width: 0;
+}
+
+.learning-start-package__steps {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learning-start-package__steps li {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #f3f6fb;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.learning-start-package__progress {
+  min-width: 92px;
+  text-align: center;
+  padding: 14px;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.learning-start-package__progress strong {
+  display: block;
+  color: #162034;
+  font-size: 24px;
+}
+
+.learning-start-package__progress span {
+  color: #6e7584;
+  font-size: 13px;
+}
+
+.learning-onboarding-checklist__header {
+  margin-bottom: 18px;
+}
+
+.learning-onboarding-checklist__items {
+  display: grid;
+  gap: 12px;
+}
+
+.learning-onboarding-checklist-item {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 18px;
+  background: #f7f8fb;
+}
+
+.learning-onboarding-checklist-item.is-complete {
+  background: #eef8f0;
+}
+
+.learning-onboarding-checklist-item__marker {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #162034;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.learning-onboarding-checklist-item.is-complete .learning-onboarding-checklist-item__marker {
+  background: #3f8f55;
+}
+
+.learning-onboarding-checklist-item__body strong {
+  display: block;
+  color: #182033;
+}
+
+.learning-onboarding-checklist-item__body p {
+  margin: 4px 0 0;
+  color: #657083;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.learning-safe-note {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #f7f8fb;
+  border: 1px solid #e5ebf3;
+}
+
+.learning-safe-note strong {
+  color: #182033;
+}
+
+.learning-safe-note p {
+  margin: 0;
+  color: #5f6878;
+  line-height: 1.7;
 }
 
 .learning-onboarding__progress strong {
@@ -1691,6 +1821,7 @@
   .learning-topbar,
   .learning-section__header,
   .learning-onboarding__header,
+  .learning-start-package,
   .learning-ready-banner,
   .learning-next-action,
   .learning-comeback,
@@ -1711,6 +1842,15 @@
   }
 
   .learning-onboarding-step .learning-button {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .learning-onboarding-checklist-item {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+
+  .learning-onboarding-checklist-item .learning-button {
     grid-column: 2;
     justify-self: start;
   }

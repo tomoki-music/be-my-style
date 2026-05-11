@@ -8,6 +8,34 @@
       %p= next_action.body
     = link_to next_action.cta_label, next_action.cta_path, class: "learning-button"
 
+  .learning-start-package
+    .learning-start-package__intro
+      %span.learning-start-package__eyebrow 初回導入パッケージ
+      %h2 まずは3ステップで始めましょう
+      %ol.learning-start-package__steps
+        %li 生徒を登録
+        %li LINE連携QRを配布
+        %li 課題を1つ出す
+      %p 自動リマインドは慣れてきたらONで大丈夫です。まずは生徒登録、LINE連携、最初の課題配布まで進めましょう。
+    .learning-start-package__progress
+      %strong= "#{@onboarding_checklist.completed_count} / #{@onboarding_checklist.total_count}"
+      %span 完了
+
+  .learning-onboarding-checklist
+    .learning-onboarding-checklist__header
+      %div
+        %span.learning-onboarding-checklist__eyebrow 初回設定チェックリスト
+        %h2 迷わず始めるための準備
+        %p 生徒が迷わず始められて、顧問が送信前に確認できる状態を順番に作ります。
+    .learning-onboarding-checklist__items
+      - @onboarding_checklist.items.each do |item|
+        .learning-onboarding-checklist-item{ class: ("is-complete" if item.completed) }
+          .learning-onboarding-checklist-item__marker= item.completed ? "✓" : "未"
+          .learning-onboarding-checklist-item__body
+            %strong= item.title
+            %p= item.description
+          = link_to item.cta_label, item.cta_path, class: "learning-button learning-button--ghost learning-button--sm"
+
   -# 初回オンボーディング
   - if @onboarding_status.completed?
     .learning-ready-banner
@@ -219,6 +247,9 @@
         = link_to "自動リマインド確認", learning_auto_reminders_path, class: "learning-button learning-button--ghost learning-button--sm"
         = link_to "通知ログを見る", learning_notifications_path, class: "learning-button learning-button--ghost learning-button--sm"
         = link_to "生徒一覧を見る", learning_students_path, class: "learning-button learning-button--ghost learning-button--sm"
+    .learning-safe-note
+      %strong 自動リマインドは、いきなり送信されません。
+      %p まずプレビューで対象者と文面を確認できます。ONにしない限り自動送信されないので安心です。
     - if @weekly_review.stagnant_students.any?
       .learning-voice-list
         - @weekly_review.stagnant_students.each do |item|
