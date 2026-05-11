@@ -113,6 +113,10 @@
         %strong.learning-stat-card__value= "#{analytics_summary.assignment_submission_rate}%"
         %p.learning-stat-card__sub= "対象 #{analytics_summary.assignment_count}件"
       .learning-stat-card
+        %span.learning-stat-card__label トレーニング消化率
+        %strong.learning-stat-card__value= "#{analytics_summary.training_completion_rate}%"
+        %p.learning-stat-card__sub 今週の割当トレーニング
+      .learning-stat-card
         %span.learning-stat-card__label LINE反応率
         %strong.learning-stat-card__value= "#{analytics_summary.line_reaction_rate}%"
         %p.learning-stat-card__sub= "反応 #{analytics_summary.line_reaction_count} / 送信 #{analytics_summary.line_sent_count}"
@@ -139,6 +143,7 @@
               %thead
                 %tr
                   %th 生徒
+                  %th.text-right 消化率
                   %th.text-right 提出率
                   %th.text-right 反応率
                   %th 最終反応
@@ -147,6 +152,7 @@
                 - @analytics_report.student_summaries.each do |item|
                   %tr
                     %td= link_to item.student.display_name, learning_student_path(item.student)
+                    %td.text-right= "#{item.training_completion_rate}%"
                     %td.text-right= "#{item.submission_rate}%"
                     %td.text-right= "#{item.reaction_rate}%"
                     %td= item.last_reaction_at ? "#{time_ago_in_words(item.last_reaction_at)}前" : "反応なし"

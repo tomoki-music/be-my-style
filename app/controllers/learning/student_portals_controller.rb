@@ -24,6 +24,12 @@ class Learning::StudentPortalsController < ApplicationController
       teacher_comment: trainings.map(&:teacher_comment).find(&:present?)
     }
     @current_trainings = trainings.first(8)
+    @weekly_training_assignments = @student.learning_assignments
+      .includes(:learning_student_training)
+      .active
+      .where.not(learning_student_training_id: nil)
+      .recent_first
+      .limit(8)
     @current_assignments = @student.learning_assignments.active.recent_first.limit(5)
     @has_overdue_assignments = @current_assignments.any?(&:overdue?)
     @recent_logs = recent_logs

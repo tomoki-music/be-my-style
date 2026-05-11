@@ -24,8 +24,8 @@ module Learning
 
     FALLBACK_MESSAGES = {
       INACTIVE_TYPE => "少し間が空いています。今日は5分だけでも、できるところから再開してみよう。",
-      DUE_TYPE => "明日が期限の課題があります。短い時間でよいので、今日のうちに確認しておこう。",
-      OVERDUE_TYPE => "期限を過ぎた課題があります。まずは1つだけ開いて、できるところから進めよう。"
+      DUE_TYPE => "今週のトレーニング、まだ取り組めていません！明日が期限なので、短い時間でよいので今日のうちに確認しておこう。",
+      OVERDUE_TYPE => "今週のトレーニング、まだ取り組めていません！まずは1つだけ開いて、できるところから進めよう。"
     }.freeze
 
     def initialize(customer, dry_run: false, line_adapter: LineNotificationAdapter.new, logger: Rails.logger, reference_time: Time.current)
@@ -140,7 +140,7 @@ module Learning
         reason: reason,
         title: assignment.title,
         message: message,
-        recommended_action: assignment.due_on ? "期限: #{I18n.l(assignment.due_on, format: :short)}" : nil,
+        recommended_action: assignment.due_on ? "トレーニング期限: #{I18n.l(assignment.due_on, format: :short)}" : nil,
         assignment: assignment,
         level: level
       )
@@ -192,6 +192,8 @@ module Learning
       {
         reason: candidate.reason,
         assignment_id: candidate.assignment&.id,
+        learning_assignment_id: candidate.assignment&.id,
+        learning_student_training_id: candidate.assignment&.learning_student_training_id,
         due_on: candidate.assignment&.due_on,
         source: "Learning::AutoReminderService"
       }.compact

@@ -61,8 +61,18 @@ RSpec.describe Learning::AnalyticsReport do
 
     it "データなしでも0を返すこと" do
       expect(report.summary.assignment_submission_rate).to eq(0)
+      expect(report.summary.training_completion_rate).to eq(0)
       expect(report.summary.line_reaction_rate).to eq(0)
       expect(report.summary.progress_log_count).to eq(0)
+    end
+
+    it "割当トレーニング由来の消化率を算出できること" do
+      completed_training = create(:learning_student_training, customer: customer, learning_student: student)
+      pending_training = create(:learning_student_training, customer: customer, learning_student: student)
+      completed_training.learning_assignments.first.update!(status: "completed", completed_at: reference_time)
+      pending_training.learning_assignments.first.update!(status: "pending", created_at: reference_time)
+
+      expect(report.summary.training_completion_rate).to eq(50)
     end
   end
 
@@ -81,6 +91,7 @@ RSpec.describe Learning::AnalyticsReport do
 
       expect(summary.student).to eq(student)
       expect(summary.submission_rate).to eq(50)
+      expect(summary.training_completion_rate).to eq(0)
       expect(summary.reaction_rate).to eq(100)
       expect(summary.status_label).to eq("様子見")
     end

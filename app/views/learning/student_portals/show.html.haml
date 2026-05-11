@@ -95,11 +95,29 @@
 
       .learning-section
         .learning-section__header
-          %h2 今週の課題
-          - if @current_assignments.any?
-            %span.learning-notification-current 未提出の課題があります
+          %h2 今週やること
+          - if @weekly_training_assignments.any?
+            %span.learning-notification-current= "割り当てトレーニング #{@weekly_training_assignments.size}件"
         .learning-stack
-          - if @current_assignments.any?
+          - if @weekly_training_assignments.any?
+            - @weekly_training_assignments.each do |assignment|
+              - training = assignment.learning_student_training
+              .learning-assignment-card
+                .learning-assignment-card__head
+                  .learning-assignment-card__title
+                    %strong= training&.title || assignment.title
+                    - if assignment.due_on
+                      %small= "期限：#{assignment.due_on.strftime('%-m/%-d')}"
+                  %span.learning-assignment-status{ class: "learning-assignment-status--#{assignment.status}" }= assignment.status_label
+                  - if assignment.overdue?
+                    %span.learning-assignment-status.learning-assignment-status--overdue 提出期限を過ぎています
+                %p= training&.description.presence || assignment.description
+                .learning-first-action__meta
+                  %span= "完了reaction: #{assignment.completed_at.present? ? '受信済み' : '未受信'}"
+                  %span= "連続日数: #{@current_streak}日"
+                  - if training&.frequency.present?
+                    %span= "頻度: #{training.frequency}"
+          - elsif @current_assignments.any?
             - @current_assignments.each do |assignment|
               .learning-assignment-card
                 .learning-assignment-card__head
@@ -114,8 +132,8 @@
                   = simple_format(assignment.description)
           - else
             .learning-empty
-              %strong 今週の課題はまだありません
-              %p 先生から課題が届いたらここに表示されます。終わったらLINEで「やった！」と返信できます。
+              %strong 今週やることはまだありません
+              %p 先生からトレーニングが割り当てられたらここに表示されます。終わったらLINEで「やった！」と返信できます。
 
       .learning-two-column.learning-two-column--balanced
         .learning-section.learning-student-nudge

@@ -61,7 +61,7 @@ FactoryBot.define do
 
   factory :learning_student_training do
     customer
-    learning_student
+    learning_student { association :learning_student, customer: customer }
     part { "guitar" }
     period { "1-2ヶ月" }
     level { "基礎" }

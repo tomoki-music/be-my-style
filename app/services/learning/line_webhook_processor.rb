@@ -16,6 +16,8 @@ module Learning
       teacher_message
       followup_message
       assignment_created
+      auto_assignment_due_reminder
+      auto_assignment_overdue_reminder
     ].freeze
 
     def initialize(channel_secret: ENV["LINE_CHANNEL_SECRET"].to_s)
@@ -104,8 +106,8 @@ module Learning
           reacted_at: Time.current,
           reaction_message: text.truncate(255)
         )
-        complete_latest_pending_assignment!(student)
-        create_progress_log_from_reaction!(student, text)
+        completed_assignment = complete_reacted_assignment!(student, notification_log)
+        create_progress_log_from_reaction!(student, text, completed_assignment: completed_assignment)
         student.update!(last_learning_action_at: Time.current)
       end
 
@@ -163,10 +165,10 @@ module Learning
         .first
     end
 
-    def create_progress_log_from_reaction!(student, text)
+    def create_progress_log_from_reaction!(student, text, completed_assignment: nil)
       return if student.learning_progress_logs.exists?(practiced_on: Time.zone.today)
 
-      training = student.learning_student_trainings.ordered.first
+      training = completed_assignment&.learning_student_training || student.learning_student_trainings.ordered.first
       student.learning_progress_logs.create!(
         customer: student.customer,
         learning_student_training: training,
@@ -178,12 +180,27 @@ module Learning
       )
     end
 
-    def complete_latest_pending_assignment!(student)
-      assignment = student.learning_assignments
-        .where(status: "pending")
+    def complete_reacted_assignment!(student, notification_log)
+      assignment = assignment_from_notification(student, notification_log) || latest_open_assignment(student)
+      assignment&.complete!
+      assignment
+    end
+
+    def assignment_from_notification(student, notification_log)
+      assignment_id = notification_log&.metadata.to_h["learning_assignment_id"] ||
+                      notification_log&.metadata.to_h["assignment_id"]
+      return if assignment_id.blank?
+
+      student.learning_assignments
+        .where(status: LearningAssignment::OPEN_STATUSES)
+        .find_by(id: assignment_id)
+    end
+
+    def latest_open_assignment(student)
+      student.learning_assignments
+        .where(status: LearningAssignment::OPEN_STATUSES)
         .order(created_at: :desc, id: :desc)
         .first
-      assignment&.complete!
     end
 
     def log_webhook_event(event, text:, reaction:)

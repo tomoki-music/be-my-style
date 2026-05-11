@@ -3,6 +3,7 @@ class LearningStudentTraining < ApplicationRecord
   belongs_to :learning_student
   belongs_to :learning_training_master, optional: true
   has_many :learning_progress_logs, dependent: :nullify
+  has_many :learning_assignments, dependent: :nullify
 
   validates :part, presence: true, inclusion: { in: LearningCatalog::PARTS.keys }
   validates :period, presence: true, inclusion: { in: LearningCatalog::PERIODS }
@@ -14,6 +15,7 @@ class LearningStudentTraining < ApplicationRecord
 
   before_validation :copy_master_fields, if: -> { learning_training_master.present? && title.blank? }
   before_validation :set_default_position, on: :create
+  after_create :create_weekly_assignment
   after_update :award_achievement_point, if: :saved_change_to_status?
 
   scope :ordered, -> { order(:position, :created_at) }
@@ -31,6 +33,10 @@ class LearningStudentTraining < ApplicationRecord
 
   def star?
     achievement_mark == "star"
+  end
+
+  def open_assignment
+    learning_assignments.active.recent_first.first
   end
 
   private
@@ -73,5 +79,37 @@ class LearningStudentTraining < ApplicationRecord
     )
     learning_student.increment!(:total_effort_points,
                                 LearningEffortPoint::POINT_TYPES["training_achieved"][:points])
+  end
+
+  def create_weekly_assignment
+    return if duplicate_open_assignment?
+
+    learning_assignments.create!(
+      customer: customer,
+      learning_student: learning_student,
+      title: "【今週の課題】#{title}",
+      description: weekly_assignment_description,
+      due_on: default_assignment_due_on,
+      status: "pending",
+      assignment_group_key: "training-assignment-#{id}"
+    )
+  end
+
+  def duplicate_open_assignment?
+    learning_student.learning_assignments
+      .active
+      .where(learning_student_training_id: id)
+      .exists?
+  end
+
+  def weekly_assignment_description
+    base = "今週は以下のトレーニングに取り組みましょう！"
+    return base if description.blank?
+
+    "#{base}\n\n#{description}"
+  end
+
+  def default_assignment_due_on
+    7.days.from_now.to_date
   end
 end
