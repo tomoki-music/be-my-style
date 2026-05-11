@@ -24,6 +24,17 @@
             %span 生徒が戻ってきた時の通知に使う予定の設定です。
           = f.check_box :student_reactivation_enabled
 
+        %label.learning-setting-toggle
+          .learning-setting-toggle__body
+            %strong 自動リマインド送信
+            %span ONにした顧問だけ、LINE連携済み生徒へ自動フォローを送信します。
+          = f.check_box :auto_reminder_enabled
+
+      .learning-form-group
+        = f.label :auto_reminder_send_hour, "自動送信時間帯"
+        = f.number_field :auto_reminder_send_hour, min: 0, max: 23, class: "learning-input", placeholder: "例: 18"
+        %p.learning-muted 0〜23で指定します。空欄の場合はrake task実行時刻を制限しません。
+
       .learning-form-group
         %label 配信方法
         .learning-channel-options
@@ -46,9 +57,10 @@
       .learning-section
         .learning-section__header
           %h2 LINE通知
+          = link_to "自動リマインドを確認", learning_auto_reminders_path, class: "learning-button learning-button--ghost learning-button--sm"
         .learning-empty
-          %strong LINE通知：準備中
-          %p 現在は手動コピーのみ利用可能です。今後、生徒ごとのLINE連携に対応予定です。
+          %strong LINE通知：自動リマインドは明示ONのみ
+          %p 手動LINE送信はこれまで通り利用できます。自動リマインドはプレビュー画面で候補を確認してからONにしてください。
 
       .learning-inline-actions
         = f.submit "保存する", class: "learning-button"

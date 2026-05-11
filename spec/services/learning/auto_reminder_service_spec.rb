@@ -5,6 +5,7 @@ RSpec.describe Learning::AutoReminderService do
   let(:line_adapter) { instance_double(Learning::LineNotificationAdapter) }
 
   before do
+    create(:learning_notification_setting, customer: customer, auto_reminder_enabled: true)
     allow(line_adapter).to receive(:deliver) do |log|
       log.update!(status: "sent", sent_at: Time.current, error_message: nil)
       Learning::LineNotificationAdapter::Result.new(status: :ok, message: "sent", payload: {})
@@ -12,6 +13,36 @@ RSpec.describe Learning::AutoReminderService do
   end
 
   describe "#call" do
+    it "auto_reminder_enabled=false では送信対象外になること" do
+      customer.learning_notification_setting.update!(auto_reminder_enabled: false)
+      connected_student
+
+      expect {
+        results = described_class.new(customer, line_adapter: line_adapter).call
+        expect(results).to be_empty
+      }.not_to change(Learning::NotificationLog, :count)
+      expect(line_adapter).not_to have_received(:deliver)
+    end
+
+    it "auto_reminder_enabled=true で対象になること" do
+      connected_student
+
+      results = described_class.new(customer, line_adapter: line_adapter).call
+
+      expect(results.map { |result| result.candidate.notification_type }).to include("auto_inactive_reminder")
+    end
+
+    it "send_hour外では送信対象外になること" do
+      customer.learning_notification_setting.update!(auto_reminder_send_hour: 8)
+      connected_student
+      reference_time = Time.zone.local(2026, 5, 11, 18, 0, 0)
+
+      results = described_class.new(customer, line_adapter: line_adapter, reference_time: reference_time).call
+
+      expect(results).to be_empty
+      expect(line_adapter).not_to have_received(:deliver)
+    end
+
     it "3日以上未反応のLINE連携済み生徒が対象になること" do
       student = connected_student
       create(:learning_notification_log,

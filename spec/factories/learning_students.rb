@@ -76,6 +76,8 @@ FactoryBot.define do
     reminder_enabled { true }
     teacher_summary_enabled { true }
     student_reactivation_enabled { true }
+    auto_reminder_enabled { false }
+    auto_reminder_send_hour { nil }
     delivery_channel { "manual" }
   end
 

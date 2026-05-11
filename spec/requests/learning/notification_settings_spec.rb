@@ -15,12 +15,14 @@ RSpec.describe "Learning notification settings", type: :request do
       expect(response.body).to include("生徒リマインド通知")
       expect(response.body).to include("顧問向け週次まとめ")
       expect(response.body).to include("生徒復帰通知")
+      expect(response.body).to include("自動リマインド送信")
+      expect(response.body).to include("自動送信時間帯")
       expect(response.body).to include("手動コピー")
       expect(response.body).to include("メール：準備中")
       expect(response.body).to include("LINE：準備中")
-      expect(response.body).to include("LINE通知：準備中")
-      expect(response.body).to include("現在は手動コピーのみ利用可能")
-      expect(response.body).to include("生徒ごとのLINE連携に対応予定")
+      expect(response.body).to include("LINE通知：自動リマインドは明示ONのみ")
+      expect(response.body).to include("手動LINE送信はこれまで通り利用できます")
+      expect(response.body).to include("自動リマインドを確認")
       expect(response.body).to include('disabled="disabled"')
     end
   end
@@ -32,6 +34,8 @@ RSpec.describe "Learning notification settings", type: :request do
           reminder_enabled: "0",
           teacher_summary_enabled: "1",
           student_reactivation_enabled: "0",
+          auto_reminder_enabled: "1",
+          auto_reminder_send_hour: "20",
           delivery_channel: "line"
         }
       }
@@ -41,6 +45,8 @@ RSpec.describe "Learning notification settings", type: :request do
       expect(setting.reminder_enabled).to eq(false)
       expect(setting.teacher_summary_enabled).to eq(true)
       expect(setting.student_reactivation_enabled).to eq(false)
+      expect(setting.auto_reminder_enabled).to eq(true)
+      expect(setting.auto_reminder_send_hour).to eq(20)
       expect(setting.delivery_channel).to eq("manual")
     end
   end

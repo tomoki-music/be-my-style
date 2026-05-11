@@ -228,6 +228,7 @@ Rails.application.routes.draw do
     resources :notifications, only: :index do
       post :persist_preview, on: :collection
     end
+    resources :auto_reminders, only: :index
     resource :notification_settings, only: [:edit, :update], controller: :notification_settings
     get "line/connect", to: "line_connections#connect", as: :line_connect
     post "line/webhook", to: "line_connections#webhook", as: :line_webhook
