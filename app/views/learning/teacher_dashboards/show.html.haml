@@ -54,6 +54,18 @@
       %span.learning-stat-card__label 今月の課題達成
       %strong.learning-stat-card__value= report.persisted? ? report.total_achieved_trainings : "-"
       %p.learning-stat-card__sub ⭐ に更新された件数
+    .learning-stat-card
+      %span.learning-stat-card__label 今日の自動フォロー候補
+      %strong.learning-stat-card__value= "#{@auto_reminder_summary.inactive_count}名"
+      %p.learning-stat-card__sub 3日以上未反応
+    .learning-stat-card
+      %span.learning-stat-card__label 期限前日リマインド
+      %strong.learning-stat-card__value= "#{@auto_reminder_summary.due_tomorrow_count}件"
+      %p.learning-stat-card__sub 明日が期限の未完了課題
+    .learning-stat-card
+      %span.learning-stat-card__label 期限超過リマインド
+      %strong.learning-stat-card__value= "#{@auto_reminder_summary.overdue_count}件"
+      %p.learning-stat-card__sub 今日時点の未完了課題
 
   - analytics_summary = @analytics_report.summary
   - at_risk_students = @analytics_report.at_risk_students

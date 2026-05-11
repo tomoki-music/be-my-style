@@ -98,6 +98,12 @@ module Learning
         followup_message_text(notification_log)
       when "assignment_created"
         assignment_created_text(notification_log)
+      when "auto_inactive_reminder"
+        auto_inactive_reminder_text(notification_log)
+      when "auto_assignment_due_reminder"
+        auto_assignment_due_reminder_text(notification_log)
+      when "auto_assignment_overdue_reminder"
+        auto_assignment_overdue_reminder_text(notification_log)
       when "teacher_action"
         action_text(notification_log)
       else
@@ -174,6 +180,44 @@ module Learning
         "▼ 生徒ページを見る",
         student_portal_url(student),
         "終わったら「やった！」と返信してね。"
+      ].compact.join("\n")
+    end
+
+    def auto_inactive_reminder_text(notification_log)
+      student = notification_log.learning_student
+      [
+        "練習の様子を見にきました。",
+        notification_log.message,
+        notification_log.recommended_action.presence,
+        "▼ 生徒ページを見る",
+        student_portal_url(student),
+        "できたらLINEで「やった」と返信してね。"
+      ].compact.join("\n")
+    end
+
+    def auto_assignment_due_reminder_text(notification_log)
+      student = notification_log.learning_student
+      [
+        "課題の期限が近づいています。",
+        notification_log.title,
+        notification_log.message,
+        notification_log.recommended_action.presence,
+        "▼ 生徒ページを見る",
+        student_portal_url(student),
+        "終わったらLINEで「やった」と返信してね。"
+      ].compact.join("\n")
+    end
+
+    def auto_assignment_overdue_reminder_text(notification_log)
+      student = notification_log.learning_student
+      [
+        "未完了の課題があります。",
+        notification_log.title,
+        notification_log.message,
+        notification_log.recommended_action.presence,
+        "▼ 生徒ページを見る",
+        student_portal_url(student),
+        "終わったらLINEで「やった」と返信してね。"
       ].compact.join("\n")
     end
 
