@@ -216,6 +216,7 @@
         %span.learning-notification-current= "今日の通知候補：#{@notification_candidates_count}件"
         %span.learning-notification-current= "保存済み履歴：#{@notification_logs_count}件"
         = link_to "通知設定を変更", edit_learning_notification_settings_path, class: "learning-button learning-button--ghost learning-button--sm"
+        = link_to "自動リマインド確認", learning_auto_reminders_path, class: "learning-button learning-button--ghost learning-button--sm"
         = link_to "通知ログを見る", learning_notifications_path, class: "learning-button learning-button--ghost learning-button--sm"
         = link_to "生徒一覧を見る", learning_students_path, class: "learning-button learning-button--ghost learning-button--sm"
     - if @weekly_review.stagnant_students.any?

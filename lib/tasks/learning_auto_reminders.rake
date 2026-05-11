@@ -5,6 +5,11 @@ namespace :learning do
   task auto_reminders: :environment do
     dry_run = ENV["DRY_RUN"].present?
     customer_id = ENV["CUSTOMER_ID"].presence
+    confirmed = ENV["CONFIRM_AUTO_REMINDER_SEND"] == "1"
+
+    unless dry_run || confirmed
+      abort "[learning:auto_reminders] stopped: set CONFIRM_AUTO_REMINDER_SEND=1 for non-DRY_RUN execution"
+    end
 
     customers = if customer_id
                   Customer.where(id: customer_id)
@@ -19,17 +24,19 @@ namespace :learning do
     puts "  line_token_configured=#{ENV['LINE_CHANNEL_ACCESS_TOKEN'].to_s.length.positive?}"
 
     customers.each do |customer|
+      setting = Learning::NotificationSetting.effective_for(customer)
       service = Learning::AutoReminderService.new(customer, dry_run: dry_run)
       results = service.call
       summary = service.summary
 
       results.each { |result| totals[result.status.to_sym] += 1 }
 
-      puts "  customer_id=#{customer.id} candidates=#{results.size} inactive=#{summary.inactive_count} due_tomorrow=#{summary.due_tomorrow_count} overdue=#{summary.overdue_count}"
+      skipped_count = results.count { |result| result.status == "skipped" }
+      puts "  customer_id=#{customer.id} customer=#{customer.name} auto_reminder_enabled=#{setting.auto_reminder_enabled?} send_hour=#{setting.auto_reminder_send_hour || 'none'} candidates=#{results.size} skipped=#{skipped_count} inactive=#{summary.inactive_count} due_tomorrow=#{summary.due_tomorrow_count} overdue=#{summary.overdue_count}"
       results.each do |result|
         candidate = result.candidate
         assignment_label = candidate.assignment ? " assignment_id=#{candidate.assignment.id}" : ""
-        puts "    student_id=#{candidate.student.id} student=#{candidate.student.display_name} type=#{candidate.notification_type} status=#{result.status} reason=#{candidate.reason}#{assignment_label}"
+        puts "    student_id=#{candidate.student.id} student=#{candidate.student.display_name} type=#{candidate.notification_type} status=#{result.status} skip_reason=#{result.message if result.status == 'skipped'} reason=#{candidate.reason}#{assignment_label}"
         puts "      message=#{candidate.message}"
       end
     end

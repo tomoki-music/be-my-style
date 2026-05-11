@@ -27,6 +27,8 @@ class Learning::NotificationSettingsController < Learning::BaseController
       :reminder_enabled,
       :teacher_summary_enabled,
       :student_reactivation_enabled,
+      :auto_reminder_enabled,
+      :auto_reminder_send_hour,
       :delivery_channel
     )
   end

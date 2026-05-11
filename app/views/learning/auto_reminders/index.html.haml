@@ -1,0 +1,98 @@
+= render "learning/shared/page", title: "自動リマインド運用", subtitle: "自動送信の状態・候補・送信ログを確認できます。" do
+  .learning-section
+    .learning-section__header
+      %h2 自動送信設定
+      .learning-section__actions
+        = link_to "通知設定を変更", edit_learning_notification_settings_path, class: "learning-button learning-button--ghost learning-button--sm"
+        = link_to "顧問ダッシュボードへ", learning_teacher_dashboard_path, class: "learning-button learning-button--ghost learning-button--sm"
+    .learning-stat-grid.learning-stat-grid--compact
+      .learning-stat-card
+        %span.learning-stat-card__label 自動送信
+        %strong.learning-stat-card__value= @notification_setting.auto_reminder_enabled? ? "ON" : "OFF"
+        %p.learning-stat-card__sub 明示的にONの顧問のみ送信
+      .learning-stat-card
+        %span.learning-stat-card__label 送信時間帯
+        %strong.learning-stat-card__value= @notification_setting.auto_reminder_send_hour_label
+        %p.learning-stat-card__sub nil の場合は時間帯制御なし
+      .learning-stat-card
+        %span.learning-stat-card__label LINE未連携
+        %strong.learning-stat-card__value= "#{@line_unconnected_count}名"
+        %p.learning-stat-card__sub 自動送信対象外
+      .learning-stat-card
+        %span.learning-stat-card__label 今日の候補
+        %strong.learning-stat-card__value= "#{@auto_reminder_results.size}件"
+        %p.learning-stat-card__sub skippedを含むプレビュー
+
+    - unless @notification_setting.auto_reminder_enabled?
+      .learning-empty
+        %strong 自動送信はOFFです
+        %p 通知設定でONにするまで、定期実行taskからLINEは送信されません。
+
+  .learning-section
+    .learning-section__header
+      %h2 自動送信プレビュー
+      %small= "未反応 #{@auto_reminder_summary.inactive_count}件 / 期限前日 #{@auto_reminder_summary.due_tomorrow_count}件 / 期限超過 #{@auto_reminder_summary.overdue_count}件"
+    .learning-table-wrap
+      %table.learning-table
+        %thead
+          %tr
+            %th 生徒
+            %th 理由
+            %th type
+            %th status
+            %th skipped理由
+            %th 送信予定メッセージ
+        %tbody
+          - if @auto_reminder_results.any?
+            - @auto_reminder_results.each do |result|
+              - candidate = result.candidate
+              %tr
+                %td= link_to candidate.student.display_name, learning_student_path(candidate.student)
+                %td= candidate.reason
+                %td= candidate.notification_type
+                %td
+                  %span.learning-notification-status{ class: "learning-notification-status--#{result.status}" }= result.status
+                %td= result.status == "skipped" ? result.message : "-"
+                %td= candidate.message
+          - else
+            %tr
+              %td{ colspan: 6 }
+                .learning-empty
+                  %strong 自動送信候補はありません
+                  %p 自動送信がOFF、送信時間外、または対象生徒がいない場合はここに候補が表示されません。
+
+  .learning-section
+    .learning-section__header
+      %h2 自動送信ログ
+      %small= "最新#{@auto_notification_logs.size}件"
+    .learning-table-wrap
+      %table.learning-table
+        %thead
+          %tr
+            %th 送信日時
+            %th 生徒
+            %th type
+            %th status
+            %th error
+            %th メッセージ冒頭
+        %tbody
+          - if @auto_notification_logs.any?
+            - @auto_notification_logs.each do |log|
+              %tr
+                %td= log.sent_at ? l(log.sent_at, format: :short) : l(log.generated_at, format: :short)
+                %td
+                  - if log.learning_student
+                    = link_to log.learning_student.display_name, learning_student_path(log.learning_student)
+                  - else
+                    = "-"
+                %td= log.notification_type
+                %td
+                  %span.learning-notification-status{ class: "learning-notification-status--#{log.status}" }= log.status
+                %td= log.error_message.presence || "-"
+                %td= truncate(log.message, length: 60)
+          - else
+            %tr
+              %td{ colspan: 6 }
+                .learning-empty
+                  %strong 自動送信ログはまだありません
+                  %p 自動リマインドtaskを実行すると、sent/skipped/failed の結果がここに表示されます。

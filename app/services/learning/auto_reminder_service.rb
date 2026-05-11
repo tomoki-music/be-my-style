@@ -28,37 +28,45 @@ module Learning
       OVERDUE_TYPE => "期限を過ぎた課題があります。まずは1つだけ開いて、できるところから進めよう。"
     }.freeze
 
-    def initialize(customer, dry_run: false, line_adapter: LineNotificationAdapter.new, logger: Rails.logger)
+    def initialize(customer, dry_run: false, line_adapter: LineNotificationAdapter.new, logger: Rails.logger, reference_time: Time.current)
       @customer = customer
       @dry_run = dry_run
       @line_adapter = line_adapter
       @logger = logger
+      @reference_time = reference_time
     end
 
     def call
-      sent_student_ids = Set.new
+      return [] unless runnable?
+
+      handled_student_ids = Set.new
 
       candidates.map do |candidate|
         if duplicate_recently_sent?(candidate)
           skipped_result(candidate, NotificationLog::DUPLICATE_RECENTLY_SENT_MESSAGE)
-        elsif auto_sent_today?(candidate.student) || sent_student_ids.include?(candidate.student.id)
+        elsif auto_sent_today?(candidate.student) || handled_student_ids.include?(candidate.student.id)
           skipped_result(candidate, "auto_daily_limit")
         elsif dry_run?
+          handled_student_ids << candidate.student.id
           Result.new(candidate: candidate, status: "previewed", message: "dry_run")
         else
           result = dispatch(candidate)
-          sent_student_ids << candidate.student.id if result.log&.status == "sent"
+          handled_student_ids << candidate.student.id if result.log&.status == "sent"
           result
         end
       end
     end
 
     def candidates
+      return [] unless runnable?
+
       @candidates ||= (inactive_candidates + assignment_due_candidates + assignment_overdue_candidates)
         .sort_by { |candidate| [priority_for(candidate.notification_type), candidate.student.id, candidate.assignment&.id.to_i] }
     end
 
     def summary
+      return Summary.new(inactive_count: 0, due_tomorrow_count: 0, overdue_count: 0) unless runnable?
+
       Summary.new(
         inactive_count: inactive_candidates.count,
         due_tomorrow_count: assignment_due_candidates.count,
@@ -68,6 +76,14 @@ module Learning
 
     def dry_run?
       @dry_run
+    end
+
+    def runnable?
+      notification_setting.auto_reminder_enabled? && within_send_hour?
+    end
+
+    def notification_setting
+      @notification_setting ||= NotificationSetting.effective_for(@customer)
     end
 
     private
@@ -140,7 +156,7 @@ module Learning
         recommended_action: recommended_action,
         assignment: assignment,
         level: level,
-        generated_at: Time.current
+        generated_at: @reference_time
       )
     end
 
@@ -252,6 +268,11 @@ module Learning
         DUE_TYPE => 1,
         INACTIVE_TYPE => 2
       }.fetch(notification_type, 99)
+    end
+
+    def within_send_hour?
+      hour = notification_setting.auto_reminder_send_hour
+      hour.blank? || hour.to_i == @reference_time.hour
     end
 
     def dispatcher
