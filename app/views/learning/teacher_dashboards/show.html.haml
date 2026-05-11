@@ -283,6 +283,27 @@
 
   .learning-section
     .learning-section__header
+      %h2 先生が確認するトレーニング
+      %span.learning-notification-current= "対象：#{@teacher_check_assignments.size}件"
+    - if @teacher_check_assignments.any?
+      .learning-stack
+        - @teacher_check_assignments.each do |assignment|
+          - training = assignment.learning_student_training
+          .learning-review-row
+            %strong= "#{assignment.learning_student.display_name} / #{training.title}"
+            %span
+              先生確認が必要
+              - if training.check_method.present?
+                = " / 確認方法: #{training.check_method}"
+              - if training.achievement_criteria.present?
+                = " / 達成の目安: #{training.achievement_criteria}"
+    - else
+      .learning-empty
+        %strong 先生確認が必要な未完了トレーニングはありません
+        %p 先生が確認する設定の課題が出ると、ここに表示されます。
+
+  .learning-section
+    .learning-section__header
       %h2 最近リアクションした生徒
       = link_to "通知ログを見る", learning_notifications_path, class: "learning-button learning-button--ghost learning-button--sm"
     - if @recent_reaction_logs.any?

@@ -52,7 +52,9 @@ class Learning::TrainingMastersController < Learning::BaseController
       :level,
       :title,
       :description,
+      :check_method,
       :achievement_criteria,
+      :judge_type,
       :frequency,
       :is_band_training
     )

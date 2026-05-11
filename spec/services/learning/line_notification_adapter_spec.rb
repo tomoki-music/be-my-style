@@ -1,7 +1,15 @@
 require "rails_helper"
 
 RSpec.describe Learning::LineNotificationAdapter do
-  let(:notification_log) { create(:learning_notification_log, delivery_channel: "line", status: "queued") }
+  let(:customer) { create(:customer, domain_name: "learning") }
+  let(:student) { create(:learning_student, customer: customer) }
+  let(:notification_log) do
+    create(:learning_notification_log,
+           customer: customer,
+           learning_student: student,
+           delivery_channel: "line",
+           status: "queued")
+  end
 
   around do |example|
     original = ENV["LINE_CHANNEL_ACCESS_TOKEN"]
@@ -150,6 +158,37 @@ RSpec.describe Learning::LineNotificationAdapter do
       expect(text).to include("▼ 生徒ページを見る")
       expect(text).to include(assignment_log.learning_student.public_access_token)
       expect(text).to include("やった！")
+    end
+
+    it "トレーニング由来の課題通知にチェック方法を入れること" do
+      master = create(:learning_training_master,
+                      customer: notification_log.customer,
+                      check_method: "10秒以上、音程を揺らさず伸ばせるか確認",
+                      achievement_criteria: "3回中2回できたら達成",
+                      judge_type: "teacher")
+      training = create(:learning_student_training,
+                        customer: notification_log.customer,
+                        learning_student: notification_log.learning_student,
+                        learning_training_master: master,
+                        title: nil)
+      assignment = training.learning_assignments.first
+      assignment_log = create(:learning_notification_log,
+                              customer: notification_log.customer,
+                              learning_student: notification_log.learning_student,
+                              notification_type: "auto_assignment_due_reminder",
+                              delivery_channel: "line",
+                              status: "queued",
+                              title: assignment.title,
+                              message: "今週のトレーニングを確認しよう",
+                              metadata: { learning_assignment_id: assignment.id })
+
+      payload = described_class.new.build_payload(assignment_log)
+      text = payload[:messages].first[:text]
+
+      expect(text).to include("確認方法: 10秒以上、音程を揺らさず伸ばせるか確認")
+      expect(text).to include("達成の目安: 3回中2回できたら達成")
+      expect(text).to include("誰に見てもらうか: 先生が確認")
+      expect(text.length).to be <= 500
     end
   end
 

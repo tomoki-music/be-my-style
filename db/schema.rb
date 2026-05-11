@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_11_040000) do
+ActiveRecord::Schema.define(version: 2026_05_11_050000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -659,10 +659,13 @@ ActiveRecord::Schema.define(version: 2026_05_11_040000) do
     t.boolean "is_band_training", default: false, null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.text "check_method"
+    t.string "judge_type", default: "self", null: false
     t.index ["customer_id", "level"], name: "index_learning_training_masters_on_customer_id_and_level"
     t.index ["customer_id", "part"], name: "index_learning_training_masters_on_customer_id_and_part"
     t.index ["customer_id", "period"], name: "index_learning_training_masters_on_customer_id_and_period"
     t.index ["customer_id"], name: "index_learning_training_masters_on_customer_id"
+    t.index ["judge_type"], name: "index_learning_training_masters_on_judge_type"
   end
 
   create_table "likes", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|

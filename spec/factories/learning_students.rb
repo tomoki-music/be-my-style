@@ -71,6 +71,19 @@ FactoryBot.define do
     achievement_mark { "cross" }
   end
 
+  factory :learning_training_master do
+    customer
+    part { "guitar" }
+    period { "1-2ヶ月" }
+    level { "基礎" }
+    title { "ロングトーン" }
+    description { "音をまっすぐ伸ばす" }
+    achievement_criteria { "3回中2回できたら達成" }
+    frequency { "毎日5分" }
+    is_band_training { false }
+    judge_type { "self" }
+  end
+
   factory :learning_notification_setting, class: "Learning::NotificationSetting" do
     customer
     reminder_enabled { true }
