@@ -36,6 +36,15 @@ module Learning
       end
     end
 
+    def dispatch_log(log)
+      selected_channel = ((@channels.presence || [:line]).map(&:to_sym) & CHANNELS).first || :line
+      status = selected_channel == :line ? "queued" : "skipped"
+
+      log.update!(status: status, delivery_channel: selected_channel.to_s)
+      @line_adapter.deliver(log) if selected_channel == :line
+      log
+    end
+
     private
 
     def reminders

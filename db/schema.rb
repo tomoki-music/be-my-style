@@ -501,16 +501,16 @@ ActiveRecord::Schema.define(version: 2026_05_11_020000) do
     t.datetime "sent_at"
     t.text "error_message"
     t.json "metadata"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
     t.boolean "reaction_received", default: false, null: false
     t.datetime "reacted_at"
     t.string "reaction_message"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
     t.index ["customer_id", "learning_student_id", "notification_type", "generated_at"], name: "index_learning_notification_logs_on_daily_dedupe_lookup"
     t.index ["customer_id"], name: "index_learning_notification_logs_on_customer_id"
     t.index ["generated_at"], name: "index_learning_notification_logs_on_generated_at"
-    t.index ["learning_student_id"], name: "index_learning_notification_logs_on_learning_student_id"
     t.index ["learning_student_id", "reaction_received", "sent_at"], name: "index_learning_notification_logs_on_student_reaction"
+    t.index ["learning_student_id"], name: "index_learning_notification_logs_on_learning_student_id"
     t.index ["notification_type"], name: "index_learning_notification_logs_on_notification_type"
     t.index ["reacted_at"], name: "index_learning_notification_logs_on_reacted_at"
     t.index ["status"], name: "index_learning_notification_logs_on_status"

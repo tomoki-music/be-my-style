@@ -9,8 +9,17 @@ module Learning
       teacher_bulk_message
       followup_message
       assignment_created
+      auto_inactive_reminder
+      auto_assignment_due_reminder
+      auto_assignment_overdue_reminder
       weekly_summary
       student_reactivation
+    ].freeze
+
+    AUTO_REMINDER_TYPES = %w[
+      auto_inactive_reminder
+      auto_assignment_due_reminder
+      auto_assignment_overdue_reminder
     ].freeze
 
     LEVELS = %w[light normal strong info].freeze
@@ -39,6 +48,14 @@ module Learning
       where(customer: customer,
             learning_student: learning_student,
             notification_type: notification_type)
+        .recently_sent_line(since_time)
+        .exists?
+    end
+
+    def self.auto_reminder_sent_today?(customer:, learning_student:, since_time: 24.hours.ago)
+      where(customer: customer,
+            learning_student: learning_student,
+            notification_type: AUTO_REMINDER_TYPES)
         .recently_sent_line(since_time)
         .exists?
     end
