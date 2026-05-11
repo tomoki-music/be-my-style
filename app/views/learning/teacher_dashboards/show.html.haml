@@ -553,6 +553,83 @@
                   %p 生徒を登録すると、専用ポータルURL・課題割当・努力ポイントの運用を始められます。
                   = link_to "生徒を追加", new_learning_student_path, class: "learning-button"
 
+  .learning-section
+    .learning-section__header
+      %h2 指導改善ヒント
+      %span.learning-notification-current 差し戻し分析（全期間）
+    - if @revision_analysis.any_data?
+      - if @revision_analysis.troubled_trainings.any?
+        .learning-revision-panel
+          .learning-section__header
+            %h3 重点フォロー候補のトレーニング
+            %p.learning-muted 再チャレンジが多いトレーニングです。達成基準やチェック方法の見直しが効果的かもしれません。
+          .learning-table-wrap
+            %table.learning-table
+              %thead
+                %tr
+                  %th トレーニング名
+                  %th.text-right 差し戻し回数
+                  %th.text-right 対象生徒
+                  %th 直近コメント
+                  %th 改善ヒント
+              %tbody
+                - @revision_analysis.troubled_trainings.each do |item|
+                  %tr
+                    %td= item.training_title
+                    %td.text-right
+                      %strong= "#{item.revision_count}回"
+                    %td.text-right= "#{item.student_count}名"
+                    %td
+                      - if item.latest_comment.present?
+                        %span.learning-muted= item.latest_comment.truncate(60)
+                      - else
+                        %span.learning-muted コメントなし
+                    %td
+                      %small.learning-muted= item.improvement_hint
+
+      - if @revision_analysis.struggling_students.any?
+        .learning-revision-panel
+          .learning-section__header
+            %h3 重点フォロー候補の生徒
+            %p.learning-muted 再チャレンジが多い生徒です。個別に話しかけてどこで止まっているか確認してみましょう。
+          .learning-table-wrap
+            %table.learning-table
+              %thead
+                %tr
+                  %th 生徒
+                  %th.text-right 差し戻し回数
+                  %th.text-right 対象トレーニング
+                  %th 最終差し戻し日
+                  %th フォロー提案
+              %tbody
+                - @revision_analysis.struggling_students.each do |item|
+                  %tr
+                    %td= link_to item.student.display_name, learning_student_path(item.student)
+                    %td.text-right
+                      %strong= "#{item.revision_count}回"
+                    %td.text-right= "#{item.training_count}件"
+                    %td= l(item.last_revised_at, format: :short)
+                    %td
+                      %small.learning-muted= item.followup_hint
+
+      - if @revision_analysis.recent_revisions.any?
+        .learning-revision-panel
+          .learning-section__header
+            %h3 最近の差し戻しコメント
+            %p.learning-muted 直近の差し戻し内容です。繰り返し出るテーマは説明を工夫するチャンスかもしれません。
+          .learning-stack
+            - @revision_analysis.recent_revisions.each do |rev|
+              .learning-review-row
+                %div
+                  %strong= "#{rev.student.display_name} / #{rev.training_title}"
+                  %span.learning-muted= l(rev.history.created_at, format: :short)
+                %p= rev.history.comment
+                = link_to "課題詳細", learning_assignment_path(rev.assignment), class: "learning-button learning-button--ghost learning-button--sm"
+    - else
+      .learning-empty
+        %strong まだ差し戻し履歴はありません。順調に進んでいます。
+        %p 生徒が課題を提出して先生が確認すると、差し戻し分析がここに表示されます。
+
   .learning-assurance
     %strong 安心して運用するために
     %p 生徒はニックネームで運用できます。ランキングは個人を責めるためではなく、努力・継続・成長を部活動全体で見守るための仕組みです。
