@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_11_030000) do
+ActiveRecord::Schema.define(version: 2026_05_11_040000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -371,12 +371,15 @@ ActiveRecord::Schema.define(version: 2026_05_11_030000) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.string "assignment_group_key"
+    t.bigint "learning_student_training_id"
     t.index ["customer_id", "assignment_group_key"], name: "index_learning_assignments_on_customer_group_key"
     t.index ["customer_id", "learning_student_id", "status"], name: "index_learning_assignments_on_customer_student_status"
     t.index ["customer_id"], name: "index_learning_assignments_on_customer_id"
     t.index ["due_on"], name: "index_learning_assignments_on_due_on"
+    t.index ["learning_student_id", "learning_student_training_id", "status"], name: "index_learning_assignments_on_student_training_status"
     t.index ["learning_student_id", "status", "created_at"], name: "index_learning_assignments_on_student_status_created_at"
     t.index ["learning_student_id"], name: "index_learning_assignments_on_learning_student_id"
+    t.index ["learning_student_training_id"], name: "index_learning_assignments_on_student_training_id"
     t.index ["status"], name: "index_learning_assignments_on_status"
   end
 
@@ -984,6 +987,7 @@ ActiveRecord::Schema.define(version: 2026_05_11_030000) do
   add_foreign_key "join_part_customers", "join_parts"
   add_foreign_key "join_parts", "songs"
   add_foreign_key "learning_assignments", "customers"
+  add_foreign_key "learning_assignments", "learning_student_trainings"
   add_foreign_key "learning_assignments", "learning_students"
   add_foreign_key "learning_band_memberships", "learning_bands"
   add_foreign_key "learning_band_memberships", "learning_students"

@@ -1,7 +1,7 @@
 class Learning::AssignmentsController < Learning::BaseController
   TITLE_MAX_LENGTH = 100
   DESCRIPTION_MAX_LENGTH = 1000
-  DEFAULT_REMINDER_MESSAGE = "課題の提出がまだ確認できていません。5分だけでも取り組んでみよう！終わったら「やった！」と返信してね🔥".freeze
+  DEFAULT_REMINDER_MESSAGE = "今週のトレーニング、まだ取り組めていません！5分だけでも取り組んでみよう。終わったら「やった！」と返信してね。".freeze
 
   AssignmentSummary = Struct.new(:representative, :assignments, keyword_init: true) do
     def title
@@ -229,7 +229,11 @@ class Learning::AssignmentsController < Learning::BaseController
       message: assignment.description.presence || assignment.title,
       recommended_action: assignment.due_on ? "期限: #{assignment.due_on.strftime('%-m/%-d')}" : nil,
       generated_at: Time.current,
-      metadata: { source: "Learning::AssignmentsController", learning_assignment_id: assignment.id }
+      metadata: {
+        source: "Learning::AssignmentsController",
+        learning_assignment_id: assignment.id,
+        learning_student_training_id: assignment.learning_student_training_id
+      }
     )
   end
 
@@ -318,13 +322,14 @@ class Learning::AssignmentsController < Learning::BaseController
       level: "info",
       delivery_channel: "line",
       status: "queued",
-      title: "課題未提出フォロー",
+      title: "今週のトレーニングフォロー",
       message: "#{assignment.title}\n#{message}",
-      recommended_action: "課題の未提出者フォローです。",
+      recommended_action: "今週のトレーニング未実施者フォローです。",
       generated_at: Time.current,
       metadata: {
         source: "Learning::AssignmentsController#bulk_reminder",
         learning_assignment_id: assignment.id,
+        learning_student_training_id: assignment.learning_student_training_id,
         assignment_group_key: assignment.grouping_key
       }
     )

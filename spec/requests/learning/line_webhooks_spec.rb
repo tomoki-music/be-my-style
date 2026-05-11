@@ -302,6 +302,46 @@ RSpec.describe "Learning line webhooks", type: :request do
       expect(older_assignment.reload.status).to eq("pending")
     end
 
+    it "通知metadataに課題IDがある場合は該当assignmentをcompletedにすること" do
+      ENV["LINE_CHANNEL_SECRET"] = channel_secret
+      create(:learning_line_connection,
+             customer: teacher,
+             learning_student: student,
+             line_user_id: "UmetadataAssignmentUserId",
+             status: "connected",
+             connected_at: Time.current)
+      target_assignment = create(:learning_assignment,
+                                 customer: teacher,
+                                 learning_student: student,
+                                 title: "腹式呼吸トレーニング",
+                                 status: "pending",
+                                 created_at: 2.hours.ago)
+      latest_assignment = create(:learning_assignment,
+                                 customer: teacher,
+                                 learning_student: student,
+                                 title: "最新だけど別課題",
+                                 status: "pending",
+                                 created_at: 1.hour.ago)
+      create(:learning_notification_log,
+             customer: teacher,
+             learning_student: student,
+             notification_type: "auto_assignment_due_reminder",
+             delivery_channel: "line",
+             status: "sent",
+             sent_at: 10.minutes.ago,
+             reaction_received: false,
+             metadata: { learning_assignment_id: target_assignment.id })
+      body = webhook_body(reaction_event("done", user_id: "UmetadataAssignmentUserId"))
+
+      post learning_line_webhook_path,
+           params: body,
+           headers: { "CONTENT_TYPE" => "application/json", "X-Line-Signature" => signature_for(body) }
+
+      expect(response).to have_http_status(:ok)
+      expect(target_assignment.reload.status).to eq("completed")
+      expect(latest_assignment.reload.status).to eq("pending")
+    end
+
     it "completed assignmentは再更新しないこと" do
       ENV["LINE_CHANNEL_SECRET"] = channel_secret
       completed_at = 1.day.ago

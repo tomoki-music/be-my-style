@@ -8,6 +8,7 @@ module Learning
 
     Summary = Struct.new(
       :assignment_submission_rate,
+      :training_completion_rate,
       :line_reaction_rate,
       :progress_log_count,
       :unsubmitted_count,
@@ -21,6 +22,8 @@ module Learning
     StudentSummary = Struct.new(
       :student,
       :submission_rate,
+      :training_completion_rate,
+      :training_assignment_count,
       :reaction_rate,
       :last_reaction_at,
       :status,
@@ -76,6 +79,7 @@ module Learning
     def summary
       @summary ||= Summary.new(
         assignment_submission_rate: percentage(completed_assignments.count, assignments.count),
+        training_completion_rate: percentage(completed_training_assignments.count, training_assignments.count),
         line_reaction_rate: percentage(line_reaction_logs.count, line_sent_logs.count),
         progress_log_count: progress_logs.count,
         unsubmitted_count: assignments.count { |assignment| open_assignment?(assignment) },
@@ -95,12 +99,19 @@ module Learning
           student_assignments.count { |assignment| assignment.status == "completed" },
           student_assignments.size
         )
+        student_training_assignments = student_assignments.select(&:training_assignment?)
+        training_completion_rate = percentage(
+          student_training_assignments.count { |assignment| assignment.status == "completed" },
+          student_training_assignments.size
+        )
         reaction_rate = percentage(student_line_logs.count { |log| log.reaction_received? }, student_line_logs.size)
-        status = student_status(submission_rate, last_reaction_at)
+        status = student_status(training_completion_rate, student_training_assignments.size, submission_rate, last_reaction_at)
 
         StudentSummary.new(
           student: student,
           submission_rate: submission_rate,
+          training_completion_rate: training_completion_rate,
+          training_assignment_count: student_training_assignments.size,
           reaction_rate: reaction_rate,
           last_reaction_at: last_reaction_at,
           status: status,
@@ -121,7 +132,7 @@ module Learning
 
     def at_risk_students
       @at_risk_students ||= student_summaries
-        .select { |item| item.submission_rate < 30 || stale_reaction?(item.last_reaction_at) }
+        .select { |item| student_completion_rate(item) < 30 || stale_reaction?(item.last_reaction_at) }
         .map { |item| build_at_risk_student(item) }
     end
 
@@ -165,6 +176,14 @@ module Learning
 
     def completed_assignments
       @completed_assignments ||= assignments.select { |assignment| assignment.status == "completed" }
+    end
+
+    def training_assignments
+      @training_assignments ||= assignments.select(&:training_assignment?)
+    end
+
+    def completed_training_assignments
+      @completed_training_assignments ||= training_assignments.select { |assignment| assignment.status == "completed" }
     end
 
     def progress_logs
@@ -228,7 +247,7 @@ module Learning
 
       AtRiskStudent.new(
         student: item.student,
-        completion_rate: item.submission_rate,
+        completion_rate: student_completion_rate(item),
         inactive_days: inactive_days(item.last_reaction_at),
         pending_assignments: student_assignments.count { |assignment| open_assignment?(assignment) },
         last_reaction_at: item.last_reaction_at,
@@ -252,11 +271,20 @@ module Learning
         end
     end
 
-    def student_status(submission_rate, last_reaction_at)
-      return :follow_up if stale_reaction?(last_reaction_at) || submission_rate < 30
-      return :good if submission_rate >= 70
+    def student_status(training_completion_rate, training_assignment_count, submission_rate, last_reaction_at)
+      completion_rate = completion_rate_value(training_completion_rate, training_assignment_count, submission_rate)
+      return :follow_up if stale_reaction?(last_reaction_at) || completion_rate < 30
+      return :good if completion_rate >= 70
 
       :watch
+    end
+
+    def student_completion_rate(item)
+      completion_rate_value(item.training_completion_rate, item.training_assignment_count, item.submission_rate)
+    end
+
+    def completion_rate_value(training_completion_rate, training_assignment_count, submission_rate)
+      training_assignment_count.to_i.positive? ? training_completion_rate : submission_rate
     end
 
     def stale_reaction?(last_reaction_at)

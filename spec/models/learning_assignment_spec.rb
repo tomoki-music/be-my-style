@@ -35,4 +35,27 @@ RSpec.describe LearningAssignment, type: :model do
     expect(assignment.reload.status).to eq("completed")
     expect(assignment.completed_at).to eq(completed_at)
   end
+
+  it "割当トレーニングと紐付けられること" do
+    training = create(:learning_student_training)
+    assignment = training.learning_assignments.first
+
+    expect(assignment).to be_training_assignment
+    expect(assignment.learning_student_training).to eq(training)
+  end
+
+  it "他生徒の割当トレーニングは紐付けられないこと" do
+    teacher = create(:customer, domain_name: "learning", confirmed_at: Time.current)
+    student = create(:learning_student, customer: teacher)
+    other_student = create(:learning_student, customer: teacher)
+    training = create(:learning_student_training, customer: teacher, learning_student: other_student)
+
+    assignment = build(:learning_assignment,
+                       customer: teacher,
+                       learning_student: student,
+                       learning_student_training: training)
+
+    expect(assignment).not_to be_valid
+    expect(assignment.errors[:learning_student_training]).to be_present
+  end
 end

@@ -122,6 +122,7 @@ RSpec.describe Learning::AutoReminderService do
 
       result = results.detect { |item| item.candidate.assignment == assignment }
       expect(result.candidate.notification_type).to eq("auto_assignment_due_reminder")
+      expect(result.candidate.message).to include("今週のトレーニング")
       expect(result.status).to eq("sent")
     end
 
