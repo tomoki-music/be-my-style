@@ -60,4 +60,14 @@ module LearningHelper
     current_path = request.path
     current_path == path || current_path.start_with?("#{path}/")
   end
+
+  def learning_time_ago_label(time)
+    return "なし" if time.blank?
+
+    if time > 1.day.ago
+      "#{distance_of_time_in_words(time, Time.current)}前"
+    else
+      "#{(Time.current.to_date - time.to_date).to_i}日前"
+    end
+  end
 end

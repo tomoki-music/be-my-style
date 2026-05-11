@@ -24,9 +24,9 @@ class Learning::FollowupLineMessagesController < Learning::BaseController
 
   private
 
-  FollowupResult = Struct.new(:sent_count, :skipped_count, :failed_count, keyword_init: true) do
+  FollowupResult = Struct.new(:sent_count, :skipped_count, :duplicate_count, :failed_count, keyword_init: true) do
     def flash_message
-      "フォローLINE送信完了。成功：#{sent_count}件 / 未連携：#{skipped_count}件 / 失敗：#{failed_count}件"
+      "フォローLINE送信完了。成功：#{sent_count}件 / 未連携：#{skipped_count}件 / 重複スキップ：#{duplicate_count}件 / 失敗：#{failed_count}件"
     end
   end
 
@@ -43,7 +43,7 @@ class Learning::FollowupLineMessagesController < Learning::BaseController
   end
 
   def deliver_to_students(student_ids, message)
-    counts = { sent_count: 0, skipped_count: 0, failed_count: 0 }
+    counts = { sent_count: 0, skipped_count: 0, duplicate_count: 0, failed_count: 0 }
     students = eligible_students_by_id(student_ids)
     adapter = Learning::LineNotificationAdapter.new
 
@@ -75,6 +75,12 @@ class Learning::FollowupLineMessagesController < Learning::BaseController
   end
 
   def deliver_to_connected_student(adapter, student, message, counts)
+    if recently_sent_duplicate?(student)
+      create_duplicate_log(student, message)
+      counts[:duplicate_count] += 1
+      return
+    end
+
     log = create_queued_log(student, message)
     result = adapter.deliver(log)
 
@@ -111,6 +117,22 @@ class Learning::FollowupLineMessagesController < Learning::BaseController
     log.update!(
       status: "skipped",
       error_message: Learning::LineNotificationAdapter::NO_RECIPIENT_MESSAGE
+    )
+  end
+
+  def create_duplicate_log(student, message)
+    log = create_queued_log(student, message)
+    log.update!(
+      status: "skipped",
+      error_message: Learning::NotificationLog::DUPLICATE_RECENTLY_SENT_MESSAGE
+    )
+  end
+
+  def recently_sent_duplicate?(student)
+    Learning::NotificationLog.recently_sent_duplicate?(
+      customer: current_customer,
+      learning_student: student,
+      notification_type: "followup_message"
     )
   end
 end

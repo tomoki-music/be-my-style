@@ -1,0 +1,30 @@
+- form_url = @template.persisted? ? learning_line_message_template_path(@template) : learning_line_message_templates_path
+= form_with model: @template, url: form_url, local: true, class: "learning-form" do |f|
+  - if @template.errors.any?
+    #error_explanation.learning-errors
+      %h2= "#{@template.errors.count}件のエラーがあります"
+      %ul
+        - @template.errors.full_messages.each do |message|
+          %li= message
+
+  .learning-form-grid
+    .learning-form-group
+      = f.label :title, "テンプレ名"
+      = f.text_field :title, class: "learning-input", maxlength: 100
+    .learning-form-group
+      = f.label :category, "カテゴリ"
+      = f.select :category, LearningLineMessageTemplate.category_options, {}, class: "learning-select"
+
+  .learning-form-group
+    = f.label :body, "本文"
+    = f.text_area :body, rows: 6, class: "learning-textarea", maxlength: 500, data: { bulk_line_message: true }
+    %p.learning-muted 500文字以内。送信時もサーバー側で再チェックされます。
+
+  .learning-form-group
+    %label.learning-switch
+      = f.check_box :active
+      %span 送信画面のテンプレ選択に表示する
+
+  .learning-inline-actions
+    = f.submit(@template.persisted? ? "更新する" : "作成する", class: "learning-button")
+    = link_to "一覧へ戻る", learning_line_message_templates_path, class: "learning-button learning-button--ghost"

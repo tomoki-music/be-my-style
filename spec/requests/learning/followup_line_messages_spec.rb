@@ -45,6 +45,55 @@ RSpec.describe "Learning followup line messages", type: :request do
       expect(log.error_message).to eq("LINE recipient is not connected")
     end
 
+    it "24時間以内にフォローLINE送信済みならduplicateとしてskipped保存し送信しないこと" do
+      student = create_at_risk_student(name: "重複生徒")
+      create_connected_line(student, "UduplicateFollowupUser")
+      create(:learning_notification_log,
+             customer: teacher,
+             learning_student: student,
+             notification_type: "followup_message",
+             delivery_channel: "line",
+             status: "sent",
+             generated_at: 2.hours.ago,
+             sent_at: 2.hours.ago)
+      adapter = successful_adapter
+
+      expect {
+        post learning_followup_line_messages_path,
+             params: { student_ids: [student.id], followup_line_message: { message: message } }
+      }.to change(Learning::NotificationLog, :count).by(1)
+
+      log = Learning::NotificationLog.order(:created_at).last
+      expect(flash[:notice]).to include("重複スキップ：1件")
+      expect(log.notification_type).to eq("followup_message")
+      expect(log.status).to eq("skipped")
+      expect(log.error_message).to eq("duplicate_recently_sent")
+      expect(adapter).not_to have_received(:deliver)
+    end
+
+    it "24時間を超えたフォローLINE送信済みなら再送信できること" do
+      student = create_at_risk_student(name: "再送信生徒")
+      create_connected_line(student, "UoldFollowupUser")
+      create(:learning_notification_log,
+             customer: teacher,
+             learning_student: student,
+             notification_type: "followup_message",
+             delivery_channel: "line",
+             status: "sent",
+             generated_at: 25.hours.ago,
+             sent_at: 25.hours.ago)
+      adapter = successful_adapter
+
+      expect {
+        post learning_followup_line_messages_path,
+             params: { student_ids: [student.id], followup_line_message: { message: message } }
+      }.to change(Learning::NotificationLog, :count).by(1)
+
+      expect(flash[:notice]).to include("成功：1件")
+      expect(Learning::NotificationLog.order(:created_at).last.status).to eq("sent")
+      expect(adapter).to have_received(:deliver).once
+    end
+
     it "他顧問の生徒には送信されないこと" do
       other_teacher = create(:customer, domain_name: "learning", confirmed_at: Time.current)
       other_student = create(:learning_student, customer: other_teacher)

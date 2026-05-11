@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning プラットフォーム 導入説明資料</title>
+  <style>
+    /* ===== 基本設定 ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #222;
+      background: #f5f5f5;
+    }
+
+    .page {
+      max-width: 800px;
+      margin: 32px auto;
+      background: #fff;
+      padding: 56px 64px;
+      border-radius: 4px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    /* ===== ヘッダー ===== */
+    .header {
+      text-align: center;
+      border-bottom: 3px solid #2563eb;
+      padding-bottom: 24px;
+      margin-bottom: 36px;
+    }
+    .header .label {
+      display: inline-block;
+      background: #2563eb;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 4px 12px;
+      border-radius: 2px;
+      margin-bottom: 12px;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #1e3a8a;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+    .header .subtitle {
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    /* ===== セクション ===== */
+    .section {
+      margin-bottom: 40px;
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 800;
+      color: #1e3a8a;
+      border-left: 4px solid #2563eb;
+      padding-left: 12px;
+      margin-bottom: 16px;
+    }
+
+    /* ===== キャッチコピーボックス ===== */
+    .catch {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 20px 24px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1d4ed8;
+      line-height: 1.6;
+    }
+    .catch::before {
+      content: "💡 ";
+    }
+
+    /* ===== テーブル ===== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    th {
+      background: #1e3a8a;
+      color: #fff;
+      font-weight: 700;
+      padding: 10px 14px;
+      text-align: left;
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+    tr:nth-child(even) td { background: #f8fafc; }
+    tr:last-child td { border-bottom: none; }
+
+    /* ===== ステップ ===== */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 8px;
+    }
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 800;
+      font-size: 14px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step-body {
+      flex: 1;
+      padding-top: 4px;
+    }
+    .step-title {
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-bottom: 2px;
+    }
+    .step-desc {
+      font-size: 13px;
+      color: #475569;
+    }
+    .step-arrow {
+      color: #94a3b8;
+      font-size: 12px;
+      margin-left: 46px;
+    }
+
+    /* ===== 機能グリッド ===== */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .feature-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 14px 16px;
+    }
+    .feature-card .f-title {
+      font-weight: 700;
+      color: #1e3a8a;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .feature-card ul {
+      padding-left: 16px;
+      font-size: 12px;
+      color: #475569;
+    }
+    .feature-card ul li { margin-bottom: 3px; }
+
+    /* ===== 生徒ポータル ===== */
+    .portal-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .portal-item {
+      background: #eff6ff;
+      border-radius: 6px;
+      padding: 12px 16px;
+      flex: 1;
+      min-width: 140px;
+      text-align: center;
+    }
+    .portal-item .pi-icon { font-size: 22px; margin-bottom: 6px; }
+    .portal-item .pi-name { font-weight: 700; font-size: 12px; color: #1e3a8a; margin-bottom: 4px; }
+    .portal-item .pi-desc { font-size: 11px; color: #64748b; line-height: 1.5; }
+
+    /* ===== LINE フロー ===== */
+    .line-flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .lf-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 12px;
+      text-align: center;
+      flex: 1;
+      min-width: 140px;
+    }
+    .lf-box .lf-num {
+      background: #16a34a;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 1px 8px;
+      display: inline-block;
+      margin-bottom: 6px;
+    }
+    .lf-arrow { color: #94a3b8; font-size: 20px; padding: 0 8px; }
+
+    /* ===== 通知サンプル ===== */
+    .notification-samples {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .notif {
+      background: #f8fafc;
+      border-left: 3px solid #16a34a;
+      border-radius: 0 4px 4px 0;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #374151;
+    }
+
+    /* ===== FAQ ===== */
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 8px;
+    }
+    .faq-item {}
+    .faq-q {
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+    .faq-q::before { content: "Q. "; }
+    .faq-a {
+      font-size: 13px;
+      color: #475569;
+      padding-left: 20px;
+    }
+    .faq-a::before { content: "A. "; font-weight: 700; color: #2563eb; }
+
+    /* ===== パートバッジ ===== */
+    .part-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .part-badge {
+      background: #e0e7ff;
+      color: #3730a3;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+
+    /* ===== フッター ===== */
+    .footer {
+      margin-top: 48px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    /* ===== 印刷用 ===== */
+    @media print {
+      body { background: #fff; font-size: 12px; }
+      .page {
+        max-width: 100%;
+        margin: 0;
+        padding: 24px 32px;
+        box-shadow: none;
+        border-radius: 0;
+      }
+      .feature-grid { grid-template-columns: 1fr 1fr; }
+      .portal-row { gap: 8px; }
+      .section { margin-bottom: 28px; page-break-inside: avoid; }
+      .header { margin-bottom: 24px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ヘッダー -->
+  <div class="header">
+    <div class="label">高校音楽教育向け 導入説明資料</div>
+    <h1>学習管理プラットフォーム「Learning」</h1>
+    <div class="subtitle">先生の管理業務を効率化し、生徒のモチベーションを高める音楽教育システム</div>
+  </div>
+
+  <!-- 1. このプラットフォームでできること -->
+  <div class="section">
+    <div class="section-title">このプラットフォームでできること</div>
+    <div class="catch">
+      先生が生徒の練習進捗をリアルタイムで管理・把握でき、LINEで自動通知まで完結する、音楽部・音楽科向けの学習管理システムです。
+    </div>
+  </div>
+
+  <!-- 2. 現場の課題と解決 -->
+  <div class="section">
+    <div class="section-title">現場の課題と解決策</div>
+    <table>
+      <tr>
+        <th style="width:48%">よくある課題</th>
+        <th>このプラットフォームでの解決</th>
+      </tr>
+      <tr>
+        <td>生徒ごとの練習状況が把握しにくい</td>
+        <td>ダッシュボードで全生徒の進捗を一覧表示</td>
+      </tr>
+      <tr>
+        <td>課題を配布しても提出確認が大変</td>
+        <td>課題配布・完了管理を一元化。未提出者には自動リマインダー</td>
+      </tr>
+      <tr>
+        <td>個別フィードバックに時間がかかる</td>
+        <td>達成記号（⭐ / △ / ×）とコメントで素早く評価</td>
+      </tr>
+      <tr>
+        <td>生徒への連絡手段がバラバラ</td>
+        <td>LINE連携で通知・リマインダーを自動送信</td>
+      </tr>
+      <tr>
+        <td>バンド全体の練習管理が難しい</td>
+        <td>バンドグループ機能で合奏練習も一元管理</td>
+      </tr>
+      <tr>
+        <td>進捗データが蓄積・分析できない</td>
+        <td>月間レポート・CSV出力で客観的データを取得</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 3. 先生向け機能 -->
+  <div class="section">
+    <div class="section-title">先生向け主要機能</div>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="f-title">📋 生徒管理</div>
+        <ul>
+          <li>パート・学年・クラスで分類</li>
+          <li>ステータス管理（在籍中 / 休会 / 卒業）</li>
+          <li>複数クラスを学校グループで整理</li>
+        </ul>
+      </div>
+      <div class="feature-card">
+        <div class="f-title">🎯 トレーニング管理</div>
+        <ul>
+          <li>4段階レベル（基礎→安定→応用→実践）</li>
+          <li>達成基準・週間目標・期間を設定</li>
+          <li>達成記号（⭐/△/×）で素早く評価</li>
+        </ul>
+      </div>
+      <div class="feature-card">
+        <div class="f-title">🎸 バンド練習管理</div>
+        <ul>
+          <li>バンドグループを作成・生徒を割り当て</li>
+          <li>合奏練習タスクを定義・追跡</li>
+          <li>関連パートを指定して管理</li>
+        </ul>
+      </div>
+      <div class="feature-card">
+        <div class="f-title">📝 課題配布</div>
+        <ul>
+          <li>複数生徒へ一括配布</li>
+          <li>配布時にLINE自動通知</li>
+          <li>完了率をリアルタイム確認</li>
+        </ul>
+      </div>
+      <div class="feature-card">
+        <div class="f-title">📊 ダッシュボード・分析</div>
+        <ul>
+          <li>全生徒の進捗を一覧表示</li>
+          <li>週間成長指標・課題完了率</li>
+          <li>CSV出力（報告・保護者対応に活用）</li>
+        </ul>
+      </div>
+      <div class="feature-card">
+        <div class="f-title">🔔 自動通知管理</div>
+        <ul>
+          <li>リマインダー・週間サマリーを自動送信</li>
+          <li>テンプレートを事前作成して使い回し</li>
+          <li>送信前にプレビューで内容確認</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 生徒向け機能 -->
+  <div class="section">
+    <div class="section-title">生徒向け機能（学習ポータル）</div>
+    <p style="font-size:13px;color:#475569;margin-bottom:12px;">
+      生徒は先生から届く専用URLをタップするだけ。ログイン不要で学習ポータルにアクセスできます。
+    </p>
+    <div class="portal-row">
+      <div class="portal-item">
+        <div class="pi-icon">📚</div>
+        <div class="pi-name">トレーニング一覧</div>
+        <div class="pi-desc">割り当てられた練習課題と進捗を確認</div>
+      </div>
+      <div class="portal-item">
+        <div class="pi-icon">✏️</div>
+        <div class="pi-name">練習ログ記録</div>
+        <div class="pi-desc">いつ・何を練習したかを日単位で記録</div>
+      </div>
+      <div class="portal-item">
+        <div class="pi-icon">📋</div>
+        <div class="pi-name">課題確認</div>
+        <div class="pi-desc">締切・内容・完了状態を一目で確認</div>
+      </div>
+      <div class="portal-item">
+        <div class="pi-icon">⭐</div>
+        <div class="pi-name">努力ポイント</div>
+        <div class="pi-desc">練習実績に応じてポイントが貯まる</div>
+      </div>
+      <div class="portal-item">
+        <div class="pi-icon">🔥</div>
+        <div class="pi-name">学習ストリーク</div>
+        <div class="pi-desc">連続ログイン日数で継続を促進</div>
+      </div>
+      <div class="portal-item">
+        <div class="pi-icon">🏆</div>
+        <div class="pi-name">クラス内ランキング</div>
+        <div class="pi-desc">努力ポイントでグループ内順位を表示</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. LINE連携 -->
+  <div class="section">
+    <div class="section-title">LINE連携のしくみ</div>
+    <div class="line-flow">
+      <div class="lf-box">
+        <div class="lf-num">STEP 1</div>
+        <div>先生がQRコードを発行<br><span style="font-size:11px;color:#64748b">（24時間有効）</span></div>
+      </div>
+      <div class="lf-arrow">▶</div>
+      <div class="lf-box">
+        <div class="lf-num">STEP 2</div>
+        <div>生徒がQRを読み込み<br>LINE友だち追加</div>
+      </div>
+      <div class="lf-arrow">▶</div>
+      <div class="lf-box">
+        <div class="lf-num">STEP 3</div>
+        <div>連携完了！<br>自動で通知が届く</div>
+      </div>
+    </div>
+    <div class="notification-samples">
+      <div class="notif">📚 「今週の課題が届きました：ドレミの音階練習（期限：〇月〇日）」</div>
+      <div class="notif">⏰ 「提出期限まで3日です！〇〇さん、忘れずに。」</div>
+      <div class="notif">🎉 「今週の練習サマリー：5回ログイン、⭐ 3つ達成！この調子で頑張ろう。」</div>
+    </div>
+  </div>
+
+  <!-- 6. 導入の流れ -->
+  <div class="section">
+    <div class="section-title">導入の流れ</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">お申し込み</div>
+          <div class="step-desc">学校名・担当者名・生徒数を入力してお申し込み</div>
+        </div>
+      </div>
+      <div class="step-arrow">↓</div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">初期設定（先生）</div>
+          <div class="step-desc">先生がアカウント作成 → 学校グループ設定 → 生徒を登録</div>
+        </div>
+      </div>
+      <div class="step-arrow">↓</div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">生徒への案内</div>
+          <div class="step-desc">先生がポータルURLをメール送信 → 生徒がLINE連携（任意）</div>
+        </div>
+      </div>
+      <div class="step-arrow">↓</div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">日常利用開始</div>
+          <div class="step-desc">先生：ダッシュボードで管理・課題配布・LINE通知　/　生徒：ポータルで進捗確認・練習ログ記録</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. 管理職へのメリット -->
+  <div class="section">
+    <div class="section-title">管理職・学校側のメリット</div>
+    <table>
+      <tr>
+        <th style="width:30%">メリット</th>
+        <th>詳細</th>
+      </tr>
+      <tr>
+        <td>教員の業務効率化</td>
+        <td>進捗確認・連絡業務がシステムで自動化され、指導時間に集中できる</td>
+      </tr>
+      <tr>
+        <td>客観的な記録</td>
+        <td>生徒の練習実績がデータとして蓄積・CSV出力可能</td>
+      </tr>
+      <tr>
+        <td>保護者対応の効率化</td>
+        <td>進捗データを出力して面談・報告に活用できる</td>
+      </tr>
+      <tr>
+        <td>卒業後のデータ保管</td>
+        <td>生徒ステータスを「卒業」に変更して実績を長期保管</td>
+      </tr>
+      <tr>
+        <td>セキュリティ</td>
+        <td>生徒ポータルはトークンURLで管理。個人情報を適切に保護</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 8. 対応楽器パート -->
+  <div class="section">
+    <div class="section-title">対応楽器パート</div>
+    <div class="part-list">
+      <span class="part-badge">Vocal（ボーカル）</span>
+      <span class="part-badge">Guitar（ギター）</span>
+      <span class="part-badge">Bass（ベース）</span>
+      <span class="part-badge">Drums（ドラムス）</span>
+      <span class="part-badge">Keyboard（キーボード）</span>
+      <span class="part-badge">Band（合奏全体）</span>
+    </div>
+  </div>
+
+  <!-- 9. FAQ -->
+  <div class="section">
+    <div class="section-title">よくある質問</div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q">生徒がスマホを持っていない場合は使えますか？</div>
+        <div class="faq-a">ポータルはPCブラウザでも利用できます。LINE連携はオプションのため、連携なしでも基本機能は利用可能です。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">クラスが複数ある場合はどうなりますか？</div>
+        <div class="faq-a">「学校グループ」機能で複数クラスに分類できます。クラスごとにダッシュボードを切り替えて確認できます。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">先生が複数いる場合は共有できますか？</div>
+        <div class="faq-a">同一学校内で複数の先生アカウントを作成し、生徒情報を共有して使用できます。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">導入後のサポートはありますか？</div>
+        <div class="faq-a">導入後のガイドページと使い方サポートをご用意しています。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- フッター -->
+  <div class="footer">
+    <p><strong>お問い合わせ・お申し込み</strong></p>
+    <p style="margin-top:4px;">学校名・ご担当者名・生徒数をお書きの上、お気軽にお問い合わせください。</p>
+    <p style="margin-top:16px;">BeMyStyle Learning Platform — 高校音楽教育向け学習管理システム</p>
+  </div>
+
+</div>
+</body>
+</html>

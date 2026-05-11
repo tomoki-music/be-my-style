@@ -81,6 +81,7 @@
           %button.learning-button.learning-button--ghost.learning-button--sm{ type: "button", data: { bulk_line_select: "connected" } } LINE連携済みのみ選択
       .learning-bulk-line-summary{ data: { bulk_line_summary: true } }
         選択中：0名 / LINE連携済み：0名 / 未連携：0名。送信対象はLINE連携済みの0名です。
+      = render "learning/line_message_templates/selector", templates: @line_message_templates, target_id: "bulk_line_message_message"
       .learning-form-group.learning-bulk-line-message
         = label_tag :bulk_line_message_message, "メッセージ"
         = text_area_tag "bulk_line_message[message]", "今日も5分だけ練習してみよう！終わったら「やった！」と返信してね。", id: "bulk_line_message_message", class: "learning-textarea", maxlength: 500, data: { bulk_line_message: true }
@@ -106,9 +107,10 @@
             - if @students.any?
               - @students.each do |student|
                 - line_connected = student.line_connected?
+                - duplicate_recently_sent = @recent_bulk_line_student_ids.include?(student.id)
                 %tr
                   %td
-                    = check_box_tag "student_ids[]", student.id, false, class: "learning-bulk-line-checkbox", data: { bulk_line_checkbox: true, line_connected: line_connected }
+                    = check_box_tag "student_ids[]", student.id, false, class: "learning-bulk-line-checkbox", data: { bulk_line_checkbox: true, line_connected: line_connected, duplicate_recently_sent: duplicate_recently_sent }
                   %td= link_to student.name, learning_student_path(student)
                   %td= student.learning_school_group&.name || "未所属"
                   %td= student.displayed_parts.map { |part| learning_part_label(part) }.join(" / ")
@@ -117,6 +119,8 @@
                   %td
                     - if line_connected
                       %span.learning-line-status.learning-line-status--connected 連携済み
+                      - if duplicate_recently_sent
+                        %div.learning-line-duplicate-warning この生徒には24時間以内に一括LINEを送っています
                     - else
                       = link_to "QR発行", learning_student_line_connection_path(student), class: "learning-text-link"
                       %span.learning-line-status 未連携

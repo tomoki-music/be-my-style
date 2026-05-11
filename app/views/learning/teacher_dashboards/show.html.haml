@@ -151,6 +151,7 @@
       - if at_risk_students.any?
         .learning-bulk-line-summary{ data: { bulk_line_summary: true } }
           選択中：0名 / LINE連携済み：0名 / 未連携：0名。送信対象はLINE連携済みの0名です。
+        = render "learning/line_message_templates/selector", templates: @line_message_templates, target_id: "followup_line_message_message"
         .learning-form-group.learning-bulk-line-message
           = label_tag :followup_line_message_message, "フォローLINE文面"
           = text_area_tag "followup_line_message[message]", Learning::FollowupLineMessagesController::DEFAULT_MESSAGE, id: "followup_line_message_message", class: "learning-textarea", maxlength: 500, data: { bulk_line_message: true }
@@ -167,16 +168,22 @@
                 %th 生徒
                 %th.text-right 提出率
                 %th 最終反応
+                %th 最終フォロー
                 %th.text-right 未提出
                 %th LINE
             %tbody
               - at_risk_students.each do |item|
+                - duplicate_recently_sent = item.last_followup_sent_at.present? && item.last_followup_sent_at >= 24.hours.ago
                 %tr
                   %td
-                    = check_box_tag "student_ids[]", item.student.id, true, class: "learning-bulk-line-checkbox", data: { bulk_line_checkbox: true, line_connected: item.line_connected }
+                    = check_box_tag "student_ids[]", item.student.id, true, class: "learning-bulk-line-checkbox", data: { bulk_line_checkbox: true, line_connected: item.line_connected, duplicate_recently_sent: duplicate_recently_sent }
                   %td= link_to item.student.display_name, learning_student_path(item.student)
                   %td.text-right= "#{item.completion_rate}%"
                   %td= item.inactive_days ? "#{item.inactive_days}日未反応" : "反応なし"
+                  %td
+                    = "最終フォロー送信：#{learning_time_ago_label(item.last_followup_sent_at)}"
+                    - if duplicate_recently_sent
+                      %div.learning-line-duplicate-warning この生徒には24時間以内にフォローLINEを送っています
                   %td.text-right= "#{item.pending_assignments}件"
                   %td
                     - if item.line_connected

@@ -49,6 +49,54 @@ RSpec.describe "Learning bulk line messages", type: :request do
       expect(skipped_log.error_message).to eq("LINE recipient is not connected")
     end
 
+    it "24時間以内に同種別送信済みならduplicateとしてskipped保存し送信しないこと" do
+      student = create(:learning_student, customer: teacher)
+      create_connected_line(student, "UduplicateBulkUser")
+      create(:learning_notification_log,
+             customer: teacher,
+             learning_student: student,
+             notification_type: "teacher_bulk_message",
+             delivery_channel: "line",
+             status: "sent",
+             generated_at: 2.hours.ago,
+             sent_at: 2.hours.ago)
+      adapter = successful_adapter
+
+      expect {
+        post bulk_line_message_learning_students_path,
+             params: { student_ids: [student.id], bulk_line_message: { message: message } }
+      }.to change(Learning::NotificationLog, :count).by(1)
+
+      log = Learning::NotificationLog.order(:created_at).last
+      expect(flash[:notice]).to include("重複スキップ：1件")
+      expect(log.status).to eq("skipped")
+      expect(log.error_message).to eq("duplicate_recently_sent")
+      expect(adapter).not_to have_received(:deliver)
+    end
+
+    it "24時間を超えた同種別送信はduplicate扱いせず送信できること" do
+      student = create(:learning_student, customer: teacher)
+      create_connected_line(student, "UoldBulkUser")
+      create(:learning_notification_log,
+             customer: teacher,
+             learning_student: student,
+             notification_type: "teacher_bulk_message",
+             delivery_channel: "line",
+             status: "sent",
+             generated_at: 25.hours.ago,
+             sent_at: 25.hours.ago)
+      adapter = successful_adapter
+
+      expect {
+        post bulk_line_message_learning_students_path,
+             params: { student_ids: [student.id], bulk_line_message: { message: message } }
+      }.to change(Learning::NotificationLog, :count).by(1)
+
+      expect(flash[:notice]).to include("送信成功：1件")
+      expect(Learning::NotificationLog.order(:created_at).last.status).to eq("sent")
+      expect(adapter).to have_received(:deliver).once
+    end
+
     it "空文字は送信しないこと" do
       student = create(:learning_student, customer: teacher)
       create_connected_line(student, "UblankBulkUser")

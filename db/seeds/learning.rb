@@ -184,3 +184,30 @@ owner.learning_students.includes(:learning_student_trainings).find_each do |stud
     )
   end
 end
+
+line_template_seed = [
+  {
+    title: "要フォロー",
+    category: "followup",
+    body: "最近の練習状況が少し止まっているみたいです！5分だけでもOKなので、まずは一歩だけやってみよう🔥終わったら「やった！」と返信してね！"
+  },
+  {
+    title: "未提出",
+    category: "assignment",
+    body: "課題の提出がまだ確認できていません！まずは短時間だけでも挑戦してみよう🔥"
+  },
+  {
+    title: "ライブ前",
+    category: "event",
+    body: "ライブまであと少し！1日5分でも積み重ねると変わるよ🔥"
+  }
+]
+
+learning_customers.find_each do |customer|
+  line_template_seed.each do |attributes|
+    template = customer.learning_line_message_templates.find_or_initialize_by(title: attributes[:title], category: attributes[:category])
+    template.body = attributes[:body]
+    template.active = true
+    template.save!
+  end
+end
