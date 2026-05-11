@@ -74,6 +74,15 @@ RSpec.describe Learning::AnalyticsReport do
 
       expect(report.summary.training_completion_rate).to eq(50)
     end
+
+    it "先生確認待ちは完了扱いにせず別集計すること" do
+      create(:learning_assignment, customer: customer, learning_student: student,
+                                   status: "pending_review", submitted_at: reference_time)
+
+      expect(report.summary.assignment_submission_rate).to eq(0)
+      expect(report.summary.unsubmitted_count).to eq(0)
+      expect(report.summary.pending_review_count).to eq(1)
+    end
   end
 
   describe "#student_summaries" do

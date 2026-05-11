@@ -36,6 +36,10 @@ class Learning::AssignmentsController < Learning::BaseController
       assignments.count { |assignment| assignment.status == "in_progress" }
     end
 
+    def pending_review_count
+      assignments.count { |assignment| assignment.status == "pending_review" }
+    end
+
     def unsubmitted_count
       pending_count + in_progress_count
     end
@@ -127,6 +131,19 @@ class Learning::AssignmentsController < Learning::BaseController
 
     result = deliver_reminder(assignments, message)
     redirect_to learning_assignment_path(assignment), notice: result.flash_message
+  end
+
+  def approve_review
+    assignment = current_customer.learning_assignments
+      .includes(:learning_student, learning_student_training: :learning_training_master)
+      .find(params[:id])
+
+    unless assignment.teacher_review_required? && assignment.pending_review?
+      return redirect_back fallback_location: learning_teacher_dashboard_path, alert: "承認待ちの課題ではありません。"
+    end
+
+    assignment.approve_review!(reviewer: current_customer, comment: params[:review_comment])
+    redirect_back fallback_location: learning_teacher_dashboard_path, notice: "確認しました。"
   end
 
   private

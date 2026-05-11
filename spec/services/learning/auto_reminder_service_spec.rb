@@ -139,6 +139,20 @@ RSpec.describe Learning::AutoReminderService do
       expect(results.map { |result| result.candidate.notification_type }).not_to include("auto_assignment_due_reminder")
     end
 
+    it "先生確認待ち課題は未提出リマインド対象外になること" do
+      student = connected_student
+      create(:learning_assignment,
+             customer: customer,
+             learning_student: student,
+             due_on: Date.current.tomorrow,
+             status: "pending_review",
+             submitted_at: Time.current)
+
+      results = described_class.new(customer, line_adapter: line_adapter).call
+
+      expect(results.map { |result| result.candidate.notification_type }).not_to include("auto_assignment_due_reminder")
+    end
+
     it "期限超過課題が対象になること" do
       student = connected_student
       create(:learning_notification_log,

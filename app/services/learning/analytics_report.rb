@@ -14,6 +14,7 @@ module Learning
       :unsubmitted_count,
       :inactive_student_count,
       :assignment_count,
+      :pending_review_count,
       :line_sent_count,
       :line_reaction_count,
       keyword_init: true
@@ -85,6 +86,7 @@ module Learning
         unsubmitted_count: assignments.count { |assignment| open_assignment?(assignment) },
         inactive_student_count: student_summaries.count { |item| stale_reaction?(item.last_reaction_at) },
         assignment_count: assignments.count,
+        pending_review_count: assignments.count { |assignment| assignment.status == "pending_review" },
         line_sent_count: line_sent_logs.count,
         line_reaction_count: line_reaction_logs.count
       )
@@ -167,7 +169,7 @@ module Learning
         base = customer.learning_assignments.where(learning_student_id: active_student_ids)
         scoped = base.where(created_at: time_range)
           .or(base.where(completed_at: time_range))
-          .or(base.where(status: LearningAssignment::OPEN_STATUSES))
+          .or(base.where(status: LearningAssignment::INCOMPLETE_STATUSES))
         group_keys = scoped.where.not(assignment_group_key: nil).distinct.pluck(:assignment_group_key)
         sibling_assignments = group_keys.any? ? base.where(assignment_group_key: group_keys) : base.none
         base.where(id: scoped.select(:id)).or(sibling_assignments).to_a
@@ -238,7 +240,7 @@ module Learning
         completion_rate: percentage(completed_count, total_count),
         completed_count: completed_count,
         total_count: total_count,
-        unsubmitted_count: total_count - completed_count
+        unsubmitted_count: group.count { |assignment| open_assignment?(assignment) }
       )
     end
 
