@@ -133,6 +133,10 @@
         %strong.learning-stat-card__value= "#{analytics_summary.pending_review_count}件"
         %p.learning-stat-card__sub 承認後に完了
       .learning-stat-card
+        %span.learning-stat-card__label 再チャレンジ待ち
+        %strong.learning-stat-card__value= "#{analytics_summary.needs_revision_count}件"
+        %p.learning-stat-card__sub 差し戻し後の再提出待ち
+      .learning-stat-card
         %span.learning-stat-card__label 7日以上未反応
         %strong.learning-stat-card__value= "#{analytics_summary.inactive_student_count}名"
         %p.learning-stat-card__sub 要フォロー候補
@@ -307,6 +311,9 @@
             = form_with url: approve_review_learning_assignment_path(assignment), method: :patch, local: true, class: "learning-inline-form" do
               = text_field_tag :review_comment, nil, class: "learning-input", placeholder: "コメント任意"
               = submit_tag "承認", class: "learning-button learning-button--sm", data: { confirm: "この課題を承認して完了にします。よろしいですか？" }
+            = form_with url: request_revision_learning_assignment_path(assignment), method: :patch, local: true, class: "learning-inline-form" do
+              = text_field_tag :review_comment, nil, class: "learning-input", placeholder: "改善コメントを書く例：テンポが少し速くなっていたので、メトロノーム80で再チャレンジしてみよう！"
+              = submit_tag "差し戻し", class: "learning-button learning-button--ghost learning-button--sm", data: { confirm: "この課題を差し戻して、生徒に再チャレンジを依頼します。よろしいですか？" }
     - else
       .learning-empty
         %strong 承認待ちの提出はありません
@@ -397,7 +404,11 @@
       .learning-stat-card
         %span.learning-stat-card__label 未提出
         %strong.learning-stat-card__value= "#{@weekly_assignment_status[:unsubmitted_count]}人"
-        %p.learning-stat-card__sub 未着手・進行中
+        %p.learning-stat-card__sub 未着手・進行中・再チャレンジ
+      .learning-stat-card
+        %span.learning-stat-card__label 再チャレンジ待ち
+        %strong.learning-stat-card__value= "#{@weekly_assignment_status[:needs_revision_count]}人"
+        %p.learning-stat-card__sub 先生が差し戻した課題
       .learning-stat-card
         %span.learning-stat-card__label 期限超過
         %strong.learning-stat-card__value= "#{@weekly_assignment_status[:overdue_count]}人"

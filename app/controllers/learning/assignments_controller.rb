@@ -2,6 +2,7 @@ class Learning::AssignmentsController < Learning::BaseController
   TITLE_MAX_LENGTH = 100
   DESCRIPTION_MAX_LENGTH = 1000
   DEFAULT_REMINDER_MESSAGE = "今週のトレーニング、まだ取り組めていません！5分だけでも取り組んでみよう。終わったら「やった！」と返信してね。".freeze
+  REVISION_REQUEST_DEFAULT_MESSAGE = "もう一度チャレンジしてみましょう。できたらLINEで「やった」と返信してください！".freeze
 
   AssignmentSummary = Struct.new(:representative, :assignments, keyword_init: true) do
     def title
@@ -40,8 +41,12 @@ class Learning::AssignmentsController < Learning::BaseController
       assignments.count { |assignment| assignment.status == "pending_review" }
     end
 
+    def needs_revision_count
+      assignments.count { |assignment| assignment.status == "needs_revision" }
+    end
+
     def unsubmitted_count
-      pending_count + in_progress_count
+      pending_count + in_progress_count + needs_revision_count
     end
 
     def overdue_count
@@ -144,6 +149,20 @@ class Learning::AssignmentsController < Learning::BaseController
 
     assignment.approve_review!(reviewer: current_customer, comment: params[:review_comment])
     redirect_back fallback_location: learning_teacher_dashboard_path, notice: "確認しました。"
+  end
+
+  def request_revision
+    assignment = current_customer.learning_assignments
+      .includes(:learning_student, learning_student_training: :learning_training_master)
+      .find(params[:id])
+
+    unless assignment.teacher_review_required? && assignment.pending_review?
+      return redirect_back fallback_location: learning_teacher_dashboard_path, alert: "先生確認待ちの課題ではありません。"
+    end
+
+    assignment.request_revision!(reviewer: current_customer, comment: params[:review_comment])
+    deliver_revision_request(assignment)
+    redirect_back fallback_location: learning_teacher_dashboard_path, notice: "差し戻しました。"
   end
 
   private
@@ -284,7 +303,7 @@ class Learning::AssignmentsController < Learning::BaseController
       )
     end
 
-    progresses = progresses.select { |progress| LearningAssignment::OPEN_STATUSES.include?(progress.status) } if params[:status] == "unsubmitted"
+    progresses = progresses.select { |progress| LearningAssignment::ACTION_REQUIRED_STATUSES.include?(progress.status) } if params[:status] == "unsubmitted"
     progresses = progresses.reject(&:line_connected?) if params[:line] == "unconnected"
     progresses = progresses.select(&:inactive?) if params[:inactive] == "1"
     progresses
@@ -304,7 +323,7 @@ class Learning::AssignmentsController < Learning::BaseController
     counts = { sent_count: 0, skipped_count: 0, failed_count: 0 }
     adapter = Learning::LineNotificationAdapter.new
 
-    assignments.select(&:open?).each do |assignment|
+    assignments.select(&:action_required?).each do |assignment|
       student = assignment.learning_student
       if student.line_connected?
         deliver_reminder_to_connected_student(adapter, assignment, message, counts)
@@ -359,6 +378,39 @@ class Learning::AssignmentsController < Learning::BaseController
     log.update!(
       status: "skipped",
       error_message: Learning::LineNotificationAdapter::NO_RECIPIENT_MESSAGE
+    )
+  end
+
+  def deliver_revision_request(assignment)
+    log = create_revision_request_log(assignment)
+    if assignment.learning_student.line_connected?
+      result = Learning::LineNotificationAdapter.new.deliver(log)
+      log.update!(status: "failed", error_message: result.message) unless result.success? || log.reload.status == "skipped"
+    else
+      log.update!(status: "skipped", error_message: Learning::LineNotificationAdapter::NO_RECIPIENT_MESSAGE)
+    end
+  rescue StandardError => e
+    log&.update!(status: "failed", error_message: "#{Learning::LineNotificationAdapter::HTTP_ERROR_MESSAGE}: #{e.class.name}")
+  end
+
+  def create_revision_request_log(assignment)
+    comment = assignment.review_comment.presence || REVISION_REQUEST_DEFAULT_MESSAGE
+    current_customer.learning_notification_logs.create!(
+      learning_student: assignment.learning_student,
+      notification_type: "teacher_revision_request",
+      level: "info",
+      delivery_channel: "line",
+      status: "queued",
+      title: "もう一度チャレンジ",
+      message: comment,
+      recommended_action: "先生からのコメントを確認して、もう一度チャレンジしてみましょう！",
+      generated_at: Time.current,
+      metadata: {
+        source: "Learning::AssignmentsController#request_revision",
+        learning_assignment_id: assignment.id,
+        learning_student_training_id: assignment.learning_student_training_id,
+        assignment_group_key: assignment.grouping_key
+      }
     )
   end
 end

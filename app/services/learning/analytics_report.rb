@@ -15,6 +15,7 @@ module Learning
       :inactive_student_count,
       :assignment_count,
       :pending_review_count,
+      :needs_revision_count,
       :line_sent_count,
       :line_reaction_count,
       keyword_init: true
@@ -87,6 +88,7 @@ module Learning
         inactive_student_count: student_summaries.count { |item| stale_reaction?(item.last_reaction_at) },
         assignment_count: assignments.count,
         pending_review_count: assignments.count { |assignment| assignment.status == "pending_review" },
+        needs_revision_count: assignments.count { |assignment| assignment.status == "needs_revision" },
         line_sent_count: line_sent_logs.count,
         line_reaction_count: line_reaction_logs.count
       )
@@ -227,7 +229,7 @@ module Learning
     end
 
     def open_assignment?(assignment)
-      LearningAssignment::OPEN_STATUSES.include?(assignment.status)
+      LearningAssignment::ACTION_REQUIRED_STATUSES.include?(assignment.status)
     end
 
     def build_assignment_summary(group)

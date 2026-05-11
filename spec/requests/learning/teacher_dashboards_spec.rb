@@ -61,6 +61,8 @@ RSpec.describe "Learning teacher dashboards", type: :request do
     expect(response.body).to include("先生確認待ち")
     expect(response.body).to include(student.display_name)
     expect(response.body).to include("承認")
+    expect(response.body).to include("差し戻し")
+    expect(response.body).to include("改善コメントを書く例")
     expect(response.body).to include("テンポを崩さず最後までできたら達成")
   end
 end

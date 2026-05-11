@@ -25,7 +25,8 @@ module Learning
     FALLBACK_MESSAGES = {
       INACTIVE_TYPE => "少し間が空いています。今日は5分だけでも、できるところから再開してみよう。",
       DUE_TYPE => "今週のトレーニング、まだ取り組めていません！明日が期限なので、短い時間でよいので今日のうちに確認しておこう。",
-      OVERDUE_TYPE => "今週のトレーニング、まだ取り組めていません！まずは1つだけ開いて、できるところから進めよう。"
+      OVERDUE_TYPE => "今週のトレーニング、まだ取り組めていません！まずは1つだけ開いて、できるところから進めよう。",
+      "needs_revision" => "先生からのコメントを確認して、もう一度チャレンジしてみましょう！"
     }.freeze
 
     def initialize(customer, dry_run: false, line_adapter: LineNotificationAdapter.new, logger: Rails.logger, reference_time: Time.current)
@@ -113,7 +114,7 @@ module Learning
           student: student,
           notification_type: DUE_TYPE,
           reason: "課題期限前日",
-          message: template_body_for(student, DUE_TYPE) || FALLBACK_MESSAGES.fetch(DUE_TYPE),
+          message: assignment_reminder_message(assignment, student, DUE_TYPE),
           level: "info"
         )
       end
@@ -127,7 +128,7 @@ module Learning
           student: student,
           notification_type: OVERDUE_TYPE,
           reason: "課題期限超過",
-          message: template_body_for(student, OVERDUE_TYPE) || FALLBACK_MESSAGES.fetch(OVERDUE_TYPE),
+          message: assignment_reminder_message(assignment, student, OVERDUE_TYPE),
           level: "strong"
         )
       end
@@ -144,6 +145,12 @@ module Learning
         assignment: assignment,
         level: level
       )
+    end
+
+    def assignment_reminder_message(assignment, student, notification_type)
+      return FALLBACK_MESSAGES.fetch("needs_revision") if assignment.needs_revision?
+
+      template_body_for(student, notification_type) || FALLBACK_MESSAGES.fetch(notification_type)
     end
 
     def build_candidate(student:, notification_type:, reason:, title:, message:, recommended_action:, level:, assignment: nil)
@@ -227,7 +234,7 @@ module Learning
 
     def open_assignments
       @open_assignments ||= @customer.learning_assignments
-        .where(status: LearningAssignment::OPEN_STATUSES, learning_student_id: line_connected_students.map(&:id))
+        .where(status: LearningAssignment::ACTION_REQUIRED_STATUSES, learning_student_id: line_connected_students.map(&:id))
     end
 
     def last_reaction_at_by_student_id

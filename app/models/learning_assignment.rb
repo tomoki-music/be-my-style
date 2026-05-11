@@ -1,7 +1,8 @@
 class LearningAssignment < ApplicationRecord
-  STATUSES = %w[pending in_progress pending_review completed].freeze
+  STATUSES = %w[pending in_progress pending_review needs_revision completed].freeze
   OPEN_STATUSES = %w[pending in_progress].freeze
-  INCOMPLETE_STATUSES = (OPEN_STATUSES + %w[pending_review]).freeze
+  ACTION_REQUIRED_STATUSES = (OPEN_STATUSES + %w[needs_revision]).freeze
+  INCOMPLETE_STATUSES = (ACTION_REQUIRED_STATUSES + %w[pending_review]).freeze
 
   belongs_to :customer
   belongs_to :learning_student
@@ -27,6 +28,7 @@ class LearningAssignment < ApplicationRecord
       "pending" => "未着手",
       "in_progress" => "進行中",
       "pending_review" => "先生確認待ち",
+      "needs_revision" => "もう一度チャレンジ",
       "completed" => "完了"
     }.fetch(status.to_s, status.to_s)
   end
@@ -40,7 +42,7 @@ class LearningAssignment < ApplicationRecord
   end
 
   def overdue?(reference_date = Date.current)
-    due_on.present? && due_on < reference_date && OPEN_STATUSES.include?(status)
+    due_on.present? && due_on < reference_date && ACTION_REQUIRED_STATUSES.include?(status)
   end
 
   def open?
@@ -49,6 +51,10 @@ class LearningAssignment < ApplicationRecord
 
   def incomplete?
     INCOMPLETE_STATUSES.include?(status)
+  end
+
+  def action_required?
+    ACTION_REQUIRED_STATUSES.include?(status)
   end
 
   def complete!(time: Time.current)
@@ -89,8 +95,26 @@ class LearningAssignment < ApplicationRecord
     end
   end
 
+  def request_revision!(reviewer:, comment: nil, time: Time.current)
+    unless pending_review?
+      errors.add(:status, "は先生確認待ちの課題だけ差し戻しできます")
+      raise ActiveRecord::RecordInvalid, self
+    end
+
+    update!(
+      status: "needs_revision",
+      reviewed_at: time,
+      reviewed_by: reviewer,
+      review_comment: comment.to_s.presence
+    )
+  end
+
   def pending_review?
     status == "pending_review"
+  end
+
+  def needs_revision?
+    status == "needs_revision"
   end
 
   private

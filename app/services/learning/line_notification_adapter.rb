@@ -132,6 +132,8 @@ module Learning
         auto_assignment_due_reminder_text(notification_log)
       when "auto_assignment_overdue_reminder"
         auto_assignment_overdue_reminder_text(notification_log)
+      when "teacher_revision_request"
+        teacher_revision_request_text(notification_log)
       when "teacher_action"
         action_text(notification_log)
       else
@@ -250,6 +252,19 @@ module Learning
         "▼ 生徒ページを見る",
         student_portal_url(student),
         "終わったらLINEで「やった」と返信してね。"
+      ].flatten.compact.join("\n"))
+    end
+
+    def teacher_revision_request_text(notification_log)
+      student = notification_log.learning_student
+      truncate_line_text([
+        "先生から再チャレンジのコメントが届きました。",
+        "「#{notification_log.message}」",
+        notification_log.recommended_action.presence,
+        training_check_lines(notification_log),
+        "▼ 生徒ページを見る",
+        student_portal_url(student),
+        "できたら、もう一度「やった」と返信してください！"
       ].flatten.compact.join("\n"))
     end
 

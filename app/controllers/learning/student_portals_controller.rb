@@ -26,11 +26,14 @@ class Learning::StudentPortalsController < ApplicationController
     @current_trainings = trainings.first(8)
     @weekly_training_assignments = @student.learning_assignments
       .includes(learning_student_training: :learning_training_master)
-      .active
+      .where(status: LearningAssignment::ACTION_REQUIRED_STATUSES)
       .where.not(learning_student_training_id: nil)
       .recent_first
       .limit(8)
-    @current_assignments = @student.learning_assignments.active.recent_first.limit(5)
+    @current_assignments = @student.learning_assignments
+      .where(status: LearningAssignment::ACTION_REQUIRED_STATUSES)
+      .recent_first
+      .limit(5)
     @has_overdue_assignments = @current_assignments.any?(&:overdue?)
     @recent_logs = recent_logs
     @current_streak  = LearningPortalAccess.current_streak(@student)

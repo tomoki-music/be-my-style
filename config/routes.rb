@@ -238,6 +238,7 @@ Rails.application.routes.draw do
     post "portal/:token/complete_tutorial", to: "student_portals#complete_tutorial", as: :student_portal_complete_tutorial
     resources :assignments, only: [:index, :show, :create] do
       patch :approve_review, on: :member
+      patch :request_revision, on: :member
       post :bulk_reminder, on: :member
     end
     resources :line_message_templates, except: [:show, :destroy]

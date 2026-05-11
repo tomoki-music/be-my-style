@@ -28,4 +28,13 @@ RSpec.describe LearningStudentTraining, type: :model do
       training.send(:create_weekly_assignment)
     }.not_to change(LearningAssignment, :count)
   end
+
+  it "差し戻し課題があれば同一割当トレーニングの課題を重複作成しないこと" do
+    training = create(:learning_student_training)
+    training.learning_assignments.first.update!(status: "needs_revision", reviewed_at: Time.current)
+
+    expect {
+      training.send(:create_weekly_assignment)
+    }.not_to change(LearningAssignment, :count)
+  end
 end

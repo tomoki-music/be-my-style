@@ -68,6 +68,29 @@ RSpec.describe Learning::LineWebhookProcessor do
     )
   end
 
+  it "needs_revision の先生確認課題はLINE再返信でpending_reviewに戻りProgressLogを作成しないこと" do
+    assignment, student = assignment_with_judge_type("teacher")
+    assignment.update!(
+      status: "needs_revision",
+      reviewed_at: 1.hour.ago,
+      review_comment: "テンポ80で再チャレンジ"
+    )
+    connect_line(student, "Uphase33Revision")
+    create_notification_log(assignment, notification_type: "teacher_revision_request")
+    body = webhook_body("やった", "Uphase33Revision")
+
+    expect {
+      result = processor.process(raw_body: body, signature: signature_for(body))
+      expect(result.reaction_count).to eq(1)
+    }.not_to change(LearningProgressLog, :count)
+
+    assignment.reload
+    expect(assignment.status).to eq("pending_review")
+    expect(assignment.submitted_at).to be_present
+    expect(assignment.reaction_message).to eq("やった")
+    expect(assignment.review_comment).to eq("テンポ80で再チャレンジ")
+  end
+
   private
 
   def assignment_with_judge_type(judge_type)
@@ -91,13 +114,13 @@ RSpec.describe Learning::LineWebhookProcessor do
            connected_at: Time.current)
   end
 
-  def create_notification_log(assignment)
+  def create_notification_log(assignment, notification_type: "assignment_created")
     create(:learning_notification_log,
            customer: assignment.customer,
            learning_student: assignment.learning_student,
            delivery_channel: "line",
            status: "sent",
-           notification_type: "assignment_created",
+           notification_type: notification_type,
            sent_at: 10.minutes.ago,
            metadata: { learning_assignment_id: assignment.id })
   end
