@@ -1,0 +1,26 @@
+- monthly_ai_challenge_available = customer.has_feature?(:singing_monthly_ai_challenge)
+.singing-diagnosis__monthly-ai-challenge{ class: ("singing-diagnosis__monthly-ai-challenge--locked" unless monthly_ai_challenge_available) }
+  .singing-diagnosis__monthly-ai-challenge-header
+    %span.singing-diagnosis__monthly-ai-challenge-icon 🔥
+    .singing-diagnosis__monthly-ai-challenge-title
+      %h2 今月のAIチャレンジ
+      %p 診断結果と月次成長レポートから、今月取り組む練習テーマを1つに絞ります。
+
+  - if monthly_ai_challenge_available
+    .singing-diagnosis__monthly-ai-challenge-body
+      %h3= challenge[:title]
+      %p= challenge[:description]
+      .singing-diagnosis__monthly-ai-challenge-meta
+        %span= "対象：#{challenge[:target_label]}"
+        %span= "難易度：#{challenge[:difficulty]}"
+        %span= "期間：#{challenge[:duration_label]}"
+      .singing-diagnosis__monthly-ai-challenge-steps
+        %h4 やること
+        %ol
+          - challenge[:practice_steps].each do |step|
+            %li= step
+  - else
+    .singing-diagnosis__monthly-ai-challenge-locked-body
+      %h3 今月のAIチャレンジに挑戦しよう
+      %p Coreプランでは、診断結果と月次成長レポートをもとに、今月取り組むべき練習チャレンジを確認できます。「何を練習すればいいか分からない」をなくし、成長につながる行動に変えていきましょう。
+      = link_to "CoreプランでAIチャレンジを見る", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
