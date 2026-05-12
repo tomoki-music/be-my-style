@@ -323,6 +323,7 @@ class Public::EventsController < ApplicationController
   end
 
   def authorize_event_creation!
+    community_param_present = params[:community_id].present? || params.dig(:event, :community_id).present?
     community =
       if params[:community_id].present?
         Community.find_by(id: params[:community_id], domain_id: @current_domain.id)
@@ -330,9 +331,17 @@ class Public::EventsController < ApplicationController
         Community.find_by(id: params[:event][:community_id], domain_id: @current_domain.id)
       end
 
-    unless current_customer.can_create_event?(community)
+    if community_param_present && community.blank?
+      redirect_to public_events_path, alert: "イベントを作成するコミュニティを確認してください。"
+    elsif community&.premium_event_creation_required? && !current_customer.premium? && !current_customer.admin?
+      redirect_to public_community_path(community), alert: premium_event_creation_required_message
+    elsif !current_customer.can_create_event?(community)
       redirect_to public_events_path, alert: "イベントを作成する権限がありません。"
     end
+  end
+
+  def premium_event_creation_required_message
+    "このコミュニティでイベントを作成するにはPremiumプランが必要です。Premiumプランでは、コミュニティ運営・イベント作成・メンバー募集を継続して利用できます。"
   end
 
   def authorize_event_edit!

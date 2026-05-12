@@ -35,7 +35,7 @@
                 = f.hidden_field :community_id, value: @community_id
                 = Community.find(@community_id).name
               - else
-                = f.collection_select :community_id, current_customer.communities, :id, :name
+                = f.collection_select :community_id, current_customer.available_communities_for_event, :id, :name
           %tr
             %th{scope:"row"}
               開催日(開始時間)

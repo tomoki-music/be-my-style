@@ -1,4 +1,6 @@
 class Community < ApplicationRecord
+  EVENT_CREATION_REQUIRED_PLANS = %w[core premium].freeze
+
   extend ActiveHash::Associations::ActiveRecordExtensions
   belongs_to :prefecture
 
@@ -32,11 +34,16 @@ class Community < ApplicationRecord
   validates :name, presence: true
   validates :name, length: { maximum: 30 }
   validates :introduction, presence: true
+  validates :required_plan_for_event_creation, presence: true, inclusion: { in: EVENT_CREATION_REQUIRED_PLANS }
 
   enum activity_stance: {
     beginner: 0,
     mypace: 1,
     tightly: 2,
   }, _prefix: true
+
+  def premium_event_creation_required?
+    required_plan_for_event_creation == "premium"
+  end
 
 end

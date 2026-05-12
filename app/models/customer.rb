@@ -345,17 +345,15 @@ class Customer < ApplicationRecord
   end
   
   def available_communities_for_event
-    if admin?
-      Community.all
-    elsif manageable_communities.exists?
-      manageable_communities
-    else
-      communities
-    end
+    return Community.all if admin?
+    return Community.none unless can_create_events_by_plan?
+
+    manageable_communities.select { |community| event_creation_required_plan_met?(community) }
   end
 
   def eligible_to_create_event_for?(community = nil)
     return true if admin?
+    return false unless can_create_events_by_plan?
     return can_manage_community?(community) if community.present?
 
     manageable_communities.exists?
@@ -363,10 +361,27 @@ class Customer < ApplicationRecord
 
   def can_create_event?(community = nil)
     return true if admin?
-    return false unless has_feature?(:music_event_create)
+    return false unless can_create_events_by_plan?
     return true if community.blank?
 
-    eligible_to_create_event_for?(community) || communities.exists?(id: community.id)
+    eligible_to_create_event_for?(community) && event_creation_required_plan_met?(community)
+  end
+
+  def can_create_events_by_plan?
+    has_feature?(:music_event_create)
+  end
+
+  def event_creation_required_plan_met?(community)
+    return false if community.blank?
+
+    case community.required_plan_for_event_creation
+    when "premium"
+      premium?
+    when "core"
+      %w[core premium].include?(plan)
+    else
+      false
+    end
   end
 
   def can_create_project_for?(community)

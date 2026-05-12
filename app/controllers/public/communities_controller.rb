@@ -72,6 +72,7 @@ class Public::CommunitiesController < ApplicationController
     @community = Community.new(community_params)
     @community.owner_id = current_customer.id
     @community.domain_id = @current_domain.id
+    @community.required_plan_for_event_creation = "premium"
 
     if @community.save
       # 👇① コミュニティ参加させる（これ追加）

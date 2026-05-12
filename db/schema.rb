@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_11_143322) do
+ActiveRecord::Schema.define(version: 2026_05_12_000000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -175,6 +175,7 @@ ActiveRecord::Schema.define(version: 2026_05_11_143322) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.bigint "domain_id", null: false
+    t.string "required_plan_for_event_creation", default: "core", null: false
     t.index ["domain_id"], name: "index_communities_on_domain_id"
   end
 

@@ -279,6 +279,59 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       end
     end
 
+    context 'イベント作成権限' do
+      let(:owned_community) { FactoryBot.create(:community, owner_id: customer.id) }
+
+      before do
+        CommunityOwner.find_or_create_by!(customer: customer, community: owned_community)
+      end
+
+      it 'Coreユーザーは通常コミュニティのオーナーならイベント作成できること' do
+        customer.create_subscription!(status: "active", plan: "core")
+
+        expect(customer.can_create_event?(owned_community)).to eq true
+      end
+
+      it 'PremiumユーザーはPremium由来コミュニティのオーナーならイベント作成できること' do
+        owned_community.update!(required_plan_for_event_creation: "premium")
+        customer.create_subscription!(status: "active", plan: "premium")
+
+        expect(customer.can_create_event?(owned_community)).to eq true
+      end
+
+      it 'CoreユーザーはPremium由来コミュニティのオーナーでもイベント作成できないこと' do
+        owned_community.update!(required_plan_for_event_creation: "premium")
+        customer.create_subscription!(status: "active", plan: "core")
+
+        expect(customer.can_create_event?(owned_community)).to eq false
+      end
+
+      it 'Freeユーザーは通常コミュニティのオーナーでもイベント作成できないこと' do
+        expect(customer.can_create_event?(owned_community)).to eq false
+      end
+
+      it 'Lightユーザーは通常コミュニティのオーナーでもイベント作成できないこと' do
+        customer.create_subscription!(status: "active", plan: "light")
+
+        expect(customer.can_create_event?(owned_community)).to eq false
+      end
+
+      it 'オーナーでないCoreユーザーは通常コミュニティでもイベント作成できないこと' do
+        customer.create_subscription!(status: "active", plan: "core")
+        other_community = FactoryBot.create(:community, owner_id: other_customer.id)
+        CommunityCustomer.find_or_create_by!(customer: customer, community: other_community)
+
+        expect(customer.can_create_event?(other_community)).to eq false
+      end
+
+      it '管理者は必要プランにかかわらずイベント作成できること' do
+        owned_community.update!(required_plan_for_event_creation: "premium")
+        customer.update!(is_owner: :admin)
+
+        expect(customer.can_create_event?(owned_community)).to eq true
+      end
+    end
+
     context 'フォロー、アンフォローのメソッドテスト' do
       it 'フォローする' do
         expect(customer.follow(other_customer.id)).to be_valid

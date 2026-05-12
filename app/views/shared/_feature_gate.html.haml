@@ -1,7 +1,7 @@
 - gate = feature_gate(feature_key)
 - title_text = local_assigns[:title] || gate[:title]
 - message_text = local_assigns[:message] || gate[:message]
-- cta_text = local_assigns[:cta] || gate[:cta]
+- cta_text = local_assigns[:cta].presence || gate[:cta]
 - extra_classes = local_assigns[:class_name]
 
 .feature-gate{ class: extra_classes }
