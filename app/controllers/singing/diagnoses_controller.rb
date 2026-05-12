@@ -37,6 +37,7 @@ class Singing::DiagnosesController < Singing::BaseController
     @polling_required = @diagnosis.queued? || @diagnosis.processing?
     if @diagnosis.completed?
       @growth_diagnoses = growth_diagnoses_for(@diagnosis)
+      @next_practice_menu = SingingDiagnoses::NextPracticeMenu.new(@diagnosis).call
       @diagnosis_season_badges = latest_season_badges_for(current_customer)
       @new_season_badges = @diagnosis_season_badges.select { |b| b.awarded_at >= 7.days.ago }
       if @diagnosis.ranking_opt_in? && @diagnosis.overall_score.present?

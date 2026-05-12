@@ -1,0 +1,23 @@
+- next_practice_available = customer.has_feature?(:singing_next_practice_menu)
+- next_practice_items = next_practice_available ? menus : menus.first(1)
+.singing-diagnosis__next-practice{ class: ("singing-diagnosis__next-practice--locked" unless next_practice_available) }
+  %h2 次のおすすめ練習メニュー
+  %p.singing-diagnosis__next-practice-lead 診断結果から、次に取り組むと成長を感じやすい練習を選びました。
+  .singing-diagnosis__next-practice-grid
+    - next_practice_items.each do |menu|
+      .singing-diagnosis__next-practice-card{ class: ("singing-diagnosis__next-practice-card--locked" unless next_practice_available) }
+        .singing-diagnosis__next-practice-card-head
+          %span.singing-diagnosis__next-practice-icon= menu[:icon]
+          .singing-diagnosis__next-practice-title
+            %h3= menu[:title]
+            %span= menu[:level]
+        %p.singing-diagnosis__next-practice-reason= menu[:reason]
+        - if next_practice_available
+          %p.singing-diagnosis__next-practice-description= menu[:description]
+        - else
+          %p.singing-diagnosis__next-practice-description.singing-diagnosis__next-practice-description--blurred 具体的な練習ステップと確認ポイントはCoreプランで確認できます。
+  - unless next_practice_available
+    .singing-diagnosis__next-practice-cta
+      %h3 あなた専用の練習メニューを確認しよう
+      %p Coreプランでは、診断結果に応じた練習メニュー・成長履歴・詳しい改善ポイントを確認できます。「診断して終わり」ではなく、次に何を練習すればよいかが分かります。
+      = link_to "Coreプランで詳しく見る", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"

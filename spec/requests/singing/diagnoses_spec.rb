@@ -491,7 +491,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("歌唱の深掘り診断")
       expect(response.body).to include("歌唱チェック項目")
       expect(response.body).to include("ミックスボイスチェック項目")
-      expect(response.body).to include("取り入れると良い歌声タイプ")
+      expect(response.body).to include("あなたの歌声タイプ診断")
       expect(response.body).to include("6つの歌声タイプマップ")
       expect(response.body).to include("パワフルボイス")
       expect(response.body).to include("ハイトーンボイス")
@@ -511,6 +511,33 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("パワフルボイス")
     end
 
+    it "coreユーザーの完了診断には次のおすすめ練習メニューの詳細を表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "core")
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, pitch_score: 60)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("次のおすすめ練習メニュー")
+      expect(response.body).to include("音程安定トレーニング")
+      expect(response.body).to include("まずは短いフレーズをゆっくり歌い")
+      expect(response.body).not_to include("あなた専用の練習メニューを確認しよう")
+    end
+
+    it "premiumユーザーの完了診断には次のおすすめ練習メニューの詳細を表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "premium")
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, rhythm_score: 60)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("次のおすすめ練習メニュー")
+      expect(response.body).to include("リズムキープ練習")
+      expect(response.body).to include("メトロノームに合わせて")
+    end
+
     it "lightユーザーの完了vocal診断には6つのボイスタイプ診断のCore導線を表示すること" do
       singing_customer.create_subscription!(status: "active", plan: "light")
       sign_in singing_customer
@@ -524,6 +551,20 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).not_to include("6つの歌声タイプマップ")
     end
 
+    it "lightユーザーの完了診断には次のおすすめ練習メニューのCore導線を表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "light")
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, expression_score: 60)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("次のおすすめ練習メニュー")
+      expect(response.body).to include("表現力アップ練習")
+      expect(response.body).to include("あなた専用の練習メニューを確認しよう")
+      expect(response.body).to include("Coreプランで詳しく見る")
+    end
+
     it "freeユーザーの完了vocal診断には6つのボイスタイプ診断のCore導線を表示すること" do
       sign_in singing_customer
       diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed)
@@ -534,6 +575,19 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("6つのボイスタイプ診断はCoreプラン以上で解放されます")
       expect(response.body).to include("Core以上のプランを見る")
       expect(response.body).not_to include("6つの歌声タイプマップ")
+    end
+
+    it "freeユーザーの完了診断には次のおすすめ練習メニューのCore導線を表示すること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, pitch_score: 60, rhythm_score: 60)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("次のおすすめ練習メニュー")
+      expect(response.body).to include("音程安定トレーニング")
+      expect(response.body).not_to include("リズムキープ練習")
+      expect(response.body).to include("Coreプランでは、診断結果に応じた練習メニュー")
     end
 
     it "premiumユーザーのguitar診断にはタイプ別詳細診断を表示すること" do
