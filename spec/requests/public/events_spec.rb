@@ -9,6 +9,10 @@ RSpec.describe "Public::Events", type: :request do
 
   describe 'ログイン済み' do
     before do
+      customer.create_subscription!(status: "active", plan: "core")
+      community.update!(owner_id: customer.id)
+      CommunityOwner.find_or_create_by!(customer: customer, community: community)
+      CommunityCustomer.find_or_create_by!(customer: customer, community: community)
       sign_in customer
     end
     context "event一覧ページ(index)が正しく表示される" do
@@ -59,7 +63,7 @@ RSpec.describe "Public::Events", type: :request do
     end
     context "event新規作成ページ(new)が正しく表示される" do
       before do
-        get new_public_event_path
+        get new_public_event_path(community_id: community.id)
       end
       it 'リクエストは200 OKとなること' do
         expect(response.status).to eq 200
@@ -70,6 +74,38 @@ RSpec.describe "Public::Events", type: :request do
         expect do
           event
         end.to change(Event, :count).by(1)
+      end
+    end
+    context "Premium由来コミュニティのイベント作成制限" do
+      let(:premium_origin_community) { FactoryBot.create(:community, :premium_origin, owner_id: customer.id) }
+
+      before do
+        CommunityOwner.find_or_create_by!(customer: customer, community: premium_origin_community)
+        CommunityCustomer.find_or_create_by!(customer: customer, community: premium_origin_community)
+      end
+
+      it "Coreユーザーはnewでブロックされ、Premium案内が表示されること" do
+        get new_public_event_path(community_id: premium_origin_community.id)
+
+        expect(response).to redirect_to(public_community_path(premium_origin_community))
+        follow_redirect!
+        expect(response.body).to include("Premiumプランが必要です")
+      end
+
+      it "Coreユーザーはcreateでブロックされ、イベントが作成されないこと" do
+        expect do
+          post public_events_path, params: event_create_params(premium_origin_community)
+        end.not_to change(Event, :count)
+
+        expect(response).to redirect_to(public_community_path(premium_origin_community))
+      end
+
+      it "PremiumユーザーはPremium由来コミュニティで作成ページを表示できること" do
+        customer.subscription.update!(plan: "premium")
+
+        get new_public_event_path(community_id: premium_origin_community.id)
+
+        expect(response.status).to eq 200
       end
     end
     context "event編集ページ(edit)が正しく表示される" do
@@ -205,5 +241,30 @@ RSpec.describe "Public::Events", type: :request do
         expect(response.status).to eq 302
       end
     end
+  end
+
+  def event_create_params(community)
+    {
+      event: {
+        community_id: community.id,
+        event_name: "Premiumコミュニティ限定セッション",
+        event_start_time: 7.days.from_now,
+        event_end_time: 7.days.from_now + 2.hours,
+        event_entry_deadline: 6.days.from_now,
+        entrance_fee: 1500,
+        place: "MMMstudio",
+        address: "埼玉県さいたま市",
+        introduction: "Premiumコミュニティのイベントです",
+        songs_attributes: {
+          "0" => {
+            song_name: "Session Song",
+            performance_time: "5",
+            join_parts_attributes: {
+              "0" => { join_part_name: "Vocal" }
+            }
+          }
+        }
+      }
+    }
   end
 end

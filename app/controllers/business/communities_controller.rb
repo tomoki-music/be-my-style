@@ -30,6 +30,7 @@ class Business::CommunitiesController < ApplicationController
     @community = Community.new(community_params)
     @community.owner = current_customer
     @community.domain_id = @current_domain.id
+    @community.required_plan_for_event_creation = "premium"
 
     begin
       ActiveRecord::Base.transaction do

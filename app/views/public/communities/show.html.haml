@@ -92,9 +92,10 @@
                     = link_to "イベント作成", new_public_event_path(community_id: @community.id), data: { 'turbolinks': false }, class: "btn btn-info event-index-create-btn"
                   - else
                     = render "shared/feature_gate",
-                      feature_key: :music_event_create,
+                      feature_key: @community.premium_event_creation_required? ? :music_community_create : :music_event_create,
                       title: "このコミュニティでイベントを作成",
-                      message: "イベント作成ボタンはCoreプラン契約で解放されます。主催できる立場から、企画を動かせます。",
+                      message: @community.premium_event_creation_required? ? "このコミュニティでイベントを作成するにはPremiumプランが必要です。Premiumプランでは、コミュニティ運営・イベント作成・メンバー募集を継続して利用できます。" : "イベント作成ボタンはCoreプラン契約で解放されます。主催できる立場から、企画を動かせます。",
+                      cta: @community.premium_event_creation_required? ? "Premiumプランを確認する" : nil,
                       class_name: "feature-gate--table"
               %tr
                 %th{scope:"row"} メンバーへメール

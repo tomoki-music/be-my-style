@@ -10,6 +10,7 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
 
   describe 'ログイン済み' do
     before do
+      customer.create_subscription!(status: "active", plan: "premium")
       sign_in customer
     end
     context "community一覧ページ(index)が正しく表示される" do
@@ -46,6 +47,16 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
             }
           }
         end.to change(Community, :count).by(1)
+      end
+      it "作成したコミュニティはPremium由来として扱われる" do
+        post public_communities_path, params: {
+          community: {
+            name: "MMM",
+            introduction: "楽しいコミュニティです！",
+          }
+        }
+
+        expect(Community.order(:created_at).last.required_plan_for_event_creation).to eq("premium")
       end
       it "チャットルームの作成が成功する" do
         expect do
