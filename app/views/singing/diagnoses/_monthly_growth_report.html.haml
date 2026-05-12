@@ -1,0 +1,35 @@
+- monthly_growth_report_available = customer.has_feature?(:singing_monthly_growth_report)
+.singing-diagnosis__monthly-growth{ class: ("singing-diagnosis__monthly-growth--locked" unless monthly_growth_report_available) }
+  .singing-diagnosis__monthly-growth-header
+    %span.singing-diagnosis__monthly-growth-icon 📈
+    .singing-diagnosis__monthly-growth-title
+      %h2 今月の成長レポート
+      %p 診断結果を月ごとに積み重ねて、今の伸び方と練習テーマを確認できます。
+
+  - if monthly_growth_report_available
+    - if report[:has_enough_data]
+      .singing-diagnosis__monthly-growth-grid
+        .singing-diagnosis__monthly-growth-card
+          %span 今月の診断回数
+          %strong= "#{report[:current_month_count]}回"
+          %small= "前月 #{report[:previous_month_count]}回"
+        .singing-diagnosis__monthly-growth-card
+          %span 前月比
+          %strong= "#{report[:overall_delta].positive? ? '+' : ''}#{report[:overall_delta]}点"
+          %small 総合スコア平均
+        .singing-diagnosis__monthly-growth-card
+          %span 一番伸びた項目
+          %strong= report[:best_growth_label]
+          %small= "#{report[:best_growth_delta].positive? ? '+' : ''}#{report[:best_growth_delta]}点"
+      .singing-diagnosis__monthly-growth-focus
+        %span 今月の重点練習
+        %h3= report[:focus_label]
+        %p= report[:focus_message]
+    - else
+      .singing-diagnosis__monthly-growth-empty
+        %p まだ比較に必要な診断データが足りません。今月と前月にそれぞれ1回以上診断すると、成長レポートが表示されます。
+  - else
+    .singing-diagnosis__monthly-growth-locked-body
+      %h3 月ごとの成長を確認しよう
+      %p Coreプランでは、今月の診断回数・前月から伸びた項目・今月の重点練習を確認できます。診断結果を積み重ねることで、自分の成長が見えるようになります。
+      = link_to "Coreプランで成長レポートを見る", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"

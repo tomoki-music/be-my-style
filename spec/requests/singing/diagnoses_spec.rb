@@ -538,6 +538,42 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("メトロノームに合わせて")
     end
 
+    it "coreユーザーの完了診断には月次成長レポート詳細を表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "core")
+      sign_in singing_customer
+      previous_time = 1.month.ago
+      FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, created_at: previous_time, overall_score: 75, pitch_score: 70, rhythm_score: 70, expression_score: 70)
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, overall_score: 85, pitch_score: 85, rhythm_score: 60, expression_score: 80)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("今月の成長レポート")
+      expect(response.body).to include("今月の診断回数")
+      expect(response.body).to include("前月比")
+      expect(response.body).to include("+10点")
+      expect(response.body).to include("一番伸びた項目")
+      expect(response.body).to include("音程")
+      expect(response.body).to include("今月の重点練習")
+      expect(response.body).to include("リズム")
+      expect(response.body).to include("今月はリズム安定を重点的に練習しましょう。")
+      expect(response.body).to include("次のおすすめ練習メニュー")
+    end
+
+    it "premiumユーザーの完了診断にも月次成長レポート詳細を表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "premium")
+      sign_in singing_customer
+      FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, created_at: 1.month.ago, overall_score: 70, pitch_score: 70, rhythm_score: 70, expression_score: 70)
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, overall_score: 80, pitch_score: 72, rhythm_score: 78, expression_score: 82)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("今月の成長レポート")
+      expect(response.body).to include("今月の診断回数")
+      expect(response.body).to include("+10点")
+    end
+
     it "lightユーザーの完了vocal診断には6つのボイスタイプ診断のCore導線を表示すること" do
       singing_customer.create_subscription!(status: "active", plan: "light")
       sign_in singing_customer
@@ -565,6 +601,24 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("Coreプランで詳しく見る")
     end
 
+    it "lightユーザーの完了診断には月次成長レポートのCTAだけを表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "light")
+      sign_in singing_customer
+      FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, created_at: 1.month.ago, overall_score: 75, pitch_score: 70, rhythm_score: 70, expression_score: 70)
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, overall_score: 85, pitch_score: 85, rhythm_score: 60, expression_score: 80)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("今月の成長レポート")
+      expect(response.body).to include("月ごとの成長を確認しよう")
+      expect(response.body).to include("Coreプランで成長レポートを見る")
+      expect(response.body).not_to include("前月 1回")
+      expect(response.body).not_to include("前月比")
+      expect(response.body).not_to include("+10点")
+      expect(response.body).not_to include("今月はリズム安定を重点的に練習しましょう。")
+    end
+
     it "freeユーザーの完了vocal診断には6つのボイスタイプ診断のCore導線を表示すること" do
       sign_in singing_customer
       diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed)
@@ -588,6 +642,23 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("音程安定トレーニング")
       expect(response.body).not_to include("リズムキープ練習")
       expect(response.body).to include("Coreプランでは、診断結果に応じた練習メニュー")
+    end
+
+    it "freeユーザーの完了診断には月次成長レポートのCTAだけを表示すること" do
+      sign_in singing_customer
+      FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, created_at: 1.month.ago, overall_score: 75, pitch_score: 70, rhythm_score: 70, expression_score: 70)
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, overall_score: 85, pitch_score: 85, rhythm_score: 60, expression_score: 80)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("今月の成長レポート")
+      expect(response.body).to include("月ごとの成長を確認しよう")
+      expect(response.body).to include("Coreプランで成長レポートを見る")
+      expect(response.body).not_to include("前月 1回")
+      expect(response.body).not_to include("前月比")
+      expect(response.body).not_to include("+10点")
+      expect(response.body).not_to include("今月はリズム安定を重点的に練習しましょう。")
     end
 
     it "premiumユーザーのguitar診断にはタイプ別詳細診断を表示すること" do

@@ -66,6 +66,7 @@
 .singing-diagnosis__ai-comment,
 .singing-diagnosis__practice,
 .singing-diagnosis__next-practice,
+.singing-diagnosis__monthly-growth,
 .singing-diagnosis__plan-features,
 .singing-diagnosis__quota,
 .singing-diagnosis__priority-notice,
@@ -2178,6 +2179,120 @@
   margin-bottom: 14px;
 }
 
+.singing-diagnosis__monthly-growth {
+  border-left: 6px solid #2563eb;
+}
+
+.singing-diagnosis__monthly-growth--locked {
+  border-left-color: #94a3b8;
+}
+
+.singing-diagnosis__monthly-growth-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.singing-diagnosis__monthly-growth-icon {
+  align-items: center;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 20px;
+  height: 42px;
+  justify-content: center;
+  line-height: 1;
+  width: 42px;
+}
+
+.singing-diagnosis__monthly-growth-title {
+  min-width: 0;
+}
+
+.singing-diagnosis__monthly-growth h2 {
+  color: #1f2937;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.singing-diagnosis__monthly-growth-title p {
+  color: #4b5563;
+  line-height: 1.8;
+  margin-bottom: 0;
+}
+
+.singing-diagnosis__monthly-growth-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.singing-diagnosis__monthly-growth-card {
+  background: #f8fafc;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.singing-diagnosis__monthly-growth-card span,
+.singing-diagnosis__monthly-growth-focus span {
+  color: #1d4ed8;
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.singing-diagnosis__monthly-growth-card strong {
+  color: #1f2937;
+  display: block;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+
+.singing-diagnosis__monthly-growth-card small {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.singing-diagnosis__monthly-growth-focus,
+.singing-diagnosis__monthly-growth-empty,
+.singing-diagnosis__monthly-growth-locked-body {
+  background: #f8fafc;
+  border: 1px solid #dbe5ef;
+  border-radius: 8px;
+  margin-top: 16px;
+  padding: 18px;
+}
+
+.singing-diagnosis__monthly-growth-focus h3,
+.singing-diagnosis__monthly-growth-locked-body h3 {
+  color: #1f2937;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.singing-diagnosis__monthly-growth-focus p,
+.singing-diagnosis__monthly-growth-empty p,
+.singing-diagnosis__monthly-growth-locked-body p {
+  color: #4b5563;
+  line-height: 1.8;
+  margin-bottom: 0;
+}
+
+.singing-diagnosis__monthly-growth-locked-body p {
+  margin-bottom: 14px;
+}
+
 .singing-diagnosis__plan-features h2 {
   color: #1f2937;
   font-size: 22px;
@@ -2514,6 +2629,10 @@
   }
 
   .singing-diagnosis__next-practice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .singing-diagnosis__monthly-growth-grid {
     grid-template-columns: 1fr;
   }
 
