@@ -579,6 +579,18 @@
       - if @monthly_ai_challenge.present?
         = render "monthly_ai_challenge", challenge: @monthly_ai_challenge, customer: current_customer, progress: @monthly_ai_challenge_progress, diagnosis: @diagnosis
 
+      - if @challenge_result_feedback.present? && current_customer.has_feature?(:singing_ai_challenge_progress)
+        .singing-diagnosis__challenge-result-feedback
+          .singing-diagnosis__challenge-result-feedback-header
+            %span.singing-diagnosis__challenge-result-feedback-icon ✓
+            .singing-diagnosis__challenge-result-feedback-title
+              %h2 前回のAIチャレンジの成果
+              %p= "#{@challenge_result_feedback[:challenge_title]}に取り組みました。"
+          .singing-diagnosis__challenge-result-feedback-body
+            %p.singing-diagnosis__challenge-result-feedback-score
+              = @challenge_result_feedback[:score_sentence]
+            %p= @challenge_result_feedback[:message]
+
       .singing-diagnosis__plan-features
         %h2 プラン別に深まる楽しみ
         %p.singing-diagnosis__plan-features-lead Coreでは自分の声の個性と成長履歴を、PremiumではTOMOKI本人の視点や限定イベントを通じた深い伴走を楽しめます。

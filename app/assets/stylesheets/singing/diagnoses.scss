@@ -68,6 +68,7 @@
 .singing-diagnosis__next-practice,
 .singing-diagnosis__monthly-growth,
 .singing-diagnosis__monthly-ai-challenge,
+.singing-diagnosis__challenge-result-feedback,
 .singing-diagnosis__plan-features,
 .singing-diagnosis__quota,
 .singing-diagnosis__priority-notice,
@@ -2457,6 +2458,71 @@
 .singing-diagnosis__monthly-ai-progress-form .btn {
   justify-self: start;
   margin-top: 4px;
+}
+
+.singing-diagnosis__challenge-result-feedback {
+  border-left: 6px solid #16a34a;
+}
+
+.singing-diagnosis__challenge-result-feedback-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.singing-diagnosis__challenge-result-feedback-icon {
+  align-items: center;
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+  color: #15803d;
+  display: inline-flex;
+  font-size: 20px;
+  font-weight: 800;
+  height: 42px;
+  justify-content: center;
+  line-height: 1;
+  width: 42px;
+}
+
+.singing-diagnosis__challenge-result-feedback-title {
+  min-width: 0;
+}
+
+.singing-diagnosis__challenge-result-feedback h2 {
+  color: #1f2937;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.singing-diagnosis__challenge-result-feedback-title p {
+  color: #4b5563;
+  line-height: 1.8;
+  margin-bottom: 0;
+}
+
+.singing-diagnosis__challenge-result-feedback-body {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.singing-diagnosis__challenge-result-feedback-body p {
+  color: #166534;
+  line-height: 1.8;
+  margin-bottom: 0;
+}
+
+.singing-diagnosis__challenge-result-feedback-body p + p {
+  margin-top: 8px;
+}
+
+.singing-diagnosis__challenge-result-feedback-score {
+  font-weight: 800;
 }
 
 .singing-diagnosis__plan-features h2 {
