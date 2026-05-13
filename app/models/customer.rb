@@ -33,6 +33,7 @@ class Customer < ApplicationRecord
     singing_diagnosis_advanced_feedback: %w[core premium],
     singing_next_practice_menu: %w[core premium],
     singing_monthly_growth_report: %w[core premium],
+    singing_yearly_growth_report: %w[core premium],
     singing_monthly_ai_challenge: %w[core premium],
     singing_ai_challenge_progress: %w[core premium],
     singing_diagnosis_voice_type: %w[core premium],

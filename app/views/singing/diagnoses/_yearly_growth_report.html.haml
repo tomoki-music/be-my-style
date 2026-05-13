@@ -1,0 +1,39 @@
+- if report&.present?
+  .singing-diagnosis__yearly-growth
+    .singing-diagnosis__yearly-growth-hero
+      %span.singing-diagnosis__yearly-growth-kicker= "#{report.year} YEAR IN VOICE"
+      %h2= "あなたの#{report.year}年はこんな1年でした"
+      %p= report.emotional_copy
+
+    .singing-diagnosis__yearly-growth-grid
+      .singing-diagnosis__yearly-growth-card.singing-diagnosis__yearly-growth-card--primary
+        %span 診断回数
+        %strong= report.diagnosis_count
+        %small times
+      .singing-diagnosis__yearly-growth-card
+        %span 一番伸びた能力
+        %strong= report.top_growth&.label || "これから"
+        %small= report.top_growth ? "#{report.top_growth.delta >= 0 ? '+' : ''}#{report.top_growth.delta}点" : "次の診断で集計"
+      .singing-diagnosis__yearly-growth-card
+        %span 自己ベスト更新
+        %strong= report.personal_best_updates_count
+        %small updates
+
+    .singing-diagnosis__yearly-growth-details
+      .singing-diagnosis__yearly-growth-detail
+        %span 最大成長量
+        %strong= report.top_growth ? "#{report.top_growth.delta >= 0 ? '+' : ''}#{report.top_growth.delta}点" : "-"
+        %small= report.top_growth ? "#{report.top_growth.first_value}点 -> #{report.top_growth.last_value}点" : "2回以上の診断で表示"
+      .singing-diagnosis__yearly-growth-detail
+        %span 最も挑戦したAIチャレンジ
+        %strong= report.top_challenge&.label || "未挑戦"
+        %small= report.top_challenge ? "#{report.top_challenge.count}回" : "チャレンジ記録待ち"
+      - if report.top_song.present?
+        .singing-diagnosis__yearly-growth-detail
+          %span 最も歌った曲
+          %strong= report.top_song.title
+          %small= "#{report.top_song.count}回"
+
+    .singing-diagnosis__yearly-growth-coach
+      %span AI Coach Note
+      %p= report.coach_message

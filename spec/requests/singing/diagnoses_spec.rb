@@ -273,6 +273,113 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).not_to include("リズムスコア +8点成長")
       expect(response.body).not_to include("リズムチャレンジ達成バッジ獲得")
     end
+
+    it "coreユーザーには年間成長レポートの詳細を表示すること" do
+      year = Time.current.year
+      singing_customer.create_subscription!(status: "active", plan: "core")
+      sign_in singing_customer
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: singing_customer,
+        song_title: "Wrapped Song",
+        created_at: Time.zone.local(year, 1, 15, 10, 0, 0),
+        overall_score: 61,
+        pitch_score: 58,
+        rhythm_score: 60,
+        expression_score: 57
+      )
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: singing_customer,
+        song_title: "Wrapped Song",
+        created_at: Time.zone.local(year, 10, 15, 10, 0, 0),
+        overall_score: 78,
+        pitch_score: 82,
+        rhythm_score: 66,
+        expression_score: 70
+      )
+      FactoryBot.create(
+        :singing_ai_challenge_progress,
+        customer: singing_customer,
+        target_key: "pitch",
+        challenge_month: Date.new(year, 8, 1),
+        tried: true
+      )
+
+      get singing_diagnoses_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("#{year} YEAR IN VOICE")
+      expect(response.body).to include("あなたの#{year}年はこんな1年でした")
+      expect(response.body).to include("一番伸びた能力")
+      expect(response.body).to include("音程")
+      expect(response.body).to include("+24点")
+      expect(response.body).to include("最も挑戦したAIチャレンジ")
+      expect(response.body).to include("最も歌った曲")
+      expect(response.body).to include("Wrapped Song")
+    end
+
+    it "freeユーザーには年間成長レポートの詳細HTMLを出力しないこと" do
+      year = Time.current.year
+      sign_in singing_customer
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: singing_customer,
+        song_title: "Free Wrapped Song",
+        created_at: Time.zone.local(year, 1, 15, 10, 0, 0),
+        overall_score: 61,
+        pitch_score: 58
+      )
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: singing_customer,
+        song_title: "Free Wrapped Song",
+        created_at: Time.zone.local(year, 10, 15, 10, 0, 0),
+        overall_score: 78,
+        pitch_score: 82
+      )
+
+      get singing_diagnoses_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("#{year} YEAR IN VOICE")
+      expect(response.body).not_to include("あなたの#{year}年はこんな1年でした")
+      expect(response.body).not_to include("一番伸びた能力")
+      expect(response.body).not_to include("+24点")
+    end
+
+    it "lightユーザーには年間成長レポートの詳細HTMLを出力しないこと" do
+      year = Time.current.year
+      singing_customer.create_subscription!(status: "active", plan: "light")
+      sign_in singing_customer
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: singing_customer,
+        created_at: Time.zone.local(year, 1, 15, 10, 0, 0),
+        overall_score: 61,
+        pitch_score: 58
+      )
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: singing_customer,
+        created_at: Time.zone.local(year, 10, 15, 10, 0, 0),
+        overall_score: 78,
+        pitch_score: 82
+      )
+
+      get singing_diagnoses_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("#{year} YEAR IN VOICE")
+      expect(response.body).not_to include("一番伸びた能力")
+      expect(response.body).not_to include("+24点")
+    end
   end
 
   describe "POST /singing/diagnoses" do

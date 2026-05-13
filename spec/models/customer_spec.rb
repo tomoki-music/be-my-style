@@ -220,6 +220,7 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
           :singing_diagnosis_advanced_feedback,
           :singing_next_practice_menu,
           :singing_monthly_growth_report,
+          :singing_yearly_growth_report,
           :singing_monthly_ai_challenge,
           :singing_ai_challenge_progress,
           :singing_diagnosis_voice_type,
@@ -232,6 +233,7 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(customer.has_feature?(:singing_diagnosis_history)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_comparison)).to eq false
         expect(customer.has_feature?(:singing_diagnosis_advanced_feedback)).to eq false
+        expect(customer.has_feature?(:singing_yearly_growth_report)).to eq false
         expect(customer.has_feature?(:singing_diagnosis_voice_type)).to eq false
         expect(customer.has_feature?(:singing_diagnosis_priority)).to eq false
       end
@@ -246,6 +248,7 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(customer.has_feature?(:singing_diagnosis_history)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_comparison)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_advanced_feedback)).to eq false
+        expect(customer.has_feature?(:singing_yearly_growth_report)).to eq false
         expect(customer.has_feature?(:singing_diagnosis_voice_type)).to eq false
         expect(customer.has_feature?(:singing_diagnosis_priority)).to eq false
       end
@@ -256,6 +259,7 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(customer.has_feature?(:singing_diagnosis_history)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_comparison)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_advanced_feedback)).to eq true
+        expect(customer.has_feature?(:singing_yearly_growth_report)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_voice_type)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_priority)).to eq false
       end
@@ -266,6 +270,7 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(customer.has_feature?(:singing_diagnosis_history)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_comparison)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_advanced_feedback)).to eq true
+        expect(customer.has_feature?(:singing_yearly_growth_report)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_voice_type)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_priority)).to eq true
         expect(customer.has_feature?(:singing_diagnosis_ai_comment)).to eq true
