@@ -608,6 +608,75 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("基準音をピアノアプリなどで確認する")
     end
 
+    it "coreユーザーの次回診断には前回AIチャレンジ成果を表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "core")
+      sign_in singing_customer
+      previous_diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, created_at: 10.days.ago, rhythm_score: 70)
+      FactoryBot.create(
+        :singing_ai_challenge_progress,
+        customer: singing_customer,
+        target_key: "rhythm",
+        challenge_month: previous_diagnosis.created_at.to_date.beginning_of_month,
+        tried: true,
+        completed: true,
+        created_at: 8.days.ago
+      )
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, created_at: Time.current, rhythm_score: 76)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("前回のAIチャレンジの成果")
+      expect(response.body).to include("リズム安定チャレンジに取り組みました。")
+      expect(response.body).to include("前回よりリズムスコアが +6 点アップしています。")
+      expect(response.body).to include("少しずつ練習の成果が出ています！")
+    end
+
+    it "lightユーザーの次回診断にはAIチャレンジ成果の詳細を表示しないこと" do
+      singing_customer.create_subscription!(status: "active", plan: "light")
+      sign_in singing_customer
+      previous_diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, created_at: 10.days.ago, rhythm_score: 70)
+      FactoryBot.create(
+        :singing_ai_challenge_progress,
+        customer: singing_customer,
+        target_key: "rhythm",
+        challenge_month: previous_diagnosis.created_at.to_date.beginning_of_month,
+        tried: true,
+        completed: true,
+        created_at: 8.days.ago
+      )
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, created_at: Time.current, rhythm_score: 76)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("前回のAIチャレンジの成果")
+      expect(response.body).not_to include("前回よりリズムスコアが +6 点アップしています。")
+      expect(response.body).not_to include("少しずつ練習の成果が出ています！")
+    end
+
+    it "freeユーザーの次回診断にはAIチャレンジ成果の詳細を表示しないこと" do
+      sign_in singing_customer
+      previous_diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, created_at: 10.days.ago, rhythm_score: 70)
+      FactoryBot.create(
+        :singing_ai_challenge_progress,
+        customer: singing_customer,
+        target_key: "rhythm",
+        challenge_month: previous_diagnosis.created_at.to_date.beginning_of_month,
+        tried: true,
+        completed: true,
+        created_at: 8.days.ago
+      )
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, created_at: Time.current, rhythm_score: 76)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("前回のAIチャレンジの成果")
+      expect(response.body).not_to include("前回よりリズムスコアが +6 点アップしています。")
+      expect(response.body).not_to include("少しずつ練習の成果が出ています！")
+    end
+
     it "lightユーザーの完了vocal診断には6つのボイスタイプ診断のCore導線を表示すること" do
       singing_customer.create_subscription!(status: "active", plan: "light")
       sign_in singing_customer

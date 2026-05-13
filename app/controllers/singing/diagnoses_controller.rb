@@ -41,6 +41,9 @@ class Singing::DiagnosesController < Singing::BaseController
       @monthly_growth_report = SingingDiagnoses::MonthlyGrowthReport.new(current_customer).call
       @monthly_ai_challenge = SingingDiagnoses::MonthlyAiChallenge.new(current_customer, growth_report: @monthly_growth_report).call
       if current_customer.has_feature?(:singing_ai_challenge_progress)
+        @challenge_result_feedback = SingingDiagnoses::ChallengeResultFeedback
+          .new(current_customer, @diagnosis)
+          .call
         @monthly_ai_challenge_progress = SingingDiagnoses::MonthlyAiChallengeProgressFinder
           .new(current_customer, challenge: @monthly_ai_challenge)
           .find_or_initialize
