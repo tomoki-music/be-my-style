@@ -632,6 +632,31 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("少しずつ練習の成果が出ています！")
     end
 
+    it "coreユーザーの次回診断にはAIチャレンジ達成バッジを表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "core")
+      sign_in singing_customer
+      previous_diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, created_at: 10.days.ago, rhythm_score: 70)
+      FactoryBot.create(
+        :singing_ai_challenge_progress,
+        customer: singing_customer,
+        target_key: "rhythm",
+        challenge_month: previous_diagnosis.created_at.to_date.beginning_of_month,
+        tried: true,
+        completed: true,
+        created_at: 8.days.ago
+      )
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed, created_at: Time.current, rhythm_score: 80)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("AIチャレンジ達成バッジ")
+      expect(response.body).to include("達成済みバッジ")
+      expect(response.body).to include("リズムチャレンジ達成")
+      expect(response.body).to include("初めてのAIチャレンジ達成")
+      expect(response.body).to include("前回より10点アップ")
+    end
+
     it "lightユーザーの次回診断にはAIチャレンジ成果の詳細を表示しないこと" do
       singing_customer.create_subscription!(status: "active", plan: "light")
       sign_in singing_customer
@@ -653,6 +678,8 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).not_to include("前回のAIチャレンジの成果")
       expect(response.body).not_to include("前回よりリズムスコアが +6 点アップしています。")
       expect(response.body).not_to include("少しずつ練習の成果が出ています！")
+      expect(response.body).not_to include("AIチャレンジ達成バッジ")
+      expect(response.body).not_to include("リズムチャレンジ達成")
     end
 
     it "freeユーザーの次回診断にはAIチャレンジ成果の詳細を表示しないこと" do
