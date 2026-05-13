@@ -11,13 +11,14 @@ RSpec.describe "Singing::ShareImages", type: :request do
   describe "GET /singing/share_image" do
     it "coreユーザーにはSNSシェア用の画像風UIを表示すること" do
       year = Time.current.year
+      long_song_title = "Shareable Voice with a Very Long Mobile Screenshot Title 2026"
       singing_customer.create_subscription!(status: "active", plan: "core")
       sign_in singing_customer
       FactoryBot.create(
         :singing_diagnosis,
         :completed,
         customer: singing_customer,
-        song_title: "Shareable Voice",
+        song_title: long_song_title,
         created_at: Time.zone.local(year, 1, 10, 10, 0, 0),
         overall_score: 60,
         pitch_score: 50,
@@ -28,7 +29,7 @@ RSpec.describe "Singing::ShareImages", type: :request do
         :singing_diagnosis,
         :completed,
         customer: singing_customer,
-        song_title: "Shareable Voice",
+        song_title: long_song_title,
         created_at: Time.zone.local(year, 10, 10, 10, 0, 0),
         overall_score: 78,
         pitch_score: 84,
@@ -55,11 +56,38 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(response.body).to include("自己ベスト更新")
       expect(response.body).to include("最も挑戦したAIチャレンジ")
       expect(response.body).to include("最も歌った曲")
-      expect(response.body).to include("Shareable Voice")
+      expect(response.body).to include(long_song_title)
       expect(response.body).to include("#BeMyStyleSinging")
       expect(response.body).to include("Xでシェア")
       expect(response.body).to include("Instagram")
       expect(response.body).to include("スクショ")
+      expect(response.body).to include("診断を続ける")
+      expect(response.body).to include("履歴へ戻る")
+      expect(response.body).to include(new_singing_diagnosis_path)
+      expect(response.body).to include(singing_diagnoses_path)
+    end
+
+    it "データが少ないcoreユーザーにも集計待ちのシェアカードを表示すること" do
+      year = Time.current.year
+      singing_customer.create_subscription!(status: "active", plan: "core")
+      sign_in singing_customer
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: singing_customer,
+        song_title: "First Song",
+        created_at: Time.zone.local(year, 5, 10, 10, 0, 0),
+        overall_score: 60,
+        pitch_score: 50
+      )
+
+      get singing_share_image_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("集計待ち")
+      expect(response.body).to include("2回以上の診断で集計")
+      expect(response.body).to include("未挑戦")
+      expect(response.body).to include("First Song")
     end
 
     it "freeユーザーには詳細データをHTML出力しないこと" do

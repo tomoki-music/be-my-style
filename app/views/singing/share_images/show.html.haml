@@ -3,8 +3,12 @@
 .singing-share-image
   .singing-share-image__inner
     .singing-share-image__toolbar
-      = link_to "成長記録へ戻る", singing_diagnoses_path, class: "btn btn-secondary"
+      = link_to "履歴へ戻る", singing_diagnoses_path, class: "btn btn-secondary"
       = link_to "Xでシェア", "https://twitter.com/intent/tweet?text=#{u(@share_image.x_share_text)}&url=#{u(request.original_url)}", class: "btn btn-primary", target: "_blank", rel: "noopener"
+
+    .singing-share-image__capture-guide
+      %span Screenshot guide
+      %strong カード全体が入るようにスクショして、Instagramの投稿やストーリーズへ。
 
     .singing-share-image__stage
       .singing-share-image__card{ role: "img", "aria-label": "#{@share_image.report.year}年の歌声成長レポート" }
@@ -46,8 +50,12 @@
 
         .singing-share-image__footer
           %span= @share_image.hashtag
-          %small Screenshot & share
+          %small Screenshot ready
 
     .singing-share-image__share-note
       %h2 SNSで共有
-      %p Xはボタンから投稿できます。Instagramでは上のカード部分をスクショして、ストーリーズや投稿でシェアしてください。
+      %p Xはボタンから投稿できます。Instagramでは上のカードだけが入るようにスクショして、投稿やストーリーズでシェアしてください。
+
+    .singing-share-image__actions
+      = link_to "診断を続ける", new_singing_diagnosis_path, class: "btn btn-primary"
+      = link_to "履歴へ戻る", singing_diagnoses_path, class: "btn btn-secondary"
