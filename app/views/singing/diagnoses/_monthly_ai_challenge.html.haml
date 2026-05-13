@@ -19,6 +19,22 @@
         %ol
           - challenge[:practice_steps].each do |step|
             %li= step
+      - if progress.present?
+        .singing-diagnosis__monthly-ai-progress
+          %h4 今月の達成チェック
+          %p チェックを入れておくと、次回の診断時に振り返りやすくなります。
+          = form_with model: progress, url: singing_ai_challenge_progress_path, method: :patch, local: true, class: "singing-diagnosis__monthly-ai-progress-form" do |f|
+            = hidden_field_tag :diagnosis_id, diagnosis.id
+            %label.singing-diagnosis__monthly-ai-progress-check
+              = f.check_box :tried
+              %span このチャレンジに挑戦した
+            %label.singing-diagnosis__monthly-ai-progress-check
+              = f.check_box :completed
+              %span 7日間やってみた
+            %label.singing-diagnosis__monthly-ai-progress-check
+              = f.check_box :next_diagnosis_planned
+              %span 次回診断で変化を確認する
+            = f.submit "進捗を保存する", class: "btn btn-primary"
   - else
     .singing-diagnosis__monthly-ai-challenge-locked-body
       %h3 今月のAIチャレンジに挑戦しよう

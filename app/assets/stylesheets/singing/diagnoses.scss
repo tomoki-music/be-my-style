@@ -2408,6 +2408,57 @@
   margin-top: 6px;
 }
 
+.singing-diagnosis__monthly-ai-progress {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-top: 16px;
+  padding: 16px 18px;
+}
+
+.singing-diagnosis__monthly-ai-progress h4 {
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.singing-diagnosis__monthly-ai-progress p {
+  color: #4b5563;
+  line-height: 1.8;
+  margin-bottom: 12px;
+}
+
+.singing-diagnosis__monthly-ai-progress-form {
+  display: grid;
+  gap: 10px;
+}
+
+.singing-diagnosis__monthly-ai-progress-check {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #dbe5ef;
+  border-radius: 8px;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  font-weight: 700;
+  gap: 10px;
+  line-height: 1.6;
+  padding: 12px 14px;
+}
+
+.singing-diagnosis__monthly-ai-progress-check input {
+  flex: 0 0 auto;
+  height: 18px;
+  width: 18px;
+}
+
+.singing-diagnosis__monthly-ai-progress-form .btn {
+  justify-self: start;
+  margin-top: 4px;
+}
+
 .singing-diagnosis__plan-features h2 {
   color: #1f2937;
   font-size: 22px;

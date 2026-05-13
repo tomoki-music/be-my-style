@@ -34,6 +34,7 @@ class Customer < ApplicationRecord
     singing_next_practice_menu: %w[core premium],
     singing_monthly_growth_report: %w[core premium],
     singing_monthly_ai_challenge: %w[core premium],
+    singing_ai_challenge_progress: %w[core premium],
     singing_diagnosis_voice_type: %w[core premium],
     singing_diagnosis_priority: %w[premium],
     singing_diagnosis_ai_comment: %w[premium]
@@ -126,6 +127,7 @@ class Customer < ApplicationRecord
   has_many :learning_line_message_templates,
            dependent: :destroy
   has_many :singing_diagnoses, dependent: :destroy
+  has_many :singing_ai_challenge_progresses, dependent: :destroy
   has_many :singing_badges, dependent: :destroy
   has_many :singing_profile_reactions, dependent: :destroy
   has_many :received_singing_profile_reactions,
