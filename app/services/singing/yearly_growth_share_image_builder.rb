@@ -86,9 +86,9 @@ module Singing
 
     def x_share_text(report)
       [
-        "#{report.year}年の歌声成長レポート",
-        "#{report.diagnosis_count}回診断しました",
-        report.top_growth ? "最大成長: #{report.top_growth.label} #{growth_delta_label(report)}" : nil,
+        "BeMyStyleで#{report.year}年の歌声成長レポートを作りました。",
+        "今年は#{report.diagnosis_count}回、自分の声を診断。",
+        report.top_growth ? "いちばん伸びたのは#{report.top_growth.label}（#{growth_delta_label(report)}）" : nil,
         HASHTAG
       ].compact.join("\n")
     end
