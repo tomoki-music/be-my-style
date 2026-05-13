@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_12_000000) do
+ActiveRecord::Schema.define(version: 2026_05_13_001000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -823,6 +823,21 @@ ActiveRecord::Schema.define(version: 2026_05_12_000000) do
     t.index ["event_id"], name: "index_requests_on_event_id"
   end
 
+  create_table "singing_ai_challenge_progresses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "target_key", null: false
+    t.date "challenge_month", null: false
+    t.boolean "tried", default: false, null: false
+    t.boolean "completed", default: false, null: false
+    t.boolean "next_diagnosis_planned", default: false, null: false
+    t.datetime "completed_at"
+    t.json "metadata"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id", "challenge_month", "target_key"], name: "idx_singing_ai_progress_unique_month_target", unique: true
+    t.index ["customer_id"], name: "index_singing_ai_challenge_progresses_on_customer_id"
+  end
+
   create_table "singing_badges", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "singing_ranking_season_id", null: false
@@ -1059,6 +1074,7 @@ ActiveRecord::Schema.define(version: 2026_05_12_000000) do
   add_foreign_key "projects", "customers"
   add_foreign_key "requests", "customers"
   add_foreign_key "requests", "events"
+  add_foreign_key "singing_ai_challenge_progresses", "customers"
   add_foreign_key "singing_badges", "customers"
   add_foreign_key "singing_badges", "singing_ranking_seasons"
   add_foreign_key "singing_diagnoses", "customers"

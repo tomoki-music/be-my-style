@@ -40,6 +40,11 @@ class Singing::DiagnosesController < Singing::BaseController
       @next_practice_menu = SingingDiagnoses::NextPracticeMenu.new(@diagnosis).call
       @monthly_growth_report = SingingDiagnoses::MonthlyGrowthReport.new(current_customer).call
       @monthly_ai_challenge = SingingDiagnoses::MonthlyAiChallenge.new(current_customer, growth_report: @monthly_growth_report).call
+      if current_customer.has_feature?(:singing_ai_challenge_progress)
+        @monthly_ai_challenge_progress = SingingDiagnoses::MonthlyAiChallengeProgressFinder
+          .new(current_customer, challenge: @monthly_ai_challenge)
+          .find_or_initialize
+      end
       @diagnosis_season_badges = latest_season_badges_for(current_customer)
       @new_season_badges = @diagnosis_season_badges.select { |b| b.awarded_at >= 7.days.ago }
       if @diagnosis.ranking_opt_in? && @diagnosis.overall_score.present?

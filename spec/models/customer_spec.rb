@@ -221,6 +221,7 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
           :singing_next_practice_menu,
           :singing_monthly_growth_report,
           :singing_monthly_ai_challenge,
+          :singing_ai_challenge_progress,
           :singing_diagnosis_voice_type,
           :singing_diagnosis_priority,
           :singing_diagnosis_ai_comment

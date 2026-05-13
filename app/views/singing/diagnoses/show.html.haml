@@ -577,7 +577,7 @@
         = render "monthly_growth_report", report: @monthly_growth_report, customer: current_customer
 
       - if @monthly_ai_challenge.present?
-        = render "monthly_ai_challenge", challenge: @monthly_ai_challenge, customer: current_customer
+        = render "monthly_ai_challenge", challenge: @monthly_ai_challenge, customer: current_customer, progress: @monthly_ai_challenge_progress, diagnosis: @diagnosis
 
       .singing-diagnosis__plan-features
         %h2 プラン別に深まる楽しみ
