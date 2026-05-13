@@ -112,3 +112,54 @@ RSpec.describe Singing::YearlyGrowthReport, type: :service do
     end
   end
 end
+
+RSpec.describe Singing::YearlyGrowthShareImageBuilder, type: :service do
+  let(:customer) { FactoryBot.create(:customer, domain_name: "singing") }
+  let(:reference_time) { Time.zone.parse("2026-12-20 12:00:00") }
+
+  describe ".call" do
+    it "年間成長レポートをSNSシェア用の表示値に変換すること" do
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: customer,
+        song_title: "Share Song",
+        created_at: Time.zone.parse("2026-01-10 10:00:00"),
+        overall_score: 60,
+        pitch_score: 50,
+        rhythm_score: 61,
+        expression_score: 55
+      )
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: customer,
+        song_title: "Share Song",
+        created_at: Time.zone.parse("2026-11-10 10:00:00"),
+        overall_score: 76,
+        pitch_score: 82,
+        rhythm_score: 70,
+        expression_score: 65
+      )
+      FactoryBot.create(
+        :singing_ai_challenge_progress,
+        customer: customer,
+        target_key: "pitch",
+        challenge_month: Date.new(2026, 8, 1),
+        tried: true
+      )
+
+      share_image = described_class.call(customer, reference_time: reference_time)
+
+      expect(share_image).to be_present
+      expect(share_image.headline).to eq("音程が今年いちばん伸びた")
+      expect(share_image.growth_delta_label).to eq("+32点")
+      expect(share_image.growth_range_label).to eq("50点から82点")
+      expect(share_image.best_updates_label).to eq("2回")
+      expect(share_image.challenge_label).to eq("音程 1回")
+      expect(share_image.song_label).to eq("Share Song 2回")
+      expect(share_image.hashtag).to eq("#BeMyStyleSinging")
+      expect(share_image.x_share_text).to include("最大成長: 音程 +32点")
+    end
+  end
+end
