@@ -44,6 +44,11 @@ class Singing::DiagnosesController < Singing::BaseController
         @challenge_result_feedback = SingingDiagnoses::ChallengeResultFeedback
           .new(current_customer, @diagnosis)
           .call
+        @ai_challenge_badges = Singing::ChallengeBadgeService.call(
+          current_customer,
+          @diagnosis,
+          feedback: @challenge_result_feedback
+        )
         @monthly_ai_challenge_progress = SingingDiagnoses::MonthlyAiChallengeProgressFinder
           .new(current_customer, challenge: @monthly_ai_challenge)
           .find_or_initialize

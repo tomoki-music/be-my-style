@@ -1,0 +1,30 @@
+.singing-diagnosis__challenge-badges
+  .singing-diagnosis__challenge-badges-header
+    %span.singing-diagnosis__challenge-badges-icon 🏅
+    .singing-diagnosis__challenge-badges-title
+      %h2 AIチャレンジ達成バッジ
+      %p チャレンジの取り組みと今回の診断結果から、いま獲得できた実績を表示しています。
+
+  - if badges.earned_badges.present?
+    .singing-diagnosis__challenge-badges-group
+      %h3 達成済みバッジ
+      .singing-diagnosis__challenge-badges-list
+        - badges.earned_badges.each do |badge|
+          .singing-diagnosis__challenge-badge.singing-diagnosis__challenge-badge--earned
+            %span.singing-diagnosis__challenge-badge-icon= badge.icon
+            .singing-diagnosis__challenge-badge-body
+              %strong.singing-diagnosis__challenge-badge-label= badge.label
+              %p.singing-diagnosis__challenge-badge-description= badge.description
+            %span.singing-diagnosis__challenge-badge-state 達成
+
+  - if badges.candidate_badges.present?
+    .singing-diagnosis__challenge-badges-group
+      %h3 今回獲得できそうなバッジ
+      .singing-diagnosis__challenge-badges-list
+        - badges.candidate_badges.each do |badge|
+          .singing-diagnosis__challenge-badge.singing-diagnosis__challenge-badge--candidate
+            %span.singing-diagnosis__challenge-badge-icon= badge.icon
+            .singing-diagnosis__challenge-badge-body
+              %strong.singing-diagnosis__challenge-badge-label= badge.label
+              %p.singing-diagnosis__challenge-badge-description= badge.description
+            %span.singing-diagnosis__challenge-badge-state もう少し

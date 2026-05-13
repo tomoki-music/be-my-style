@@ -69,6 +69,7 @@
 .singing-diagnosis__monthly-growth,
 .singing-diagnosis__monthly-ai-challenge,
 .singing-diagnosis__challenge-result-feedback,
+.singing-diagnosis__challenge-badges,
 .singing-diagnosis__plan-features,
 .singing-diagnosis__quota,
 .singing-diagnosis__priority-notice,
@@ -2464,6 +2465,10 @@
   border-left: 6px solid #16a34a;
 }
 
+.singing-diagnosis__challenge-badges {
+  border-left: 6px solid #f59e0b;
+}
+
 .singing-diagnosis__challenge-result-feedback-header {
   align-items: flex-start;
   display: flex;
@@ -2523,6 +2528,121 @@
 
 .singing-diagnosis__challenge-result-feedback-score {
   font-weight: 800;
+}
+
+.singing-diagnosis__challenge-badges-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.singing-diagnosis__challenge-badges-icon {
+  align-items: center;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 20px;
+  height: 42px;
+  justify-content: center;
+  line-height: 1;
+  width: 42px;
+}
+
+.singing-diagnosis__challenge-badges-title {
+  min-width: 0;
+}
+
+.singing-diagnosis__challenge-badges h2 {
+  color: #1f2937;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.singing-diagnosis__challenge-badges-title p {
+  color: #4b5563;
+  line-height: 1.8;
+  margin-bottom: 0;
+}
+
+.singing-diagnosis__challenge-badges-group {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 16px 18px;
+}
+
+.singing-diagnosis__challenge-badges-group + .singing-diagnosis__challenge-badges-group {
+  margin-top: 14px;
+}
+
+.singing-diagnosis__challenge-badges-group h3 {
+  color: #92400e;
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.singing-diagnosis__challenge-badges-list {
+  display: grid;
+  gap: 10px;
+}
+
+.singing-diagnosis__challenge-badge {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.singing-diagnosis__challenge-badge--candidate {
+  border-color: #dbe5ef;
+}
+
+.singing-diagnosis__challenge-badge-icon {
+  flex: 0 0 auto;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.singing-diagnosis__challenge-badge-body {
+  min-width: 0;
+}
+
+.singing-diagnosis__challenge-badge-label {
+  color: #1f2937;
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.singing-diagnosis__challenge-badge-description {
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 2px 0 0;
+}
+
+.singing-diagnosis__challenge-badge-state {
+  background: #f59e0b;
+  border-radius: 999px;
+  color: #fff;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 7px 10px;
+}
+
+.singing-diagnosis__challenge-badge--candidate .singing-diagnosis__challenge-badge-state {
+  background: #64748b;
 }
 
 .singing-diagnosis__plan-features h2 {
