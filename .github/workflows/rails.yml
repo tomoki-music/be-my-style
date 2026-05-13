@@ -76,12 +76,67 @@ jobs:
           NEW_COMMIT=$(git rev-parse HEAD)
           echo "[deploy] After: ${NEW_COMMIT}"
 
+          CHANGED_FILES="$(git diff --name-only "$PREV_COMMIT" "$NEW_COMMIT" || true)"
+          CHANGED_FILE_COUNT=$(printf '%s\n' "$CHANGED_FILES" | sed '/^$/d' | wc -l | tr -d ' ')
+          echo "[deploy] Changed files: ${CHANGED_FILE_COUNT}"
+
+          BUNDLE_DEPS_CHANGED=false
+          YARN_DEPS_CHANGED=false
+          ASSETS_CHANGED=false
+          MIGRATIONS_CHANGED=false
+
+          while IFS= read -r changed_file; do
+            [ -n "$changed_file" ] || continue
+
+            case "$changed_file" in
+              Gemfile|Gemfile.lock)
+                BUNDLE_DEPS_CHANGED=true
+                ;;
+            esac
+
+            case "$changed_file" in
+              package.json|yarn.lock)
+                YARN_DEPS_CHANGED=true
+                ;;
+            esac
+
+            case "$changed_file" in
+              app/assets/*|app/javascript/*|app/packs/*|config/webpack/*|config/webpacker.yml|config/initializers/assets.rb|package.json|yarn.lock)
+                ASSETS_CHANGED=true
+                ;;
+            esac
+
+            case "$changed_file" in
+              db/migrate/*)
+                MIGRATIONS_CHANGED=true
+                ;;
+            esac
+          done <<< "$CHANGED_FILES"
+
           BUNDLE_STARTED_AT=$(date +%s)
           log_step_start "bundle check/install"
           ~/.rbenv/shims/bundle config set deployment 'true'
           ~/.rbenv/shims/bundle config set without 'development test'
-          ~/.rbenv/shims/bundle check || ~/.rbenv/shims/bundle install --jobs 4 --retry 3
+          if ~/.rbenv/shims/bundle check; then
+            echo "[deploy] Skip bundle install: bundle check passed"
+          elif [ "$BUNDLE_DEPS_CHANGED" = "true" ]; then
+            echo "[deploy] bundle install required: Gemfile/Gemfile.lock changed"
+            ~/.rbenv/shims/bundle install --jobs 4 --retry 3
+          else
+            echo "[deploy] bundle install required: bundle check failed even though Gemfile/Gemfile.lock did not change"
+            ~/.rbenv/shims/bundle install --jobs 4 --retry 3
+          fi
           log_step_finish "bundle check/install" "$BUNDLE_STARTED_AT"
+
+          YARN_STARTED_AT=$(date +%s)
+          log_step_start "yarn check/install"
+          if [ "$YARN_DEPS_CHANGED" = "true" ]; then
+            echo "[deploy] yarn install required: package.json/yarn.lock changed"
+            bin/yarn install --frozen-lockfile
+          else
+            echo "[deploy] Skip yarn install: package.json/yarn.lock unchanged"
+          fi
+          log_step_finish "yarn check/install" "$YARN_STARTED_AT"
 
           ASSETS_STARTED_AT=$(date +%s)
           log_step_start "assets check/precompile"
@@ -92,16 +147,11 @@ jobs:
           if [ "$FORCE_CLOBBER" = "true" ]; then
             SHOULD_PRECOMPILE_ASSETS=true
             echo "[deploy] assets:precompile required: FORCE_ASSETS_CLOBBER=true"
+          elif [ "$ASSETS_CHANGED" = "true" ]; then
+            SHOULD_PRECOMPILE_ASSETS=true
+            echo "[deploy] assets:precompile required: asset-related changes detected"
           else
-            while IFS= read -r changed_file; do
-              case "$changed_file" in
-                app/assets/*|app/javascript/*|app/packs/*|config/webpacker.yml|config/initializers/assets.rb|package.json|yarn.lock|Gemfile.lock)
-                  SHOULD_PRECOMPILE_ASSETS=true
-                  echo "[deploy] assets:precompile required by: $changed_file"
-                  break
-                  ;;
-              esac
-            done < <(git diff --name-only "$PREV_COMMIT" "$NEW_COMMIT")
+            echo "[deploy] Skip assets:precompile: no asset-related changes"
           fi
 
           if [ "$FORCE_CLOBBER" = "true" ]; then
@@ -144,14 +194,17 @@ jobs:
               fi
               exit 1
             fi
-          else
-            echo "[deploy] Skip assets:precompile: no asset-related changes"
           fi
           log_step_finish "assets check/precompile" "$ASSETS_STARTED_AT"
 
           MIGRATE_STARTED_AT=$(date +%s)
           log_step_start "db:migrate"
-          RAILS_ENV=production ~/.rbenv/shims/bundle exec rails db:migrate
+          if [ "$MIGRATIONS_CHANGED" = "true" ]; then
+            echo "[deploy] db:migrate required: db/migrate changed"
+            RAILS_ENV=production ~/.rbenv/shims/bundle exec rails db:migrate
+          else
+            echo "[deploy] Skip db:migrate: db/migrate unchanged"
+          fi
           log_step_finish "db:migrate" "$MIGRATE_STARTED_AT"
 
           PUMA_STARTED_AT=$(date +%s)
