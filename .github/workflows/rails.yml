@@ -47,33 +47,62 @@ jobs:
 
           echo "Host: $(hostname)"
           echo "Deploy path: ${DEPLOY_PATH}"
+          DEPLOY_STARTED_AT=$(date +%s)
           echo "[deploy] START: $(date '+%H:%M:%S')"
           echo "[deploy] FORCE_ASSETS_CLOBBER: ${FORCE_ASSETS_CLOBBER:-false}"
+
+          log_step_start() {
+            echo "[deploy] $1 start: $(date '+%H:%M:%S')"
+          }
+
+          log_step_finish() {
+            step_name="$1"
+            step_started_at="$2"
+            step_finished_at=$(date +%s)
+            echo "[deploy] ${step_name} finished: $(date '+%H:%M:%S') ($((step_finished_at - step_started_at))s)"
+          }
 
           cd "${DEPLOY_PATH}"
 
           PREV_COMMIT=$(git rev-parse HEAD)
           echo "[deploy] Before: ${PREV_COMMIT}"
 
-          echo "[deploy] git fetch start: $(date '+%H:%M:%S')"
+          GIT_UPDATE_STARTED_AT=$(date +%s)
+          log_step_start "git update"
           git fetch origin main
           git reset --hard origin/main
-          echo "[deploy] git fetch finished: $(date '+%H:%M:%S')"
+          log_step_finish "git update" "$GIT_UPDATE_STARTED_AT"
 
           NEW_COMMIT=$(git rev-parse HEAD)
           echo "[deploy] After: ${NEW_COMMIT}"
 
-          echo "[deploy] bundle config start: $(date '+%H:%M:%S')"
+          BUNDLE_STARTED_AT=$(date +%s)
+          log_step_start "bundle check/install"
           ~/.rbenv/shims/bundle config set deployment 'true'
           ~/.rbenv/shims/bundle config set without 'development test'
-          echo "[deploy] bundle config finished: $(date '+%H:%M:%S')"
+          ~/.rbenv/shims/bundle check || ~/.rbenv/shims/bundle install --jobs 4 --retry 3
+          log_step_finish "bundle check/install" "$BUNDLE_STARTED_AT"
 
-          echo "[deploy] bundle install start: $(date '+%H:%M:%S')"
-          ~/.rbenv/shims/bundle install --jobs 4 --retry 3
-          echo "[deploy] bundle install finished: $(date '+%H:%M:%S')"
-
+          ASSETS_STARTED_AT=$(date +%s)
+          log_step_start "assets check/precompile"
           BACKUP_DIR="/tmp/be-my-style-assets-backup-$(date +%Y%m%d%H%M%S)"
           FORCE_CLOBBER="${FORCE_ASSETS_CLOBBER:-false}"
+          SHOULD_PRECOMPILE_ASSETS=false
+
+          if [ "$FORCE_CLOBBER" = "true" ]; then
+            SHOULD_PRECOMPILE_ASSETS=true
+            echo "[deploy] assets:precompile required: FORCE_ASSETS_CLOBBER=true"
+          else
+            while IFS= read -r changed_file; do
+              case "$changed_file" in
+                app/assets/*|app/javascript/*|app/packs/*|config/webpacker.yml|config/initializers/assets.rb|package.json|yarn.lock|Gemfile.lock)
+                  SHOULD_PRECOMPILE_ASSETS=true
+                  echo "[deploy] assets:precompile required by: $changed_file"
+                  break
+                  ;;
+              esac
+            done < <(git diff --name-only "$PREV_COMMIT" "$NEW_COMMIT")
+          fi
 
           if [ "$FORCE_CLOBBER" = "true" ]; then
             echo "[deploy] FORCE_ASSETS_CLOBBER=true: backing up assets before clobber"
@@ -87,44 +116,52 @@ jobs:
             echo "[deploy] assets:clobber finished: $(date '+%H:%M:%S')"
           fi
 
-          echo "[deploy] assets:precompile start: $(date '+%H:%M:%S')"
-          (RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:precompile) &
-          PRECOMPILE_PID=$!
-          while kill -0 "$PRECOMPILE_PID" 2>/dev/null; do
-            echo "[deploy] assets:precompile still running: $(date '+%H:%M:%S')"
-            sleep 30
-          done
+          if [ "$SHOULD_PRECOMPILE_ASSETS" = "true" ]; then
+            echo "[deploy] assets:precompile start: $(date '+%H:%M:%S')"
+            (RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:precompile) &
+            PRECOMPILE_PID=$!
+            while kill -0 "$PRECOMPILE_PID" 2>/dev/null; do
+              echo "[deploy] assets:precompile still running: $(date '+%H:%M:%S')"
+              sleep 30
+            done
 
-          if wait "$PRECOMPILE_PID"; then
-            echo "[deploy] assets:precompile finished: $(date '+%H:%M:%S')"
-            if [ "$FORCE_CLOBBER" = "true" ] && [ -d "$BACKUP_DIR" ]; then
-              rm -rf "$BACKUP_DIR"
-              echo "[deploy] assets backup deleted"
+            if wait "$PRECOMPILE_PID"; then
+              echo "[deploy] assets:precompile finished: $(date '+%H:%M:%S')"
+              if [ "$FORCE_CLOBBER" = "true" ] && [ -d "$BACKUP_DIR" ]; then
+                rm -rf "$BACKUP_DIR"
+                echo "[deploy] assets backup deleted"
+              fi
+            else
+              echo "[deploy] ERROR: assets:precompile FAILED. Aborting deploy."
+              if [ "$FORCE_CLOBBER" = "true" ] && [ -d "$BACKUP_DIR" ]; then
+                echo "[deploy] Restoring assets from backup: $BACKUP_DIR"
+                rm -rf public/assets public/packs
+                [ -d "$BACKUP_DIR/assets" ] && cp -a "$BACKUP_DIR/assets" public/assets
+                [ -d "$BACKUP_DIR/packs" ] && cp -a "$BACKUP_DIR/packs" public/packs
+                echo "[deploy] Assets restored. Existing assets preserved."
+              else
+                echo "[deploy] Existing assets preserved."
+              fi
+              exit 1
             fi
           else
-            echo "[deploy] ERROR: assets:precompile FAILED. Aborting deploy."
-            if [ "$FORCE_CLOBBER" = "true" ] && [ -d "$BACKUP_DIR" ]; then
-              echo "[deploy] Restoring assets from backup: $BACKUP_DIR"
-              rm -rf public/assets public/packs
-              [ -d "$BACKUP_DIR/assets" ] && cp -a "$BACKUP_DIR/assets" public/assets
-              [ -d "$BACKUP_DIR/packs" ] && cp -a "$BACKUP_DIR/packs" public/packs
-              echo "[deploy] Assets restored. Existing assets preserved."
-            else
-              echo "[deploy] Existing assets preserved."
-            fi
-            exit 1
+            echo "[deploy] Skip assets:precompile: no asset-related changes"
           fi
+          log_step_finish "assets check/precompile" "$ASSETS_STARTED_AT"
 
-          echo "[deploy] db:migrate start: $(date '+%H:%M:%S')"
+          MIGRATE_STARTED_AT=$(date +%s)
+          log_step_start "db:migrate"
           RAILS_ENV=production ~/.rbenv/shims/bundle exec rails db:migrate
-          echo "[deploy] db:migrate finished: $(date '+%H:%M:%S')"
+          log_step_finish "db:migrate" "$MIGRATE_STARTED_AT"
 
-          echo "[deploy] puma restart start: $(date '+%H:%M:%S')"
+          PUMA_STARTED_AT=$(date +%s)
+          log_step_start "puma restart"
           sudo systemctl restart puma
-          echo "[deploy] puma restart finished: $(date '+%H:%M:%S')"
+          log_step_finish "puma restart" "$PUMA_STARTED_AT"
           sudo systemctl status puma --no-pager --lines=20
 
-          echo "[deploy] END: $(date '+%H:%M:%S')"
+          DEPLOY_FINISHED_AT=$(date +%s)
+          echo "[deploy] END: $(date '+%H:%M:%S') ($((DEPLOY_FINISHED_AT - DEPLOY_STARTED_AT))s)"
           echo "Deploy completed successfully."
         EOF
 
