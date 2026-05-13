@@ -10,6 +10,9 @@ class Singing::DiagnosesController < Singing::BaseController
     else
       []
     end
+    @yearly_growth_report = if current_customer.has_feature?(:singing_yearly_growth_report)
+      Singing::YearlyGrowthReport.call(current_customer)
+    end
   end
 
   def new
