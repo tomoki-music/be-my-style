@@ -54,6 +54,8 @@
     - if @polling_required
       %p.singing-diagnosis__polling-note 解析中の診断があるため、自動更新しています。すべて完了または失敗になると更新は止まります。
 
+    = render "growth_timeline", events: @growth_timeline_events, customer: current_customer
+
     - if @diagnoses.any?
       .singing-diagnosis__history
         .singing-diagnosis__history-row.singing-diagnosis__history-row--head
