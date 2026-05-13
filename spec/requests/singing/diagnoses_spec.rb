@@ -198,6 +198,81 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("成長記録")
     end
+
+    it "coreユーザーには成長履歴タイムラインの詳細イベントを表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "core")
+      sign_in singing_customer
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: singing_customer,
+        created_at: 2.months.ago,
+        overall_score: 70,
+        rhythm_score: 62
+      )
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: singing_customer,
+        created_at: 1.month.ago,
+        overall_score: 78,
+        rhythm_score: 70
+      )
+      FactoryBot.create(
+        :singing_ai_challenge_progress,
+        customer: singing_customer,
+        target_key: "rhythm",
+        tried: true,
+        completed: true,
+        created_at: 45.days.ago
+      )
+
+      get singing_diagnoses_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("成長履歴タイムライン")
+      expect(response.body).to include("総合スコア +8点成長")
+      expect(response.body).to include("リズムスコア +8点成長")
+      expect(response.body).to include("リズムチャレンジ達成バッジ獲得")
+    end
+
+    it "lightユーザーには成長履歴タイムラインの詳細イベントをHTML出力せずCTAのみ表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "light")
+      sign_in singing_customer
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: singing_customer,
+        created_at: 2.months.ago,
+        overall_score: 70,
+        rhythm_score: 62
+      )
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: singing_customer,
+        created_at: 1.month.ago,
+        overall_score: 78,
+        rhythm_score: 70
+      )
+      FactoryBot.create(
+        :singing_ai_challenge_progress,
+        customer: singing_customer,
+        target_key: "rhythm",
+        tried: true,
+        completed: true,
+        created_at: 45.days.ago
+      )
+
+      get singing_diagnoses_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("成長履歴タイムライン")
+      expect(response.body).to include("Coreプラン以上")
+      expect(response.body).not_to include("総合スコア +8点成長")
+      expect(response.body).not_to include("リズムスコア +8点成長")
+      expect(response.body).not_to include("リズムチャレンジ達成バッジ獲得")
+    end
   end
 
   describe "POST /singing/diagnoses" do

@@ -5,6 +5,11 @@ class Singing::DiagnosesController < Singing::BaseController
   def index
     @diagnoses = current_customer.singing_diagnoses.order(created_at: :desc)
     @polling_required = @diagnoses.any? { |diagnosis| diagnosis.queued? || diagnosis.processing? }
+    @growth_timeline_events = if current_customer.has_feature?(:singing_ai_challenge_progress)
+      Singing::GrowthTimelineService.call(current_customer)
+    else
+      []
+    end
   end
 
   def new

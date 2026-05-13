@@ -7195,3 +7195,124 @@ $ranking-accent: #7c4dff;
     color: #0369a1;
   }
 }
+
+.singing-diagnosis__growth-timeline {
+  background: #ffffff;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+  margin: 28px 0;
+  padding: 24px;
+}
+
+.singing-diagnosis__growth-timeline--locked {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-color: #e2e8f0;
+}
+
+.singing-diagnosis__growth-timeline-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.singing-diagnosis__growth-timeline-icon {
+  align-items: center;
+  background: #eff6ff;
+  border-radius: 6px;
+  display: inline-flex;
+  font-size: 22px;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
+.singing-diagnosis__growth-timeline-title h2 {
+  color: #0f172a;
+  font-size: 22px;
+  margin: 0 0 6px;
+}
+
+.singing-diagnosis__growth-timeline-title p {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.singing-diagnosis__growth-timeline-list {
+  display: grid;
+  gap: 12px;
+}
+
+.singing-diagnosis__growth-timeline-item {
+  align-items: flex-start;
+  border-left: 4px solid #38bdf8;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 56px 1fr;
+  padding: 10px 0 10px 14px;
+}
+
+.singing-diagnosis__growth-timeline-item--score_up,
+.singing-diagnosis__growth-timeline-item--specific_growth,
+.singing-diagnosis__growth-timeline-item--personal_best {
+  border-left-color: #22c55e;
+}
+
+.singing-diagnosis__growth-timeline-item--challenge_completed,
+.singing-diagnosis__growth-timeline-item--challenge_badge {
+  border-left-color: #f59e0b;
+}
+
+.singing-diagnosis__growth-timeline-month {
+  background: #f1f5f9;
+  border-radius: 999px;
+  color: #334155;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 700;
+  justify-content: center;
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+
+.singing-diagnosis__growth-timeline-body strong {
+  color: #0f172a;
+  display: block;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.singing-diagnosis__growth-timeline-body p,
+.singing-diagnosis__growth-timeline-empty p,
+.singing-diagnosis__growth-timeline-locked-body p {
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 4px 0 0;
+}
+
+.singing-diagnosis__growth-timeline-empty,
+.singing-diagnosis__growth-timeline-locked-body {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.singing-diagnosis__growth-timeline-empty .btn,
+.singing-diagnosis__growth-timeline-locked-body .btn {
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .singing-diagnosis__growth-timeline {
+    padding: 18px;
+  }
+
+  .singing-diagnosis__growth-timeline-item {
+    grid-template-columns: 48px 1fr;
+    gap: 10px;
+  }
+}

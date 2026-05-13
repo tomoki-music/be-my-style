@@ -1,0 +1,25 @@
+- timeline_available = customer.has_feature?(:singing_ai_challenge_progress)
+.singing-diagnosis__growth-timeline{ class: ("singing-diagnosis__growth-timeline--locked" unless timeline_available) }
+  .singing-diagnosis__growth-timeline-header
+    %span.singing-diagnosis__growth-timeline-icon 📍
+    .singing-diagnosis__growth-timeline-title
+      %h2 成長履歴タイムライン
+      %p 診断結果、AIチャレンジ、バッジ達成を時系列で振り返れます。
+
+  - if timeline_available
+    - if events.present?
+      .singing-diagnosis__growth-timeline-list
+        - events.each do |event|
+          .singing-diagnosis__growth-timeline-item{ class: "singing-diagnosis__growth-timeline-item--#{event.event_type}" }
+            %span.singing-diagnosis__growth-timeline-month= event.month_label
+            .singing-diagnosis__growth-timeline-body
+              %strong= event.title
+              %p= event.description
+    - else
+      .singing-diagnosis__growth-timeline-empty
+        %p 診断やAIチャレンジを重ねると、ここに成長の節目が表示されます。
+        = link_to "新しい診断を作成", new_singing_diagnosis_path, class: "btn btn-primary"
+  - else
+    .singing-diagnosis__growth-timeline-locked-body
+      %p Coreプラン以上で、スコア成長・AIチャレンジ・バッジ達成をまとめたタイムラインを確認できます。
+      = link_to "Coreプランを見る", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
