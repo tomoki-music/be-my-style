@@ -90,6 +90,28 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(response.body).to include("First Song")
     end
 
+    it "premiumユーザーにもSNSシェア用の画像風UIを表示すること" do
+      year = Time.current.year
+      singing_customer.create_subscription!(status: "active", plan: "premium")
+      sign_in singing_customer
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: singing_customer,
+        song_title: "Premium Share Song",
+        created_at: Time.zone.local(year, 1, 10, 10, 0, 0),
+        overall_score: 60,
+        pitch_score: 50
+      )
+
+      get singing_share_image_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("#{year} YEAR IN VOICE")
+      expect(response.body).to include("Premium Share Song")
+      expect(response.body).to include("Xでシェア")
+    end
+
     it "freeユーザーには詳細データをHTML出力しないこと" do
       year = Time.current.year
       sign_in singing_customer

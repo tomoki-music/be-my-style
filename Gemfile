@@ -52,8 +52,8 @@ group :test do
   gem 'faker'
   gem 'capybara', '>= 3.26'
   gem 'selenium-webdriver'
-  # Easy installation and use of web drivers to run system tests with browsers
-  gem 'webdrivers'
+  # Keep available for older local workflows, but prefer Selenium Manager by default.
+  gem 'webdrivers', require: false
   gem 'launchy'
 end
 
