@@ -1,0 +1,44 @@
+- content_for :title, "挑戦状 | BeMyStyle"
+
+.score-battle
+  .score-battle__inner
+    %p.score-battle__eyebrow Score Battle
+
+    .score-battle__invite
+      .score-battle__invite-header
+        %span.score-battle__invite-icon ⚔️
+        %h1.score-battle__invite-title 挑戦状を作成しました！
+        %p.score-battle__invite-lead 以下のリンクを友達に送って、同じ曲でスコアを競おう！
+
+      .score-battle__song
+        %span.score-battle__song-label 対象曲
+        %strong.score-battle__song-title= @battle.song_title
+        %span.score-battle__song-type= SingingDiagnosis::PERFORMANCE_TYPE_LABELS[@battle.performance_type] || @battle.performance_type
+
+      .score-battle__link-box
+        %p.score-battle__link-label 挑戦リンク（コピーして共有）
+        %input.score-battle__link-input{ type: "text", value: singing_join_battle_url(token: @battle.token), readonly: true, id: "battle-link-input" }
+        %button.score-battle__link-copy{ type: "button", data: { target: "battle-link-input" } } コピー
+
+      .score-battle__your-score
+        %h2 あなたのスコア
+        .score-battle__score-grid
+          .score-battle__score-item
+            %span 総合
+            %strong= @battle.challenger_diagnosis.overall_score || "-"
+          .score-battle__score-item
+            %span ピッチ
+            %strong= @battle.challenger_diagnosis.pitch_score || "-"
+          .score-battle__score-item
+            %span リズム
+            %strong= @battle.challenger_diagnosis.rhythm_score || "-"
+          .score-battle__score-item
+            %span 表現力
+            %strong= @battle.challenger_diagnosis.expression_score || "-"
+
+      .score-battle__expires
+        %span 挑戦リンクの有効期限：
+        %strong= @battle.expires_at.strftime("%Y/%m/%d %H:%M")
+
+    .score-battle__actions
+      = link_to "診断履歴へ", singing_diagnoses_path, class: "btn btn-secondary"

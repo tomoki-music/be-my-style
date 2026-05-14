@@ -131,6 +131,8 @@ class Customer < ApplicationRecord
   has_many :singing_ai_challenge_progresses, dependent: :destroy
   has_many :singing_badges, dependent: :destroy
   has_many :singing_daily_challenge_progresses, dependent: :destroy
+  has_many :singing_battles_as_challenger, class_name: "SingingBattle", foreign_key: :challenger_id, dependent: :destroy
+  has_many :singing_battles_as_opponent, class_name: "SingingBattle", foreign_key: :opponent_id, dependent: :nullify
   has_many :singing_profile_reactions, dependent: :destroy
   has_many :received_singing_profile_reactions,
            class_name: "SingingProfileReaction",

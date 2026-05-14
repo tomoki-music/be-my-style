@@ -16,12 +16,17 @@ class Singing::DiagnosesController < Singing::BaseController
   end
 
   def new
-    @diagnosis = current_customer.singing_diagnoses.build
+    @diagnosis = current_customer.singing_diagnoses.build(
+      song_title:       params[:song_title],
+      performance_type: params[:performance_type]
+    )
+    @battle_token = params[:battle_token]
     @daily_challenge = Singing::DailyChallengeGenerator.ensure_today
     @daily_challenge_progress = @daily_challenge.progress_for(current_customer)
   end
 
   def create
+    @battle_token = params[:battle_token]
     @diagnosis = current_customer.singing_diagnoses.build(diagnosis_params)
     @diagnosis.reference_key = reference_params[:reference_key]
     @diagnosis.reference_bpm = reference_params[:reference_bpm]
@@ -37,7 +42,7 @@ class Singing::DiagnosesController < Singing::BaseController
 
     if @diagnosis.save
       enqueue_submit_to_analyzer_job(@diagnosis)
-      redirect_to singing_diagnosis_path(@diagnosis), notice: "歌唱・演奏診断リクエストを受け付けました。"
+      redirect_to singing_diagnosis_path(@diagnosis, battle_token: @battle_token), notice: "歌唱・演奏診断リクエストを受け付けました。"
     else
       render :new
     end
@@ -77,6 +82,7 @@ class Singing::DiagnosesController < Singing::BaseController
       @xp_gained = xp_gained
       @daily_challenge = Singing::DailyChallengeGenerator.ensure_today
       @daily_challenge_progress = @daily_challenge.progress_for(current_customer)
+      @battle = link_diagnosis_to_battle
     end
   end
 
@@ -157,6 +163,24 @@ class Singing::DiagnosesController < Singing::BaseController
         count += 1
         return score if count == 10
       end
+    nil
+  end
+
+  def link_diagnosis_to_battle
+    return nil unless params[:battle_token].present?
+
+    battle = SingingBattle.find_by(token: params[:battle_token])
+    return nil unless battle&.open?
+    return nil if battle.challenger == current_customer
+    return nil if battle.opponent_diagnosis_id.present?
+
+    battle.update!(
+      opponent:           current_customer,
+      opponent_diagnosis: @diagnosis,
+      status:             :completed
+    )
+    battle
+  rescue ActiveRecord::StaleObjectError, ActiveRecord::RecordNotUnique
     nil
   end
 end

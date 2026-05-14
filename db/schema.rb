@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_14_142555) do
+ActiveRecord::Schema.define(version: 2026_05_14_142956) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -852,6 +852,25 @@ ActiveRecord::Schema.define(version: 2026_05_14_142555) do
     t.index ["singing_ranking_season_id"], name: "index_singing_badges_on_season_id"
   end
 
+  create_table "singing_battles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "token", null: false
+    t.string "song_title"
+    t.string "performance_type"
+    t.integer "status", default: 0, null: false
+    t.datetime "expires_at", null: false
+    t.bigint "challenger_id", null: false
+    t.bigint "opponent_id"
+    t.bigint "challenger_diagnosis_id", null: false
+    t.bigint "opponent_diagnosis_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["challenger_diagnosis_id"], name: "index_singing_battles_on_challenger_diagnosis_id"
+    t.index ["challenger_id"], name: "index_singing_battles_on_challenger_id"
+    t.index ["opponent_diagnosis_id"], name: "fk_singing_battles_opponent_diagnosis"
+    t.index ["opponent_id"], name: "index_singing_battles_on_opponent_id"
+    t.index ["token"], name: "index_singing_battles_on_token", unique: true
+  end
+
   create_table "singing_daily_challenge_progresses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "singing_daily_challenge_id", null: false
@@ -1103,6 +1122,10 @@ ActiveRecord::Schema.define(version: 2026_05_14_142555) do
   add_foreign_key "singing_ai_challenge_progresses", "customers"
   add_foreign_key "singing_badges", "customers"
   add_foreign_key "singing_badges", "singing_ranking_seasons"
+  add_foreign_key "singing_battles", "customers", column: "challenger_id", name: "fk_singing_battles_challenger"
+  add_foreign_key "singing_battles", "customers", column: "opponent_id", name: "fk_singing_battles_opponent"
+  add_foreign_key "singing_battles", "singing_diagnoses", column: "challenger_diagnosis_id", name: "fk_singing_battles_challenger_diagnosis"
+  add_foreign_key "singing_battles", "singing_diagnoses", column: "opponent_diagnosis_id", name: "fk_singing_battles_opponent_diagnosis"
   add_foreign_key "singing_daily_challenge_progresses", "customers"
   add_foreign_key "singing_daily_challenge_progresses", "singing_daily_challenges", name: "fk_sdcp_on_singing_daily_challenge"
   add_foreign_key "singing_diagnoses", "customers"
