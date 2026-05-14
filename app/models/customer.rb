@@ -240,6 +240,18 @@ class Customer < ApplicationRecord
     monthly_singing_diagnosis_count(reference_time) < limit
   end
 
+  def singer_rank
+    Singing::SingerRankService.rank_for(singing_xp)
+  end
+
+  def singer_rank_progress
+    Singing::SingerRankService.xp_progress(singing_xp)
+  end
+
+  def singer_next_rank
+    Singing::SingerRankService.next_rank_for(singing_xp)
+  end
+
   def has_feature?(feature_key)
     return true if admin?
 

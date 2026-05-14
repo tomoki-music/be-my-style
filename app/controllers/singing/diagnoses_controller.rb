@@ -68,6 +68,11 @@ class Singing::DiagnosesController < Singing::BaseController
         @ranking_top10_threshold = top10_score_threshold
       end
       @next_badges = Singing::NextBadgeService.call(current_customer)
+      @singer_rank = current_customer.singer_rank
+      @singer_rank_progress = current_customer.singer_rank_progress
+      @singer_next_rank = current_customer.singer_next_rank
+      xp_gained = (50 + (@diagnosis.overall_score.to_f / 100 * 50).round).to_i
+      @xp_gained = xp_gained
     end
   end
 

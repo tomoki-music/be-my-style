@@ -26,6 +26,7 @@ module SingingDiagnoses
       )
 
       enqueue_ai_comment_if_available
+      grant_xp
 
       true
     rescue StandardError => e
@@ -49,6 +50,12 @@ module SingingDiagnoses
 
     def score_payload
       @score_payload ||= payload[:common] || payload["common"] || payload
+    end
+
+    def grant_xp
+      Singing::XpGranter.call(diagnosis)
+    rescue StandardError => e
+      Rails.logger.error("XpGranter failed for diagnosis #{diagnosis.id}: #{e.message}")
     end
 
     def enqueue_ai_comment_if_available

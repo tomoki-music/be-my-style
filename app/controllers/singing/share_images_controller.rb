@@ -4,6 +4,7 @@ class Singing::ShareImagesController < Singing::BaseController
   def show
     @share_image = Singing::YearlyGrowthShareImageBuilder.call(current_customer)
     redirect_to singing_diagnoses_path, alert: "今年の診断がまだないため、シェアカードは表示できません。" unless @share_image.present?
+    @singer_rank = current_customer.singer_rank
   end
 
   private

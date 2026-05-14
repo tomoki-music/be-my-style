@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_13_001000) do
+ActiveRecord::Schema.define(version: 2026_05_14_141733) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -293,6 +293,8 @@ ActiveRecord::Schema.define(version: 2026_05_13_001000) do
     t.text "achievements"
     t.boolean "onboarding_done"
     t.string "singing_profile_comment", limit: 120
+    t.integer "singing_xp", default: 0, null: false
+    t.integer "singing_level", default: 1, null: false
     t.index ["email"], name: "index_customers_on_email", unique: true
     t.index ["reset_password_token"], name: "index_customers_on_reset_password_token", unique: true
   end
