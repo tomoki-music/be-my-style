@@ -48,6 +48,11 @@
             %strong= @share_image.song_label
             %small most sung
 
+        .singing-share-image__singer-rank
+          %span.singing-share-image__singer-rank-icon= @singer_rank.icon
+          %span.singing-share-image__singer-rank-label= @singer_rank.label
+          %span.singing-share-image__singer-rank-level= "Lv.#{@singer_rank.level}"
+
         .singing-share-image__footer
           %span= @share_image.hashtag
           %small Screenshot ready

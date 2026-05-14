@@ -118,6 +118,26 @@
                   %span.singing-diagnosis__season-badge-new NEW
           = link_to "すべてのバッジを見る →", singing_badges_path, class: "singing-diagnosis__badges-link"
 
+      - if @singer_rank
+        .singer-rank-result{ class: @singer_rank.color_class }
+          .singer-rank-result__xp-gained
+            %span.singer-rank-result__xp-icon ⚡
+            %strong.singer-rank-result__xp-value= "+#{@xp_gained} XP"
+            %span.singer-rank-result__xp-label 獲得！
+          .singer-rank-result__rank
+            %span.singer-rank-result__rank-icon= @singer_rank.icon
+            .singer-rank-result__rank-body
+              %strong.singer-rank-result__rank-label= @singer_rank.label
+              %span.singer-rank-result__rank-level= "Lv.#{@singer_rank.level}  |  通算 #{current_customer.singing_xp} XP"
+          - if @singer_next_rank
+            - progress = @singer_rank_progress
+            .singer-rank-result__progress
+              .singer-rank-result__progress-bar
+                .singer-rank-result__progress-fill{ style: "width: #{progress[:percent]}%" }
+              %span.singer-rank-result__progress-label= "次のランク「#{@singer_next_rank.icon} #{@singer_next_rank.label}」まで #{progress[:xp_to_next]} XP"
+          = link_to singing_user_path(current_customer), class: "singer-rank-result__profile-link" do
+            自分のランクページを見る →
+
       - if @next_badges.present?
         .singing-diagnosis__next-badges
           .singing-diagnosis__next-badges-header

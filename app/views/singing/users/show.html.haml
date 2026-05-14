@@ -13,6 +13,24 @@
             %strong.singing-profile__title-label= @profile_title.label
             %span.singing-profile__title-desc= @profile_title.description
           = link_to "バッジ一覧 →", singing_badges_path, class: "singing-profile__title-link"
+
+        - progress = @singer_rank_progress
+        .singer-rank{ class: @singer_rank.color_class }
+          .singer-rank__header
+            %span.singer-rank__icon= @singer_rank.icon
+            .singer-rank__info
+              %strong.singer-rank__label= @singer_rank.label
+              %span.singer-rank__level= "Lv.#{@singer_rank.level}"
+            %span.singer-rank__xp= "#{@user.singing_xp} XP"
+          - if @singer_next_rank
+            .singer-rank__progress
+              .singer-rank__progress-bar
+                .singer-rank__progress-fill{ style: "width: #{progress[:percent]}%" }
+              %span.singer-rank__progress-label= "次のランクまで #{progress[:xp_to_next]} XP"
+          - else
+            .singer-rank__max
+              %span MAX RANK 達成！
+
         - if @user.singing_profile_comment.present?
           %p.singing-profile__comment= @user.singing_profile_comment
         - else
