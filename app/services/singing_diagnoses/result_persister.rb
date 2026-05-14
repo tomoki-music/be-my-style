@@ -26,6 +26,8 @@ module SingingDiagnoses
       )
 
       enqueue_ai_comment_if_available
+      grant_xp
+      evaluate_daily_challenge
 
       true
     rescue StandardError => e
@@ -49,6 +51,18 @@ module SingingDiagnoses
 
     def score_payload
       @score_payload ||= payload[:common] || payload["common"] || payload
+    end
+
+    def grant_xp
+      Singing::XpGranter.call(diagnosis)
+    rescue StandardError => e
+      Rails.logger.error("XpGranter failed for diagnosis #{diagnosis.id}: #{e.message}")
+    end
+
+    def evaluate_daily_challenge
+      Singing::DailyChallengeEvaluator.call(diagnosis)
+    rescue StandardError => e
+      Rails.logger.error("DailyChallengeEvaluator failed for diagnosis #{diagnosis.id}: #{e.message}")
     end
 
     def enqueue_ai_comment_if_available

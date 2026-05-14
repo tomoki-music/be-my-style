@@ -4,6 +4,20 @@
     %h1 歌唱・演奏診断を依頼する
     %p 音声ファイルを添付して、診断リクエストを作成します。
 
+    - if @daily_challenge
+      .daily-challenge-banner{ class: (@daily_challenge_progress&.completed? ? "daily-challenge-banner--done" : "") }
+        .daily-challenge-banner__header
+          %span.daily-challenge-banner__date-label= "TODAY'S CHALLENGE #{Date.current.strftime('%m/%d')}"
+          - if @daily_challenge_progress&.completed?
+            %span.daily-challenge-banner__done-badge ✅ クリア済み
+          - else
+            %span.daily-challenge-banner__xp-badge= "+#{@daily_challenge.xp_reward} XP"
+        .daily-challenge-banner__body
+          %span.daily-challenge-banner__icon= @daily_challenge.target_icon
+          .daily-challenge-banner__text
+            %strong.daily-challenge-banner__title= @daily_challenge.title
+            %span.daily-challenge-banner__desc= @daily_challenge.description
+
     .singing-diagnosis__quota{ class: ("singing-diagnosis__quota--limited" if @singing_diagnosis_quota_exceeded) }
       - if @singing_diagnosis_quota_limited
         %h2 今月の歌唱・演奏診断

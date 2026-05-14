@@ -130,6 +130,7 @@ class Customer < ApplicationRecord
   has_many :singing_diagnoses, dependent: :destroy
   has_many :singing_ai_challenge_progresses, dependent: :destroy
   has_many :singing_badges, dependent: :destroy
+  has_many :singing_daily_challenge_progresses, dependent: :destroy
   has_many :singing_profile_reactions, dependent: :destroy
   has_many :received_singing_profile_reactions,
            class_name: "SingingProfileReaction",

@@ -17,6 +17,8 @@ class Singing::DiagnosesController < Singing::BaseController
 
   def new
     @diagnosis = current_customer.singing_diagnoses.build
+    @daily_challenge = Singing::DailyChallengeGenerator.ensure_today
+    @daily_challenge_progress = @daily_challenge.progress_for(current_customer)
   end
 
   def create
@@ -68,6 +70,8 @@ class Singing::DiagnosesController < Singing::BaseController
         @ranking_top10_threshold = top10_score_threshold
       end
       @next_badges = Singing::NextBadgeService.call(current_customer)
+      @daily_challenge = Singing::DailyChallengeGenerator.ensure_today
+      @daily_challenge_progress = @daily_challenge.progress_for(current_customer)
     end
   end
 
