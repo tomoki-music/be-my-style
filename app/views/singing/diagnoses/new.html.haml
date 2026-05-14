@@ -1,115 +1,174 @@
-.singing-diagnosis
-  .singing-diagnosis__inner
-    %p.singing-diagnosis__eyebrow Singing / Performance Diagnosis
-    %h1 歌唱・演奏診断を依頼する
-    %p 音声ファイルを添付して、診断リクエストを作成します。
+.singing-diagnosis-new
+  .singing-diagnosis-new__hero
+    .singing-diagnosis-new__hero-inner
+      %p.singing-diagnosis-new__hero-eyebrow 🎵 Singing / Performance Diagnosis
+      %h1.singing-diagnosis-new__hero-title 歌唱・演奏診断を依頼する
+      %p.singing-diagnosis-new__hero-desc
+        ピッチ・リズム・表現力を AI がスコア化します。
+        %br
+        音声ファイルをアップロードするだけで詳細な診断レポートが届きます。
 
-    - if @daily_challenge
-      .daily-challenge-banner{ class: (@daily_challenge_progress&.completed? ? "daily-challenge-banner--done" : "") }
-        .daily-challenge-banner__header
-          %span.daily-challenge-banner__date-label= "TODAY'S CHALLENGE #{Date.current.strftime('%m/%d')}"
-          - if @daily_challenge_progress&.completed?
-            %span.daily-challenge-banner__done-badge ✅ クリア済み
+  .singing-diagnosis-new__body
+    .singing-diagnosis-new__container
+
+      - if @daily_challenge
+        .singing-diagnosis-new__challenge{ class: (@daily_challenge_progress&.completed? ? "singing-diagnosis-new__challenge--done" : "") }
+          .singing-diagnosis-new__challenge-header
+            %span.singing-diagnosis-new__challenge-date= "TODAY'S CHALLENGE · #{Date.current.strftime('%m/%d')}"
+            - if @daily_challenge_progress&.completed?
+              %span.singing-diagnosis-new__challenge-badge.singing-diagnosis-new__challenge-badge--done ✅ クリア済み
+            - else
+              %span.singing-diagnosis-new__challenge-badge= "+#{@daily_challenge.xp_reward} XP"
+          .singing-diagnosis-new__challenge-body
+            %span.singing-diagnosis-new__challenge-icon= @daily_challenge.target_icon
+            .singing-diagnosis-new__challenge-text
+              %strong= @daily_challenge.title
+              %span= @daily_challenge.description
+
+      .singing-diagnosis-new__quota{ class: ("singing-diagnosis-new__quota--exceeded" if @singing_diagnosis_quota_exceeded) }
+        - if @singing_diagnosis_quota_limited
+          .singing-diagnosis-new__quota-row
+            %span.singing-diagnosis-new__quota-label 今月の診断
+            .singing-diagnosis-new__quota-progress
+              .singing-diagnosis-new__quota-bar
+                .singing-diagnosis-new__quota-fill{ style: "width: #{[(@singing_diagnosis_monthly_count.to_f / @singing_diagnosis_monthly_limit * 100).round, 100].min}%" }
+              %span.singing-diagnosis-new__quota-count= "#{@singing_diagnosis_monthly_count} / #{@singing_diagnosis_monthly_limit} 回"
+          - if @singing_diagnosis_quota_exceeded
+            %p.singing-diagnosis-new__quota-msg 今月の完了済み診断回数を使い切りました。プランをアップグレードすると引き続き利用できます。
+            = link_to "プランを見る →", public_singing_lp_path(anchor: "lp-section"), class: "singing-diagnosis-new__quota-link"
           - else
-            %span.daily-challenge-banner__xp-badge= "+#{@daily_challenge.xp_reward} XP"
-        .daily-challenge-banner__body
-          %span.daily-challenge-banner__icon= @daily_challenge.target_icon
-          .daily-challenge-banner__text
-            %strong.daily-challenge-banner__title= @daily_challenge.title
-            %span.daily-challenge-banner__desc= @daily_challenge.description
-
-    .singing-diagnosis__quota{ class: ("singing-diagnosis__quota--limited" if @singing_diagnosis_quota_exceeded) }
-      - if @singing_diagnosis_quota_limited
-        %h2 今月の歌唱・演奏診断
-        %p
-          = "今月の完了済み診断 #{@singing_diagnosis_monthly_count} / #{@singing_diagnosis_monthly_limit} 回"
-        - if @singing_diagnosis_quota_exceeded
-          %p 今月の完了済み診断回数を使い切りました。継続して変化を見たい場合は、歌唱・演奏診断向けのプラン案内を確認できます。
-          = link_to "歌唱・演奏診断のプランを見る", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
+            %p.singing-diagnosis-new__quota-msg= "残り #{@singing_diagnosis_remaining_quota} 回利用できます（失敗した診断は回数に含まれません）"
         - else
-          %p= "残り #{@singing_diagnosis_remaining_quota} 回、今月の完了済み診断として利用できます。失敗した診断は回数に含まれません。"
-      - else
-        %h2 歌唱・演奏診断を利用できます
-        %p 現在のプランでは、今月の診断回数を気にせず依頼できます。
+          .singing-diagnosis-new__quota-row
+            %span.singing-diagnosis-new__quota-label ✅ 今月の診断回数
+            %span.singing-diagnosis-new__quota-unlimited 無制限
 
-    - if current_customer.has_feature?(:singing_diagnosis_priority)
-      .singing-diagnosis__priority-notice
-        %h2 Premium 優先解析
-        %p 現在のプランでは、歌唱・演奏診断リクエストを優先解析対象として受け付けます。
+      - if current_customer.has_feature?(:singing_diagnosis_priority)
+        .singing-diagnosis-new__priority
+          %strong ⚡ Premium 優先解析が有効です
+          %span 診断リクエストを優先的に処理します。
 
-    = form_with model: @diagnosis, url: singing_diagnoses_path, local: true do |f|
-      - if @diagnosis.errors.any?
-        #error_explanation
-          %ul
-            - @diagnosis.errors.full_messages.each do |message|
-              %li= message
-
-      .form-group
-        %label 診断対象
-        = f.select :performance_type, SingingDiagnosis.performance_type_options, {}, class: "form-control"
-        .singing-diagnosis__type-grid
-          - singing_performance_type_cards.each do |card|
-            - card_classes = ["singing-diagnosis__type-card"]
-            - card_classes << "singing-diagnosis__type-card--featured" if card[:featured]
-            %div{ class: card_classes.join(" ") }
-              .singing-diagnosis__type-card-header
-                %strong= card[:label]
-                - if card[:badges].present?
-                  .singing-diagnosis__type-card-badges
-                    - card[:badges].each do |badge|
-                      %span= badge
-              %p= card[:description]
-        - if SingingDiagnosis.future_performance_type_labels.present?
-          %small.form-text.text-muted
-            = "#{SingingDiagnosis.future_performance_type_labels.join(' / ')}は今後対応予定です。"
-
-      .singing-diagnosis__band-guide
-        %h2= singing_band_promo_catch_copy
-        %p.singing-diagnosis__band-guide-lead= singing_band_promo_description
-        .singing-diagnosis__band-guide-grid
-          .singing-diagnosis__band-guide-card
-            %h3 おすすめ対象
+      = form_with model: @diagnosis, url: singing_diagnoses_path, local: true do |f|
+        - if @diagnosis.errors.any?
+          .singing-diagnosis-new__errors
             %ul
-              - singing_band_promo_recommended_for.each do |item|
-                %li= item
-          .singing-diagnosis__band-guide-card
-            %h3 推奨音源
-            %p= singing_band_promo_upload_note
-          .singing-diagnosis__band-guide-card
-            %h3 Premiumで一緒に伸ばすこと
-            %p= singing_band_premium_promo
+              - @diagnosis.errors.full_messages.each do |message|
+                %li= message
 
-      .form-group
-        %label 音声ファイル
-        = f.file_field :audio_file, accept: "audio/*", class: "form-control"
+        -# ── STEP 1: 診断タイプ ──────────────────────────────
+        .singing-diagnosis-new__step
+          .singing-diagnosis-new__step-header
+            %span.singing-diagnosis-new__step-num 01
+            %h2 診断タイプを選ぶ
+          .singing-diagnosis-new__step-body
+            .singing-diagnosis-new__type-select-wrap
+              = f.select :performance_type, SingingDiagnosis.performance_type_options, {}, class: "form-control singing-diagnosis-new__select"
+            .singing-diagnosis__type-grid
+              - singing_performance_type_cards.each do |card|
+                - card_classes = ["singing-diagnosis__type-card"]
+                - card_classes << "singing-diagnosis__type-card--featured" if card[:featured]
+                %div{ class: card_classes.join(" ") }
+                  .singing-diagnosis__type-card-header
+                    %strong= card[:label]
+                    - if card[:badges].present?
+                      .singing-diagnosis__type-card-badges
+                        - card[:badges].each do |badge|
+                          %span= badge
+                  %p= card[:description]
+            - if SingingDiagnosis.future_performance_type_labels.present?
+              %small.form-text.text-muted= "#{SingingDiagnosis.future_performance_type_labels.join(' / ')}は今後対応予定です。"
 
-      .form-group
-        %label 曲名
-        = f.text_field :song_title, class: "form-control", placeholder: "未定の場合は空欄でOK"
+        -# ── STEP 2: 音声アップロード ────────────────────────
+        .singing-diagnosis-new__step
+          .singing-diagnosis-new__step-header
+            %span.singing-diagnosis-new__step-num 02
+            %h2 音声ファイルをアップロード
+          .singing-diagnosis-new__step-body
+            .singing-diagnosis-new__upload{ id: "upload-zone" }
+              %label.singing-diagnosis-new__upload-label{ for: "audio_file_input" }
+                %span.singing-diagnosis-new__upload-icon 🎙️
+                .singing-diagnosis-new__upload-text
+                  %strong ファイルを選択 または ここにドロップ
+                  %span MP3 · WAV · M4A · AAC などの音声ファイル
+                %span.singing-diagnosis-new__upload-btn ファイルを選ぶ
+              = f.file_field :audio_file, accept: "audio/*", class: "singing-diagnosis-new__upload-input", id: "audio_file_input"
+              %p.singing-diagnosis-new__upload-filename{ id: "upload-filename" }
 
-      .form-group
-        %label 参考キー（任意）
-        = f.text_field :reference_key, class: "form-control", placeholder: "例: C / G# / Bb"
-        %small.form-text.text-muted 曲のキーが分かる場合だけ入力してください。簡易比較の目安として使います。
+        -# ── STEP 3: 楽曲情報（任意）────────────────────────
+        .singing-diagnosis-new__step
+          .singing-diagnosis-new__step-header
+            %span.singing-diagnosis-new__step-num 03
+            %h2
+              楽曲情報
+              %span.singing-diagnosis-new__optional （任意）
+          .singing-diagnosis-new__step-body
+            .singing-diagnosis-new__fields-row
+              .singing-diagnosis-new__field
+                %label.singing-diagnosis-new__field-label 曲名
+                = f.text_field :song_title, class: "form-control", placeholder: "例: 夜に駆ける"
+              .singing-diagnosis-new__field
+                %label.singing-diagnosis-new__field-label 参考キー
+                = f.text_field :reference_key, class: "form-control", placeholder: "例: C / G#"
+                %small.singing-diagnosis-new__field-hint キーが分かる場合のみ
+              .singing-diagnosis-new__field
+                %label.singing-diagnosis-new__field-label テンポ BPM
+                = f.number_field :reference_bpm, class: "form-control", min: 1, step: 0.1, placeholder: "例: 120"
+                %small.singing-diagnosis-new__field-hint テンポが分かる場合のみ
+            .singing-diagnosis-new__field.singing-diagnosis-new__field--full
+              %label.singing-diagnosis-new__field-label メモ
+              = f.text_area :memo, class: "form-control singing-diagnosis-new__textarea", rows: 4, placeholder: "気になる点、診断してほしいポイントなど"
 
-      .form-group
-        %label 参考テンポ BPM（任意）
-        = f.number_field :reference_bpm, class: "form-control", min: 1, step: 0.1, placeholder: "例: 120"
-        %small.form-text.text-muted 曲のテンポが分かる場合だけ入力してください。録音から推定したテンポとの差を表示します。
+        -# ── バンドガイド ─────────────────────────────────────
+        .singing-diagnosis__band-guide
+          %h2= singing_band_promo_catch_copy
+          %p.singing-diagnosis__band-guide-lead= singing_band_promo_description
+          .singing-diagnosis__band-guide-grid
+            .singing-diagnosis__band-guide-card
+              %h3 おすすめ対象
+              %ul
+                - singing_band_promo_recommended_for.each do |item|
+                  %li= item
+            .singing-diagnosis__band-guide-card
+              %h3 推奨音源
+              %p= singing_band_promo_upload_note
+            .singing-diagnosis__band-guide-card
+              %h3 Premiumで一緒に伸ばすこと
+              %p= singing_band_premium_promo
 
-      .form-group
-        %label メモ
-        = f.text_area :memo, class: "form-control", rows: 5, placeholder: "気になる点、診断してほしいポイントなど"
+        -# ── ランキング参加 ───────────────────────────────────
+        .singing-diagnosis__ranking-opt-in
+          %h2 ランキング参加
+          %p.singing-diagnosis__ranking-opt-in-note
+            ランキングページで、あなたのベストスコアを公開できます。
+            参加は任意です。いつでも新しい診断で変更できます。
+          .singing-diagnosis__ranking-opt-in-check
+            = f.check_box :ranking_opt_in, class: "singing-diagnosis__ranking-checkbox"
+            = f.label :ranking_opt_in, "ランキングに参加する（名前とスコアが公開されます）", class: "singing-diagnosis__ranking-label"
 
-      .singing-diagnosis__ranking-opt-in
-        %h2 ランキング参加
-        %p.singing-diagnosis__ranking-opt-in-note
-          ランキングページで、あなたのベストスコアを公開できます。
-          参加は任意です。いつでも新しい診断で変更できます。
-        .singing-diagnosis__ranking-opt-in-check
-          = f.check_box :ranking_opt_in, class: "singing-diagnosis__ranking-checkbox"
-          = f.label :ranking_opt_in, "ランキングに参加する（名前とスコアが公開されます）", class: "singing-diagnosis__ranking-label"
+        -# ── 送信エリア ──────────────────────────────────────
+        .singing-diagnosis-new__submit
+          = f.submit "診断を依頼する", class: "singing-diagnosis-new__submit-btn", disabled: @singing_diagnosis_quota_exceeded
+          = link_to "キャンセル", singing_root_path, class: "singing-diagnosis-new__back-link"
 
-      .singing-diagnosis__actions
-        = f.submit "診断を依頼する", class: "btn btn-primary", disabled: @singing_diagnosis_quota_exceeded
-        = link_to "戻る", singing_root_path, class: "btn btn-secondary"
+:javascript
+  (function() {
+    var input = document.getElementById('audio_file_input');
+    var zone  = document.getElementById('upload-zone');
+    var label = document.getElementById('upload-filename');
+    if (!input || !zone || !label) return;
+
+    input.addEventListener('change', function() {
+      if (input.files && input.files[0]) {
+        label.textContent = '📎 ' + input.files[0].name;
+        label.style.display = 'block';
+        zone.classList.add('singing-diagnosis-new__upload--selected');
+      }
+    });
+
+    ['dragover', 'dragenter'].forEach(function(ev) {
+      zone.addEventListener(ev, function(e) { e.preventDefault(); zone.classList.add('singing-diagnosis-new__upload--dragging'); });
+    });
+    ['dragleave', 'dragend', 'drop'].forEach(function(ev) {
+      zone.addEventListener(ev, function() { zone.classList.remove('singing-diagnosis-new__upload--dragging'); });
+    });
+  })();

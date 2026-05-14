@@ -8719,3 +8719,556 @@ $ranking-accent: #7c4dff;
   margin-top: 16px;
   text-align: center;
 }
+
+// =========================================================
+// singing/diagnoses/new — リデザイン
+// =========================================================
+
+// ----- ページラッパー -----
+.singing-diagnosis-new {
+  background: #f0f3f8;
+  min-height: calc(100vh - 80px);
+}
+
+// ----- ヒーローヘッダー -----
+.singing-diagnosis-new__hero {
+  background: linear-gradient(135deg, #0c1220 0%, #1a2744 55%, #0e2018 100%);
+  overflow: hidden;
+  padding: 60px 16px 72px;
+  position: relative;
+
+  &::before {
+    background:
+      radial-gradient(ellipse at 15% 60%, rgba(5, 150, 105, 0.22) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 20%, rgba(37, 99, 235, 0.14) 0%, transparent 55%);
+    content: "";
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+  }
+}
+
+.singing-diagnosis-new__hero-inner {
+  margin: 0 auto;
+  max-width: 720px;
+  position: relative;
+  text-align: center;
+}
+
+.singing-diagnosis-new__hero-eyebrow {
+  color: #34d399;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  margin-bottom: 18px;
+  text-transform: uppercase;
+}
+
+.singing-diagnosis-new__hero-title {
+  color: #f1f5f9;
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 18px;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+}
+
+.singing-diagnosis-new__hero-desc {
+  color: #94a3b8;
+  font-size: 16px;
+  line-height: 1.85;
+  margin: 0 auto;
+  max-width: 520px;
+}
+
+// ----- ボディ -----
+.singing-diagnosis-new__body {
+  padding: 36px 16px 64px;
+}
+
+.singing-diagnosis-new__container {
+  margin: 0 auto;
+  max-width: 760px;
+}
+
+// ----- デイリーチャレンジバナー -----
+.singing-diagnosis-new__challenge {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border: 1px solid #93c5fd;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+
+  &.singing-diagnosis-new__challenge--done {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border-color: #86efac;
+  }
+}
+
+.singing-diagnosis-new__challenge-header {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.singing-diagnosis-new__challenge-date {
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  .singing-diagnosis-new__challenge--done & { color: #15803d; }
+}
+
+.singing-diagnosis-new__challenge-badge {
+  background: #1d4ed8;
+  border-radius: 99px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  margin-left: auto;
+  padding: 2px 10px;
+
+  &.singing-diagnosis-new__challenge-badge--done {
+    background: #15803d;
+    font-weight: 700;
+  }
+}
+
+.singing-diagnosis-new__challenge-body {
+  align-items: flex-start;
+  display: flex;
+  gap: 10px;
+}
+
+.singing-diagnosis-new__challenge-icon {
+  flex-shrink: 0;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.singing-diagnosis-new__challenge-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  strong {
+    color: #1e3a5f;
+    font-size: 14px;
+    font-weight: 700;
+
+    .singing-diagnosis-new__challenge--done & { color: #14532d; }
+  }
+
+  span {
+    color: #3b5ea6;
+    font-size: 13px;
+
+    .singing-diagnosis-new__challenge--done & { color: #166534; }
+  }
+}
+
+// ----- クォータカード -----
+.singing-diagnosis-new__quota {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-left: 5px solid #059669;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+
+  &.singing-diagnosis-new__quota--exceeded {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    border-left-color: #f97316;
+  }
+}
+
+.singing-diagnosis-new__quota-row {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.singing-diagnosis-new__quota-label {
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.singing-diagnosis-new__quota-progress {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  gap: 10px;
+}
+
+.singing-diagnosis-new__quota-bar {
+  background: #e5e7eb;
+  border-radius: 99px;
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+}
+
+.singing-diagnosis-new__quota-fill {
+  background: #059669;
+  border-radius: 99px;
+  height: 100%;
+  transition: width 0.4s ease;
+
+  .singing-diagnosis-new__quota--exceeded & { background: #f97316; }
+}
+
+.singing-diagnosis-new__quota-count {
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.singing-diagnosis-new__quota-unlimited {
+  color: #059669;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.singing-diagnosis-new__quota-msg {
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+  width: 100%;
+}
+
+.singing-diagnosis-new__quota-link {
+  color: #f97316;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}
+
+// ----- 優先解析バナー -----
+.singing-diagnosis-new__priority {
+  align-items: center;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 10px;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+
+  strong {
+    color: #047857;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  span {
+    color: #374151;
+    font-size: 13px;
+  }
+}
+
+// ----- エラー表示 -----
+.singing-diagnosis-new__errors {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+
+  ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  li {
+    color: #dc2626;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+}
+
+// ----- ステップカード -----
+.singing-diagnosis-new__step {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.singing-diagnosis-new__step-header {
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  gap: 14px;
+  padding: 20px 24px;
+
+  h2 {
+    color: #1e293b;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+  }
+}
+
+.singing-diagnosis-new__step-num {
+  align-items: center;
+  background: linear-gradient(135deg, #059669, #0f766e);
+  border-radius: 9px;
+  color: #fff;
+  display: flex;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 800;
+  height: 36px;
+  justify-content: center;
+  letter-spacing: 0.04em;
+  width: 36px;
+}
+
+.singing-diagnosis-new__optional {
+  color: #9ca3af;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.singing-diagnosis-new__step-body {
+  padding: 24px;
+}
+
+// ----- タイプセレクト -----
+.singing-diagnosis-new__type-select-wrap {
+  margin-bottom: 16px;
+}
+
+.singing-diagnosis-new__select {
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 15px;
+  padding: 10px 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus {
+    border-color: #059669;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+    outline: none;
+  }
+}
+
+// ----- アップロードゾーン -----
+.singing-diagnosis-new__upload {
+  border: 2.5px dashed #cbd5e1;
+  border-radius: 16px;
+  cursor: pointer;
+  padding: 44px 24px;
+  position: relative;
+  text-align: center;
+  transition: background 0.2s, border-color 0.2s;
+
+  &:hover,
+  &.singing-diagnosis-new__upload--dragging {
+    background: #f0fdf4;
+    border-color: #34d399;
+  }
+
+  &.singing-diagnosis-new__upload--selected {
+    background: #f0fdf4;
+    border-color: #059669;
+    border-style: solid;
+  }
+}
+
+.singing-diagnosis-new__upload-label {
+  cursor: pointer;
+  display: block;
+}
+
+.singing-diagnosis-new__upload-icon {
+  display: block;
+  font-size: 52px;
+  line-height: 1;
+  margin-bottom: 18px;
+}
+
+.singing-diagnosis-new__upload-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 22px;
+
+  strong {
+    color: #1e293b;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  span {
+    color: #6b7280;
+    font-size: 13px;
+  }
+}
+
+.singing-diagnosis-new__upload-btn {
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  color: #374151;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 28px;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+
+  .singing-diagnosis-new__upload:hover &,
+  .singing-diagnosis-new__upload--dragging & {
+    background: #dcfce7;
+    border-color: #059669;
+    color: #047857;
+  }
+}
+
+.singing-diagnosis-new__upload-input {
+  height: 0;
+  opacity: 0;
+  position: absolute;
+  width: 0;
+}
+
+.singing-diagnosis-new__upload-filename {
+  color: #047857;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 14px 0 0;
+}
+
+// ----- 楽曲情報フィールド -----
+.singing-diagnosis-new__fields-row {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+
+.singing-diagnosis-new__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &.singing-diagnosis-new__field--full {
+    grid-column: 1 / -1;
+  }
+}
+
+.singing-diagnosis-new__field-label {
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.singing-diagnosis-new__field-hint {
+  color: #9ca3af;
+  font-size: 12px;
+  margin: 0;
+}
+
+.singing-diagnosis-new__textarea {
+  resize: vertical;
+}
+
+// ----- 送信エリア -----
+.singing-diagnosis-new__submit {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+  padding: 28px 24px;
+  text-align: center;
+}
+
+.singing-diagnosis-new__submit-btn {
+  background: linear-gradient(135deg, #059669, #0f766e);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.3);
+  color: #fff;
+  cursor: pointer;
+  display: block;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 14px;
+  padding: 17px 0;
+  transition: box-shadow 0.2s, transform 0.15s;
+  width: 100%;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 12px 32px rgba(5, 150, 105, 0.42);
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    background: #d1d5db;
+    box-shadow: none;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+.singing-diagnosis-new__back-link {
+  color: #9ca3af;
+  font-size: 14px;
+  text-decoration: none;
+  transition: color 0.15s;
+
+  &:hover { color: #4b5563; }
+}
+
+// ----- レスポンシブ -----
+@media (max-width: 640px) {
+  .singing-diagnosis-new__hero {
+    padding: 44px 16px 56px;
+  }
+
+  .singing-diagnosis-new__hero-title {
+    font-size: 26px;
+  }
+
+  .singing-diagnosis-new__hero-desc {
+    font-size: 14px;
+  }
+
+  .singing-diagnosis-new__step-header {
+    padding: 16px 18px;
+  }
+
+  .singing-diagnosis-new__step-body {
+    padding: 18px;
+  }
+
+  .singing-diagnosis-new__fields-row {
+    grid-template-columns: 1fr;
+  }
+
+  .singing-diagnosis-new__upload {
+    padding: 32px 16px;
+  }
+}
