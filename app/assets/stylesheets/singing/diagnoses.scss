@@ -8345,67 +8345,6 @@ $ranking-accent: #7c4dff;
 }
 
 // ========================================
-<<<<<<< HEAD
-// デイリーチャレンジ バナー（診断フォームページ）
-// ========================================
-.daily-challenge-banner {
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
-  border: 1px solid #93c5fd;
-  border-radius: 14px;
-  margin-bottom: 24px;
-  padding: 14px 16px;
-
-  &.daily-challenge-banner--done {
-    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-    border-color: #86efac;
-  }
-}
-
-.daily-challenge-banner__header {
-  align-items: center;
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.daily-challenge-banner__date-label {
-  color: #1d4ed8;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-
-  .daily-challenge-banner--done & { color: #15803d; }
-}
-
-.daily-challenge-banner__xp-badge {
-  background: #1d4ed8;
-  border-radius: 99px;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 800;
-  margin-left: auto;
-  padding: 2px 10px;
-}
-
-.daily-challenge-banner__done-badge {
-  background: #15803d;
-  border-radius: 99px;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  margin-left: auto;
-  padding: 2px 10px;
-}
-
-.daily-challenge-banner__body {
-  align-items: flex-start;
-  display: flex;
-  gap: 10px;
-}
-
-.daily-challenge-banner__icon {
-=======
 // スコアバトル CTA（診断結果ページ）
 // ========================================
 .score-battle-cta {
@@ -8420,127 +8359,11 @@ $ranking-accent: #7c4dff;
 }
 
 .score-battle-cta__icon {
->>>>>>> feature/score-battle
   flex-shrink: 0;
   font-size: 24px;
   line-height: 1;
 }
 
-<<<<<<< HEAD
-.daily-challenge-banner__text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.daily-challenge-banner__title {
-  color: #1e3a5f;
-  font-size: 15px;
-  font-weight: 700;
-
-  .daily-challenge-banner--done & { color: #14532d; }
-}
-
-.daily-challenge-banner__desc {
-  color: #3b5ea6;
-  font-size: 13px;
-
-  .daily-challenge-banner--done & { color: #166534; }
-}
-
-// ========================================
-// デイリーチャレンジ 結果カード（診断結果ページ）
-// ========================================
-.daily-challenge-result {
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
-  border: 1px solid #93c5fd;
-  border-radius: 14px;
-  margin-bottom: 20px;
-  padding: 14px 16px;
-
-  &.daily-challenge-result--cleared {
-    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-    border-color: #86efac;
-  }
-}
-
-.daily-challenge-result__header {
-  align-items: center;
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.daily-challenge-result__date-label {
-  color: #1d4ed8;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-
-  .daily-challenge-result--cleared & { color: #15803d; }
-}
-
-.daily-challenge-result__xp-badge {
-  background: #1d4ed8;
-  border-radius: 99px;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 800;
-  margin-left: auto;
-  padding: 2px 10px;
-}
-
-.daily-challenge-result__cleared-badge {
-  background: #15803d;
-  border-radius: 99px;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  margin-left: auto;
-  padding: 2px 10px;
-}
-
-.daily-challenge-result__body {
-  align-items: flex-start;
-  display: flex;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.daily-challenge-result__icon {
-  flex-shrink: 0;
-  font-size: 24px;
-  line-height: 1;
-}
-
-.daily-challenge-result__text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.daily-challenge-result__title {
-  color: #1e3a5f;
-  font-size: 15px;
-  font-weight: 700;
-
-  .daily-challenge-result--cleared & { color: #14532d; }
-}
-
-.daily-challenge-result__desc {
-  color: #3b5ea6;
-  font-size: 13px;
-
-  .daily-challenge-result--cleared & { color: #166534; }
-}
-
-.daily-challenge-result__hint {
-  color: #4b5563;
-  font-size: 12px;
-  margin: 0;
-}
-=======
 .score-battle-cta__text {
   display: flex;
   flex-direction: column;
@@ -8896,4 +8719,3 @@ $ranking-accent: #7c4dff;
   margin-top: 16px;
   text-align: center;
 }
->>>>>>> feature/score-battle
