@@ -119,6 +119,7 @@ RSpec.describe Singing::YearlyGrowthShareImageBuilder, type: :service do
 
   describe ".call" do
     it "年間成長レポートをSNSシェア用の表示値に変換すること" do
+      customer.create_subscription!(status: "active", plan: "core")
       FactoryBot.create(
         :singing_diagnosis,
         :completed,
@@ -159,7 +160,8 @@ RSpec.describe Singing::YearlyGrowthShareImageBuilder, type: :service do
       expect(share_image.challenge_label).to eq("音程 1回")
       expect(share_image.song_label).to eq("Share Song 2回")
       expect(share_image.hashtag).to eq("#BeMyStyleSinging")
-      expect(share_image.x_share_text).to include("最大成長: 音程 +32点")
+      expect(share_image.x_share_text).to include("2026年は診断2回")
+      expect(share_image.x_share_text).to include("音程が32点成長")
     end
   end
 end

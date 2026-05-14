@@ -1,0 +1,16 @@
+- page_title = content_for?(:og_title) ? yield(:og_title) : (content_for?(:title) ? yield(:title) : "BeMyStyle")
+- page_description = content_for?(:og_description) ? yield(:og_description) : "好きで繋がった仲間は一生もの。音楽人の為のコミュニティアプリです。"
+- twitter_card = content_for?(:twitter_card) ? yield(:twitter_card) : "summary"
+
+%meta{ property: "og:type", content: "website" }/
+%meta{ property: "og:site_name", content: "BeMyStyle" }/
+%meta{ property: "og:title", content: page_title }/
+%meta{ property: "og:description", content: page_description }/
+%meta{ name: "twitter:card", content: twitter_card }/
+%meta{ name: "twitter:title", content: page_title }/
+%meta{ name: "twitter:description", content: page_description }/
+- if content_for?(:og_image)
+  - og_image = yield(:og_image).to_s.strip
+  - if og_image.present?
+    %meta{ property: "og:image", content: og_image }/
+    %meta{ name: "twitter:image", content: og_image }/

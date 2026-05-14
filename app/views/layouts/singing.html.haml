@@ -3,8 +3,10 @@
   %head
     %meta{:content => "text/haml; charset=UTF-8mb4", "http-equiv" => "Content-Type"}/
     %meta{:content => "width=device-width,initial-scale=1", :name => "viewport"}/
-    %meta{:content => "好きで繋がった仲間は一生もの。音楽人の為のコミュニティアプリです。", :name => "description"}/
+    - page_description = content_for?(:og_description) ? yield(:og_description) : "好きで繋がった仲間は一生もの。音楽人の為のコミュニティアプリです。"
+    %meta{:content => page_description, :name => "description"}/
     %title= content_for?(:title) ? yield(:title) : "BeMyStyle"
+    = render "singing/shared/og_meta"
     = favicon_link_tag'favicon.ico'
     = csrf_meta_tags
     = csp_meta_tag
