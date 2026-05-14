@@ -17,6 +17,8 @@ class Singing::DiagnosesController < Singing::BaseController
 
   def new
     @diagnosis = current_customer.singing_diagnoses.build
+    @daily_challenge = Singing::DailyChallengeGenerator.ensure_today
+    @daily_challenge_progress = @daily_challenge.progress_for(current_customer)
   end
 
   def create
@@ -73,6 +75,8 @@ class Singing::DiagnosesController < Singing::BaseController
       @singer_next_rank = current_customer.singer_next_rank
       xp_gained = (50 + (@diagnosis.overall_score.to_f / 100 * 50).round).to_i
       @xp_gained = xp_gained
+      @daily_challenge = Singing::DailyChallengeGenerator.ensure_today
+      @daily_challenge_progress = @daily_challenge.progress_for(current_customer)
     end
   end
 

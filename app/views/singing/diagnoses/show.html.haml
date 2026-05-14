@@ -85,6 +85,22 @@
               %small= card[:short_label]
               %p= card[:comment]
 
+      - if @daily_challenge
+        .daily-challenge-result{ class: (@daily_challenge_progress&.completed? ? "daily-challenge-result--cleared" : "") }
+          .daily-challenge-result__header
+            %span.daily-challenge-result__date-label= "TODAY'S CHALLENGE #{Date.current.strftime('%m/%d')}"
+            - if @daily_challenge_progress&.completed?
+              %span.daily-challenge-result__cleared-badge ✅ クリア！ +#{@daily_challenge_progress.xp_rewarded} XP
+            - else
+              %span.daily-challenge-result__xp-badge= "+#{@daily_challenge.xp_reward} XP"
+          .daily-challenge-result__body
+            %span.daily-challenge-result__icon= @daily_challenge.target_icon
+            .daily-challenge-result__text
+              %strong.daily-challenge-result__title= @daily_challenge.title
+              %span.daily-challenge-result__desc= @daily_challenge.description
+          - unless @daily_challenge_progress&.completed?
+            %p.daily-challenge-result__hint 条件を満たしていれば自動でクリア判定されます。未達成の場合は再挑戦しよう！
+
       - if @new_season_badges.present?
         .singing-diagnosis__badge-celebration
           .singing-diagnosis__badge-celebration-header

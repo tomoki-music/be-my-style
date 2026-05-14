@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_14_141733) do
+ActiveRecord::Schema.define(version: 2026_05_14_142555) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -852,6 +852,30 @@ ActiveRecord::Schema.define(version: 2026_05_14_141733) do
     t.index ["singing_ranking_season_id"], name: "index_singing_badges_on_season_id"
   end
 
+  create_table "singing_daily_challenge_progresses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "singing_daily_challenge_id", null: false
+    t.datetime "completed_at"
+    t.integer "xp_rewarded", default: 0, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id", "singing_daily_challenge_id"], name: "idx_sdcp_customer_challenge", unique: true
+    t.index ["singing_daily_challenge_id"], name: "fk_sdcp_on_singing_daily_challenge"
+  end
+
+  create_table "singing_daily_challenges", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.date "challenge_date", null: false
+    t.string "challenge_type", null: false
+    t.string "target_attribute", null: false
+    t.integer "threshold_value", null: false
+    t.integer "xp_reward", default: 30, null: false
+    t.string "title", null: false
+    t.text "description", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["challenge_date"], name: "index_singing_daily_challenges_on_challenge_date", unique: true
+  end
+
   create_table "singing_diagnoses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.string "song_title"
@@ -1079,6 +1103,8 @@ ActiveRecord::Schema.define(version: 2026_05_14_141733) do
   add_foreign_key "singing_ai_challenge_progresses", "customers"
   add_foreign_key "singing_badges", "customers"
   add_foreign_key "singing_badges", "singing_ranking_seasons"
+  add_foreign_key "singing_daily_challenge_progresses", "customers"
+  add_foreign_key "singing_daily_challenge_progresses", "singing_daily_challenges", name: "fk_sdcp_on_singing_daily_challenge"
   add_foreign_key "singing_diagnoses", "customers"
   add_foreign_key "singing_profile_reactions", "customers"
   add_foreign_key "singing_profile_reactions", "customers", column: "target_customer_id"
