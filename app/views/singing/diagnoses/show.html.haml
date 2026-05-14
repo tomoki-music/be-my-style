@@ -153,9 +153,49 @@
               %h3= guide[:label]
               %p= guide[:description]
 
+      - if @battle&.completed?
+        .score-battle-result
+          .score-battle-result__header
+            %span.score-battle-result__icon ⚔️
+            %h2.score-battle-result__title バトル結果！
+          .score-battle-result__vs
+            .score-battle-result__player
+              %strong= @battle.challenger.name
+              %span（挑戦者）
+            %span.score-battle-result__vs-label VS
+            .score-battle-result__player
+              %strong= @battle.opponent.name
+              %span（あなた）
+          .score-battle-result__scores
+            - [:overall, :pitch, :rhythm, :expression].each do |attr|
+              - ch_score = @battle.challenger_diagnosis.public_send("#{attr}_score")
+              - op_score = @battle.opponent_diagnosis.public_send("#{attr}_score")
+              - label = { overall: "総合", pitch: "ピッチ", rhythm: "リズム", expression: "表現力" }[attr]
+              .score-battle-result__row
+                %span.score-battle-result__label= label
+                .score-battle-result__bar-wrap
+                  %strong.score-battle-result__score{ class: (@battle.challenger_wins?(attr) ? "score-battle-result__score--lose" : "score-battle-result__score--win") }= ch_score || "-"
+                  %span.score-battle-result__divider vs
+                  %strong.score-battle-result__score{ class: (@battle.opponent_wins?(attr) ? "score-battle-result__score--win" : "score-battle-result__score--lose") }= op_score || "-"
+          .score-battle-result__verdict
+            - if @battle.opponent_wins?(:overall)
+              %p.score-battle-result__win 🎉 あなたの勝ち！
+            - elsif @battle.challenger_wins?(:overall)
+              %p.score-battle-result__lose 惜しい！次回リベンジしよう
+            - else
+              %p.score-battle-result__draw 引き分け！
+
       .singing-diagnosis__share
         %h2 結果をシェアする
         %p.singing-diagnosis__share-lead 友達に共有して、一緒に盛り上がろう！
+
+        .score-battle-cta
+          %span.score-battle-cta__icon ⚔️
+          .score-battle-cta__text
+            %strong 友達と対決！スコアバトル
+            %span スコアを競いながらモチベーションアップ
+          = button_to "挑戦状を送る", singing_battles_path(diagnosis_id: @diagnosis.id), method: :post, class: "score-battle-cta__btn"
+
         .singing-diagnosis__share-grid
           = link_to "https://twitter.com/intent/tweet?text=#{u(singing_diagnosis_share_text(@diagnosis))}&url=#{u(request.original_url)}", class: "singing-diagnosis__share-btn singing-diagnosis__share-btn--x", target: "_blank", rel: "noopener" do
             %span.singing-diagnosis__share-btn-icon 𝕏

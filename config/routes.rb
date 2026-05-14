@@ -209,6 +209,13 @@ Rails.application.routes.draw do
     end
     get  "join", to: "joins#show",   as: :join
     post "join", to: "joins#create"
+
+    resources :battles, only: [:create, :show] do
+      collection do
+        get  "join/:token", action: :join, as: :join
+        post "join/:token", action: :accept, as: :accept
+      end
+    end
   end
 
   namespace :learning do

@@ -1,0 +1,44 @@
+- content_for :title, "挑戦を受けよう！ | BeMyStyle"
+
+.score-battle
+  .score-battle__inner
+    %p.score-battle__eyebrow Score Battle — Challenge
+
+    .score-battle__challenge
+      .score-battle__challenge-header
+        %span.score-battle__challenge-icon ⚔️
+        %h1.score-battle__challenge-title= "#{@battle.challenger.name}さんから挑戦状が届いています！"
+
+      .score-battle__song
+        %span.score-battle__song-label 対象曲
+        %strong.score-battle__song-title= @battle.song_title
+        %span.score-battle__song-type= SingingDiagnosis::PERFORMANCE_TYPE_LABELS[@battle.performance_type] || @battle.performance_type
+
+      .score-battle__challenger-score
+        %h2 挑戦者のスコア
+        .score-battle__score-grid
+          .score-battle__score-item
+            %span 総合
+            %strong= @battle.challenger_diagnosis.overall_score || "-"
+          .score-battle__score-item
+            %span ピッチ
+            %strong= @battle.challenger_diagnosis.pitch_score || "-"
+          .score-battle__score-item
+            %span リズム
+            %strong= @battle.challenger_diagnosis.rhythm_score || "-"
+          .score-battle__score-item
+            %span 表現力
+            %strong= @battle.challenger_diagnosis.expression_score || "-"
+
+      .score-battle__expires
+        %span 有効期限：
+        %strong= @battle.expires_at.strftime("%Y/%m/%d %H:%M")
+
+      .score-battle__cta
+        - if current_customer.present?
+          %p この曲を診断して、スコアで勝負しよう！
+          = button_to "挑戦を受ける！", singing_accept_battle_path(token: @battle.token), method: :post, class: "btn btn-primary score-battle__accept-btn"
+        - else
+          %p 挑戦を受けるにはログインが必要です。
+          = link_to "ログインして挑戦する", new_singing_session_path(after_sign_in_url: request.original_url), class: "btn btn-primary"
+          = link_to "無料で登録する", new_singing_registration_path, class: "btn btn-secondary"
