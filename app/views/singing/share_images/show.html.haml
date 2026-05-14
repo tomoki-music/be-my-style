@@ -1,61 +1,18 @@
 - content_for :title, "#{@share_image.report.year}年 歌声成長シェアカード | BeMyStyle"
+- content_for :og_title, "#{@share_image.report.year}年 歌声成長レポート | BeMyStyle Singing"
+- content_for :og_description, @share_text
+- content_for :twitter_card, "summary_large_image"
 
 .singing-share-image
   .singing-share-image__inner
-    .singing-share-image__toolbar
-      = link_to "履歴へ戻る", singing_diagnoses_path, class: "btn btn-secondary"
-      = link_to "Xでシェア", "https://twitter.com/intent/tweet?text=#{u(@share_image.x_share_text)}&url=#{u(request.original_url)}", class: "btn btn-primary", target: "_blank", rel: "noopener"
+    = render "share_actions", variant: :toolbar, share_text: @share_text, share_url: request.original_url
 
     .singing-share-image__capture-guide
       %span Screenshot guide
       %strong カード全体が入るようにスクショして、Instagramの投稿やストーリーズへ。
 
     .singing-share-image__stage
-      .singing-share-image__card{ role: "img", "aria-label": "#{@share_image.report.year}年の歌声成長レポート" }
-        .singing-share-image__topline
-          %span= "#{@share_image.report.year} YEAR IN VOICE"
-          %strong BeMyStyle Singing
-
-        .singing-share-image__hero
-          %p.singing-share-image__kicker ANNUAL GROWTH REPORT
-          %h1= @share_image.headline
-          %p= @share_image.annual_copy
-
-        .singing-share-image__metric.singing-share-image__metric--primary
-          %span 今年の診断回数
-          %strong= @share_image.report.diagnosis_count
-          %small times
-
-        .singing-share-image__metric-grid
-          .singing-share-image__metric
-            %span 最大成長した能力
-            %strong= @share_image.report.top_growth&.label || "これから"
-            %small growth area
-          .singing-share-image__metric
-            %span 最大成長量
-            %strong= @share_image.growth_delta_label
-            %small= @share_image.growth_range_label
-          .singing-share-image__metric
-            %span 自己ベスト更新
-            %strong= @share_image.best_updates_label
-            %small personal best
-          .singing-share-image__metric
-            %span 最も挑戦したAIチャレンジ
-            %strong= @share_image.challenge_label
-            %small challenge
-          .singing-share-image__metric
-            %span 最も歌った曲
-            %strong= @share_image.song_label
-            %small most sung
-
-        .singing-share-image__singer-rank
-          %span.singing-share-image__singer-rank-icon= @singer_rank.icon
-          %span.singing-share-image__singer-rank-label= @singer_rank.label
-          %span.singing-share-image__singer-rank-level= "Lv.#{@singer_rank.level}"
-
-        .singing-share-image__footer
-          %span= @share_image.hashtag
-          %small Screenshot ready
+      = render "share_card", share_image: @share_image, singer_rank: @singer_rank
 
     .singing-share-image__invite-cta
       %strong あなたは何タイプ？
@@ -66,6 +23,4 @@
       %h2 SNSで共有
       %p Xはボタンから投稿できます。Instagramでは上のカードだけが入るようにスクショして、投稿やストーリーズでシェアしてください。
 
-    .singing-share-image__actions
-      = link_to "診断を続ける", new_singing_diagnosis_path, class: "btn btn-primary"
-      = link_to "履歴へ戻る", singing_diagnoses_path, class: "btn btn-secondary"
+    = render "share_actions", variant: :footer, share_text: @share_text, share_url: request.original_url

@@ -63,6 +63,11 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(response.body).to include("スクショ")
       expect(response.body).to include("診断を続ける")
       expect(response.body).to include("履歴へ戻る")
+      expect(response.body).to include("data-share-capture-target='yearly-growth'")
+      expect(response.body).to include("property='og:title'")
+      expect(response.body).to include("#{year}年 歌声成長レポート")
+      expect(response.body).to include("name='twitter:card'")
+      expect(response.body).to include("summary_large_image")
       expect(response.body).to include(new_singing_diagnosis_path)
       expect(response.body).to include(singing_diagnoses_path)
     end

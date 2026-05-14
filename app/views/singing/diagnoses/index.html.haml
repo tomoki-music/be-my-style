@@ -42,7 +42,8 @@
     .singing-diagnosis__actions
       = link_to "新しい診断を作成", new_singing_diagnosis_path, class: "btn btn-primary"
       = link_to "歌唱・演奏診断トップへ", singing_root_path, class: "btn btn-secondary"
-      = link_to "年間成長シェアカードを見る", singing_share_image_path, class: "btn btn-secondary"
+      - if current_customer.has_feature?(:singing_yearly_growth_report)
+        = link_to "年間成長シェアカードを見る", singing_share_image_path, class: "btn btn-secondary"
 
     - weekly_theme = singing_weekly_challenge_theme
     - weekly_done = singing_weekly_diagnosed?(@diagnoses)

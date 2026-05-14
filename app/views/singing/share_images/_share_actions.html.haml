@@ -1,0 +1,8 @@
+- if variant == :toolbar
+  .singing-share-image__toolbar
+    = link_to "履歴へ戻る", singing_diagnoses_path, class: "btn btn-secondary"
+    = link_to "Xでシェア", "https://twitter.com/intent/tweet?text=#{u(share_text)}&url=#{u(share_url)}", class: "btn btn-primary", target: "_blank", rel: "noopener"
+- elsif variant == :footer
+  .singing-share-image__actions
+    = link_to "診断を続ける", new_singing_diagnosis_path, class: "btn btn-primary"
+    = link_to "履歴へ戻る", singing_diagnoses_path, class: "btn btn-secondary"
