@@ -3467,4 +3467,34 @@ module Singing::DiagnosesHelper
 
     customer.name.strip.chars.first.upcase
   end
+
+  def singing_diagnosis_share_text(diagnosis)
+    score = diagnosis.overall_score
+    type_label = diagnosis.performance_type_label
+    if score
+      "歌声・演奏診断で#{type_label}の総合スコア #{score}点が出ました！ #BeMyStyle #歌声診断"
+    else
+      "歌声・演奏診断にチャレンジ中！ #BeMyStyle #歌声診断"
+    end
+  end
+
+  WEEKLY_CHALLENGE_THEMES = [
+    { icon: "🎯", title: "音程の安定を意識する週", body: "フレーズの入りで力まず、ゆったりしたテンポから練習してみよう。録音して聴き返すのが上達の近道。" },
+    { icon: "🥁", title: "リズムをキープする週", body: "メトロノームに合わせて歌い、自分のテンポのクセを確認しよう。ズレやすいポイントが見えてくる。" },
+    { icon: "🎤", title: "表現の強弱をつける週", body: "サビに向かうにつれて声量を少しずつ上げてみよう。メリハリが聴き手に伝わる演奏になる。" },
+    { icon: "💨", title: "ブレスを整える週", body: "フレーズの切れ目を意識して、しっかり息を吸ってから歌い出す練習をしよう。" },
+    { icon: "🎸", title: "フレーズを一つ仕上げる週", body: "曲全体ではなく1フレーズに絞って繰り返し練習。完成度を高めることで自信がつく。" },
+    { icon: "🔍", title: "録音して聴き返す週", body: "自分の声を客観的に聴くのが上達への最短ルート。今週は必ず録音して振り返ってみよう。" },
+    { icon: "🌱", title: "新しい曲にチャレンジする週", body: "いつもと違う曲を試すことで、自分の声の幅が広がる。難しすぎず、少し背伸びできる曲を選んでみよう。" },
+    { icon: "⚡", title: "テンポを変えて練習する週", body: "いつもより遅めのテンポで丁寧に歌い、細部の正確さを磨こう。ゆっくりできれば速くもできる。" }
+  ].freeze
+
+  def singing_weekly_challenge_theme
+    WEEKLY_CHALLENGE_THEMES[Date.today.cweek % WEEKLY_CHALLENGE_THEMES.size]
+  end
+
+  def singing_weekly_diagnosed?(diagnoses)
+    week_start = Date.today.beginning_of_week
+    diagnoses.select(&:completed?).any? { |d| d.diagnosed_at&.to_date&.>=(week_start) }
+  end
 end

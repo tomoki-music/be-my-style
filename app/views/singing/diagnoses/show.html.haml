@@ -153,6 +153,30 @@
               %h3= guide[:label]
               %p= guide[:description]
 
+      .singing-diagnosis__share
+        %h2 結果をシェアする
+        %p.singing-diagnosis__share-lead 友達に共有して、一緒に盛り上がろう！
+        .singing-diagnosis__share-grid
+          = link_to "https://twitter.com/intent/tweet?text=#{u(singing_diagnosis_share_text(@diagnosis))}&url=#{u(request.original_url)}", class: "singing-diagnosis__share-btn singing-diagnosis__share-btn--x", target: "_blank", rel: "noopener" do
+            %span.singing-diagnosis__share-btn-icon 𝕏
+            %span X (Twitter) でシェア
+          .singing-diagnosis__share-instagram
+            %strong Instagram でシェア
+            %p 診断カードのスクリーンショットを撮って、ストーリーズや投稿でシェアしてね
+        - if current_customer.has_feature?(:singing_yearly_growth_report)
+          .singing-diagnosis__share-card-cta
+            = link_to singing_share_image_path, class: "singing-diagnosis__share-card-link" do
+              .singing-diagnosis__share-card-inner
+                %span.singing-diagnosis__share-card-badge Core以上
+                %strong 年間成長カードを作る
+                %p 今年の診断を振り返るシェアカードを自動生成 →
+        - else
+          .singing-diagnosis__share-card-locked
+            %span.singing-diagnosis__share-card-badge-locked Core以上
+            %strong 年間成長カード
+            %p 今年の診断を1枚にまとめたシェアカードを作成できます
+            = link_to "Coreプランを見る →", public_singing_lp_path(anchor: "lp-section"), class: "singing-diagnosis__share-card-cta-link"
+
       - growth_chart_data = singing_growth_chart_data(@growth_diagnoses)
       .singing-diagnosis__growth
         %h2= singing_growth_chart_title(@diagnosis)
@@ -344,7 +368,13 @@
         - else
           %h2 詳しく振り返りたい方へ
           %p.singing-diagnosis__advanced-feedback-lead= singing_advanced_feedback_locked_lead(@diagnosis)
-          = link_to "Core以上のプランを見る", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
+          .singing-diagnosis__advanced-feedback-locked-preview
+            - [["良い点", "今回の録音で特に安定していた部分を確認できます"], ["次に意識したいこと", "スコアから見えた改善ポイントを整理します"], ["練習の優先度", "今週取り組むと効果的なテーマをピックアップ"]].each do |label, hint|
+              .singing-diagnosis__advanced-feedback-locked-card
+                %span= label
+                %p= hint
+                %span.singing-diagnosis__advanced-feedback-locked-blur ████████████
+          = link_to "Coreプランで解放する", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
 
       - if current_customer.has_feature?(:singing_diagnosis_voice_type) && @diagnosis.performance_type_vocal?
         - voice_type = singing_premium_voice_type(@diagnosis)
@@ -442,8 +472,16 @@
               %span.singing-diagnosis__premium-badge-icon= singing_premium_type_diagnosis_icon(@diagnosis)
               Core以上
             %h2 6つのボイスタイプ診断
-            %p.singing-diagnosis__premium-report-lead 6つのボイスタイプ診断はCoreプラン以上で解放されます。あなたの声の個性を知り、成長の方向性を見つけましょう。
-          = link_to "Core以上のプランを見る", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
+            %p.singing-diagnosis__premium-report-lead あなたの歌声は6つのタイプのうち、どれが一番当てはまるか？Coreプランで解放して確認してみよう。
+          .singing-diagnosis__voice-type-locked-preview
+            - [["パワフルボイス", "声量と力強さ"], ["ハイトーンボイス", "高音の伸び"], ["クリスタルボイス", "透明感"], ["ワイルドボイス", "エッジと熱量"], ["アーティスティックボイス", "独自の個性"], ["カリスマ（独特な世界観）", "独特な世界観"]].each do |title, desc|
+              .singing-diagnosis__voice-type-locked-slot
+                %span.singing-diagnosis__voice-type-locked-icon 🎤
+                %strong= title
+                %small= desc
+          .singing-diagnosis__voice-type-locked-cta
+            %p あなたの声がどのタイプに近いか、スコアで確認できます
+            = link_to "Coreプランで解放する", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
       - elsif @diagnosis.performance_type.to_s != "vocal"
         .singing-diagnosis__premium-report{ class: "singing-diagnosis__premium-report--#{singing_premium_type_diagnosis_accent_key(@diagnosis)}" }
           - if current_customer.has_feature?(:singing_diagnosis_priority)
@@ -504,6 +542,15 @@
             %p.singing-diagnosis__ai-comment-lead AIコメントの生成に失敗しました。スコア・比較・補足スコアは通常どおり確認できます。
           - else
             %p.singing-diagnosis__ai-comment-lead AIコメントは、Premium向けに解析完了後の診断から生成されます。
+      - else
+        .singing-diagnosis__ai-comment.singing-diagnosis__ai-comment--locked
+          %h2 AIコメント
+          %p.singing-diagnosis__ai-comment-lead このスコアをもとに、次の練習へのヒントをAIがコメントします。
+          .singing-diagnosis__ai-comment-locked-preview
+            %span.singing-diagnosis__ai-comment-locked-icon 💬
+            %p.singing-diagnosis__ai-comment-locked-sample 「音程スコアが#{@diagnosis.overall_score.present? ? "#{@diagnosis.overall_score}点台" : "高め"}で安定感が出てきています。次はリズムの入りを意識すると…」
+            %span.singing-diagnosis__ai-comment-locked-blur ████████████████
+          = link_to "Premiumで解放する", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
 
       .singing-diagnosis__coach{ class: "singing-diagnosis__coach--#{@diagnosis.performance_type}" }
         - if singing_weekly_coach_available?(current_customer)

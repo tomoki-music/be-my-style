@@ -42,6 +42,28 @@
     .singing-diagnosis__actions
       = link_to "新しい診断を作成", new_singing_diagnosis_path, class: "btn btn-primary"
       = link_to "歌唱・演奏診断トップへ", singing_root_path, class: "btn btn-secondary"
+      = link_to "年間成長シェアカードを見る", singing_share_image_path, class: "btn btn-secondary"
+
+    - weekly_theme = singing_weekly_challenge_theme
+    - weekly_done = singing_weekly_diagnosed?(@diagnoses)
+    .singing-diagnosis__weekly-challenge{ class: (weekly_done ? "singing-diagnosis__weekly-challenge--done" : "") }
+      .singing-diagnosis__weekly-challenge-header
+        %span.singing-diagnosis__weekly-challenge-week= "Week #{Date.today.cweek} チャレンジ"
+        - if weekly_done
+          %span.singing-diagnosis__weekly-challenge-status 今週診断済み ✓
+        - else
+          %span.singing-diagnosis__weekly-challenge-status--pending 今週未診断
+      .singing-diagnosis__weekly-challenge-body
+        %span.singing-diagnosis__weekly-challenge-icon= weekly_theme[:icon]
+        .singing-diagnosis__weekly-challenge-content
+          %strong.singing-diagnosis__weekly-challenge-title= weekly_theme[:title]
+          %p.singing-diagnosis__weekly-challenge-desc= weekly_theme[:body]
+      .singing-diagnosis__weekly-challenge-footer
+        - if weekly_done
+          %p.singing-diagnosis__weekly-challenge-done-msg 今週のチャレンジに取り組みました！次の診断で変化を確認しよう。
+          = link_to "新しい診断を作成", new_singing_diagnosis_path, class: "singing-diagnosis__weekly-challenge-btn"
+        - else
+          = link_to "今週診断してみる", new_singing_diagnosis_path, class: "singing-diagnosis__weekly-challenge-btn singing-diagnosis__weekly-challenge-btn--cta"
 
     = link_to singing_rankings_path, class: "singing-diagnosis__ranking-banner" do
       .singing-diagnosis__ranking-banner-left

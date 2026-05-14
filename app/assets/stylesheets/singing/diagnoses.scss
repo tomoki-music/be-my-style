@@ -7509,7 +7509,6 @@ $ranking-accent: #7c4dff;
 }
 
 .singing-share-image__card {
-  aspect-ratio: 4 / 5;
   background:
     radial-gradient(circle at 20% 14%, rgba(254, 240, 138, 0.58), transparent 24%),
     radial-gradient(circle at 84% 24%, rgba(125, 211, 252, 0.45), transparent 28%),
@@ -7539,6 +7538,37 @@ $ranking-accent: #7c4dff;
 }
 
 .singing-share-image__topline,
+.singing-share-image__cta-strip {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.singing-share-image__cta-question {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.singing-share-image__cta-action {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
+  color: #fff;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+}
+
 .singing-share-image__footer {
   align-items: center;
   display: flex;
@@ -7685,6 +7715,49 @@ $ranking-accent: #7c4dff;
   color: #ffffff;
 }
 
+.singing-share-image__invite-cta {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 12px;
+  color: #ffffff;
+  margin: 20px auto 0;
+  max-width: 560px;
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.singing-share-image__invite-cta strong {
+  display: block;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  margin-bottom: 6px;
+}
+
+.singing-share-image__invite-cta p {
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 0 0 16px;
+  opacity: 0.9;
+}
+
+.singing-share-image__invite-cta-btn {
+  background: #ffffff;
+  border-radius: 8px;
+  color: #6366f1;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 24px;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.singing-share-image__invite-cta-btn:hover {
+  color: #6366f1;
+  opacity: 0.88;
+  text-decoration: none;
+}
+
 .singing-share-image__share-note {
   background: #ffffff;
   border: 1px solid #dde3ec;
@@ -7769,7 +7842,6 @@ $ranking-accent: #7c4dff;
   }
 
   .singing-share-image__card {
-    aspect-ratio: 4 / 5;
     min-height: 0;
     padding: 20px;
   }
@@ -7841,4 +7913,433 @@ $ranking-accent: #7c4dff;
   .singing-share-image__actions .btn {
     width: 100%;
   }
+}
+
+/* ── シェアセクション ─────────────────────────────── */
+.singing-diagnosis__share {
+  background: linear-gradient(135deg, #f0f4ff 0%, #fafbff 100%);
+  border: 1px solid #d8e0f8;
+  border-radius: 16px;
+  margin: 32px 0;
+  padding: 28px 24px;
+}
+
+.singing-diagnosis__share h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.singing-diagnosis__share-lead {
+  color: #666;
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+}
+
+.singing-diagnosis__share-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.singing-diagnosis__share-btn {
+  align-items: center;
+  border-radius: 10px;
+  display: flex;
+  font-size: 0.9rem;
+  font-weight: 600;
+  gap: 8px;
+  padding: 12px 18px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.singing-diagnosis__share-btn:hover {
+  opacity: 0.85;
+}
+
+.singing-diagnosis__share-btn--x {
+  background: #000;
+  color: #fff;
+}
+
+.singing-diagnosis__share-btn-icon {
+  font-size: 1rem;
+  font-style: normal;
+}
+
+.singing-diagnosis__share-instagram {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.singing-diagnosis__share-instagram strong {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.singing-diagnosis__share-instagram p {
+  color: #666;
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.singing-diagnosis__share-card-cta {
+  margin-top: 4px;
+}
+
+.singing-diagnosis__share-card-link {
+  background: linear-gradient(135deg, #5b5ef4, #7c5cf4);
+  border-radius: 10px;
+  color: #fff;
+  display: block;
+  padding: 14px 18px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.singing-diagnosis__share-card-link:hover {
+  color: #fff;
+  opacity: 0.85;
+}
+
+.singing-diagnosis__share-card-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.singing-diagnosis__share-card-badge {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.singing-diagnosis__share-card-link strong {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.singing-diagnosis__share-card-link p {
+  font-size: 0.8rem;
+  margin: 0;
+  opacity: 0.85;
+}
+
+.singing-diagnosis__share-card-locked {
+  background: #f5f5f5;
+  border: 1px dashed #ccc;
+  border-radius: 10px;
+  color: #888;
+  margin-top: 4px;
+  padding: 14px 18px;
+}
+
+.singing-diagnosis__share-card-badge-locked {
+  background: #e8e8e8;
+  border-radius: 4px;
+  color: #666;
+  display: inline-block;
+  font-size: 0.7rem;
+  margin-bottom: 4px;
+  padding: 2px 8px;
+}
+
+.singing-diagnosis__share-card-locked strong {
+  color: #555;
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 2px;
+}
+
+.singing-diagnosis__share-card-locked p {
+  color: #888;
+  font-size: 0.8rem;
+  margin: 0 0 8px;
+}
+
+.singing-diagnosis__share-card-cta-link {
+  color: #5b5ef4;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ── ボイスタイプ ロックプレビュー ─────────────────── */
+.singing-diagnosis__voice-type-locked-preview {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, 1fr);
+  margin: 20px 0;
+}
+
+.singing-diagnosis__voice-type-locked-slot {
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  position: relative;
+}
+
+.singing-diagnosis__voice-type-locked-slot::after {
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 10px;
+  bottom: 0;
+  content: "";
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.singing-diagnosis__voice-type-locked-icon {
+  font-size: 1.2rem;
+}
+
+.singing-diagnosis__voice-type-locked-slot strong {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.singing-diagnosis__voice-type-locked-slot small {
+  color: #888;
+  font-size: 0.75rem;
+}
+
+.singing-diagnosis__voice-type-locked-cta {
+  text-align: center;
+}
+
+.singing-diagnosis__voice-type-locked-cta p {
+  color: #666;
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+/* ── AIコメント ロック表示 ─────────────────────────── */
+.singing-diagnosis__ai-comment--locked {
+  background: #fafafa;
+  border: 1px dashed #ddd;
+  border-radius: 12px;
+  margin: 24px 0;
+  padding: 24px;
+}
+
+.singing-diagnosis__ai-comment-locked-preview {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  margin: 16px 0;
+  padding: 16px;
+  position: relative;
+}
+
+.singing-diagnosis__ai-comment-locked-icon {
+  font-size: 1.5rem;
+}
+
+.singing-diagnosis__ai-comment-locked-sample {
+  color: #555;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  margin: 8px 0 4px;
+}
+
+.singing-diagnosis__ai-comment-locked-blur {
+  color: transparent;
+  display: block;
+  font-size: 0.88rem;
+  letter-spacing: 2px;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.25);
+  user-select: none;
+}
+
+/* ── 詳細フィードバック ロックプレビュー ─────────────── */
+.singing-diagnosis__advanced-feedback-locked-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0 20px;
+}
+
+.singing-diagnosis__advanced-feedback-locked-card {
+  background: #f8f8f8;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 14px 16px;
+  position: relative;
+}
+
+.singing-diagnosis__advanced-feedback-locked-card span:first-child {
+  color: #888;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.singing-diagnosis__advanced-feedback-locked-card p {
+  color: #aaa;
+  font-size: 0.82rem;
+  margin: 4px 0 8px;
+}
+
+.singing-diagnosis__advanced-feedback-locked-blur {
+  color: transparent;
+  display: block;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+  user-select: none;
+}
+
+@media (min-width: 640px) {
+  .singing-diagnosis__share-grid {
+    flex-direction: row;
+  }
+
+  .singing-diagnosis__share-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .singing-diagnosis__voice-type-locked-preview {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .singing-diagnosis__advanced-feedback-locked-preview {
+    flex-direction: row;
+  }
+
+  .singing-diagnosis__advanced-feedback-locked-card {
+    flex: 1;
+  }
+}
+
+/* ── 週次チャレンジバナー ─────────────────────────── */
+.singing-diagnosis__weekly-challenge {
+  background: linear-gradient(135deg, #fff8ec 0%, #fffdf7 100%);
+  border: 1px solid #f0d080;
+  border-radius: 16px;
+  margin: 20px 0;
+  overflow: hidden;
+}
+
+.singing-diagnosis__weekly-challenge--done {
+  background: linear-gradient(135deg, #f0fff4 0%, #fafffc 100%);
+  border-color: #86e0a8;
+}
+
+.singing-diagnosis__weekly-challenge-header {
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 20px;
+}
+
+.singing-diagnosis__weekly-challenge-week {
+  color: #c07000;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.singing-diagnosis__weekly-challenge--done .singing-diagnosis__weekly-challenge-week {
+  color: #2a9b5a;
+}
+
+.singing-diagnosis__weekly-challenge-status {
+  background: #2a9b5a;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+}
+
+.singing-diagnosis__weekly-challenge-status--pending {
+  background: #f0d080;
+  border-radius: 20px;
+  color: #7a5000;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 10px;
+}
+
+.singing-diagnosis__weekly-challenge-body {
+  align-items: flex-start;
+  display: flex;
+  gap: 14px;
+  padding: 18px 20px;
+}
+
+.singing-diagnosis__weekly-challenge-icon {
+  flex-shrink: 0;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.singing-diagnosis__weekly-challenge-title {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.singing-diagnosis__weekly-challenge-desc {
+  color: #555;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.singing-diagnosis__weekly-challenge-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 20px;
+}
+
+.singing-diagnosis__weekly-challenge-done-msg {
+  color: #2a9b5a;
+  font-size: 0.82rem;
+  margin: 0 0 8px;
+  width: 100%;
+}
+
+.singing-diagnosis__weekly-challenge-btn {
+  border: 1.5px solid #c07000;
+  border-radius: 8px;
+  color: #c07000;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.singing-diagnosis__weekly-challenge-btn:hover {
+  background: #c07000;
+  color: #fff;
+}
+
+.singing-diagnosis__weekly-challenge-btn--cta {
+  background: #c07000;
+  color: #fff;
+}
+
+.singing-diagnosis__weekly-challenge-btn--cta:hover {
+  background: #9a5800;
+  color: #fff;
 }

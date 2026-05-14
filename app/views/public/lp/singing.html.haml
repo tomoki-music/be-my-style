@@ -271,6 +271,127 @@
         .plan-note TOMOKIと歌の成長を育てる
 
   .lp-section
+    %h2 プラン機能 比較表
+    %p.lp-section-lead どの機能がどのプランで使えるか、一目で確認できます。
+    .lp-feature-table-wrap
+      %table.lp-feature-table
+        %colgroup
+          %col{ style: "width: 36%" }
+          %col{ style: "width: 16%" }
+          %col{ style: "width: 16%" }
+          %col{ style: "width: 16%" }
+          %col{ style: "width: 16%" }
+        %thead
+          %tr
+            %th{ style: "width: 36%; text-align: left" } 機能
+            %th{ style: "width: 16%" } Free
+            %th{ style: "width: 16%" } Light
+            %th{ style: "width: 16%" }
+              Core
+              %small.lp-feature-table__recommended 人気
+            %th{ style: "width: 16%" } Premium
+        %tbody
+          %tr.lp-feature-table__section-head
+            %td{ colspan: 5 } 診断・スコア
+          %tr
+            %td 月間診断回数
+            %td 1回
+            %td 5回
+            %td 20回
+            %td 無制限
+          %tr
+            %td 音程・リズム・表現スコア
+            %td.check ✓
+            %td.check ✓
+            %td.check ✓
+            %td.check ✓
+          %tr
+            %td 前回との比較
+            %td.cross —
+            %td.check ✓
+            %td.check ✓
+            %td.check ✓
+          %tr.lp-feature-table__section-head
+            %td{ colspan: 5 } 成長・振り返り
+          %tr
+            %td 成長グラフ
+            %td.cross —
+            %td.cross —
+            %td.check ✓
+            %td.check ✓
+          %tr
+            %td 詳細フィードバック（良い点・改善点）
+            %td.cross —
+            %td.cross —
+            %td.check ✓
+            %td.check ✓
+          %tr
+            %td 年間成長シェアカード
+            %td.cross —
+            %td.cross —
+            %td.check ✓
+            %td.check ✓
+          %tr.lp-feature-table__section-head
+            %td{ colspan: 5 } 声の個性・タイプ分析
+          %tr
+            %td 6つのボイスタイプ診断
+            %td.cross —
+            %td.cross —
+            %td.check ✓
+            %td.check ✓
+          %tr
+            %td パート別詳細診断
+            %td.cross —
+            %td.cross —
+            %td.cross —
+            %td.check ✓
+          %tr.lp-feature-table__section-head
+            %td{ colspan: 5 } AI・コーチング
+          %tr
+            %td AIコメント（次の練習へのヒント）
+            %td.cross —
+            %td.cross —
+            %td.cross —
+            %td.check ✓
+          %tr
+            %td 今週のAIコーチ（週次練習テーマ）
+            %td.cross —
+            %td.cross —
+            %td.cross —
+            %td.check ✓
+          %tr.lp-feature-table__section-head
+            %td{ colspan: 5 } コミュニティ・特典
+          %tr
+            %td ランキング参加・バッジ
+            %td.cross —
+            %td.cross —
+            %td.check ✓
+            %td.check ✓
+          %tr
+            %td TOMOKI本人診断
+            %td.cross —
+            %td.cross —
+            %td.cross —
+            %td.check ✓
+          %tr
+            %td 月1プレミアム限定イベント
+            %td.cross —
+            %td.cross —
+            %td.cross —
+            %td.check ✓
+        %tfoot
+          %tr
+            %td
+            %td
+              = link_to "無料で始める", new_customer_registration_path, data: { turbolinks: false }, class: "lp-feature-table__cta-btn lp-feature-table__cta-btn--free"
+            %td
+              = link_to "Lightへ", "#lp-pricing-plans", class: "lp-feature-table__cta-btn"
+            %td
+              = link_to "Coreへ", "#lp-pricing-plans", class: "lp-feature-table__cta-btn lp-feature-table__cta-btn--core"
+            %td
+              = link_to "Premiumへ", "#lp-pricing-plans", class: "lp-feature-table__cta-btn lp-feature-table__cta-btn--premium"
+
+  .lp-section
     %h2 はじめる前の不安を、ここで解消
     .lp-faq-list
       .lp-faq-item

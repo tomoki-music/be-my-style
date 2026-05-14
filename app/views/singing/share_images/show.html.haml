@@ -52,6 +52,11 @@
           %span= @share_image.hashtag
           %small Screenshot ready
 
+    .singing-share-image__invite-cta
+      %strong あなたは何タイプ？
+      %p 歌声・演奏診断で、あなたの声の個性を無料で確認してみよう。
+      = link_to "無料で診断してみる →", new_singing_diagnosis_path, class: "singing-share-image__invite-cta-btn"
+
     .singing-share-image__share-note
       %h2 SNSで共有
       %p Xはボタンから投稿できます。Instagramでは上のカードだけが入るようにスクショして、投稿やストーリーズでシェアしてください。
