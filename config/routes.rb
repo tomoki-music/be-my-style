@@ -197,7 +197,9 @@ Rails.application.routes.draw do
   namespace :singing do
     root to: "homes#top"
     resources :diagnoses, only: [:index, :new, :create, :show]
-    resource :share_image, only: [:show]
+    resource :share_image, only: [:show] do
+      post :capture
+    end
     resource :ai_challenge_progress, only: [:update]
     resources :rankings, only: [:index]
     resources :ranking_seasons, only: [:index, :show]
