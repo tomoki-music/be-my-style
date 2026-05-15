@@ -344,6 +344,65 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(flash[:alert]).to include("この月の診断記録がない")
     end
 
+    it "premiumユーザーはyearly-wrappedカードを表示できること" do
+      singing_customer.create_subscription!(status: "active", plan: "premium")
+      sign_in singing_customer
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: singing_customer,
+        created_at: Time.zone.local(2026, 3, 10, 10, 0, 0),
+        overall_score: 75
+      )
+
+      get singing_share_image_path(target: "yearly-wrapped", year: 2026)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Yearly Wrapped")
+      expect(response.body).to include("2026年")
+      expect(response.body).to include("data-share-capture-target='yearly-wrapped'")
+      expect(response.body).to include("YEARLY WRAPPED")
+    end
+
+    it "coreユーザーはyearly-wrappedにアクセスできずリダイレクトされること" do
+      singing_customer.create_subscription!(status: "active", plan: "core")
+      sign_in singing_customer
+
+      get singing_share_image_path(target: "yearly-wrapped", year: 2026)
+
+      expect(response).to redirect_to(singing_diagnoses_path)
+      expect(flash[:alert]).to include("Premiumプラン")
+    end
+
+    it "lightユーザーはyearly-wrappedにアクセスできずリダイレクトされること" do
+      singing_customer.create_subscription!(status: "active", plan: "light")
+      sign_in singing_customer
+
+      get singing_share_image_path(target: "yearly-wrapped", year: 2026)
+
+      expect(response).to redirect_to(singing_diagnoses_path)
+      expect(flash[:alert]).to include("Premiumプラン")
+    end
+
+    it "freeユーザーはyearly-wrappedにアクセスできずリダイレクトされること" do
+      sign_in singing_customer
+
+      get singing_share_image_path(target: "yearly-wrapped", year: 2026)
+
+      expect(response).to redirect_to(singing_diagnoses_path)
+      expect(flash[:alert]).to include("Premiumプラン")
+    end
+
+    it "当年に診断がない場合はyearly-wrappedがリダイレクトされること" do
+      singing_customer.create_subscription!(status: "active", plan: "premium")
+      sign_in singing_customer
+
+      get singing_share_image_path(target: "yearly-wrapped", year: 2026)
+
+      expect(response).to redirect_to(singing_diagnoses_path)
+      expect(flash[:alert]).to include("今年の診断記録がない")
+    end
+
     it "legacyのcapture_target指定でもdaily_challengeを表示できること" do
       sign_in singing_customer
       FactoryBot.create(:singing_daily_challenge, challenge_date: Date.current)

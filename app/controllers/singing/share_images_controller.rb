@@ -19,6 +19,7 @@ class Singing::ShareImagesController < Singing::BaseController
     @generated_image_url = params[:generated_image_url].to_s.presence
     @wrapped_year = wrapped_reference_time.year if capture_target == "monthly-wrapped"
     @wrapped_month = wrapped_reference_time.month if capture_target == "monthly-wrapped"
+    @wrapped_year = yearly_wrapped_reference_time.year if capture_target == "yearly-wrapped"
   end
 
   def capture
@@ -103,6 +104,13 @@ class Singing::ShareImagesController < Singing::BaseController
         format.html { redirect_to singing_diagnoses_path, alert: "Monthly Wrapped シェアカードはCoreプラン以上で利用できます。" }
         format.json { render json: { error: "Monthly Wrapped シェアカードはCoreプラン以上で利用できます。" }, status: :forbidden }
       end
+    elsif capture_target == "yearly-wrapped"
+      return if share_image_customer.has_feature?(:singing_yearly_wrapped_share_image)
+
+      respond_to do |format|
+        format.html { redirect_to singing_diagnoses_path, alert: "Yearly Wrapped はPremiumプランで利用できます。" }
+        format.json { render json: { error: "Yearly Wrapped はPremiumプランで利用できます。" }, status: :forbidden }
+      end
     end
   end
 
@@ -130,6 +138,13 @@ class Singing::ShareImagesController < Singing::BaseController
     end
   end
 
+  def yearly_wrapped_reference_time
+    @yearly_wrapped_reference_time ||= begin
+      year = params[:year].to_i
+      year.positive? ? Time.zone.local(year, 6, 1) : Time.current
+    end
+  end
+
   def build_share_image
     case capture_target
     when "yearly-growth"
@@ -143,6 +158,11 @@ class Singing::ShareImagesController < Singing::BaseController
         share_image_customer,
         reference_time: wrapped_reference_time
       )
+    when "yearly-wrapped"
+      Singing::ShareImages::YearlyWrappedCardBuilder.call(
+        share_image_customer,
+        reference_time: yearly_wrapped_reference_time
+      )
     end
   end
 
@@ -154,6 +174,8 @@ class Singing::ShareImagesController < Singing::BaseController
       "ランキングのシェアカードはまだ表示できません。"
     when "monthly-wrapped"
       "この月の診断記録がないため、Monthly Wrapped は表示できません。"
+    when "yearly-wrapped"
+      "今年の診断記録がないため、Yearly Wrapped は表示できません。"
     else
       "今年の診断がまだないため、シェアカードは表示できません。"
     end

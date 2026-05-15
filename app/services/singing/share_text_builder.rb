@@ -18,6 +18,10 @@ module Singing
       new(customer, reference_time: reference_time).monthly_wrapped(stats: stats)
     end
 
+    def self.yearly_wrapped(customer, reference_time: Time.current, stats: nil)
+      new(customer, reference_time: reference_time).yearly_wrapped(stats: stats)
+    end
+
     def initialize(customer, reference_time: Time.current)
       @customer = customer
       @reference_time = reference_time
@@ -65,6 +69,23 @@ module Singing
         parts << "#{stats.top_skill_label}が最も伸びました"
       end
       parts << "#BeMyStyle #歌唱診断 #MonthlyWrapped"
+      parts.join
+    end
+
+    def yearly_wrapped(stats: nil)
+      return generic_text unless stats.present?
+
+      parts = ["#{stats.year}年は#{stats.diagnosis_count}回、自分の声と向き合いました🎤"]
+      if stats.score_growth.to_i.positive?
+        parts << "年間 +#{stats.score_growth}点成長📈"
+      end
+      if stats.top_skill_label.present? && stats.top_skill_delta.to_i.positive?
+        parts << "#{stats.top_skill_label}が最も伸びた年でした"
+      end
+      if stats.longest_challenge_streak.to_i >= 7
+        parts << "Daily Challenge #{stats.longest_challenge_streak}日連続継続🔥"
+      end
+      parts << "#BeMyStyle #歌唱診断 #YearlyWrapped"
       parts.join
     end
 

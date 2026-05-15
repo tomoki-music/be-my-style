@@ -23,6 +23,11 @@ module Singing
         feature: :singing_monthly_wrapped_share_image,
         selector: "[data-share-capture-target='monthly-wrapped']",
         path_helper: :singing_share_image_path
+      },
+      "yearly-wrapped" => {
+        feature: :singing_yearly_wrapped_share_image,
+        selector: "[data-share-capture-target='yearly-wrapped']",
+        path_helper: :singing_share_image_path
       }
     }.freeze
 
@@ -104,6 +109,8 @@ module Singing
                               Singing::ShareImages::RankingCardBuilder.call(customer)
                             when "monthly-wrapped"
                               Singing::ShareImages::MonthlyWrappedCardBuilder.call(customer, reference_time: reference_time)
+                            when "yearly-wrapped"
+                              Singing::ShareImages::YearlyWrappedCardBuilder.call(customer, reference_time: reference_time)
                             end
     end
 
@@ -152,6 +159,20 @@ module Singing
           top_skill_label: share_image_data.top_skill_label,
           challenge_completed_count: share_image_data.challenge_completed_count
         }.compact
+      when "yearly-wrapped"
+        {
+          title: "#{share_image_data.year_label} Yearly Wrapped",
+          description: share_image_data.message,
+          share_text: share_image_data.x_share_text,
+          year: share_image_data.year,
+          diagnosis_count: share_image_data.diagnosis_count,
+          best_score: share_image_data.best_score,
+          score_growth: share_image_data.score_growth,
+          top_skill_label: share_image_data.top_skill_label,
+          top_month: share_image_data.top_month,
+          ai_challenge_count: share_image_data.ai_challenge_count,
+          longest_challenge_streak: share_image_data.longest_challenge_streak
+        }.compact
       else
         {}
       end
@@ -159,7 +180,11 @@ module Singing
 
     def capture_url
       token = Singing::ShareImageCaptureToken.generate(customer: customer, capture_target: capture_target)
-      extra_params = capture_target == "monthly-wrapped" ? { year: reference_time.year, month: reference_time.month } : {}
+      extra_params = case capture_target
+                     when "monthly-wrapped" then { year: reference_time.year, month: reference_time.month }
+                     when "yearly-wrapped"  then { year: reference_time.year }
+                     else {}
+                     end
       path = Rails.application.routes.url_helpers.public_send(
         target_config.fetch(:path_helper),
         { target: capture_target, capture_token: token }.merge(extra_params)

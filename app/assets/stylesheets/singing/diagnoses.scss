@@ -7553,9 +7553,9 @@ $ranking-accent: #7c4dff;
   box-shadow: 0 12px 28px rgba(91, 33, 182, 0.1);
   display: grid;
   gap: 6px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   margin: 0 auto 18px;
-  max-width: 720px;
+  max-width: 900px;
   padding: 6px;
 }
 
@@ -7598,6 +7598,23 @@ $ranking-accent: #7c4dff;
   font-weight: 800;
   line-height: 1.35;
   opacity: 0.82;
+}
+
+.singing-share-image__tab-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  margin-top: 3px;
+  padding: 1px 6px;
+  text-transform: uppercase;
+}
+
+.singing-share-image__tab--active .singing-share-image__tab-badge {
+  background: rgba(255, 255, 255, 0.28);
+  color: #fef3c7;
 }
 
 @media (max-width: 479px) {
@@ -9983,4 +10000,145 @@ $ranking-accent: #7c4dff;
   .singing-diagnosis-new__upload {
     padding: 32px 16px;
   }
+}
+
+// ─── Yearly Wrapped card ────────────────────────────────────────────
+.singing-share-image__card--yearly-wrapped {
+  background:
+    radial-gradient(circle at 10% 14%, rgba(251, 191, 36, 0.36), transparent 24%),
+    radial-gradient(circle at 90% 10%, rgba(253, 230, 138, 0.22), transparent 22%),
+    radial-gradient(circle at 16% 88%, rgba(251, 191, 36, 0.28), transparent 26%),
+    radial-gradient(circle at 82% 82%, rgba(99, 102, 241, 0.22), transparent 20%),
+    linear-gradient(158deg, #05071a 0%, #0a1128 40%, #0d1945 70%, #12203a 100%);
+  border: 1px solid rgba(251, 191, 36, 0.26);
+  box-shadow:
+    0 0 0 1px rgba(251, 191, 36, 0.12),
+    0 40px 80px rgba(5, 7, 26, 0.72),
+    0 0 120px rgba(251, 191, 36, 0.08) inset;
+  color: #f5f5f0;
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__topline {
+  border-bottom-color: rgba(251, 191, 36, 0.2);
+  color: rgba(253, 230, 138, 0.76);
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__topline strong {
+  color: rgba(253, 230, 138, 0.9);
+}
+
+.singing-share-image__wrapped-hero--yearly {
+  margin: 32px 0 24px;
+  text-align: center;
+}
+
+.singing-share-image__wrapped-icon--yearly {
+  color: #fbbf24;
+  display: block;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 10px;
+  text-shadow: 0 0 32px rgba(251, 191, 36, 0.7);
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__kicker {
+  color: rgba(253, 230, 138, 0.65);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__wrapped-hero--yearly h1 {
+  background: linear-gradient(135deg, #fde68a 0%, #ffffff 45%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 52px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin-bottom: 10px;
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__wrapped-hero--yearly p {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.singing-share-image__metric--yearly-primary {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__metric--yearly-primary strong {
+  background: linear-gradient(135deg, #fde68a, #fbbf24);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 48px;
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__metric {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(251, 191, 36, 0.16);
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__metric span {
+  color: rgba(253, 230, 138, 0.65);
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__metric strong {
+  color: #f5f5f0;
+  font-size: 22px;
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__metric small {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__wrapped-challenge {
+  background: rgba(251, 191, 36, 0.08);
+  border-color: rgba(251, 191, 36, 0.28);
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__wrapped-challenge span {
+  color: rgba(253, 230, 138, 0.65);
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__wrapped-challenge strong {
+  color: #fde68a;
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__wrapped-challenge em {
+  color: rgba(253, 230, 138, 0.6);
+}
+
+.singing-share-image__yearly-message {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(251, 191, 36, 0.14);
+  border-radius: 10px;
+  margin: 16px 0;
+  padding: 14px 16px;
+}
+
+.singing-share-image__yearly-message p {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__footer {
+  border-top-color: rgba(251, 191, 36, 0.2);
+  color: rgba(253, 230, 138, 0.55);
+}
+
+.singing-share-image__card--yearly-wrapped .singing-share-image__footer small {
+  color: rgba(253, 230, 138, 0.38);
 }

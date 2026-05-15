@@ -39,7 +39,8 @@ class Customer < ApplicationRecord
     singing_diagnosis_voice_type: %w[core premium],
     singing_diagnosis_priority: %w[premium],
     singing_diagnosis_ai_comment: %w[premium],
-    singing_monthly_wrapped_share_image: %w[core premium]
+    singing_monthly_wrapped_share_image: %w[core premium],
+    singing_yearly_wrapped_share_image: %w[premium]
   }.freeze
 
   # Include default devise modules. Others available are:

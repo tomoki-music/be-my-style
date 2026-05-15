@@ -91,6 +91,65 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
     end
   end
 
+  context "yearly-wrapped / premiumユーザー" do
+    let(:plan) { "premium" }
+
+    before do
+      create_completed_diagnosis(
+        created_at: Time.zone.local(year, 2, 10, 10, 0, 0),
+        overall_score: 72,
+        pitch_score: 65,
+        rhythm_score: 68,
+        expression_score: 60
+      )
+      create_completed_diagnosis(
+        created_at: Time.zone.local(year, 5, 15, 10, 0, 0),
+        overall_score: 85,
+        pitch_score: 80,
+        rhythm_score: 78,
+        expression_score: 72
+      )
+    end
+
+    it "375px幅でもyearly-wrappedカードが横にはみ出さないこと" do
+      resize_browser_to(375, 900)
+
+      visit singing_share_image_path(target: "yearly-wrapped", year: year)
+
+      expect(page).to have_selector("[data-share-capture-target='yearly-wrapped']")
+      expect(page.html).to include("#{year}年")
+      expect(page.html).to include("Yearly Wrapped")
+
+      FileUtils.mkdir_p(Rails.root.join("tmp/screenshots"))
+      save_screenshot(Rails.root.join("tmp/screenshots/singing_share_image_yearly_wrapped_mobile.png").to_s)
+
+      aggregate_failures do
+        expect(card_layout("yearly-wrapped")).to include(
+          "fitsViewport" => true,
+          "childrenFitCardHorizontally" => true
+        )
+      end
+    end
+
+    it "1280px幅でyearly-wrappedカードが中央表示されること" do
+      resize_browser_to(1280, 960)
+
+      visit singing_share_image_path(target: "yearly-wrapped", year: year)
+
+      expect(page).to have_selector("[data-share-capture-target='yearly-wrapped']")
+      expect(page.html).to include("#{year}年")
+
+      FileUtils.mkdir_p(Rails.root.join("tmp/screenshots"))
+      save_screenshot(Rails.root.join("tmp/screenshots/singing_share_image_yearly_wrapped_desktop.png").to_s)
+
+      aggregate_failures do
+        expect(card_layout("yearly-wrapped").fetch("fitsViewport")).to eq(true)
+        expect(card_layout("yearly-wrapped").fetch("childrenFitCardHorizontally")).to eq(true)
+        expect(card_layout("yearly-wrapped").fetch("centerOffset").abs).to be <= 2
+      end
+    end
+  end
+
   context "monthly-wrapped / coreユーザー" do
     let(:plan) { "core" }
 
@@ -171,10 +230,11 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
     page.driver.browser.manage.window.resize_to(width, height)
   end
 
-  def card_layout
+  def card_layout(capture_target = nil)
+    selector = capture_target ? "[data-share-capture-target='#{capture_target}']" : ".singing-share-image__card"
     page.evaluate_script(<<~JS)
       (function () {
-        const card = document.querySelector(".singing-share-image__card");
+        const card = document.querySelector("#{selector}");
         const cardRect = card.getBoundingClientRect();
         const tolerance = 1;
         const childrenFitCardHorizontally = Array.from(card.querySelectorAll("*")).every((node) => {

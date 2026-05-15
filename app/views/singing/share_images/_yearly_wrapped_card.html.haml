@@ -1,0 +1,60 @@
+.singing-share-image__card.singing-share-image__card--yearly-wrapped{ role: "img", "aria-label": "#{share_image.year_label} Yearly Wrapped シェアカード", data: { share_capture_target: "yearly-wrapped" } }
+  .singing-share-image__topline
+    %span= share_image.badge_label
+    %strong BeMyStyle Singing
+
+  .singing-share-image__wrapped-hero.singing-share-image__wrapped-hero--yearly
+    %span.singing-share-image__wrapped-icon.singing-share-image__wrapped-icon--yearly ✦
+    %p.singing-share-image__kicker YEARLY WRAPPED
+    %h1= share_image.year_label
+    %p= share_image.headline
+
+  .singing-share-image__metric.singing-share-image__metric--primary.singing-share-image__metric--yearly-primary
+    %span 今年の診断回数
+    %strong= "#{share_image.diagnosis_count}回"
+    %small times
+
+  .singing-share-image__metric-grid.singing-share-image__metric-grid--wrapped
+    .singing-share-image__metric
+      %span 年間最高スコア
+      %strong= share_image.best_score.present? ? "#{share_image.best_score}点" : "記録前"
+      %small best score
+    .singing-share-image__metric
+      %span 年初からの成長
+      %strong= share_image.score_growth_label
+      %small score growth
+    - if share_image.top_skill_label.present?
+      .singing-share-image__metric
+        %span 最も伸びたスキル
+        %strong= share_image.top_skill_delta_label.presence || share_image.top_skill_label
+        %small top skill
+    - else
+      .singing-share-image__metric
+        %span 最も伸びたスキル
+        %strong 集計中
+        %small top skill
+    - if share_image.top_month.present?
+      .singing-share-image__metric
+        %span 一番頑張った月
+        %strong= "#{share_image.top_month}月"
+        %small= "#{share_image.top_month_count}回診断"
+    - else
+      .singing-share-image__metric
+        %span 一番頑張った月
+        %strong —
+        %small top month
+
+  - if share_image.longest_challenge_streak.to_i > 0
+    - streak_label = share_image.longest_challenge_streak.to_i >= 14 ? "singing-share-image__wrapped-challenge--streak" : nil
+    .singing-share-image__wrapped-challenge{ class: streak_label }
+      %span Daily Challenge
+      %strong= "#{share_image.longest_challenge_streak}日連続継続"
+      - if share_image.ai_challenge_count.to_i > 0
+        %em= "AIチャレンジ #{share_image.ai_challenge_count}回挑戦"
+
+  .singing-share-image__yearly-message
+    %p= share_image.message
+
+  .singing-share-image__footer
+    %span #BeMyStyle
+    %small 今年も声と向き合ってくれてありがとう
