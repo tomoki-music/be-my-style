@@ -5,6 +5,8 @@
     %meta{:content => "width=device-width,initial-scale=1", :name => "viewport"}/
     - page_description = content_for?(:og_description) ? yield(:og_description) : "好きで繋がった仲間は一生もの。音楽人の為のコミュニティアプリです。"
     %meta{:content => page_description, :name => "description"}/
+    - if content_for?(:robots)
+      %meta{ name: "robots", content: yield(:robots) }/
     %title= content_for?(:title) ? yield(:title) : "BeMyStyle"
     = render "singing/shared/og_meta"
     = favicon_link_tag'favicon.ico'

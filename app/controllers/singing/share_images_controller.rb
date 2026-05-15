@@ -38,15 +38,24 @@ class Singing::ShareImagesController < Singing::BaseController
 
   def public_show
     @share_image = SingingShareImage.find_signed!(params[:token], purpose: :public_share_image)
-    return head :not_found unless @share_image.completed? && !@share_image.expired_for_public? && @share_image.image.attached?
+    return render_expired_public_share_image if @share_image.expired_for_public?
+    return head :not_found unless @share_image.completed? && @share_image.image.attached?
 
     @share_title = @share_image.public_title
     @share_description = @share_image.public_description
+    @share_og_image_url = rails_blob_url(@share_image.image)
+    @debug_ogp = params[:debug_ogp].present?
   rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
     head :not_found
   end
 
   private
+
+  def render_expired_public_share_image
+    @share_title = "このシェア画像は公開期限が終了しました"
+    @share_description = "BeMyStyle Singing のシェア画像は一定期間で公開を終了します。"
+    render :expired, status: :gone
+  end
 
   def authenticate_share_image_viewer!
     return authenticate_customer! if params[:capture_token].blank?

@@ -25,9 +25,17 @@ class SingingShareImage < ApplicationRecord
   before_validation :set_default_expires_at, on: :create
 
   scope :expired_for_cleanup, -> { where("expires_at <= ?", Time.current) }
+  scope :failed_for_cleanup, -> { failed.where("updated_at <= ?", 1.day.ago) }
+  scope :missing_attachment_for_cleanup, -> {
+    completed.left_outer_joins(:image_attachment).where(active_storage_attachments: { id: nil })
+  }
 
   def expired_for_public?
     expires_at.present? && expires_at <= Time.current
+  end
+
+  def cleanup_eligible?
+    expired_for_public? || stale_failed? || missing_completed_image?
   end
 
   def public_title
@@ -39,6 +47,14 @@ class SingingShareImage < ApplicationRecord
   end
 
   private
+
+  def stale_failed?
+    failed? && updated_at.present? && updated_at <= 1.day.ago
+  end
+
+  def missing_completed_image?
+    completed? && !image.attached?
+  end
 
   def set_default_expires_at
     self.expires_at ||= 7.days.from_now

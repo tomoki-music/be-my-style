@@ -2,11 +2,25 @@
 - content_for :og_title, "#{@share_title} | BeMyStyle Singing"
 - content_for :og_description, @share_description
 - content_for :twitter_card, "summary_large_image"
-- content_for :og_image, rails_blob_url(@share_image.image)
+- content_for :og_image, @share_og_image_url
+- content_for :robots, "noindex,nofollow"
 - content_for :suppress_singing_nav, true
 
 .singing-share-image
   .singing-share-image__inner
+    - if @debug_ogp
+      .singing-share-image__ogp-debug
+        %strong OGP debug
+        %dl
+          %dt og:title
+          %dd= "#{@share_title} | BeMyStyle Singing"
+          %dt og:description
+          %dd= @share_description
+          %dt og:image
+          %dd= @share_og_image_url
+          %dt robots
+          %dd noindex,nofollow
+
     .singing-share-image__stage
       = image_tag url_for(@share_image.image), alt: @share_title, class: "singing-share-image__public-image"
 
