@@ -18,10 +18,11 @@ RSpec.describe Singing::ShareImageCaptureService, type: :service do
   end
 
   after do
+    ActiveStorage::Blob.where("key LIKE ?", "singing/share_images/%").find_each(&:purge)
     FileUtils.rm_rf(output_root)
   end
 
-  it "signed token付きのshare_image URLを開き、capture targetだけをpng保存する" do
+  it "signed token付きのshare_image URLを開き、capture targetだけをpng保存してActiveStorage URLを返す" do
     result = described_class.call(
       customer: customer,
       base_url: "https://example.test",
@@ -31,7 +32,10 @@ RSpec.describe Singing::ShareImageCaptureService, type: :service do
     )
 
     expect(result.capture_target).to eq("yearly-growth")
-    expect(result.image_url).to be_nil
+    expect(result.filename).to match(/\Ayearly-growth-\d{8}-[0-9a-f]{12}\.png\z/)
+    expect(result.image_url).to start_with("https://example.test/rails/active_storage/blobs/")
+    expect(result.image_url).to include(result.filename)
+    expect(ActiveStorage::Blob.where("key LIKE ?", "singing/share_images/yearly-growth/%").count).to eq(1)
     relative_path = result.local_path.relative_path_from(Rails.root).to_s
     expect(relative_path).to match(%r{\Atmp/spec/share_images/yearly-growth/#{customer.id}-\d{14}-[0-9a-f]{12}\.png\z})
     expect(File.binread(result.local_path)).to eq("PNG")

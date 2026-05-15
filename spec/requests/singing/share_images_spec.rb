@@ -239,7 +239,8 @@ RSpec.describe "Singing::ShareImages", type: :request do
       FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, song_title: "Capture Song")
       result = Singing::ShareImageCaptureService::Result.new(
         capture_target: "yearly-growth",
-        image_url: nil,
+        image_url: "https://www.example.com/rails/active_storage/blobs/redirect/signed/yearly-growth-20260515-abcd1234abcd.png",
+        filename: "yearly-growth-20260515-abcd1234abcd.png",
         local_path: Rails.root.join("tmp/share_images/yearly-growth/sample.png")
       )
       expect(Singing::ShareImageCaptureService).to receive(:call).with(
@@ -254,8 +255,37 @@ RSpec.describe "Singing::ShareImages", type: :request do
       json = JSON.parse(response.body)
       expect(json).to include(
         "capture_target" => "yearly-growth",
-        "image_url" => nil,
+        "image_url" => "https://www.example.com/rails/active_storage/blobs/redirect/signed/yearly-growth-20260515-abcd1234abcd.png",
+        "filename" => "yearly-growth-20260515-abcd1234abcd.png",
         "local_path" => "tmp/share_images/yearly-growth/sample.png"
+      )
+    end
+
+    it "premiumユーザーも保存済み画像URLをJSONで受け取れること" do
+      singing_customer.create_subscription!(status: "active", plan: "premium")
+      sign_in singing_customer
+      FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, song_title: "Premium Capture Song")
+      result = Singing::ShareImageCaptureService::Result.new(
+        capture_target: "yearly-growth",
+        image_url: "https://www.example.com/rails/active_storage/blobs/redirect/signed/yearly-growth-20260515-1234abcd1234.png",
+        filename: "yearly-growth-20260515-1234abcd1234.png",
+        local_path: Rails.root.join("tmp/share_images/yearly-growth/premium.png")
+      )
+      expect(Singing::ShareImageCaptureService).to receive(:call).with(
+        customer: singing_customer,
+        base_url: "http://www.example.com",
+        capture_target: "yearly-growth"
+      ).and_return(result)
+
+      post capture_singing_share_image_path, params: { capture_target: "yearly-growth" }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      json = JSON.parse(response.body)
+      expect(json).to include(
+        "capture_target" => "yearly-growth",
+        "image_url" => "https://www.example.com/rails/active_storage/blobs/redirect/signed/yearly-growth-20260515-1234abcd1234.png",
+        "filename" => "yearly-growth-20260515-1234abcd1234.png",
+        "local_path" => "tmp/share_images/yearly-growth/premium.png"
       )
     end
 
@@ -267,6 +297,18 @@ RSpec.describe "Singing::ShareImages", type: :request do
 
       expect(response).to have_http_status(:forbidden)
       expect(response.body).not_to include("Free Capture Song")
+      expect(response.body).to include("Coreプラン以上")
+    end
+
+    it "lightユーザーは画像生成できず、詳細データも返さないこと" do
+      singing_customer.create_subscription!(status: "active", plan: "light")
+      sign_in singing_customer
+      FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, song_title: "Light Capture Song")
+
+      post capture_singing_share_image_path, params: { capture_target: "yearly-growth" }, as: :json
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response.body).not_to include("Light Capture Song")
       expect(response.body).to include("Coreプラン以上")
     end
 
