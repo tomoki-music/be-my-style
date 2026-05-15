@@ -1,0 +1,20 @@
+- content_for :title, "#{@share_title} | BeMyStyle"
+- content_for :og_title, "#{@share_title} | BeMyStyle Singing"
+- content_for :og_description, @share_description
+- content_for :twitter_card, "summary_large_image"
+- content_for :og_image, rails_blob_url(@share_image.image)
+- content_for :suppress_singing_nav, true
+
+.singing-share-image
+  .singing-share-image__inner
+    .singing-share-image__stage
+      = image_tag url_for(@share_image.image), alt: @share_title, class: "singing-share-image__public-image"
+
+    .singing-share-image__invite-cta
+      %strong あなたは何タイプ？
+      %p 歌声・演奏診断で、あなたの声の個性を無料で確認してみよう。
+      = link_to "無料で診断してみる →", new_singing_diagnosis_path, class: "singing-share-image__invite-cta-btn"
+
+    .singing-share-image__share-note
+      %h2 #BeMyStyleSinging
+      %p 歌声の成長を、画像で残してシェアできます。

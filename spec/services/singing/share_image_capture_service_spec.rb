@@ -18,6 +18,7 @@ RSpec.describe Singing::ShareImageCaptureService, type: :service do
   end
 
   after do
+    SingingShareImage.find_each(&:destroy)
     ActiveStorage::Blob.where("key LIKE ?", "singing/share_images/%").find_each(&:purge)
     FileUtils.rm_rf(output_root)
   end
@@ -34,8 +35,16 @@ RSpec.describe Singing::ShareImageCaptureService, type: :service do
     expect(result.capture_target).to eq("yearly-growth")
     expect(result.filename).to match(/\Ayearly-growth-\d{8}-[0-9a-f]{12}\.png\z/)
     expect(result.image_url).to start_with("https://example.test/rails/active_storage/blobs/")
+    expect(result.public_url).to start_with("https://example.test/singing/share_images/")
     expect(result.image_url).to include(result.filename)
+    expect(result.share_image).to be_completed
+    expect(result.share_image.metadata).to include(
+      "title" => "#{year}年 歌声成長レポート",
+      "season" => year
+    )
+    expect(result.share_image.metadata["share_text"]).to include("#BeMyStyleSinging")
     expect(ActiveStorage::Blob.where("key LIKE ?", "singing/share_images/yearly-growth/%").count).to eq(1)
+    expect(SingingShareImage.where(customer: customer, capture_target: "yearly-growth", status: :completed).count).to eq(1)
     relative_path = result.local_path.relative_path_from(Rails.root).to_s
     expect(relative_path).to match(%r{\Atmp/spec/share_images/yearly-growth/#{customer.id}-\d{14}-[0-9a-f]{12}\.png\z})
     expect(File.binread(result.local_path)).to eq("PNG")

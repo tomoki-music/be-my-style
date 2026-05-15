@@ -7508,6 +7508,15 @@ $ranking-accent: #7c4dff;
   padding: 0 6px;
 }
 
+.singing-share-image__public-image {
+  border-radius: 8px;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.28);
+  display: block;
+  height: auto;
+  max-width: 520px;
+  width: 100%;
+}
+
 .singing-share-image__card {
   background:
     radial-gradient(circle at 20% 14%, rgba(254, 240, 138, 0.58), transparent 24%),

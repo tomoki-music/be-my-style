@@ -3,7 +3,7 @@ require "uri"
 
 module Singing
   class ShareImageStorageService
-    Result = Struct.new(:capture_target, :blob, :filename, :image_url, keyword_init: true)
+    Result = Struct.new(:capture_target, :share_image, :blob, :filename, :image_url, :public_url, keyword_init: true)
 
     class UnsupportedCaptureTarget < StandardError; end
     class MissingImageFile < StandardError; end
@@ -12,15 +12,26 @@ module Singing
       new(...).call
     end
 
-    def initialize(customer:, capture_target:, local_path:, base_url:)
+    def initialize(customer:, capture_target:, local_path:, base_url:, metadata: {})
       @customer = customer
       @capture_target = capture_target.to_s
       @local_path = Pathname(local_path)
       @base_url = base_url.to_s.delete_suffix("/")
+      @metadata = metadata.to_h
     end
 
     def call
       validate!
+
+      share_image = nil
+      share_image = SingingShareImage.create!(
+        customer: customer,
+        capture_target: capture_target,
+        status: :pending,
+        expires_at: 7.days.from_now,
+        generated_at: Time.current,
+        metadata: share_image_metadata
+      )
 
       blob = File.open(local_path, "rb") do |file|
         ActiveStorage::Blob.create_and_upload!(
@@ -28,22 +39,30 @@ module Singing
           filename: filename,
           content_type: "image/png",
           key: storage_key,
-          metadata: metadata,
+          metadata: share_image_metadata,
           identify: false
         )
       end
 
+      share_image.image.attach(blob)
+      share_image.update!(status: :completed)
+
       Result.new(
         capture_target: capture_target,
+        share_image: share_image,
         blob: blob,
         filename: filename,
-        image_url: blob_url(blob)
+        image_url: blob_url(share_image.image.blob),
+        public_url: public_url(share_image)
       )
+    rescue StandardError
+      share_image&.update(status: :failed) if share_image&.persisted?
+      raise
     end
 
     private
 
-    attr_reader :customer, :capture_target, :local_path, :base_url
+    attr_reader :customer, :capture_target, :local_path, :base_url, :metadata
 
     def validate!
       unless Singing::ShareImageCaptureService::SUPPORTED_TARGETS.key?(capture_target)
@@ -61,16 +80,20 @@ module Singing
       @storage_key ||= "singing/share_images/#{capture_target}/#{filename}"
     end
 
-    def metadata
+    def share_image_metadata
       {
         capture_target: capture_target,
-        customer_id: customer.id,
         generated_at: Time.current.iso8601
-      }
+      }.merge(metadata)
     end
 
     def blob_url(blob)
       Rails.application.routes.url_helpers.rails_blob_url(blob, url_options)
+    end
+
+    def public_url(share_image)
+      token = share_image.signed_id(purpose: :public_share_image)
+      Rails.application.routes.url_helpers.singing_public_share_image_url(token, url_options)
     end
 
     def url_options

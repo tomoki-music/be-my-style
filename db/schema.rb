@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_14_142956) do
+ActiveRecord::Schema.define(version: 2026_05_15_000000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -967,6 +967,22 @@ ActiveRecord::Schema.define(version: 2026_05_14_142956) do
     t.index ["singing_ranking_season_id"], name: "index_season_entries_on_season_id"
   end
 
+  create_table "singing_share_images", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "capture_target", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "expires_at", null: false
+    t.datetime "generated_at"
+    t.json "metadata"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["capture_target"], name: "index_singing_share_images_on_capture_target"
+    t.index ["customer_id", "capture_target"], name: "index_singing_share_images_on_customer_id_and_capture_target"
+    t.index ["customer_id"], name: "index_singing_share_images_on_customer_id"
+    t.index ["expires_at"], name: "index_singing_share_images_on_expires_at"
+    t.index ["status"], name: "index_singing_share_images_on_status"
+  end
+
   create_table "song_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "song_id", null: false
@@ -1134,6 +1150,7 @@ ActiveRecord::Schema.define(version: 2026_05_14_142956) do
   add_foreign_key "singing_season_ranking_entries", "customers"
   add_foreign_key "singing_season_ranking_entries", "singing_diagnoses"
   add_foreign_key "singing_season_ranking_entries", "singing_ranking_seasons"
+  add_foreign_key "singing_share_images", "customers"
   add_foreign_key "song_customers", "customers"
   add_foreign_key "song_customers", "songs"
   add_foreign_key "songs", "events"
