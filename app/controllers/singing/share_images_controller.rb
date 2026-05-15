@@ -28,6 +28,7 @@ class Singing::ShareImagesController < Singing::BaseController
     render json: {
       capture_target: result.capture_target,
       image_url: result.image_url,
+      filename: result.filename,
       local_path: result.local_path.relative_path_from(Rails.root).to_s
     }
   rescue Singing::ShareImageCaptureService::NoShareImageData => e

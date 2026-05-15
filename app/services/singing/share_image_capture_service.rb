@@ -3,7 +3,7 @@ require "securerandom"
 
 module Singing
   class ShareImageCaptureService
-    Result = Struct.new(:capture_target, :local_path, :image_url, keyword_init: true)
+    Result = Struct.new(:capture_target, :local_path, :image_url, :filename, keyword_init: true)
 
     SUPPORTED_TARGETS = {
       "yearly-growth" => {
@@ -41,7 +41,19 @@ module Singing
         output_path: output_path
       )
 
-      Result.new(capture_target: capture_target, local_path: output_path, image_url: nil)
+      storage_result = Singing::ShareImageStorageService.call(
+        customer: customer,
+        capture_target: capture_target,
+        local_path: output_path,
+        base_url: base_url
+      )
+
+      Result.new(
+        capture_target: capture_target,
+        local_path: output_path,
+        image_url: storage_result.image_url,
+        filename: storage_result.filename
+      )
     ensure
       active_browser.close if owns_browser && defined?(@active_browser) && @active_browser.present?
     end
