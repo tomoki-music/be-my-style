@@ -62,11 +62,32 @@ RSpec.describe Singing::ShareImageCaptureService, type: :service do
       described_class.call(
         customer: customer,
         base_url: "https://example.test",
-        capture_target: "ranking",
+        capture_target: "unknown",
         output_root: output_root,
         browser: browser
       )
     end.to raise_error(described_class::UnsupportedCaptureTarget)
+  end
+
+  it "ranking targetの画像を生成してActiveStorage URLを返す" do
+    customer.singing_diagnoses.update_all(ranking_opt_in: true, overall_score: 88)
+
+    result = described_class.call(
+      customer: customer,
+      base_url: "https://example.test",
+      capture_target: "ranking",
+      output_root: output_root,
+      browser: browser
+    )
+
+    expect(result.capture_target).to eq("ranking")
+    expect(result.share_image.metadata).to include(
+      "title" => "Singing Rankingに挑戦しました",
+      "description" => "挑戦の成果がランキングに刻まれました",
+      "rank_label" => "全国1位",
+      "score_label" => "総合スコア 88点"
+    )
+    expect(browser.captures.first.fetch(:selector)).to eq("[data-share-capture-target='ranking']")
   end
 
   it "Core未満のユーザーは画像生成できない" do

@@ -14,6 +14,10 @@ module Singing
       "daily-challenge" => {
         selector: "[data-share-capture-target='daily-challenge']",
         path_helper: :singing_share_image_path
+      },
+      "ranking" => {
+        selector: "[data-share-capture-target='ranking']",
+        path_helper: :singing_share_image_path
       }
     }.freeze
 
@@ -90,6 +94,8 @@ module Singing
                               Singing::YearlyGrowthShareImageBuilder.call(customer)
                             when "daily-challenge"
                               Singing::ShareImages::DailyChallengeCardBuilder.call(customer)
+                            when "ranking"
+                              Singing::ShareImages::RankingCardBuilder.call(customer)
                             end
     end
 
@@ -113,6 +119,17 @@ module Singing
           streak_days: share_image_data.streak_days,
           completed_today: share_image_data.completed_today,
           score_delta: share_image_data.score_delta
+        }.compact
+      when "ranking"
+        {
+          title: "Singing Rankingに挑戦しました",
+          description: share_image_data.message,
+          share_text: share_image_data.x_share_text,
+          rank: share_image_data.rank,
+          score: share_image_data.score,
+          rank_label: share_image_data.rank_label,
+          score_label: share_image_data.score_label,
+          rank_change_label: share_image_data.rank_change_label
         }.compact
       else
         {}

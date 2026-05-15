@@ -111,6 +111,8 @@ class Singing::ShareImagesController < Singing::BaseController
       Singing::YearlyGrowthShareImageBuilder.call(share_image_customer)
     when "daily-challenge"
       Singing::ShareImages::DailyChallengeCardBuilder.call(share_image_customer)
+    when "ranking"
+      Singing::ShareImages::RankingCardBuilder.call(share_image_customer)
     end
   end
 
@@ -118,6 +120,8 @@ class Singing::ShareImagesController < Singing::BaseController
     case capture_target
     when "daily-challenge"
       "Daily Challenge のシェアカードはまだ表示できません。"
+    when "ranking"
+      "ランキングのシェアカードはまだ表示できません。"
     else
       "今年の診断がまだないため、シェアカードは表示できません。"
     end

@@ -1,9 +1,12 @@
-- if @share_image.respond_to?(:report)
+- if @capture_target == "yearly-growth"
   - page_title = "#{@share_image.report.year}年 歌声成長シェアカード"
   - og_title = "#{@share_image.report.year}年 歌声成長レポート"
-- else
+- elsif @capture_target == "daily-challenge"
   - page_title = "Daily Challenge シェアカード"
   - og_title = "Daily Challenge を完了しました"
+- else
+  - page_title = "Singing Ranking シェアカード"
+  - og_title = "Singing Rankingに挑戦しました"
 - content_for :title, "#{page_title} | BeMyStyle"
 - content_for :og_title, "#{og_title} | BeMyStyle Singing"
 - content_for :og_description, @share_text
@@ -19,6 +22,7 @@
 
     - yearly_active = @capture_target == "yearly-growth"
     - daily_active = @capture_target == "daily-challenge"
+    - ranking_active = @capture_target == "ranking"
     .singing-share-image__tabs{ role: "tablist", "aria-label": "シェア画像の種類" }
       = link_to singing_share_image_path, class: "singing-share-image__tab #{'singing-share-image__tab--active' if yearly_active}", role: "tab", "aria-selected": yearly_active do
         %span 年間レポート
@@ -26,6 +30,9 @@
       = link_to singing_share_image_path(target: "daily-challenge"), class: "singing-share-image__tab #{'singing-share-image__tab--active' if daily_active}", role: "tab", "aria-selected": daily_active do
         %span Daily Challenge
         %small 今日の頑張りを1枚に
+      = link_to singing_share_image_path(target: "ranking"), class: "singing-share-image__tab #{'singing-share-image__tab--active' if ranking_active}", role: "tab", "aria-selected": ranking_active do
+        %span ランキング
+        %small 挑戦の記録を1枚に
 
     = render "share_actions", variant: :toolbar, share_text: @share_text, share_url: request.original_url
 
@@ -36,6 +43,8 @@
     .singing-share-image__stage
       - if @capture_target == "daily-challenge"
         = render "daily_challenge_card", share_image: @share_image
+      - elsif @capture_target == "ranking"
+        = render "ranking_card", share_image: @share_image
       - else
         = render "share_card", share_image: @share_image, singer_rank: @singer_rank
 

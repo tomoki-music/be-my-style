@@ -263,6 +263,10 @@
               %span.singing-diagnosis__share-card-badge Daily
               %strong Daily Challengeをシェア
               %p 今日も歌った記録を、SNS向け画像に
+            = link_to singing_share_image_path(target: "ranking"), class: "singing-diagnosis__share-image-option singing-diagnosis__share-image-option--ranking" do
+              %span.singing-diagnosis__share-card-badge Ranking
+              %strong ランキングをシェア
+              %p 挑戦の成果を、順位だけに寄せず画像で残す
 
       - growth_chart_data = singing_growth_chart_data(@growth_diagnoses)
       .singing-diagnosis__growth

@@ -71,6 +71,31 @@ RSpec.describe Singing::ShareTextBuilder, type: :service do
     end
   end
 
+  describe ".ranking" do
+    it "順位ありの場合は挑戦の成果として現在順位を含めること" do
+      card = Struct.new(:rank, :rank_label, :message).new(24, "全国24位", "挑戦の成果がランキングに刻まれました")
+
+      text = described_class.ranking(customer, reference_time: reference_time, card: card)
+
+      expect(text).to include("Singing Rankingに挑戦しました")
+      expect(text).to include("現在 全国24位")
+      expect(text).to include("挑戦の成果がランキングに刻まれました")
+      expect(text).to include("#BeMyStyle")
+      expect(text).to include("#歌唱診断")
+      expect(text).to include("#歌ってみた")
+    end
+
+    it "順位なしの場合も自慢ではなく挑戦の文言を返すこと" do
+      card = Struct.new(:rank, :rank_label, :message).new(nil, "ランキング参加前", "次の挑戦でランキングに参加できます")
+
+      text = described_class.ranking(customer, reference_time: reference_time, card: card)
+
+      expect(text).to include("Singing Rankingに挑戦しました")
+      expect(text).to include("次の挑戦でランキングに参加できます")
+      expect(text).not_to include("現在 ランキング参加前")
+    end
+  end
+
   def create_completed_diagnosis(owner, song_title, created_on, pitch_score:)
     FactoryBot.create(
       :singing_diagnosis,

@@ -1,0 +1,36 @@
+.singing-share-image__card.singing-share-image__card--ranking{ role: "img", "aria-label": "Singing Ranking の成果シェアカード", data: { share_capture_target: "ranking" } }
+  .singing-share-image__topline
+    %span= share_image.badge_label
+    %strong BeMyStyle Singing
+
+  .singing-share-image__ranking-hero
+    %span.singing-share-image__ranking-icon 🏆
+    %p.singing-share-image__kicker CHALLENGE RECORD
+    %h1= share_image.rank_label
+    %p= share_image.score_label
+
+  .singing-share-image__ranking-message
+    %span 挑戦の記録
+    %strong= share_image.message
+
+  .singing-share-image__metric-grid.singing-share-image__metric-grid--ranking
+    .singing-share-image__metric
+      %span 現在順位
+      %strong= share_image.rank.present? ? "#{share_image.rank}位" : "これから"
+      %small ranking
+    .singing-share-image__metric
+      %span 総合スコア
+      %strong= share_image.score.present? ? "#{share_image.score}点" : "集計待ち"
+      %small overall score
+    .singing-share-image__metric
+      %span 順位推移
+      %strong= share_image.rank_change_label
+      %small season record
+    .singing-share-image__metric
+      %span ステータス
+      %strong= share_image.best_diagnosis.present? ? "参加中" : "参加前"
+      %small challenge status
+
+  .singing-share-image__footer
+    %span #BeMyStyle
+    %small 挑戦した証を残そう
