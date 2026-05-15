@@ -10,6 +10,10 @@ module Singing
       new(customer, reference_time: reference_time).daily_challenge(card: card)
     end
 
+    def self.ranking(customer, reference_time: Time.current, card: nil)
+      new(customer, reference_time: reference_time).ranking(card: card)
+    end
+
     def initialize(customer, reference_time: Time.current)
       @customer = customer
       @reference_time = reference_time
@@ -33,6 +37,14 @@ module Singing
       parts = [card&.completed_today ? "今日もDaily Challenge完了🎤" : "Daily Challengeに挑戦中🎤"]
       parts << "前回より +#{card.score_delta.to_i}点アップ📈" if card&.score_delta.to_i.positive?
       parts << "小さな一歩を積み重ねています。"
+      parts << "#BeMyStyle #歌唱診断 #歌ってみた"
+      parts.join
+    end
+
+    def ranking(card: nil)
+      parts = ["Singing Rankingに挑戦しました🏆"]
+      parts << "現在 #{card.rank_label}🏆" if card&.rank.present?
+      parts << (card&.message.presence || "挑戦の成果がランキングに刻まれました")
       parts << "#BeMyStyle #歌唱診断 #歌ってみた"
       parts.join
     end

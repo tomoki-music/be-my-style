@@ -43,7 +43,7 @@ class SingingShareImage < ApplicationRecord
   end
 
   def public_description
-    metadata.to_h["share_text"].presence || "#BeMyStyleSinging"
+    metadata.to_h["description"].presence || metadata.to_h["share_text"].presence || "#BeMyStyleSinging"
   end
 
   private

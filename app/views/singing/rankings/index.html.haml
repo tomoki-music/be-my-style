@@ -44,6 +44,12 @@
                my_best_diagnosis: @my_best_diagnosis,
                my_badges: @my_badges
 
+    .singing-ranking__share-image-cta
+      .singing-ranking__share-image-copy
+        %strong ランキング結果を画像でシェア
+        %span 順位だけでなく、挑戦した証として残せます。
+      = link_to "シェア画像を作る", singing_share_image_path(target: "ranking"), class: "singing-ranking__share-image-btn"
+
     = render "singing/rankings/tabs", ranking_type: @ranking_type
 
     - case @ranking_type

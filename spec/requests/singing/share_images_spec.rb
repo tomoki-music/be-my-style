@@ -64,8 +64,10 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(response.body).to include("成果共有ハブ")
       expect(response.body).to include("年間レポート")
       expect(response.body).to include("Daily Challenge")
+      expect(response.body).to include("ランキング")
       expect(response.body).to include("singing-share-image__tab--active")
       expect(response.body).to include("target=daily-challenge")
+      expect(response.body).to include("target=ranking")
       expect(response.body).to include("Instagramで共有する場合")
       expect(response.body).to include("画像を長押し保存")
       expect(response.body).to include("診断を続ける")
@@ -209,7 +211,7 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(response.body).not_to include(singing_share_image_path)
     end
 
-    it "診断結果ページに年間レポートとDaily Challengeの画像シェア導線を表示すること" do
+    it "診断結果ページに年間レポートとDaily Challengeとランキングの画像シェア導線を表示すること" do
       singing_customer.create_subscription!(status: "active", plan: "core")
       sign_in singing_customer
       diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, created_at: Time.current)
@@ -221,7 +223,9 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(response.body).to include("成果を画像でシェア")
       expect(response.body).to include("年間レポートをシェア")
       expect(response.body).to include("Daily Challengeをシェア")
+      expect(response.body).to include("ランキングをシェア")
       expect(response.body).to include(singing_share_image_path(target: "daily-challenge"))
+      expect(response.body).to include(singing_share_image_path(target: "ranking"))
     end
 
     it "capture token付きの内部表示では対象ユーザーのシェアカードを表示すること" do
@@ -259,8 +263,36 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(response.body).to include("Daily Challenge を完了しました")
       expect(response.body).to include("年間レポート")
       expect(response.body).to include("Daily Challenge")
+      expect(response.body).to include("ランキング")
       expect(response.body).to include("singing-share-image__tab--active")
       expect(response.body).to include("Instagramで共有する場合")
+    end
+
+    it "ログインユーザーがranking targetを表示できること" do
+      sign_in singing_customer
+      FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 88)
+
+      get singing_share_image_path(target: "ranking")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Singing Ranking")
+      expect(response.body).to include("全国1位")
+      expect(response.body).to include("総合スコア 88点")
+      expect(response.body).to include("挑戦の成果がランキングに刻まれました")
+      expect(response.body).to include("data-share-capture-target='ranking'")
+      expect(response.body).to include("Singing Rankingに挑戦しました")
+    end
+
+    it "ranking未参加でもranking targetを自然に表示できること" do
+      sign_in singing_customer
+
+      get singing_share_image_path(target: "ranking")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("ランキング参加前")
+      expect(response.body).to include("次の診断でスコアを記録")
+      expect(response.body).to include("次の挑戦でランキングに参加できます")
+      expect(response.body).to include("data-share-capture-target='ranking'")
     end
 
     it "legacyのcapture_target指定でもdaily_challengeを表示できること" do
@@ -386,7 +418,7 @@ RSpec.describe "Singing::ShareImages", type: :request do
       FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer)
       expect(Singing::ShareImageCaptureService).not_to receive(:call)
 
-      post capture_singing_share_image_path, params: { capture_target: "ranking" }, as: :json
+      post capture_singing_share_image_path, params: { capture_target: "unknown" }, as: :json
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include("unsupported capture target")
@@ -416,6 +448,32 @@ RSpec.describe "Singing::ShareImages", type: :request do
         "capture_target" => "daily-challenge",
         "public_url" => "http://www.example.com/singing/share_images/daily-token",
         "local_path" => "tmp/share_images/daily-challenge/sample.png"
+      )
+    end
+
+    it "ranking targetで画像生成できること" do
+      sign_in singing_customer
+      result = Singing::ShareImageCaptureService::Result.new(
+        capture_target: "ranking",
+        image_url: "https://www.example.com/rails/active_storage/blobs/redirect/signed/ranking-20260515-abcd1234abcd.png",
+        public_url: "http://www.example.com/singing/share_images/ranking-token",
+        filename: "ranking-20260515-abcd1234abcd.png",
+        local_path: Rails.root.join("tmp/share_images/ranking/sample.png")
+      )
+      expect(Singing::ShareImageCaptureService).to receive(:call).with(
+        customer: singing_customer,
+        base_url: "http://www.example.com",
+        capture_target: "ranking"
+      ).and_return(result)
+
+      post capture_singing_share_image_path, params: { target: "ranking" }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      json = JSON.parse(response.body)
+      expect(json).to include(
+        "capture_target" => "ranking",
+        "public_url" => "http://www.example.com/singing/share_images/ranking-token",
+        "local_path" => "tmp/share_images/ranking/sample.png"
       )
     end
 
@@ -491,6 +549,29 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Daily Challenge を完了しました")
       expect(response.body).to include("今日もDaily Challenge完了")
+      expect(response.body).to include("og:title")
+      expect(response.body).to include("og:description")
+    end
+
+    it "rankingの公開URLでRanking用OGPを表示すること" do
+      share_image = FactoryBot.create(
+        :singing_share_image,
+        :completed,
+        customer: singing_customer,
+        capture_target: "ranking",
+        expires_at: 1.day.from_now,
+        metadata: {
+          title: "Singing Rankingに挑戦しました",
+          description: "挑戦の成果がランキングに刻まれました。",
+          share_text: "Singing Rankingに挑戦しました🏆現在 全国24位🏆挑戦の成果がランキングに刻まれました。"
+        }
+      )
+
+      get singing_public_share_image_path(share_image.signed_id(purpose: :public_share_image), debug_ogp: "1")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Singing Rankingに挑戦しました")
+      expect(response.body).to include("挑戦の成果がランキングに刻まれました。")
       expect(response.body).to include("og:title")
       expect(response.body).to include("og:description")
     end
