@@ -197,6 +197,7 @@ Rails.application.routes.draw do
   namespace :singing do
     root to: "homes#top"
     resources :diagnoses, only: [:index, :new, :create, :show]
+    get "share_images/:token", to: "share_images#public_show", as: :public_share_image
     resource :share_image, only: [:show] do
       post :capture
     end

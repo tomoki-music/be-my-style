@@ -3,7 +3,7 @@ require "securerandom"
 
 module Singing
   class ShareImageCaptureService
-    Result = Struct.new(:capture_target, :local_path, :image_url, :filename, keyword_init: true)
+    Result = Struct.new(:capture_target, :local_path, :image_url, :public_url, :filename, :share_image, keyword_init: true)
 
     SUPPORTED_TARGETS = {
       "yearly-growth" => {
@@ -45,14 +45,17 @@ module Singing
         customer: customer,
         capture_target: capture_target,
         local_path: output_path,
-        base_url: base_url
+        base_url: base_url,
+        metadata: storage_metadata
       )
 
       Result.new(
         capture_target: capture_target,
         local_path: output_path,
         image_url: storage_result.image_url,
-        filename: storage_result.filename
+        public_url: storage_result.public_url,
+        filename: storage_result.filename,
+        share_image: storage_result.share_image
       )
     ensure
       active_browser.close if owns_browser && defined?(@active_browser) && @active_browser.present?
@@ -73,12 +76,27 @@ module Singing
     end
 
     def share_image_present?
-      case capture_target
-      when "yearly-growth"
-        Singing::YearlyGrowthShareImageBuilder.call(customer).present?
-      else
-        false
-      end
+      share_image_data.present?
+    end
+
+    def share_image_data
+      @share_image_data ||= case capture_target
+                            when "yearly-growth"
+                              Singing::YearlyGrowthShareImageBuilder.call(customer)
+                            end
+    end
+
+    def storage_metadata
+      return {} unless capture_target == "yearly-growth" && share_image_data.present?
+
+      {
+        title: "#{share_image_data.report.year}年 歌声成長レポート",
+        season: share_image_data.report.year,
+        share_text: share_image_data.x_share_text,
+        diagnosis_count: share_image_data.report.diagnosis_count,
+        top_growth_label: share_image_data.report.top_growth&.label,
+        growth_delta_label: share_image_data.growth_delta_label
+      }.compact
     end
 
     def capture_url

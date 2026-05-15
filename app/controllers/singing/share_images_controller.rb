@@ -1,10 +1,10 @@
 class Singing::ShareImagesController < Singing::BaseController
-  skip_before_action :authenticate_customer!, only: [:show]
-  skip_before_action :ensure_singing_access!, only: [:show]
+  skip_before_action :authenticate_customer!, only: [:show, :public_show]
+  skip_before_action :ensure_singing_access!, only: [:show, :public_show]
   before_action :authenticate_share_image_viewer!, only: [:show]
   before_action :ensure_share_image_singing_access!, only: [:show]
-  before_action :ensure_supported_capture_target!
-  before_action :ensure_yearly_growth_report_access!
+  before_action :ensure_supported_capture_target!, only: [:show, :capture]
+  before_action :ensure_yearly_growth_report_access!, only: [:show, :capture]
 
   def show
     @share_image = Singing::YearlyGrowthShareImageBuilder.call(share_image_customer)
@@ -28,11 +28,22 @@ class Singing::ShareImagesController < Singing::BaseController
     render json: {
       capture_target: result.capture_target,
       image_url: result.image_url,
+      public_url: result.public_url,
       filename: result.filename,
       local_path: result.local_path.relative_path_from(Rails.root).to_s
     }
   rescue Singing::ShareImageCaptureService::NoShareImageData => e
     render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def public_show
+    @share_image = SingingShareImage.find_signed!(params[:token], purpose: :public_share_image)
+    return head :not_found unless @share_image.completed? && !@share_image.expired_for_public? && @share_image.image.attached?
+
+    @share_title = @share_image.public_title
+    @share_description = @share_image.public_description
+  rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
+    head :not_found
   end
 
   private

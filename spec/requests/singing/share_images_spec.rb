@@ -240,6 +240,7 @@ RSpec.describe "Singing::ShareImages", type: :request do
       result = Singing::ShareImageCaptureService::Result.new(
         capture_target: "yearly-growth",
         image_url: "https://www.example.com/rails/active_storage/blobs/redirect/signed/yearly-growth-20260515-abcd1234abcd.png",
+        public_url: "http://www.example.com/singing/share_images/public-token",
         filename: "yearly-growth-20260515-abcd1234abcd.png",
         local_path: Rails.root.join("tmp/share_images/yearly-growth/sample.png")
       )
@@ -256,6 +257,7 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(json).to include(
         "capture_target" => "yearly-growth",
         "image_url" => "https://www.example.com/rails/active_storage/blobs/redirect/signed/yearly-growth-20260515-abcd1234abcd.png",
+        "public_url" => "http://www.example.com/singing/share_images/public-token",
         "filename" => "yearly-growth-20260515-abcd1234abcd.png",
         "local_path" => "tmp/share_images/yearly-growth/sample.png"
       )
@@ -268,6 +270,7 @@ RSpec.describe "Singing::ShareImages", type: :request do
       result = Singing::ShareImageCaptureService::Result.new(
         capture_target: "yearly-growth",
         image_url: "https://www.example.com/rails/active_storage/blobs/redirect/signed/yearly-growth-20260515-1234abcd1234.png",
+        public_url: "http://www.example.com/singing/share_images/premium-token",
         filename: "yearly-growth-20260515-1234abcd1234.png",
         local_path: Rails.root.join("tmp/share_images/yearly-growth/premium.png")
       )
@@ -284,6 +287,7 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(json).to include(
         "capture_target" => "yearly-growth",
         "image_url" => "https://www.example.com/rails/active_storage/blobs/redirect/signed/yearly-growth-20260515-1234abcd1234.png",
+        "public_url" => "http://www.example.com/singing/share_images/premium-token",
         "filename" => "yearly-growth-20260515-1234abcd1234.png",
         "local_path" => "tmp/share_images/yearly-growth/premium.png"
       )
@@ -328,6 +332,53 @@ RSpec.describe "Singing::ShareImages", type: :request do
       post capture_singing_share_image_path, params: { capture_target: "yearly-growth" }, as: :json
 
       expect(response).to have_http_status(:unauthorized).or have_http_status(:found)
+    end
+  end
+
+  describe "GET /singing/share_images/:token" do
+    it "ログインなしで期限内の公開share imageを表示し、OGP画像を出力すること" do
+      share_image = FactoryBot.create(
+        :singing_share_image,
+        :completed,
+        customer: singing_customer,
+        expires_at: 1.day.from_now,
+        metadata: {
+          title: "公開用 歌声成長レポート",
+          share_text: "公開用の説明 #BeMyStyleSinging"
+        }
+      )
+
+      get singing_public_share_image_path(share_image.signed_id(purpose: :public_share_image))
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("公開用 歌声成長レポート")
+      expect(response.body).to include("公開用の説明 #BeMyStyleSinging")
+      expect(response.body).to include("#BeMyStyleSinging")
+      expect(response.body).to include("property='og:image'")
+      expect(response.body).to include("rails/active_storage/blobs")
+      expect(response.body).not_to include(singing_customer.email)
+      expect(response.body).not_to include("customer_id")
+    end
+
+    it "期限切れの公開share imageは404にすること" do
+      share_image = FactoryBot.create(
+        :singing_share_image,
+        :completed,
+        customer: singing_customer,
+        expires_at: 1.minute.ago,
+        metadata: { title: "Expired Share Image" }
+      )
+
+      get singing_public_share_image_path(share_image.signed_id(purpose: :public_share_image))
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.body).not_to include("Expired Share Image")
+    end
+
+    it "不正なtokenは404にすること" do
+      get singing_public_share_image_path("invalid-token")
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 end
