@@ -100,6 +100,8 @@
               %span.daily-challenge-result__desc= @daily_challenge.description
           - unless @daily_challenge_progress&.completed?
             %p.daily-challenge-result__hint 条件を満たしていれば自動でクリア判定されます。未達成の場合は再挑戦しよう！
+          - if @daily_challenge_progress&.completed?
+            = link_to "今日の頑張りを画像でシェア", singing_share_image_path(target: "daily-challenge"), class: "btn btn-secondary"
 
       - if @new_season_badges.present?
         .singing-diagnosis__badge-celebration
@@ -239,19 +241,28 @@
           .singing-diagnosis__share-instagram
             %strong Instagram でシェア
             %p 診断カードのスクリーンショットを撮って、ストーリーズや投稿でシェアしてね
-        - if current_customer.has_feature?(:singing_yearly_growth_report)
-          .singing-diagnosis__share-card-cta
-            = link_to singing_share_image_path, class: "singing-diagnosis__share-card-link" do
-              .singing-diagnosis__share-card-inner
+        .singing-diagnosis__share-image-hub
+          .singing-diagnosis__share-image-hub-header
+            %span 🎉
+            .singing-diagnosis__share-image-hub-title
+              %strong 成果を画像でシェア
+              %p 今日の診断完了を、努力が伝わるカードとして残せます。
+          .singing-diagnosis__share-image-options
+            - if current_customer.has_feature?(:singing_yearly_growth_report)
+              = link_to singing_share_image_path, class: "singing-diagnosis__share-image-option" do
                 %span.singing-diagnosis__share-card-badge Core以上
-                %strong 年間成長カードを作る
-                %p 今年の診断を振り返るシェアカードを自動生成 →
-        - else
-          .singing-diagnosis__share-card-locked
-            %span.singing-diagnosis__share-card-badge-locked Core以上
-            %strong 年間成長カード
-            %p 今年の診断を1枚にまとめたシェアカードを作成できます
-            = link_to "Coreプランを見る →", public_singing_lp_path(anchor: "lp-section"), class: "singing-diagnosis__share-card-cta-link"
+                %strong 年間レポートをシェア
+                %p 今年の診断を振り返る成長カード
+            - else
+              .singing-diagnosis__share-image-option.singing-diagnosis__share-image-option--locked
+                %span.singing-diagnosis__share-card-badge-locked Core以上
+                %strong 年間レポート
+                %p 今年の診断を1枚にまとめられます
+                = link_to "Coreプランを見る", public_singing_lp_path(anchor: "lp-section"), class: "singing-diagnosis__share-card-cta-link"
+            = link_to singing_share_image_path(target: "daily-challenge"), class: "singing-diagnosis__share-image-option singing-diagnosis__share-image-option--daily" do
+              %span.singing-diagnosis__share-card-badge Daily
+              %strong Daily Challengeをシェア
+              %p 今日も歌った記録を、SNS向け画像に
 
       - growth_chart_data = singing_growth_chart_data(@growth_diagnoses)
       .singing-diagnosis__growth

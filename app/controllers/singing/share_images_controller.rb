@@ -4,12 +4,13 @@ class Singing::ShareImagesController < Singing::BaseController
   before_action :authenticate_share_image_viewer!, only: [:show]
   before_action :ensure_share_image_singing_access!, only: [:show]
   before_action :ensure_supported_capture_target!, only: [:show, :capture]
-  before_action :ensure_yearly_growth_report_access!, only: [:show, :capture]
+  before_action :ensure_capture_target_access!, only: [:show, :capture]
 
   def show
-    @share_image = Singing::YearlyGrowthShareImageBuilder.call(share_image_customer)
+    @capture_target = capture_target
+    @share_image = build_share_image
     unless @share_image.present?
-      redirect_to singing_diagnoses_path, alert: "今年の診断がまだないため、シェアカードは表示できません。"
+      redirect_to singing_diagnoses_path, alert: share_image_unavailable_message
       return
     end
 
@@ -85,7 +86,8 @@ class Singing::ShareImagesController < Singing::BaseController
     end
   end
 
-  def ensure_yearly_growth_report_access!
+  def ensure_capture_target_access!
+    return unless capture_target == "yearly-growth"
     return if share_image_customer.has_feature?(:singing_yearly_growth_report)
 
     respond_to do |format|
@@ -99,6 +101,25 @@ class Singing::ShareImagesController < Singing::BaseController
   end
 
   def capture_target
-    params[:capture_target].presence || "yearly-growth"
+    raw_target = params[:target].presence || params[:capture_target].presence || "yearly-growth"
+    raw_target.to_s.tr("_", "-")
+  end
+
+  def build_share_image
+    case capture_target
+    when "yearly-growth"
+      Singing::YearlyGrowthShareImageBuilder.call(share_image_customer)
+    when "daily-challenge"
+      Singing::ShareImages::DailyChallengeCardBuilder.call(share_image_customer)
+    end
+  end
+
+  def share_image_unavailable_message
+    case capture_target
+    when "daily-challenge"
+      "Daily Challenge のシェアカードはまだ表示できません。"
+    else
+      "今年の診断がまだないため、シェアカードは表示できません。"
+    end
   end
 end

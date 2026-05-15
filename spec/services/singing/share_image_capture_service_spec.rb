@@ -51,7 +51,7 @@ RSpec.describe Singing::ShareImageCaptureService, type: :service do
 
     captured = browser.captures.first
     expect(captured.fetch(:url)).to start_with("https://example.test/singing/share_image?")
-    expect(captured.fetch(:url)).to include("capture_target=yearly-growth")
+    expect(captured.fetch(:url)).to include("target=yearly-growth")
     expect(captured.fetch(:url)).to include("capture_token=")
     expect(captured.fetch(:selector)).to eq("[data-share-capture-target='yearly-growth']")
     expect(captured.fetch(:output_path)).to eq(result.local_path)

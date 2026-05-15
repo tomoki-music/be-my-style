@@ -7465,6 +7465,92 @@ $ranking-accent: #7c4dff;
   width: 100%;
 }
 
+.singing-share-image__hub {
+  margin: 0 auto 18px;
+  max-width: 620px;
+  text-align: center;
+}
+
+.singing-share-image__hub-label {
+  color: #6d28d9;
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.singing-share-image__hub h1 {
+  color: #111827;
+  font-size: clamp(24px, 5vw, 34px);
+  font-weight: 900;
+  line-height: 1.25;
+  margin: 0 0 8px;
+}
+
+.singing-share-image__hub p {
+  color: #475569;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.75;
+  margin: 0;
+}
+
+.singing-share-image__tabs {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid #ddd6fe;
+  border-radius: 999px;
+  box-shadow: 0 12px 28px rgba(91, 33, 182, 0.1);
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0 auto 18px;
+  max-width: 620px;
+  padding: 6px;
+}
+
+.singing-share-image__tab {
+  border-radius: 999px;
+  color: #4b5563;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 14px;
+  text-align: center;
+  text-decoration: none;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.singing-share-image__tab:hover {
+  color: #5b21b6;
+  text-decoration: none;
+}
+
+.singing-share-image__tab--active {
+  background: linear-gradient(135deg, #5b5ef4, #8b5cf6);
+  box-shadow: 0 10px 18px rgba(91, 33, 182, 0.22);
+  color: #ffffff;
+}
+
+.singing-share-image__tab--active:hover {
+  color: #ffffff;
+}
+
+.singing-share-image__tab span {
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.singing-share-image__tab small {
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+  opacity: 0.82;
+}
+
 .singing-share-image__toolbar {
   align-items: center;
   display: flex;
@@ -7544,6 +7630,13 @@ $ranking-accent: #7c4dff;
   inset: 16px;
   pointer-events: none;
   position: absolute;
+}
+
+.singing-share-image__card--daily-challenge {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(250, 204, 21, 0.5), transparent 24%),
+    radial-gradient(circle at 86% 18%, rgba(45, 212, 191, 0.36), transparent 28%),
+    linear-gradient(150deg, #12312d 0%, #255f5a 48%, #7c4a12 100%);
 }
 
 .singing-share-image__topline,
@@ -7641,6 +7734,70 @@ $ranking-accent: #7c4dff;
   overflow-wrap: anywhere;
 }
 
+.singing-share-image__daily-hero {
+  margin: clamp(26px, 6vw, 42px) 0 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.singing-share-image__daily-icon {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  display: inline-flex;
+  font-size: 34px;
+  height: 68px;
+  justify-content: center;
+  margin-bottom: 16px;
+  width: 68px;
+}
+
+.singing-share-image__daily-hero h1 {
+  color: #ffffff;
+  font-size: clamp(34px, 8vw, 48px);
+  font-weight: 900;
+  line-height: 1.14;
+  margin: 0 0 14px;
+  overflow-wrap: anywhere;
+}
+
+.singing-share-image__daily-hero p:not(.singing-share-image__kicker) {
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.7;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.singing-share-image__daily-message {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  color: #12312d;
+  margin-bottom: 12px;
+  padding: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.singing-share-image__daily-message span {
+  color: #0f766e;
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.singing-share-image__daily-message strong {
+  display: block;
+  font-size: clamp(20px, 5vw, 28px);
+  font-weight: 900;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 .singing-share-image__metric,
 .singing-share-image__metric-grid {
   position: relative;
@@ -7713,6 +7870,10 @@ $ranking-accent: #7c4dff;
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.singing-share-image__metric-grid--daily .singing-share-image__metric strong {
+  font-size: clamp(17px, 4vw, 21px);
 }
 
 .singing-share-image__footer {
@@ -7796,6 +7957,42 @@ $ranking-accent: #7c4dff;
   color: #475569;
   font-size: 14px;
   line-height: 1.8;
+  margin: 0;
+}
+
+.singing-share-image__instagram-guide {
+  align-items: flex-start;
+  background: #ffffff;
+  border: 1px solid #e9d5ff;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(31, 41, 55, 0.06);
+  display: flex;
+  gap: 12px;
+  margin: 14px auto 0;
+  max-width: 560px;
+  padding: 16px 18px;
+}
+
+.singing-share-image__instagram-guide > span {
+  flex: 0 0 auto;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.singing-share-image__instagram-guide strong {
+  color: #111827;
+  display: block;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.singing-share-image__instagram-guide p {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.75;
   margin: 0;
 }
 
@@ -7914,6 +8111,21 @@ $ranking-accent: #7c4dff;
     padding: 14px 10px 36px;
   }
 
+  .singing-share-image__hub {
+    margin-bottom: 14px;
+  }
+
+  .singing-share-image__tabs {
+    border-radius: 18px;
+    grid-template-columns: 1fr;
+    margin-bottom: 14px;
+  }
+
+  .singing-share-image__tab {
+    border-radius: 12px;
+    padding: 11px 12px;
+  }
+
   .singing-share-image__capture-guide {
     margin-bottom: 14px;
     padding: 12px;
@@ -7943,6 +8155,30 @@ $ranking-accent: #7c4dff;
   .singing-share-image__hero p:not(.singing-share-image__kicker) {
     font-size: 13px;
     line-height: 1.65;
+  }
+
+  .singing-share-image__daily-hero {
+    margin: 24px 0 14px;
+  }
+
+  .singing-share-image__daily-hero h1 {
+    font-size: 31px;
+  }
+
+  .singing-share-image__daily-hero p:not(.singing-share-image__kicker) {
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .singing-share-image__daily-icon {
+    font-size: 28px;
+    height: 56px;
+    margin-bottom: 12px;
+    width: 56px;
+  }
+
+  .singing-share-image__daily-message {
+    padding: 14px;
   }
 
   .singing-share-image__metric {
@@ -7983,6 +8219,7 @@ $ranking-accent: #7c4dff;
   }
 
   .singing-share-image__share-note,
+  .singing-share-image__instagram-guide,
   .singing-share-image__actions {
     max-width: none;
   }
@@ -7994,6 +8231,10 @@ $ranking-accent: #7c4dff;
 
   .singing-share-image__actions .btn {
     width: 100%;
+  }
+
+  .singing-diagnosis__share-image-options {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -8148,6 +8389,97 @@ $ranking-accent: #7c4dff;
   font-size: 0.82rem;
   font-weight: 600;
   text-decoration: none;
+}
+
+.singing-diagnosis__share-image-hub {
+  background: #ffffff;
+  border: 1px solid #d8e0f8;
+  border-radius: 12px;
+  margin-top: 16px;
+  padding: 16px;
+}
+
+.singing-diagnosis__share-image-hub-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.singing-diagnosis__share-image-hub-header > span {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.singing-diagnosis__share-image-hub-title strong {
+  color: #111827;
+  display: block;
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.singing-diagnosis__share-image-hub-title p {
+  color: #667085;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  margin: 2px 0 0;
+}
+
+.singing-diagnosis__share-image-options {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.singing-diagnosis__share-image-option {
+  background: linear-gradient(135deg, #5b5ef4, #7c5cf4);
+  border-radius: 10px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px 16px;
+  text-decoration: none;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.singing-diagnosis__share-image-option:hover {
+  color: #ffffff;
+  opacity: 0.9;
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.singing-diagnosis__share-image-option--daily {
+  background: linear-gradient(135deg, #0f766e, #7c3aed);
+}
+
+.singing-diagnosis__share-image-option--locked {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+}
+
+.singing-diagnosis__share-image-option--locked:hover {
+  color: #64748b;
+  opacity: 1;
+  transform: none;
+}
+
+.singing-diagnosis__share-image-option strong {
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.singing-diagnosis__share-image-option p {
+  font-size: 0.78rem;
+  line-height: 1.55;
+  margin: 0;
+  opacity: 0.86;
 }
 
 /* ── ボイスタイプ ロックプレビュー ─────────────────── */

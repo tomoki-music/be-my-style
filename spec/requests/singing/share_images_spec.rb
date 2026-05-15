@@ -61,6 +61,13 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(response.body).to include("Xでシェア")
       expect(response.body).to include("Instagram")
       expect(response.body).to include("スクショ")
+      expect(response.body).to include("成果共有ハブ")
+      expect(response.body).to include("年間レポート")
+      expect(response.body).to include("Daily Challenge")
+      expect(response.body).to include("singing-share-image__tab--active")
+      expect(response.body).to include("target=daily-challenge")
+      expect(response.body).to include("Instagramで共有する場合")
+      expect(response.body).to include("画像を長押し保存")
       expect(response.body).to include("診断を続ける")
       expect(response.body).to include("履歴へ戻る")
       expect(response.body).to include("data-share-capture-target='yearly-growth'")
@@ -202,6 +209,21 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(response.body).not_to include(singing_share_image_path)
     end
 
+    it "診断結果ページに年間レポートとDaily Challengeの画像シェア導線を表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "core")
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, created_at: Time.current)
+      FactoryBot.create(:singing_daily_challenge, challenge_date: Date.current)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("成果を画像でシェア")
+      expect(response.body).to include("年間レポートをシェア")
+      expect(response.body).to include("Daily Challengeをシェア")
+      expect(response.body).to include(singing_share_image_path(target: "daily-challenge"))
+    end
+
     it "capture token付きの内部表示では対象ユーザーのシェアカードを表示すること" do
       year = Time.current.year
       singing_customer.create_subscription!(status: "active", plan: "core")
@@ -219,6 +241,48 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Token Capture Song")
       expect(response.body).to include("data-share-capture-target='yearly-growth'")
+    end
+
+    it "ログインユーザーがdaily_challenge targetを表示できること" do
+      sign_in singing_customer
+      FactoryBot.create(:singing_daily_challenge, challenge_date: Date.current)
+      FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, created_at: 1.day.ago, overall_score: 70)
+      FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, created_at: Time.current, overall_score: 74)
+
+      get singing_share_image_path(target: "daily-challenge")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Daily Challenge")
+      expect(response.body).to include("今日の一歩")
+      expect(response.body).to include("+4点")
+      expect(response.body).to include("data-share-capture-target='daily-challenge'")
+      expect(response.body).to include("Daily Challenge を完了しました")
+      expect(response.body).to include("年間レポート")
+      expect(response.body).to include("Daily Challenge")
+      expect(response.body).to include("singing-share-image__tab--active")
+      expect(response.body).to include("Instagramで共有する場合")
+    end
+
+    it "legacyのcapture_target指定でもdaily_challengeを表示できること" do
+      sign_in singing_customer
+      FactoryBot.create(:singing_daily_challenge, challenge_date: Date.current)
+
+      get singing_share_image_path(capture_target: "daily_challenge")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("data-share-capture-target='daily-challenge'")
+    end
+
+    it "daily_challengeのcapture token付き内部表示では対象ユーザーだけのカードを表示すること" do
+      FactoryBot.create(:singing_daily_challenge, challenge_date: Date.current)
+      FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, created_at: Time.current, overall_score: 74)
+      token = Singing::ShareImageCaptureToken.generate(customer: singing_customer, capture_target: "daily-challenge")
+
+      get singing_share_image_path(target: "daily-challenge", capture_token: token)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Daily Challenge")
+      expect(response.body).to include("data-share-capture-target='daily-challenge'")
     end
 
     it "不正なcapture tokenではシェアカードを表示しないこと" do
@@ -328,6 +392,33 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(response.body).to include("unsupported capture target")
     end
 
+    it "daily_challenge targetで画像生成できること" do
+      sign_in singing_customer
+      FactoryBot.create(:singing_daily_challenge, challenge_date: Date.current)
+      result = Singing::ShareImageCaptureService::Result.new(
+        capture_target: "daily-challenge",
+        image_url: "https://www.example.com/rails/active_storage/blobs/redirect/signed/daily-challenge-20260515-abcd1234abcd.png",
+        public_url: "http://www.example.com/singing/share_images/daily-token",
+        filename: "daily-challenge-20260515-abcd1234abcd.png",
+        local_path: Rails.root.join("tmp/share_images/daily-challenge/sample.png")
+      )
+      expect(Singing::ShareImageCaptureService).to receive(:call).with(
+        customer: singing_customer,
+        base_url: "http://www.example.com",
+        capture_target: "daily-challenge"
+      ).and_return(result)
+
+      post capture_singing_share_image_path, params: { target: "daily-challenge" }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      json = JSON.parse(response.body)
+      expect(json).to include(
+        "capture_target" => "daily-challenge",
+        "public_url" => "http://www.example.com/singing/share_images/daily-token",
+        "local_path" => "tmp/share_images/daily-challenge/sample.png"
+      )
+    end
+
     it "未ログインではcapture endpointを使えないこと" do
       post capture_singing_share_image_path, params: { capture_target: "yearly-growth" }, as: :json
 
@@ -380,6 +471,28 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(response.body).to include("og:title")
       expect(response.body).to include("og:image")
       expect(response.body).to include("noindex,nofollow")
+    end
+
+    it "daily_challengeの公開URLで自然なOGPを表示すること" do
+      share_image = FactoryBot.create(
+        :singing_share_image,
+        :completed,
+        customer: singing_customer,
+        capture_target: "daily-challenge",
+        expires_at: 1.day.from_now,
+        metadata: {
+          title: "Daily Challenge を完了しました",
+          share_text: "今日もDaily Challenge完了🎤小さな一歩を積み重ねています。 #BeMyStyle"
+        }
+      )
+
+      get singing_public_share_image_path(share_image.signed_id(purpose: :public_share_image), debug_ogp: "1")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Daily Challenge を完了しました")
+      expect(response.body).to include("今日もDaily Challenge完了")
+      expect(response.body).to include("og:title")
+      expect(response.body).to include("og:description")
     end
 
     it "期限切れの公開share imageは専用画面で410にすること" do
