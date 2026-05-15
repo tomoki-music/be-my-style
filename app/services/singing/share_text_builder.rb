@@ -14,6 +14,10 @@ module Singing
       new(customer, reference_time: reference_time).ranking(card: card)
     end
 
+    def self.monthly_wrapped(customer, reference_time: Time.current, stats: nil)
+      new(customer, reference_time: reference_time).monthly_wrapped(stats: stats)
+    end
+
     def initialize(customer, reference_time: Time.current)
       @customer = customer
       @reference_time = reference_time
@@ -46,6 +50,21 @@ module Singing
       parts << "現在 #{card.rank_label}🏆" if card&.rank.present?
       parts << (card&.message.presence || "挑戦の成果がランキングに刻まれました")
       parts << "#BeMyStyle #歌唱診断 #歌ってみた"
+      parts.join
+    end
+
+    def monthly_wrapped(stats: nil)
+      return generic_text unless stats.present?
+
+      label = stats.year.present? && stats.month.present? ? "#{stats.year}年#{stats.month}月" : "今月"
+      parts = ["#{label}は#{stats.diagnosis_count}回歌いました🎤"]
+      if stats.score_improvement.to_f.positive?
+        parts << "前月比 +#{stats.score_improvement}点スコアアップ📈"
+      end
+      if stats.top_skill_label.present? && stats.top_skill_delta.to_f.positive?
+        parts << "#{stats.top_skill_label}が最も伸びました"
+      end
+      parts << "#BeMyStyle #歌唱診断 #MonthlyWrapped"
       parts.join
     end
 

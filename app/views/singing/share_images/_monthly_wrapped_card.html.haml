@@ -1,0 +1,43 @@
+.singing-share-image__card.singing-share-image__card--monthly-wrapped{ role: "img", "aria-label": "#{share_image.month_label} Monthly Wrapped シェアカード", data: { share_capture_target: "monthly-wrapped" } }
+  .singing-share-image__topline
+    %span= share_image.badge_label
+    %strong BeMyStyle Singing
+
+  .singing-share-image__wrapped-hero
+    %span.singing-share-image__wrapped-icon 🎤
+    %p.singing-share-image__kicker MONTHLY WRAPPED
+    %h1= share_image.month_label
+    %p= share_image.headline
+
+  .singing-share-image__wrapped-message
+    %span 今月の記録
+    %strong= share_image.message
+
+  .singing-share-image__metric-grid.singing-share-image__metric-grid--wrapped
+    .singing-share-image__metric
+      %span 診断回数
+      %strong= "#{share_image.diagnosis_count}回"
+      %small this month
+    .singing-share-image__metric
+      %span 最高スコア
+      %strong= share_image.best_score.present? ? "#{share_image.best_score}点" : "記録前"
+      %small best score
+    .singing-share-image__metric
+      %span 前月比
+      %strong= share_image.score_improvement_label
+      %small score change
+    .singing-share-image__metric
+      %span 最も伸びた力
+      %strong= share_image.top_skill_delta_label.presence || "集計中"
+      %small top growth
+
+  - if share_image.challenge_completed_count.to_i > 0
+    .singing-share-image__wrapped-challenge
+      %span Daily Challenge
+      %strong= "#{share_image.challenge_completed_count}日達成"
+      - if share_image.challenge_streak.to_i >= 3
+        %em= "#{share_image.challenge_streak}日連続継続中"
+
+  .singing-share-image__footer
+    %span #BeMyStyle
+    %small 歌を続けることが、あなたの成長です

@@ -76,7 +76,7 @@ RSpec.describe Singing::ShareImageStorageService, type: :service do
     expect do
       described_class.call(
         customer: customer,
-        capture_target: "ranking",
+        capture_target: "unknown-target",
         local_path: png_path,
         base_url: "https://example.test"
       )

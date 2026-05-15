@@ -18,6 +18,11 @@ module Singing
       "ranking" => {
         selector: "[data-share-capture-target='ranking']",
         path_helper: :singing_share_image_path
+      },
+      "monthly-wrapped" => {
+        feature: :singing_monthly_wrapped_share_image,
+        selector: "[data-share-capture-target='monthly-wrapped']",
+        path_helper: :singing_share_image_path
       }
     }.freeze
 
@@ -29,10 +34,11 @@ module Singing
       new(...).call
     end
 
-    def initialize(customer:, base_url:, capture_target: "yearly-growth", output_root: Rails.root.join("tmp/share_images"), browser: nil)
+    def initialize(customer:, base_url:, capture_target: "yearly-growth", reference_time: Time.current, output_root: Rails.root.join("tmp/share_images"), browser: nil)
       @customer = customer
       @base_url = base_url.to_s.delete_suffix("/")
       @capture_target = (capture_target.to_s.presence || "yearly-growth").tr("_", "-")
+      @reference_time = reference_time
       @output_root = Pathname(output_root)
       @browser = browser
       @owns_browser = browser.nil?
@@ -71,7 +77,7 @@ module Singing
 
     private
 
-    attr_reader :customer, :base_url, :capture_target, :output_root, :browser, :owns_browser
+    attr_reader :customer, :base_url, :capture_target, :reference_time, :output_root, :browser, :owns_browser
 
     def validate!
       raise UnsupportedCaptureTarget, "unsupported capture target: #{capture_target}" unless target_config
@@ -96,6 +102,8 @@ module Singing
                               Singing::ShareImages::DailyChallengeCardBuilder.call(customer)
                             when "ranking"
                               Singing::ShareImages::RankingCardBuilder.call(customer)
+                            when "monthly-wrapped"
+                              Singing::ShareImages::MonthlyWrappedCardBuilder.call(customer, reference_time: reference_time)
                             end
     end
 
@@ -131,6 +139,19 @@ module Singing
           score_label: share_image_data.score_label,
           rank_change_label: share_image_data.rank_change_label
         }.compact
+      when "monthly-wrapped"
+        {
+          title: "#{share_image_data.month_label} Singing Wrapped",
+          description: share_image_data.message,
+          share_text: share_image_data.x_share_text,
+          year: share_image_data.year,
+          month: share_image_data.month,
+          diagnosis_count: share_image_data.diagnosis_count,
+          best_score: share_image_data.best_score,
+          score_improvement: share_image_data.score_improvement,
+          top_skill_label: share_image_data.top_skill_label,
+          challenge_completed_count: share_image_data.challenge_completed_count
+        }.compact
       else
         {}
       end
@@ -138,10 +159,10 @@ module Singing
 
     def capture_url
       token = Singing::ShareImageCaptureToken.generate(customer: customer, capture_target: capture_target)
+      extra_params = capture_target == "monthly-wrapped" ? { year: reference_time.year, month: reference_time.month } : {}
       path = Rails.application.routes.url_helpers.public_send(
         target_config.fetch(:path_helper),
-        target: capture_target,
-        capture_token: token
+        { target: capture_target, capture_token: token }.merge(extra_params)
       )
 
       "#{base_url}#{path}"

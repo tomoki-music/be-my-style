@@ -17,6 +17,8 @@ class Singing::ShareImagesController < Singing::BaseController
     @share_text = @share_image.x_share_text
     @singer_rank = share_image_customer.singer_rank
     @generated_image_url = params[:generated_image_url].to_s.presence
+    @wrapped_year = wrapped_reference_time.year if capture_target == "monthly-wrapped"
+    @wrapped_month = wrapped_reference_time.month if capture_target == "monthly-wrapped"
   end
 
   def capture
@@ -87,12 +89,20 @@ class Singing::ShareImagesController < Singing::BaseController
   end
 
   def ensure_capture_target_access!
-    return unless capture_target == "yearly-growth"
-    return if share_image_customer.has_feature?(:singing_yearly_growth_report)
+    if capture_target == "yearly-growth"
+      return if share_image_customer.has_feature?(:singing_yearly_growth_report)
 
-    respond_to do |format|
-      format.html { redirect_to singing_diagnoses_path, alert: "年間成長レポートのシェアカードはCoreプラン以上で利用できます。" }
-      format.json { render json: { error: "年間成長レポートのシェアカードはCoreプラン以上で利用できます。" }, status: :forbidden }
+      respond_to do |format|
+        format.html { redirect_to singing_diagnoses_path, alert: "年間成長レポートのシェアカードはCoreプラン以上で利用できます。" }
+        format.json { render json: { error: "年間成長レポートのシェアカードはCoreプラン以上で利用できます。" }, status: :forbidden }
+      end
+    elsif capture_target == "monthly-wrapped"
+      return if share_image_customer.has_feature?(:singing_monthly_wrapped_share_image)
+
+      respond_to do |format|
+        format.html { redirect_to singing_diagnoses_path, alert: "Monthly Wrapped シェアカードはCoreプラン以上で利用できます。" }
+        format.json { render json: { error: "Monthly Wrapped シェアカードはCoreプラン以上で利用できます。" }, status: :forbidden }
+      end
     end
   end
 
@@ -105,6 +115,21 @@ class Singing::ShareImagesController < Singing::BaseController
     raw_target.to_s.tr("_", "-")
   end
 
+  def wrapped_reference_time
+    @wrapped_reference_time ||= begin
+      year  = params[:year].to_i
+      month = params[:month].to_i
+      if year.positive? && (1..12).cover?(month)
+        Time.zone.local(year, month, 1)
+      else
+        prev_month = Time.current.beginning_of_month - 1.day
+        has_prev = share_image_customer.singing_diagnoses.completed
+          .where(created_at: prev_month.all_month).exists?
+        has_prev ? prev_month : Time.current
+      end
+    end
+  end
+
   def build_share_image
     case capture_target
     when "yearly-growth"
@@ -113,6 +138,11 @@ class Singing::ShareImagesController < Singing::BaseController
       Singing::ShareImages::DailyChallengeCardBuilder.call(share_image_customer)
     when "ranking"
       Singing::ShareImages::RankingCardBuilder.call(share_image_customer)
+    when "monthly-wrapped"
+      Singing::ShareImages::MonthlyWrappedCardBuilder.call(
+        share_image_customer,
+        reference_time: wrapped_reference_time
+      )
     end
   end
 
@@ -122,6 +152,8 @@ class Singing::ShareImagesController < Singing::BaseController
       "Daily Challenge のシェアカードはまだ表示できません。"
     when "ranking"
       "ランキングのシェアカードはまだ表示できません。"
+    when "monthly-wrapped"
+      "この月の診断記録がないため、Monthly Wrapped は表示できません。"
     else
       "今年の診断がまだないため、シェアカードは表示できません。"
     end

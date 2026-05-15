@@ -4,6 +4,9 @@
 - elsif @capture_target == "daily-challenge"
   - page_title = "Daily Challenge シェアカード"
   - og_title = "Daily Challenge を完了しました"
+- elsif @capture_target == "monthly-wrapped"
+  - page_title = "#{@share_image.month_label} Monthly Wrapped"
+  - og_title = "#{@share_image.month_label} Singing Wrapped"
 - else
   - page_title = "Singing Ranking シェアカード"
   - og_title = "Singing Rankingに挑戦しました"
@@ -20,9 +23,10 @@
       %h1 成果共有ハブ
       %p 年間の成長も、今日の一歩も、SNSで共有しやすい画像にできます。
 
-    - yearly_active = @capture_target == "yearly-growth"
-    - daily_active = @capture_target == "daily-challenge"
-    - ranking_active = @capture_target == "ranking"
+    - yearly_active   = @capture_target == "yearly-growth"
+    - daily_active    = @capture_target == "daily-challenge"
+    - ranking_active  = @capture_target == "ranking"
+    - wrapped_active  = @capture_target == "monthly-wrapped"
     .singing-share-image__tabs{ role: "tablist", "aria-label": "シェア画像の種類" }
       = link_to singing_share_image_path, class: "singing-share-image__tab #{'singing-share-image__tab--active' if yearly_active}", role: "tab", "aria-selected": yearly_active do
         %span 年間レポート
@@ -33,6 +37,9 @@
       = link_to singing_share_image_path(target: "ranking"), class: "singing-share-image__tab #{'singing-share-image__tab--active' if ranking_active}", role: "tab", "aria-selected": ranking_active do
         %span ランキング
         %small 挑戦の記録を1枚に
+      = link_to singing_share_image_path(target: "monthly-wrapped"), class: "singing-share-image__tab #{'singing-share-image__tab--active' if wrapped_active}", role: "tab", "aria-selected": wrapped_active do
+        %span Monthly Wrapped
+        %small 今月の成果を1枚に
 
     = render "share_actions", variant: :toolbar, share_text: @share_text, share_url: request.original_url
 
@@ -45,6 +52,8 @@
         = render "daily_challenge_card", share_image: @share_image
       - elsif @capture_target == "ranking"
         = render "ranking_card", share_image: @share_image
+      - elsif @capture_target == "monthly-wrapped"
+        = render "monthly_wrapped_card", share_image: @share_image
       - else
         = render "share_card", share_image: @share_image, singer_rank: @singer_rank
 
