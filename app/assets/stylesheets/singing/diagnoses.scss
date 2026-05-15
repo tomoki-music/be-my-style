@@ -7553,9 +7553,9 @@ $ranking-accent: #7c4dff;
   box-shadow: 0 12px 28px rgba(91, 33, 182, 0.1);
   display: grid;
   gap: 6px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 0 auto 18px;
-  max-width: 620px;
+  max-width: 720px;
   padding: 6px;
 }
 
@@ -7598,6 +7598,18 @@ $ranking-accent: #7c4dff;
   font-weight: 800;
   line-height: 1.35;
   opacity: 0.82;
+}
+
+@media (max-width: 479px) {
+  .singing-share-image__tabs {
+    border-radius: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .singing-share-image__tab {
+    border-radius: 12px;
+    padding: 10px;
+  }
 }
 
 .singing-share-image__toolbar {
@@ -7694,6 +7706,15 @@ $ranking-accent: #7c4dff;
     radial-gradient(circle at 84% 20%, rgba(96, 165, 250, 0.36), transparent 28%),
     radial-gradient(circle at 24% 88%, rgba(52, 211, 153, 0.28), transparent 26%),
     linear-gradient(150deg, #172033 0%, #1f3a5f 46%, #0f766e 100%);
+}
+
+.singing-share-image__card--monthly-wrapped {
+  background:
+    radial-gradient(circle at 12% 16%, rgba(251, 191, 36, 0.42), transparent 22%),
+    radial-gradient(circle at 88% 12%, rgba(196, 141, 250, 0.52), transparent 26%),
+    radial-gradient(circle at 18% 90%, rgba(244, 114, 182, 0.44), transparent 24%),
+    radial-gradient(circle at 84% 84%, rgba(99, 102, 241, 0.28), transparent 22%),
+    linear-gradient(148deg, #14042e 0%, #1e1b4b 42%, #4a0e4e 100%);
 }
 
 .singing-share-image__topline,
@@ -7919,6 +7940,120 @@ $ranking-accent: #7c4dff;
   overflow-wrap: anywhere;
 }
 
+.singing-share-image__wrapped-hero {
+  margin: clamp(26px, 6vw, 42px) 0 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.singing-share-image__wrapped-icon {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 8px;
+  box-shadow: 0 0 32px rgba(196, 141, 250, 0.52), 0 0 0 1px rgba(255, 255, 255, 0.18);
+  display: inline-flex;
+  font-size: 34px;
+  height: 68px;
+  justify-content: center;
+  margin-bottom: 16px;
+  width: 68px;
+}
+
+.singing-share-image__wrapped-hero h1 {
+  background: linear-gradient(135deg, #fde68a 0%, #ffffff 50%, #f9a8d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: #ffffff;
+  font-size: clamp(34px, 8vw, 48px);
+  font-weight: 900;
+  line-height: 1.14;
+  margin: 0 0 14px;
+  overflow-wrap: anywhere;
+}
+
+.singing-share-image__wrapped-hero p:not(.singing-share-image__kicker) {
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.7;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.singing-share-image__wrapped-message {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  color: #14042e;
+  margin-bottom: 12px;
+  padding: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.singing-share-image__wrapped-message span {
+  color: #7c3aed;
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.singing-share-image__wrapped-message strong {
+  display: block;
+  font-size: clamp(20px, 5vw, 28px);
+  font-weight: 900;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.singing-share-image__wrapped-challenge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.singing-share-image__wrapped-challenge span {
+  color: rgba(255, 255, 255, 0.62);
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.singing-share-image__wrapped-challenge strong {
+  color: #ffffff;
+  display: block;
+  font-size: clamp(18px, 4vw, 22px);
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.singing-share-image__wrapped-challenge em {
+  color: rgba(255, 255, 255, 0.7);
+  display: block;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 800;
+  margin-top: 4px;
+}
+
+.singing-share-image__wrapped-challenge--streak {
+  background: rgba(251, 191, 36, 0.18);
+  border-color: rgba(251, 191, 36, 0.44);
+}
+
+.singing-share-image__wrapped-challenge--streak strong {
+  color: #fde68a;
+}
+
 .singing-share-image__metric,
 .singing-share-image__metric-grid {
   position: relative;
@@ -7998,6 +8133,10 @@ $ranking-accent: #7c4dff;
 }
 
 .singing-share-image__metric-grid--ranking .singing-share-image__metric strong {
+  font-size: clamp(17px, 4vw, 21px);
+}
+
+.singing-share-image__metric-grid--wrapped .singing-share-image__metric strong {
   font-size: clamp(17px, 4vw, 21px);
 }
 

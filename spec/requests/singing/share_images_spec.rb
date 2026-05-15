@@ -295,6 +295,55 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(response.body).to include("data-share-capture-target='ranking'")
     end
 
+    it "coreユーザーはmonthly-wrappedカードを表示できること" do
+      singing_customer.create_subscription!(status: "active", plan: "core")
+      sign_in singing_customer
+      FactoryBot.create(
+        :singing_diagnosis,
+        :completed,
+        customer: singing_customer,
+        created_at: Time.zone.local(2026, 5, 10, 10, 0, 0),
+        overall_score: 80
+      )
+
+      get singing_share_image_path(target: "monthly-wrapped", year: 2026, month: 5)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Monthly Wrapped")
+      expect(response.body).to include("2026年5月")
+      expect(response.body).to include("data-share-capture-target='monthly-wrapped'")
+      expect(response.body).to include("MONTHLY WRAPPED")
+    end
+
+    it "lightユーザーはmonthly-wrappedにアクセスできずリダイレクトされること" do
+      singing_customer.create_subscription!(status: "active", plan: "light")
+      sign_in singing_customer
+
+      get singing_share_image_path(target: "monthly-wrapped", year: 2026, month: 5)
+
+      expect(response).to redirect_to(singing_diagnoses_path)
+      expect(flash[:alert]).to include("Coreプラン以上")
+    end
+
+    it "freeユーザーはmonthly-wrappedにアクセスできずリダイレクトされること" do
+      sign_in singing_customer
+
+      get singing_share_image_path(target: "monthly-wrapped", year: 2026, month: 5)
+
+      expect(response).to redirect_to(singing_diagnoses_path)
+      expect(flash[:alert]).to include("Coreプラン以上")
+    end
+
+    it "対象月に診断がない場合はリダイレクトしてメッセージを表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "core")
+      sign_in singing_customer
+
+      get singing_share_image_path(target: "monthly-wrapped", year: 2026, month: 5)
+
+      expect(response).to redirect_to(singing_diagnoses_path)
+      expect(flash[:alert]).to include("この月の診断記録がない")
+    end
+
     it "legacyのcapture_target指定でもdaily_challengeを表示できること" do
       sign_in singing_customer
       FactoryBot.create(:singing_daily_challenge, challenge_date: Date.current)

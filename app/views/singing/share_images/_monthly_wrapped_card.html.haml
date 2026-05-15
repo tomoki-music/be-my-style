@@ -32,7 +32,8 @@
       %small top growth
 
   - if share_image.challenge_completed_count.to_i > 0
-    .singing-share-image__wrapped-challenge
+    - streak_modifier = share_image.challenge_streak.to_i >= 7 ? "singing-share-image__wrapped-challenge--streak" : nil
+    .singing-share-image__wrapped-challenge{ class: streak_modifier }
       %span Daily Challenge
       %strong= "#{share_image.challenge_completed_count}日達成"
       - if share_image.challenge_streak.to_i >= 3

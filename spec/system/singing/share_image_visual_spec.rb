@@ -91,6 +91,71 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
     end
   end
 
+  context "monthly-wrapped / coreユーザー" do
+    let(:plan) { "core" }
+
+    before do
+      create(
+        :singing_diagnosis,
+        :completed,
+        customer: customer,
+        created_at: Time.zone.local(2026, 5, 1, 10, 0, 0),
+        overall_score: 75,
+        pitch_score: 70,
+        rhythm_score: 72,
+        expression_score: 68
+      )
+      create(
+        :singing_diagnosis,
+        :completed,
+        customer: customer,
+        created_at: Time.zone.local(2026, 5, 10, 10, 0, 0),
+        overall_score: 82,
+        pitch_score: 79,
+        rhythm_score: 80,
+        expression_score: 76
+      )
+    end
+
+    it "375px幅でもmonthly-wrappedカードが横にはみ出さないこと" do
+      resize_browser_to(375, 900)
+
+      visit singing_share_image_path(target: "monthly-wrapped", year: 2026, month: 5)
+
+      expect(page).to have_selector("[data-share-capture-target='monthly-wrapped']")
+      expect(page.html).to include("2026年5月")
+      expect(page.html).to include("Monthly Wrapped")
+
+      FileUtils.mkdir_p(Rails.root.join("tmp/screenshots"))
+      save_screenshot(Rails.root.join("tmp/screenshots/singing_share_image_monthly_wrapped_mobile.png").to_s)
+
+      aggregate_failures do
+        expect(card_layout).to include(
+          "fitsViewport" => true,
+          "childrenFitCardHorizontally" => true
+        )
+      end
+    end
+
+    it "1280px幅でmonthly-wrappedカードが中央表示されること" do
+      resize_browser_to(1280, 960)
+
+      visit singing_share_image_path(target: "monthly-wrapped", year: 2026, month: 5)
+
+      expect(page).to have_selector("[data-share-capture-target='monthly-wrapped']")
+      expect(page.html).to include("2026年5月")
+
+      FileUtils.mkdir_p(Rails.root.join("tmp/screenshots"))
+      save_screenshot(Rails.root.join("tmp/screenshots/singing_share_image_monthly_wrapped_desktop.png").to_s)
+
+      aggregate_failures do
+        expect(card_layout.fetch("fitsViewport")).to eq(true)
+        expect(card_layout.fetch("childrenFitCardHorizontally")).to eq(true)
+        expect(card_layout.fetch("centerOffset").abs).to be <= 2
+      end
+    end
+  end
+
   def create_completed_diagnosis(attributes)
     create(
       :singing_diagnosis,
