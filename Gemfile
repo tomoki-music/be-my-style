@@ -24,6 +24,7 @@ gem 'jbuilder', '~> 2.7'
 
 # Use Active Storage variant
 gem 'image_processing', '~> 1.2'
+gem 'selenium-webdriver'
 
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.4.4', require: false
@@ -51,7 +52,6 @@ group :test do
   gem "factory_bot_rails"
   gem 'faker'
   gem 'capybara', '>= 3.26'
-  gem 'selenium-webdriver'
   # Keep available for older local workflows, but prefer Selenium Manager by default.
   gem 'webdrivers', require: false
   gem 'launchy'
