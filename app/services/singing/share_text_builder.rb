@@ -6,6 +6,10 @@ module Singing
       new(customer, reference_time: reference_time).yearly_growth_report(report: report)
     end
 
+    def self.daily_challenge(customer, reference_time: Time.current, card: nil)
+      new(customer, reference_time: reference_time).daily_challenge(card: card)
+    end
+
     def initialize(customer, reference_time: Time.current)
       @customer = customer
       @reference_time = reference_time
@@ -23,6 +27,14 @@ module Singing
         "🎤 ",
         HASHTAG
       ].compact.join
+    end
+
+    def daily_challenge(card: nil)
+      parts = [card&.completed_today ? "今日もDaily Challenge完了🎤" : "Daily Challengeに挑戦中🎤"]
+      parts << "前回より +#{card.score_delta.to_i}点アップ📈" if card&.score_delta.to_i.positive?
+      parts << "小さな一歩を積み重ねています。"
+      parts << "#BeMyStyle #歌唱診断 #歌ってみた"
+      parts.join
     end
 
     private

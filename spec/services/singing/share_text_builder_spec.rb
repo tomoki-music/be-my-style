@@ -57,6 +57,20 @@ RSpec.describe Singing::ShareTextBuilder, type: :service do
     end
   end
 
+  describe ".daily_challenge" do
+    it "努力共有に寄せたSNS投稿文を返すこと" do
+      card = Struct.new(:completed_today, :score_delta).new(true, 4)
+
+      text = described_class.daily_challenge(customer, reference_time: reference_time, card: card)
+
+      expect(text).to include("今日もDaily Challenge完了")
+      expect(text).to include("前回より +4点アップ")
+      expect(text).to include("小さな一歩を積み重ねています")
+      expect(text).to include("#BeMyStyle")
+      expect(text).to include("#歌唱診断")
+    end
+  end
+
   def create_completed_diagnosis(owner, song_title, created_on, pitch_score:)
     FactoryBot.create(
       :singing_diagnosis,

@@ -1,0 +1,36 @@
+.singing-share-image__card.singing-share-image__card--daily-challenge{ role: "img", "aria-label": "Daily Challenge の成果シェアカード", data: { share_capture_target: "daily-challenge" } }
+  .singing-share-image__topline
+    %span= share_image.badge_label
+    %strong BeMyStyle Singing
+
+  .singing-share-image__daily-hero
+    %span.singing-share-image__daily-icon= share_image.challenge_icon
+    %p.singing-share-image__kicker EFFORT SHARE
+    %h1= share_image.headline
+    %p= share_image.subheadline
+
+  .singing-share-image__daily-message
+    %span 今日の記録
+    %strong= share_image.message
+
+  .singing-share-image__metric-grid.singing-share-image__metric-grid--daily
+    .singing-share-image__metric
+      %span 継続
+      %strong= share_image.streak_days.positive? ? "#{share_image.streak_days}日" : "これから"
+      %small keep going
+    .singing-share-image__metric
+      %span 今日の挑戦
+      %strong= share_image.completed_today ? "完了" : "準備中"
+      %small daily challenge
+    .singing-share-image__metric
+      %span 前回から
+      %strong= share_image.score_delta_label || "積み重ね中"
+      %small small progress
+    .singing-share-image__metric
+      %span テーマ
+      %strong= share_image.challenge_title
+      %small practice theme
+
+  .singing-share-image__footer
+    %span #BeMyStyle
+    %small 今日も歌った記録

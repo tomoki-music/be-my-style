@@ -10,6 +10,10 @@ module Singing
         feature: :singing_yearly_growth_report,
         selector: "[data-share-capture-target='yearly-growth']",
         path_helper: :singing_share_image_path
+      },
+      "daily-challenge" => {
+        selector: "[data-share-capture-target='daily-challenge']",
+        path_helper: :singing_share_image_path
       }
     }.freeze
 
@@ -24,7 +28,7 @@ module Singing
     def initialize(customer:, base_url:, capture_target: "yearly-growth", output_root: Rails.root.join("tmp/share_images"), browser: nil)
       @customer = customer
       @base_url = base_url.to_s.delete_suffix("/")
-      @capture_target = capture_target.to_s.presence || "yearly-growth"
+      @capture_target = (capture_target.to_s.presence || "yearly-growth").tr("_", "-")
       @output_root = Pathname(output_root)
       @browser = browser
       @owns_browser = browser.nil?
@@ -67,7 +71,8 @@ module Singing
 
     def validate!
       raise UnsupportedCaptureTarget, "unsupported capture target: #{capture_target}" unless target_config
-      raise AccessDenied, "share image capture is not available for this plan" unless customer&.has_feature?(target_config.fetch(:feature))
+      feature = target_config[:feature]
+      raise AccessDenied, "share image capture is not available for this plan" if feature.present? && !customer&.has_feature?(feature)
       raise NoShareImageData, "share image data is not ready" unless share_image_present?
     end
 
@@ -83,27 +88,42 @@ module Singing
       @share_image_data ||= case capture_target
                             when "yearly-growth"
                               Singing::YearlyGrowthShareImageBuilder.call(customer)
+                            when "daily-challenge"
+                              Singing::ShareImages::DailyChallengeCardBuilder.call(customer)
                             end
     end
 
     def storage_metadata
-      return {} unless capture_target == "yearly-growth" && share_image_data.present?
+      return {} unless share_image_data.present?
 
-      {
-        title: "#{share_image_data.report.year}年 歌声成長レポート",
-        season: share_image_data.report.year,
-        share_text: share_image_data.x_share_text,
-        diagnosis_count: share_image_data.report.diagnosis_count,
-        top_growth_label: share_image_data.report.top_growth&.label,
-        growth_delta_label: share_image_data.growth_delta_label
-      }.compact
+      case capture_target
+      when "yearly-growth"
+        {
+          title: "#{share_image_data.report.year}年 歌声成長レポート",
+          season: share_image_data.report.year,
+          share_text: share_image_data.x_share_text,
+          diagnosis_count: share_image_data.report.diagnosis_count,
+          top_growth_label: share_image_data.report.top_growth&.label,
+          growth_delta_label: share_image_data.growth_delta_label
+        }.compact
+      when "daily-challenge"
+        {
+          title: "Daily Challenge を完了しました",
+          share_text: share_image_data.x_share_text,
+          streak_days: share_image_data.streak_days,
+          completed_today: share_image_data.completed_today,
+          score_delta: share_image_data.score_delta
+        }.compact
+      else
+        {}
+      end
     end
 
     def capture_url
       token = Singing::ShareImageCaptureToken.generate(customer: customer, capture_target: capture_target)
       path = Rails.application.routes.url_helpers.public_send(
         target_config.fetch(:path_helper),
-        capture_target: capture_target,
+        target: capture_target,
         capture_token: token
       )
 
