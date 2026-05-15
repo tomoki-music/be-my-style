@@ -6,5 +6,17 @@ BUNDLE_BIN="${BUNDLE_BIN:-${HOME:-/home/deploy}/.rbenv/shims/bundle}"
 
 cd "$APP_ROOT"
 
-RAILS_ENV=production DISABLE_SPRING=1 "$BUNDLE_BIN" exec rails runner \
-  'Singing::CleanupExpiredShareImagesJob.perform_now'
+timestamp() {
+  date '+%Y-%m-%d %H:%M:%S %z'
+}
+
+echo "[$(timestamp)] cleanup_singing_share_images start app_root=$APP_ROOT bundle_bin=$BUNDLE_BIN"
+
+if RAILS_ENV=production DISABLE_SPRING=1 "$BUNDLE_BIN" exec rails runner \
+  'Singing::CleanupExpiredShareImagesJob.perform_now'; then
+  echo "[$(timestamp)] cleanup_singing_share_images finish exit_status=0"
+else
+  status=$?
+  echo "[$(timestamp)] cleanup_singing_share_images failed exit_status=$status" >&2
+  exit "$status"
+fi
