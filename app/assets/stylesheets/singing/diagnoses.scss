@@ -7799,6 +7799,79 @@ $ranking-accent: #7c4dff;
   margin: 0;
 }
 
+.singing-share-image__expired {
+  background: #ffffff;
+  border: 1px solid #dde3ec;
+  border-radius: 8px;
+  box-shadow: 0 16px 36px rgba(31, 41, 55, 0.1);
+  margin: 70px auto 0;
+  max-width: 560px;
+  padding: 34px 28px;
+  text-align: center;
+}
+
+.singing-share-image__expired-eyebrow {
+  color: #0f766e;
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.singing-share-image__expired h1 {
+  color: #111827;
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.35;
+  margin: 0 0 12px;
+}
+
+.singing-share-image__expired p {
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.8;
+  margin: 0 0 20px;
+}
+
+.singing-share-image__ogp-debug {
+  background: #111827;
+  border-radius: 8px;
+  color: #e5e7eb;
+  margin: 0 auto 18px;
+  max-width: 560px;
+  padding: 16px;
+}
+
+.singing-share-image__ogp-debug strong {
+  color: #ffffff;
+  display: block;
+  font-size: 13px;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+
+.singing-share-image__ogp-debug dl {
+  display: grid;
+  gap: 8px 12px;
+  grid-template-columns: 110px minmax(0, 1fr);
+  margin: 0;
+}
+
+.singing-share-image__ogp-debug dt,
+.singing-share-image__ogp-debug dd {
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.singing-share-image__ogp-debug dt {
+  color: #93c5fd;
+  font-weight: 900;
+}
+
 @media (max-width: 640px) {
   .singing-diagnosis__growth-timeline {
     padding: 18px;

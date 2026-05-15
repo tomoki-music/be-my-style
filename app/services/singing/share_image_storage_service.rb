@@ -83,8 +83,19 @@ module Singing
     def share_image_metadata
       {
         capture_target: capture_target,
+        generated_from: generated_from,
+        version: 1,
         generated_at: Time.current.iso8601
       }.merge(metadata)
+    end
+
+    def generated_from
+      case capture_target
+      when "yearly-growth"
+        "yearly_growth_report"
+      else
+        capture_target.tr("-", "_")
+      end
     end
 
     def blob_url(blob)

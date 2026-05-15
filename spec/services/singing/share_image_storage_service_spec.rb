@@ -39,6 +39,8 @@ RSpec.describe Singing::ShareImageStorageService, type: :service do
       expect(result.share_image.generated_at).to be_within(5.seconds).of(Time.current)
       expect(result.share_image.metadata).to include(
         "capture_target" => "yearly-growth",
+        "generated_from" => "yearly_growth_report",
+        "version" => 1,
         "title" => "2026年 歌声成長レポート",
         "share_text" => "#BeMyStyleSinging"
       )

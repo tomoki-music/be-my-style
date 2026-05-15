@@ -1,0 +1,13 @@
+- content_for :title, "#{@share_title} | BeMyStyle"
+- content_for :og_title, "#{@share_title} | BeMyStyle Singing"
+- content_for :og_description, @share_description
+- content_for :robots, "noindex,nofollow"
+- content_for :suppress_singing_nav, true
+
+.singing-share-image
+  .singing-share-image__inner
+    .singing-share-image__expired
+      %span.singing-share-image__expired-eyebrow Share image expired
+      %h1 このシェア画像は公開期限が終了しました🎤
+      %p BeMyStyle Singing のシェア画像は、プライバシーとストレージ保護のため一定期間で公開を終了します。
+      = link_to "歌声・演奏診断へ", new_singing_diagnosis_path, class: "singing-share-image__invite-cta-btn"

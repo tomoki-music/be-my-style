@@ -356,11 +356,33 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(response.body).to include("#BeMyStyleSinging")
       expect(response.body).to include("property='og:image'")
       expect(response.body).to include("rails/active_storage/blobs")
+      expect(response.body).to include("content='noindex,nofollow' name='robots'")
       expect(response.body).not_to include(singing_customer.email)
       expect(response.body).not_to include("customer_id")
     end
 
-    it "期限切れの公開share imageは404にすること" do
+    it "debug_ogp=1でOGP確認用の表示を出すこと" do
+      share_image = FactoryBot.create(
+        :singing_share_image,
+        :completed,
+        customer: singing_customer,
+        expires_at: 1.day.from_now,
+        metadata: {
+          title: "OGP確認タイトル",
+          share_text: "OGP確認説明 #BeMyStyleSinging"
+        }
+      )
+
+      get singing_public_share_image_path(share_image.signed_id(purpose: :public_share_image), debug_ogp: "1")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("OGP debug")
+      expect(response.body).to include("og:title")
+      expect(response.body).to include("og:image")
+      expect(response.body).to include("noindex,nofollow")
+    end
+
+    it "期限切れの公開share imageは専用画面で410にすること" do
       share_image = FactoryBot.create(
         :singing_share_image,
         :completed,
@@ -371,7 +393,9 @@ RSpec.describe "Singing::ShareImages", type: :request do
 
       get singing_public_share_image_path(share_image.signed_id(purpose: :public_share_image))
 
-      expect(response).to have_http_status(:not_found)
+      expect(response).to have_http_status(:gone)
+      expect(response.body).to include("このシェア画像は公開期限が終了しました")
+      expect(response.body).to include("content='noindex,nofollow' name='robots'")
       expect(response.body).not_to include("Expired Share Image")
     end
 
