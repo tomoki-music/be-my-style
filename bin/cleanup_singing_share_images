@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/var/www/be-my-style/current}"
+BUNDLE_BIN="${BUNDLE_BIN:-${HOME:-/home/deploy}/.rbenv/shims/bundle}"
+
+cd "$APP_ROOT"
+
+RAILS_ENV=production DISABLE_SPRING=1 "$BUNDLE_BIN" exec rails runner \
+  'Singing::CleanupExpiredShareImagesJob.perform_now'
