@@ -10,6 +10,9 @@
 - elsif @capture_target == "yearly-wrapped"
   - page_title = "#{@share_image.year_label} Yearly Wrapped"
   - og_title = "#{@share_image.year_label} Yearly Wrapped"
+- elsif @capture_target == "achievement-badge"
+  - page_title = "Achievement Badge シェアカード"
+  - og_title = @share_image&.badge_label.present? ? "#{@share_image.badge_label} を達成しました！" : "Achievement Badge"
 - else
   - page_title = "Singing Ranking シェアカード"
   - og_title = "Singing Rankingに挑戦しました"
@@ -31,6 +34,7 @@
     - ranking_active         = @capture_target == "ranking"
     - monthly_wrapped_active = @capture_target == "monthly-wrapped"
     - yearly_wrapped_active  = @capture_target == "yearly-wrapped"
+    - achievement_badge_active = @capture_target == "achievement-badge"
     .singing-share-image__tabs{ role: "tablist", "aria-label": "シェア画像の種類" }
       = link_to singing_share_image_path, class: "singing-share-image__tab #{'singing-share-image__tab--active' if yearly_active}", role: "tab", "aria-selected": yearly_active do
         %span 年間レポート
@@ -48,6 +52,9 @@
         %span Yearly Wrapped
         %small 年間の声を1枚に
         %span.singing-share-image__tab-badge Premium
+      = link_to singing_share_image_path(target: "achievement-badge"), class: "singing-share-image__tab #{'singing-share-image__tab--active' if achievement_badge_active}", role: "tab", "aria-selected": achievement_badge_active do
+        %span Achievement
+        %small 達成バッジを1枚に
 
     = render "share_actions", variant: :toolbar, share_text: @share_text, share_url: request.original_url
 
@@ -64,6 +71,8 @@
         = render "monthly_wrapped_card", share_image: @share_image
       - elsif @capture_target == "yearly-wrapped"
         = render "yearly_wrapped_card", share_image: @share_image
+      - elsif @capture_target == "achievement-badge"
+        = render "achievement_badge_card", share_image: @share_image
       - else
         = render "share_card", share_image: @share_image, singer_rank: @singer_rank
 

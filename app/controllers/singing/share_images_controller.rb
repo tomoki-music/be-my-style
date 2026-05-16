@@ -111,6 +111,13 @@ class Singing::ShareImagesController < Singing::BaseController
         format.html { redirect_to singing_diagnoses_path, alert: "Yearly Wrapped はPremiumプランで利用できます。" }
         format.json { render json: { error: "Yearly Wrapped はPremiumプランで利用できます。" }, status: :forbidden }
       end
+    elsif capture_target == "achievement-badge"
+      return if share_image_customer.has_feature?(:singing_achievement_badge_share_image)
+
+      respond_to do |format|
+        format.html { redirect_to singing_diagnoses_path, alert: "Achievement Badge シェアカードはCoreプラン以上で利用できます。" }
+        format.json { render json: { error: "Achievement Badge シェアカードはCoreプラン以上で利用できます。" }, status: :forbidden }
+      end
     end
   end
 
@@ -163,6 +170,8 @@ class Singing::ShareImagesController < Singing::BaseController
         share_image_customer,
         reference_time: yearly_wrapped_reference_time
       )
+    when "achievement-badge"
+      Singing::ShareImages::AchievementBadgeCardBuilder.call(share_image_customer)
     end
   end
 
@@ -176,6 +185,8 @@ class Singing::ShareImagesController < Singing::BaseController
       "この月の診断記録がないため、Monthly Wrapped は表示できません。"
     when "yearly-wrapped"
       "今年の診断記録がないため、Yearly Wrapped は表示できません。"
+    when "achievement-badge"
+      "まだバッジを獲得していません。診断を完了するとバッジが獲得できます。"
     else
       "今年の診断がまだないため、シェアカードは表示できません。"
     end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_15_000000) do
+ActiveRecord::Schema.define(version: 2026_05_15_164712) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -825,6 +825,20 @@ ActiveRecord::Schema.define(version: 2026_05_15_000000) do
     t.index ["event_id"], name: "index_requests_on_event_id"
   end
 
+  create_table "singing_achievement_badges", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "badge_key", null: false
+    t.bigint "singing_diagnosis_id"
+    t.datetime "earned_at", null: false
+    t.json "metadata"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id", "badge_key"], name: "index_singing_achievement_badges_unique", unique: true
+    t.index ["customer_id", "earned_at"], name: "index_singing_achievement_badges_on_customer_earned"
+    t.index ["customer_id"], name: "index_singing_achievement_badges_on_customer_id"
+    t.index ["singing_diagnosis_id"], name: "index_singing_achievement_badges_on_singing_diagnosis_id"
+  end
+
   create_table "singing_ai_challenge_progresses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.string "target_key", null: false
@@ -1135,6 +1149,8 @@ ActiveRecord::Schema.define(version: 2026_05_15_000000) do
   add_foreign_key "projects", "customers"
   add_foreign_key "requests", "customers"
   add_foreign_key "requests", "events"
+  add_foreign_key "singing_achievement_badges", "customers"
+  add_foreign_key "singing_achievement_badges", "singing_diagnoses"
   add_foreign_key "singing_ai_challenge_progresses", "customers"
   add_foreign_key "singing_badges", "customers"
   add_foreign_key "singing_badges", "singing_ranking_seasons"

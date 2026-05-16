@@ -7,6 +7,7 @@ class SingingShareImage < ApplicationRecord
     monthly-report
     monthly-wrapped
     yearly-wrapped
+    achievement-badge
   ].freeze
 
   belongs_to :customer

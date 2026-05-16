@@ -40,7 +40,8 @@ class Customer < ApplicationRecord
     singing_diagnosis_priority: %w[premium],
     singing_diagnosis_ai_comment: %w[premium],
     singing_monthly_wrapped_share_image: %w[core premium],
-    singing_yearly_wrapped_share_image: %w[premium]
+    singing_yearly_wrapped_share_image: %w[premium],
+    singing_achievement_badge_share_image: %w[core premium]
   }.freeze
 
   # Include default devise modules. Others available are:
@@ -133,6 +134,7 @@ class Customer < ApplicationRecord
   has_many :singing_diagnoses, dependent: :destroy
   has_many :singing_ai_challenge_progresses, dependent: :destroy
   has_many :singing_badges, dependent: :destroy
+  has_many :singing_achievement_badges, dependent: :destroy
   has_many :singing_daily_challenge_progresses, dependent: :destroy
   has_many :singing_battles_as_challenger, class_name: "SingingBattle", foreign_key: :challenger_id, dependent: :destroy
   has_many :singing_battles_as_opponent, class_name: "SingingBattle", foreign_key: :opponent_id, dependent: :nullify

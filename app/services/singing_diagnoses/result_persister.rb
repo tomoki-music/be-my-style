@@ -28,6 +28,7 @@ module SingingDiagnoses
       enqueue_ai_comment_if_available
       grant_xp
       evaluate_daily_challenge
+      award_achievement_badges
 
       true
     rescue StandardError => e
@@ -76,6 +77,14 @@ module SingingDiagnoses
       )
 
       GenerateAiCommentJob.perform_later(diagnosis.id)
+    end
+
+    def award_achievement_badges
+      Singing::AwardAchievementBadgesJob.perform_later(diagnosis.id)
+    rescue StandardError => e
+      Rails.logger.error(
+        "AwardAchievementBadgesJob enqueue failed for diagnosis #{diagnosis.id}: #{e.message}"
+      )
     end
 
     def mark_failed(reason)

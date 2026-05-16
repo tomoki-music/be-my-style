@@ -1,0 +1,24 @@
+.singing-achievement-badge-card{ "data-share-capture-target": "achievement-badge",
+                                 "data-rarity": share_image.rarity.to_s,
+                                 role: "img",
+                                 "aria-label": "#{share_image.badge_label} Achievement Badge シェアカード" }
+  .singing-achievement-badge-card__brand
+    %span BeMyStyle Singing
+    %small 🎤
+
+  .singing-achievement-badge-card__body
+    .singing-achievement-badge-card__emoji-wrap
+      %span.singing-achievement-badge-card__emoji= share_image.emoji
+    %p.singing-achievement-badge-card__rarity-label= share_image.rarity_label
+    %h2.singing-achievement-badge-card__badge-label= share_image.badge_label
+    .singing-achievement-badge-card__separator
+    %p.singing-achievement-badge-card__headline= share_image.headline
+    - if share_image.earned_at_label.present?
+      %p.singing-achievement-badge-card__earned-at= "#{share_image.earned_at_label} 達成"
+
+  - if share_image.subline.present?
+    .singing-achievement-badge-card__subline= share_image.subline
+
+  .singing-achievement-badge-card__footer
+    %span #BeMyStyle
+    %small 小さな達成が、歌い続ける力になる

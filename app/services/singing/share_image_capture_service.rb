@@ -28,6 +28,11 @@ module Singing
         feature: :singing_yearly_wrapped_share_image,
         selector: "[data-share-capture-target='yearly-wrapped']",
         path_helper: :singing_share_image_path
+      },
+      "achievement-badge" => {
+        feature: :singing_achievement_badge_share_image,
+        selector: "[data-share-capture-target='achievement-badge']",
+        path_helper: :singing_share_image_path
       }
     }.freeze
 
@@ -111,6 +116,8 @@ module Singing
                               Singing::ShareImages::MonthlyWrappedCardBuilder.call(customer, reference_time: reference_time)
                             when "yearly-wrapped"
                               Singing::ShareImages::YearlyWrappedCardBuilder.call(customer, reference_time: reference_time)
+                            when "achievement-badge"
+                              Singing::ShareImages::AchievementBadgeCardBuilder.call(customer)
                             end
     end
 
@@ -172,6 +179,15 @@ module Singing
           top_month: share_image_data.top_month,
           ai_challenge_count: share_image_data.ai_challenge_count,
           longest_challenge_streak: share_image_data.longest_challenge_streak
+        }.compact
+      when "achievement-badge"
+        {
+          title:           "#{share_image_data.badge_label} を達成しました！",
+          description:     share_image_data.headline,
+          share_text:      share_image_data.x_share_text,
+          badge_key:       share_image_data.badge_key,
+          rarity:          share_image_data.rarity.to_s,
+          earned_at_label: share_image_data.earned_at_label
         }.compact
       else
         {}

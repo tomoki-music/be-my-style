@@ -215,6 +215,71 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
     end
   end
 
+  context "achievement-badge / coreユーザー" do
+    let(:plan) { "core" }
+
+    before do
+      create(:singing_achievement_badge,
+             customer: customer,
+             badge_key: "first_score_90",
+             earned_at: 1.day.ago,
+             metadata: {
+               schema_version:  1,
+               badge_key:       "first_score_90",
+               badge_label:     "Score 90 Club",
+               earned_at_label: "2024年5月15日",
+               diagnosis_count: 10,
+               overall_score:   91
+             })
+    end
+
+    it "375px幅でもachievement-badgeカードが横にはみ出さないこと" do
+      resize_browser_to(375, 900)
+
+      visit singing_share_image_path(target: "achievement-badge")
+
+      expect(page).to have_selector("[data-share-capture-target='achievement-badge']")
+      expect(page.html).to include("Score 90 Club")
+
+      FileUtils.mkdir_p(Rails.root.join("tmp/screenshots"))
+      save_screenshot(Rails.root.join("tmp/screenshots/singing_achievement_badge_mobile.png").to_s)
+
+      aggregate_failures do
+        expect(card_layout("achievement-badge")).to include(
+          "fitsViewport" => true,
+          "childrenFitCardHorizontally" => true
+        )
+      end
+    end
+
+    it "1280px幅でachievement-badgeカードが中央表示されること" do
+      resize_browser_to(1280, 960)
+
+      visit singing_share_image_path(target: "achievement-badge")
+
+      expect(page).to have_selector("[data-share-capture-target='achievement-badge']")
+      expect(page.html).to include("Score 90 Club")
+
+      FileUtils.mkdir_p(Rails.root.join("tmp/screenshots"))
+      save_screenshot(Rails.root.join("tmp/screenshots/singing_achievement_badge_desktop.png").to_s)
+
+      aggregate_failures do
+        expect(card_layout("achievement-badge").fetch("fitsViewport")).to eq(true)
+        expect(card_layout("achievement-badge").fetch("childrenFitCardHorizontally")).to eq(true)
+        expect(card_layout("achievement-badge").fetch("centerOffset").abs).to be <= 2
+      end
+    end
+
+    it "rarity: rareのスタイルが適用されること" do
+      resize_browser_to(1280, 960)
+
+      visit singing_share_image_path(target: "achievement-badge")
+
+      badge_card = find("[data-share-capture-target='achievement-badge']")
+      expect(badge_card["data-rarity"]).to eq("rare")
+    end
+  end
+
   def create_completed_diagnosis(attributes)
     create(
       :singing_diagnosis,
