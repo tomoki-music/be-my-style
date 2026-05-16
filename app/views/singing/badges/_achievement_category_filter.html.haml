@@ -1,0 +1,17 @@
+-# locals: available_categories, active_category, active_rarity
+- category_labels = { milestone: "節目", streak: "連続", score: "スコア", growth: "成長", ranking: "ランキング", skill: "スキル", challenge: "チャレンジ", special: "特別" }
+
+.achievement-filter
+  .achievement-filter__categories
+    = link_to singing_badges_path(rarity: active_rarity), class: "achievement-filter__pill #{active_category.nil? ? 'achievement-filter__pill--active' : ''}" do
+      すべて
+    - available_categories.each do |cat|
+      = link_to singing_badges_path(category: cat, rarity: active_rarity), class: "achievement-filter__pill #{active_category == cat ? 'achievement-filter__pill--active' : ''}" do
+        = category_labels[cat] || cat.to_s
+
+  .achievement-filter__rarities
+    = link_to singing_badges_path(category: active_category), class: "achievement-filter__rarity-pill #{active_rarity.nil? ? 'achievement-filter__rarity-pill--active' : ''}" do
+      全レアリティ
+    - SingingAchievementBadge::RARITY_ORDER.each do |rarity|
+      = link_to singing_badges_path(category: active_category, rarity: rarity), class: "achievement-filter__rarity-pill achievement-filter__rarity-pill--#{rarity} #{active_rarity == rarity ? 'achievement-filter__rarity-pill--active' : ''}" do
+        = rarity.to_s.upcase

@@ -411,3 +411,538 @@
     }
   }
 }
+
+// ============================================================
+// Achievement Badge ギャラリー
+// ============================================================
+
+// ── ギャラリーヘッダー ───────────────────────────────────────
+.achievement-gallery {
+  .achievement-gallery__header {
+    align-items: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .achievement-gallery__header-text {
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+
+  .achievement-gallery__summary {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    gap: 6px;
+  }
+
+  .achievement-gallery__summary-stat {
+    align-items: baseline;
+    display: flex;
+    gap: 4px;
+  }
+
+  .achievement-gallery__summary-count {
+    color: #4b6af0;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .achievement-gallery__summary-sep {
+    color: #9ca3af;
+    font-size: 18px;
+  }
+
+  .achievement-gallery__summary-total {
+    color: #6b7280;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .achievement-gallery__summary-label {
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 2px;
+  }
+
+  .achievement-gallery__progress-bar-wrap {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    width: 140px;
+  }
+
+  .achievement-gallery__progress-bar-track {
+    background: #e5e7eb;
+    border-radius: 999px;
+    flex: 1;
+    height: 8px;
+    overflow: hidden;
+  }
+
+  .achievement-gallery__progress-bar-fill {
+    background: linear-gradient(90deg, #4b6af0, #22c55e);
+    border-radius: inherit;
+    height: 100%;
+    transition: width 0.6s ease;
+  }
+
+  .achievement-gallery__progress-rate {
+    color: #374151;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+}
+
+// ── カテゴリ / レアリティ フィルター ─────────────────────────
+.achievement-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+
+  &__categories,
+  &__rarities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+.achievement-filter__pill {
+  background: #f1f5f9;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: #4b5563;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 14px;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+
+  &:hover {
+    background: #e0e7ff;
+    color: #3730a3;
+  }
+
+  &--active {
+    background: #4b6af0;
+    border-color: #4b6af0;
+    color: #fff;
+
+    &:hover {
+      background: #3b5bd9;
+      color: #fff;
+    }
+  }
+}
+
+.achievement-filter__rarity-pill {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 4px 12px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+
+  &--active { opacity: 1; }
+  &:not(&--active) { opacity: 0.55; }
+  &:hover { opacity: 1; }
+
+  &--legendary {
+    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #b45309;
+  }
+
+  &--epic {
+    background: linear-gradient(135deg, #f5f0ff, #ede9fe);
+    border-color: rgba(139, 92, 246, 0.3);
+    color: #6d28d9;
+  }
+
+  &--rare {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #1d4ed8;
+  }
+
+  &--common {
+    background: #f0f4ff;
+    border-color: rgba(75, 106, 240, 0.2);
+    color: #3730a3;
+  }
+}
+
+// ── Rarity セクション ────────────────────────────────────────
+.achievement-gallery__rarity-section {
+  margin-bottom: 28px;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.achievement-gallery__rarity-header {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.achievement-gallery__rarity-label {
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 3px 10px;
+  text-transform: uppercase;
+
+  &--legendary {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #92400e;
+  }
+
+  &--epic {
+    background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+    color: #4c1d95;
+  }
+
+  &--rare {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #1e3a8a;
+  }
+
+  &--common {
+    background: #e0e7ff;
+    color: #312e81;
+  }
+}
+
+.achievement-gallery__rarity-count {
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+// ── バッジグリッド ────────────────────────────────────────────
+.achievement-badge-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+// ── バッジカード ──────────────────────────────────────────────
+.achievement-badge-card {
+  background: #fff;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(31, 41, 55, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover:not(&--locked) {
+    box-shadow: 0 8px 24px rgba(31, 41, 55, 0.12);
+    transform: translateY(-3px);
+  }
+
+  // ── rarity 別ボーダー・背景 ─
+  &--legendary {
+    background: linear-gradient(160deg, #fffbeb 0%, #fefce8 100%);
+    border-color: rgba(245, 158, 11, 0.45);
+    box-shadow: 0 2px 16px rgba(245, 158, 11, 0.18);
+
+    &:hover:not(.achievement-badge-card--locked) {
+      box-shadow: 0 8px 28px rgba(245, 158, 11, 0.3);
+    }
+  }
+
+  &--epic {
+    background: linear-gradient(160deg, #faf5ff 0%, #f3e8ff 100%);
+    border-color: rgba(139, 92, 246, 0.35);
+    box-shadow: 0 2px 14px rgba(139, 92, 246, 0.14);
+
+    &:hover:not(.achievement-badge-card--locked) {
+      box-shadow: 0 8px 28px rgba(139, 92, 246, 0.25);
+    }
+  }
+
+  &--rare {
+    background: linear-gradient(160deg, #eff6ff 0%, #dbeafe 100%);
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+
+  &--common {
+    background: #f8faff;
+    border-color: rgba(75, 106, 240, 0.18);
+  }
+
+  // ── 未獲得 ─
+  &--locked {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    box-shadow: none;
+    filter: grayscale(0.8);
+    opacity: 0.6;
+  }
+}
+
+.achievement-badge-card__rarity-bar {
+  height: 4px;
+  width: 100%;
+
+  .achievement-badge-card--legendary & { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+  .achievement-badge-card--epic &      { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+  .achievement-badge-card--rare &      { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+  .achievement-badge-card--common &    { background: linear-gradient(90deg, #4b6af0, #818cf8); }
+  .achievement-badge-card--locked &    { background: #d1d5db; }
+}
+
+.achievement-badge-card__rarity-label {
+  display: none; // rarity bar で代替（hover tooltip は将来）
+}
+
+.achievement-badge-card__emoji {
+  font-size: 40px;
+  line-height: 1;
+  padding: 18px 16px 10px;
+  text-align: center;
+
+  &--locked { filter: grayscale(1); }
+}
+
+.achievement-badge-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 14px 16px;
+}
+
+.achievement-badge-card__label {
+  color: #1f2937;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin: 0;
+
+  .achievement-badge-card--locked & { color: #6b7280; }
+}
+
+// ── 獲得済み ─
+.achievement-badge-card__earned-info {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.achievement-badge-card__earned-check { font-size: 13px; }
+
+.achievement-badge-card__earned-label {
+  background: #dcfce7;
+  border-radius: 999px;
+  color: #15803d;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+}
+
+.achievement-badge-card__earned-date {
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 500;
+  width: 100%;
+}
+
+.achievement-badge-card__description {
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.achievement-badge-card__share-btn {
+  background: linear-gradient(135deg, #4b6af0, #6366f1);
+  border-radius: 8px;
+  color: #fff;
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: auto;
+  padding: 7px 12px;
+  text-align: center;
+  text-decoration: none;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.88; color: #fff; }
+}
+
+.achievement-badge-card__share-locked {
+  align-items: center;
+  background: #f3f4f6;
+  border-radius: 8px;
+  color: #9ca3af;
+  display: flex;
+  font-size: 11px;
+  font-weight: 600;
+  gap: 4px;
+  justify-content: center;
+  margin-top: auto;
+  padding: 7px 12px;
+}
+
+// ── 未獲得ラベル ─
+.achievement-badge-card__locked-info {
+  align-items: center;
+  display: flex;
+  gap: 5px;
+}
+
+.achievement-badge-card__lock-icon { font-size: 14px; }
+
+.achievement-badge-card__lock-label {
+  background: #e5e7eb;
+  border-radius: 999px;
+  color: #6b7280;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+}
+
+.achievement-badge-card__locked-description {
+  color: #9ca3af;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+// ── 空状態 ────────────────────────────────────────────────────
+.achievement-gallery__empty {
+  color: #6b7280;
+  font-size: 14px;
+  padding: 24px 0;
+  text-align: center;
+}
+
+.achievement-gallery__empty-link {
+  color: #4b6af0;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}
+
+// ── 課金 CTA ─────────────────────────────────────────────────
+.achievement-gallery__upgrade-cta {
+  align-items: center;
+  background: linear-gradient(135deg, #f0f4ff 0%, #faf5ff 100%);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-radius: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 28px;
+  padding: 18px 20px;
+}
+
+.achievement-gallery__upgrade-cta-icon {
+  flex-shrink: 0;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.achievement-gallery__upgrade-cta-text {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.achievement-gallery__upgrade-cta-title {
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 3px;
+}
+
+.achievement-gallery__upgrade-cta-desc {
+  color: #6b7280;
+  font-size: 13px;
+  margin: 0;
+}
+
+.achievement-gallery__upgrade-cta-btn {
+  background: linear-gradient(135deg, #4b6af0, #6366f1);
+  border-radius: 8px;
+  color: #fff;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 9px 18px;
+  text-decoration: none;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+
+  &:hover { color: #fff; opacity: 0.88; }
+}
+
+// ── レスポンシブ ──────────────────────────────────────────────
+@media (max-width: 640px) {
+  .achievement-badge-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .achievement-gallery__header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .achievement-gallery__summary {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .achievement-gallery__progress-bar-wrap {
+    width: 120px;
+  }
+
+  .achievement-gallery__upgrade-cta {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .achievement-gallery__upgrade-cta-btn {
+    text-align: center;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .achievement-badge-card__emoji {
+    font-size: 32px;
+    padding: 14px 12px 8px;
+  }
+
+  .achievement-badge-card__label {
+    font-size: 12px;
+  }
+}

@@ -1,5 +1,24 @@
 class Singing::BadgesController < Singing::BaseController
+  RARITY_LABELS = {
+    legendary: "LEGENDARY",
+    epic:      "EPIC",
+    rare:      "RARE",
+    common:    "COMMON"
+  }.freeze
+
+  CATEGORY_LABELS = {
+    milestone: "節目",
+    streak:    "連続",
+    score:     "スコア",
+    growth:    "成長",
+    ranking:   "ランキング",
+    skill:     "スキル",
+    challenge: "チャレンジ",
+    special:   "特別"
+  }.freeze
+
   def index
+    # ── ランキング / シーズンバッジ（既存） ────────────────────────
     @season_badges = current_customer.singing_badges
                                      .includes(:singing_ranking_season)
                                      .order(awarded_at: :desc)
@@ -9,5 +28,40 @@ class Singing::BadgesController < Singing::BaseController
       Singing::RankingBadgeService::BADGE_DEFINITIONS[key].merge(key: key)
     end
     @next_badges = Singing::NextBadgeService.call(current_customer)
+
+    # ── Achievement バッジ（新規） ─────────────────────────────────
+    @active_category = params[:category].presence&.to_sym
+    @active_rarity   = params[:rarity].presence&.to_sym
+
+    @earned_achievement_badges = current_customer.singing_achievement_badges
+                                                  .includes(:singing_diagnosis)
+                                                  .order(earned_at: :desc)
+    @earned_achievement_keys = @earned_achievement_badges.map(&:badge_key).to_set
+
+    all_defs = SingingAchievementBadge::BADGE_DEFINITIONS
+
+    @grouped_achievement_badges = SingingAchievementBadge::RARITY_ORDER.each_with_object({}) do |rarity, h|
+      next if @active_rarity && rarity != @active_rarity
+
+      entries = all_defs
+        .select { |_, d| d[:rarity] == rarity }
+        .select { |_, d| @active_category.nil? || d[:category] == @active_category }
+        .map do |key, defn|
+          earned = @earned_achievement_badges.find { |b| b.badge_key == key.to_s }
+          { key: key.to_s, definition: defn, earned: earned }
+        end
+      h[rarity] = entries unless entries.empty?
+    end
+
+    @achievement_earned_count      = @earned_achievement_keys.size
+    @achievement_total_count       = all_defs.size
+    @achievement_completion_rate   = @achievement_total_count.zero? ? 0 :
+                                       (@achievement_earned_count * 100 / @achievement_total_count)
+
+    # MVP バッジに存在するカテゴリのみ（フィルタ UI 用）
+    @available_categories = all_defs.values.map { |d| d[:category] }.uniq
+                              .sort_by { |c| SingingAchievementBadge::CATEGORY_ORDER.index(c) || 99 }
+
+    @can_share_achievement = current_customer.has_feature?(:singing_achievement_badge_share_image)
   end
 end

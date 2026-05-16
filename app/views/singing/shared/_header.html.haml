@@ -8,6 +8,7 @@
       = link_to "診断トップ", singing_root_path, class: "singing-nav__link#{' singing-nav__link--active' if current_page?(singing_root_path)}"
       = link_to "診断する", new_singing_diagnosis_path, class: "singing-nav__link#{' singing-nav__link--active' if current_page?(new_singing_diagnosis_path)}"
       = link_to "成長記録", singing_diagnoses_path, class: "singing-nav__link#{' singing-nav__link--active' if current_page?(singing_diagnoses_path)}"
+      = link_to "バッジ", singing_badges_path, class: "singing-nav__link#{' singing-nav__link--active' if current_page?(singing_badges_path)}"
       - if current_customer
         = link_to "プロフィール", singing_user_path(current_customer), class: "singing-nav__link#{' singing-nav__link--active' if current_page?(singing_user_path(current_customer))}"
         = link_to singing_notifications_path, class: "singing-nav__link singing-nav__link--with-badge#{' singing-nav__link--active' if current_page?(singing_notifications_path)}" do
@@ -63,6 +64,7 @@
         = link_to "診断トップ", singing_root_path, class: "singing-nav__mobile-link"
         = link_to "診断する", new_singing_diagnosis_path, class: "singing-nav__mobile-link singing-nav__mobile-link--primary"
         = link_to "成長記録", singing_diagnoses_path, class: "singing-nav__mobile-link"
+        = link_to "バッジ", singing_badges_path, class: "singing-nav__mobile-link"
         - if current_customer
           = link_to "プロフィール", singing_user_path(current_customer), class: "singing-nav__mobile-link"
           = link_to singing_notifications_path, class: "singing-nav__mobile-link" do

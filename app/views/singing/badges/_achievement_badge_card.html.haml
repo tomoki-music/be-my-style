@@ -1,0 +1,39 @@
+-# locals: key (String), definition (Hash), earned (SingingAchievementBadge | nil), can_share (Boolean)
+-# progress_hint: 将来 Phase 2-B で追加予定（今回は未使用）
+- rarity      = definition[:rarity]
+- is_earned   = earned.present?
+- card_classes = ["achievement-badge-card", "achievement-badge-card--#{rarity}", ("achievement-badge-card--locked" unless is_earned)].compact.join(" ")
+
+%div{ class: card_classes, data: { badge_key: key } }
+  .achievement-badge-card__rarity-bar
+
+  %div{ class: "achievement-badge-card__emoji#{is_earned ? '' : ' achievement-badge-card__emoji--locked'}" }
+    = definition[:emoji]
+
+  .achievement-badge-card__body
+    %p.achievement-badge-card__label= definition[:label]
+
+    - if is_earned
+      .achievement-badge-card__earned-info
+        %span.achievement-badge-card__earned-check ✅
+        %span.achievement-badge-card__earned-label 獲得済み
+        %span.achievement-badge-card__earned-date= earned.earned_at.strftime("%-m月%-d日 達成")
+      %p.achievement-badge-card__description= definition[:description]
+
+      -# ShareImage 導線
+      - if can_share
+        = link_to singing_share_image_path(target: "achievement-badge"),
+                  class: "achievement-badge-card__share-btn",
+                  title: "シェアカードを作成" do
+          シェアする
+      - else
+        .achievement-badge-card__share-locked{ title: "Coreプランでシェア機能を解放" }
+          🔒
+          %span Coreプランでシェア
+
+    - else
+      .achievement-badge-card__locked-info
+        %span.achievement-badge-card__lock-icon 🔒
+        %span.achievement-badge-card__lock-label 未獲得
+      %p.achievement-badge-card__locked-description= definition[:locked_description]
+      -# progress_hint はここに Phase 2-B で追加

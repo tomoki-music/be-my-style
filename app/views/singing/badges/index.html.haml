@@ -7,6 +7,60 @@
       %h1 あなたのバッジ
       %p.singing-badges__lead 診断への取り組みで獲得した称号と、シーズンの実績バッジを確認できます。
 
+    -# ── Achievement Badge ギャラリー ────────────────────────────
+    %section.singing-badges__section.achievement-gallery
+      .achievement-gallery__header
+        .achievement-gallery__header-text
+          %p.singing-badges__section-kicker Achievement Badges
+          %h2 実績バッジ
+          %p.singing-badges__section-desc 診断を続けると自動で獲得できるバッジです。次の目標にしてみましょう。
+        .achievement-gallery__summary
+          .achievement-gallery__summary-stat
+            %span.achievement-gallery__summary-count= @achievement_earned_count
+            %span.achievement-gallery__summary-sep /
+            %span.achievement-gallery__summary-total= @achievement_total_count
+            %span.achievement-gallery__summary-label 個獲得
+          .achievement-gallery__progress-bar-wrap
+            .achievement-gallery__progress-bar-track
+              .achievement-gallery__progress-bar-fill{ style: "width: #{@achievement_completion_rate}%" }
+            %span.achievement-gallery__progress-rate= "#{@achievement_completion_rate}%"
+
+      = render "singing/badges/achievement_category_filter",
+               available_categories: @available_categories,
+               active_category: @active_category,
+               active_rarity: @active_rarity
+
+      - if @grouped_achievement_badges.empty?
+        .achievement-gallery__empty
+          %p フィルター条件に該当するバッジがありません。
+          = link_to "すべて表示", singing_badges_path, class: "achievement-gallery__empty-link"
+      - else
+        - @grouped_achievement_badges.each do |rarity, entries|
+          .achievement-gallery__rarity-section
+            .achievement-gallery__rarity-header
+              %span.achievement-gallery__rarity-label{ class: "achievement-gallery__rarity-label--#{rarity}" }= rarity.to_s.upcase
+              - earned_in_group = entries.count { |e| e[:earned].present? }
+              %span.achievement-gallery__rarity-count= "#{earned_in_group} / #{entries.size}"
+            .achievement-badge-grid
+              - entries.each do |entry|
+                = render "singing/badges/achievement_badge_card",
+                         key:        entry[:key],
+                         definition: entry[:definition],
+                         earned:     entry[:earned],
+                         can_share:  @can_share_achievement
+
+      -# Free / Light 向け課金導線（獲得済みバッジがある場合のみ）
+      - unless @can_share_achievement
+        - if @achievement_earned_count > 0
+          .achievement-gallery__upgrade-cta
+            .achievement-gallery__upgrade-cta-icon 🏅
+            .achievement-gallery__upgrade-cta-text
+              %p.achievement-gallery__upgrade-cta-title 獲得バッジをSNSでシェアしよう
+              %p.achievement-gallery__upgrade-cta-desc Coreプランにアップグレードすると、バッジカードをSNSでシェアできます。
+            = link_to public_singing_lp_path(anchor: "lp-section"),
+                      class: "achievement-gallery__upgrade-cta-btn" do
+              Coreプランを見る →
+
     - if @next_badges.present?
       .singing-badges__section.singing-badges__section--next-target
         .singing-badges__section-head

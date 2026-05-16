@@ -167,6 +167,145 @@ RSpec.describe "Singing::Badges", type: :request do
           expect(response.body).not_to include("もう一度診断する")
         end
       end
+
+      context "Achievement Badge ギャラリー" do
+        it "実績バッジセクションが表示されること" do
+          get singing_badges_path
+
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("Achievement Badges")
+          expect(response.body).to include("実績バッジ")
+        end
+
+        it "全 MVP バッジのラベルが表示されること" do
+          get singing_badges_path
+
+          SingingAchievementBadge::BADGE_DEFINITIONS.each_value do |defn|
+            expect(response.body).to include(defn[:label])
+          end
+        end
+
+        it "バッジ未獲得の場合、すべて未獲得ラベルで表示されること" do
+          get singing_badges_path
+
+          expect(response.body).to include("未獲得")
+          expect(response.body).to include("🔒")
+        end
+
+        it "獲得済みバッジが獲得済みラベルで表示されること" do
+          create(:singing_achievement_badge, :first_diagnosis, customer: customer,
+                 earned_at: Time.zone.local(2026, 5, 15))
+
+          get singing_badges_path
+
+          expect(response.body).to include("獲得済み")
+          expect(response.body).to include("5月15日 達成")
+          expect(response.body).to include("First Note")
+        end
+
+        it "コンプリート率が表示されること" do
+          get singing_badges_path
+
+          expect(response.body).to include("0%")
+          expect(response.body).to include("0")
+          expect(response.body).to include(SingingAchievementBadge::BADGE_DEFINITIONS.size.to_s)
+        end
+
+        it "category フィルターが効くこと（milestone のみ表示）" do
+          get singing_badges_path(category: "milestone")
+
+          expect(response.body).to include("First Note")     # milestone
+          expect(response.body).to include("10 Songs")       # milestone
+          expect(response.body).not_to include("7 Day Streak") # streak
+        end
+
+        it "rarity フィルターが効くこと（rare のみ表示）" do
+          get singing_badges_path(rarity: "rare")
+
+          expect(response.body).to include("7 Day Streak")   # rare
+          expect(response.body).to include("Score 90 Club")  # rare
+          expect(response.body).not_to include("Monthly Devotee") # epic
+        end
+
+        it "他ユーザーの achievement badge は表示されないこと" do
+          create(:singing_achievement_badge, :streak_7, customer: other_customer,
+                 earned_at: Time.zone.local(2026, 5, 10))
+
+          get singing_badges_path
+
+          # 他ユーザーの earned_at は表示されない
+          expect(response.body).not_to include("5月10日 達成")
+        end
+
+        it "当該ユーザーの achievement badge のみ表示されること" do
+          create(:singing_achievement_badge, :first_diagnosis, customer: customer,
+                 earned_at: Time.zone.local(2026, 5, 1))
+          create(:singing_achievement_badge, :personal_best, customer: other_customer,
+                 earned_at: Time.zone.local(2026, 5, 2))
+
+          get singing_badges_path
+
+          expect(response.body).to include("5月1日 達成")      # 自分のバッジ
+          expect(response.body).not_to include("5月2日 達成") # 他人のバッジ
+        end
+
+        context "Free / Light ユーザーの場合" do
+          before do
+            allow(customer).to receive(:has_feature?).and_call_original
+            allow(customer).to receive(:has_feature?)
+              .with(:singing_achievement_badge_share_image).and_return(false)
+          end
+
+          it "シェアボタンが表示されずロック表示になること" do
+            create(:singing_achievement_badge, :first_diagnosis, customer: customer)
+
+            get singing_badges_path
+
+            expect(response.body).to include("Coreプランでシェア")
+            expect(response.body).not_to include("シェアする")
+          end
+
+          it "獲得済みバッジがある場合、Core プランへの課金 CTA が表示されること" do
+            create(:singing_achievement_badge, :first_diagnosis, customer: customer)
+
+            get singing_badges_path
+
+            expect(response.body).to include("Coreプランにアップグレード")
+            expect(response.body).to include("Coreプランを見る")
+          end
+
+          it "バッジ未獲得の場合、課金 CTA は表示されないこと" do
+            get singing_badges_path
+
+            expect(response.body).not_to include("Coreプランにアップグレード")
+          end
+        end
+
+        context "Core / Premium ユーザーの場合" do
+          before do
+            allow(customer).to receive(:has_feature?).and_call_original
+            allow(customer).to receive(:has_feature?)
+              .with(:singing_achievement_badge_share_image).and_return(true)
+          end
+
+          it "獲得済みバッジにシェアボタンが表示されること" do
+            create(:singing_achievement_badge, :first_diagnosis, customer: customer)
+
+            get singing_badges_path
+
+            expect(response.body).to include("シェアする")
+            expect(response.body).not_to include("Coreプランでシェア")
+          end
+
+          it "課金 CTA が表示されないこと" do
+            create(:singing_achievement_badge, :first_diagnosis, customer: customer)
+
+            get singing_badges_path
+
+            expect(response.body).not_to include("Coreプランにアップグレード")
+          end
+        end
+      end
     end
   end
 end
