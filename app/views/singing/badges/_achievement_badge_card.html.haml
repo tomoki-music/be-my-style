@@ -28,9 +28,14 @@
                   title: "シェアカードを作成" do
           シェアする
       - else
-        .achievement-badge-card__share-locked{ title: "Coreプランでシェア機能を解放" }
-          🔒
-          %span Coreプランでシェア
+        .achievement-badge-card__share-preview-wrap
+          .achievement-badge-card__share-preview{ class: "achievement-badge-card__share-preview--#{rarity}" }
+            .achievement-badge-card__share-preview-emoji= definition[:emoji]
+          .achievement-badge-card__share-lock-overlay
+            %span.achievement-badge-card__share-lock-icon 🔒
+            %p.achievement-badge-card__share-lock-main この達成をシェアカードにする
+            = link_to "Coreプランを見る →", public_singing_lp_path(anchor: "lp-section"),
+                      class: "achievement-badge-card__share-lock-link"
 
     - else
       .achievement-badge-card__locked-info
