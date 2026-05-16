@@ -29,6 +29,11 @@ class Singing::BadgesController < Singing::BaseController
                                                .pluck(:badge_key).to_set
   end
 
+  def monthly_wrapped
+    month_str = params[:month].presence || Time.current.strftime("%Y-%m")
+    @wrapped = Singing::MonthlyAchievementWrappedBuilder.call(current_customer, month_str)
+  end
+
   def pin
     badge = current_customer.singing_achievement_badges.find(params[:id])
 

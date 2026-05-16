@@ -381,6 +381,133 @@ RSpec.describe "Singing::Badges", type: :request do
     end
   end
 
+  # ── GET /singing/badges/monthly_wrapped ───────────────────────────────────
+
+  describe "GET /singing/badges/monthly_wrapped" do
+    context "未ログインの場合" do
+      it "ログインページへリダイレクトされること" do
+        get monthly_wrapped_singing_badges_path
+
+        expect(response).to redirect_to(new_customer_session_path)
+      end
+    end
+
+    context "ログイン済みの場合" do
+      before { sign_in customer }
+
+      it "monthly_wrapped ページが表示されること" do
+        create(:singing_achievement_badge, :first_diagnosis, customer: customer,
+               earned_at: Time.zone.local(2026, 5, 10, 10, 0, 0))
+        get monthly_wrapped_singing_badges_path(month: "2026-05")
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Monthly Achievement Wrapped")
+        expect(response.body).to include("2026年5月のAchievement Wrapped")
+      end
+
+      it "month 未指定でもページが表示されること（当月がデフォルト）" do
+        get monthly_wrapped_singing_badges_path
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      context "指定月にバッジがない場合（空状態）" do
+        it "空状態メッセージが表示されること" do
+          get monthly_wrapped_singing_badges_path(month: "2026-05")
+
+          expect(response.body).to include("2026年5月のAchievementはまだありません")
+          expect(response.body).to include("Timelineに戻って、これまでの挑戦を振り返ってみましょう。")
+        end
+
+        it "Timeline へのリンクが表示されること" do
+          get monthly_wrapped_singing_badges_path(month: "2026-05")
+
+          expect(response.body).to include(timeline_singing_badges_path)
+        end
+      end
+
+      context "指定月にバッジがある場合" do
+        let!(:badge_first) do
+          create(:singing_achievement_badge, :first_diagnosis, customer: customer,
+                 earned_at: Time.zone.local(2026, 5, 5, 10, 0, 0))
+        end
+        let!(:badge_streak) do
+          create(:singing_achievement_badge, :streak_7, customer: customer,
+                 earned_at: Time.zone.local(2026, 5, 20, 10, 0, 0))
+        end
+
+        it "指定月のバッジが表示されること" do
+          get monthly_wrapped_singing_badges_path(month: "2026-05")
+
+          expect(response.body).to include("First Note")
+          expect(response.body).to include("7 Day Streak")
+        end
+
+        it "月タイトルが表示されること" do
+          get monthly_wrapped_singing_badges_path(month: "2026-05")
+
+          expect(response.body).to include("2026年5月のAchievement Wrapped")
+        end
+
+        it "月ラベルが表示されること" do
+          get monthly_wrapped_singing_badges_path(month: "2026-05")
+
+          expect(response.body).to include("挑戦が形になった月")
+        end
+
+        it "獲得数が表示されること" do
+          get monthly_wrapped_singing_badges_path(month: "2026-05")
+
+          expect(response.body).to include("2")
+          expect(response.body).to include("件の達成")
+        end
+
+        it "Timeline へ戻るリンクが表示されること" do
+          get monthly_wrapped_singing_badges_path(month: "2026-05")
+
+          expect(response.body).to include("Achievement Timeline")
+          expect(response.body).to include(timeline_singing_badges_path)
+        end
+      end
+
+      context "他月のバッジは表示されないこと" do
+        let!(:badge_may) do
+          create(:singing_achievement_badge, :first_diagnosis, customer: customer,
+                 earned_at: Time.zone.local(2026, 5, 10, 10, 0, 0))
+        end
+        let!(:badge_apr) do
+          create(:singing_achievement_badge, :personal_best, customer: customer,
+                 earned_at: Time.zone.local(2026, 4, 15, 10, 0, 0))
+        end
+
+        it "5月のバッジのみ表示されること" do
+          get monthly_wrapped_singing_badges_path(month: "2026-05")
+
+          expect(response.body).to include("First Note")
+          expect(response.body).not_to include("Personal Best")
+        end
+      end
+
+      context "他ユーザーのバッジは表示されないこと" do
+        let!(:my_badge) do
+          create(:singing_achievement_badge, :first_diagnosis, customer: customer,
+                 earned_at: Time.zone.local(2026, 5, 1, 10, 0, 0))
+        end
+        let!(:other_badge) do
+          create(:singing_achievement_badge, :streak_7, customer: other_customer,
+                 earned_at: Time.zone.local(2026, 5, 1, 10, 0, 0))
+        end
+
+        it "自分のバッジのみ表示されること" do
+          get monthly_wrapped_singing_badges_path(month: "2026-05")
+
+          expect(response.body).to include("First Note")
+          expect(response.body).not_to include("7 Day Streak")
+        end
+      end
+    end
+  end
+
   # ── GET /singing/badges/timeline ──────────────────────────────────────────
 
   describe "GET /singing/badges/timeline" do
@@ -457,6 +584,16 @@ RSpec.describe "Singing::Badges", type: :request do
 
         expect(response.body).not_to include("7 Day Streak")
         expect(response.body).to include("まだTimelineは始まったばかりです。")
+      end
+
+      it "バッジがある月に Monthly Wrapped 導線が表示されること" do
+        create(:singing_achievement_badge, :first_diagnosis, customer: customer,
+               earned_at: Time.zone.local(2026, 5, 10))
+
+        get timeline_singing_badges_path
+
+        expect(response.body).to include("この月を振り返る →")
+        expect(response.body).to include(monthly_wrapped_singing_badges_path(month: "2026-05"))
       end
     end
   end

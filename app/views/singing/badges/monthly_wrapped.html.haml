@@ -1,0 +1,12 @@
+- content_for :title, "#{@wrapped.month&.strftime('%-Y年%-m月')} Achievement Wrapped | BeMyStyle"
+
+.singing-monthly-wrapped
+  .mw-inner
+
+    .mw-nav
+      = link_to "← Achievement Timeline", timeline_singing_badges_path, class: "mw-back-link"
+
+    - if @wrapped.empty?
+      = render "singing/badges/monthly_wrapped_empty", wrapped: @wrapped
+    - else
+      = render "singing/badges/monthly_wrapped_summary", wrapped: @wrapped

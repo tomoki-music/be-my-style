@@ -1,0 +1,76 @@
+-# locals: wrapped (MonthlyAchievementWrappedBuilder::Result)
+- month_display = wrapped.month.strftime("%-Y年%-m月")
+
+.mw-hero{ class: ("mw-hero--legendary" if wrapped.has_legendary) }
+  .mw-hero__eyebrow Monthly Achievement Wrapped
+  %h1.mw-hero__title= "#{month_display}のAchievement Wrapped"
+  %p.mw-hero__sub= wrapped.month_label
+
+  .mw-hero__count
+    %span.mw-hero__count-num= wrapped.total_count
+    %span.mw-hero__count-unit 件の達成
+
+  %p.mw-hero__message
+    この月、あなたは
+    = wrapped.total_count
+    つの達成を積み重ねました。
+    %br
+    ひとつひとつの挑戦が、確かに歌声の歴史になっています。
+
+- if wrapped.representative_badge
+  .mw-rep-section
+    %p.mw-rep-section__label この月の代表Achievement
+    = render "singing/badges/monthly_wrapped_badge",
+             item:        wrapped.representative_badge,
+             highlighted: true
+
+.mw-rarity-section
+  %p.mw-rarity-section__label Rarity Breakdown
+  .mw-rarity-grid
+    - SingingAchievementBadge::RARITY_ORDER.each do |rarity|
+      - count = wrapped.rarity_counts[rarity]
+      - next if count.zero?
+      .mw-rarity-chip{ class: "mw-rarity-chip--#{rarity}" }
+        %span.mw-rarity-chip__label= rarity.to_s.upcase
+        %span.mw-rarity-chip__count= "#{count}件"
+
+- if wrapped.items.size > 1
+  .mw-badges-section
+    %p.mw-badges-section__label この月のすべての Achievement
+    .mw-badges-list
+      - wrapped.items.sort_by { |i| [Singing::MonthlyAchievementWrappedBuilder::RARITY_RANK[i.rarity] || 99, i.earned_at] }.each do |item|
+        - next if wrapped.representative_badge && item.badge_id == wrapped.representative_badge.badge_id
+        = render "singing/badges/monthly_wrapped_badge",
+                 item:        item,
+                 highlighted: false
+
+.mw-story-section
+  .mw-story-card
+    .mw-story-card__head
+      %span.mw-story-card__icon 📖
+      %strong.mw-story-card__title 今月の軌跡
+    - if wrapped.first_earned && wrapped.last_earned && wrapped.first_earned.badge_id != wrapped.last_earned.badge_id
+      %p.mw-story-card__text
+        = "#{wrapped.first_earned.emoji} #{wrapped.first_earned.label}"
+        から始まり、
+        = "#{wrapped.last_earned.emoji} #{wrapped.last_earned.label}"
+        まで。
+        %br
+        この月のあなたの歌声は、着実に前進しました。
+    - else
+      %p.mw-story-card__text
+        = "#{wrapped.representative_badge.emoji} #{wrapped.representative_badge.label}"
+        を達成。この一歩が、次の挑戦への土台になっています。
+
+.mw-share-section
+  .mw-share-card
+    %p.mw-share-card__title シェアカードを作る（準備中）
+    %p.mw-share-card__desc
+      この月の成長をカードにして記録・シェアする機能は近日公開予定です。
+      %br
+      Timeline から毎月の振り返りを続けると、さらに充実した記録になります。
+    .mw-share-card__actions
+      = link_to timeline_singing_badges_path, class: "mw-btn mw-btn--secondary" do
+        Achievement Timeline を見る
+      = link_to singing_badges_path, class: "mw-btn mw-btn--ghost" do
+        バッジ一覧へ

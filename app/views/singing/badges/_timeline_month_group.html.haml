@@ -11,3 +11,9 @@
                item:                    item,
                can_share:               can_share,
                earned_achievement_keys: earned_achievement_keys
+
+  .badge-timeline-group__wrapped-link
+    = link_to monthly_wrapped_singing_badges_path(month: group.month.strftime("%Y-%m")),
+              class: "badge-timeline-group__wrapped-btn" do
+      %span.badge-timeline-group__wrapped-icon 📅
+      %span この月を振り返る →

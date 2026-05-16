@@ -1,0 +1,619 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Monthly Achievement Wrapped（Phase 2-K）
+// すべて .singing-monthly-wrapped 配下にスコープ化
+// ─────────────────────────────────────────────────────────────────────────────
+
+.singing-monthly-wrapped {
+  background: #f7f8fb;
+  min-height: calc(100vh - 80px);
+  padding: 48px 16px 80px;
+
+  // ── Inner container ─────────────────────────────────────────────────────────
+
+  .mw-inner {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  // ── Nav ─────────────────────────────────────────────────────────────────────
+
+  .mw-nav {
+    margin-bottom: 28px;
+  }
+
+  .mw-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #2347c9;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  // ── Hero ─────────────────────────────────────────────────────────────────────
+
+  .mw-hero {
+    padding: 36px 28px 32px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #1d2a3d 0%, #2b4070 100%);
+    color: #fff;
+    text-align: center;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 20% 80%, rgba(35, 71, 201, 0.3), transparent 50%),
+                  radial-gradient(circle at 80% 10%, rgba(79, 130, 245, 0.2), transparent 50%);
+      pointer-events: none;
+    }
+
+    // legendary 月は金色グラデーション
+    &--legendary {
+      background: linear-gradient(135deg, #78350f 0%, #b45309 50%, #1d2a3d 100%);
+
+      &::before {
+        background: radial-gradient(circle at 20% 80%, rgba(245, 158, 11, 0.35), transparent 50%),
+                    radial-gradient(circle at 80% 10%, rgba(251, 191, 36, 0.2), transparent 50%);
+      }
+    }
+  }
+
+  .mw-hero__eyebrow {
+    display: inline-flex;
+    padding: 5px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .mw-hero__title {
+    margin: 0 0 8px;
+    font-size: clamp(20px, 5vw, 28px);
+    font-weight: 800;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    position: relative;
+  }
+
+  .mw-hero__sub {
+    margin: 0 0 24px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    position: relative;
+  }
+
+  .mw-hero__count {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 18px;
+    position: relative;
+  }
+
+  .mw-hero__count-num {
+    font-size: 56px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .mw-hero__count-unit {
+    font-size: 16px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .mw-hero__message {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.9;
+    color: rgba(255, 255, 255, 0.85);
+    position: relative;
+  }
+
+  // ── Representative badge section ─────────────────────────────────────────────
+
+  .mw-rep-section {
+    margin-bottom: 20px;
+  }
+
+  .mw-rep-section__label {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #5f6b7c;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  // ── Badge card ───────────────────────────────────────────────────────────────
+
+  .mw-badge-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid #e8ecf2;
+    box-shadow: 0 4px 16px rgba(31, 48, 77, 0.06);
+    margin-bottom: 12px;
+
+    &--rare {
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    &--epic {
+      border-color: rgba(168, 85, 247, 0.3);
+      background: linear-gradient(135deg, #fdf4ff, #fff);
+    }
+
+    &--legendary {
+      border-color: rgba(245, 158, 11, 0.4);
+      background: linear-gradient(135deg, #fffbeb, #fff);
+      box-shadow:
+        0 4px 16px rgba(31, 48, 77, 0.06),
+        0 0 0 1px rgba(245, 158, 11, 0.15),
+        0 0 20px rgba(245, 158, 11, 0.1);
+    }
+
+    &--highlighted {
+      padding: 20px 22px;
+
+      .mw-badge-card__emoji {
+        width: 60px;
+        height: 60px;
+        font-size: 30px;
+        border-radius: 18px;
+      }
+
+      .mw-badge-card__label {
+        font-size: 17px;
+      }
+    }
+  }
+
+  .mw-badge-card__emoji-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .mw-badge-card__emoji {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 24px;
+    background: rgba(35, 71, 201, 0.06);
+
+    &--rare    { background: rgba(59, 130, 246, 0.1); }
+    &--epic    { background: rgba(168, 85, 247, 0.1); }
+    &--legendary {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.1));
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
+    }
+  }
+
+  .mw-badge-card__pin {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    font-size: 10px;
+    color: #f59e0b;
+    line-height: 1;
+  }
+
+  .mw-badge-card__meta {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mw-badge-card__labels {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 3px;
+  }
+
+  .mw-badge-card__rarity {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+
+    &--common   { background: rgba(100, 116, 139, 0.1); color: #64748b; }
+    &--rare     { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
+    &--epic     { background: rgba(168, 85, 247, 0.12); color: #9333ea; }
+    &--legendary {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.15));
+      color: #b45309;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+  }
+
+  .mw-badge-card__rep-mark {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    background: rgba(35, 71, 201, 0.1);
+    color: #2347c9;
+  }
+
+  .mw-badge-card__label {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1d2a3d;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mw-badge-card__date {
+    display: block;
+    font-size: 12px;
+    color: #8897aa;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  // ── Rarity section ───────────────────────────────────────────────────────────
+
+  .mw-rarity-section {
+    margin-bottom: 24px;
+  }
+
+  .mw-rarity-section__label {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #5f6b7c;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .mw-rarity-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .mw-rarity-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid transparent;
+
+    &--common {
+      background: rgba(100, 116, 139, 0.1);
+      color: #475569;
+      border-color: rgba(100, 116, 139, 0.15);
+    }
+
+    &--rare {
+      background: rgba(59, 130, 246, 0.1);
+      color: #1d4ed8;
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+
+    &--epic {
+      background: rgba(168, 85, 247, 0.1);
+      color: #7c3aed;
+      border-color: rgba(168, 85, 247, 0.2);
+    }
+
+    &--legendary {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.1));
+      color: #92400e;
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+  }
+
+  .mw-rarity-chip__label {
+    letter-spacing: 0.06em;
+  }
+
+  .mw-rarity-chip__count {
+    font-weight: 900;
+  }
+
+  // ── All badges section ────────────────────────────────────────────────────────
+
+  .mw-badges-section {
+    margin-bottom: 24px;
+  }
+
+  .mw-badges-section__label {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #5f6b7c;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .mw-badges-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  // ── Story section ─────────────────────────────────────────────────────────────
+
+  .mw-story-section {
+    margin-bottom: 24px;
+  }
+
+  .mw-story-card {
+    padding: 20px 22px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #f0f4ff, #f7f8ff);
+    border: 1px solid rgba(35, 71, 201, 0.12);
+  }
+
+  .mw-story-card__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .mw-story-card__icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .mw-story-card__title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #1d2a3d;
+  }
+
+  .mw-story-card__text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.85;
+    color: #3d4f6b;
+  }
+
+  // ── Share section ─────────────────────────────────────────────────────────────
+
+  .mw-share-section {
+    margin-bottom: 0;
+  }
+
+  .mw-share-card {
+    padding: 24px;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid #e8ecf2;
+    text-align: center;
+  }
+
+  .mw-share-card__title {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #1d2a3d;
+  }
+
+  .mw-share-card__desc {
+    margin: 0 0 20px;
+    font-size: 13px;
+    line-height: 1.85;
+    color: #5f6b7c;
+  }
+
+  .mw-share-card__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+
+  // ── Buttons ───────────────────────────────────────────────────────────────────
+
+  .mw-btn {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+
+    &--primary {
+      background: linear-gradient(135deg, #2347c9, #1d3da8);
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(35, 71, 201, 0.25);
+
+      &:hover {
+        box-shadow: 0 12px 28px rgba(35, 71, 201, 0.32);
+        color: #fff;
+      }
+    }
+
+    &--secondary {
+      background: #2347c9;
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(35, 71, 201, 0.2);
+
+      &:hover {
+        color: #fff;
+        box-shadow: 0 10px 24px rgba(35, 71, 201, 0.28);
+      }
+    }
+
+    &--ghost {
+      background: transparent;
+      color: #2347c9;
+      border: 1px solid rgba(35, 71, 201, 0.3);
+
+      &:hover {
+        background: rgba(35, 71, 201, 0.04);
+        color: #2347c9;
+      }
+    }
+  }
+
+  // ── Empty state ───────────────────────────────────────────────────────────────
+
+  .mw-empty {
+    text-align: center;
+    padding: 64px 24px;
+  }
+
+  .mw-empty__icon {
+    font-size: 52px;
+    margin-bottom: 18px;
+  }
+
+  .mw-empty__title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1d2a3d;
+    margin: 0 0 10px;
+  }
+
+  .mw-empty__desc {
+    color: #5f6b7c;
+    font-size: 14px;
+    line-height: 1.85;
+    margin: 0 0 28px;
+  }
+
+  .mw-empty__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+
+  // ── Mobile ────────────────────────────────────────────────────────────────────
+
+  @media (max-width: 600px) {
+    padding: 32px 12px 64px;
+
+    .mw-hero {
+      padding: 28px 20px 24px;
+      border-radius: 20px;
+    }
+
+    .mw-hero__count-num {
+      font-size: 44px;
+    }
+
+    .mw-badge-card {
+      gap: 12px;
+      padding: 14px 14px;
+
+      &--highlighted {
+        padding: 16px 16px;
+
+        .mw-badge-card__emoji {
+          width: 52px;
+          height: 52px;
+          font-size: 26px;
+        }
+      }
+    }
+
+    .mw-share-card__actions {
+      flex-direction: column;
+
+      .mw-btn {
+        width: 100%;
+      }
+    }
+  }
+
+  // ── Reduced motion ─────────────────────────────────────────────────────────────
+
+  @media (prefers-reduced-motion: reduce) {
+    .mw-btn {
+      transition: none;
+
+      &:hover {
+        transform: none;
+      }
+    }
+  }
+}
+
+// ── Timeline 月グループ内の Wrapped 導線（badge_timeline.scss スコープ拡張） ──────
+
+.singing-badge-timeline {
+  .badge-timeline-group__wrapped-link {
+    margin-top: 14px;
+    text-align: right;
+  }
+
+  .badge-timeline-group__wrapped-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: rgba(35, 71, 201, 0.06);
+    border: 1px solid rgba(35, 71, 201, 0.15);
+    color: #2347c9;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.15s ease, transform 0.15s ease;
+
+    &:hover {
+      background: rgba(35, 71, 201, 0.1);
+      transform: translateY(-1px);
+      color: #2347c9;
+    }
+  }
+
+  .badge-timeline-group__wrapped-icon {
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .badge-timeline-group__wrapped-btn {
+      transition: none;
+
+      &:hover {
+        transform: none;
+      }
+    }
+  }
+}

@@ -213,6 +213,7 @@ Rails.application.routes.draw do
     resources :badges, only: [:index] do
       collection do
         get :timeline
+        get :monthly_wrapped
       end
       member do
         patch :pin

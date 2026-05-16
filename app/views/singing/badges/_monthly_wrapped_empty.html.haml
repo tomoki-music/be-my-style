@@ -1,0 +1,15 @@
+-# locals: wrapped (MonthlyAchievementWrappedBuilder::Result)
+- month_display = wrapped.month&.strftime("%-Y年%-m月") || "この月"
+
+.mw-empty
+  .mw-empty__icon 🎤
+  %p.mw-empty__title= "#{month_display}のAchievementはまだありません"
+  %p.mw-empty__desc
+    Timelineに戻って、これまでの挑戦を振り返ってみましょう。
+    %br
+    診断を続けることで、毎月の記録が積み上がっていきます。
+  .mw-empty__actions
+    = link_to timeline_singing_badges_path, class: "mw-btn mw-btn--primary" do
+      Achievement Timeline を見る
+    = link_to new_singing_diagnosis_path, class: "mw-btn mw-btn--ghost" do
+      診断に挑戦する →

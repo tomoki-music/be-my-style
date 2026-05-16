@@ -1,0 +1,16 @@
+-# locals: item (TimelineItem), highlighted (Boolean)
+- rarity = item.rarity.to_s
+
+.mw-badge-card{ class: ["mw-badge-card--#{rarity}", ("mw-badge-card--highlighted" if highlighted)] }
+  .mw-badge-card__emoji-wrap
+    .mw-badge-card__emoji{ class: "mw-badge-card__emoji--#{rarity}" }
+      = item.emoji
+    - if item.pinned?
+      %span.mw-badge-card__pin ★
+  .mw-badge-card__meta
+    .mw-badge-card__labels
+      %span.mw-badge-card__rarity{ class: "mw-badge-card__rarity--#{rarity}" }= rarity.upcase
+      - if highlighted
+        %span.mw-badge-card__rep-mark 代表
+    %p.mw-badge-card__label= item.label
+    %span.mw-badge-card__date= item.earned_at.strftime("%-m月%-d日 達成")
