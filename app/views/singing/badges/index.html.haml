@@ -11,23 +11,21 @@
     - if @next_badge_hint
       = render "singing/badges/next_badge_hint_banner", next_badge_hint: @next_badge_hint
 
+    -# ── Near Completion セクション ──────────────────────────
+    - if @near_completion_hints.any?
+      = render "singing/badges/near_completion_section",
+               near_completion_hints:      @near_completion_hints,
+               near_completion_more_count: @near_completion_more_count
+
     -# ── Achievement Badge ギャラリー ────────────────────────────
-    %section.singing-badges__section.achievement-gallery
-      .achievement-gallery__header
-        .achievement-gallery__header-text
-          %p.singing-badges__section-kicker Achievement Badges
-          %h2 実績バッジ
-          %p.singing-badges__section-desc 診断を続けると自動で獲得できるバッジです。次の目標にしてみましょう。
-        .achievement-gallery__summary
-          .achievement-gallery__summary-stat
-            %span.achievement-gallery__summary-count= @achievement_earned_count
-            %span.achievement-gallery__summary-sep /
-            %span.achievement-gallery__summary-total= @achievement_total_count
-            %span.achievement-gallery__summary-label 個獲得
-          .achievement-gallery__progress-bar-wrap
-            .achievement-gallery__progress-bar-track
-              .achievement-gallery__progress-bar-fill{ style: "width: #{@achievement_completion_rate}%" }
-            %span.achievement-gallery__progress-rate= "#{@achievement_completion_rate}%"
+    %section.singing-badges__section{ class: "achievement-gallery #{achievement_seasonal_class}" }
+      = render "singing/badges/achievement_collection_header",
+               earned_count:            @achievement_earned_count,
+               total_count:             @achievement_total_count,
+               completion_rate:         @achievement_completion_rate,
+               rarity_counts:           @achievement_rarity_counts,
+               recent_earned:           @recent_earned_badges,
+               earned_achievement_keys: @earned_achievement_keys
 
       = render "singing/badges/achievement_category_filter",
                available_categories: @available_categories,

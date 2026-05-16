@@ -1,0 +1,38 @@
+-# locals: near_completion_hints (Array<ProgressHintBuilder::ProgressHint>),
+-#          near_completion_more_count (Integer)
+%section.near-completion-section.singing-badges__section
+  .near-completion-section__header
+    %p.singing-badges__section-kicker Near Complete
+    %h2 あと少しで解除！
+    %p.singing-badges__section-desc このまま続ければ手が届きます。
+
+  .near-completion-section__list
+    - near_completion_hints.each do |hint|
+      - defn     = SingingAchievementBadge::BADGE_DEFINITIONS[hint.badge_key] || {}
+      - rarity   = defn[:rarity]
+      - is_close = hint.progress_ratio >= 0.9
+      - percent  = (hint.progress_ratio * 100).to_i
+      - item_classes = ["near-completion-item",
+                        "near-completion-item--#{rarity}",
+                        ("near-completion-item--is-close" if is_close)].compact.join(" ")
+      .near-completion-item{ class: item_classes }
+        .near-completion-item__accent-bar
+        .near-completion-item__content
+          .near-completion-item__top
+            %span.near-completion-item__emoji= defn[:emoji]
+            .near-completion-item__texts
+              %p.near-completion-item__hint= hint.hint_text
+              %p.near-completion-item__detail= hint.detail_text
+            - if is_close
+              %span.near-completion-item__close-tag あと少し！
+          .near-completion-item__progress-row
+            .near-completion-item__progress-track
+              %div{ class: "near-completion-item__progress-fill near-completion-item__progress-fill--#{rarity}",
+                    style: "width: #{percent}%" }
+            %span.near-completion-item__progress-rate= "#{percent}%"
+          = link_to new_singing_diagnosis_path,
+                    class: "near-completion-item__cta" do
+            = near_completion_cta_label(hint.badge_key)
+
+  - if near_completion_more_count > 0
+    %p.near-completion-section__more= "他 #{near_completion_more_count} 件のバッジも間もなく達成できます"

@@ -17,6 +17,9 @@ class Singing::BadgesController < Singing::BaseController
     special:   "特別"
   }.freeze
 
+  NEAR_COMPLETION_THRESHOLD = 0.7
+  NEAR_COMPLETION_MAX       = 3
+
   def index
     # ── ランキング / シーズンバッジ（既存） ────────────────────────
     @season_badges = current_customer.singing_badges
@@ -75,5 +78,19 @@ class Singing::BadgesController < Singing::BaseController
                               .sort_by { |c| SingingAchievementBadge::CATEGORY_ORDER.index(c) || 99 }
 
     @can_share_achievement = current_customer.has_feature?(:singing_achievement_badge_share_image)
+
+    # ── Near Completion UX ────────────────────────────────────
+    all_near = progress_hints
+      .values
+      .select { |h| h.progress_ratio >= NEAR_COMPLETION_THRESHOLD }
+      .sort_by { |h| -h.progress_ratio }
+    @near_completion_hints      = all_near.first(NEAR_COMPLETION_MAX)
+    @near_completion_more_count = [all_near.size - NEAR_COMPLETION_MAX, 0].max
+
+    # ── Collection Header UX ─────────────────────────────────
+    @achievement_rarity_counts = SingingAchievementBadge::RARITY_ORDER.each_with_object({}) do |rarity, h|
+      h[rarity] = @earned_achievement_badges.count { |b| b.rarity == rarity }
+    end
+    @recent_earned_badges = @earned_achievement_badges.first(2)
   end
 end

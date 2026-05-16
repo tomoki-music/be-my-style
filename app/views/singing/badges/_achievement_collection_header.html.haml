@@ -1,0 +1,51 @@
+-# locals: earned_count (Integer), total_count (Integer), completion_rate (Integer),
+-#          rarity_counts (Hash rarity=>Integer), recent_earned (Array<SingingAchievementBadge>),
+-#          earned_achievement_keys (Set<String>)
+- rarity_labels = { legendary: "LEGENDARY", epic: "EPIC", rare: "RARE", common: "NORMAL" }
+- streak_key = ["streak_30", "streak_7"].find { |k| earned_achievement_keys.include?(k) }
+
+.achievement-collection-header
+  .achievement-collection-header__top
+    .achievement-collection-header__title
+      %p.singing-badges__section-kicker Achievement Badges
+      %h2 実績バッジ
+      %p.singing-badges__section-desc 診断を続けると自動で獲得できるバッジです。次の目標にしてみましょう。
+
+    .achievement-collection-header__completion
+      .achievement-collection-header__count-row
+        %span.achievement-collection-header__count-earned= earned_count
+        %span.achievement-collection-header__count-sep /
+        %span.achievement-collection-header__count-total= total_count
+        %span.achievement-collection-header__count-label 個獲得
+      .achievement-collection-header__progress-wrap
+        .achievement-collection-header__progress-track
+          .achievement-collection-header__progress-fill{ style: "width: #{completion_rate}%" }
+        %span.achievement-collection-header__progress-rate= "#{completion_rate}%"
+
+  -# Rarity 集計グリッド
+  .achievement-collection-header__rarity-grid
+    - [:legendary, :epic, :rare, :common].each do |rarity|
+      - count = rarity_counts[rarity] || 0
+      .achievement-collection-header__rarity-cell{ class: "achievement-collection-header__rarity-cell--#{rarity}#{count.zero? ? ' achievement-collection-header__rarity-cell--zero' : ''}" }
+        %span.achievement-collection-header__rarity-count= count
+        %span.achievement-collection-header__rarity-name= rarity_labels[rarity]
+
+  -# 最近獲得 + streak（どちらかがあれば表示）
+  - if recent_earned.any? || streak_key
+    .achievement-collection-header__meta
+      - if streak_key
+        - streak_defn = SingingAchievementBadge::BADGE_DEFINITIONS[streak_key] || {}
+        .achievement-collection-header__streak
+          %span.achievement-collection-header__streak-emoji= streak_defn[:emoji]
+          %span.achievement-collection-header__streak-label= streak_defn[:label]
+
+      - if recent_earned.any?
+        .achievement-collection-header__recent
+          %span.achievement-collection-header__recent-label 最近獲得
+          .achievement-collection-header__recent-list
+            - recent_earned.each do |badge|
+              .achievement-collection-header__recent-item
+                %span.achievement-collection-header__recent-emoji= badge.emoji
+                .achievement-collection-header__recent-info
+                  %span.achievement-collection-header__recent-name= badge.label
+                  %span.achievement-collection-header__recent-date= badge_earned_relative_time(badge.earned_at)

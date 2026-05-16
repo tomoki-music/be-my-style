@@ -1389,3 +1389,568 @@
     &__progress-track { max-width: 120px; }
   }
 }
+
+// ============================================================
+// Near Completion Section（Phase 2-E）
+// ============================================================
+
+.near-completion-section {
+  background: linear-gradient(145deg, #f0fdf4, #f0f4ff);
+  border: 1px solid rgba(99, 102, 241, 0.14);
+
+  .near-completion-section__header {
+    margin-bottom: 18px;
+  }
+}
+
+.near-completion-section__more {
+  color: #6b7280;
+  font-size: 12px;
+  margin: 12px 0 0;
+  text-align: center;
+}
+
+.near-completion-section__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.near-completion-item {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  display: flex;
+  gap: 0;
+  overflow: hidden;
+  position: relative;
+  transition: box-shadow 0.18s ease;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(31, 41, 55, 0.1);
+  }
+}
+
+// rarity 別左アクセントバー
+.near-completion-item__accent-bar {
+  flex-shrink: 0;
+  width: 4px;
+
+  .near-completion-item--legendary & { background: linear-gradient(180deg, #f59e0b, #fbbf24); }
+  .near-completion-item--epic &      { background: linear-gradient(180deg, #8b5cf6, #a78bfa); }
+  .near-completion-item--rare &      { background: linear-gradient(180deg, #3b82f6, #60a5fa); }
+  .near-completion-item--common &    { background: linear-gradient(180deg, #4b6af0, #818cf8); }
+}
+
+.near-completion-item__content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.near-completion-item__top {
+  align-items: flex-start;
+  display: flex;
+  gap: 10px;
+}
+
+.near-completion-item__emoji {
+  flex-shrink: 0;
+  font-size: 24px;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.near-completion-item__texts {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.near-completion-item__hint {
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.near-completion-item__detail {
+  color: #6b7280;
+  font-size: 12px;
+  margin: 0;
+}
+
+// is_close（90%+）バッジ
+.near-completion-item__close-tag {
+  background: linear-gradient(135deg, #4b6af0, #6366f1);
+  border-radius: 999px;
+  color: #fff;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  margin-top: 2px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+
+.near-completion-item__progress-row {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.near-completion-item__progress-track {
+  background: #e5e7eb;
+  border-radius: 999px;
+  flex: 1;
+  height: 7px;
+  overflow: hidden;
+}
+
+.near-completion-item__progress-fill {
+  border-radius: inherit;
+  height: 100%;
+  transition: width 0.5s ease;
+
+  &--legendary { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+  &--epic      { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+  &--rare      { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+  &--common    { background: linear-gradient(90deg, #4b6af0, #818cf8); }
+}
+
+.near-completion-item__progress-rate {
+  color: #374151;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.near-completion-item__cta {
+  align-self: flex-start;
+  background: #f0f4ff;
+  border-radius: 8px;
+  color: #4b6af0;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: #4b6af0;
+    color: #fff;
+  }
+}
+
+// is_close pulse（90%+ のみ）
+@keyframes near-completion-pulse {
+  0%, 100% { box-shadow: 0 2px 8px rgba(75, 106, 240, 0.1); }
+  50%       { box-shadow: 0 4px 20px rgba(75, 106, 240, 0.32); }
+}
+
+.near-completion-item--is-close {
+  animation: near-completion-pulse 2.5s ease-in-out infinite;
+}
+
+@media (max-width: 600px) {
+  .near-completion-item__hint { font-size: 13px; }
+  .near-completion-item__close-tag { font-size: 9px; padding: 2px 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .near-completion-item--is-close { animation: none; }
+}
+
+// ============================================================
+// Achievement Collection Header（Phase 2-E）
+// ============================================================
+
+.achievement-collection-header {
+  margin-bottom: 20px;
+}
+
+.achievement-collection-header__top {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.achievement-collection-header__title {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.achievement-collection-header__completion {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.achievement-collection-header__count-row {
+  align-items: baseline;
+  display: flex;
+  gap: 3px;
+}
+
+.achievement-collection-header__count-earned {
+  color: #4b6af0;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.achievement-collection-header__count-sep {
+  color: #9ca3af;
+  font-size: 18px;
+}
+
+.achievement-collection-header__count-total {
+  color: #6b7280;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.achievement-collection-header__count-label {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+.achievement-collection-header__progress-wrap {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  width: 140px;
+}
+
+.achievement-collection-header__progress-track {
+  background: #e5e7eb;
+  border-radius: 999px;
+  flex: 1;
+  height: 8px;
+  overflow: hidden;
+}
+
+.achievement-collection-header__progress-fill {
+  background: linear-gradient(90deg, #4b6af0, #22c55e);
+  border-radius: inherit;
+  height: 100%;
+  transition: width 0.6s ease;
+}
+
+.achievement-collection-header__progress-rate {
+  color: #374151;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+// Rarity 集計グリッド（desktop: 4列, mobile: 2×2）
+.achievement-collection-header__rarity-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, 1fr);
+  margin-bottom: 16px;
+}
+
+.achievement-collection-header__rarity-cell {
+  border-radius: 10px;
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 6px;
+  text-align: center;
+
+  &--legendary {
+    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    border-color: rgba(245, 158, 11, 0.3);
+  }
+
+  &--epic {
+    background: linear-gradient(135deg, #faf5ff, #ede9fe);
+    border-color: rgba(139, 92, 246, 0.25);
+  }
+
+  &--rare {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border-color: rgba(59, 130, 246, 0.25);
+  }
+
+  &--common {
+    background: #f0f4ff;
+    border-color: rgba(75, 106, 240, 0.18);
+  }
+
+  &--zero {
+    opacity: 0.45;
+  }
+}
+
+.achievement-collection-header__rarity-count {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+
+  .achievement-collection-header__rarity-cell--legendary & { color: #b45309; }
+  .achievement-collection-header__rarity-cell--epic &      { color: #6d28d9; }
+  .achievement-collection-header__rarity-cell--rare &      { color: #1d4ed8; }
+  .achievement-collection-header__rarity-cell--common &    { color: #3730a3; }
+}
+
+.achievement-collection-header__rarity-name {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+
+  .achievement-collection-header__rarity-cell--legendary & { color: #92400e; }
+  .achievement-collection-header__rarity-cell--epic &      { color: #4c1d95; }
+  .achievement-collection-header__rarity-cell--rare &      { color: #1e3a8a; }
+  .achievement-collection-header__rarity-cell--common &    { color: #312e81; }
+}
+
+// meta 行（streak + recent earned）
+.achievement-collection-header__meta {
+  align-items: center;
+  background: #f8faff;
+  border: 1px solid rgba(75, 106, 240, 0.1);
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 4px;
+  padding: 10px 14px;
+}
+
+.achievement-collection-header__streak {
+  align-items: center;
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.achievement-collection-header__streak-emoji {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.achievement-collection-header__streak-label {
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.achievement-collection-header__recent {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.achievement-collection-header__recent-label {
+  color: #8b9ab0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.achievement-collection-header__recent-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.achievement-collection-header__recent-item {
+  align-items: center;
+  display: flex;
+  gap: 5px;
+}
+
+.achievement-collection-header__recent-emoji {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.achievement-collection-header__recent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.achievement-collection-header__recent-name {
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.achievement-collection-header__recent-date {
+  color: #9ca3af;
+  font-size: 10px;
+}
+
+// mobile: rarity grid を 2×2 に
+@media (max-width: 640px) {
+  .achievement-collection-header__top {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .achievement-collection-header__completion {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .achievement-collection-header__progress-wrap {
+    width: 120px;
+  }
+
+  .achievement-collection-header__rarity-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .achievement-collection-header__meta {
+    gap: 8px;
+    padding: 8px 12px;
+  }
+}
+
+// ============================================================
+// Seasonal Effect（Phase 2-E）
+// legendary / epic / rare のみ。common は変化なし。
+// reduced-motion では animation をすべて無効化。
+// ============================================================
+
+// ── Spring（3〜5月）桜ピンク ───────────────────────────────
+@keyframes achievement-epic-pulse-spring {
+  0%, 100% { box-shadow: 0 2px 14px rgba(249, 168, 212, 0.18); }
+  50%       { box-shadow: 0 4px 28px rgba(249, 168, 212, 0.5); }
+}
+
+.achievement-gallery.season--spring {
+  .achievement-badge-card--legendary:not(.achievement-badge-card--locked) {
+    border-color: rgba(249, 168, 212, 0.55);
+    box-shadow: 0 2px 16px rgba(249, 168, 212, 0.25);
+
+    .achievement-badge-card__rarity-bar {
+      background: linear-gradient(
+        90deg,
+        #f9a8d4 0%, #fbcfe8 35%, #fce7f3 50%, #fbcfe8 65%, #f9a8d4 100%
+      );
+      background-size: 200% 100%;
+    }
+  }
+
+  .achievement-badge-card--epic:not(.achievement-badge-card--locked) {
+    animation-name: achievement-epic-pulse-spring;
+  }
+
+  .achievement-badge-card--rare:not(.achievement-badge-card--locked) {
+    .achievement-badge-card__rarity-bar {
+      background: linear-gradient(90deg, #f9a8d4, #fbcfe8);
+    }
+  }
+}
+
+// ── Summer（6〜8月）青空・シアン ──────────────────────────
+@keyframes achievement-epic-pulse-summer {
+  0%, 100% { box-shadow: 0 2px 14px rgba(56, 189, 248, 0.18); }
+  50%       { box-shadow: 0 4px 28px rgba(56, 189, 248, 0.5); }
+}
+
+.achievement-gallery.season--summer {
+  .achievement-badge-card--legendary:not(.achievement-badge-card--locked) {
+    border-color: rgba(56, 189, 248, 0.5);
+    box-shadow: 0 2px 16px rgba(56, 189, 248, 0.22);
+
+    .achievement-badge-card__rarity-bar {
+      background: linear-gradient(
+        90deg,
+        #38bdf8 0%, #67e8f9 35%, #e0f2fe 50%, #67e8f9 65%, #38bdf8 100%
+      );
+      background-size: 200% 100%;
+    }
+  }
+
+  .achievement-badge-card--epic:not(.achievement-badge-card--locked) {
+    animation-name: achievement-epic-pulse-summer;
+  }
+
+  .achievement-badge-card--rare:not(.achievement-badge-card--locked) {
+    .achievement-badge-card__rarity-bar {
+      background: linear-gradient(90deg, #38bdf8, #67e8f9);
+    }
+  }
+}
+
+// ── Autumn（9〜11月）オレンジ・琥珀 ──────────────────────
+@keyframes achievement-epic-pulse-autumn {
+  0%, 100% { box-shadow: 0 2px 14px rgba(249, 115, 22, 0.18); }
+  50%       { box-shadow: 0 4px 28px rgba(249, 115, 22, 0.48); }
+}
+
+.achievement-gallery.season--autumn {
+  .achievement-badge-card--legendary:not(.achievement-badge-card--locked) {
+    border-color: rgba(251, 191, 36, 0.55);
+    box-shadow: 0 2px 16px rgba(249, 115, 22, 0.22);
+
+    .achievement-badge-card__rarity-bar {
+      background: linear-gradient(
+        90deg,
+        #f97316 0%, #fbbf24 35%, #fef9c3 50%, #fbbf24 65%, #f97316 100%
+      );
+      background-size: 200% 100%;
+    }
+  }
+
+  .achievement-badge-card--epic:not(.achievement-badge-card--locked) {
+    animation-name: achievement-epic-pulse-autumn;
+  }
+
+  .achievement-badge-card--rare:not(.achievement-badge-card--locked) {
+    .achievement-badge-card__rarity-bar {
+      background: linear-gradient(90deg, #f97316, #fbbf24);
+    }
+  }
+}
+
+// ── Winter（12〜2月）氷青・霜 ─────────────────────────────
+// デフォルトの epic-pulse / legendary-shimmer をそのまま使う。
+// winter は「変化なし」ではなく「既存の紫・金が冬にも合う」という判断。
+
+// ── reduced-motion: seasonal animation も無効化 ──────────
+@media (prefers-reduced-motion: reduce) {
+  .achievement-gallery {
+    &.season--spring,
+    &.season--summer,
+    &.season--autumn {
+      .achievement-badge-card--epic { animation: none; }
+
+      .achievement-badge-card--legendary .achievement-badge-card__rarity-bar {
+        animation: none;
+      }
+    }
+  }
+}
