@@ -802,59 +802,125 @@
   position: relative;
 }
 
+// Share Image 風ミニカード（blurred）
 .achievement-badge-card__share-preview {
-  align-items: center;
+  aspect-ratio: 600 / 315;
+  background: #0f1b2d;
+  border: 1px solid #b0bec5;
   border-radius: 8px;
+  color: #f0f4f8;
   display: flex;
   filter: blur(3px);
-  justify-content: center;
-  padding: 8px 6px 6px;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: 5px 7px 4px;
   pointer-events: none;
   user-select: none;
+  width: 100%;
 
-  &--legendary {
-    background: linear-gradient(160deg, #fffbeb, #fef3c7);
-    box-shadow: 0 0 14px rgba(245, 158, 11, 0.35);
-  }
-
-  &--epic {
-    background: linear-gradient(160deg, #faf5ff, #f3e8ff);
-    box-shadow: 0 0 14px rgba(139, 92, 246, 0.3);
+  &--common {
+    background: #0f1b2d;
+    border-color: #b0bec5;
   }
 
   &--rare {
-    background: linear-gradient(160deg, #eff6ff, #dbeafe);
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+    background: radial-gradient(ellipse at center, #1a1040 0%, #0f1b2d 70%);
+    border-color: #7c4dff;
+    box-shadow: 0 0 8px rgba(124, 77, 255, 0.4);
   }
 
-  &--common {
-    background: #f0f4ff;
-    box-shadow: 0 0 8px rgba(75, 106, 240, 0.15);
+  &--epic {
+    background: radial-gradient(ellipse at top, #2a1f00 0%, #0f1b2d 65%);
+    border-color: #f9a825;
+    box-shadow: 0 0 10px rgba(249, 168, 37, 0.45);
+  }
+
+  &--legendary {
+    background: #0a0e1a;
+    border-color: #ff6b6b;
+    box-shadow: 0 0 12px rgba(255, 107, 107, 0.35);
   }
 }
 
-.achievement-badge-card__share-preview-emoji {
-  font-size: 20px;
+// ミニカード内レイアウト
+.achievement-badge-card__share-mini-brand {
+  align-items: center;
+  color: rgba(255, 255, 255, 0.35);
+  display: flex;
+  font-size: 6px;
+  font-weight: 700;
+  gap: 3px;
+  justify-content: space-between;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+
+  small { font-size: 8px; }
+}
+
+.achievement-badge-card__share-mini-body {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  justify-content: center;
+  text-align: center;
+}
+
+.achievement-badge-card__share-mini-emoji {
+  font-size: 22px;
   line-height: 1;
+  margin-bottom: 1px;
 }
 
+.achievement-badge-card__share-mini-rarity {
+  font-size: 6px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin: 0;
+  text-transform: uppercase;
+
+  &--common    { color: #b0bec5; }
+  &--rare      { color: #9c67ff; }
+  &--epic      { color: #f9a825; }
+  &--legendary {
+    background: linear-gradient(135deg, #ff6b6b, #ffe66d);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+.achievement-badge-card__share-mini-label {
+  color: #f0f4f8;
+  font-size: 7px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.achievement-badge-card__share-mini-footer {
+  color: rgba(255, 255, 255, 0.25);
+  display: flex;
+  font-size: 5px;
+  justify-content: space-between;
+  letter-spacing: 0.04em;
+}
+
+// オーバーレイ（ロックアイコン削除・感情型コピーへ）
 .achievement-badge-card__share-lock-overlay {
   align-items: center;
   background: rgba(255, 255, 255, 0.88);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   inset: 0;
   justify-content: center;
   padding: 6px 8px;
   position: absolute;
   text-align: center;
-}
-
-.achievement-badge-card__share-lock-icon {
-  font-size: 13px;
-  line-height: 1;
 }
 
 .achievement-badge-card__share-lock-main {
@@ -1013,6 +1079,62 @@
 
   .achievement-badge-card__label {
     font-size: 12px;
+  }
+
+  // blur を弱める（mobile では重さより "ぼんやり見える" を優先）
+  .achievement-badge-card__share-preview {
+    filter: blur(2px);
+  }
+
+  // tap target 確保
+  .achievement-badge-card__share-lock-link {
+    display: block;
+    font-size: 11px;
+    padding: 3px 0;
+  }
+}
+
+// ── Rarity アニメーション演出 ─────────────────────────────────
+
+// epic: 3秒周期 pulse glow（unlocked のみ）
+@keyframes achievement-epic-pulse {
+  0%, 100% { box-shadow: 0 2px 14px rgba(139, 92, 246, 0.14); }
+  50%       { box-shadow: 0 4px 28px rgba(139, 92, 246, 0.42); }
+}
+
+.achievement-badge-card--epic:not(.achievement-badge-card--locked) {
+  animation: achievement-epic-pulse 3s ease-in-out infinite;
+}
+
+// legendary: rarity bar のみ shimmer sweep（CSS 先行。badge 定義追加時に即動く）
+@keyframes achievement-legendary-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.achievement-badge-card--legendary:not(.achievement-badge-card--locked) {
+  .achievement-badge-card__rarity-bar {
+    background: linear-gradient(
+      90deg,
+      #f59e0b 0%,
+      #fbbf24 35%,
+      #fffde7 50%,
+      #fbbf24 65%,
+      #f59e0b 100%
+    );
+    background-size: 200% 100%;
+    animation: achievement-legendary-shimmer 2.5s linear infinite;
+  }
+}
+
+// reduced-motion: すべての animation を無効化
+@media (prefers-reduced-motion: reduce) {
+  .achievement-badge-card--epic {
+    animation: none;
+  }
+
+  .achievement-badge-card--legendary .achievement-badge-card__rarity-bar {
+    animation: none;
   }
 }
 

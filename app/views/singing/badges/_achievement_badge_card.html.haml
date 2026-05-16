@@ -3,6 +3,7 @@
 - rarity      = definition[:rarity]
 - is_earned   = earned.present?
 - card_classes = ["achievement-badge-card", "achievement-badge-card--#{rarity}", ("achievement-badge-card--locked" unless is_earned)].compact.join(" ")
+- rarity_label_text = { common: "NORMAL", rare: "RARE", epic: "EPIC", legendary: "LEGENDARY" }[rarity] || rarity.to_s.upcase
 - show_progress = !is_earned && progress_hint && progress_hint.progress_ratio >= 0.5
 
 %div{ class: card_classes, data: { badge_key: key } }
@@ -29,12 +30,21 @@
           シェアする
       - else
         .achievement-badge-card__share-preview-wrap
+          -# Share Image 風ミニカード（blur で "本物っぽさ" を演出。Selenium 不使用）
           .achievement-badge-card__share-preview{ class: "achievement-badge-card__share-preview--#{rarity}" }
-            .achievement-badge-card__share-preview-emoji= definition[:emoji]
+            .achievement-badge-card__share-mini-brand
+              BeMyStyle Singing
+              %small 🎤
+            .achievement-badge-card__share-mini-body
+              .achievement-badge-card__share-mini-emoji= definition[:emoji]
+              %p.achievement-badge-card__share-mini-rarity{ class: "achievement-badge-card__share-mini-rarity--#{rarity}" }= rarity_label_text
+              %p.achievement-badge-card__share-mini-label= definition[:label]
+            .achievement-badge-card__share-mini-footer
+              %span= earned.earned_at.strftime("%-m月%-d日 達成")
+              %span #BeMyStyle
           .achievement-badge-card__share-lock-overlay
-            %span.achievement-badge-card__share-lock-icon 🔒
-            %p.achievement-badge-card__share-lock-main この達成をシェアカードにする
-            = link_to "Coreプランを見る →", public_singing_lp_path(anchor: "lp-section"),
+            %p.achievement-badge-card__share-lock-main この努力を1枚に残す
+            = link_to "Coreで記録する →", public_singing_lp_path(anchor: "lp-section"),
                       class: "achievement-badge-card__share-lock-link"
 
     - else

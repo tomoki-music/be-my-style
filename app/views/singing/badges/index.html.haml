@@ -60,11 +60,11 @@
           .achievement-gallery__upgrade-cta
             .achievement-gallery__upgrade-cta-icon 🏅
             .achievement-gallery__upgrade-cta-text
-              %p.achievement-gallery__upgrade-cta-title この達成をシェアカードにする
-              %p.achievement-gallery__upgrade-cta-desc Coreプラン以上で、獲得バッジをSNS用カードとして保存・共有できます。せっかく掴んだ達成だから、きれいな1枚に残してみませんか？
+              %p.achievement-gallery__upgrade-cta-title= "#{@achievement_earned_count}個の達成を、記録に残せます"
+              %p.achievement-gallery__upgrade-cta-desc これまで獲得したバッジを、SNS用のシェアカードとして残せます。せっかく積み重ねた努力だから、きれいな1枚にしてみませんか？
             = link_to public_singing_lp_path(anchor: "lp-section"),
                       class: "achievement-gallery__upgrade-cta-btn" do
-              Coreプランを見る →
+              シェアカードを作る
 
     - if @next_badges.present?
       .singing-badges__section.singing-badges__section--next-target
