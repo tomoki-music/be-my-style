@@ -7,6 +7,10 @@
       %h1 あなたのバッジ
       %p.singing-badges__lead 診断への取り組みで獲得した称号と、シーズンの実績バッジを確認できます。
 
+    -# ── NextBadgeHint バナー ──────────────────────────────────────
+    - if @next_badge_hint
+      = render "singing/badges/next_badge_hint_banner", next_badge_hint: @next_badge_hint
+
     -# ── Achievement Badge ギャラリー ────────────────────────────
     %section.singing-badges__section.achievement-gallery
       .achievement-gallery__header
@@ -44,10 +48,11 @@
             .achievement-badge-grid
               - entries.each do |entry|
                 = render "singing/badges/achievement_badge_card",
-                         key:        entry[:key],
-                         definition: entry[:definition],
-                         earned:     entry[:earned],
-                         can_share:  @can_share_achievement
+                         key:           entry[:key],
+                         definition:    entry[:definition],
+                         earned:        entry[:earned],
+                         can_share:     @can_share_achievement,
+                         progress_hint: entry[:progress_hint]
 
       -# Free / Light 向け課金導線（獲得済みバッジがある場合のみ）
       - unless @can_share_achievement

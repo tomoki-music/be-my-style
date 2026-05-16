@@ -177,21 +177,7 @@ module Singing
     end
 
     def streak_days(as_of_date)
-      # SQLのDATE()はUTC保存で日付ズレが起きるため、Rubyレベルでto_dateを使う
-      dates = customer.singing_diagnoses
-                      .completed
-                      .where(created_at: ..as_of_date.end_of_day)
-                      .pluck(:created_at)
-                      .map(&:to_date)
-                      .to_set
-
-      count = 0
-      date  = as_of_date
-      while dates.include?(date)
-        count += 1
-        date  -= 1.day
-      end
-      count
+      Singing::StreakCalculator.call(customer, as_of_date: as_of_date)
     end
 
     def score_delta_for_personal_best

@@ -946,3 +946,255 @@
     font-size: 12px;
   }
 }
+
+// ============================================================
+// ProgressHint（Phase 2-B）
+// ============================================================
+
+// ── Badge Card 内 Progress ────────────────────────────────────
+.achievement-badge-card__progress-hint {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.achievement-badge-card__hint-text {
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.achievement-badge-card__progress-bar-wrap {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+}
+
+.achievement-badge-card__progress-bar-track {
+  background: #e5e7eb;
+  border-radius: 999px;
+  flex: 1;
+  height: 7px;
+  overflow: hidden;
+}
+
+.achievement-badge-card__progress-bar-fill {
+  border-radius: inherit;
+  height: 100%;
+  transition: width 0.4s ease;
+
+  &--legendary { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+  &--epic      { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+  &--rare      { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+  &--common    { background: linear-gradient(90deg, #4b6af0, #818cf8); }
+}
+
+.achievement-badge-card__progress-rate {
+  color: #374151;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.achievement-badge-card__detail-text {
+  color: #9ca3af;
+  font-size: 11px;
+  margin: 0;
+}
+
+// ── NextBadgeHint Banner ──────────────────────────────────────
+.next-badge-hint-banner {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+
+  // rarity 別スタイル
+  &--legendary {
+    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    border-color: rgba(245, 158, 11, 0.35);
+  }
+
+  &--epic {
+    background: linear-gradient(135deg, #faf5ff, #f3e8ff);
+    border-color: rgba(139, 92, 246, 0.3);
+  }
+
+  &--rare {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border-color: rgba(59, 130, 246, 0.28);
+  }
+
+  &--common {
+    background: linear-gradient(135deg, #f0f4ff, #e0e7ff);
+    border-color: rgba(75, 106, 240, 0.2);
+  }
+
+  // is_close: 輝度を少し上げるだけ（glow animation は Selenium 安定優先で省略）
+  &--close {
+    box-shadow: 0 4px 18px rgba(75, 106, 240, 0.16);
+  }
+
+  &__emoji {
+    flex-shrink: 0;
+    font-size: 32px;
+    line-height: 1;
+  }
+
+  &__body {
+    display: flex;
+    flex: 1 1 160px;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  &__close-badge {
+    background: linear-gradient(135deg, #4b6af0, #6366f1);
+    border-radius: 999px;
+    color: #fff;
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 2px 10px;
+    width: fit-content;
+  }
+
+  &__hint {
+    color: #1f2937;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  &__detail {
+    color: #6b7280;
+    font-size: 12px;
+    margin: 0;
+  }
+
+  &__progress-wrap {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+  }
+
+  &__progress-track {
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 999px;
+    flex: 1;
+    height: 8px;
+    max-width: 160px;
+    overflow: hidden;
+  }
+
+  &__progress-fill {
+    background: linear-gradient(90deg, #4b6af0, #22c55e);
+    border-radius: inherit;
+    height: 100%;
+    transition: width 0.4s ease;
+  }
+
+  &__progress-rate {
+    color: #374151;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  &__link {
+    align-self: center;
+    color: #4b6af0;
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+      color: #3b5bd9;
+      text-decoration: underline;
+    }
+  }
+}
+
+// ── diagnoses#show Next Goal ──────────────────────────────────
+.singing-diagnosis__next-goal {
+  align-items: flex-start;
+  background: linear-gradient(135deg, #f0f4ff, #faf5ff);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+}
+
+.singing-diagnosis__next-goal-label {
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.singing-diagnosis__next-goal-body {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.singing-diagnosis__next-goal-emoji {
+  flex-shrink: 0;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.singing-diagnosis__next-goal-text {
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.singing-diagnosis__next-goal-close {
+  background: linear-gradient(135deg, #4b6af0, #6366f1);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 10px;
+}
+
+.singing-diagnosis__next-goal-link {
+  color: #4b6af0;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    color: #3b5bd9;
+    text-decoration: underline;
+  }
+}
+
+@media (max-width: 600px) {
+  .next-badge-hint-banner {
+    gap: 10px;
+    padding: 14px 16px;
+
+    &__hint { font-size: 14px; }
+    &__progress-track { max-width: 120px; }
+  }
+}

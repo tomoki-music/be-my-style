@@ -1,0 +1,19 @@
+-# locals: next_badge_hint (Singing::NextBadgeHintAggregator::Result)
+- defn = SingingAchievementBadge::BADGE_DEFINITIONS[next_badge_hint.badge_key] || {}
+- hint = next_badge_hint.progress_hint
+- percent = (hint.progress_ratio * 100).to_i
+- banner_class = "next-badge-hint-banner next-badge-hint-banner--#{defn[:rarity]}#{next_badge_hint.is_close ? ' next-badge-hint-banner--close' : ''}"
+
+%div{ class: banner_class }
+  .next-badge-hint-banner__emoji= defn[:emoji]
+  .next-badge-hint-banner__body
+    - if next_badge_hint.is_close
+      %span.next-badge-hint-banner__close-badge あと少し！
+    %p.next-badge-hint-banner__hint= hint.hint_text
+    %p.next-badge-hint-banner__detail= hint.detail_text
+    .next-badge-hint-banner__progress-wrap
+      .next-badge-hint-banner__progress-track
+        .next-badge-hint-banner__progress-fill{ style: "width: #{percent}%" }
+      %span.next-badge-hint-banner__progress-rate= "#{percent}%"
+  = link_to singing_badges_path, class: "next-badge-hint-banner__link" do
+    バッジ一覧 →

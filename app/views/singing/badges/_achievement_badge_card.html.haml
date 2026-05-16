@@ -1,8 +1,9 @@
--# locals: key (String), definition (Hash), earned (SingingAchievementBadge | nil), can_share (Boolean)
--# progress_hint: 将来 Phase 2-B で追加予定（今回は未使用）
+-# locals: key (String), definition (Hash), earned (SingingAchievementBadge | nil),
+-#          can_share (Boolean), progress_hint (ProgressHintBuilder::ProgressHint | nil)
 - rarity      = definition[:rarity]
 - is_earned   = earned.present?
 - card_classes = ["achievement-badge-card", "achievement-badge-card--#{rarity}", ("achievement-badge-card--locked" unless is_earned)].compact.join(" ")
+- show_progress = !is_earned && progress_hint && progress_hint.progress_ratio >= 0.5
 
 %div{ class: card_classes, data: { badge_key: key } }
   .achievement-badge-card__rarity-bar
@@ -35,5 +36,16 @@
       .achievement-badge-card__locked-info
         %span.achievement-badge-card__lock-icon 🔒
         %span.achievement-badge-card__lock-label 未獲得
-      %p.achievement-badge-card__locked-description= definition[:locked_description]
-      -# progress_hint はここに Phase 2-B で追加
+
+      - if show_progress
+        -# Phase 2-B: ProgressHint 表示（達成率 50% 以上）
+        - percent = (progress_hint.progress_ratio * 100).to_i
+        .achievement-badge-card__progress-hint
+          %p.achievement-badge-card__hint-text= progress_hint.hint_text
+          .achievement-badge-card__progress-bar-wrap
+            .achievement-badge-card__progress-bar-track
+              %div{ class: "achievement-badge-card__progress-bar-fill achievement-badge-card__progress-bar-fill--#{rarity}", style: "width: #{percent}%" }
+            %span.achievement-badge-card__progress-rate= "#{percent}%"
+          %p.achievement-badge-card__detail-text= progress_hint.detail_text
+      - else
+        %p.achievement-badge-card__locked-description= definition[:locked_description]

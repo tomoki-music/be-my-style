@@ -835,6 +835,19 @@
               = link_to "ランキングを見る", singing_rankings_path, class: "btn btn-secondary"
               = link_to "バッジを見る", singing_badges_path, class: "btn btn-secondary"
 
+    - if @next_achievement_hint
+      - hint = @next_achievement_hint.progress_hint
+      - defn = SingingAchievementBadge::BADGE_DEFINITIONS[@next_achievement_hint.badge_key] || {}
+      .singing-diagnosis__next-goal
+        %span.singing-diagnosis__next-goal-label 🎯 次の目標
+        .singing-diagnosis__next-goal-body
+          %span.singing-diagnosis__next-goal-emoji= defn[:emoji]
+          %span.singing-diagnosis__next-goal-text= hint.hint_text
+          - if @next_achievement_hint.is_close
+            %span.singing-diagnosis__next-goal-close あと少し！
+        = link_to singing_badges_path, class: "singing-diagnosis__next-goal-link" do
+          バッジ一覧を見る →
+
     .singing-diagnosis__actions
       = link_to "もう一度診断する", new_singing_diagnosis_path, class: "btn btn-primary"
       = link_to "診断履歴へ戻る", singing_diagnoses_path, class: "btn btn-secondary"

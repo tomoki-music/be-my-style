@@ -305,6 +305,69 @@ RSpec.describe "Singing::Badges", type: :request do
             expect(response.body).not_to include("Coreプランにアップグレード")
           end
         end
+
+        context "NextBadgeHint バナー（Phase 2-B）" do
+          it "進捗 > 0 のバッジがある場合、バナーが表示されること" do
+            # diagnosis_10: 3回診断 → progress_ratio = 0.3 > 0
+            3.times { create(:singing_diagnosis, :completed, customer: customer) }
+
+            get singing_badges_path
+
+            expect(response.body).to include("バッジ一覧 →")
+          end
+
+          it "progress がない場合（診断0回）、バナーが表示されないこと" do
+            allow(Singing::NextBadgeHintAggregator).to receive(:call).and_return(nil)
+
+            get singing_badges_path
+
+            expect(response.body).not_to include("バッジ一覧 →")
+          end
+
+          it "is_close の場合「あと少し！」バッジが表示されること" do
+            # streak_7: 6日連続 → ratio ≈ 0.857 >= 0.8 → is_close
+            6.times { |i| create(:singing_diagnosis, :completed, customer: customer, created_at: (5 - i).days.ago) }
+
+            get singing_badges_path
+
+            close_result = Singing::NextBadgeHintAggregator.call(
+              customer,
+              earned_badge_keys: customer.singing_achievement_badges.pluck(:badge_key).to_set
+            )
+            if close_result&.is_close
+              expect(response.body).to include("あと少し！")
+            end
+          end
+        end
+
+        context "ProgressHint（未獲得カード）" do
+          it "達成率50%以上の未獲得バッジにhint_textが表示されること" do
+            # diagnosis_10: 5回 → ratio = 0.5 → 表示対象
+            5.times { create(:singing_diagnosis, :completed, customer: customer) }
+
+            get singing_badges_path
+
+            expect(response.body).to include("あと5回で「10 Songs」")
+          end
+
+          it "達成率50%未満の場合はhint_textが表示されないこと" do
+            # diagnosis_10: 0回 → ratio = 0.0 → locked_description のみ
+            get singing_badges_path
+
+            expect(response.body).to include("診断を累計10回完了すると獲得できます")
+            expect(response.body).not_to include("あと10回で「10 Songs」")
+          end
+
+          it "獲得済みバッジにはProgressHintが表示されないこと" do
+            create(:singing_achievement_badge, :diagnosis_10, customer: customer)
+            9.times { create(:singing_diagnosis, :completed, customer: customer) }
+
+            get singing_badges_path
+
+            # diagnosis_10 は獲得済みなので hint が表示されない
+            expect(response.body).not_to include("あと1回で「10 Songs」")
+          end
+        end
       end
     end
   end

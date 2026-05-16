@@ -40,6 +40,17 @@ class Singing::BadgesController < Singing::BaseController
 
     all_defs = SingingAchievementBadge::BADGE_DEFINITIONS
 
+    # ProgressHint を一括計算（未獲得バッジのみ）
+    progress_hints = Singing::ProgressHintBuilder.call(
+      current_customer,
+      earned_badge_keys: @earned_achievement_keys
+    ).index_by(&:badge_key)
+
+    @next_badge_hint = Singing::NextBadgeHintAggregator.call(
+      current_customer,
+      earned_badge_keys: @earned_achievement_keys
+    )
+
     @grouped_achievement_badges = SingingAchievementBadge::RARITY_ORDER.each_with_object({}) do |rarity, h|
       next if @active_rarity && rarity != @active_rarity
 
@@ -47,8 +58,9 @@ class Singing::BadgesController < Singing::BaseController
         .select { |_, d| d[:rarity] == rarity }
         .select { |_, d| @active_category.nil? || d[:category] == @active_category }
         .map do |key, defn|
-          earned = @earned_achievement_badges.find { |b| b.badge_key == key.to_s }
-          { key: key.to_s, definition: defn, earned: earned }
+          earned        = @earned_achievement_badges.find { |b| b.badge_key == key.to_s }
+          progress_hint = earned ? nil : progress_hints[key.to_s]
+          { key: key.to_s, definition: defn, earned: earned, progress_hint: progress_hint }
         end
       h[rarity] = entries unless entries.empty?
     end

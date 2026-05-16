@@ -75,6 +75,10 @@ class Singing::DiagnosesController < Singing::BaseController
         @ranking_top10_threshold = top10_score_threshold
       end
       @next_badges = Singing::NextBadgeService.call(current_customer)
+      @next_achievement_hint = Singing::NextBadgeHintAggregator.call(
+        current_customer,
+        earned_badge_keys: current_customer.singing_achievement_badges.pluck(:badge_key).to_set
+      )
       @singer_rank = current_customer.singer_rank
       @singer_rank_progress = current_customer.singer_rank_progress
       @singer_next_rank = current_customer.singer_next_rank
