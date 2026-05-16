@@ -1,0 +1,13 @@
+-# locals: group (TimelineMonthGroup), can_share (Boolean), earned_achievement_keys (Set)
+.badge-timeline-group
+  .badge-timeline-group__header
+    %h2.badge-timeline-group__month= group.month.strftime("%-Y年%-m月")
+    %p.badge-timeline-group__label= group.label
+    %span.badge-timeline-group__count= "#{group.items.size}件の実績"
+
+  .badge-timeline-group__items
+    - group.items.each do |item|
+      = render "singing/badges/timeline_item",
+               item:                    item,
+               can_share:               can_share,
+               earned_achievement_keys: earned_achievement_keys

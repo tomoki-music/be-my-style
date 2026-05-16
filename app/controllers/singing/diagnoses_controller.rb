@@ -1,5 +1,5 @@
 class Singing::DiagnosesController < Singing::BaseController
-  before_action :set_diagnosis, only: [:show]
+  before_action :set_diagnosis, only: [:show, :newly_awarded_badges]
   before_action :set_singing_diagnosis_quota, only: [:new, :create]
 
   def index
@@ -90,6 +90,11 @@ class Singing::DiagnosesController < Singing::BaseController
     end
   end
 
+  def newly_awarded_badges
+    badges = @diagnosis.singing_achievement_badges.map { |b| serialize_achievement_badge(b) }
+    render json: { badges: badges }
+  end
+
   private
 
   def set_diagnosis
@@ -168,6 +173,17 @@ class Singing::DiagnosesController < Singing::BaseController
         return score if count == 10
       end
     nil
+  end
+
+  def serialize_achievement_badge(badge)
+    {
+      badge_key:   badge.badge_key,
+      label:       badge.label,
+      emoji:       badge.emoji,
+      rarity:      badge.rarity,
+      description: badge.description,
+      metadata:    badge.metadata
+    }
   end
 
   def link_diagnosis_to_battle

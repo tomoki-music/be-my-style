@@ -59,11 +59,11 @@
           .achievement-gallery__upgrade-cta
             .achievement-gallery__upgrade-cta-icon 🏅
             .achievement-gallery__upgrade-cta-text
-              %p.achievement-gallery__upgrade-cta-title= "#{@achievement_earned_count}個の達成を、記録に残せます"
-              %p.achievement-gallery__upgrade-cta-desc これまで獲得したバッジを、SNS用のシェアカードとして残せます。せっかく積み重ねた努力だから、きれいな1枚にしてみませんか？
+              %p.achievement-gallery__upgrade-cta-title Coreプランにアップグレード
+              %p.achievement-gallery__upgrade-cta-desc= "#{@achievement_earned_count}個の達成をシェアカードに残せます。せっかく積み重ねた努力だから、きれいな1枚にしてみませんか？"
             = link_to public_singing_lp_path(anchor: "lp-section"),
                       class: "achievement-gallery__upgrade-cta-btn" do
-              シェアカードを作る
+              Coreプランを見る
 
     - if @next_badges.present?
       .singing-badges__section.singing-badges__section--next-target
@@ -139,6 +139,8 @@
     .singing-badges__nav
       = link_to singing_season_histories_path, class: "singing-badges__nav-link" do
         過去のシーズン成績を見る →
+      = link_to timeline_singing_badges_path, class: "singing-badges__nav-link singing-badges__nav-link--timeline" do
+        Achievement Timeline を見る →
 
 :javascript
   (function() {

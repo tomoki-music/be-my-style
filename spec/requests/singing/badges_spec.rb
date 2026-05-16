@@ -4,6 +4,8 @@ RSpec.describe "Singing::Badges", type: :request do
   let(:customer) { create(:customer, domain_name: "singing") }
   let(:other_customer) { create(:customer, domain_name: "singing") }
 
+  # ── GET /singing/badges ────────────────────────────────────────────────────
+
   describe "GET /singing/badges" do
     context "未ログインの場合" do
       it "ログインページへリダイレクトされること" do
@@ -46,9 +48,7 @@ RSpec.describe "Singing::Badges", type: :request do
         get singing_badges_path
 
         expect(response.body).to include("初診断")
-        # 獲得済みバッジには --unearned クラスが付かない
         body = response.body
-        # 初診断の前後コンテキストで未獲得クラスが付いていないことを確認
         expect(body).to include("実績バッジ")
       end
 
@@ -224,7 +224,8 @@ RSpec.describe "Singing::Badges", type: :request do
 
           expect(response.body).to include("7 Day Streak")   # rare
           expect(response.body).to include("Score 90 Club")  # rare
-          expect(response.body).not_to include("Monthly Devotee") # epic
+          # epic カードが gallery セクションに表示されないこと（JSON データ属性への混入は許容）
+          expect(response.body).not_to include("achievement-badge-card--epic")
         end
 
         it "他ユーザーの achievement badge は表示されないこと" do
@@ -233,7 +234,6 @@ RSpec.describe "Singing::Badges", type: :request do
 
           get singing_badges_path
 
-          # 他ユーザーの earned_at は表示されない
           expect(response.body).not_to include("5月10日 達成")
         end
 
@@ -305,69 +305,158 @@ RSpec.describe "Singing::Badges", type: :request do
             expect(response.body).not_to include("Coreプランにアップグレード")
           end
         end
+      end
 
-        context "NextBadgeHint バナー（Phase 2-B）" do
-          it "進捗 > 0 のバッジがある場合、バナーが表示されること" do
-            # diagnosis_10: 3回診断 → progress_ratio = 0.3 > 0
-            3.times { create(:singing_diagnosis, :completed, customer: customer) }
+      context "NextBadgeHint バナー（Phase 2-B）" do
+        it "進捗 > 0 のバッジがある場合、バナーが表示されること" do
+          # diagnosis_10: 3回診断 → progress_ratio = 0.3 > 0
+          3.times { create(:singing_diagnosis, :completed, customer: customer) }
 
-            get singing_badges_path
+          get singing_badges_path
 
-            expect(response.body).to include("バッジ一覧 →")
-          end
-
-          it "progress がない場合（診断0回）、バナーが表示されないこと" do
-            allow(Singing::NextBadgeHintAggregator).to receive(:call).and_return(nil)
-
-            get singing_badges_path
-
-            expect(response.body).not_to include("バッジ一覧 →")
-          end
-
-          it "is_close の場合「あと少し！」バッジが表示されること" do
-            # streak_7: 6日連続 → ratio ≈ 0.857 >= 0.8 → is_close
-            6.times { |i| create(:singing_diagnosis, :completed, customer: customer, created_at: (5 - i).days.ago) }
-
-            get singing_badges_path
-
-            close_result = Singing::NextBadgeHintAggregator.call(
-              customer,
-              earned_badge_keys: customer.singing_achievement_badges.pluck(:badge_key).to_set
-            )
-            if close_result&.is_close
-              expect(response.body).to include("あと少し！")
-            end
-          end
+          expect(response.body).to include("バッジ一覧 →")
         end
 
-        context "ProgressHint（未獲得カード）" do
-          it "達成率50%以上の未獲得バッジにhint_textが表示されること" do
-            # diagnosis_10: 5回 → ratio = 0.5 → 表示対象
-            5.times { create(:singing_diagnosis, :completed, customer: customer) }
+        it "progress がない場合（診断0回）、バナーが表示されないこと" do
+          allow(Singing::NextBadgeHintAggregator).to receive(:call).and_return(nil)
 
-            get singing_badges_path
+          get singing_badges_path
 
-            expect(response.body).to include("あと5回で「10 Songs」")
-          end
+          expect(response.body).not_to include("バッジ一覧 →")
+        end
 
-          it "達成率50%未満の場合はhint_textが表示されないこと" do
-            # diagnosis_10: 0回 → ratio = 0.0 → locked_description のみ
-            get singing_badges_path
+        it "is_close の場合「あと少し！」バッジが表示されること" do
+          # streak_7: 6日連続 → ratio ≈ 0.857 >= 0.8 → is_close
+          6.times { |i| create(:singing_diagnosis, :completed, customer: customer, created_at: (5 - i).days.ago) }
 
-            expect(response.body).to include("診断を累計10回完了すると獲得できます")
-            expect(response.body).not_to include("あと10回で「10 Songs」")
-          end
+          get singing_badges_path
 
-          it "獲得済みバッジにはProgressHintが表示されないこと" do
-            create(:singing_achievement_badge, :diagnosis_10, customer: customer)
-            9.times { create(:singing_diagnosis, :completed, customer: customer) }
-
-            get singing_badges_path
-
-            # diagnosis_10 は獲得済みなので hint が表示されない
-            expect(response.body).not_to include("あと1回で「10 Songs」")
+          close_result = Singing::NextBadgeHintAggregator.call(
+            customer,
+            earned_badge_keys: customer.singing_achievement_badges.pluck(:badge_key).to_set
+          )
+          if close_result&.is_close
+            expect(response.body).to include("あと少し！")
           end
         end
+      end
+
+      context "ProgressHint（未獲得カード）" do
+        it "達成率50%以上の未獲得バッジにhint_textが表示されること" do
+          # diagnosis_10: 5回 → ratio = 0.5 → 表示対象
+          5.times { create(:singing_diagnosis, :completed, customer: customer) }
+
+          get singing_badges_path
+
+          expect(response.body).to include("あと5回で「10 Songs」")
+        end
+
+        it "達成率50%未満の場合はhint_textが表示されないこと" do
+          # diagnosis_10: 0回 → ratio = 0.0 → locked_description のみ
+          get singing_badges_path
+
+          expect(response.body).to include("診断を累計10回完了すると獲得できます")
+          expect(response.body).not_to include("あと10回で「10 Songs」")
+        end
+
+        it "獲得済みバッジにはProgressHintが表示されないこと" do
+          create(:singing_achievement_badge, :diagnosis_10, customer: customer)
+          9.times { create(:singing_diagnosis, :completed, customer: customer) }
+
+          get singing_badges_path
+
+          # diagnosis_10 は獲得済みなので hint が表示されない
+          expect(response.body).not_to include("あと1回で「10 Songs」")
+        end
+      end
+
+      context "Timeline 導線（Phase 2-J）" do
+        it "Achievement Timeline へのリンクが表示されること" do
+          get singing_badges_path
+
+          expect(response.body).to include("Achievement Timeline")
+          expect(response.body).to include(timeline_singing_badges_path)
+        end
+      end
+    end
+  end
+
+  # ── GET /singing/badges/timeline ──────────────────────────────────────────
+
+  describe "GET /singing/badges/timeline" do
+    context "未ログインの場合" do
+      it "ログインページへリダイレクトされること" do
+        get timeline_singing_badges_path
+
+        expect(response).to redirect_to(new_customer_session_path)
+      end
+    end
+
+    context "ログイン済みの場合" do
+      before { sign_in customer }
+
+      it "Timeline ページが表示されること" do
+        get timeline_singing_badges_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Achievement Timeline")
+        expect(response.body).to include("これまで積み重ねてきた挑戦の記録です。")
+      end
+
+      it "獲得済みバッジがない場合に空状態メッセージが表示されること" do
+        get timeline_singing_badges_path
+
+        expect(response.body).to include("まだTimelineは始まったばかりです。")
+        expect(response.body).to include("最初の診断を完了すると、ここにあなたのAchievementが刻まれます。")
+      end
+
+      it "獲得済みバッジがある場合にバッジ情報が表示されること" do
+        create(:singing_achievement_badge, :first_diagnosis, customer: customer,
+               earned_at: Time.zone.local(2026, 5, 10))
+
+        get timeline_singing_badges_path
+
+        expect(response.body).to include("First Note")
+        expect(response.body).to include("2026年5月")
+        expect(response.body).to include("5月10日 達成")
+      end
+
+      it "月単位でグループ化されて表示されること" do
+        create(:singing_achievement_badge, :first_diagnosis, customer: customer,
+               earned_at: Time.zone.local(2026, 5, 10))
+        create(:singing_achievement_badge, :personal_best, customer: customer,
+               earned_at: Time.zone.local(2026, 4, 15))
+
+        get timeline_singing_badges_path
+
+        expect(response.body).to include("2026年5月")
+        expect(response.body).to include("2026年4月")
+      end
+
+      it "月のラベルが表示されること" do
+        create(:singing_achievement_badge, :first_diagnosis, customer: customer,
+               earned_at: Time.zone.local(2026, 5, 1))
+
+        get timeline_singing_badges_path
+
+        expect(response.body).to include("挑戦が形になった月")
+      end
+
+      it "バッジ一覧ページへの戻りリンクがあること" do
+        get timeline_singing_badges_path
+
+        expect(response.body).to include("バッジ一覧")
+        expect(response.body).to include(singing_badges_path)
+      end
+
+      it "他ユーザーのバッジは表示されないこと" do
+        create(:singing_achievement_badge, :streak_7, customer: other_customer,
+               earned_at: Time.zone.local(2026, 5, 5))
+
+        get timeline_singing_badges_path
+
+        expect(response.body).not_to include("7 Day Streak")
+        expect(response.body).to include("まだTimelineは始まったばかりです。")
       end
     end
   end

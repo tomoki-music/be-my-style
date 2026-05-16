@@ -1,0 +1,14 @@
+- can_share    = current_customer.has_feature?(:singing_achievement_badge_share_image)
+- pinned_count = current_customer.singing_achievement_badges.where.not(pinned_at: nil).count
+- can_pin      = pinned_count < SingingAchievementBadge::PIN_LIMIT
+
+#achievement-celebration{
+  data: {
+    diagnosis_id: diagnosis.id,
+    api_url:      newly_awarded_badges_singing_diagnosis_path(diagnosis, format: :json),
+    can_share:    can_share.to_s,
+    can_pin:      can_pin.to_s,
+    badges_path:  singing_badges_path,
+    share_path:   singing_share_image_path
+  }
+}

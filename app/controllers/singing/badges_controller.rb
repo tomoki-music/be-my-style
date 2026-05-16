@@ -22,6 +22,13 @@ class Singing::BadgesController < Singing::BaseController
 
   PIN_LIMIT = SingingAchievementBadge::PIN_LIMIT
 
+  def timeline
+    @timeline_groups = Singing::AchievementTimelineBuilder.call(current_customer)
+    @can_share_achievement = current_customer.has_feature?(:singing_achievement_badge_share_image)
+    @earned_achievement_keys = current_customer.singing_achievement_badges
+                                               .pluck(:badge_key).to_set
+  end
+
   def pin
     badge = current_customer.singing_achievement_badges.find(params[:id])
 

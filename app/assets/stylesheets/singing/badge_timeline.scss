@@ -1,0 +1,468 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Badge Timeline（Phase 2-J）
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Page layout ────────────────────────────────────────────────────────────────
+
+.badge-timeline-page {
+  background: #f7f8fb;
+  min-height: calc(100vh - 80px);
+  padding: 48px 16px 72px;
+}
+
+.badge-timeline-page__inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.badge-timeline-page__header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.badge-timeline-page__eyebrow {
+  display: inline-flex;
+  margin: 0 0 10px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(35, 71, 201, 0.08);
+  color: #2347c9;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.badge-timeline-page__title {
+  margin: 0 0 12px;
+  font-size: 26px;
+  font-weight: 800;
+  color: #1d2a3d;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.badge-timeline-page__lead {
+  margin: 0;
+  color: #5f6b7c;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.badge-timeline-page__nav {
+  margin-bottom: 32px;
+}
+
+.badge-timeline-page__back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #2347c9;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ── Empty state ────────────────────────────────────────────────────────────────
+
+.badge-timeline-empty {
+  text-align: center;
+  padding: 64px 24px;
+}
+
+.badge-timeline-empty__icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.badge-timeline-empty__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1d2a3d;
+  margin: 0 0 10px;
+}
+
+.badge-timeline-empty__desc {
+  color: #5f6b7c;
+  font-size: 14px;
+  line-height: 1.8;
+  margin: 0 0 24px;
+}
+
+.badge-timeline-empty__cta {
+  display: inline-block;
+}
+
+// ── Timeline container ─────────────────────────────────────────────────────────
+
+.badge-timeline {
+  position: relative;
+  padding-left: 28px;
+
+  // 縦ライン
+  &::before {
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(
+      to bottom,
+      rgba(35, 71, 201, 0.25) 0%,
+      rgba(35, 71, 201, 0.08) 100%
+    );
+    border-radius: 1px;
+  }
+}
+
+// ── Month group ────────────────────────────────────────────────────────────────
+
+.badge-timeline-group {
+  margin-bottom: 40px;
+}
+
+.badge-timeline-group__header {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding-left: 0;
+
+  // 月見出しのドット
+  &::before {
+    content: "";
+    position: absolute;
+    left: -22px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2347c9;
+    box-shadow: 0 0 0 3px rgba(35, 71, 201, 0.15);
+  }
+}
+
+.badge-timeline-group__month {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #1d2a3d;
+  letter-spacing: -0.01em;
+}
+
+.badge-timeline-group__label {
+  margin: 0;
+  font-size: 12px;
+  color: #2347c9;
+  font-weight: 600;
+}
+
+.badge-timeline-group__count {
+  margin-left: auto;
+  font-size: 11px;
+  color: #8897aa;
+  font-weight: 600;
+}
+
+.badge-timeline-group__items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+// ── Timeline item ─────────────────────────────────────────────────────────────
+
+.badge-timeline-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+
+    .badge-timeline-item__card {
+      box-shadow:
+        0 0 0 2px rgba(35, 71, 201, 0.5),
+        0 8px 24px rgba(31, 48, 77, 0.1);
+    }
+  }
+
+  &:hover .badge-timeline-item__card {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(31, 48, 77, 0.12);
+  }
+}
+
+// ── Line dot（縦ライン上のアイテムドット）──────────────────────────────────────
+
+.badge-timeline-item__line-dot {
+  position: absolute;
+  left: -23px;
+  top: 20px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #c7d2e8;
+  flex-shrink: 0;
+  z-index: 1;
+
+  .badge-timeline-item--rare & {
+    border-color: #3b82f6;
+  }
+
+  .badge-timeline-item--epic & {
+    border-color: #a855f7;
+  }
+
+  .badge-timeline-item--legendary & {
+    border-color: #f59e0b;
+    background: #fef9c3;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+  }
+}
+
+// ── Card ───────────────────────────────────────────────────────────────────────
+
+.badge-timeline-item__card {
+  flex: 1;
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px 18px;
+  border: 1px solid #e8ecf2;
+  box-shadow: 0 4px 16px rgba(31, 48, 77, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  .badge-timeline-item--rare & {
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+
+  .badge-timeline-item--epic & {
+    border-color: rgba(168, 85, 247, 0.3);
+    background: linear-gradient(135deg, #fdf4ff, #fff);
+  }
+
+  .badge-timeline-item--legendary & {
+    border-color: rgba(245, 158, 11, 0.4);
+    background: linear-gradient(135deg, #fffbeb, #fff);
+    box-shadow:
+      0 4px 16px rgba(31, 48, 77, 0.06),
+      0 0 0 1px rgba(245, 158, 11, 0.15),
+      0 0 16px rgba(245, 158, 11, 0.08);
+  }
+}
+
+.badge-timeline-item--legendary-milestone .badge-timeline-item__card {
+  padding: 20px 22px;
+}
+
+.badge-timeline-item__card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+// ── Emoji ─────────────────────────────────────────────────────────────────────
+
+.badge-timeline-item__emoji-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.badge-timeline-item__emoji {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  font-size: 24px;
+  background: rgba(35, 71, 201, 0.06);
+
+  &--rare {
+    background: rgba(59, 130, 246, 0.1);
+  }
+
+  &--epic {
+    background: rgba(168, 85, 247, 0.1);
+  }
+
+  &--legendary {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.1));
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
+  }
+}
+
+.badge-timeline-item--legendary-milestone .badge-timeline-item__emoji {
+  width: 56px;
+  height: 56px;
+  font-size: 28px;
+  border-radius: 16px;
+}
+
+.badge-timeline-item__pin-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-size: 10px;
+  color: #f59e0b;
+  line-height: 1;
+}
+
+// ── Meta ──────────────────────────────────────────────────────────────────────
+
+.badge-timeline-item__meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.badge-timeline-item__labels {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.badge-timeline-item__rarity {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+
+  &--common {
+    background: rgba(100, 116, 139, 0.1);
+    color: #64748b;
+  }
+
+  &--rare {
+    background: rgba(59, 130, 246, 0.12);
+    color: #2563eb;
+  }
+
+  &--epic {
+    background: rgba(168, 85, 247, 0.12);
+    color: #9333ea;
+  }
+
+  &--legendary {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.15));
+    color: #b45309;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+}
+
+.badge-timeline-item__label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1d2a3d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  .badge-timeline-item--legendary & {
+    font-size: 16px;
+  }
+}
+
+.badge-timeline-item__date {
+  display: block;
+  font-size: 12px;
+  color: #8897aa;
+  font-weight: 500;
+}
+
+// ── Growth story ──────────────────────────────────────────────────────────────
+
+.badge-timeline-item__growth-story {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #475569;
+
+  &--rare {
+    color: #1e40af;
+  }
+
+  &--epic {
+    color: #7e22ce;
+  }
+
+  &--legendary {
+    font-size: 14px;
+    font-weight: 600;
+    color: #92400e;
+    padding-top: 8px;
+    border-top: 1px solid rgba(245, 158, 11, 0.2);
+  }
+}
+
+// ── Mobile ────────────────────────────────────────────────────────────────────
+
+@media (max-width: 600px) {
+  .badge-timeline-page {
+    padding: 32px 12px 60px;
+  }
+
+  .badge-timeline {
+    padding-left: 22px;
+  }
+
+  .badge-timeline-page__title {
+    font-size: 22px;
+  }
+
+  .badge-timeline-group__header {
+    &::before {
+      left: -17px;
+    }
+  }
+
+  .badge-timeline-item__line-dot {
+    left: -18px;
+  }
+
+  .badge-timeline-item__card {
+    padding: 14px 14px;
+  }
+
+  .badge-timeline-item__emoji {
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
+    border-radius: 12px;
+  }
+
+  .badge-timeline-item--legendary-milestone .badge-timeline-item__emoji {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+
+  .badge-timeline-item__label {
+    font-size: 14px;
+  }
+}
+
+// ── Reduced motion ────────────────────────────────────────────────────────────
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-timeline-item,
+  .badge-timeline-item__card {
+    animation: none;
+    transition: none;
+  }
+}

@@ -835,6 +835,8 @@
               = link_to "ランキングを見る", singing_rankings_path, class: "btn btn-secondary"
               = link_to "バッジを見る", singing_badges_path, class: "btn btn-secondary"
 
+      = render 'achievement_celebration', diagnosis: @diagnosis
+
     - if @next_achievement_hint
       - hint = @next_achievement_hint.progress_hint
       - defn = SingingAchievementBadge::BADGE_DEFINITIONS[@next_achievement_hint.badge_key] || {}

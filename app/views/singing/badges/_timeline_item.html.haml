@@ -1,0 +1,29 @@
+-# locals: item (TimelineItem), can_share (Boolean), earned_achievement_keys (Set)
+- rarity       = item.rarity
+- rarity_label = { common: "NORMAL", rare: "RARE", epic: "EPIC", legendary: "LEGENDARY" }[rarity] || rarity.to_s.upcase
+- growth_story = achievement_growth_story(item.badge_key)
+- modal_data   = achievement_badge_modal_data(key: item.badge_key, definition: item.definition, earned: item.customer_achievement_badge, progress_hint: nil, can_share: can_share, show_pin: true, earned_achievement_keys: earned_achievement_keys)
+
+.badge-timeline-item{ class: "badge-timeline-item--#{rarity} #{"badge-timeline-item--legendary-milestone" if rarity == :legendary}",
+                      tabindex: "0",
+                      data: { badge_modal: modal_data.to_json } }
+  .badge-timeline-item__line-dot
+
+  .badge-timeline-item__card
+    .badge-timeline-item__card-top
+      .badge-timeline-item__emoji-wrap
+        %span.badge-timeline-item__emoji{ class: "badge-timeline-item__emoji--#{rarity}" }
+          = item.emoji
+        - if item.pinned?
+          %span.badge-timeline-item__pin-badge{ title: "プロフィールに固定中", "aria-label": "固定済み" } ★
+
+      .badge-timeline-item__meta
+        .badge-timeline-item__labels
+          %span.badge-timeline-item__rarity{ class: "badge-timeline-item__rarity--#{rarity}" }= rarity_label
+          %span.badge-timeline-item__label= item.label
+        %time.badge-timeline-item__date{ datetime: item.earned_at.iso8601 }
+          = item.earned_at.strftime("%-Y年%-m月%-d日 達成")
+
+    - if growth_story.present?
+      %p.badge-timeline-item__growth-story{ class: "badge-timeline-item__growth-story--#{rarity}" }
+        = growth_story

@@ -1,0 +1,563 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Badge Detail Modal（Phase 2-I）
+// z-index: 8100（celebration modal: 9000 / toast: 8500 より下）
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Overlay ───────────────────────────────────────────────────────────────────
+
+.badge-detail-overlay {
+  align-items: center;
+  backdrop-filter: blur(3px);
+  background: rgba(0, 0, 0, 0.52);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  opacity: 0;
+  padding: 16px;
+  position: fixed;
+  transition: opacity 0.22s ease;
+  z-index: 8100;
+
+  &--visible {
+    opacity: 1;
+  }
+
+  @media (max-width: 767px) {
+    align-items: flex-end;
+    padding: 0;
+  }
+}
+
+// ── Modal（desktop: center card / mobile: bottom drawer）────────────────────
+
+.badge-detail-modal {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  max-width: 480px;
+  opacity: 0;
+  overflow-y: auto;
+  position: relative;
+  transform: scale(0.95) translateY(10px);
+  transition: transform 0.25s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.22s ease;
+  width: 100%;
+
+  &--visible {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+
+  // Rarity variants
+  &--legendary {
+    background: linear-gradient(160deg, #fffbeb 0%, #fef3c7 30%, #fff 65%);
+    border-color: rgba(251, 191, 36, 0.38);
+    box-shadow: 0 20px 60px rgba(251, 191, 36, 0.14), 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  &--epic {
+    background: linear-gradient(160deg, #f5f3ff 0%, #ede9fe 30%, #fff 65%);
+    border-color: rgba(139, 92, 246, 0.28);
+    box-shadow: 0 20px 60px rgba(139, 92, 246, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  &--rare {
+    border-color: rgba(59, 130, 246, 0.22);
+  }
+
+  // Mobile: drawer from bottom
+  @media (max-width: 767px) {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-radius: 24px 24px 0 0;
+    max-height: 90vh;
+    max-width: 100%;
+    opacity: 0;
+    transform: translateY(48px);
+
+    &--visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+// ── Mobile drag handle ────────────────────────────────────────────────────────
+
+.badge-detail-modal__drag-handle {
+  background: #d1d5db;
+  border-radius: 2px;
+  display: none;
+  height: 4px;
+  margin: 12px auto 0;
+  width: 36px;
+
+  @media (max-width: 767px) {
+    display: block;
+  }
+}
+
+// ── Close button ──────────────────────────────────────────────────────────────
+
+.badge-detail-modal__close {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.06);
+  border: none;
+  border-radius: 50%;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  font-size: 18px;
+  height: 32px;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  transition: background 0.15s, color 0.15s;
+  width: 32px;
+  z-index: 1;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.12);
+    color: #1f2937;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #4b6af0;
+    outline-offset: 2px;
+  }
+}
+
+// ── Body（scrollable content）────────────────────────────────────────────────
+
+.badge-detail-modal__body {
+  padding: 28px 24px 28px;
+
+  @media (max-width: 767px) {
+    padding: 20px 20px;
+    padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+// ── Emoji ─────────────────────────────────────────────────────────────────────
+
+.badge-detail-modal__emoji-wrap {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.badge-detail-modal__emoji {
+  display: inline-block;
+  font-size: 72px;
+  line-height: 1;
+
+  &--legendary {
+    animation: badgeDetailShimmer 2.5s ease-in-out infinite;
+  }
+
+  &--epic {
+    animation: badgeDetailPulse 2.2s ease-in-out infinite;
+  }
+
+  // Locked 段階別透明度
+  &--locked {
+    filter: grayscale(1) opacity(0.35);
+  }
+
+  &--locked-near {
+    filter: grayscale(0.6) opacity(0.65);
+  }
+
+  &--locked-close {
+    filter: grayscale(0.2) opacity(0.82);
+  }
+}
+
+@keyframes badgeDetailShimmer {
+  0%, 100% { filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.35)); }
+  50%       { filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.82)); }
+}
+
+@keyframes badgeDetailPulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.06); }
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+
+.badge-detail-modal__header {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.badge-detail-modal__rarity-chip {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  padding: 3px 10px;
+  text-transform: uppercase;
+
+  &--legendary {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+    color: #fff;
+  }
+
+  &--epic {
+    background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+    color: #fff;
+  }
+
+  &--rare {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  &--common {
+    background: #f3f4f6;
+    color: #4b5563;
+  }
+}
+
+.badge-detail-modal__label {
+  color: #1f2937;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin: 0 0 6px;
+}
+
+.badge-detail-modal__category-tag {
+  background: #f3f4f6;
+  border-radius: 6px;
+  color: #6b7280;
+  display: inline-block;
+  font-size: 12px;
+  padding: 2px 8px;
+}
+
+// ── Earned date ───────────────────────────────────────────────────────────────
+
+.badge-detail-modal__earned-date {
+  color: #9ca3af;
+  font-size: 13px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+// ── Divider ───────────────────────────────────────────────────────────────────
+
+.badge-detail-modal__divider {
+  background: #f3f4f6;
+  height: 1px;
+  margin: 14px 0;
+}
+
+// ── Growth story ──────────────────────────────────────────────────────────────
+
+.badge-detail-modal__growth-story {
+  border-left: 3px solid #e5e7eb;
+  border-radius: 0 12px 12px 0;
+  background: #f9fafb;
+  color: #374151;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.65;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  text-align: left;
+
+  &--legendary {
+    background: #fffbeb;
+    border-left-color: #f59e0b;
+  }
+
+  &--epic {
+    background: #f5f3ff;
+    border-left-color: #8b5cf6;
+  }
+
+  &--rare {
+    background: #eff6ff;
+    border-left-color: #3b82f6;
+  }
+
+  &--common {
+    background: #f0fdf4;
+    border-left-color: #10b981;
+  }
+}
+
+// ── Description ──────────────────────────────────────────────────────────────
+
+.badge-detail-modal__description {
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.65;
+  margin-bottom: 0;
+  text-align: center;
+}
+
+// ── Actions（earned: pin + share）────────────────────────────────────────────
+
+.badge-detail-modal__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.badge-detail-modal__pin-btn {
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  color: #374151;
+  cursor: pointer;
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 12px;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+  &:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+  }
+
+  &--active {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #92400e;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #4b6af0;
+    outline-offset: 2px;
+  }
+}
+
+.badge-detail-modal__share-btn {
+  background: linear-gradient(135deg, #f07b4a, #da5635);
+  border-radius: 10px;
+  color: #fff;
+  display: block;
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 12px;
+  text-align: center;
+  text-decoration: none;
+  transition: opacity 0.15s, transform 0.1s;
+
+  &:hover {
+    color: #fff;
+    opacity: 0.88;
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #f07b4a;
+    outline-offset: 2px;
+  }
+}
+
+// ── Locked state ──────────────────────────────────────────────────────────────
+
+.badge-detail-modal__locked-badge {
+  align-items: center;
+  color: #9ca3af;
+  display: flex;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.badge-detail-modal__locked-desc {
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 0;
+  text-align: center;
+}
+
+// ── Progress section（locked, ratio ≥ 0.5）───────────────────────────────────
+
+.badge-detail-modal__progress-section {
+  background: #f9fafb;
+  border-radius: 12px;
+  margin-top: 14px;
+  padding: 14px 16px;
+}
+
+.badge-detail-modal__progress-hint-text {
+  color: #374151;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.badge-detail-modal__progress-bar-wrap {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.badge-detail-modal__progress-bar-track {
+  background: #e5e7eb;
+  border-radius: 4px;
+  flex: 1;
+  height: 8px;
+  overflow: hidden;
+}
+
+.badge-detail-modal__progress-bar-fill {
+  border-radius: 4px;
+  height: 100%;
+  transition: width 0.6s ease;
+
+  &--legendary { background: linear-gradient(90deg, #f59e0b, #d97706); }
+  &--epic       { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+  &--rare       { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+  &--common     { background: linear-gradient(90deg, #10b981, #059669); }
+
+  // ratio ≥ 0.8: 達成間近演出
+  &--close {
+    animation: badgeDetailProgressGlow 1.8s ease-in-out infinite;
+  }
+}
+
+@keyframes badgeDetailProgressGlow {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.72; }
+}
+
+.badge-detail-modal__progress-rate {
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 38px;
+  text-align: right;
+}
+
+.badge-detail-modal__progress-detail {
+  color: #6b7280;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+// ── CTA（locked）─────────────────────────────────────────────────────────────
+
+.badge-detail-modal__cta-wrap {
+  margin-top: 18px;
+}
+
+.badge-detail-modal__cta-btn {
+  background: linear-gradient(135deg, #f07b4a, #da5635);
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(218, 86, 53, 0.2);
+  color: #fff;
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 16px;
+  text-align: center;
+  text-decoration: none;
+  transition: opacity 0.15s, transform 0.1s;
+  width: 100%;
+
+  &:hover {
+    color: #fff;
+    opacity: 0.88;
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+}
+
+// ── Next badge section（earned で次がある場合）────────────────────────────────
+
+.badge-detail-modal__next-section {
+  background: #f0f4ff;
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  border-radius: 12px;
+  margin-top: 18px;
+  padding: 14px 16px;
+}
+
+.badge-detail-modal__next-label {
+  color: #6366f1;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.badge-detail-modal__next-badge {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.badge-detail-modal__next-emoji {
+  flex-shrink: 0;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.badge-detail-modal__next-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.badge-detail-modal__next-badge-label {
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 2px;
+}
+
+.badge-detail-modal__next-badge-rarity {
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-detail-modal__next-cta {
+  color: #4f46e5;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.15s;
+  white-space: nowrap;
+
+  &:hover {
+    color: #3730a3;
+    text-decoration: none;
+  }
+}
+
+// ── reduced-motion ────────────────────────────────────────────────────────────
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-detail-overlay                         { transition: none; }
+  .badge-detail-modal                           { transition: none; }
+  .badge-detail-modal__emoji--legendary         { animation: none; }
+  .badge-detail-modal__emoji--epic              { animation: none; }
+  .badge-detail-modal__progress-bar-fill--close { animation: none; }
+  .badge-detail-modal__progress-bar-fill        { transition: none; }
+}

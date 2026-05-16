@@ -9,7 +9,12 @@
 - show_pin      = local_assigns.fetch(:show_pin, false)
 - is_pinned     = is_earned && earned.pinned?
 
-%div{ class: card_classes, data: { badge_key: key } }
+-# ── Badge Detail Modal 用データ ─────────────────────────────────────────────
+- modal_data = achievement_badge_modal_data(key: key, definition: definition, earned: earned, progress_hint: progress_hint, can_share: can_share, show_pin: show_pin, earned_achievement_keys: @earned_achievement_keys)
+
+%div{ class: card_classes,
+      tabindex: "0",
+      data: { badge_key: key, badge_modal: modal_data.to_json } }
   .achievement-badge-card__rarity-bar
   - if show_pin && is_earned
     %button.achievement-badge-card__pin-btn{ type: "button",
@@ -57,7 +62,7 @@
               %span #BeMyStyle
           .achievement-badge-card__share-lock-overlay
             %p.achievement-badge-card__share-lock-main この努力を1枚に残す
-            = link_to "Coreで記録する →", public_singing_lp_path(anchor: "lp-section"),
+            = link_to "Coreプランでシェア", public_singing_lp_path(anchor: "lp-section"),
                       class: "achievement-badge-card__share-lock-link"
 
     - else

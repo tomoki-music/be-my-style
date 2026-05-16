@@ -196,7 +196,11 @@ Rails.application.routes.draw do
 
   namespace :singing do
     root to: "homes#top"
-    resources :diagnoses, only: [:index, :new, :create, :show]
+    resources :diagnoses, only: [:index, :new, :create, :show] do
+      member do
+        get :newly_awarded_badges
+      end
+    end
     get "share_images/:token", to: "share_images#public_show", as: :public_share_image
     resource :share_image, only: [:show] do
       post :capture
@@ -207,6 +211,9 @@ Rails.application.routes.draw do
     resources :season_histories, only: [:index]
     resources :notifications, only: [:index]
     resources :badges, only: [:index] do
+      collection do
+        get :timeline
+      end
       member do
         patch :pin
         patch :unpin
