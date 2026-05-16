@@ -122,9 +122,28 @@ class SingingAchievementBadge < ApplicationRecord
                         inclusion: { in: BADGE_DEFINITIONS.keys }
   validates :earned_at, presence: true
 
-  scope :earned,        -> { order(earned_at: :desc) }
-  scope :for_category,  ->(cat) { where("JSON_EXTRACT(metadata, '$.category') = ?", cat.to_s) }
-  scope :by_rarity,     -> { sort_by { |b| RARITY_ORDER.index(definition(b.badge_key)[:rarity]) || 99 } }
+  PIN_LIMIT = 3
+
+  scope :earned,   -> { order(earned_at: :desc) }
+  scope :pinned,   -> { where.not(pinned_at: nil).order(pinned_at: :asc) }
+  scope :for_category, ->(cat) { where("JSON_EXTRACT(metadata, '$.category') = ?", cat.to_s) }
+  scope :by_rarity,    -> { sort_by { |b| RARITY_ORDER.index(definition(b.badge_key)[:rarity]) || 99 } }
+
+  def pinned?
+    pinned_at.present?
+  end
+
+  def pin!
+    touch(:pinned_at)
+  end
+
+  def unpin!
+    update!(pinned_at: nil)
+  end
+
+  def self.pinned_limit_reached?(customer)
+    customer.singing_achievement_badges.pinned.count >= PIN_LIMIT
+  end
 
   def self.definition(badge_key)
     BADGE_DEFINITIONS[badge_key.to_s] || {}

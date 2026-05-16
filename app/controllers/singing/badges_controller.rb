@@ -20,6 +20,35 @@ class Singing::BadgesController < Singing::BaseController
   NEAR_COMPLETION_THRESHOLD = 0.7
   NEAR_COMPLETION_MAX       = 3
 
+  PIN_LIMIT = SingingAchievementBadge::PIN_LIMIT
+
+  def pin
+    badge = current_customer.singing_achievement_badges.find(params[:id])
+
+    if badge.pinned?
+      render json: { ok: true, pinned: true, message: "すでに固定済みです" }
+      return
+    end
+
+    if SingingAchievementBadge.pinned_limit_reached?(current_customer)
+      render json: { ok: false, pinned: false, message: "固定できるバッジは最大#{PIN_LIMIT}件です" }, status: :unprocessable_entity
+      return
+    end
+
+    badge.pin!
+    render json: { ok: true, pinned: true, message: "バッジを固定しました" }
+  rescue ActiveRecord::RecordNotFound
+    head :not_found
+  end
+
+  def unpin
+    badge = current_customer.singing_achievement_badges.find(params[:id])
+    badge.unpin!
+    render json: { ok: true, pinned: false, message: "固定を解除しました" }
+  rescue ActiveRecord::RecordNotFound
+    head :not_found
+  end
+
   def index
     # ── ランキング / シーズンバッジ（既存） ────────────────────────
     @season_badges = current_customer.singing_badges

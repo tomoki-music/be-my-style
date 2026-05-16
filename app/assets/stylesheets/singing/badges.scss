@@ -1954,3 +1954,94 @@
     }
   }
 }
+
+// ── Pin ボタン ────────────────────────────────────────────
+.achievement-badge-card {
+  position: relative;
+}
+
+.achievement-badge-card__pin-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 4px 6px;
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  transition: color 0.15s, transform 0.15s;
+  z-index: 2;
+
+  &:hover {
+    color: #f59e0b;
+    transform: scale(1.2);
+  }
+
+  &--active {
+    color: #f59e0b;
+  }
+
+  &:focus-visible {
+    border-radius: 4px;
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+  }
+}
+
+// タッチ端末でタップしやすいように最低サイズ確保
+@media (pointer: coarse) {
+  .achievement-badge-card__pin-btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px;
+  }
+}
+
+// ── Pin toast ─────────────────────────────────────────────
+.achievement-pin-toast {
+  animation: achievement-pin-toast-in 0.25s ease;
+  background: #1f2937;
+  border-radius: 10px;
+  bottom: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  left: 50%;
+  max-width: 320px;
+  opacity: 0;
+  padding: 12px 20px;
+  pointer-events: none;
+  position: fixed;
+  text-align: center;
+  transform: translateX(-50%) translateY(0);
+  width: calc(100% - 32px);
+  z-index: 9999;
+
+  &--visible {
+    opacity: 1;
+  }
+
+  &--error {
+    background: #dc2626;
+  }
+}
+
+@keyframes achievement-pin-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .achievement-pin-toast {
+    animation: none;
+  }
+}

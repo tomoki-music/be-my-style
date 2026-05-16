@@ -309,3 +309,113 @@ $rank-colors: (
   font-weight: 600;
   margin-left: auto;
 }
+
+// ── Pinned Achievements ────────────────────────────────────
+.singing-profile__section--pinned-achievements {
+  background: linear-gradient(145deg, #fffbeb, #fefce8);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.singing-profile__pinned-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.singing-profile__pinned-badge {
+  align-items: center;
+  background: #fff;
+  border: 1px solid rgba(156, 163, 175, 0.25);
+  border-radius: 14px;
+  display: flex;
+  flex: 1 1 140px;
+  gap: 10px;
+  max-width: 200px;
+  min-width: 130px;
+  overflow: hidden;
+  padding: 12px 14px;
+  position: relative;
+
+  &--legendary {
+    border-color: rgba(234, 179, 8, 0.4);
+    box-shadow: 0 0 12px rgba(234, 179, 8, 0.15);
+  }
+
+  &--epic {
+    border-color: rgba(139, 92, 246, 0.3);
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.12);
+  }
+
+  &--rare {
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+}
+
+.singing-profile__pinned-badge-glow {
+  border-radius: 14px;
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+
+  .singing-profile__pinned-badge--legendary & {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.06), transparent);
+  }
+
+  .singing-profile__pinned-badge--epic & {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.06), transparent);
+  }
+}
+
+.singing-profile__pinned-badge-emoji {
+  flex-shrink: 0;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.singing-profile__pinned-badge-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.singing-profile__pinned-badge-rarity {
+  color: #9ca3af;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0;
+
+  .singing-profile__pinned-badge--legendary & { color: #b45309; }
+  .singing-profile__pinned-badge--epic        & { color: #7c3aed; }
+  .singing-profile__pinned-badge--rare        & { color: #1d4ed8; }
+}
+
+.singing-profile__pinned-badge-label {
+  color: #1f2937;
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.singing-profile__pinned-badge-date {
+  color: #6b7280;
+  font-size: 11px;
+  margin: 0;
+}
+
+.singing-profile__pinned-manage-link {
+  color: #6b7280;
+  font-size: 13px;
+  text-decoration: none;
+
+  &:hover {
+    color: #4b5563;
+    text-decoration: underline;
+  }
+}

@@ -1,13 +1,26 @@
 -# locals: key (String), definition (Hash), earned (SingingAchievementBadge | nil),
--#          can_share (Boolean), progress_hint (ProgressHintBuilder::ProgressHint | nil)
+-#          can_share (Boolean), progress_hint (ProgressHintBuilder::ProgressHint | nil),
+-#          show_pin (Boolean) — true のとき pin ボタンを表示（自分のギャラリーのみ）
 - rarity      = definition[:rarity]
 - is_earned   = earned.present?
 - card_classes = ["achievement-badge-card", "achievement-badge-card--#{rarity}", ("achievement-badge-card--locked" unless is_earned)].compact.join(" ")
 - rarity_label_text = { common: "NORMAL", rare: "RARE", epic: "EPIC", legendary: "LEGENDARY" }[rarity] || rarity.to_s.upcase
 - show_progress = !is_earned && progress_hint && progress_hint.progress_ratio >= 0.5
+- show_pin      = local_assigns.fetch(:show_pin, false)
+- is_pinned     = is_earned && earned.pinned?
 
 %div{ class: card_classes, data: { badge_key: key } }
   .achievement-badge-card__rarity-bar
+  - if show_pin && is_earned
+    %button.achievement-badge-card__pin-btn{ type: "button",
+                                             class: ("achievement-badge-card__pin-btn--active" if is_pinned),
+                                             title: (is_pinned ? "固定を解除する" : "プロフィールに固定する"),
+                                             "aria-label": (is_pinned ? "固定を解除する" : "プロフィールに固定する"),
+                                             "data-badge-id": earned.id,
+                                             "data-pin-url": pin_singing_badge_path(earned),
+                                             "data-unpin-url": unpin_singing_badge_path(earned),
+                                             "data-pinned": is_pinned.to_s }
+      = is_pinned ? "★" : "☆"
 
   %div{ class: "achievement-badge-card__emoji#{is_earned ? '' : ' achievement-badge-card__emoji--locked'}" }
     = definition[:emoji]

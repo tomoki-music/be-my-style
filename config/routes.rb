@@ -206,7 +206,12 @@ Rails.application.routes.draw do
     resources :ranking_seasons, only: [:index, :show]
     resources :season_histories, only: [:index]
     resources :notifications, only: [:index]
-    resources :badges, only: [:index]
+    resources :badges, only: [:index] do
+      member do
+        patch :pin
+        patch :unpin
+      end
+    end
     resources :users, only: [:show, :edit, :update] do
       resource :profile_reaction, only: [:create]
     end

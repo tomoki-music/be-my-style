@@ -80,6 +80,25 @@
             - if current_customer == @user
               = link_to "自己紹介を書く", edit_singing_user_path(@user)
 
+      - if @pinned_achievement_badges.any?
+        %section.singing-profile__section.singing-profile__section--pinned-achievements
+          .singing-profile__section-head
+            %p.singing-profile__section-kicker Pinned
+            %h2 ピン止めバッジ
+          .singing-profile__pinned-badges
+            - @pinned_achievement_badges.each do |badge|
+              - defn = badge.definition
+              - rarity = badge.rarity
+              .singing-profile__pinned-badge{ class: "singing-profile__pinned-badge--#{rarity}" }
+                .singing-profile__pinned-badge-glow
+                %span.singing-profile__pinned-badge-emoji= defn[:emoji]
+                .singing-profile__pinned-badge-body
+                  %p.singing-profile__pinned-badge-rarity= rarity.to_s.upcase
+                  %strong.singing-profile__pinned-badge-label= defn[:label]
+                  %p.singing-profile__pinned-badge-date= badge.earned_at.strftime("%-m月%-d日 達成")
+          - if current_customer == @user
+            = link_to "バッジを管理する →", singing_badges_path, class: "singing-profile__pinned-manage-link"
+
       %section.singing-profile__section
         .singing-profile__section-head
           %p.singing-profile__section-kicker Achievements

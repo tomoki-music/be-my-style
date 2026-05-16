@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_15_164712) do
+ActiveRecord::Schema.define(version: 2026_05_16_112320) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -833,8 +833,10 @@ ActiveRecord::Schema.define(version: 2026_05_15_164712) do
     t.json "metadata"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.datetime "pinned_at"
     t.index ["customer_id", "badge_key"], name: "index_singing_achievement_badges_unique", unique: true
     t.index ["customer_id", "earned_at"], name: "index_singing_achievement_badges_on_customer_earned"
+    t.index ["customer_id", "pinned_at"], name: "index_singing_achievement_badges_on_customer_pinned"
     t.index ["customer_id"], name: "index_singing_achievement_badges_on_customer_id"
     t.index ["singing_diagnosis_id"], name: "index_singing_achievement_badges_on_singing_diagnosis_id"
   end

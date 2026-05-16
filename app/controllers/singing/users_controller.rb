@@ -5,6 +5,7 @@ class Singing::UsersController < Singing::BaseController
   before_action :ensure_correct_user, only: [:edit, :update]
 
   def show
+    @pinned_achievement_badges = @user.singing_achievement_badges.pinned.limit(SingingAchievementBadge::PIN_LIMIT)
     @recent_diagnoses = @user.singing_diagnoses.completed.order(created_at: :desc).limit(5)
     @growth_diagnoses = @user.singing_diagnoses.completed.where.not(overall_score: nil).order(created_at: :asc).limit(12)
     @recent_activities = @user.activities.with_attached_activity_image.includes(:activity_reactions).order(created_at: :desc).limit(3)
