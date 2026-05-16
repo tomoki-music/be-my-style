@@ -26,7 +26,8 @@
 
 .achievement-modal {
   position: relative;
-  width: min(90vw, 360px);
+  width: 90vw;
+  max-width: 360px;
   border-radius: 20px;
   padding: 32px 24px 24px;
   background: #fff;
@@ -228,7 +229,7 @@
   &--rare {
     padding: 13px 14px;
     min-width: 224px;
-    max-width: min(calc(100vw - 32px), 320px);
+    max-width: 320px;
     border-left: 3px solid #6366f1;
   }
 
@@ -236,7 +237,7 @@
   &--common {
     padding: 11px 14px;
     min-width: 180px;
-    max-width: min(calc(100vw - 32px), 280px);
+    max-width: 280px;
     border-left: 3px solid #10b981;
   }
 }
