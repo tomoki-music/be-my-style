@@ -39,8 +39,8 @@ class Singing::ShareImagesController < Singing::BaseController
       filename: result.filename,
       local_path: result.local_path.relative_path_from(Rails.root).to_s
     }
-  rescue Singing::ShareImageCaptureService::NoShareImageData => e
-    render json: { error: e.message }, status: :unprocessable_entity
+  rescue Singing::ShareImageCaptureService::NoShareImageData
+    render json: { error: capture_no_data_message }, status: :unprocessable_entity
   end
 
   def public_show
@@ -203,6 +203,25 @@ class Singing::ShareImagesController < Singing::BaseController
         share_image_customer,
         achievement_wrapped_month_str
       )
+    end
+  end
+
+  def capture_no_data_message
+    case capture_target
+    when "monthly-achievement-wrapped"
+      "この月のバッジがないため、シェアカードを生成できませんでした。診断を続けてバッジを獲得すると表示されます。"
+    when "monthly-wrapped"
+      "この月の診断記録がないため、シェアカードを生成できませんでした。"
+    when "yearly-wrapped"
+      "今年の診断記録がないため、シェアカードを生成できませんでした。"
+    when "achievement-badge"
+      "まだバッジを獲得していないため、シェアカードを生成できませんでした。診断を完了するとバッジが獲得できます。"
+    when "daily-challenge"
+      "Daily Challenge のシェアカードをまだ生成できません。今日の診断を完了してください。"
+    when "ranking"
+      "ランキングのシェアカードをまだ生成できません。診断でスコアを記録してください。"
+    else
+      "シェアカードを生成できませんでした。診断を続けてからもう一度お試しください。"
     end
   end
 

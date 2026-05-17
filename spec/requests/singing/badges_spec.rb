@@ -468,6 +468,46 @@ RSpec.describe "Singing::Badges", type: :request do
           expect(response.body).to include("Achievement Timeline")
           expect(response.body).to include(timeline_singing_badges_path)
         end
+
+        context "Core ユーザーはシェアカード導線が表示されること" do
+          before { customer.create_subscription!(status: "active", plan: "core") }
+
+          it "シェアカードを作るボタンが表示されること" do
+            get monthly_wrapped_singing_badges_path(month: "2026-05")
+
+            expect(response.body).to include("シェアカードを作る")
+            expect(response.body).to include("target=monthly-achievement-wrapped")
+            expect(response.body).to include("month=2026-05")
+            expect(response.body).to include("Core / Premium")
+          end
+
+          it "アップグレード CTA は表示されないこと" do
+            get monthly_wrapped_singing_badges_path(month: "2026-05")
+
+            expect(response.body).not_to include("シェアカードは Core / Premium で利用できます")
+          end
+        end
+
+        context "Free ユーザーには押し売り感のないアップグレード導線が表示されること" do
+          it "アップグレード CTA が表示されること" do
+            get monthly_wrapped_singing_badges_path(month: "2026-05")
+
+            expect(response.body).to include("シェアカードは Core / Premium で利用できます")
+            expect(response.body).to include("プランを見る")
+            expect(response.body).not_to include("シェアカードを作る")
+          end
+        end
+
+        context "Light ユーザーにもアップグレード CTA が表示されること" do
+          before { customer.create_subscription!(status: "active", plan: "light") }
+
+          it "アップグレード CTA が表示されること" do
+            get monthly_wrapped_singing_badges_path(month: "2026-05")
+
+            expect(response.body).to include("シェアカードは Core / Premium で利用できます")
+            expect(response.body).not_to include("シェアカードを作る")
+          end
+        end
       end
 
       context "他月のバッジは表示されないこと" do

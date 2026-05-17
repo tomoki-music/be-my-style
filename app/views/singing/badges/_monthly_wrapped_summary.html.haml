@@ -64,13 +64,27 @@
 
 .mw-share-section
   .mw-share-card
-    %p.mw-share-card__title この月をシェア画像にする
-    %p.mw-share-card__desc
-      この月の Achievement Wrapped をカードにして SNS でシェアできます。
-    .mw-share-card__actions
-      = link_to singing_share_image_path(target: "monthly-achievement-wrapped", month: wrapped.month_str),
-                class: "mw-btn mw-btn--primary" do
-        📸 シェアカードを作る
+    - if current_customer.has_feature?(:singing_achievement_badge_share_image)
+      .mw-share-card__head
+        %span.mw-share-card__plan-badge Core / Premium
+        %p.mw-share-card__title この月をシェア画像にする
+      %p.mw-share-card__desc
+        この月の Achievement Wrapped をカードにして SNS でシェアできます。
+      .mw-share-card__actions
+        = link_to singing_share_image_path(target: "monthly-achievement-wrapped", month: wrapped.month_str),
+                  class: "mw-btn mw-btn--primary" do
+          📸 シェアカードを作る
+    - else
+      .mw-share-card__upgrade
+        %span.mw-share-card__upgrade-icon 📸
+        %p.mw-share-card__upgrade-title シェアカードは Core / Premium で利用できます
+        %p.mw-share-card__upgrade-desc
+          この月の Achievement をカードにして SNS でシェアできます。
+          %br
+          続けて診断を重ねたいときは、Core 以上のプランもご検討ください。
+        = link_to public_singing_lp_path(anchor: "lp-section"), class: "mw-btn mw-btn--ghost mw-btn--sm" do
+          プランを見る →
+    .mw-share-card__actions.mw-share-card__actions--nav
       = link_to timeline_singing_badges_path, class: "mw-btn mw-btn--secondary" do
         Achievement Timeline を見る
       = link_to singing_badges_path, class: "mw-btn mw-btn--ghost" do
