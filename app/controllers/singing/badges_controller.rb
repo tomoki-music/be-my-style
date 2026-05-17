@@ -49,6 +49,13 @@ class Singing::BadgesController < Singing::BaseController
     @year  = year
   end
 
+  def recap_movie
+    year = sanitize_year(params[:year])
+    recap = Singing::AchievementRecapMovieBuilder.call(current_customer, year: year)
+
+    render json: Singing::AchievementRecapMovieSerializer.new(recap).as_json
+  end
+
   def pin
     badge = current_customer.singing_achievement_badges.find(params[:id])
 
@@ -148,5 +155,12 @@ class Singing::BadgesController < Singing::BaseController
       h[rarity] = @earned_achievement_badges.count { |b| b.rarity == rarity }
     end
     @recent_earned_badges = @earned_achievement_badges.first(2)
+  end
+
+  private
+
+  def sanitize_year(raw)
+    year = raw.to_i
+    year < 2020 || year > Time.current.year + 1 ? Time.current.year : year
   end
 end

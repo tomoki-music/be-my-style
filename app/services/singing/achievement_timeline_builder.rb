@@ -21,13 +21,14 @@ module Singing
       :definition,
       keyword_init: true
     ) do
-      def label    = definition[:label]    || badge_key
-      def emoji    = definition[:emoji]    || "🎯"
-      def rarity   = definition[:rarity]   || :common
-      def category = definition[:category] || :milestone
-      def earned_at = customer_achievement_badge.earned_at
-      def pinned?  = customer_achievement_badge.pinned?
-      def badge_id = customer_achievement_badge.id
+      def label       = definition[:label]       || badge_key
+      def emoji       = definition[:emoji]       || "🎯"
+      def rarity      = definition[:rarity]      || :common
+      def category    = definition[:category]    || :milestone
+      def description = definition[:description] || ""
+      def earned_at   = customer_achievement_badge.earned_at
+      def pinned?     = customer_achievement_badge.pinned?
+      def badge_id    = customer_achievement_badge.id
     end
 
     TimelineMonthGroup = Struct.new(:month, :label, :items, keyword_init: true)

@@ -796,4 +796,109 @@ RSpec.describe "Singing::Badges", type: :request do
       end
     end
   end
+
+  # ── GET /singing/badges/recap_movie.json ──────────────────────────────────
+
+  describe "GET /singing/badges/recap_movie.json" do
+    context "未ログインの場合" do
+      it "認証エラーになること（リダイレクトまたは401）" do
+        get recap_movie_singing_badges_path(format: :json)
+
+        expect(response.status).to be_in([302, 401])
+      end
+    end
+
+    context "ログイン済みの場合" do
+      before { sign_in customer }
+
+      it "200 を返すこと" do
+        get recap_movie_singing_badges_path(format: :json, year: "2026")
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "Content-Type が application/json であること" do
+        get recap_movie_singing_badges_path(format: :json, year: "2026")
+
+        expect(response.content_type).to match(%r{application/json})
+      end
+
+      context "バッジがない場合（empty）" do
+        it "JSON が返ること" do
+          get recap_movie_singing_badges_path(format: :json, year: "2026")
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:empty]).to be true
+          expect(json[:scenes]).to eq([])
+          expect(json[:year]).to eq(2026)
+        end
+      end
+
+      context "バッジがある場合" do
+        let!(:badge_jan) do
+          create(:singing_achievement_badge, :first_diagnosis, customer: customer,
+                 earned_at: Time.zone.local(2026, 1, 10, 10, 0, 0))
+        end
+        let!(:badge_may) do
+          create(:singing_achievement_badge, :streak_7, customer: customer,
+                 earned_at: Time.zone.local(2026, 5, 20, 10, 0, 0))
+        end
+
+        it "scenes 配列が含まれること" do
+          get recap_movie_singing_badges_path(format: :json, year: "2026")
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:scenes]).to be_an(Array)
+          expect(json[:scenes]).not_to be_empty
+        end
+
+        it "必須トップレベルキーが揃っていること" do
+          get recap_movie_singing_badges_path(format: :json, year: "2026")
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json.keys).to include(:year, :title, :subtitle, :total_duration, :empty, :scenes)
+        end
+
+        it "scene に必須フィールドが含まれること" do
+          get recap_movie_singing_badges_path(format: :json, year: "2026")
+
+          json  = JSON.parse(response.body, symbolize_names: true)
+          scene = json[:scenes].first
+          expect(scene.keys).to include(:index, :type, :title, :subtitle, :body, :duration, :emotion, :background_style, :badge)
+        end
+
+        it "他ユーザーのデータを返さないこと" do
+          create(:singing_achievement_badge, :personal_best, customer: other_customer,
+                 earned_at: Time.zone.local(2026, 3, 1, 10, 0, 0))
+
+          get recap_movie_singing_badges_path(format: :json, year: "2026")
+
+          json = JSON.parse(response.body)
+          expect(json.to_json).not_to include("Personal Best")
+        end
+      end
+
+      context "不正な year パラメータ" do
+        it "year=0 でも 500 にならないこと" do
+          get recap_movie_singing_badges_path(format: :json, year: "0")
+
+          expect(response.status).not_to eq(500)
+        end
+
+        it "year=abc でも 500 にならないこと" do
+          get recap_movie_singing_badges_path(format: :json, year: "abc")
+
+          expect(response.status).not_to eq(500)
+        end
+
+        it "year 未指定でも JSON が返ること" do
+          get recap_movie_singing_badges_path(format: :json)
+
+          expect(response).to have_http_status(:ok)
+          json = JSON.parse(response.body)
+          expect(json["scenes"]).to be_an(Array)
+        end
+      end
+    end
+  end
 end

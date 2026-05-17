@@ -216,6 +216,7 @@ Rails.application.routes.draw do
         get :monthly_wrapped
         get :yearly_rewind
         get :recap_movie_preview
+        get :recap_movie
       end
       member do
         patch :pin
