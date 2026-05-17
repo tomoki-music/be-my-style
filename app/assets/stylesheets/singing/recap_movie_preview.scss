@@ -1,0 +1,397 @@
+// ──────────────────────────────────────────────────────────────────────────────
+// Achievement Recap Movie Preview
+// ──────────────────────────────────────────────────────────────────────────────
+
+// CSS カスタムプロパティ（シーン背景・感情カラー）
+:root {
+  --rmp-cosmic:     linear-gradient(135deg, #0a0e27 0%, #1a1060 50%, #0d2040 100%);
+  --rmp-sunrise:    linear-gradient(160deg, #1a1a2e 0%, #e44d26 50%, #f7b731 100%);
+  --rmp-neon:       linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  --rmp-aurora:     linear-gradient(160deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+  --rmp-dark-stage: linear-gradient(180deg, #000000 0%, #1a0a2e 60%, #0d0d0d 100%);
+
+  --rmp-emotional:  #e07b7b;
+  --rmp-hopeful:    #7bc8e0;
+  --rmp-powerful:   #e0b57b;
+  --rmp-nostalgic:  #b57be0;
+}
+
+// ── ページ外枠 ──────────────────────────────────────────────────────────────
+
+.singing-recap-movie-preview {
+  background: #0d1117;
+  color: #e6edf3;
+  min-height: calc(100vh - 80px);
+  padding: 28px 16px 80px;
+
+  @media (min-width: 640px) {
+    padding: 44px 24px 100px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+}
+
+.rmp-inner {
+  margin: 0 auto;
+  max-width: 760px;
+}
+
+// ── ナビ ────────────────────────────────────────────────────────────────────
+
+.rmp-nav {
+  margin-bottom: 28px;
+}
+
+.rmp-back-link {
+  color: #8b949e;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover { color: #e6edf3; }
+}
+
+// ── ボタン ──────────────────────────────────────────────────────────────────
+
+.rmp-btn {
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 22px;
+  text-align: center;
+  text-decoration: none;
+  transition: filter 0.15s ease, transform 0.1s ease;
+
+  &:hover { filter: brightness(1.1); }
+  &:active { transform: scale(0.97); }
+}
+
+.rmp-btn--primary {
+  background: #4f46e5;
+  color: #fff;
+}
+
+.rmp-btn--secondary {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #e6edf3;
+}
+
+.rmp-btn--ghost {
+  background: transparent;
+  border: 1px solid #30363d;
+  color: #8b949e;
+}
+
+// ── Empty ───────────────────────────────────────────────────────────────────
+
+.rmp-empty {
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.rmp-empty__icon {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 20px;
+}
+
+.rmp-empty__title {
+  color: #e6edf3;
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.rmp-empty__desc {
+  color: #8b949e;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin: 0 0 28px;
+}
+
+.rmp-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+// ── ヘッダー ────────────────────────────────────────────────────────────────
+
+.rmp-header {
+  margin-bottom: 40px;
+  padding: 28px 24px 24px;
+  border: 1px solid #21262d;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #161b22 0%, #0d1117 100%);
+}
+
+.rmp-header__eyebrow {
+  color: #8b949e;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.rmp-header__title {
+  color: #e6edf3;
+  font-size: clamp(1.5rem, 5vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 8px;
+}
+
+.rmp-header__subtitle {
+  color: #8b949e;
+  font-size: 1rem;
+  margin: 0 0 20px;
+}
+
+.rmp-header__meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rmp-header__meta-item {
+  color: #8b949e;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.rmp-header__meta-icon {
+  margin-right: 4px;
+}
+
+.rmp-header__meta-sep {
+  color: #30363d;
+}
+
+// ── Storyboard（シーンリスト） ───────────────────────────────────────────────
+
+.rmp-storyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+// ── 個別シーン ───────────────────────────────────────────────────────────────
+
+.rmp-scene {
+  border: 1px solid #21262d;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+}
+
+.rmp-scene__header {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 20px;
+}
+
+.rmp-scene__meta {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.rmp-scene__index {
+  color: #8b949e;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.rmp-scene__type-badge {
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  text-transform: uppercase;
+}
+
+.rmp-scene__type-badge--hero           { background: rgba(79, 70, 229, 0.3); color: #a5b4fc; }
+.rmp-scene__type-badge--first_achievement { background: rgba(234, 179, 8, 0.25); color: #fde68a; }
+.rmp-scene__type-badge--growth         { background: rgba(34, 197, 94, 0.2); color: #86efac; }
+.rmp-scene__type-badge--monthly_peak   { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+.rmp-scene__type-badge--legendary      { background: rgba(251, 191, 36, 0.25); color: #fcd34d; }
+.rmp-scene__type-badge--ending         { background: rgba(139, 148, 158, 0.2); color: #c9d1d9; }
+
+.rmp-scene__duration {
+  color: #8b949e;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.rmp-scene__dur-icon {
+  margin-right: 3px;
+}
+
+.rmp-scene__body {
+  padding: 24px 20px;
+
+  @media (min-width: 640px) {
+    padding: 28px 28px;
+  }
+}
+
+.rmp-scene__title {
+  color: #e6edf3;
+  font-size: clamp(1.15rem, 4vw, 1.55rem);
+  font-weight: 800;
+  line-height: 1.3;
+  margin: 0 0 8px;
+}
+
+.rmp-scene__subtitle {
+  color: #8b949e;
+  font-size: 0.92rem;
+  font-weight: 600;
+  margin: 0 0 14px;
+}
+
+.rmp-scene__copy {
+  color: #c9d1d9;
+  font-size: 0.93rem;
+  line-height: 1.75;
+  margin: 0;
+}
+
+.rmp-scene__badge {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 14px 16px;
+}
+
+.rmp-scene__badge-emoji {
+  flex-shrink: 0;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.rmp-scene__badge-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rmp-scene__badge-rarity {
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.rmp-scene__badge-rarity--legendary { color: #fcd34d; }
+.rmp-scene__badge-rarity--epic      { color: #c084fc; }
+.rmp-scene__badge-rarity--rare      { color: #60a5fa; }
+.rmp-scene__badge-rarity--common    { color: #8b949e; }
+
+.rmp-scene__badge-label {
+  color: #e6edf3;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.rmp-scene__footer {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  gap: 10px;
+  padding: 12px 20px;
+}
+
+.rmp-scene__emotion-pill,
+.rmp-scene__bg-pill {
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+}
+
+.rmp-scene__emotion-pill--emotional { background: rgba(224, 123, 123, 0.2); color: var(--rmp-emotional); }
+.rmp-scene__emotion-pill--hopeful   { background: rgba(123, 200, 224, 0.2); color: var(--rmp-hopeful); }
+.rmp-scene__emotion-pill--powerful  { background: rgba(224, 181, 123, 0.2); color: var(--rmp-powerful); }
+.rmp-scene__emotion-pill--nostalgic { background: rgba(181, 123, 224, 0.2); color: var(--rmp-nostalgic); }
+
+.rmp-scene__bg-pill {
+  background: rgba(255, 255, 255, 0.06);
+  color: #8b949e;
+}
+
+// ── シーン背景スタイル（左ボーダーアクセント） ────────────────────────────────
+
+.rmp-scene--cosmic     { border-left: 4px solid #6366f1; }
+.rmp-scene--sunrise    { border-left: 4px solid #f97316; }
+.rmp-scene--neon       { border-left: 4px solid #a855f7; }
+.rmp-scene--aurora     { border-left: 4px solid #22d3ee; }
+.rmp-scene--dark_stage { border-left: 4px solid #fbbf24; }
+
+// ── Remotion 接続ヒント ──────────────────────────────────────────────────────
+
+.rmp-export-hint {
+  align-items: flex-start;
+  background: rgba(79, 70, 229, 0.08);
+  border: 1px solid rgba(79, 70, 229, 0.2);
+  border-radius: 14px;
+  display: flex;
+  gap: 14px;
+  margin-bottom: 32px;
+  padding: 20px 20px;
+}
+
+.rmp-export-hint__icon {
+  flex-shrink: 0;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.rmp-export-hint__title {
+  color: #a5b4fc;
+  font-size: 0.88rem;
+  font-weight: 800;
+  margin: 0 0 5px;
+}
+
+.rmp-export-hint__desc {
+  color: #8b949e;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin: 0;
+
+  code {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    font-size: 0.82em;
+    padding: 1px 5px;
+  }
+}
+
+// ── 下部アクション ───────────────────────────────────────────────────────────
+
+.rmp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}

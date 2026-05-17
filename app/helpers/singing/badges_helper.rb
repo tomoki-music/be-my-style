@@ -78,6 +78,42 @@ module Singing
       earned_at.strftime("%-m月%-d日")
     end
 
+    SCENE_TYPE_LABELS = {
+      hero:              "オープニング",
+      first_achievement: "最初の達成",
+      growth:            "成長の記録",
+      monthly_peak:      "最高潮の月",
+      legendary:         "Legendary",
+      ending:            "エンディング"
+    }.freeze
+
+    EMOTION_LABELS = {
+      emotional: "感動的",
+      hopeful:   "希望",
+      powerful:  "力強い",
+      nostalgic: "懐かしい"
+    }.freeze
+
+    BG_STYLE_LABELS = {
+      cosmic:     "Cosmic",
+      sunrise:    "Sunrise",
+      neon:       "Neon",
+      aurora:     "Aurora",
+      dark_stage: "Dark Stage"
+    }.freeze
+
+    def scene_type_label(type)
+      SCENE_TYPE_LABELS[type.to_sym] || type.to_s
+    end
+
+    def emotion_label(emotion)
+      EMOTION_LABELS[emotion.to_sym] || emotion.to_s
+    end
+
+    def bg_style_label(bg_style)
+      BG_STYLE_LABELS[bg_style.to_sym] || bg_style.to_s
+    end
+
     def achievement_badge_modal_data(key:, definition:, earned:, progress_hint:, can_share:, show_pin:, earned_achievement_keys: nil)
       is_earned  = earned.present?
       is_pinned  = is_earned && earned.pinned?

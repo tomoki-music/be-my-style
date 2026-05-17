@@ -42,6 +42,13 @@ class Singing::BadgesController < Singing::BaseController
     @can_share_achievement = current_customer.has_feature?(:singing_achievement_badge_share_image)
   end
 
+  def recap_movie_preview
+    year = params[:year].to_i
+    year = Time.current.year if year < 2020 || year > Time.current.year + 1
+    @recap = Singing::AchievementRecapMovieBuilder.call(current_customer, year: year)
+    @year  = year
+  end
+
   def pin
     badge = current_customer.singing_achievement_badges.find(params[:id])
 

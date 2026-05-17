@@ -1,0 +1,84 @@
+- content_for :title, "#{@year}年 Recap Movie Preview | BeMyStyle"
+
+.singing-recap-movie-preview
+  .rmp-inner
+
+    .rmp-nav
+      = link_to "← Yearly Rewind", yearly_rewind_singing_badges_path(year: @year), class: "rmp-back-link"
+
+    - if @recap.empty?
+      .rmp-empty
+        .rmp-empty__icon 🎬
+        %h1.rmp-empty__title #{@year}年の Recap はまだありません
+        %p.rmp-empty__desc
+          バッジを獲得すると、1年間の軌跡が映画のシーンとして生成されます。
+          %br
+          まずは診断を始めてみましょう。
+        .rmp-empty__actions
+          = link_to new_singing_diagnosis_path, class: "rmp-btn rmp-btn--primary" do
+            診断を始める
+          = link_to singing_badges_path, class: "rmp-btn rmp-btn--ghost" do
+            バッジ一覧へ
+
+    - else
+      .rmp-header
+        .rmp-header__eyebrow Achievement Recap Movie
+        %h1.rmp-header__title= @recap.title
+        %p.rmp-header__subtitle= @recap.subtitle
+        .rmp-header__meta
+          %span.rmp-header__meta-item
+            %span.rmp-header__meta-icon 🎬
+            = "#{@recap.scenes.size}シーン"
+          %span.rmp-header__meta-sep ·
+          %span.rmp-header__meta-item
+            %span.rmp-header__meta-icon ⏱
+            = "総尺 #{@recap.total_duration}秒"
+
+      .rmp-storyboard{ role: "list", "aria-label" => "映画シーン一覧" }
+        - @recap.scenes.each do |scene|
+          .rmp-scene{ class: ["rmp-scene--#{scene.background_style}", "rmp-scene--emotion-#{scene.emotion}"],
+                      role: "listitem",
+                      data: { index: scene.index, type: scene.type, duration: scene.duration } }
+
+            .rmp-scene__header
+              .rmp-scene__meta
+                %span.rmp-scene__index= "SCENE #{scene.index + 1}"
+                %span.rmp-scene__type-badge{ class: "rmp-scene__type-badge--#{scene.type}" }
+                  = scene_type_label(scene.type)
+              .rmp-scene__duration
+                %span.rmp-scene__dur-icon ⏱
+                = "#{scene.duration}s"
+
+            .rmp-scene__body
+              %h2.rmp-scene__title= scene.title
+              %p.rmp-scene__subtitle= scene.subtitle
+              %p.rmp-scene__copy= scene.body
+
+              - if scene.badge
+                .rmp-scene__badge
+                  %span.rmp-scene__badge-emoji= scene.badge.emoji
+                  .rmp-scene__badge-info
+                    %span.rmp-scene__badge-rarity{ class: "rmp-scene__badge-rarity--#{scene.badge.rarity}" }
+                      = scene.badge.rarity.to_s.upcase
+                    %span.rmp-scene__badge-label= scene.badge.label
+
+            .rmp-scene__footer
+              .rmp-scene__emotion-pill{ class: "rmp-scene__emotion-pill--#{scene.emotion}" }
+                = emotion_label(scene.emotion)
+              .rmp-scene__bg-pill
+                = bg_style_label(scene.background_style)
+
+      .rmp-export-hint
+        .rmp-export-hint__icon 🚀
+        .rmp-export-hint__body
+          %p.rmp-export-hint__title 将来の Remotion 接続ポイント
+          %p.rmp-export-hint__desc
+            このシーン構成は
+            %code /singing/recap_movies/:year
+            経由で Remotion に渡せる JSON として出力できます。
+
+      .rmp-actions
+        = link_to yearly_rewind_singing_badges_path(year: @year), class: "rmp-btn rmp-btn--secondary" do
+          Yearly Rewind に戻る
+        = link_to timeline_singing_badges_path, class: "rmp-btn rmp-btn--ghost" do
+          Achievement Timeline
