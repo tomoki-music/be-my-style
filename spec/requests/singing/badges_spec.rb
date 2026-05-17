@@ -1058,17 +1058,147 @@ RSpec.describe "Singing::Badges", type: :request do
           )
         end
 
-        it "status / message / movie キーが含まれること" do
+        it "status / message / movie / queued キーが含まれること" do
           post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
 
           json = JSON.parse(response.body, symbolize_names: true)
-          expect(json.keys).to include(:status, :message, :movie)
+          expect(json.keys).to include(:status, :message, :movie, :queued)
         end
 
         it "Content-Type が application/json であること" do
           post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
 
           expect(response.content_type).to match(%r{application/json})
+        end
+      end
+
+      context "Job enqueue（enqueueされる場合）" do
+        include ActiveJob::TestHelper
+
+        context "新規リクエストの場合（created_pending）" do
+          before do
+            allow(Singing::AchievementRecapMovieBuilder).to receive(:call).and_return(
+              instance_double("Singing::AchievementRecapMovieBuilder::Result", empty?: false)
+            )
+            allow(Singing::AchievementRecapMovieSerializer).to receive(:new).and_return(
+              instance_double("Singing::AchievementRecapMovieSerializer", as_json: { scenes: [] })
+            )
+          end
+
+          it "Singing::GenerateRecapMovieJob が enqueue されること" do
+            expect {
+              post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+            }.to have_enqueued_job(Singing::GenerateRecapMovieJob)
+          end
+
+          it "response に queued: true が含まれること" do
+            post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+            json = JSON.parse(response.body, symbolize_names: true)
+            expect(json[:queued]).to be true
+          end
+        end
+
+        context "失敗済みレコードをリセットした場合（reset_pending）" do
+          let!(:failed_movie) { create(:singing_generated_recap_movie, :failed, customer: customer, year: year) }
+
+          before do
+            allow(Singing::AchievementRecapMovieBuilder).to receive(:call).and_return(
+              instance_double("Singing::AchievementRecapMovieBuilder::Result", empty?: false)
+            )
+            allow(Singing::AchievementRecapMovieSerializer).to receive(:new).and_return(
+              instance_double("Singing::AchievementRecapMovieSerializer", as_json: { scenes: [] })
+            )
+          end
+
+          it "Singing::GenerateRecapMovieJob が enqueue されること" do
+            expect {
+              post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+            }.to have_enqueued_job(Singing::GenerateRecapMovieJob)
+          end
+
+          it "response に queued: true が含まれること" do
+            post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+            json = JSON.parse(response.body, symbolize_names: true)
+            expect(json[:queued]).to be true
+          end
+        end
+      end
+
+      context "Job enqueue（enqueueされない場合）" do
+        include ActiveJob::TestHelper
+
+        context "already_pending の場合" do
+          let!(:existing_movie) { create(:singing_generated_recap_movie, customer: customer, year: year, status: :pending) }
+
+          it "Job が enqueue されないこと" do
+            expect {
+              post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+            }.not_to have_enqueued_job(Singing::GenerateRecapMovieJob)
+          end
+
+          it "response に queued: false が含まれること" do
+            post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+            json = JSON.parse(response.body, symbolize_names: true)
+            expect(json[:queued]).to be false
+          end
+        end
+
+        context "already_processing の場合" do
+          let!(:existing_movie) { create(:singing_generated_recap_movie, customer: customer, year: year, status: :processing) }
+
+          it "Job が enqueue されないこと" do
+            expect {
+              post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+            }.not_to have_enqueued_job(Singing::GenerateRecapMovieJob)
+          end
+
+          it "response に queued: false が含まれること" do
+            post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+            json = JSON.parse(response.body, symbolize_names: true)
+            expect(json[:queued]).to be false
+          end
+        end
+
+        context "reused_completed の場合" do
+          let!(:existing_movie) { create(:singing_generated_recap_movie, :completed, customer: customer, year: year) }
+
+          it "Job が enqueue されないこと" do
+            expect {
+              post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+            }.not_to have_enqueued_job(Singing::GenerateRecapMovieJob)
+          end
+
+          it "response に queued: false が含まれること" do
+            post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+            json = JSON.parse(response.body, symbolize_names: true)
+            expect(json[:queued]).to be false
+          end
+        end
+
+        context "empty_source の場合" do
+          before do
+            allow(Singing::AchievementRecapMovieBuilder).to receive(:call).and_return(
+              instance_double("Singing::AchievementRecapMovieBuilder::Result", empty?: true)
+            )
+          end
+
+          it "Job が enqueue されないこと" do
+            expect {
+              post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+            }.not_to have_enqueued_job(Singing::GenerateRecapMovieJob)
+          end
+
+          it "response に queued: false が含まれること" do
+            post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+            json = JSON.parse(response.body, symbolize_names: true)
+            expect(json[:queued]).to be false
+          end
         end
       end
     end

@@ -31,6 +31,8 @@ class Singing::BadgesController < Singing::BaseController
     empty_source:       "今年のRecap Movieを作成できるAchievementがまだありません。"
   }.freeze
 
+  ENQUEUE_STATUSES = %i[created_pending reset_pending].freeze
+
   def timeline
     @timeline_groups = Singing::AchievementTimelineBuilder.call(current_customer)
     @can_share_achievement = current_customer.has_feature?(:singing_achievement_badge_share_image)
@@ -68,6 +70,9 @@ class Singing::BadgesController < Singing::BaseController
   def recap_movie_request
     result = Singing::RecapMovieRequestService.call(current_customer, year: sanitize_year(params[:year]))
 
+    queued = ENQUEUE_STATUSES.include?(result.status)
+    Singing::GenerateRecapMovieJob.perform_later(result.movie.id) if queued
+
     movie_data = if result.movie
       video_url = result.movie.video_file.attached? ? (url_for(result.movie.video_file) rescue nil) : nil
       {
@@ -82,7 +87,8 @@ class Singing::BadgesController < Singing::BaseController
     render json: {
       status:  result.status,
       message: RECAP_MOVIE_MESSAGES[result.status] || result.message,
-      movie:   movie_data
+      movie:   movie_data,
+      queued:  queued
     }
   end
 
