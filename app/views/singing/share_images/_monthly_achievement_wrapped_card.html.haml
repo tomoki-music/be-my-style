@@ -1,0 +1,39 @@
+- rep    = share_image.representative_badge
+- rarity = rep&.rarity&.to_s || "common"
+- month_display = begin; d = Date.parse("#{share_image.month_str}-01"); "#{d.year}年#{d.month}月"; rescue; share_image.month_str; end
+
+.singing-maw-card{ "data-share-capture-target": "monthly-achievement-wrapped",
+                   "data-rarity": rarity,
+                   role: "img",
+                   "aria-label": "#{month_display} Monthly Achievement Wrapped シェアカード" }
+  .singing-maw-card__header
+    .singing-maw-card__brand
+      %span BeMyStyle Singing
+      %small 🏆
+    %p.singing-maw-card__eyebrow MONTHLY ACHIEVEMENT WRAPPED
+    %p.singing-maw-card__month= month_display
+
+  .singing-maw-card__body
+    - if rep
+      .singing-maw-card__rep
+        %span.singing-maw-card__rep-emoji= rep.emoji
+        .singing-maw-card__rep-info
+          %span.singing-maw-card__rep-rarity= rarity.upcase
+          %p.singing-maw-card__rep-label= rep.label
+
+    %h2.singing-maw-card__headline= share_image.headline
+
+    .singing-maw-card__rarity-row
+      - SingingAchievementBadge::RARITY_ORDER.each do |r|
+        - count = share_image.rarity_counts[r]
+        - next if count.zero?
+        %span.singing-maw-card__rarity-chip{ class: "singing-maw-card__rarity-chip--#{r}" }
+          = "#{r.to_s.upcase} ×#{count}"
+
+    %p.singing-maw-card__story= share_image.growth_story
+
+  .singing-maw-card__footer
+    .singing-maw-card__count
+      %span.singing-maw-card__count-num= share_image.total_count
+      %span.singing-maw-card__count-unit 件の達成
+    %span.singing-maw-card__hashtag #BeMyStyle

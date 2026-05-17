@@ -403,6 +403,67 @@ RSpec.describe "Singing::ShareImages", type: :request do
       expect(flash[:alert]).to include("今年の診断記録がない")
     end
 
+    it "coreユーザーはmonthly-achievement-wrappedカードを表示できること" do
+      singing_customer.create_subscription!(status: "active", plan: "core")
+      sign_in singing_customer
+      create(
+        :singing_achievement_badge,
+        :streak_7,
+        customer: singing_customer,
+        earned_at: Time.zone.local(2026, 5, 10, 10, 0, 0)
+      )
+
+      get singing_share_image_path(target: "monthly-achievement-wrapped", month: "2026-05")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Monthly Achievement Wrapped")
+      expect(response.body).to include("2026年5月")
+      expect(response.body).to include("data-share-capture-target='monthly-achievement-wrapped'")
+      expect(response.body).to include("MONTHLY ACHIEVEMENT WRAPPED")
+      expect(response.body).to include("月別Achievement")
+    end
+
+    it "月別Achievement Wrappedタブが成果共有ハブに存在すること" do
+      singing_customer.create_subscription!(status: "active", plan: "core")
+      sign_in singing_customer
+      FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, created_at: Time.current)
+
+      get singing_share_image_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("月別Achievement")
+      expect(response.body).to include("monthly-achievement-wrapped")
+    end
+
+    it "指定月にバッジがない場合はmonthly-achievement-wrappedがリダイレクトされること" do
+      singing_customer.create_subscription!(status: "active", plan: "core")
+      sign_in singing_customer
+
+      get singing_share_image_path(target: "monthly-achievement-wrapped", month: "2026-05")
+
+      expect(response).to redirect_to(singing_diagnoses_path)
+      expect(flash[:alert]).to include("この月のバッジがない")
+    end
+
+    it "lightユーザーはmonthly-achievement-wrappedにアクセスできずリダイレクトされること" do
+      singing_customer.create_subscription!(status: "active", plan: "light")
+      sign_in singing_customer
+
+      get singing_share_image_path(target: "monthly-achievement-wrapped", month: "2026-05")
+
+      expect(response).to redirect_to(singing_diagnoses_path)
+      expect(flash[:alert]).to include("Coreプラン以上")
+    end
+
+    it "freeユーザーはmonthly-achievement-wrappedにアクセスできずリダイレクトされること" do
+      sign_in singing_customer
+
+      get singing_share_image_path(target: "monthly-achievement-wrapped", month: "2026-05")
+
+      expect(response).to redirect_to(singing_diagnoses_path)
+      expect(flash[:alert]).to include("Coreプラン以上")
+    end
+
     it "legacyのcapture_target指定でもdaily_challengeを表示できること" do
       sign_in singing_customer
       FactoryBot.create(:singing_daily_challenge, challenge_date: Date.current)

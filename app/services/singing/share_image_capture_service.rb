@@ -33,6 +33,11 @@ module Singing
         feature: :singing_achievement_badge_share_image,
         selector: "[data-share-capture-target='achievement-badge']",
         path_helper: :singing_share_image_path
+      },
+      "monthly-achievement-wrapped" => {
+        feature: :singing_achievement_badge_share_image,
+        selector: "[data-share-capture-target='monthly-achievement-wrapped']",
+        path_helper: :singing_share_image_path
       }
     }.freeze
 
@@ -118,6 +123,10 @@ module Singing
                               Singing::ShareImages::YearlyWrappedCardBuilder.call(customer, reference_time: reference_time)
                             when "achievement-badge"
                               Singing::ShareImages::AchievementBadgeCardBuilder.call(customer)
+                            when "monthly-achievement-wrapped"
+                              Singing::ShareImages::MonthlyAchievementWrappedCardBuilder.call(
+                                customer, achievement_wrapped_month_str
+                              )
                             end
     end
 
@@ -189,6 +198,15 @@ module Singing
           rarity:          share_image_data.rarity.to_s,
           earned_at_label: share_image_data.earned_at_label
         }.compact
+      when "monthly-achievement-wrapped"
+        {
+          title:       "#{month_display_for(share_image_data.month_str)} Achievement Wrapped",
+          description: share_image_data.headline,
+          share_text:  share_image_data.x_share_text,
+          month_str:   share_image_data.month_str,
+          month_label: share_image_data.month_label,
+          total_count: share_image_data.total_count
+        }.compact
       else
         {}
       end
@@ -197,8 +215,9 @@ module Singing
     def capture_url
       token = Singing::ShareImageCaptureToken.generate(customer: customer, capture_target: capture_target)
       extra_params = case capture_target
-                     when "monthly-wrapped" then { year: reference_time.year, month: reference_time.month }
-                     when "yearly-wrapped"  then { year: reference_time.year }
+                     when "monthly-wrapped"             then { year: reference_time.year, month: reference_time.month }
+                     when "yearly-wrapped"              then { year: reference_time.year }
+                     when "monthly-achievement-wrapped" then { month: achievement_wrapped_month_str }
                      else {}
                      end
       path = Rails.application.routes.url_helpers.public_send(
@@ -219,6 +238,17 @@ module Singing
 
     def active_browser
       @active_browser ||= browser || SeleniumElementScreenshotter.new
+    end
+
+    def achievement_wrapped_month_str
+      @achievement_wrapped_month_str ||= reference_time.strftime("%Y-%m")
+    end
+
+    def month_display_for(str)
+      date = Date.parse("#{str}-01")
+      "#{date.year}年#{date.month}月"
+    rescue ArgumentError
+      str
     end
 
     def cleanup_stale_files

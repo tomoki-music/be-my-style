@@ -64,12 +64,13 @@
 
 .mw-share-section
   .mw-share-card
-    %p.mw-share-card__title シェアカードを作る（準備中）
+    %p.mw-share-card__title この月をシェア画像にする
     %p.mw-share-card__desc
-      この月の成長をカードにして記録・シェアする機能は近日公開予定です。
-      %br
-      Timeline から毎月の振り返りを続けると、さらに充実した記録になります。
+      この月の Achievement Wrapped をカードにして SNS でシェアできます。
     .mw-share-card__actions
+      = link_to singing_share_image_path(target: "monthly-achievement-wrapped", month: wrapped.month_str),
+                class: "mw-btn mw-btn--primary" do
+        📸 シェアカードを作る
       = link_to timeline_singing_badges_path, class: "mw-btn mw-btn--secondary" do
         Achievement Timeline を見る
       = link_to singing_badges_path, class: "mw-btn mw-btn--ghost" do

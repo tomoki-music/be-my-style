@@ -22,6 +22,10 @@ module Singing
       new(customer, reference_time: reference_time).yearly_wrapped(stats: stats)
     end
 
+    def self.monthly_achievement_wrapped(customer, reference_time: Time.current, card: nil)
+      new(customer, reference_time: reference_time).monthly_achievement_wrapped(card: card)
+    end
+
     def initialize(customer, reference_time: Time.current)
       @customer = customer
       @reference_time = reference_time
@@ -87,6 +91,12 @@ module Singing
       end
       parts << "#BeMyStyle #歌唱診断 #YearlyWrapped"
       parts.join
+    end
+
+    def monthly_achievement_wrapped(card: nil)
+      return generic_text unless card.present?
+
+      card.x_share_text
     end
 
     private

@@ -20,13 +20,16 @@ class Singing::ShareImagesController < Singing::BaseController
     @wrapped_year = wrapped_reference_time.year if capture_target == "monthly-wrapped"
     @wrapped_month = wrapped_reference_time.month if capture_target == "monthly-wrapped"
     @wrapped_year = yearly_wrapped_reference_time.year if capture_target == "yearly-wrapped"
+    @achievement_wrapped_month_str = achievement_wrapped_month_str if capture_target == "monthly-achievement-wrapped"
   end
 
   def capture
+    extra_opts = capture_extra_opts
     result = Singing::ShareImageCaptureService.call(
       customer: current_customer,
       base_url: request.base_url,
-      capture_target: capture_target
+      capture_target: capture_target,
+      **extra_opts
     )
 
     render json: {
@@ -118,6 +121,13 @@ class Singing::ShareImagesController < Singing::BaseController
         format.html { redirect_to singing_diagnoses_path, alert: "Achievement Badge シェアカードはCoreプラン以上で利用できます。" }
         format.json { render json: { error: "Achievement Badge シェアカードはCoreプラン以上で利用できます。" }, status: :forbidden }
       end
+    elsif capture_target == "monthly-achievement-wrapped"
+      return if share_image_customer.has_feature?(:singing_achievement_badge_share_image)
+
+      respond_to do |format|
+        format.html { redirect_to singing_diagnoses_path, alert: "Monthly Achievement Wrapped シェアカードはCoreプラン以上で利用できます。" }
+        format.json { render json: { error: "Monthly Achievement Wrapped シェアカードはCoreプラン以上で利用できます。" }, status: :forbidden }
+      end
     end
   end
 
@@ -142,6 +152,22 @@ class Singing::ShareImagesController < Singing::BaseController
           .where(created_at: prev_month.all_month).exists?
         has_prev ? prev_month : Time.current
       end
+    end
+  end
+
+  def achievement_wrapped_month_str
+    @achievement_wrapped_month_str ||= begin
+      str = params[:month].presence
+      str&.match?(/\A\d{4}-\d{2}\z/) ? str : Time.current.strftime("%Y-%m")
+    end
+  end
+
+  def capture_extra_opts
+    case capture_target
+    when "monthly-achievement-wrapped"
+      { reference_time: Time.zone.parse("#{achievement_wrapped_month_str}-01") }
+    else
+      {}
     end
   end
 
@@ -172,6 +198,11 @@ class Singing::ShareImagesController < Singing::BaseController
       )
     when "achievement-badge"
       Singing::ShareImages::AchievementBadgeCardBuilder.call(share_image_customer)
+    when "monthly-achievement-wrapped"
+      Singing::ShareImages::MonthlyAchievementWrappedCardBuilder.call(
+        share_image_customer,
+        achievement_wrapped_month_str
+      )
     end
   end
 
@@ -187,6 +218,8 @@ class Singing::ShareImagesController < Singing::BaseController
       "今年の診断記録がないため、Yearly Wrapped は表示できません。"
     when "achievement-badge"
       "まだバッジを獲得していません。診断を完了するとバッジが獲得できます。"
+    when "monthly-achievement-wrapped"
+      "この月のバッジがないため、Monthly Achievement Wrapped は表示できません。"
     else
       "今年の診断がまだないため、シェアカードは表示できません。"
     end
