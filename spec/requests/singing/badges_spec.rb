@@ -901,4 +901,176 @@ RSpec.describe "Singing::Badges", type: :request do
       end
     end
   end
+
+  # ── POST /singing/badges/recap_movie_request ──────────────────────────────
+
+  describe "POST /singing/badges/recap_movie_request" do
+    let(:year) { Time.current.year }
+
+    context "未ログインの場合" do
+      it "ログインページへリダイレクトまたは401になること" do
+        post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+        expect(response.status).to be_in([302, 401])
+      end
+    end
+
+    context "ログイン済みの場合" do
+      before { sign_in customer }
+
+      context "Achievementがない場合（empty_source）" do
+        before do
+          allow(Singing::AchievementRecapMovieBuilder).to receive(:call).and_return(
+            instance_double("Singing::AchievementRecapMovieBuilder::Result", empty?: true)
+          )
+        end
+
+        it "200を返すこと" do
+          post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "status が empty_source で movie が null であること" do
+          post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:status]).to eq("empty_source")
+          expect(json[:movie]).to be_nil
+        end
+
+        it "messageが含まれること" do
+          post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:message]).to be_present
+        end
+      end
+
+      context "新規リクエストの場合（created_pending）" do
+        before do
+          allow(Singing::AchievementRecapMovieBuilder).to receive(:call).and_return(
+            instance_double("Singing::AchievementRecapMovieBuilder::Result", empty?: false)
+          )
+          allow(Singing::AchievementRecapMovieSerializer).to receive(:new).and_return(
+            instance_double("Singing::AchievementRecapMovieSerializer", as_json: { scenes: [] })
+          )
+        end
+
+        it "200を返すこと" do
+          post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "status が created_pending で movie が含まれること" do
+          post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:status]).to eq("created_pending")
+          expect(json[:movie]).to be_present
+          expect(json[:movie][:year]).to eq(year)
+          expect(json[:movie][:status]).to eq("pending")
+          expect(json[:movie][:reusable]).to be false
+          expect(json[:movie][:video_url]).to be_nil
+        end
+
+        it "DBにrecap movieレコードが作成されること" do
+          expect {
+            post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+          }.to change(SingingGeneratedRecapMovie, :count).by(1)
+        end
+      end
+
+      context "すでに pending 状態の場合（already_pending）" do
+        let!(:existing_movie) { create(:singing_generated_recap_movie, customer: customer, year: year, status: :pending) }
+
+        it "status が already_pending であること" do
+          post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:status]).to eq("already_pending")
+          expect(json[:movie][:id]).to eq(existing_movie.id)
+        end
+
+        it "新規レコードが作られないこと" do
+          expect {
+            post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+          }.not_to change(SingingGeneratedRecapMovie, :count)
+        end
+      end
+
+      context "すでに processing 状態の場合（already_processing）" do
+        let!(:existing_movie) { create(:singing_generated_recap_movie, customer: customer, year: year, status: :processing) }
+
+        it "status が already_processing であること" do
+          post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:status]).to eq("already_processing")
+        end
+      end
+
+      context "completed かつ reusable な場合（reused_completed）" do
+        let!(:existing_movie) { create(:singing_generated_recap_movie, :completed, customer: customer, year: year) }
+
+        it "status が reused_completed であること" do
+          post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:status]).to eq("reused_completed")
+          expect(json[:movie][:reusable]).to be true
+        end
+      end
+
+      context "不正な year パラメータ" do
+        before do
+          allow(Singing::AchievementRecapMovieBuilder).to receive(:call).and_return(
+            instance_double("Singing::AchievementRecapMovieBuilder::Result", empty?: true)
+          )
+        end
+
+        it "year=0 でも 500 にならないこと" do
+          post recap_movie_request_singing_badges_path, params: { year: "0" }, as: :json
+
+          expect(response.status).not_to eq(500)
+        end
+
+        it "year=abc でも 500 にならないこと" do
+          post recap_movie_request_singing_badges_path, params: { year: "abc" }, as: :json
+
+          expect(response.status).not_to eq(500)
+        end
+
+        it "year 未指定でも JSON が返ること" do
+          post recap_movie_request_singing_badges_path, as: :json
+
+          expect(response.status).not_to eq(500)
+          json = JSON.parse(response.body)
+          expect(json["status"]).to be_present
+        end
+      end
+
+      context "レスポンス構造" do
+        before do
+          allow(Singing::AchievementRecapMovieBuilder).to receive(:call).and_return(
+            instance_double("Singing::AchievementRecapMovieBuilder::Result", empty?: true)
+          )
+        end
+
+        it "status / message / movie キーが含まれること" do
+          post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json.keys).to include(:status, :message, :movie)
+        end
+
+        it "Content-Type が application/json であること" do
+          post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
+
+          expect(response.content_type).to match(%r{application/json})
+        end
+      end
+    end
+  end
 end

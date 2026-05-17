@@ -22,6 +22,15 @@ class Singing::BadgesController < Singing::BaseController
 
   PIN_LIMIT = SingingAchievementBadge::PIN_LIMIT
 
+  RECAP_MOVIE_MESSAGES = {
+    created_pending:    "動画生成の準備ができました。",
+    reset_pending:      "動画生成を再リクエストしました。",
+    already_pending:    "動画生成はすでに処理待ちです。",
+    already_processing: "動画生成は現在処理中です。",
+    reused_completed:   "生成済みの Recap Movie をご利用いただけます。",
+    empty_source:       "今年のRecap Movieを作成できるAchievementがまだありません。"
+  }.freeze
+
   def timeline
     @timeline_groups = Singing::AchievementTimelineBuilder.call(current_customer)
     @can_share_achievement = current_customer.has_feature?(:singing_achievement_badge_share_image)
@@ -54,6 +63,27 @@ class Singing::BadgesController < Singing::BaseController
     recap = Singing::AchievementRecapMovieBuilder.call(current_customer, year: year)
 
     render json: Singing::AchievementRecapMovieSerializer.new(recap).as_json
+  end
+
+  def recap_movie_request
+    result = Singing::RecapMovieRequestService.call(current_customer, year: sanitize_year(params[:year]))
+
+    movie_data = if result.movie
+      video_url = result.movie.video_file.attached? ? (url_for(result.movie.video_file) rescue nil) : nil
+      {
+        id:        result.movie.id,
+        year:      result.movie.year,
+        status:    result.movie.status,
+        reusable:  result.movie.reusable?,
+        video_url: video_url
+      }
+    end
+
+    render json: {
+      status:  result.status,
+      message: RECAP_MOVIE_MESSAGES[result.status] || result.message,
+      movie:   movie_data
+    }
   end
 
   def pin
