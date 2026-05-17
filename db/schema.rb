@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_16_112320) do
+ActiveRecord::Schema.define(version: 2026_05_18_003114) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -939,6 +939,21 @@ ActiveRecord::Schema.define(version: 2026_05_16_112320) do
     t.index ["status"], name: "index_singing_diagnoses_on_status"
   end
 
+  create_table "singing_generated_recap_movies", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.integer "year", null: false
+    t.string "status", default: "pending", null: false
+    t.json "source_json"
+    t.text "error_message"
+    t.datetime "generated_at"
+    t.datetime "expires_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id", "year"], name: "index_singing_generated_recap_movies_on_customer_id_and_year", unique: true
+    t.index ["expires_at"], name: "index_singing_generated_recap_movies_on_expires_at"
+    t.index ["status"], name: "index_singing_generated_recap_movies_on_status"
+  end
+
   create_table "singing_profile_reactions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "target_customer_id", null: false
@@ -1163,6 +1178,7 @@ ActiveRecord::Schema.define(version: 2026_05_16_112320) do
   add_foreign_key "singing_daily_challenge_progresses", "customers"
   add_foreign_key "singing_daily_challenge_progresses", "singing_daily_challenges", name: "fk_sdcp_on_singing_daily_challenge"
   add_foreign_key "singing_diagnoses", "customers"
+  add_foreign_key "singing_generated_recap_movies", "customers"
   add_foreign_key "singing_profile_reactions", "customers"
   add_foreign_key "singing_profile_reactions", "customers", column: "target_customer_id"
   add_foreign_key "singing_season_ranking_entries", "customers"

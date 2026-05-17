@@ -55,6 +55,7 @@ class Customer < ApplicationRecord
 
   has_one_attached :profile_image
   has_many :singing_share_images, dependent: :destroy
+  has_many :singing_generated_recap_movies, dependent: :destroy
   has_many :customer_domains, dependent: :destroy
   has_many :domains, through: :customer_domains
   has_one :subscription
