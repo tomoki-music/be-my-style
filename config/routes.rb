@@ -214,6 +214,7 @@ Rails.application.routes.draw do
       collection do
         get :timeline
         get :monthly_wrapped
+        get :yearly_rewind
       end
       member do
         patch :pin

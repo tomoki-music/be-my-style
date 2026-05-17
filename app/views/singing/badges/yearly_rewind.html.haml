@@ -1,0 +1,148 @@
+- content_for :title, "#{@year}年 Yearly Achievement Rewind | BeMyStyle"
+
+.singing-yearly-rewind
+  .yr-inner
+
+    .yr-nav
+      = link_to "← Achievement Timeline", timeline_singing_badges_path, class: "yr-back-link"
+
+    - if @rewind.empty?
+      .yr-empty
+        .yr-empty__icon 🎯
+        %h1.yr-empty__title #{@year}年のAchievementはまだありません
+        %p.yr-empty__desc
+          バッジを獲得すると、ここに1年間の達成がまとめて振り返れます。
+          %br
+          まずは診断を始めてみましょう。
+        .yr-empty__actions
+          = link_to singing_badges_path, class: "yr-btn yr-btn--primary" do
+            バッジ一覧へ
+          = link_to new_singing_diagnosis_path, class: "yr-btn yr-btn--ghost" do
+            診断を始める
+
+    - else
+      -# ── Hero ────────────────────────────────────────────────────
+      .yr-hero{ class: ("yr-hero--legendary" if @rewind.has_legendary) }
+        .yr-hero__eyebrow Yearly Achievement Rewind
+        %h1.yr-hero__title= "#{@year}年のAchievement Rewind"
+        %p.yr-hero__sub
+          - if @rewind.has_legendary
+            Legendary 達成の年！
+          - elsif @rewind.has_epic
+            Epic 達成の年！
+          - else
+            = "#{@rewind.total_count}件の達成を積み重ねた年"
+
+        .yr-hero__stats
+          .yr-hero__stat
+            %span.yr-hero__stat-num= @rewind.total_count
+            %span.yr-hero__stat-unit 件の達成
+          - if @rewind.milestone_count > 0
+            .yr-hero__stat
+              %span.yr-hero__stat-num= @rewind.milestone_count
+              %span.yr-hero__stat-unit 件の高レアリティ
+
+      -# ── Representative Achievement ───────────────────────────────
+      - if @rewind.representative_badge
+        .yr-rep-section
+          %p.yr-rep-section__label #{@year}年の代表Achievement
+          .yr-rep-badge{ class: "yr-rep-badge--#{@rewind.representative_badge.rarity}" }
+            .yr-rep-badge__emoji= @rewind.representative_badge.emoji
+            .yr-rep-badge__info
+              %p.yr-rep-badge__rarity= @rewind.representative_badge.rarity.to_s.upcase
+              %p.yr-rep-badge__label= @rewind.representative_badge.label
+              %p.yr-rep-badge__date= "#{@rewind.representative_badge.earned_at.strftime('%-m月%-d日')} 達成"
+
+      -# ── Rarity Breakdown ─────────────────────────────────────────
+      .yr-rarity-section
+        %p.yr-rarity-section__label Rarity Breakdown
+        .yr-rarity-grid
+          - SingingAchievementBadge::RARITY_ORDER.each do |rarity|
+            - count = @rewind.rarity_counts[rarity]
+            - next if count.zero?
+            .yr-rarity-chip{ class: "yr-rarity-chip--#{rarity}" }
+              %span.yr-rarity-chip__label= rarity.to_s.upcase
+              %span.yr-rarity-chip__count= "#{count}件"
+
+      -# ── Monthly Highlights (scroll-snap carousel) ─────────────────
+      - active_months = @rewind.monthly_highlights.reject(&:empty?)
+      - if active_months.any?
+        .yr-monthly-section
+          %p.yr-monthly-section__label Monthly Highlights
+          .yr-monthly-carousel{ role: "list" }
+            - active_months.each do |mw|
+              .yr-monthly-card{ role: "listitem" }
+                .yr-monthly-card__header
+                  %span.yr-monthly-card__month= mw.month.strftime("%-m月")
+                  - if mw.has_legendary
+                    %span.yr-monthly-card__rarity.yr-monthly-card__rarity--legendary LEGENDARY
+                  - elsif mw.has_epic
+                    %span.yr-monthly-card__rarity.yr-monthly-card__rarity--epic EPIC
+                .yr-monthly-card__count
+                  %span.yr-monthly-card__num= mw.total_count
+                  %span.yr-monthly-card__unit 件
+                - if mw.representative_badge
+                  .yr-monthly-card__rep
+                    %span.yr-monthly-card__emoji= mw.representative_badge.emoji
+                    %span.yr-monthly-card__badge-label= mw.representative_badge.label
+                = link_to monthly_wrapped_singing_badges_path(month: mw.month_str), class: "yr-monthly-card__link" do
+                  この月を見る →
+
+      -# ── Growth Story ────────────────────────────────────────────
+      .yr-story-section
+        .yr-story-card
+          .yr-story-card__head
+            %span.yr-story-card__icon 📖
+            %strong.yr-story-card__title #{@year}年の軌跡
+          - if @rewind.first_earned && @rewind.last_earned && @rewind.first_earned.badge_id != @rewind.last_earned.badge_id
+            %p.yr-story-card__text
+              = "#{@rewind.first_earned.emoji} #{@rewind.first_earned.label}"
+              から始まり、
+              = "#{@rewind.last_earned.emoji} #{@rewind.last_earned.label}"
+              まで。
+              %br
+              この1年、あなたの歌声は確かに前進しました。
+          - elsif @rewind.representative_badge
+            %p.yr-story-card__text
+              = "#{@rewind.representative_badge.emoji} #{@rewind.representative_badge.label}"
+              を達成した年。この積み重ねが、次の1年への土台になっています。
+
+      -# ── Milestone ───────────────────────────────────────────────
+      - if @rewind.milestone_count > 0
+        .yr-milestone-section
+          .yr-milestone-card
+            %span.yr-milestone-card__icon ✨
+            %p.yr-milestone-card__text
+              この1年で
+              %strong= "#{@rewind.milestone_count}件"
+              の高レアリティ（Epic / Legendary）を達成しました。
+              この挑戦を続けた記録は、あなたの歌声の歴史です。
+
+      -# ── Share CTA ───────────────────────────────────────────────
+      .yr-share-section
+        .yr-share-card
+          - if @can_share_achievement
+            .yr-share-card__head
+              %span.yr-share-card__plan-badge Core / Premium
+              %p.yr-share-card__title この1年をシェア画像にする
+            %p.yr-share-card__desc
+              #{@year}年の Achievement Rewind をカードにして SNS でシェアできます。
+            .yr-share-card__actions
+              = link_to singing_share_image_path(target: "yearly-achievement-rewind", year: @year),
+                        class: "yr-btn yr-btn--primary" do
+                📸 シェアカードを作る
+          - else
+            .yr-share-card__upgrade
+              %span.yr-share-card__upgrade-icon 📸
+              %p.yr-share-card__upgrade-title シェアカードは Core / Premium で利用できます
+              %p.yr-share-card__upgrade-desc
+                この年の Achievement をカードにして SNS でシェアできます。
+                %br
+                続けて診断を重ねたいときは、Core 以上のプランもご検討ください。
+              = link_to public_singing_lp_path(anchor: "lp-section"), class: "yr-btn yr-btn--ghost yr-btn--sm" do
+                プランを見る →
+          .yr-share-card__actions.yr-share-card__actions--nav
+            = link_to timeline_singing_badges_path, class: "yr-btn yr-btn--secondary" do
+              Achievement Timeline を見る
+            = link_to singing_badges_path, class: "yr-btn yr-btn--ghost" do
+              バッジ一覧へ

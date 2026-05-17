@@ -26,6 +26,38 @@ module Singing
       new(customer, month_str).build
     end
 
+    # DB を再クエリせず、既取得の badges 配列から Result を組み立てる。
+    # YearlyAchievementRewindBuilder など、年次バッチ処理から呼ぶ用途向け。
+    def self.build_from_badges(badges:, month:)
+      month_str = month.strftime("%Y-%m")
+      scoped    = badges.select { |b| b.earned_at.beginning_of_month == month.beginning_of_month }
+
+      if scoped.empty?
+        return Result.new(
+          month:               month,
+          month_str:           month_str,
+          month_label:         MONTH_LABELS[month.month] || "挑戦を続けた月",
+          total_count:         0,
+          rarity_counts:       SingingAchievementBadge::RARITY_ORDER.each_with_object({}) { |r, h| h[r] = 0 },
+          has_legendary:       false,
+          has_epic:            false,
+          representative_badge: nil,
+          first_earned:        nil,
+          last_earned:         nil,
+          items:               [],
+          empty:               true
+        )
+      end
+
+      instance = new(nil, month_str)
+      items    = scoped.sort_by(&:earned_at).map { |b| instance.send(:build_item, b) }
+      instance.send(:build_result, month, month_str, items)
+    end
+
+    def self.call(customer, month_str)
+      new(customer, month_str).build
+    end
+
     def initialize(customer, month_str)
       @customer  = customer
       @month_str = month_str.to_s
@@ -39,14 +71,19 @@ module Singing
       return empty_result(month) if badges.empty?
 
       items = badges.map { |b| build_item(b) }
+      build_result(month, @month_str, items)
+    end
 
+    private
+
+    def build_result(month, month_str, items)
       rarity_counts = SingingAchievementBadge::RARITY_ORDER.each_with_object({}) do |rarity, h|
         h[rarity] = items.count { |i| i.rarity == rarity }
       end
 
       Result.new(
         month:               month,
-        month_str:           @month_str,
+        month_str:           month_str,
         month_label:         MONTH_LABELS[month.month] || "挑戦を続けた月",
         total_count:         items.size,
         rarity_counts:       rarity_counts,
@@ -59,8 +96,6 @@ module Singing
         empty:               false
       )
     end
-
-    private
 
     def parse_month(str)
       Time.zone.parse("#{str}-01").beginning_of_month

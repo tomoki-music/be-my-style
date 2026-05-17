@@ -34,6 +34,14 @@ class Singing::BadgesController < Singing::BaseController
     @wrapped = Singing::MonthlyAchievementWrappedBuilder.call(current_customer, month_str)
   end
 
+  def yearly_rewind
+    year = params[:year].to_i
+    year = Time.current.year if year < 2020 || year > Time.current.year + 1
+    @rewind = Singing::YearlyAchievementRewindBuilder.call(current_customer, year: year)
+    @year   = year
+    @can_share_achievement = current_customer.has_feature?(:singing_achievement_badge_share_image)
+  end
+
   def pin
     badge = current_customer.singing_achievement_badges.find(params[:id])
 

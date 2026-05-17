@@ -38,6 +38,11 @@ module Singing
         feature: :singing_achievement_badge_share_image,
         selector: "[data-share-capture-target='monthly-achievement-wrapped']",
         path_helper: :singing_share_image_path
+      },
+      "yearly-achievement-rewind" => {
+        feature: :singing_achievement_badge_share_image,
+        selector: "[data-share-capture-target='yearly-achievement-rewind']",
+        path_helper: :singing_share_image_path
       }
     }.freeze
 

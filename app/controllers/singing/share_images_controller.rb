@@ -21,6 +21,7 @@ class Singing::ShareImagesController < Singing::BaseController
     @wrapped_month = wrapped_reference_time.month if capture_target == "monthly-wrapped"
     @wrapped_year = yearly_wrapped_reference_time.year if capture_target == "yearly-wrapped"
     @achievement_wrapped_month_str = achievement_wrapped_month_str if capture_target == "monthly-achievement-wrapped"
+    @yearly_rewind_year = yearly_rewind_year if capture_target == "yearly-achievement-rewind"
   end
 
   def capture
@@ -128,6 +129,13 @@ class Singing::ShareImagesController < Singing::BaseController
         format.html { redirect_to singing_diagnoses_path, alert: "Monthly Achievement Wrapped シェアカードはCoreプラン以上で利用できます。" }
         format.json { render json: { error: "Monthly Achievement Wrapped シェアカードはCoreプラン以上で利用できます。" }, status: :forbidden }
       end
+    elsif capture_target == "yearly-achievement-rewind"
+      return if share_image_customer.has_feature?(:singing_achievement_badge_share_image)
+
+      respond_to do |format|
+        format.html { redirect_to singing_diagnoses_path, alert: "Yearly Achievement Rewind シェアカードはCoreプラン以上で利用できます。" }
+        format.json { render json: { error: "Yearly Achievement Rewind シェアカードはCoreプラン以上で利用できます。" }, status: :forbidden }
+      end
     end
   end
 
@@ -166,6 +174,8 @@ class Singing::ShareImagesController < Singing::BaseController
     case capture_target
     when "monthly-achievement-wrapped"
       { reference_time: Time.zone.parse("#{achievement_wrapped_month_str}-01") }
+    when "yearly-achievement-rewind"
+      { reference_time: Time.zone.local(yearly_rewind_year, 6, 1) }
     else
       {}
     end
@@ -203,11 +213,25 @@ class Singing::ShareImagesController < Singing::BaseController
         share_image_customer,
         achievement_wrapped_month_str
       )
+    when "yearly-achievement-rewind"
+      Singing::ShareImages::YearlyAchievementRewindCardBuilder.call(
+        share_image_customer,
+        year: yearly_rewind_year
+      )
+    end
+  end
+
+  def yearly_rewind_year
+    @yearly_rewind_year ||= begin
+      y = params[:year].to_i
+      (y >= 2020 && y <= Time.current.year + 1) ? y : Time.current.year
     end
   end
 
   def capture_no_data_message
     case capture_target
+    when "yearly-achievement-rewind"
+      "この年のバッジがないため、シェアカードを生成できませんでした。診断を続けてバッジを獲得すると表示されます。"
     when "monthly-achievement-wrapped"
       "この月のバッジがないため、シェアカードを生成できませんでした。診断を続けてバッジを獲得すると表示されます。"
     when "monthly-wrapped"
@@ -227,6 +251,8 @@ class Singing::ShareImagesController < Singing::BaseController
 
   def share_image_unavailable_message
     case capture_target
+    when "yearly-achievement-rewind"
+      "この年のバッジがないため、Yearly Achievement Rewind は表示できません。"
     when "daily-challenge"
       "Daily Challenge のシェアカードはまだ表示できません。"
     when "ranking"

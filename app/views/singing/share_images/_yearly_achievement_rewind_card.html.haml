@@ -1,0 +1,39 @@
+.singing-yearly-rewind-card{ "data-share-capture-target": "yearly-achievement-rewind",
+                             "data-has-legendary": share_image.has_legendary.to_s,
+                             role: "img",
+                             "aria-label": "#{share_image.year}年 Achievement Rewind シェアカード" }
+  .singing-yearly-rewind-card__brand
+    %span BeMyStyle Singing
+    %small 🏆
+
+  .singing-yearly-rewind-card__body
+    .singing-yearly-rewind-card__year-badge
+      = "#{share_image.year} Rewind"
+
+    - if share_image.representative_badge
+      .singing-yearly-rewind-card__rep-emoji= share_image.representative_badge.emoji
+    %h2.singing-yearly-rewind-card__headline= share_image.headline
+
+    .singing-yearly-rewind-card__stats
+      .singing-yearly-rewind-card__stat
+        %span.singing-yearly-rewind-card__stat-num= share_image.total_count
+        %span.singing-yearly-rewind-card__stat-unit 件の達成
+      - if share_image.milestone_count > 0
+        .singing-yearly-rewind-card__stat
+          %span.singing-yearly-rewind-card__stat-num= share_image.milestone_count
+          %span.singing-yearly-rewind-card__stat-unit 件の高レア
+
+    .singing-yearly-rewind-card__separator
+
+    .singing-yearly-rewind-card__rarity
+      - SingingAchievementBadge::RARITY_ORDER.each do |rarity|
+        - count = share_image.rarity_counts[rarity]
+        - next if count.zero?
+        .singing-yearly-rewind-card__rarity-chip{ class: "singing-yearly-rewind-card__rarity-chip--#{rarity}" }
+          = "#{rarity.to_s.upcase} ×#{count}"
+
+  .singing-yearly-rewind-card__growth= share_image.growth_story
+
+  .singing-yearly-rewind-card__footer
+    %span #BeMyStyle
+    %small 1年分の達成が、歌声の歴史になる

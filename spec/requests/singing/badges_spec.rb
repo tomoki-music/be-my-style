@@ -548,6 +548,165 @@ RSpec.describe "Singing::Badges", type: :request do
     end
   end
 
+  # ── GET /singing/badges/yearly_rewind ────────────────────────────────────
+
+  describe "GET /singing/badges/yearly_rewind" do
+    context "未ログインの場合" do
+      it "ログインページへリダイレクトされること" do
+        get yearly_rewind_singing_badges_path
+
+        expect(response).to redirect_to(new_customer_session_path)
+      end
+    end
+
+    context "ログイン済みの場合" do
+      before { sign_in customer }
+
+      it "year 未指定でもページが表示されること" do
+        get yearly_rewind_singing_badges_path
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "year 指定でページが表示されること" do
+        get yearly_rewind_singing_badges_path(year: "2026")
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      context "指定年にバッジがない場合（空状態）" do
+        it "空状態メッセージが表示されること" do
+          get yearly_rewind_singing_badges_path(year: "2026")
+
+          expect(response.body).to include("2026年のAchievementはまだありません")
+          expect(response.body).to include("バッジを獲得すると、ここに1年間の達成がまとめて振り返れます。")
+        end
+
+        it "診断・バッジ一覧への導線が表示されること" do
+          get yearly_rewind_singing_badges_path(year: "2026")
+
+          expect(response.body).to include("バッジ一覧へ")
+          expect(response.body).to include("診断を始める")
+        end
+      end
+
+      context "指定年にバッジがある場合" do
+        let!(:badge_jan) do
+          create(:singing_achievement_badge, :first_diagnosis, customer: customer,
+                 earned_at: Time.zone.local(2026, 1, 10, 10, 0, 0))
+        end
+        let!(:badge_may) do
+          create(:singing_achievement_badge, :streak_7, customer: customer,
+                 earned_at: Time.zone.local(2026, 5, 20, 10, 0, 0))
+        end
+
+        it "Yearly Achievement Rewind ページが表示されること" do
+          get yearly_rewind_singing_badges_path(year: "2026")
+
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("Yearly Achievement Rewind")
+          expect(response.body).to include("2026年のAchievement Rewind")
+        end
+
+        it "獲得数が表示されること" do
+          get yearly_rewind_singing_badges_path(year: "2026")
+
+          expect(response.body).to include("2")
+          expect(response.body).to include("件の達成")
+        end
+
+        it "バッジラベルが表示されること" do
+          get yearly_rewind_singing_badges_path(year: "2026")
+
+          expect(response.body).to include("First Note")
+          expect(response.body).to include("7 Day Streak")
+        end
+
+        it "Monthly Highlights セクションが表示されること" do
+          get yearly_rewind_singing_badges_path(year: "2026")
+
+          expect(response.body).to include("Monthly Highlights")
+          expect(response.body).to include("1月")
+          expect(response.body).to include("5月")
+        end
+
+        it "Monthly Wrapped への導線が含まれること" do
+          get yearly_rewind_singing_badges_path(year: "2026")
+
+          expect(response.body).to include(monthly_wrapped_singing_badges_path(month: "2026-01"))
+          expect(response.body).to include(monthly_wrapped_singing_badges_path(month: "2026-05"))
+        end
+
+        it "Timeline へ戻るリンクが表示されること" do
+          get yearly_rewind_singing_badges_path(year: "2026")
+
+          expect(response.body).to include("Achievement Timeline")
+          expect(response.body).to include(timeline_singing_badges_path)
+        end
+
+        it "他年のバッジは表示されないこと" do
+          create(:singing_achievement_badge, :personal_best, customer: customer,
+                 earned_at: Time.zone.local(2025, 12, 31, 10, 0, 0))
+
+          get yearly_rewind_singing_badges_path(year: "2026")
+
+          expect(response.body).not_to include("12月")
+        end
+
+        it "他ユーザーのバッジは表示されないこと" do
+          create(:singing_achievement_badge, :streak_30, customer: other_customer,
+                 earned_at: Time.zone.local(2026, 3, 10, 10, 0, 0))
+
+          get yearly_rewind_singing_badges_path(year: "2026")
+
+          expect(response.body).not_to include("Monthly Devotee")
+        end
+
+        context "Core ユーザーはシェアカード導線が表示されること" do
+          before { customer.create_subscription!(status: "active", plan: "core") }
+
+          it "シェアカードを作るボタンが表示されること" do
+            get yearly_rewind_singing_badges_path(year: "2026")
+
+            expect(response.body).to include("シェアカードを作る")
+            expect(response.body).to include("target=yearly-achievement-rewind")
+            expect(response.body).to include("year=2026")
+            expect(response.body).to include("Core / Premium")
+          end
+
+          it "アップグレード CTA は表示されないこと" do
+            get yearly_rewind_singing_badges_path(year: "2026")
+
+            expect(response.body).not_to include("シェアカードは Core / Premium で利用できます")
+          end
+        end
+
+        context "Free ユーザーにはアップグレード導線が表示されること" do
+          it "アップグレード CTA が表示されること" do
+            get yearly_rewind_singing_badges_path(year: "2026")
+
+            expect(response.body).to include("シェアカードは Core / Premium で利用できます")
+            expect(response.body).not_to include("シェアカードを作る")
+          end
+        end
+      end
+
+      context "不正な year パラメータ" do
+        it "year=0 は当年にフォールバックすること" do
+          get yearly_rewind_singing_badges_path(year: "0")
+
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "year=abc は当年にフォールバックすること" do
+          get yearly_rewind_singing_badges_path(year: "abc")
+
+          expect(response).to have_http_status(:ok)
+        end
+      end
+    end
+  end
+
   # ── GET /singing/badges/timeline ──────────────────────────────────────────
 
   describe "GET /singing/badges/timeline" do
