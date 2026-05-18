@@ -10,16 +10,17 @@ document.addEventListener("turbolinks:load", () => {
   let pollTimer = null;
 
   const el = {
-    intro:       document.getElementById("rmp-intro"),
-    generateBtn: document.getElementById("rmp-generate-btn"),
-    retryBtn:    document.getElementById("rmp-retry-btn"),
-    statusArea:  document.getElementById("rmp-status-area"),
-    statusMsg:   document.getElementById("rmp-status-msg"),
-    spinner:     document.getElementById("rmp-spinner"),
-    videoArea:   document.getElementById("rmp-video-area"),
-    videoLink:   document.getElementById("rmp-video-link"),
-    retryArea:   document.getElementById("rmp-retry-area"),
-    emptyMsg:    document.getElementById("rmp-empty-msg"),
+    intro:           document.getElementById("rmp-intro"),
+    generateBtn:     document.getElementById("rmp-generate-btn"),
+    retryBtn:        document.getElementById("rmp-retry-btn"),
+    statusArea:      document.getElementById("rmp-status-area"),
+    statusMsg:       document.getElementById("rmp-status-msg"),
+    spinner:         document.getElementById("rmp-spinner"),
+    videoArea:       document.getElementById("rmp-video-area"),
+    videoLink:       document.getElementById("rmp-video-link"),
+    retryArea:       document.getElementById("rmp-retry-area"),
+    previewLinkArea: document.getElementById("rmp-preview-link-area"),
+    emptyMsg:        document.getElementById("rmp-empty-msg"),
   };
 
   const show = (e) => e && (e.style.display = "");
@@ -32,6 +33,7 @@ document.addEventListener("turbolinks:load", () => {
     hide(el.statusArea);
     hide(el.videoArea);
     hide(el.retryArea);
+    hide(el.previewLinkArea);
     hide(el.emptyMsg);
 
     switch (state) {
@@ -52,6 +54,12 @@ document.addEventListener("turbolinks:load", () => {
           show(el.videoArea);
           if (el.videoLink) el.videoLink.href = data.videoUrl;
         }
+        break;
+      case "renderer_preparing":
+        show(el.statusArea);
+        hide(el.spinner);
+        if (el.statusMsg) el.statusMsg.textContent = "動画生成機能は現在準備中です。まずはストーリーボードPreviewをお楽しみください。";
+        show(el.previewLinkArea);
         break;
       case "failed":
         show(el.statusArea);
@@ -84,7 +92,11 @@ document.addEventListener("turbolinks:load", () => {
           setState("completed", { videoUrl: data.movie && data.movie.video_url });
         } else if (data.status === "failed" || data.status === "expired") {
           stopPolling();
-          setState("failed");
+          if (data.movie && data.movie.renderer_preparing) {
+            setState("renderer_preparing");
+          } else {
+            setState("failed");
+          }
         }
         // pending / processing: 引き続き polling、表示はそのまま
       })
@@ -134,6 +146,8 @@ document.addEventListener("turbolinks:load", () => {
       } else if (data.status === "pending" || data.status === "processing") {
         setState("loading");
         startPolling();
+      } else if (data.status === "failed" && data.movie && data.movie.renderer_preparing) {
+        setState("renderer_preparing");
       } else {
         setState("idle");
       }

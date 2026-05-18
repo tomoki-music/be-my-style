@@ -1300,6 +1300,48 @@ RSpec.describe "Singing::Badges", type: :request do
           expect(json[:movie][:error_message]).to be_present
           expect(json[:movie][:reusable]).to be false
         end
+
+        it "通常の failed は renderer_preparing が false であること" do
+          get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:movie][:renderer_preparing]).to be false
+        end
+      end
+
+      context "failed かつ Renderer is not implemented. の場合" do
+        let!(:movie) do
+          create(:singing_generated_recap_movie, :failed, customer: customer, year: year,
+                 error_message: "Renderer is not implemented.")
+        end
+
+        it "message が技術文言を含まないこと" do
+          get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:message]).not_to include("Renderer is not implemented.")
+        end
+
+        it "message が準備中文言を含むこと" do
+          get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:message]).to include("準備中")
+        end
+
+        it "movie.renderer_preparing が true であること" do
+          get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:movie][:renderer_preparing]).to be true
+        end
+
+        it "movie.error_message が nil であること（技術文言を隠す）" do
+          get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:movie][:error_message]).to be_nil
+        end
       end
 
       context "expired の場合" do
