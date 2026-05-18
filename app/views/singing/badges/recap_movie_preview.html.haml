@@ -68,6 +68,27 @@
               .rmp-scene__bg-pill
                 = bg_style_label(scene.background_style)
 
+      .rmp-generate-section#rmp-generate-section{ data: { year: @year,
+                                                          request_url: recap_movie_request_singing_badges_path,
+                                                          status_url: recap_movie_status_singing_badges_path } }
+        %noscript.rmp-generate__noscript
+          Recap Movieを生成するには JavaScript を有効にしてください。
+        .rmp-generate__intro#rmp-intro
+          あなたの一年を映画のように振り返る準備ができます。
+        %button.rmp-btn.rmp-btn--generate#rmp-generate-btn{ type: "button" }
+          🎬 Recap Movieを生成する
+        .rmp-generate__status#rmp-status-area{ style: "display:none" }
+          .rmp-generate__spinner#rmp-spinner{ "aria-hidden" => "true" }
+          %p.rmp-generate__status-msg#rmp-status-msg
+        .rmp-generate__video#rmp-video-area{ style: "display:none" }
+          %a.rmp-btn.rmp-btn--primary#rmp-video-link{ href: "#", target: "_blank", rel: "noopener noreferrer" }
+            🎬 動画を見る
+        .rmp-generate__retry#rmp-retry-area{ style: "display:none" }
+          %button.rmp-btn.rmp-btn--secondary#rmp-retry-btn{ type: "button" }
+            もう一度試す
+        %p.rmp-generate__empty-msg#rmp-empty-msg{ style: "display:none" }
+          今年のAchievementがまだありません。
+
       .rmp-export-hint
         .rmp-export-hint__icon 🚀
         .rmp-export-hint__body

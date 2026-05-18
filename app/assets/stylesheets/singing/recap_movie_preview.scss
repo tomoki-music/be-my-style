@@ -387,6 +387,96 @@
   }
 }
 
+// ── 生成セクション ────────────────────────────────────────────────────────────
+
+.rmp-generate-section {
+  border: 1px solid rgba(79, 70, 229, 0.25);
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(79, 70, 229, 0.08) 0%, rgba(13, 17, 23, 0.9) 100%);
+  margin-bottom: 32px;
+  padding: 28px 20px;
+  text-align: center;
+
+  @media (min-width: 640px) {
+    padding: 32px 28px;
+  }
+}
+
+.rmp-generate__noscript {
+  color: #8b949e;
+  font-size: 0.88rem;
+}
+
+.rmp-generate__intro {
+  color: #c9d1d9;
+  font-size: 1rem;
+  line-height: 1.65;
+  margin: 0 0 20px;
+}
+
+.rmp-btn--generate {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  border: none;
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3);
+  color: #fff;
+  font-size: 1rem;
+  padding: 14px 32px;
+
+  &:hover {
+    box-shadow: 0 12px 32px rgba(79, 70, 229, 0.45);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.rmp-generate__status {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.rmp-generate__spinner {
+  animation: rmp-spin 0.8s linear infinite;
+  border: 3px solid rgba(79, 70, 229, 0.2);
+  border-radius: 50%;
+  border-top-color: #7c3aed;
+  height: 28px;
+  width: 28px;
+}
+
+@keyframes rmp-spin {
+  to { transform: rotate(360deg); }
+}
+
+.rmp-generate__status-msg {
+  color: #8b949e;
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.rmp-generate__video {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.rmp-generate__retry {
+  margin-top: 16px;
+}
+
+.rmp-generate__empty-msg {
+  color: #8b949e;
+  font-size: 0.92rem;
+  margin: 16px 0 0;
+}
+
 // ── 下部アクション ───────────────────────────────────────────────────────────
 
 .rmp-actions {
