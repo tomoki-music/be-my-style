@@ -33,6 +33,15 @@ class Singing::BadgesController < Singing::BaseController
 
   ENQUEUE_STATUSES = %i[created_pending reset_pending].freeze
 
+  RECAP_MOVIE_STATUS_MESSAGES = {
+    "not_requested" => "まだRecap Movieは作成されていません。",
+    "pending"       => "Recap Movieの生成を受け付けました。しばらくお待ちください。",
+    "processing"    => "Recap Movieを生成中です。",
+    "completed"     => "Recap Movieの生成が完了しました。",
+    "failed"        => "Recap Movieの生成に失敗しました。",
+    "expired"       => "Recap Movieの有効期限が切れています。"
+  }.freeze
+
   def timeline
     @timeline_groups = Singing::AchievementTimelineBuilder.call(current_customer)
     @can_share_achievement = current_customer.has_feature?(:singing_achievement_badge_share_image)
@@ -65,6 +74,30 @@ class Singing::BadgesController < Singing::BaseController
     recap = Singing::AchievementRecapMovieBuilder.call(current_customer, year: year)
 
     render json: Singing::AchievementRecapMovieSerializer.new(recap).as_json
+  end
+
+  def recap_movie_status
+    year  = sanitize_year(params[:year])
+    movie = current_customer.singing_generated_recap_movies.find_by(year: year)
+
+    if movie.nil?
+      render json: {
+        exists:  false,
+        year:    year,
+        status:  "not_requested",
+        message: RECAP_MOVIE_STATUS_MESSAGES["not_requested"],
+        movie:   nil
+      }
+      return
+    end
+
+    render json: {
+      exists:  true,
+      year:    year,
+      status:  movie.status,
+      message: RECAP_MOVIE_STATUS_MESSAGES[movie.status] || movie.status,
+      movie:   movie_status_payload(movie)
+    }
   end
 
   def recap_movie_request
@@ -198,5 +231,25 @@ class Singing::BadgesController < Singing::BaseController
   def sanitize_year(raw)
     year = raw.to_i
     year < 2020 || year > Time.current.year + 1 ? Time.current.year : year
+  end
+
+  def movie_status_payload(movie)
+    {
+      id:            movie.id,
+      year:          movie.year,
+      status:        movie.status,
+      reusable:      movie.reusable?,
+      video_url:     recap_movie_video_url(movie),
+      error_message: movie.error_message,
+      generated_at:  movie.generated_at,
+      expires_at:    movie.expires_at
+    }
+  end
+
+  def recap_movie_video_url(movie)
+    return nil unless movie.video_file.attached?
+    url_for(movie.video_file)
+  rescue StandardError
+    nil
   end
 end

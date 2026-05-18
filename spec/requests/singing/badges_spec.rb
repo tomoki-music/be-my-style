@@ -1203,4 +1203,171 @@ RSpec.describe "Singing::Badges", type: :request do
       end
     end
   end
+
+  # ── GET /singing/badges/recap_movie_status ────────────────────────────────
+
+  describe "GET /singing/badges/recap_movie_status" do
+    let(:year) { Time.current.year }
+
+    context "未ログインの場合" do
+      it "ログインページへリダイレクトまたは401になること" do
+        get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+        expect(response.status).to be_in([302, 401])
+      end
+    end
+
+    context "ログイン済みの場合" do
+      before { sign_in customer }
+
+      it "200 を返すこと" do
+        get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "Content-Type が application/json であること" do
+        get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+        expect(response.content_type).to match(%r{application/json})
+      end
+
+      context "未作成の場合（not_requested）" do
+        it "exists: false / status: not_requested を返すこと" do
+          get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:exists]).to be false
+          expect(json[:status]).to eq("not_requested")
+          expect(json[:year]).to eq(year)
+          expect(json[:movie]).to be_nil
+          expect(json[:message]).to be_present
+        end
+      end
+
+      context "pending 状態の場合" do
+        let!(:movie) { create(:singing_generated_recap_movie, customer: customer, year: year, status: :pending) }
+
+        it "exists: true / status: pending を返すこと" do
+          get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:exists]).to be true
+          expect(json[:status]).to eq("pending")
+          expect(json[:movie][:id]).to eq(movie.id)
+          expect(json[:movie][:reusable]).to be false
+          expect(json[:movie][:video_url]).to be_nil
+        end
+      end
+
+      context "processing 状態の場合" do
+        let!(:movie) { create(:singing_generated_recap_movie, customer: customer, year: year, status: :processing) }
+
+        it "exists: true / status: processing を返すこと" do
+          get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:exists]).to be true
+          expect(json[:status]).to eq("processing")
+          expect(json[:movie][:id]).to eq(movie.id)
+          expect(json[:movie][:reusable]).to be false
+        end
+      end
+
+      context "completed かつ reusable な場合" do
+        let!(:movie) { create(:singing_generated_recap_movie, :completed, customer: customer, year: year) }
+
+        it "exists: true / status: completed / reusable: true を返すこと" do
+          get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:exists]).to be true
+          expect(json[:status]).to eq("completed")
+          expect(json[:movie][:reusable]).to be true
+          expect(json[:movie][:generated_at]).to be_present
+        end
+      end
+
+      context "failed の場合" do
+        let!(:movie) { create(:singing_generated_recap_movie, :failed, customer: customer, year: year) }
+
+        it "exists: true / status: failed / error_message が含まれること" do
+          get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:exists]).to be true
+          expect(json[:status]).to eq("failed")
+          expect(json[:movie][:error_message]).to be_present
+          expect(json[:movie][:reusable]).to be false
+        end
+      end
+
+      context "expired の場合" do
+        let!(:movie) { create(:singing_generated_recap_movie, :expired, customer: customer, year: year) }
+
+        it "exists: true / status: expired を返すこと" do
+          get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:exists]).to be true
+          expect(json[:status]).to eq("expired")
+          expect(json[:movie][:reusable]).to be false
+        end
+      end
+
+      context "レスポンス構造" do
+        it "トップレベルキー exists / year / status / message / movie が揃っていること" do
+          get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json.keys).to include(:exists, :year, :status, :message, :movie)
+        end
+
+        context "movie が存在する場合" do
+          let!(:movie) { create(:singing_generated_recap_movie, customer: customer, year: year, status: :pending) }
+
+          it "movie に必要なキーが揃っていること" do
+            get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+            json = JSON.parse(response.body, symbolize_names: true)
+            expect(json[:movie].keys).to include(:id, :year, :status, :reusable, :video_url, :error_message, :generated_at, :expires_at)
+          end
+        end
+      end
+
+      context "セキュリティ: 他ユーザーの movie は見えないこと" do
+        let!(:other_movie) { create(:singing_generated_recap_movie, :completed, customer: other_customer, year: year) }
+
+        it "他ユーザーの movie が存在しても not_requested を返すこと" do
+          get recap_movie_status_singing_badges_path, params: { year: year }, as: :json
+
+          json = JSON.parse(response.body, symbolize_names: true)
+          expect(json[:exists]).to be false
+          expect(json[:status]).to eq("not_requested")
+        end
+      end
+
+      context "不正な year パラメータ" do
+        it "year=0 でも 500 にならないこと" do
+          get recap_movie_status_singing_badges_path, params: { year: "0" }, as: :json
+
+          expect(response.status).not_to eq(500)
+        end
+
+        it "year=abc でも 500 にならないこと" do
+          get recap_movie_status_singing_badges_path, params: { year: "abc" }, as: :json
+
+          expect(response.status).not_to eq(500)
+        end
+
+        it "year 未指定でも JSON が返ること" do
+          get recap_movie_status_singing_badges_path, as: :json
+
+          expect(response).to have_http_status(:ok)
+          json = JSON.parse(response.body)
+          expect(json["status"]).to be_present
+        end
+      end
+    end
+  end
 end

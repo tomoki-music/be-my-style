@@ -217,6 +217,7 @@ Rails.application.routes.draw do
         get :yearly_rewind
         get  :recap_movie_preview
         get  :recap_movie
+        get  :recap_movie_status
         post :recap_movie_request
       end
       member do
