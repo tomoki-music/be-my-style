@@ -347,44 +347,58 @@
 .rmp-scene--aurora     { border-left: 4px solid #22d3ee; }
 .rmp-scene--dark_stage { border-left: 4px solid #fbbf24; }
 
-// ── Remotion 接続ヒント ──────────────────────────────────────────────────────
+// ── Coming Soon バッジ ────────────────────────────────────────────────────────
 
-.rmp-export-hint {
+.rmp-coming-soon-badge {
+  align-items: center;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 999px;
+  color: #fbbf24;
+  display: inline-flex;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  font-weight: 700;
+  gap: 6px;
+  margin-bottom: 24px;
+  padding: 7px 14px;
+}
+
+.rmp-coming-soon-badge__sep {
+  color: rgba(251, 191, 36, 0.4);
+}
+
+// ── Coming Soon パネル（export hint 代替） ───────────────────────────────────
+
+.rmp-coming-soon-panel {
   align-items: flex-start;
-  background: rgba(79, 70, 229, 0.08);
-  border: 1px solid rgba(79, 70, 229, 0.2);
+  background: rgba(251, 191, 36, 0.06);
+  border: 1px solid rgba(251, 191, 36, 0.2);
   border-radius: 14px;
   display: flex;
   gap: 14px;
   margin-bottom: 32px;
-  padding: 20px 20px;
+  padding: 20px;
 }
 
-.rmp-export-hint__icon {
+.rmp-coming-soon-panel__icon {
   flex-shrink: 0;
   font-size: 1.5rem;
   line-height: 1;
 }
 
-.rmp-export-hint__title {
-  color: #a5b4fc;
+.rmp-coming-soon-panel__title {
+  color: #fbbf24;
   font-size: 0.88rem;
   font-weight: 800;
   margin: 0 0 5px;
 }
 
-.rmp-export-hint__desc {
+.rmp-coming-soon-panel__desc {
   color: #8b949e;
   font-size: 0.85rem;
   line-height: 1.6;
   margin: 0;
-
-  code {
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 4px;
-    font-size: 0.82em;
-    padding: 1px 5px;
-  }
 }
 
 // ── 生成セクション ────────────────────────────────────────────────────────────
@@ -468,6 +482,10 @@
 }
 
 .rmp-generate__retry {
+  margin-top: 16px;
+}
+
+.rmp-generate__preview-link {
   margin-top: 16px;
 }
 

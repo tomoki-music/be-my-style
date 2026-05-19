@@ -42,6 +42,9 @@ class Singing::BadgesController < Singing::BaseController
     "expired"       => "Recap Movieの有効期限が切れています。"
   }.freeze
 
+  RENDERER_NOT_IMPLEMENTED_ERROR = "Renderer is not implemented."
+  RENDERER_PREPARING_MESSAGE     = "動画生成機能は現在準備中です。"
+
   def timeline
     @timeline_groups = Singing::AchievementTimelineBuilder.call(current_customer)
     @can_share_achievement = current_customer.has_feature?(:singing_achievement_badge_share_image)
@@ -91,11 +94,17 @@ class Singing::BadgesController < Singing::BaseController
       return
     end
 
+    status_message = if renderer_preparing?(movie)
+      RENDERER_PREPARING_MESSAGE
+    else
+      RECAP_MOVIE_STATUS_MESSAGES[movie.status] || movie.status
+    end
+
     render json: {
       exists:  true,
       year:    year,
       status:  movie.status,
-      message: RECAP_MOVIE_STATUS_MESSAGES[movie.status] || movie.status,
+      message: status_message,
       movie:   movie_status_payload(movie)
     }
   end
@@ -234,16 +243,22 @@ class Singing::BadgesController < Singing::BaseController
   end
 
   def movie_status_payload(movie)
+    preparing = renderer_preparing?(movie)
     {
-      id:            movie.id,
-      year:          movie.year,
-      status:        movie.status,
-      reusable:      movie.reusable?,
-      video_url:     recap_movie_video_url(movie),
-      error_message: movie.error_message,
-      generated_at:  movie.generated_at,
-      expires_at:    movie.expires_at
+      id:                 movie.id,
+      year:               movie.year,
+      status:             movie.status,
+      reusable:           movie.reusable?,
+      video_url:          recap_movie_video_url(movie),
+      error_message:      preparing ? nil : movie.error_message,
+      renderer_preparing: preparing,
+      generated_at:       movie.generated_at,
+      expires_at:         movie.expires_at
     }
+  end
+
+  def renderer_preparing?(movie)
+    movie.failed? && movie.error_message == RENDERER_NOT_IMPLEMENTED_ERROR
   end
 
   def recap_movie_video_url(movie)

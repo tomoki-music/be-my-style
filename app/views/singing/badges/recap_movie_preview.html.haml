@@ -34,7 +34,12 @@
             %span.rmp-header__meta-icon ⏱
             = "総尺 #{@recap.total_duration}秒"
 
-      .rmp-storyboard{ role: "list", "aria-label" => "映画シーン一覧" }
+      .rmp-coming-soon-badge
+        🎞️ Movie生成は準備中
+        %span.rmp-coming-soon-badge__sep ·
+        現在はストーリーボードPreviewとして確認できます
+
+      .rmp-storyboard#rmp-storyboard{ role: "list", "aria-label" => "映画シーン一覧" }
         - @recap.scenes.each do |scene|
           .rmp-scene{ class: ["rmp-scene--#{scene.background_style}", "rmp-scene--emotion-#{scene.emotion}"],
                       role: "listitem",
@@ -74,9 +79,9 @@
         %noscript.rmp-generate__noscript
           Recap Movieを生成するには JavaScript を有効にしてください。
         .rmp-generate__intro#rmp-intro
-          あなたの一年を映画のように振り返る準備ができます。
+          現在、動画生成機能は準備中です。まずは絵コンテPreviewをお楽しみください。
         %button.rmp-btn.rmp-btn--generate#rmp-generate-btn{ type: "button" }
-          🎬 Recap Movieを生成する
+          🎬 Recap Movieを生成する（試験的）
         .rmp-generate__status#rmp-status-area{ style: "display:none" }
           .rmp-generate__spinner#rmp-spinner{ "aria-hidden" => "true" }
           %p.rmp-generate__status-msg#rmp-status-msg
@@ -86,17 +91,18 @@
         .rmp-generate__retry#rmp-retry-area{ style: "display:none" }
           %button.rmp-btn.rmp-btn--secondary#rmp-retry-btn{ type: "button" }
             もう一度試す
+        .rmp-generate__preview-link#rmp-preview-link-area{ style: "display:none" }
+          %a.rmp-btn.rmp-btn--secondary{ href: "#rmp-storyboard" }
+            🎞️ Previewを見る
         %p.rmp-generate__empty-msg#rmp-empty-msg{ style: "display:none" }
           今年のAchievementがまだありません。
 
-      .rmp-export-hint
-        .rmp-export-hint__icon 🚀
-        .rmp-export-hint__body
-          %p.rmp-export-hint__title 将来の Remotion 接続ポイント
-          %p.rmp-export-hint__desc
-            このシーン構成は
-            %code /singing/recap_movies/:year
-            経由で Remotion に渡せる JSON として出力できます。
+      .rmp-coming-soon-panel
+        .rmp-coming-soon-panel__icon 🎞️
+        .rmp-coming-soon-panel__body
+          %p.rmp-coming-soon-panel__title Movie生成は準備中
+          %p.rmp-coming-soon-panel__desc
+            現在はストーリーボードPreviewとして確認できます。動画生成機能は今後リリース予定です。
 
       .rmp-actions
         = link_to yearly_rewind_singing_badges_path(year: @year), class: "rmp-btn rmp-btn--secondary" do
