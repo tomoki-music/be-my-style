@@ -1,0 +1,188 @@
+# Recap Movie Cleanup Scheduler
+
+## 目的
+
+`SingingGeneratedRecapMovie` の `expires_at` を過ぎたレコードを定期クリーンアップする。
+ステータスが `pending / processing / completed / failed` かつ `expires_at < 現在時刻` のレコードを対象に `expire!` を呼び出し、S3 動画ファイルの削除とステータスの `expired` 更新を行う。
+
+## 対象 Job
+
+```
+Singing::CleanupGeneratedRecapMoviesJob
+```
+
+場所: `app/jobs/singing/cleanup_generated_recap_movies_job.rb`
+
+## runner script の場所
+
+```
+bin/cleanup_generated_recap_movies
+```
+
+本番 EC2 上のフルパス: `/var/www/be-my-style/current/bin/cleanup_generated_recap_movies`
+
+## 手動実行方法
+
+### ローカル開発環境
+
+```bash
+cd /path/to/be-my-style
+DISABLE_SPRING=1 ~/.rbenv/shims/bundle exec rails runner 'Singing::CleanupGeneratedRecapMoviesJob.perform_now'
+```
+
+### 本番 EC2 上（必ず事前にユーザー確認してから行う）
+
+```bash
+cd /var/www/be-my-style/current
+/var/www/be-my-style/current/bin/cleanup_generated_recap_movies
+```
+
+正常終了時はログに `start` と `finish exit_status=0` が出る。
+
+rails runner を直接確認したい場合:
+
+```bash
+cd /var/www/be-my-style/current
+RAILS_ENV=production DISABLE_SPRING=1 ~/.rbenv/shims/bundle exec rails runner 'Singing::CleanupGeneratedRecapMoviesJob.perform_now'
+```
+
+## cron 登録例
+
+1 時間に 1 回、毎時 0 分に実行する。
+
+```cron
+0 * * * * APP_ROOT=/var/www/be-my-style/current /var/www/be-my-style/current/bin/cleanup_generated_recap_movies >> /var/www/be-my-style/current/log/cron_recap_movie_cleanup.log 2>&1
+```
+
+実際の本番 EC2 のデプロイパスが異なる場合（例: `/home/ec2-user/be-my-style`）は `APP_ROOT` を上書きする:
+
+```cron
+0 * * * * APP_ROOT=/home/ec2-user/be-my-style /home/ec2-user/be-my-style/bin/cleanup_generated_recap_movies >> /home/ec2-user/be-my-style/log/cron_recap_movie_cleanup.log 2>&1
+```
+
+## 実行頻度
+
+1 時間に 1 回（毎時 0 分）
+
+## ログ出力先
+
+| ログ種別 | パス |
+|---------|------|
+| cron script ログ | `log/cron_recap_movie_cleanup.log` |
+| Rails production ログ | `log/production.log` |
+
+cron ログ確認:
+
+```bash
+tail -n 100 /var/www/be-my-style/current/log/cron_recap_movie_cleanup.log
+```
+
+Rails ログ確認:
+
+```bash
+grep RecapMovieCleanup /var/www/be-my-style/current/log/production.log
+```
+
+期待するログ例:
+
+```text
+[2026-05-19 00:00:00 +0900] cleanup_generated_recap_movies start app_root=/var/www/be-my-style/current bundle_bin=/home/deploy/.rbenv/shims/bundle
+[2026-05-19 00:00:05 +0900] cleanup_generated_recap_movies finish exit_status=0
+```
+
+Rails ログ（job 内部）:
+
+```text
+[RecapMovieCleanup] expired movie_id=123 year=2025 customer_id=456
+[RecapMovieCleanup] failed movie_id=789: ...
+```
+
+## rollback 方法
+
+### cron を止める場合（本番 EC2 上）
+
+```bash
+crontab -e  # 該当行を削除して保存
+crontab -l  # 削除されたか確認
+```
+
+cron 登録・削除は本番サーバー操作のため、必ず事前にユーザー確認してから行う。
+
+### コードをロールバックする場合
+
+```bash
+git log --oneline -5
+git checkout <commit-hash>
+```
+
+DB の `status: expired` に変更されたレコードを元に戻すことはできない（`expire!` は非可逆操作）。
+S3 から削除済みの動画は復元できない。ロールバック前に影響範囲を確認する。
+
+## purge_later の注意
+
+`expire!` 内で `video_file.purge_later` を呼ぶ（`status: completed` のレコードのみ）。
+
+`purge_later` は ActiveStorage の非同期削除であり、ジョブキューに `ActiveStorage::PurgeJob` を enqueue する。
+実際の S3 削除はキューが処理されるまで行われない。
+
+**注意点:**
+- `AsyncAdapter`（開発・テスト）では即時 Puma ワーカー内で実行される
+- 本番は `AsyncAdapter`（Redis）のため、Sidekiq や Solid Queue を使用している場合はそちらのキュー処理を確認する
+- `purge_later` enqueue 後に Rails が落ちた場合、ジョブが失われて S3 にゴミが残る可能性がある
+
+## ActiveStorage queue の注意
+
+`ActiveStorage::PurgeJob` はデフォルトで `:active_storage_purge` キューを使用する。
+
+本番環境のキュー設定を確認する:
+
+```bash
+# 本番サーバー上
+RAILS_ENV=production DISABLE_SPRING=1 ~/.rbenv/shims/bundle exec rails runner \
+  'puts ActiveJob::Base.queue_adapter.class.name'
+```
+
+`AsyncAdapter` の場合: Puma ワーカー内で即時実行される。Puma が落ちると削除されない。
+Redis + Solid Queue / Sidekiq の場合: 別プロセスが処理する。キューのバックログを定期的に確認する。
+
+## S3 cleanup 注意
+
+`video_file.purge_later` は ActiveStorage が管理する S3 blob を削除する。
+
+**注意点:**
+- S3 の削除は非同期（`purge_later`）のため、`expire!` 直後に S3 にファイルが残っている場合がある
+- `SingingGeneratedRecapMovie` レコードの `status` が `expired` に変わっても、S3 blob が削除済みとは限らない
+- ActiveStorage の `blob` テーブルと S3 の実態の整合性は `ActiveStorage::PurgeJob` の完了後に保証される
+- S3 の Lifecycle ポリシーでの自動削除と競合する場合は、どちらが先に削除するか確認しておく
+
+## 本番適用手順（実施する際）
+
+1. 本番 EC2 に SSH 接続（事前確認必須）
+2. デプロイ済みの `bin/cleanup_generated_recap_movies` が存在することを確認
+   ```bash
+   ls -l /var/www/be-my-style/current/bin/cleanup_generated_recap_movies
+   ```
+3. 実行権限を確認（`-rwxr-xr-x` であること）
+4. 手動実行で動作確認
+   ```bash
+   /var/www/be-my-style/current/bin/cleanup_generated_recap_movies
+   ```
+5. cron 登録
+   ```bash
+   crontab -e
+   ```
+6. 登録確認
+   ```bash
+   crontab -l
+   ```
+7. 1 時間後にログを確認
+   ```bash
+   tail -n 50 /var/www/be-my-style/current/log/cron_recap_movie_cleanup.log
+   ```
+
+## 今回は本番未適用
+
+このスクリプト・ドキュメントは `feature/recap-movie-cleanup-scheduler` ブランチで作成し、main マージまで本番に適用しない。
+
+本番 EC2 への SSH 作業・cron 登録は今回のスコープ外。
+適用タイミングはユーザーが判断してから行う。
