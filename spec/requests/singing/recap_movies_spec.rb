@@ -52,6 +52,30 @@ RSpec.describe "Singing::RecapMovies", type: :request do
 
         expect(response.body).to include("まだ Recap Movie はありません")
       end
+
+      it "空状態に診断への導線を表示すること" do
+        get singing_recap_movies_path
+
+        expect(response.body).to include("診断を続けると、あなただけの年間Recap Movieが生成されます")
+        expect(response.body).to include("診断を始める")
+      end
+
+      it "processing 状態のカードに生成中バッジを表示すること" do
+        FactoryBot.create(:singing_generated_recap_movie, customer: owner, status: :processing)
+
+        get singing_recap_movies_path
+
+        expect(response.body).to include("srm-badge--processing")
+        expect(response.body).to include("あなた専用のRecap Movieを生成しています")
+      end
+
+      it "completed 状態のカードに completed バッジを表示すること" do
+        FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner)
+
+        get singing_recap_movies_path
+
+        expect(response.body).to include("srm-badge--completed")
+      end
     end
   end
 
@@ -95,7 +119,8 @@ RSpec.describe "Singing::RecapMovies", type: :request do
         get singing_recap_movie_path(movie)
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("動画を生成しています")
+        expect(response.body).to include("あなた専用のRecap Movieを生成しています")
+        expect(response.body).to include("数分かかる場合があります")
       end
 
       it "pending の場合に生成中メッセージを表示すること" do
@@ -104,7 +129,7 @@ RSpec.describe "Singing::RecapMovies", type: :request do
         get singing_recap_movie_path(movie)
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("動画を生成しています")
+        expect(response.body).to include("あなた専用のRecap Movieを生成しています")
       end
 
       it "expired の場合に期限切れメッセージを表示すること" do
@@ -114,6 +139,49 @@ RSpec.describe "Singing::RecapMovies", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("動画の保存期限が切れました")
+      end
+
+      it "Hero タイトルに年と Recap Movie を表示すること" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, customer: owner, year: 2025, status: :processing)
+
+        get singing_recap_movie_path(movie)
+
+        expect(response.body).to include("2025 Recap Movie")
+        expect(response.body).to include("Your Singing Recap")
+      end
+
+      it "completed バッジのクラスを表示すること" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner)
+
+        get singing_recap_movie_path(movie)
+
+        expect(response.body).to include("srm-badge--completed")
+      end
+
+      it "processing バッジのクラスを表示すること" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, :processing, customer: owner)
+
+        get singing_recap_movie_path(movie)
+
+        expect(response.body).to include("srm-badge--processing")
+      end
+
+      it "診断データがある場合に診断回数を表示すること" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner, year: Time.current.year)
+        FactoryBot.create(:singing_diagnosis, customer: owner, status: :completed, created_at: Time.current)
+
+        get singing_recap_movie_path(movie)
+
+        expect(response.body).to include("診断回数")
+        expect(response.body).to include("srm-meta-grid")
+      end
+
+      it "診断データがない場合にメタグリッドを表示しないこと" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, :processing, customer: owner)
+
+        get singing_recap_movie_path(movie)
+
+        expect(response.body).not_to include("srm-meta-grid")
       end
     end
 

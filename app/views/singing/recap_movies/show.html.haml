@@ -4,24 +4,57 @@
       = link_to singing_recap_movies_path, class: "srm-back-link" do
         &larr; Recap Movie 一覧へ
 
-    .srm-show-header
-      %p.srm-header__eyebrow Singing / Recap Movie
-      %h1.srm-show-header__title= "#{@recap_movie.year} Recap Movie"
-      .srm-show-header__meta
+    .srm-hero
+      .srm-hero__eyebrow
+        %span.srm-hero__icon 🎬
+        %span.srm-hero__label Your Singing Recap
+      %h1.srm-hero__title= "#{@recap_movie.year} Recap Movie"
+      .srm-hero__meta
         %span.srm-badge{ class: "srm-badge--#{@recap_movie.status}" }
           - case @recap_movie.status
           - when "completed"
-            完了
+            ✦ Completed
           - when "processing"
-            生成中
+            ◌ Generating...
           - when "pending"
-            待機中
+            ◌ Queued
           - when "failed"
-            生成失敗
+            ✕ Failed
           - when "expired"
-            期限切れ
+            ⊘ Expired
         - if @recap_movie.generated_at.present?
-          %span.srm-show-header__date= "生成日: #{l(@recap_movie.generated_at, format: :short)}"
+          %span.srm-hero__date
+            Generated on
+            = @recap_movie.generated_at.strftime("%-m月%-d日, %Y")
+
+    - props = @movie_props || {}
+    - has_stats = props[:diagnosis_count].to_i > 0
+    - if has_stats
+      .srm-meta-grid
+        .srm-meta-item
+          .srm-meta-item__icon 🎤
+          .srm-meta-item__value= "#{props[:diagnosis_count]}回"
+          .srm-meta-item__label 診断回数
+        - if props[:best_score].present?
+          .srm-meta-item
+            .srm-meta-item__icon 🏆
+            .srm-meta-item__value= props[:best_score]
+            .srm-meta-item__label ベストスコア
+        - if props[:average_score].present?
+          .srm-meta-item
+            .srm-meta-item__icon 📊
+            .srm-meta-item__value= props[:average_score]
+            .srm-meta-item__label 平均スコア
+        - if props[:top_growth_metric].present?
+          .srm-meta-item
+            .srm-meta-item__icon 📈
+            .srm-meta-item__value= props[:top_growth_metric]
+            .srm-meta-item__label 最も成長
+        - if props[:voice_type].present?
+          .srm-meta-item.srm-meta-item--wide
+            .srm-meta-item__icon 🔥
+            .srm-meta-item__value= props[:voice_type]
+            .srm-meta-item__label ボイスタイプ
 
     .srm-show-body
       - if @recap_movie.completed? && @recap_movie.video_file.attached?
@@ -38,8 +71,8 @@
         .srm-status-panel.srm-status-panel--processing
           .srm-status-panel__icon
             .srm-spinner
-          %p.srm-status-panel__title 動画を生成しています
-          %p.srm-status-panel__desc しばらくしてからページを再読み込みしてください。
+          %p.srm-status-panel__title あなた専用のRecap Movieを生成しています
+          %p.srm-status-panel__desc 数分かかる場合があります。ページを再読み込みすると最新状態を確認できます。
 
       - elsif @recap_movie.failed?
         .srm-status-panel.srm-status-panel--failed
