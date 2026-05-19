@@ -91,5 +91,26 @@
           %p.srm-status-panel__desc Recap Movie の保存期限が過ぎました。再生成はバッジページからリクエストできます。
           = link_to "バッジページへ", singing_badges_path, class: "srm-btn srm-btn--secondary"
 
+    - if @recap_movie.completed? && @recap_movie.video_file.attached?
+      - _share_text = CGI.escape("🎤 My Singing Recap #{@recap_movie.year}\n今年の歌の成長をまとめました✨\n#BeMyStyle #SingingRecap")
+      - _share_url  = CGI.escape(request.original_url)
+      - _twitter_url = "https://twitter.com/intent/tweet?text=#{_share_text}&url=#{_share_url}"
+      .srm-share-area
+        .srm-share-area__heading
+          %span.srm-share-area__icon ✨
+          %span.srm-share-area__title Share Your Recap
+        .srm-share-area__btns
+          = link_to _twitter_url, class: "srm-btn srm-btn--twitter", target: "_blank", rel: "noopener noreferrer" do
+            ✨ Xでシェア
+          = link_to rails_blob_path(@recap_movie.video_file, disposition: "attachment"),
+            class: "srm-btn srm-btn--download",
+            download: "singing_recap_#{@recap_movie.year}.mp4" do
+            ⬇ 動画を保存
+        .srm-instagram-hint
+          %span.srm-instagram-hint__icon 📱
+          動画を保存して
+          %strong Instagram リール
+          へ投稿しよう！
+
     .srm-show-footer
       = link_to "一覧へ戻る", singing_recap_movies_path, class: "srm-btn srm-btn--ghost"

@@ -504,6 +504,91 @@ $srm-green:      #22c55e;
   word-break: break-all;
 }
 
+// ── Share Area ───────────────────────────────────────────────────────────────
+
+.srm-share-area {
+  background: linear-gradient(135deg, rgba($srm-purple, 0.12) 0%, rgba($srm-surface-2, 0.8) 100%);
+  border: 1px solid rgba($srm-purple-lt, 0.25);
+  border-radius: 20px;
+  margin-bottom: 32px;
+  padding: 28px 24px 24px;
+  text-align: center;
+
+  box-shadow:
+    0 0 0 1px rgba($srm-purple, 0.08),
+    0 8px 32px rgba($srm-purple, 0.12);
+}
+
+.srm-share-area__heading {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.srm-share-area__icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.srm-share-area__title {
+  color: $srm-purple-lt;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.srm-share-area__btns {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  @media (min-width: 480px) {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+
+.srm-btn--twitter {
+  background: #000;
+  border: 1px solid rgba($srm-purple-lt, 0.35);
+  box-shadow: 0 0 16px rgba($srm-purple, 0.3);
+  color: #fff;
+
+  &:hover {
+    box-shadow: 0 0 24px rgba($srm-purple, 0.5);
+    filter: brightness(1.15);
+  }
+}
+
+.srm-btn--download {
+  background: $srm-surface-2;
+  border: 1px solid $srm-border;
+  color: $srm-text;
+}
+
+.srm-instagram-hint {
+  align-items: center;
+  color: $srm-muted;
+  display: flex;
+  font-size: 0.85rem;
+  gap: 6px;
+  justify-content: center;
+
+  strong {
+    color: $srm-text;
+    font-weight: 700;
+  }
+}
+
+.srm-instagram-hint__icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
 // ── Show フッター ────────────────────────────────────────────────────────────
 
 .srm-show-footer {

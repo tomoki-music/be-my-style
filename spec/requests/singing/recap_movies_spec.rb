@@ -183,6 +183,52 @@ RSpec.describe "Singing::RecapMovies", type: :request do
 
         expect(response.body).not_to include("srm-meta-grid")
       end
+
+      context "Share Area" do
+        it "completed かつ video_file attached の場合に share area を表示すること" do
+          movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner)
+
+          get singing_recap_movie_path(movie)
+
+          expect(response.body).to include("srm-share-area")
+          expect(response.body).to include("Share Your Recap")
+        end
+
+        it "completed かつ video_file attached の場合に X share URL を含むこと" do
+          movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner)
+
+          get singing_recap_movie_path(movie)
+
+          expect(response.body).to include("twitter.com/intent/tweet")
+          expect(response.body).to include("BeMyStyle")
+          expect(response.body).to include("SingingRecap")
+        end
+
+        it "completed かつ video_file attached の場合にダウンロードリンクを表示すること" do
+          movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner)
+
+          get singing_recap_movie_path(movie)
+
+          expect(response.body).to include("srm-btn--download")
+          expect(response.body).to include("動画を保存")
+        end
+
+        it "processing の場合に share area を表示しないこと" do
+          movie = FactoryBot.create(:singing_generated_recap_movie, :processing, customer: owner)
+
+          get singing_recap_movie_path(movie)
+
+          expect(response.body).not_to include("srm-share-area")
+        end
+
+        it "failed の場合に share area を表示しないこと" do
+          movie = FactoryBot.create(:singing_generated_recap_movie, :failed, customer: owner)
+
+          get singing_recap_movie_path(movie)
+
+          expect(response.body).not_to include("srm-share-area")
+        end
+      end
     end
 
     context "他人の Recap Movie へのアクセス" do
