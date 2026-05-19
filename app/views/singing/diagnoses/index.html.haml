@@ -74,6 +74,8 @@
       .singing-diagnosis__ranking-banner-right
         %span ランキングを見る &rarr;
 
+    = render "recap_movie_cta"
+
     - if @polling_required
       %p.singing-diagnosis__polling-note 解析中の診断があるため、自動更新しています。すべて完了または失敗になると更新は止まります。
 

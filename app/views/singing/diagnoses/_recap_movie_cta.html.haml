@@ -1,0 +1,26 @@
+- recap_movies = current_customer.singing_generated_recap_movies.order(year: :desc)
+- latest = recap_movies.first
+
+.singing-recap-cta
+  .singing-recap-cta__inner
+    %span.singing-recap-cta__icon 🎬
+    - if latest.nil?
+      .singing-recap-cta__content
+        %strong.singing-recap-cta__title Recap Movie
+        %p.singing-recap-cta__desc 診断を続けると、あなたの年間まとめ動画が作成されます。
+      %span.singing-recap-cta__badge.singing-recap-cta__badge--none まだRecap Movieはありません
+    - elsif latest.completed?
+      .singing-recap-cta__content
+        %strong.singing-recap-cta__title= "#{latest.year}年のRecap Movieが完成しました"
+        %p.singing-recap-cta__desc 今年の歌声の成長をまとめた動画を振り返ってみましょう。
+      = link_to "今年のまとめ動画を見る →", singing_recap_movies_path, class: "singing-recap-cta__link"
+    - elsif latest.status == "processing" || latest.status == "pending"
+      .singing-recap-cta__content
+        %strong.singing-recap-cta__title= "#{latest.year}年のRecap Movie"
+        %p.singing-recap-cta__desc まとめ動画を生成しています。完成後にお知らせします。
+      %span.singing-recap-cta__badge.singing-recap-cta__badge--processing 生成中です
+    - elsif latest.failed?
+      .singing-recap-cta__content
+        %strong.singing-recap-cta__title= "#{latest.year}年のRecap Movie"
+        %p.singing-recap-cta__desc まとめ動画の生成に失敗しました。
+      %span.singing-recap-cta__badge.singing-recap-cta__badge--failed 生成に失敗しました

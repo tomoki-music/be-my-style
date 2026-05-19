@@ -10587,3 +10587,116 @@ $ranking-accent: #7c4dff;
   font-weight: 700;
   letter-spacing: 0.06em;
 }
+
+.singing-recap-cta {
+  background: linear-gradient(135deg, #1a1035 0%, #2d1b5e 50%, #1a1035 100%);
+  border: 1px solid rgba(147, 112, 219, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(26, 16, 53, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  margin: 24px 0;
+  overflow: hidden;
+  padding: 20px 24px;
+  position: relative;
+
+  &::before {
+    background: linear-gradient(90deg, transparent, rgba(147, 112, 219, 0.6), transparent);
+    content: "";
+    height: 1px;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+}
+
+.singing-recap-cta__inner {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+}
+
+.singing-recap-cta__icon {
+  flex-shrink: 0;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.singing-recap-cta__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.singing-recap-cta__title {
+  color: #e8d5ff;
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.singing-recap-cta__desc {
+  color: rgba(200, 180, 240, 0.75);
+  font-size: 13px;
+  margin: 0;
+}
+
+.singing-recap-cta__link {
+  background: linear-gradient(135deg, #7c3aed, #9333ea);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+  color: #fff;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 10px 18px;
+  text-decoration: none;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    box-shadow: 0 8px 22px rgba(124, 58, 237, 0.45);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+}
+
+.singing-recap-cta__badge {
+  border-radius: 999px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 14px;
+  white-space: nowrap;
+}
+
+.singing-recap-cta__badge--none {
+  background: rgba(147, 112, 219, 0.1);
+  border: 1px solid rgba(147, 112, 219, 0.2);
+  color: rgba(200, 180, 240, 0.55);
+}
+
+.singing-recap-cta__badge--processing {
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+}
+
+.singing-recap-cta__badge--failed {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+
+@media (max-width: 600px) {
+  .singing-recap-cta__inner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .singing-recap-cta__link {
+    display: block;
+    text-align: center;
+    width: 100%;
+  }
+}

@@ -380,6 +380,58 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).not_to include("一番伸びた能力")
       expect(response.body).not_to include("+24点")
     end
+
+    context "Recap Movie CTA" do
+      it "Recap Movieがない場合は「まだRecap Movieはありません」と表示すること" do
+        sign_in singing_customer
+
+        get singing_diagnoses_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("まだRecap Movieはありません")
+      end
+
+      it "completed状態のRecap Movieがある場合は「今年のまとめ動画を見る」を表示すること" do
+        sign_in singing_customer
+        FactoryBot.create(:singing_generated_recap_movie, :completed, customer: singing_customer)
+
+        get singing_diagnoses_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("今年のまとめ動画を見る")
+        expect(response.body).to include(singing_recap_movies_path)
+      end
+
+      it "processing状態のRecap Movieがある場合は「生成中です」を表示すること" do
+        sign_in singing_customer
+        FactoryBot.create(:singing_generated_recap_movie, :processing, customer: singing_customer)
+
+        get singing_diagnoses_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("生成中です")
+      end
+
+      it "pending状態のRecap Movieがある場合は「生成中です」を表示すること" do
+        sign_in singing_customer
+        FactoryBot.create(:singing_generated_recap_movie, customer: singing_customer, status: :pending)
+
+        get singing_diagnoses_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("生成中です")
+      end
+
+      it "failed状態のRecap Movieがある場合は「生成に失敗しました」を表示すること" do
+        sign_in singing_customer
+        FactoryBot.create(:singing_generated_recap_movie, :failed, customer: singing_customer)
+
+        get singing_diagnoses_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("生成に失敗しました")
+      end
+    end
   end
 
   describe "POST /singing/diagnoses" do
