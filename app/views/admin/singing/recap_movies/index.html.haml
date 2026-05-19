@@ -1,0 +1,124 @@
+= render 'layouts/admin_header_menu'
+
+.container.py-4
+  .d-flex.justify-content-between.align-items-center.mb-4
+    %h2.mb-0 Recap Movie 管理ダッシュボード
+
+  .row.mb-4
+    .col-md-3.col-6.mb-3
+      .card.text-center.shadow-sm
+        .card-body
+          %h4.card-title.mb-1= @stats[:total]
+          %p.card-text.text-muted.mb-0 総数
+    .col-md-3.col-6.mb-3
+      .card.text-center.shadow-sm.border-success
+        .card-body
+          %h4.card-title.mb-1.text-success= @stats[:completed]
+          %p.card-text.text-muted.mb-0 completed
+    .col-md-3.col-6.mb-3
+      .card.text-center.shadow-sm.border-danger
+        .card-body
+          %h4.card-title.mb-1.text-danger= @stats[:failed]
+          %p.card-text.text-muted.mb-0 failed
+    .col-md-3.col-6.mb-3
+      .card.text-center.shadow-sm
+        .card-body
+          %h4.card-title.mb-1= @stats[:processing]
+          %p.card-text.text-muted.mb-0 processing
+
+  .row.mb-4
+    .col-md-3.col-6.mb-3
+      .card.text-center.shadow-sm
+        .card-body
+          %h4.card-title.mb-1= @stats[:pending]
+          %p.card-text.text-muted.mb-0 pending
+    .col-md-3.col-6.mb-3
+      .card.text-center.shadow-sm
+        .card-body
+          %h4.card-title.mb-1= @stats[:expired]
+          %p.card-text.text-muted.mb-0 expired
+    .col-md-3.col-6.mb-3
+      .card.text-center.shadow-sm.border-primary
+        .card-body
+          %h4.card-title.mb-1.text-primary= @stats[:total_shares]
+          %p.card-text.text-muted.mb-0 総シェア数
+    .col-md-3.col-6.mb-3
+      .card.text-center.shadow-sm.border-info
+        .card-body
+          %h4.card-title.mb-1.text-info= @stats[:total_downloads]
+          %p.card-text.text-muted.mb-0 総DL数
+
+  .row.mb-4
+    .col-md-3.col-6.mb-3
+      .card.text-center.shadow-sm
+        .card-body
+          %h4.card-title.mb-1= @stats[:total_instagram_clicks]
+          %p.card-text.text-muted.mb-0 Instagram導線クリック数
+
+  - if @failed_movies.present?
+    .card.shadow-sm.border-danger.mb-4
+      .card-header.bg-danger.text-white
+        %strong Failed 一覧（直近 #{@failed_movies.count} 件）
+      .card-body.p-0
+        .table-responsive
+          %table.table.table-sm.table-striped.mb-0
+            %thead.thead-light
+              %tr
+                %th ID
+                %th ユーザー
+                %th 年
+                %th エラー
+                %th 更新日時
+            %tbody
+              - @failed_movies.each do |movie|
+                %tr
+                  %td= link_to movie.id, admin_singing_recap_movie_path(movie)
+                  %td= movie.customer.name
+                  %td= movie.year
+                  %td.text-danger
+                    %small= movie.error_message.to_s.truncate(60)
+                  %td.text-nowrap= l(movie.updated_at, format: :short)
+
+  .card.shadow-sm
+    .card-header
+      %strong 直近生成一覧（#{@recent_movies.count} 件表示）
+    .card-body.p-0
+      - if @recent_movies.empty?
+        .p-3.text-muted Recap Movie はまだありません。
+      - else
+        .table-responsive
+          %table.table.table-sm.table-striped.mb-0
+            %thead.thead-dark
+              %tr
+                %th ID
+                %th ユーザー
+                %th 年
+                %th ステータス
+                %th シェア
+                %th DL
+                %th IG
+                %th 生成日時
+                %th
+            %tbody
+              - @recent_movies.each do |movie|
+                %tr
+                  %td= movie.id
+                  %td= movie.customer.name
+                  %td= movie.year
+                  %td
+                    - case movie.status
+                    - when "completed"
+                      %span.badge.badge-success completed
+                    - when "failed"
+                      %span.badge.badge-danger failed
+                    - when "processing"
+                      %span.badge.badge-warning processing
+                    - when "pending"
+                      %span.badge.badge-secondary pending
+                    - when "expired"
+                      %span.badge.badge-dark expired
+                  %td.text-center= movie.share_count
+                  %td.text-center= movie.download_count
+                  %td.text-center= movie.instagram_hint_click_count
+                  %td.text-nowrap= movie.generated_at ? l(movie.generated_at, format: :short) : "-"
+                  %td= link_to "詳細", admin_singing_recap_movie_path(movie), class: "btn btn-sm btn-outline-secondary"

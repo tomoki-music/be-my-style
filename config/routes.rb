@@ -38,6 +38,11 @@ Rails.application.routes.draw do
       post :ensure_current, on: :collection
       post :aggregate, on: :member
     end
+
+    # Recap Movie 管理ダッシュボード
+    namespace :singing do
+      resources :recap_movies, only: [:index, :show]
+    end
   end
   
   namespace :public do

@@ -1,0 +1,123 @@
+= render 'layouts/admin_header_menu'
+
+.container.py-4
+  .d-flex.justify-content-between.align-items-center.mb-4
+    %h2.mb-0 Recap Movie ##{@movie.id}
+    = link_to "一覧へ", admin_singing_recap_movies_path, class: "btn btn-outline-dark"
+
+  .row
+    .col-md-6.mb-4
+      .card.shadow-sm
+        .card-header
+          %strong 基本情報
+        .card-body
+          %table.table.table-sm.mb-0
+            %tbody
+              %tr
+                %th.text-nowrap ID
+                %td= @movie.id
+              %tr
+                %th.text-nowrap ステータス
+                %td
+                  - case @movie.status
+                  - when "completed"
+                    %span.badge.badge-success completed
+                  - when "failed"
+                    %span.badge.badge-danger failed
+                  - when "processing"
+                    %span.badge.badge-warning processing
+                  - when "pending"
+                    %span.badge.badge-secondary pending
+                  - when "expired"
+                    %span.badge.badge-dark expired
+              %tr
+                %th.text-nowrap 年
+                %td= @movie.year
+              %tr
+                %th.text-nowrap エラーメッセージ
+                %td.text-danger= @movie.error_message.presence || "-"
+              %tr
+                %th.text-nowrap 生成日時
+                %td= @movie.generated_at ? l(@movie.generated_at, format: :short) : "-"
+              %tr
+                %th.text-nowrap 有効期限
+                %td= @movie.expires_at ? l(@movie.expires_at, format: :short) : "-"
+              %tr
+                %th.text-nowrap 作成日時
+                %td= l(@movie.created_at, format: :short)
+              %tr
+                %th.text-nowrap 更新日時
+                %td= l(@movie.updated_at, format: :short)
+
+    .col-md-6.mb-4
+      .card.shadow-sm
+        .card-header
+          %strong ユーザー情報
+        .card-body
+          %table.table.table-sm.mb-0
+            %tbody
+              %tr
+                %th.text-nowrap Customer ID
+                %td= @movie.customer.id
+              %tr
+                %th.text-nowrap 名前
+                %td= @movie.customer.name
+              %tr
+                %th.text-nowrap メール
+                %td= @movie.customer.email
+
+  .row
+    .col-md-6.mb-4
+      .card.shadow-sm
+        .card-header
+          %strong トラッキング数値
+        .card-body
+          %table.table.table-sm.mb-0
+            %tbody
+              %tr
+                %th.text-nowrap シェア数
+                %td= @movie.share_count
+              %tr
+                %th.text-nowrap 初回シェア日時
+                %td= @movie.first_shared_at ? l(@movie.first_shared_at, format: :short) : "-"
+              %tr
+                %th.text-nowrap 最終シェア日時
+                %td= @movie.last_shared_at ? l(@movie.last_shared_at, format: :short) : "-"
+              %tr
+                %th.text-nowrap ダウンロード数
+                %td= @movie.download_count
+              %tr
+                %th.text-nowrap 最終DL日時
+                %td= @movie.last_downloaded_at ? l(@movie.last_downloaded_at, format: :short) : "-"
+              %tr
+                %th.text-nowrap Instagram導線クリック数
+                %td= @movie.instagram_hint_click_count
+              %tr
+                %th.text-nowrap 最終IGクリック日時
+                %td= @movie.last_instagram_hint_clicked_at ? l(@movie.last_instagram_hint_clicked_at, format: :short) : "-"
+
+    .col-md-6.mb-4
+      .card.shadow-sm
+        .card-header
+          %strong 動画ファイル
+        .card-body
+          - if @movie.video_file.attached?
+            %p.text-success
+              %strong 添付あり
+            %table.table.table-sm.mb-0
+              %tbody
+                %tr
+                  %th.text-nowrap ファイル名
+                  %td= @movie.video_file.blob.filename
+                %tr
+                  %th.text-nowrap Content-Type
+                  %td= @movie.video_file.blob.content_type
+                %tr
+                  %th.text-nowrap サイズ
+                  %td= number_to_human_size(@movie.video_file.blob.byte_size)
+                %tr
+                  %th.text-nowrap Blob Key
+                  %td
+                    %code= @movie.video_file.blob.key
+          - else
+            %p.text-muted 動画ファイルは添付されていません。
