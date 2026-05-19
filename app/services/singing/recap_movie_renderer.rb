@@ -84,12 +84,67 @@ module Singing
     end
 
     def props_payload
+      customer = @recap_movie.customer
+      year     = @recap_movie.year
+      stats    = yearly_diagnosis_stats(customer, year)
+
       {
-        recapMovieId: @recap_movie.id,
-        customerId:   @recap_movie.customer_id,
-        year:         @recap_movie.year,
-        theme:        "default"
+        recapMovieId:    @recap_movie.id,
+        customerId:      @recap_movie.customer_id,
+        year:            year,
+        theme:           "default",
+        userName:        customer.name.to_s,
+        diagnosisCount:  stats[:count],
+        bestScore:       stats[:best_score],
+        averageScore:    stats[:average_score],
+        topGrowthMetric: stats[:top_growth_metric],
+        voiceType:       stats[:voice_type]
       }
+    end
+
+    SCORE_GROWTH_LABELS = {
+      overall_score:    "総合力",
+      pitch_score:      "音程",
+      rhythm_score:     "リズム",
+      expression_score: "表現力"
+    }.freeze
+
+    def yearly_diagnosis_stats(customer, year)
+      year_range = Time.zone.local(year).all_year
+
+      diagnoses = customer.singing_diagnoses
+        .completed
+        .where(created_at: year_range)
+        .order(:created_at, :id)
+        .to_a
+
+      scored = diagnoses.select { |d| d.overall_score.present? }
+
+      {
+        count:            diagnoses.size,
+        best_score:       scored.map(&:overall_score).max,
+        average_score:    scored.empty? ? nil : (scored.sum(&:overall_score) / scored.size.to_f).round,
+        top_growth_metric: compute_top_growth_metric(diagnoses),
+        voice_type:       compute_voice_type_label(scored.last)
+      }
+    end
+
+    def compute_top_growth_metric(diagnoses)
+      return nil if diagnoses.size < 2
+
+      SCORE_GROWTH_LABELS.filter_map do |attr, label|
+        values = diagnoses.filter_map { |d| d.public_send(attr) }
+        next if values.size < 2
+
+        [label, values.last.to_i - values.first.to_i]
+      end.max_by { |_, delta| delta }&.first
+    end
+
+    def compute_voice_type_label(diagnosis)
+      return nil unless diagnosis
+
+      result = SingingDiagnoses::VoiceTypeAnalyzer.call(diagnosis)
+      SingingDiagnoses::VoiceTypeAnalyzer::VOICE_TYPE_LABELS[result[:main_type]]
     end
 
     def attach_video!(path)

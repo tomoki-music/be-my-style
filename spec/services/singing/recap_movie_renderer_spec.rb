@@ -130,6 +130,85 @@ RSpec.describe Singing::RecapMovieRenderer, type: :service do
         renderer.call
         expect(captured_props["theme"]).to eq("default")
       end
+
+      it "userName が含まれる" do
+        renderer.call
+        expect(captured_props["userName"]).to eq(customer.name)
+      end
+
+      it "diagnosisCount が含まれる" do
+        renderer.call
+        expect(captured_props).to have_key("diagnosisCount")
+      end
+
+      it "bestScore が含まれる（nil 許容）" do
+        renderer.call
+        expect(captured_props).to have_key("bestScore")
+      end
+
+      it "averageScore が含まれる（nil 許容）" do
+        renderer.call
+        expect(captured_props).to have_key("averageScore")
+      end
+
+      it "topGrowthMetric が含まれる（nil 許容）" do
+        renderer.call
+        expect(captured_props).to have_key("topGrowthMetric")
+      end
+
+      it "voiceType が含まれる（nil 許容）" do
+        renderer.call
+        expect(captured_props).to have_key("voiceType")
+      end
+    end
+
+    context "props.json の内容 — 診断データあり" do
+      let(:captured_props) { {} }
+
+      before do
+        create(:singing_diagnosis, :completed,
+               customer: customer,
+               overall_score: 70, pitch_score: 68, rhythm_score: 72, expression_score: 65,
+               created_at: Time.zone.local(2025, 1, 10))
+        create(:singing_diagnosis, :completed,
+               customer: customer,
+               overall_score: 85, pitch_score: 88, rhythm_score: 80, expression_score: 82,
+               created_at: Time.zone.local(2025, 7, 10))
+
+        allow(Open3).to receive(:capture3) do |*args, **_kwargs|
+          props_idx = args.index("--props")
+          captured_props.merge!(JSON.parse(File.read(args[props_idx + 1]))) if props_idx
+          out_idx = args.index("--out")
+          File.write(args[out_idx + 1], "DUMMY") if out_idx
+          ["", "", status_success]
+        end
+      end
+
+      it "diagnosisCount が正しい" do
+        renderer.call
+        expect(captured_props["diagnosisCount"]).to eq(2)
+      end
+
+      it "bestScore が最大スコアになる" do
+        renderer.call
+        expect(captured_props["bestScore"]).to eq(85)
+      end
+
+      it "averageScore が平均になる" do
+        renderer.call
+        expect(captured_props["averageScore"]).to eq(((70 + 85) / 2.0).round)
+      end
+
+      it "topGrowthMetric が最も伸びた指標のラベルを返す" do
+        renderer.call
+        # pitch が 68→88 で +20 が最大
+        expect(captured_props["topGrowthMetric"]).to eq("音程")
+      end
+
+      it "voiceType が nil でない" do
+        renderer.call
+        expect(captured_props["voiceType"]).not_to be_nil
+      end
     end
 
     context "render timeout" do
