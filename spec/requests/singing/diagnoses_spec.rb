@@ -39,17 +39,17 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get new_singing_diagnosis_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("今月の歌唱・演奏診断")
-      expect(response.body).to include("今月の完了済み診断 0 / 1 回")
+      expect(response.body).to include("今月の診断")
+      expect(response.body).to include("0 / 1 回")
     end
 
-    it "診断対象はボーカル・ギター・ベース・ドラム・キーボード・バンド演奏を選択可能として表示すること" do
+    it "診断タイプはボーカル・ギター・ベース・ドラム・キーボード・バンド演奏を選択可能として表示すること" do
       sign_in singing_customer
 
       get new_singing_diagnosis_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("診断対象")
+      expect(response.body).to include("診断タイプを選ぶ")
       expect(response.body).to include("ボーカル")
       expect(response.body).to include("ギター")
       expect(response.body).to include("ベース")
@@ -92,7 +92,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get new_singing_diagnosis_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("今月の完了済み診断 0 / 5 回")
+      expect(response.body).to include("0 / 5 回")
     end
 
     it "premiumユーザーには無制限の案内を表示すること" do
@@ -102,7 +102,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get new_singing_diagnosis_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("今月の診断回数を気にせず依頼できます")
+      expect(response.body).to include("無制限")
     end
 
     it "premiumユーザーには優先解析の案内を表示すること" do
@@ -113,7 +113,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Premium 優先解析")
-      expect(response.body).to include("優先解析対象として受け付けます")
+      expect(response.body).to include("診断リクエストを優先的に処理します。")
     end
 
     it "freeユーザーが上限到達済みの場合はアップグレード導線を表示すること" do
@@ -124,7 +124,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("今月の完了済み診断回数を使い切りました")
-      expect(response.body).to include("歌唱・演奏診断のプランを見る")
+      expect(response.body).to include("プランを見る")
     end
 
     it "musicユーザーも共通診断フォームにアクセスできること" do
@@ -946,8 +946,8 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("6つのボイスタイプ診断はCoreプラン以上で解放されます")
-      expect(response.body).to include("Core以上のプランを見る")
+      expect(response.body).to include("6つのボイスタイプ診断")
+      expect(response.body).to include("Coreプランで解放する")
       expect(response.body).not_to include("6つの歌声タイプマップ")
     end
 
@@ -1007,8 +1007,8 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("6つのボイスタイプ診断はCoreプラン以上で解放されます")
-      expect(response.body).to include("Core以上のプランを見る")
+      expect(response.body).to include("6つのボイスタイプ診断")
+      expect(response.body).to include("Coreプランで解放する")
       expect(response.body).not_to include("6つの歌声タイプマップ")
     end
 
@@ -1320,7 +1320,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("ダイナミクス")
       expect(response.body).to include("フィル")
       expect(response.body).to include("ドラム演奏ならではの補足スコア")
-      expect(response.body).to include("Core以上のプランを見る")
+      expect(response.body).to include("Coreプランで解放する")
       expect(response.body).not_to include("テンポ安定の読み解き")
       expect(response.body).to include('data-singing-diagnosis-radar')
       expect(response.body).to include("ドラム演奏の特徴バランス")
@@ -1360,7 +1360,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("おすすめ練習メニュー")
       expect(response.body).to include("打鍵の粒そろえ練習")
       expect(response.body).to include("フレーズ接続練習")
-      expect(response.body).to include("Core以上のプランを見る")
+      expect(response.body).to include("Coreプランで解放する")
       expect(response.body).not_to include("ミックスボイスチェック項目")
       expect(response.body).not_to include("取り入れると良い歌声タイプ")
       expect(response.body).not_to include("ピッキング")
@@ -1725,7 +1725,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("詳しく振り返りたい方へ")
-      expect(response.body).to include("Core以上のプランを見る")
+      expect(response.body).to include("Coreプランで解放する")
       expect(response.body).not_to include("音程の読み解き")
     end
 
@@ -1737,7 +1737,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Core以上のプランを見る")
+      expect(response.body).to include("Coreプランで解放する")
       expect(response.body).not_to include("音程の読み解き")
     end
 
@@ -1760,7 +1760,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("音程の読み解き")
       expect(response.body).to include("リズムの読み解き")
       expect(response.body).to include("表現の読み解き")
-      expect(response.body).not_to include("Core以上のプランを見る")
+      expect(response.body).not_to include("Coreプランで解放する")
     end
 
     it "coreユーザーのguitar診断にはguitar詳細フィードバック本文を表示すること" do
@@ -1791,7 +1791,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("全体のまとまり")
       expect(response.body).to include("音の立ち上がりがはっきり")
       expect(response.body).not_to include("音程の読み解き")
-      expect(response.body).not_to include("Core以上のプランを見る")
+      expect(response.body).not_to include("Coreプランで解放する")
     end
 
     it "freeユーザーのguitar診断にはguitar詳細フィードバック本文を表示せず導線を表示すること" do
@@ -1814,7 +1814,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("詳しく振り返りたい方へ")
-      expect(response.body).to include("Core以上のプランを見る")
+      expect(response.body).to include("Coreプランで解放する")
       expect(response.body).not_to include("アタックの読み解き")
     end
 
@@ -1847,7 +1847,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("気持ちよく前へ進む流れ")
       expect(response.body).not_to include("音程の読み解き")
       expect(response.body).not_to include("アタックの読み解き")
-      expect(response.body).not_to include("Core以上のプランを見る")
+      expect(response.body).not_to include("Coreプランで解放する")
     end
 
     it "freeユーザーのbass診断にはbass詳細フィードバック本文を表示せず導線を表示すること" do
@@ -1870,7 +1870,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("詳しく振り返りたい方へ")
-      expect(response.body).to include("Core以上のプランを見る")
+      expect(response.body).to include("Coreプランで解放する")
       expect(response.body).not_to include("グルーヴの読み解き")
     end
 
@@ -1906,7 +1906,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).not_to include("音程の読み解き")
       expect(response.body).not_to include("アタックの読み解き")
       expect(response.body).not_to include("グルーヴの読み解き")
-      expect(response.body).not_to include("Core以上のプランを見る")
+      expect(response.body).not_to include("Coreプランで解放する")
     end
 
     it "freeユーザーのdrums診断にはdrums詳細フィードバック本文を表示せず導線を表示すること" do
@@ -1930,7 +1930,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("詳しく振り返りたい方へ")
-      expect(response.body).to include("Core以上のプランを見る")
+      expect(response.body).to include("Coreプランで解放する")
       expect(response.body).not_to include("テンポ安定の読み解き")
     end
 
@@ -1967,7 +1967,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).not_to include("アタックの読み解き")
       expect(response.body).not_to include("グルーヴの読み解き")
       expect(response.body).not_to include("テンポ安定の読み解き")
-      expect(response.body).not_to include("Core以上のプランを見る")
+      expect(response.body).not_to include("Coreプランで解放する")
     end
 
     it "freeユーザーのkeyboard診断にはkeyboard詳細フィードバック本文を表示せず導線を表示すること" do
@@ -1991,7 +1991,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("詳しく振り返りたい方へ")
-      expect(response.body).to include("Core以上のプランを見る")
+      expect(response.body).to include("Coreプランで解放する")
       expect(response.body).not_to include("和音の安定の読み解き")
     end
 
