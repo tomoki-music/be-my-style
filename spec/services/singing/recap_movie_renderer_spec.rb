@@ -8,8 +8,13 @@ RSpec.describe Singing::RecapMovieRenderer, type: :service do
 
   let(:tmp_base) { Dir.mktmpdir("recap_renderer_spec") }
 
-  before { allow(renderer).to receive(:tmp_root).and_return(tmp_base) }
-  after  { FileUtils.remove_entry(tmp_base) }
+  before do
+    allow(renderer).to receive(:tmp_root).and_return(tmp_base)
+    # デフォルトはパス検証をスキップ（各コンテキストで必要に応じてオーバーライド）
+    allow(renderer).to receive(:validate_paths!)
+  end
+
+  after { FileUtils.remove_entry(tmp_base) }
 
   let(:status_success) { instance_double(Process::Status, success?: true,  exitstatus: 0) }
   let(:status_failure) { instance_double(Process::Status, success?: false, exitstatus: 1) }
@@ -124,6 +129,89 @@ RSpec.describe Singing::RecapMovieRenderer, type: :service do
       it "theme が含まれる" do
         renderer.call
         expect(captured_props["theme"]).to eq("default")
+      end
+    end
+
+    context "render timeout" do
+      before do
+        allow(Open3).to receive(:capture3).and_raise(Timeout::Error)
+      end
+
+      it "status が failed になる" do
+        renderer.call
+        expect(movie.reload.status).to eq("failed")
+      end
+
+      it "error_message に timeout が含まれる" do
+        renderer.call
+        expect(movie.reload.error_message).to include("timeout")
+      end
+
+      it "false を返す" do
+        expect(renderer.call).to be false
+      end
+
+      it "video_file が attach されない" do
+        renderer.call
+        expect(movie.reload.video_file).not_to be_attached
+      end
+    end
+
+    context "render script が存在しない" do
+      before do
+        allow(renderer).to receive(:validate_paths!).and_call_original
+        allow(renderer).to receive(:remotion_root).and_return(tmp_base)
+        allow(renderer).to receive(:absolute_script_path).and_return(
+          File.join(tmp_base, "scripts", "render_recap_movie.js")
+        )
+      end
+
+      it "status が failed になる" do
+        renderer.call
+        expect(movie.reload.status).to eq("failed")
+      end
+
+      it "error_message に render script not found が含まれる" do
+        renderer.call
+        expect(movie.reload.error_message).to include("render script not found")
+      end
+
+      it "false を返す" do
+        expect(renderer.call).to be false
+      end
+    end
+
+    context "remotion root が存在しない" do
+      before do
+        allow(renderer).to receive(:validate_paths!).and_call_original
+        allow(renderer).to receive(:remotion_root).and_return("/nonexistent/path/bemystyle-reel")
+      end
+
+      it "status が failed になる" do
+        renderer.call
+        expect(movie.reload.status).to eq("failed")
+      end
+
+      it "error_message に BEMYSTYLE_REEL_PATH not found が含まれる" do
+        renderer.call
+        expect(movie.reload.error_message).to include("BEMYSTYLE_REEL_PATH not found")
+      end
+
+      it "false を返す" do
+        expect(renderer.call).to be false
+      end
+    end
+
+    context "stderr が長い場合は truncate される" do
+      let(:long_stderr) { "E" * 2000 }
+
+      before do
+        allow(Open3).to receive(:capture3).and_return(["", long_stderr, status_failure])
+      end
+
+      it "error_message が MAX_ERROR_LENGTH 以内に収まる" do
+        renderer.call
+        expect(movie.reload.error_message.length).to be <= described_class::MAX_ERROR_LENGTH
       end
     end
   end
