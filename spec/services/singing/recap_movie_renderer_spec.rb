@@ -1,0 +1,130 @@
+require "rails_helper"
+
+RSpec.describe Singing::RecapMovieRenderer, type: :service do
+  let(:customer) { create(:customer, domain_name: "singing") }
+  let(:movie)    { create(:singing_generated_recap_movie, customer: customer, year: 2025) }
+
+  subject(:renderer) { described_class.new(movie) }
+
+  let(:tmp_base) { Dir.mktmpdir("recap_renderer_spec") }
+
+  before { allow(renderer).to receive(:tmp_root).and_return(tmp_base) }
+  after  { FileUtils.remove_entry(tmp_base) }
+
+  let(:status_success) { instance_double(Process::Status, success?: true,  exitstatus: 0) }
+  let(:status_failure) { instance_double(Process::Status, success?: false, exitstatus: 1) }
+
+  def stub_open3_success
+    allow(Open3).to receive(:capture3) do |*args, **_kwargs|
+      out_idx = args.index("--out")
+      File.write(args[out_idx + 1], "DUMMY_MP4") if out_idx
+      ["stdout output", "", status_success]
+    end
+  end
+
+  describe "#call" do
+    context "成功パス" do
+      before { stub_open3_success }
+
+      it "status が completed になる" do
+        renderer.call
+        expect(movie.reload.status).to eq("completed")
+      end
+
+      it "video_file が attach される" do
+        renderer.call
+        expect(movie.reload.video_file).to be_attached
+      end
+
+      it "true を返す" do
+        expect(renderer.call).to be true
+      end
+    end
+
+    context "render コマンド失敗 (exit status != 0)" do
+      before do
+        allow(Open3).to receive(:capture3).and_return(["", "node error detail", status_failure])
+      end
+
+      it "status が failed になる" do
+        renderer.call
+        expect(movie.reload.status).to eq("failed")
+      end
+
+      it "video_file が attach されない" do
+        renderer.call
+        expect(movie.reload.video_file).not_to be_attached
+      end
+
+      it "false を返す" do
+        expect(renderer.call).to be false
+      end
+    end
+
+    context "output mp4 が存在しない (コマンドは成功)" do
+      before do
+        allow(Open3).to receive(:capture3).and_return(["", "", status_success])
+      end
+
+      it "status が failed になる" do
+        renderer.call
+        expect(movie.reload.status).to eq("failed")
+      end
+
+      it "video_file が attach されない" do
+        renderer.call
+        expect(movie.reload.video_file).not_to be_attached
+      end
+
+      it "false を返す" do
+        expect(renderer.call).to be false
+      end
+    end
+
+    context "tmp dir cleanup" do
+      before { stub_open3_success }
+
+      it "call 後に tmp_base 内に一時ファイルが残らない" do
+        renderer.call
+        entries = Dir.glob(File.join(tmp_base, "**", "*")).reject { |f| File.directory?(f) }
+        expect(entries).to be_empty
+      end
+    end
+
+    context "props.json の内容" do
+      let(:captured_props) { {} }
+
+      before do
+        allow(Open3).to receive(:capture3) do |*args, **_kwargs|
+          props_idx = args.index("--props")
+          if props_idx
+            captured_props.merge!(JSON.parse(File.read(args[props_idx + 1])))
+          end
+          out_idx = args.index("--out")
+          File.write(args[out_idx + 1], "DUMMY") if out_idx
+          ["", "", status_success]
+        end
+      end
+
+      it "recapMovieId が含まれる" do
+        renderer.call
+        expect(captured_props["recapMovieId"]).to eq(movie.id)
+      end
+
+      it "customerId が含まれる" do
+        renderer.call
+        expect(captured_props["customerId"]).to eq(movie.customer_id)
+      end
+
+      it "year が含まれる" do
+        renderer.call
+        expect(captured_props["year"]).to eq(2025)
+      end
+
+      it "theme が含まれる" do
+        renderer.call
+        expect(captured_props["theme"]).to eq("default")
+      end
+    end
+  end
+end

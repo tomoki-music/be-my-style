@@ -23,16 +23,11 @@ RSpec.describe Singing::GenerateRecapMovieJob, type: :job do
     context "status が pending の場合" do
       let(:movie) { create(:singing_generated_recap_movie, customer: customer) }
 
-      it "processing を経て failed になる" do
+      it "Singing::RecapMovieRenderer を呼ぶ" do
+        renderer = instance_double(Singing::RecapMovieRenderer, call: true)
+        allow(Singing::RecapMovieRenderer).to receive(:new).with(movie).and_return(renderer)
         described_class.perform_now(movie.id)
-        expect(movie.reload.status).to eq("failed")
-      end
-
-      it "error_message に未実装メッセージが入る" do
-        described_class.perform_now(movie.id)
-        expect(movie.reload.error_message).to eq(
-          Singing::GenerateRecapMovieJob::RENDERER_NOT_IMPLEMENTED_MESSAGE
-        )
+        expect(renderer).to have_received(:call)
       end
     end
 
@@ -40,8 +35,8 @@ RSpec.describe Singing::GenerateRecapMovieJob, type: :job do
       let(:movie) { create(:singing_generated_recap_movie, customer: customer) }
 
       before do
-        allow(movie).to receive(:mark_processing!).and_raise(StandardError, "unexpected error")
         allow(SingingGeneratedRecapMovie).to receive(:find_by).and_return(movie)
+        allow(Singing::RecapMovieRenderer).to receive(:new).and_raise(StandardError, "unexpected error")
       end
 
       it "例外を再 raise しない" do

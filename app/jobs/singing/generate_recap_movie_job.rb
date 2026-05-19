@@ -2,8 +2,6 @@ module Singing
   class GenerateRecapMovieJob < ApplicationJob
     queue_as :default
 
-    RENDERER_NOT_IMPLEMENTED_MESSAGE = "Renderer is not implemented."
-
     def perform(movie_id)
       movie = SingingGeneratedRecapMovie.find_by(id: movie_id)
 
@@ -14,13 +12,7 @@ module Singing
 
       return unless movie.pending?
 
-      movie.mark_processing!
-
-      # TODO: Remotion でmp4をレンダリングし S3 にアップロードする
-      # Singing::RecapMovieRenderer.call(movie)
-      # movie.mark_completed!
-
-      movie.mark_failed!(RENDERER_NOT_IMPLEMENTED_MESSAGE)
+      Singing::RecapMovieRenderer.new(movie).call
     rescue StandardError => e
       Rails.logger.error("[Singing::GenerateRecapMovieJob] error movie_id=#{movie_id}: #{e.message}")
       movie&.mark_failed!(e.message)
