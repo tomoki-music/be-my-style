@@ -19,7 +19,7 @@ Singing::CleanupGeneratedRecapMoviesJob
 bin/cleanup_generated_recap_movies
 ```
 
-本番 EC2 上のフルパス: `/var/www/be-my-style/current/bin/cleanup_generated_recap_movies`
+本番 EC2 上のフルパス: `/home/ec2-user/be-my-style/bin/cleanup_generated_recap_movies`
 
 ## 手動実行方法
 
@@ -33,8 +33,8 @@ DISABLE_SPRING=1 ~/.rbenv/shims/bundle exec rails runner 'Singing::CleanupGenera
 ### 本番 EC2 上（必ず事前にユーザー確認してから行う）
 
 ```bash
-cd /var/www/be-my-style/current
-/var/www/be-my-style/current/bin/cleanup_generated_recap_movies
+cd /home/ec2-user/be-my-style
+APP_ROOT=/home/ec2-user/be-my-style /home/ec2-user/be-my-style/bin/cleanup_generated_recap_movies
 ```
 
 正常終了時はログに `start` と `finish exit_status=0` が出る。
@@ -42,19 +42,13 @@ cd /var/www/be-my-style/current
 rails runner を直接確認したい場合:
 
 ```bash
-cd /var/www/be-my-style/current
+cd /home/ec2-user/be-my-style
 RAILS_ENV=production DISABLE_SPRING=1 ~/.rbenv/shims/bundle exec rails runner 'Singing::CleanupGeneratedRecapMoviesJob.perform_now'
 ```
 
 ## cron 登録例
 
 1 時間に 1 回、毎時 0 分に実行する。
-
-```cron
-0 * * * * APP_ROOT=/var/www/be-my-style/current /var/www/be-my-style/current/bin/cleanup_generated_recap_movies >> /var/www/be-my-style/current/log/cron_recap_movie_cleanup.log 2>&1
-```
-
-実際の本番 EC2 のデプロイパスが異なる場合（例: `/home/ec2-user/be-my-style`）は `APP_ROOT` を上書きする:
 
 ```cron
 0 * * * * APP_ROOT=/home/ec2-user/be-my-style /home/ec2-user/be-my-style/bin/cleanup_generated_recap_movies >> /home/ec2-user/be-my-style/log/cron_recap_movie_cleanup.log 2>&1
@@ -68,25 +62,25 @@ RAILS_ENV=production DISABLE_SPRING=1 ~/.rbenv/shims/bundle exec rails runner 'S
 
 | ログ種別 | パス |
 |---------|------|
-| cron script ログ | `log/cron_recap_movie_cleanup.log` |
-| Rails production ログ | `log/production.log` |
+| cron script ログ | `/home/ec2-user/be-my-style/log/cron_recap_movie_cleanup.log` |
+| Rails production ログ | `/home/ec2-user/be-my-style/log/production.log` |
 
 cron ログ確認:
 
 ```bash
-tail -n 100 /var/www/be-my-style/current/log/cron_recap_movie_cleanup.log
+tail -n 100 /home/ec2-user/be-my-style/log/cron_recap_movie_cleanup.log
 ```
 
 Rails ログ確認:
 
 ```bash
-grep RecapMovieCleanup /var/www/be-my-style/current/log/production.log
+grep RecapMovieCleanup /home/ec2-user/be-my-style/log/production.log
 ```
 
 期待するログ例:
 
 ```text
-[2026-05-19 00:00:00 +0900] cleanup_generated_recap_movies start app_root=/var/www/be-my-style/current bundle_bin=/home/deploy/.rbenv/shims/bundle
+[2026-05-19 00:00:00 +0900] cleanup_generated_recap_movies start app_root=/home/ec2-user/be-my-style bundle_bin=/home/ec2-user/.rbenv/shims/bundle
 [2026-05-19 00:00:05 +0900] cleanup_generated_recap_movies finish exit_status=0
 ```
 
@@ -160,16 +154,20 @@ Redis + Solid Queue / Sidekiq の場合: 別プロセスが処理する。キュ
 1. 本番 EC2 に SSH 接続（事前確認必須）
 2. デプロイ済みの `bin/cleanup_generated_recap_movies` が存在することを確認
    ```bash
-   ls -l /var/www/be-my-style/current/bin/cleanup_generated_recap_movies
+   ls -l /home/ec2-user/be-my-style/bin/cleanup_generated_recap_movies
    ```
 3. 実行権限を確認（`-rwxr-xr-x` であること）
 4. 手動実行で動作確認
    ```bash
-   /var/www/be-my-style/current/bin/cleanup_generated_recap_movies
+   APP_ROOT=/home/ec2-user/be-my-style /home/ec2-user/be-my-style/bin/cleanup_generated_recap_movies
    ```
 5. cron 登録
    ```bash
    crontab -e
+   ```
+   追加する行:
+   ```cron
+   0 * * * * APP_ROOT=/home/ec2-user/be-my-style /home/ec2-user/be-my-style/bin/cleanup_generated_recap_movies >> /home/ec2-user/be-my-style/log/cron_recap_movie_cleanup.log 2>&1
    ```
 6. 登録確認
    ```bash
@@ -177,12 +175,14 @@ Redis + Solid Queue / Sidekiq の場合: 別プロセスが処理する。キュ
    ```
 7. 1 時間後にログを確認
    ```bash
-   tail -n 50 /var/www/be-my-style/current/log/cron_recap_movie_cleanup.log
+   tail -n 50 /home/ec2-user/be-my-style/log/cron_recap_movie_cleanup.log
    ```
 
-## 今回は本番未適用
+## 本番適用状況
 
-このスクリプト・ドキュメントは `feature/recap-movie-cleanup-scheduler` ブランチで作成し、main マージまで本番に適用しない。
+本番 APP_ROOT は `/home/ec2-user/be-my-style`（`/var/www/be-my-style/current` は存在しないことを確認済み）。
 
-本番 EC2 への SSH 作業・cron 登録は今回のスコープ外。
-適用タイミングはユーザーが判断してから行う。
+スクリプトの default APP_ROOT は `/var/www/be-my-style/current` のまま（汎用値として保持）。
+cron 登録時は必ず `APP_ROOT=/home/ec2-user/be-my-style` を明示すること（B案採用）。
+
+本番 EC2 への cron 登録は未実施。登録タイミングはユーザーが判断してから行う。
