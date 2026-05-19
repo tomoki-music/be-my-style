@@ -1,0 +1,62 @@
+.srm-show
+  .srm-inner
+    .srm-nav
+      = link_to singing_recap_movies_path, class: "srm-back-link" do
+        &larr; Recap Movie 一覧へ
+
+    .srm-show-header
+      %p.srm-header__eyebrow Singing / Recap Movie
+      %h1.srm-show-header__title= "#{@recap_movie.year} Recap Movie"
+      .srm-show-header__meta
+        %span.srm-badge{ class: "srm-badge--#{@recap_movie.status}" }
+          - case @recap_movie.status
+          - when "completed"
+            完了
+          - when "processing"
+            生成中
+          - when "pending"
+            待機中
+          - when "failed"
+            生成失敗
+          - when "expired"
+            期限切れ
+        - if @recap_movie.generated_at.present?
+          %span.srm-show-header__date= "生成日: #{l(@recap_movie.generated_at, format: :short)}"
+
+    .srm-show-body
+      - if @recap_movie.completed? && @recap_movie.video_file.attached?
+        .srm-video-wrap
+          = video_tag url_for(@recap_movie.video_file),
+            controls: true,
+            playsinline: true,
+            class: "srm-video"
+
+        .srm-video-note
+          %p スマホを縦向きにすると見やすくなります。
+
+      - elsif @recap_movie.processing? || @recap_movie.pending?
+        .srm-status-panel.srm-status-panel--processing
+          .srm-status-panel__icon
+            .srm-spinner
+          %p.srm-status-panel__title 動画を生成しています
+          %p.srm-status-panel__desc しばらくしてからページを再読み込みしてください。
+
+      - elsif @recap_movie.failed?
+        .srm-status-panel.srm-status-panel--failed
+          .srm-status-panel__icon 😔
+          %p.srm-status-panel__title 動画の生成に失敗しました
+          %p.srm-status-panel__desc 時間をおいて再試行するか、サポートまでお問い合わせください。
+          - if Rails.env.development? && @recap_movie.error_message.present?
+            %details.srm-error-detail
+              %summary エラー詳細（開発環境のみ）
+              %pre.srm-error-pre= @recap_movie.error_message
+
+      - elsif @recap_movie.expired?
+        .srm-status-panel.srm-status-panel--expired
+          .srm-status-panel__icon ⏰
+          %p.srm-status-panel__title 動画の保存期限が切れました
+          %p.srm-status-panel__desc Recap Movie の保存期限が過ぎました。再生成はバッジページからリクエストできます。
+          = link_to "バッジページへ", singing_badges_path, class: "srm-btn srm-btn--secondary"
+
+    .srm-show-footer
+      = link_to "一覧へ戻る", singing_recap_movies_path, class: "srm-btn srm-btn--ghost"

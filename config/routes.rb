@@ -225,6 +225,7 @@ Rails.application.routes.draw do
         patch :unpin
       end
     end
+    resources :recap_movies, only: [:index, :show]
     resources :users, only: [:show, :edit, :update] do
       resource :profile_reaction, only: [:create]
     end

@@ -1,0 +1,400 @@
+// ──────────────────────────────────────────────────────────────────────────────
+// Singing Recap Movie Viewer
+// dark purple / cinematic / mobile-first
+// ──────────────────────────────────────────────────────────────────────────────
+
+// ── 変数 ────────────────────────────────────────────────────────────────────
+
+$srm-bg:         #09090f;
+$srm-surface:    #12121d;
+$srm-surface-2:  #1a1a2e;
+$srm-border:     rgba(255, 255, 255, 0.08);
+$srm-text:       #e8e8f0;
+$srm-muted:      #7a7a9a;
+$srm-purple:     #7c3aed;
+$srm-purple-lt:  #a78bfa;
+$srm-coral:      #ef6c3f;
+$srm-gold:       #f5b84b;
+$srm-red:        #ef4444;
+$srm-green:      #22c55e;
+
+// ── 外枠 ────────────────────────────────────────────────────────────────────
+
+.srm-index,
+.srm-show {
+  background: $srm-bg;
+  color: $srm-text;
+  min-height: 100vh;
+  padding: 24px 16px 80px;
+
+  @media (min-width: 640px) {
+    padding: 40px 24px 100px;
+  }
+}
+
+.srm-inner {
+  margin: 0 auto;
+  max-width: 680px;
+}
+
+// ── ナビ ────────────────────────────────────────────────────────────────────
+
+.srm-nav {
+  margin-bottom: 28px;
+}
+
+.srm-back-link {
+  color: $srm-muted;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s;
+
+  &:hover { color: $srm-text; }
+}
+
+// ── ヘッダー ────────────────────────────────────────────────────────────────
+
+.srm-header {
+  margin-bottom: 32px;
+}
+
+.srm-header__eyebrow {
+  color: $srm-muted;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.srm-header__title {
+  color: $srm-text;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 6px;
+}
+
+.srm-header__subtitle {
+  color: $srm-muted;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+// ── ボタン ──────────────────────────────────────────────────────────────────
+
+.srm-btn {
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 22px;
+  text-align: center;
+  text-decoration: none;
+  transition: filter 0.15s, transform 0.1s;
+
+  &:hover  { filter: brightness(1.1); }
+  &:active { transform: scale(0.97); }
+}
+
+.srm-btn--primary {
+  background: linear-gradient(135deg, $srm-purple, darken($srm-purple, 8%));
+  color: #fff;
+}
+
+.srm-btn--secondary {
+  background: $srm-surface-2;
+  border: 1px solid $srm-border;
+  color: $srm-text;
+}
+
+.srm-btn--ghost {
+  background: transparent;
+  border: 1px solid $srm-border;
+  color: $srm-muted;
+}
+
+// ── Empty ───────────────────────────────────────────────────────────────────
+
+.srm-empty {
+  margin-top: 60px;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.srm-empty__icon {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 18px;
+}
+
+.srm-empty__title {
+  color: $srm-text;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+.srm-empty__desc {
+  color: $srm-muted;
+  font-size: 0.93rem;
+  line-height: 1.7;
+  margin: 0 0 24px;
+}
+
+.srm-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+// ── 一覧カード ───────────────────────────────────────────────────────────────
+
+.srm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.srm-card {
+  align-items: center;
+  background: $srm-surface;
+  border: 1px solid $srm-border;
+  border-radius: 16px;
+  color: $srm-text;
+  display: flex;
+  gap: 18px;
+  padding: 20px;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+
+  &:hover {
+    background: $srm-surface-2;
+    border-color: rgba($srm-purple-lt, 0.3);
+    transform: translateY(-2px);
+  }
+
+  &--completed { border-left: 4px solid $srm-green; }
+  &--processing { border-left: 4px solid $srm-gold; }
+  &--pending    { border-left: 4px solid $srm-muted; }
+  &--failed     { border-left: 4px solid $srm-red; }
+  &--expired    { border-left: 4px solid rgba($srm-muted, 0.4); }
+}
+
+.srm-card__year {
+  align-items: baseline;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 2px;
+  text-align: center;
+  width: 60px;
+}
+
+.srm-card__year-num {
+  color: $srm-purple-lt;
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.srm-card__year-label {
+  color: $srm-muted;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.srm-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.srm-card__desc {
+  color: $srm-muted;
+  font-size: 0.88rem;
+  margin: 6px 0 0;
+}
+
+.srm-card__arrow {
+  flex-shrink: 0;
+}
+
+.srm-card__cta {
+  color: $srm-muted;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+// ── バッジ ──────────────────────────────────────────────────────────────────
+
+.srm-badge {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+
+  &--completed  { background: rgba($srm-green, 0.2);           color: $srm-green; }
+  &--processing { background: rgba($srm-gold, 0.2);            color: $srm-gold; }
+  &--pending    { background: rgba($srm-muted, 0.2);           color: $srm-muted; }
+  &--failed     { background: rgba($srm-red, 0.2);             color: $srm-red; }
+  &--expired    { background: rgba($srm-muted, 0.1);           color: rgba($srm-muted, 0.7); }
+}
+
+// ── Show: ヘッダー ───────────────────────────────────────────────────────────
+
+.srm-show-header {
+  margin-bottom: 28px;
+}
+
+.srm-show-header__title {
+  color: $srm-text;
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  font-weight: 800;
+  margin: 0 0 10px;
+}
+
+.srm-show-header__meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.srm-show-header__date {
+  color: $srm-muted;
+  font-size: 0.85rem;
+}
+
+// ── 動画エリア ───────────────────────────────────────────────────────────────
+
+.srm-show-body {
+  margin-bottom: 32px;
+}
+
+.srm-video-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.srm-video {
+  background: #000;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  max-height: 80vh;
+  max-width: 420px;
+  width: 100%;
+}
+
+.srm-video-note {
+  margin-top: 12px;
+  text-align: center;
+
+  p {
+    color: $srm-muted;
+    font-size: 0.83rem;
+    margin: 0;
+  }
+}
+
+// ── ステータスパネル ─────────────────────────────────────────────────────────
+
+.srm-status-panel {
+  border-radius: 16px;
+  margin: 0 auto;
+  max-width: 420px;
+  padding: 48px 24px;
+  text-align: center;
+
+  &--processing {
+    background: rgba($srm-gold, 0.06);
+    border: 1px solid rgba($srm-gold, 0.2);
+  }
+
+  &--failed {
+    background: rgba($srm-red, 0.06);
+    border: 1px solid rgba($srm-red, 0.2);
+  }
+
+  &--expired {
+    background: rgba($srm-muted, 0.06);
+    border: 1px solid rgba($srm-muted, 0.15);
+  }
+}
+
+.srm-status-panel__icon {
+  font-size: 2.2rem;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.srm-status-panel__title {
+  color: $srm-text;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.srm-status-panel__desc {
+  color: $srm-muted;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  margin: 0 0 20px;
+}
+
+// ── スピナー ─────────────────────────────────────────────────────────────────
+
+.srm-spinner {
+  animation: srm-spin 0.8s linear infinite;
+  border: 3px solid rgba($srm-gold, 0.2);
+  border-radius: 50%;
+  border-top-color: $srm-gold;
+  display: inline-block;
+  height: 32px;
+  width: 32px;
+}
+
+@keyframes srm-spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── エラー詳細（開発環境のみ） ────────────────────────────────────────────────
+
+.srm-error-detail {
+  background: rgba($srm-red, 0.06);
+  border: 1px solid rgba($srm-red, 0.2);
+  border-radius: 10px;
+  margin-top: 20px;
+  padding: 12px 16px;
+  text-align: left;
+
+  summary {
+    color: $srm-red;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+}
+
+.srm-error-pre {
+  color: rgba($srm-text, 0.7);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  margin: 10px 0 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+// ── Show フッター ────────────────────────────────────────────────────────────
+
+.srm-show-footer {
+  border-top: 1px solid $srm-border;
+  padding-top: 24px;
+  text-align: center;
+}

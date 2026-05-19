@@ -1,0 +1,50 @@
+.srm-index
+  .srm-inner
+    .srm-nav
+      = link_to singing_root_path, class: "srm-back-link" do
+        &larr; トップへ戻る
+
+    .srm-header
+      %p.srm-header__eyebrow Singing / Recap Movie
+      %h1.srm-header__title Recap Movie
+      %p.srm-header__subtitle あなたの歌声の成長を振り返る動画です。
+
+    - if @recap_movies.empty?
+      .srm-empty
+        .srm-empty__icon 🎬
+        %p.srm-empty__title まだ Recap Movie はありません
+        %p.srm-empty__desc 診断を重ねることで、年間の成長をまとめた Recap Movie を生成できるようになります。
+        .srm-empty__actions
+          = link_to "診断を始める", new_singing_diagnosis_path, class: "srm-btn srm-btn--primary"
+          = link_to "バッジ・リワード", singing_badges_path, class: "srm-btn srm-btn--secondary"
+    - else
+      .srm-list
+        - @recap_movies.each do |movie|
+          = link_to singing_recap_movie_path(movie), class: "srm-card srm-card--#{movie.status}" do
+            .srm-card__year
+              %span.srm-card__year-num= movie.year
+              %span.srm-card__year-label 年
+
+            .srm-card__body
+              - case movie.status
+              - when "completed"
+                %span.srm-badge.srm-badge--completed 完了
+                %p.srm-card__desc 動画を再生できます。
+              - when "processing"
+                %span.srm-badge.srm-badge--processing 生成中
+                %p.srm-card__desc 動画を生成しています。しばらくお待ちください。
+              - when "pending"
+                %span.srm-badge.srm-badge--pending 待機中
+                %p.srm-card__desc 生成キューに入っています。
+              - when "failed"
+                %span.srm-badge.srm-badge--failed 生成失敗
+                %p.srm-card__desc 生成に失敗しました。
+              - when "expired"
+                %span.srm-badge.srm-badge--expired 期限切れ
+                %p.srm-card__desc 動画の保存期限が切れました。
+
+            .srm-card__arrow
+              - if movie.completed? && movie.video_file.attached?
+                %span.srm-card__cta 動画を見る &rarr;
+              - else
+                %span.srm-card__cta 詳細を見る &rarr;
