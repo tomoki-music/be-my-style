@@ -1,6 +1,6 @@
 class Singing::RecapMoviesController < Singing::BaseController
   before_action :authenticate_customer!
-  before_action :set_recap_movie, only: [:show]
+  before_action :set_recap_movie, only: [:show, :track_share]
 
   SCORE_GROWTH_LABELS = {
     overall_score:    "総合力",
@@ -15,6 +15,29 @@ class Singing::RecapMoviesController < Singing::BaseController
 
   def show
     @movie_props = build_movie_props(@recap_movie)
+  end
+
+  def track_share
+    now = Time.current
+
+    case params[:kind]
+    when "x"
+      @recap_movie.share_count += 1
+      @recap_movie.first_shared_at ||= now
+      @recap_movie.last_shared_at = now
+    when "download"
+      @recap_movie.download_count += 1
+      @recap_movie.last_downloaded_at = now
+    when "instagram"
+      @recap_movie.instagram_hint_click_count += 1
+      @recap_movie.last_instagram_hint_clicked_at = now
+    else
+      render json: { error: "unknown kind" }, status: :bad_request
+      return
+    end
+
+    @recap_movie.save!
+    render json: { ok: true }, status: :ok
   end
 
   private

@@ -243,4 +243,119 @@ RSpec.describe "Singing::RecapMovies", type: :request do
       end
     end
   end
+
+  # ─── track_share ────────────────────────────────────────────────────────────
+
+  describe "POST /singing/recap_movies/:id/track_share" do
+    let!(:movie) { FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner) }
+
+    context "未ログイン" do
+      it "ログインページにリダイレクトされること" do
+        post track_share_singing_recap_movie_path(movie), params: { kind: "x" }
+
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    context "ログイン済み・自分の recap movie" do
+      before { sign_in owner }
+
+      context "kind=x" do
+        it "share_count が +1 されること" do
+          expect {
+            post track_share_singing_recap_movie_path(movie), params: { kind: "x" }, as: :json
+          }.to change { movie.reload.share_count }.by(1)
+        end
+
+        it "first_shared_at が初回のみセットされること" do
+          post track_share_singing_recap_movie_path(movie), params: { kind: "x" }, as: :json
+          first_at = movie.reload.first_shared_at
+          expect(first_at).to be_present
+
+          post track_share_singing_recap_movie_path(movie), params: { kind: "x" }, as: :json
+          expect(movie.reload.first_shared_at).to be_within(1.second).of(first_at)
+        end
+
+        it "last_shared_at が更新されること" do
+          post track_share_singing_recap_movie_path(movie), params: { kind: "x" }, as: :json
+          expect(movie.reload.last_shared_at).to be_present
+        end
+
+        it "200 を返すこと" do
+          post track_share_singing_recap_movie_path(movie), params: { kind: "x" }, as: :json
+          expect(response).to have_http_status(:ok)
+          expect(JSON.parse(response.body)["ok"]).to be true
+        end
+      end
+
+      context "kind=download" do
+        it "download_count が +1 されること" do
+          expect {
+            post track_share_singing_recap_movie_path(movie), params: { kind: "download" }, as: :json
+          }.to change { movie.reload.download_count }.by(1)
+        end
+
+        it "last_downloaded_at が更新されること" do
+          post track_share_singing_recap_movie_path(movie), params: { kind: "download" }, as: :json
+          expect(movie.reload.last_downloaded_at).to be_present
+        end
+
+        it "200 を返すこと" do
+          post track_share_singing_recap_movie_path(movie), params: { kind: "download" }, as: :json
+          expect(response).to have_http_status(:ok)
+        end
+      end
+
+      context "kind=instagram" do
+        it "instagram_hint_click_count が +1 されること" do
+          expect {
+            post track_share_singing_recap_movie_path(movie), params: { kind: "instagram" }, as: :json
+          }.to change { movie.reload.instagram_hint_click_count }.by(1)
+        end
+
+        it "last_instagram_hint_clicked_at が更新されること" do
+          post track_share_singing_recap_movie_path(movie), params: { kind: "instagram" }, as: :json
+          expect(movie.reload.last_instagram_hint_clicked_at).to be_present
+        end
+
+        it "200 を返すこと" do
+          post track_share_singing_recap_movie_path(movie), params: { kind: "instagram" }, as: :json
+          expect(response).to have_http_status(:ok)
+        end
+      end
+
+      context "unknown kind" do
+        it "400 を返すこと" do
+          post track_share_singing_recap_movie_path(movie), params: { kind: "unknown" }, as: :json
+          expect(response).to have_http_status(:bad_request)
+        end
+
+        it "カウントが変更されないこと" do
+          expect {
+            post track_share_singing_recap_movie_path(movie), params: { kind: "unknown" }, as: :json
+          }.not_to(change { movie.reload.share_count })
+        end
+      end
+    end
+
+    context "他人の recap movie へのアクセス" do
+      before { sign_in owner }
+
+      it "一覧ページにリダイレクトされること" do
+        other_movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: other)
+
+        post track_share_singing_recap_movie_path(other_movie), params: { kind: "x" }, as: :json
+
+        expect(response).to redirect_to(singing_recap_movies_path)
+      end
+
+      it "他人の share_count が変更されないこと" do
+        other_movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: other)
+
+        expect {
+          post track_share_singing_recap_movie_path(other_movie), params: { kind: "x" }, as: :json
+        }.not_to(change { other_movie.reload.share_count })
+      end
+    end
+  end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_18_003114) do
+ActiveRecord::Schema.define(version: 2026_05_20_000001) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -949,6 +949,13 @@ ActiveRecord::Schema.define(version: 2026_05_18_003114) do
     t.datetime "expires_at"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.integer "share_count", default: 0, null: false
+    t.integer "download_count", default: 0, null: false
+    t.integer "instagram_hint_click_count", default: 0, null: false
+    t.datetime "first_shared_at"
+    t.datetime "last_shared_at"
+    t.datetime "last_downloaded_at"
+    t.datetime "last_instagram_hint_clicked_at"
     t.index ["customer_id", "year"], name: "index_singing_generated_recap_movies_on_customer_id_and_year", unique: true
     t.index ["expires_at"], name: "index_singing_generated_recap_movies_on_expires_at"
     t.index ["status"], name: "index_singing_generated_recap_movies_on_status"
