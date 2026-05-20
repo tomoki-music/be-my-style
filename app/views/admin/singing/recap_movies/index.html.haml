@@ -79,12 +79,46 @@
                     %small= movie.error_message.to_s.truncate(60)
                   %td.text-nowrap= l(movie.updated_at, format: :short)
 
+  .card.shadow-sm.mb-3
+    .card-header
+      %strong 絞り込み
+    .card-body
+      = form_with url: admin_singing_recap_movies_path, method: :get, local: true do |f|
+        .form-row.align-items-end
+          .col-auto
+            = f.label :status, "ステータス", class: "sr-only"
+            = f.select :status,
+                [["すべて", ""]] + [["pending", "pending"], ["processing", "processing"], ["completed", "completed"], ["failed", "failed"], ["expired", "expired"]],
+                { selected: @filter_status.to_s },
+                { class: "form-control form-control-sm" }
+          .col-auto
+            = f.label :year, "年", class: "sr-only"
+            = f.text_field :year, value: @filter_year, placeholder: "年（例: 2025）", class: "form-control form-control-sm", style: "width: 120px"
+          .col-auto
+            = f.label :per_page, "表示件数", class: "sr-only"
+            = f.select :per_page,
+                [["30件", 30], ["50件", 50], ["100件", 100]],
+                { selected: @per_page },
+                { class: "form-control form-control-sm" }
+          .col-auto
+            = f.submit "絞り込む", class: "btn btn-sm btn-primary"
+          .col-auto
+            = link_to "リセット", admin_singing_recap_movies_path, class: "btn btn-sm btn-outline-secondary"
+      - if @filter_status.present? || @filter_year.present?
+        %small.text-muted.mt-2.d-block
+          現在の絞り込み:
+          - if @filter_status.present?
+            %span.badge.badge-secondary= @filter_status
+          - if @filter_year.present?
+            %span.badge.badge-secondary= @filter_year
+
   .card.shadow-sm
     .card-header
-      %strong 直近生成一覧（#{@recent_movies.count} 件表示）
+      %strong
+        一覧（#{@total_count} 件中 #{@movies.count} 件表示 / ページ #{@page}/#{[@total_pages, 1].max}）
     .card-body.p-0
-      - if @recent_movies.empty?
-        .p-3.text-muted Recap Movie はまだありません。
+      - if @movies.empty?
+        .p-3.text-muted 該当する Recap Movie はありません。
       - else
         .table-responsive
           %table.table.table-sm.table-striped.mb-0
@@ -100,7 +134,7 @@
                 %th 生成日時
                 %th
             %tbody
-              - @recent_movies.each do |movie|
+              - @movies.each do |movie|
                 %tr
                   %td= movie.id
                   %td= movie.customer.name
@@ -122,3 +156,17 @@
                   %td.text-center= movie.instagram_hint_click_count
                   %td.text-nowrap= movie.generated_at ? l(movie.generated_at, format: :short) : "-"
                   %td= link_to "詳細", admin_singing_recap_movie_path(movie), class: "btn btn-sm btn-outline-secondary"
+
+    - if @total_pages > 1
+      .card-footer
+        .d-flex.align-items-center.justify-content-between
+          .text-muted.small #{@page} / #{@total_pages} ページ
+          .btn-group
+            - if @page > 1
+              = link_to "前へ",
+                  admin_singing_recap_movies_path(status: @filter_status, year: @filter_year, per_page: @per_page, page: @page - 1),
+                  class: "btn btn-sm btn-outline-secondary"
+            - if @page < @total_pages
+              = link_to "次へ",
+                  admin_singing_recap_movies_path(status: @filter_status, year: @filter_year, per_page: @per_page, page: @page + 1),
+                  class: "btn btn-sm btn-outline-secondary"

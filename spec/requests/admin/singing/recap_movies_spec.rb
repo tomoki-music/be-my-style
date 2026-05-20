@@ -42,10 +42,68 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
         expect(response.body).to include("Remotion render failed")
       end
 
-      it "直近生成一覧を表示すること" do
+      it "一覧を表示すること" do
         get admin_singing_recap_movies_path
-        expect(response.body).to include("直近生成一覧")
+        expect(response.body).to include("一覧")
         expect(response.body).to include(customer.name)
+      end
+
+      context "status filter" do
+        it "?status=completed で completed のみ返すこと" do
+          get admin_singing_recap_movies_path, params: { status: "completed" }
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include(customer.name)
+          expect(response.body).to include("2025")
+        end
+
+        it "?status=failed で failed のみ返すこと" do
+          get admin_singing_recap_movies_path, params: { status: "failed" }
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("2024")
+        end
+
+        it "不正 status は無視して全件返すこと" do
+          get admin_singing_recap_movies_path, params: { status: "invalid_status" }
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include(customer.name)
+        end
+      end
+
+      context "year filter" do
+        it "?year=2025 で 2025 年のみ返すこと" do
+          get admin_singing_recap_movies_path, params: { year: "2025" }
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("2025")
+        end
+
+        it "?year=2024 で 2024 年のみ返すこと" do
+          get admin_singing_recap_movies_path, params: { year: "2024" }
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("2024")
+        end
+
+        it "不正 year は無視して全件返すこと" do
+          get admin_singing_recap_movies_path, params: { year: "abc" }
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include(customer.name)
+        end
+      end
+
+      context "pagination" do
+        it "?per_page=1 で 1 件のみ返すこと" do
+          get admin_singing_recap_movies_path, params: { per_page: "1" }
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "per_page が 100 を超える場合は 100 に丸めること" do
+          get admin_singing_recap_movies_path, params: { per_page: "999" }
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "?page=2 で 200 OK を返すこと" do
+          get admin_singing_recap_movies_path, params: { per_page: "1", page: "2" }
+          expect(response).to have_http_status(:ok)
+        end
       end
     end
 
