@@ -39,6 +39,15 @@ class Admin::Singing::RecapMoviesController < ApplicationController
         @total_pages = (@total_count.to_f / per_page).ceil
 
         @failed_movies = SingingGeneratedRecapMovie.includes(:customer).failed.order(updated_at: :desc).limit(20)
+
+        @status_counts = VALID_STATUSES.each_with_object({}) do |s, h|
+          h[s] = @stats[s.to_sym]
+        end
+
+        raw_year_counts = SingingGeneratedRecapMovie.group(:year).order(year: :desc).count
+        @year_counts = raw_year_counts.each_with_object({}) do |(year, count), h|
+          h[year.presence || "不明"] = count
+        end
       end
 
       format.csv do

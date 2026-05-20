@@ -51,6 +51,62 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
         expect(response.body).to include(customer.name)
       end
 
+      context "Graph Dashboard" do
+        it "Status Distribution セクションを表示すること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("Status Distribution")
+        end
+
+        it "completed / failed / expired などの件数が表示されること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("completed")
+          expect(response.body).to include("failed")
+          expect(response.body).to include("expired")
+        end
+
+        it "Share Engagement セクションを表示すること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("Share Engagement")
+        end
+
+        it "share_count / download_count / instagram_hint_click_count の合計が表示されること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("X シェア")
+          expect(response.body).to include("ダウンロード")
+          expect(response.body).to include("Instagram Hint")
+        end
+
+        it "Yearly Generation セクションを表示すること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("Yearly Generation")
+        end
+
+        it "year 別件数が表示されること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("2025")
+          expect(response.body).to include("2024")
+        end
+
+        context "0件の場合" do
+          before { SingingGeneratedRecapMovie.destroy_all }
+
+          it "index が落ちないこと" do
+            get admin_singing_recap_movies_path
+            expect(response).to have_http_status(:ok)
+          end
+
+          it "Status Distribution を表示すること" do
+            get admin_singing_recap_movies_path
+            expect(response.body).to include("Status Distribution")
+          end
+
+          it "Yearly Generation で データなし を表示すること" do
+            get admin_singing_recap_movies_path
+            expect(response.body).to include("データなし")
+          end
+        end
+      end
+
       context "status filter" do
         it "?status=completed で completed のみ返すこと" do
           get admin_singing_recap_movies_path, params: { status: "completed" }

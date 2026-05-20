@@ -55,6 +55,53 @@
           %h4.card-title.mb-1= @stats[:total_instagram_clicks]
           %p.card-text.text-muted.mb-0 Instagram導線クリック数
 
+  .row.mb-4
+    .col-md-6.mb-3
+      .card.shadow-sm.h-100
+        .card-header
+          %strong Status Distribution
+        .card-body
+          - max_status = [@status_counts.values.max.to_i, 1].max
+          - @status_counts.each do |status, count|
+            .mb-2
+              .d-flex.justify-content-between.mb-1
+                %span.small.font-weight-bold= status
+                %span.badge.badge-secondary= count
+              .admin-recap-bar__track
+                .admin-recap-bar__fill{ class: "admin-recap-bar__fill--#{status}",
+                                        style: "width: #{(count.to_f / max_status * 100).round(1)}%" }
+    .col-md-6.mb-3
+      .card.shadow-sm.h-100
+        .card-header
+          %strong Yearly Generation
+        .card-body
+          - if @year_counts.blank?
+            %p.text-muted.mb-0 データなし
+          - else
+            - max_year = [@year_counts.values.max.to_i, 1].max
+            - @year_counts.each do |year, count|
+              .mb-2
+                .d-flex.justify-content-between.mb-1
+                  %span.small.font-weight-bold= year
+                  %span.badge.badge-secondary= count
+                .admin-recap-bar__track
+                  .admin-recap-bar__fill.admin-recap-bar__fill--year{ style: "width: #{(count.to_f / max_year * 100).round(1)}%" }
+
+  .card.shadow-sm.mb-4
+    .card-header
+      %strong Share Engagement
+    .card-body
+      .row.text-center
+        .col-4
+          %p.h4.mb-1.text-primary= @stats[:total_shares]
+          %p.text-muted.small.mb-0 X シェア
+        .col-4
+          %p.h4.mb-1.text-info= @stats[:total_downloads]
+          %p.text-muted.small.mb-0 ダウンロード
+        .col-4
+          %p.h4.mb-1= @stats[:total_instagram_clicks]
+          %p.text-muted.small.mb-0 Instagram Hint
+
   - if @failed_movies.present?
     .card.shadow-sm.border-danger.mb-4
       .card-header.bg-danger.text-white

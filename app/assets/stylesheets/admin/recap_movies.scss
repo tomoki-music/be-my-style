@@ -1,0 +1,21 @@
+.admin-recap-bar__track {
+  height: 14px;
+  background-color: #e9ecef;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.admin-recap-bar__fill {
+  height: 100%;
+  border-radius: 7px;
+  min-width: 2px;
+  background-color: #6c757d;
+  transition: width 0.3s ease;
+
+  &--completed  { background-color: #28a745; }
+  &--failed     { background-color: #dc3545; }
+  &--processing { background-color: #ffc107; }
+  &--pending    { background-color: #adb5bd; }
+  &--expired    { background-color: #495057; }
+  &--year       { background-color: #007bff; }
+}
