@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe "Admin::Singing::RecapMovies", type: :request do
+  include ActiveJob::TestHelper
+
   let(:admin)    { FactoryBot.create(:admin) }
   let(:customer) { FactoryBot.create(:customer, domain_name: "singing") }
 
@@ -141,6 +143,110 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
         get admin_singing_recap_movie_path(failed_movie)
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Remotion render failed")
+      end
+    end
+
+    describe "POST /admin/singing/recap_movies/:id/regenerate" do
+      context "failed movie" do
+        it "status が pending に戻ること" do
+          post regenerate_admin_singing_recap_movie_path(failed_movie)
+          expect(failed_movie.reload.status).to eq("pending")
+        end
+
+        it "error_message がクリアされること" do
+          post regenerate_admin_singing_recap_movie_path(failed_movie)
+          expect(failed_movie.reload.error_message).to be_nil
+        end
+
+        it "GenerateRecapMovieJob が enqueue されること" do
+          expect {
+            post regenerate_admin_singing_recap_movie_path(failed_movie)
+          }.to have_enqueued_job(Singing::GenerateRecapMovieJob).with(failed_movie.id)
+        end
+
+        it "show 画面にリダイレクトされること" do
+          post regenerate_admin_singing_recap_movie_path(failed_movie)
+          expect(response).to redirect_to(admin_singing_recap_movie_path(failed_movie))
+        end
+
+        it "success flash が表示されること" do
+          post regenerate_admin_singing_recap_movie_path(failed_movie)
+          follow_redirect!
+          expect(response.body).to include("Recap Movieの再生成を開始しました。")
+        end
+      end
+
+      context "expired movie" do
+        let!(:expired_movie) do
+          FactoryBot.create(:singing_generated_recap_movie, :expired,
+                            customer: FactoryBot.create(:customer, domain_name: "singing"),
+                            year: 2023)
+        end
+
+        it "status が pending に戻ること" do
+          post regenerate_admin_singing_recap_movie_path(expired_movie)
+          expect(expired_movie.reload.status).to eq("pending")
+        end
+
+        it "GenerateRecapMovieJob が enqueue されること" do
+          expect {
+            post regenerate_admin_singing_recap_movie_path(expired_movie)
+          }.to have_enqueued_job(Singing::GenerateRecapMovieJob).with(expired_movie.id)
+        end
+
+        it "show 画面にリダイレクトされること" do
+          post regenerate_admin_singing_recap_movie_path(expired_movie)
+          expect(response).to redirect_to(admin_singing_recap_movie_path(expired_movie))
+        end
+      end
+
+      context "completed movie" do
+        it "status が変わらないこと" do
+          post regenerate_admin_singing_recap_movie_path(completed_movie)
+          expect(completed_movie.reload.status).to eq("completed")
+        end
+
+        it "GenerateRecapMovieJob が enqueue されないこと" do
+          expect {
+            post regenerate_admin_singing_recap_movie_path(completed_movie)
+          }.not_to have_enqueued_job(Singing::GenerateRecapMovieJob)
+        end
+
+        it "show 画面にリダイレクトされること" do
+          post regenerate_admin_singing_recap_movie_path(completed_movie)
+          expect(response).to redirect_to(admin_singing_recap_movie_path(completed_movie))
+        end
+
+        it "alert flash が表示されること" do
+          post regenerate_admin_singing_recap_movie_path(completed_movie)
+          follow_redirect!
+          expect(response.body).to include("このRecap Movieは現在のステータスでは再生成できません。")
+        end
+      end
+
+      context "processing movie" do
+        let!(:processing_movie) do
+          FactoryBot.create(:singing_generated_recap_movie, :processing,
+                            customer: FactoryBot.create(:customer, domain_name: "singing"),
+                            year: 2022)
+        end
+
+        it "status が変わらないこと" do
+          post regenerate_admin_singing_recap_movie_path(processing_movie)
+          expect(processing_movie.reload.status).to eq("processing")
+        end
+
+        it "GenerateRecapMovieJob が enqueue されないこと" do
+          expect {
+            post regenerate_admin_singing_recap_movie_path(processing_movie)
+          }.not_to have_enqueued_job(Singing::GenerateRecapMovieJob)
+        end
+
+        it "alert flash が表示されること" do
+          post regenerate_admin_singing_recap_movie_path(processing_movie)
+          follow_redirect!
+          expect(response.body).to include("このRecap Movieは現在のステータスでは再生成できません。")
+        end
       end
     end
   end

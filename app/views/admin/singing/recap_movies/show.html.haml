@@ -3,7 +3,14 @@
 .container.py-4
   .d-flex.justify-content-between.align-items-center.mb-4
     %h2.mb-0 Recap Movie ##{@movie.id}
-    = link_to "一覧へ", admin_singing_recap_movies_path, class: "btn btn-outline-dark"
+    .d-flex.gap-2
+      - if @movie.failed? || @movie.expired?
+        = button_to "このRecap Movieを再生成する",
+          regenerate_admin_singing_recap_movie_path(@movie),
+          method: :post,
+          data: { confirm: "このRecap Movieを再生成します。よろしいですか？" },
+          class: "btn btn-warning"
+      = link_to "一覧へ", admin_singing_recap_movies_path, class: "btn btn-outline-dark"
 
   .row
     .col-md-6.mb-4

@@ -2,7 +2,7 @@ class Admin::Singing::RecapMoviesController < ApplicationController
   skip_before_action :authenticate_customer!
   skip_before_action :ensure_music_domain_access_for_public_routes!, raise: false
   before_action :authenticate_admin!
-  before_action :set_recap_movie, only: [:show]
+  before_action :set_recap_movie, only: [:show, :regenerate]
 
   VALID_STATUSES = %w[pending processing completed failed expired].freeze
   PER_PAGE_DEFAULT = 30
@@ -51,6 +51,23 @@ class Admin::Singing::RecapMoviesController < ApplicationController
   end
 
   def show
+  end
+
+  def regenerate
+    unless @movie.failed? || @movie.expired?
+      redirect_to admin_singing_recap_movie_path(@movie),
+                  alert: "このRecap Movieは現在のステータスでは再生成できません。"
+      return
+    end
+
+    @movie.update!(
+      status:          :pending,
+      error_message:   nil
+    )
+    Singing::GenerateRecapMovieJob.perform_later(@movie.id)
+
+    redirect_to admin_singing_recap_movie_path(@movie),
+                notice: "Recap Movieの再生成を開始しました。"
   end
 
   private

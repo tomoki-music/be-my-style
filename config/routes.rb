@@ -41,7 +41,11 @@ Rails.application.routes.draw do
 
     # Recap Movie 管理ダッシュボード
     namespace :singing do
-      resources :recap_movies, only: [:index, :show]
+      resources :recap_movies, only: [:index, :show] do
+        member do
+          post :regenerate
+        end
+      end
     end
   end
   
