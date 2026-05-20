@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'csv'
 
 RSpec.describe "Admin::Singing::RecapMovies", type: :request do
   include ActiveJob::TestHelper
@@ -88,6 +89,91 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
           get admin_singing_recap_movies_path, params: { year: "abc" }
           expect(response).to have_http_status(:ok)
           expect(response.body).to include(customer.name)
+        end
+      end
+
+      context "CSV export" do
+        it "200 OK を返すこと" do
+          get admin_singing_recap_movies_path(format: :csv)
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "Content-Type が text/csv であること" do
+          get admin_singing_recap_movies_path(format: :csv)
+          expect(response.content_type).to include("text/csv")
+        end
+
+        it "ヘッダー行が含まれること" do
+          get admin_singing_recap_movies_path(format: :csv)
+          lines = response.body.lines
+          expect(lines.first).to include("id", "customer_id", "customer_name", "status", "share_count")
+        end
+
+        it "movie データが含まれること" do
+          get admin_singing_recap_movies_path(format: :csv)
+          expect(response.body).to include(customer.name)
+          expect(response.body).to include(customer.email)
+          expect(response.body).to include("completed")
+          expect(response.body).to include("3")
+        end
+
+        it "全カラムが出力されること" do
+          get admin_singing_recap_movies_path(format: :csv)
+          header = response.body.lines.first
+          %w[id customer_name customer_email status year share_count download_count
+             instagram_hint_click_count video_attached error_message created_at].each do |col|
+            expect(header).to include(col)
+          end
+        end
+
+        context "status filter が CSV に反映されること" do
+          it "?status=completed で completed のみ出力すること" do
+            get admin_singing_recap_movies_path(format: :csv, status: "completed")
+            rows = CSV.parse(response.body, headers: true)
+            expect(rows.map { |r| r["status"] }.uniq).to eq(["completed"])
+          end
+
+          it "?status=failed で failed のみ出力すること" do
+            get admin_singing_recap_movies_path(format: :csv, status: "failed")
+            rows = CSV.parse(response.body, headers: true)
+            expect(rows.map { |r| r["status"] }.uniq).to eq(["failed"])
+          end
+        end
+
+        context "year filter が CSV に反映されること" do
+          it "?year=2025 で 2025 年のみ出力すること" do
+            get admin_singing_recap_movies_path(format: :csv, year: "2025")
+            rows = CSV.parse(response.body, headers: true)
+            expect(rows.map { |r| r["year"] }.uniq).to eq(["2025"])
+          end
+
+          it "?year=2024 で 2024 年のみ出力すること" do
+            get admin_singing_recap_movies_path(format: :csv, year: "2024")
+            rows = CSV.parse(response.body, headers: true)
+            expect(rows.map { |r| r["year"] }.uniq).to eq(["2024"])
+          end
+        end
+
+        context "pagination を無視して全件出力すること" do
+          let!(:extra_movies) do
+            5.times.map do |i|
+              FactoryBot.create(:singing_generated_recap_movie, :completed,
+                                customer: FactoryBot.create(:customer, domain_name: "singing"),
+                                year: 2020 + i)
+            end
+          end
+
+          it "per_page に関係なく全件含まれること" do
+            get admin_singing_recap_movies_path(format: :csv, per_page: "1")
+            rows = CSV.parse(response.body, headers: true)
+            expect(rows.count).to be >= 2
+          end
+
+          it "page に関係なく全件含まれること" do
+            get admin_singing_recap_movies_path(format: :csv, per_page: "1", page: "2")
+            rows = CSV.parse(response.body, headers: true)
+            expect(rows.count).to be >= 2
+          end
         end
       end
 

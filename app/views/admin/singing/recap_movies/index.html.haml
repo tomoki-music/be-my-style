@@ -112,6 +112,11 @@
           - if @filter_year.present?
             %span.badge.badge-secondary= @filter_year
 
+  .d-flex.justify-content-end.mb-2
+    = link_to "CSV出力",
+        admin_singing_recap_movies_path(request.query_parameters.except("page", "per_page").merge(format: :csv)),
+        class: "btn btn-outline-secondary btn-sm"
+
   .card.shadow-sm
     .card-header
       %strong
