@@ -20,7 +20,9 @@ module Singing
         props_path  = File.join(dir, "props.json")
         output_path = File.join(dir, "recap_#{@recap_movie.year}.mp4")
 
-        File.write(props_path, JSON.pretty_generate(props_payload))
+        props = props_payload
+        @recap_movie.update!(generated_props: props)
+        File.write(props_path, JSON.pretty_generate(props))
         Rails.logger.info("[RecapMovieRenderer] props exported movie_id=#{@recap_movie.id} path=#{props_path}")
 
         started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)

@@ -44,6 +44,22 @@ RSpec.describe Singing::RecapMovieRenderer, type: :service do
       it "true を返す" do
         expect(renderer.call).to be true
       end
+
+      it "generated_props が保存される" do
+        renderer.call
+        props = movie.reload.generated_props
+        expect(props).to be_present
+        expect(props["recapMovieId"]).to eq(movie.id)
+        expect(props["year"]).to eq(2025)
+        expect(props["theme"]).to eq("default")
+        expect(props["userName"]).to eq(customer.name)
+      end
+
+      it "再生成時も generated_props が上書きされる" do
+        movie.update!(generated_props: { "recapMovieId" => -1, "year" => 1999 })
+        renderer.call
+        expect(movie.reload.generated_props["year"]).to eq(2025)
+      end
     end
 
     context "render コマンド失敗 (exit status != 0)" do

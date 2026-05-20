@@ -144,6 +144,22 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Remotion render failed")
       end
+
+      it "generated_props が保存されている場合に表示すること" do
+        completed_movie.update!(generated_props: { "recapMovieId" => completed_movie.id, "year" => 2025, "theme" => "default" })
+        get admin_singing_recap_movie_path(completed_movie)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Generated Props")
+        expect(response.body).to include("recapMovieId")
+        expect(response.body).to include("theme")
+      end
+
+      it "generated_props が未保存でも show が落ちないこと" do
+        get admin_singing_recap_movie_path(failed_movie)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Generated Props")
+        expect(response.body).to include("まだ生成propsは保存されていません")
+      end
     end
 
     describe "POST /admin/singing/recap_movies/:id/regenerate" do

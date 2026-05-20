@@ -128,3 +128,14 @@
                     %code= @movie.video_file.blob.key
           - else
             %p.text-muted 動画ファイルは添付されていません。
+
+  .row
+    .col-12.mb-4
+      .card.shadow-sm
+        .card-header
+          %strong Generated Props
+        .card-body
+          - if @movie.generated_props.present?
+            %pre.mb-0{ style: "max-height: 400px; overflow-y: auto;" }= JSON.pretty_generate(@movie.generated_props)
+          - else
+            %p.text-muted.mb-0 まだ生成propsは保存されていません。

@@ -35,6 +35,10 @@ class SingingGeneratedRecapMovie < ApplicationRecord
     completed? && (expires_at.nil? || expires_at > Time.current)
   end
 
+  def generated_props_hash
+    generated_props.presence || {}
+  end
+
   def mark_processing!
     update!(status: :processing)
   end
