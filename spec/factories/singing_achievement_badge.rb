@@ -43,5 +43,20 @@ FactoryBot.define do
       badge_key { "growth_10" }
       metadata  { { schema_version: 1, badge_key: "growth_10", badge_label: "Rising Star", earned_at_label: "2024年5月1日", diagnosis_count: 5, first_overall_score: 60, current_overall_score: 72, growth_delta: 12 } }
     end
+
+    trait :recap_movie_first_share do
+      badge_key { "recap_movie_first_share" }
+      metadata  { { schema_version: 1, badge_key: "recap_movie_first_share", badge_label: "My Singing Recap", earned_at_label: "2025年1月1日", recap_movie_year: 2024, share_kind: "x" } }
+    end
+
+    trait :recap_movie_first_download do
+      badge_key { "recap_movie_first_download" }
+      metadata  { { schema_version: 1, badge_key: "recap_movie_first_download", badge_label: "Saved My Recap", earned_at_label: "2025年1月1日", recap_movie_year: 2024, share_kind: "download" } }
+    end
+
+    trait :recap_movie_instagram_share do
+      badge_key { "recap_movie_instagram_share" }
+      metadata  { { schema_version: 1, badge_key: "recap_movie_instagram_share", badge_label: "Instagram Ready", earned_at_label: "2025年1月1日", recap_movie_year: 2024, share_kind: "instagram" } }
+    end
   end
 end

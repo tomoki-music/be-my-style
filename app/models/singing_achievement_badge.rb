@@ -102,6 +102,45 @@ class SingingAchievementBadge < ApplicationRecord
       description:        "初回診断からスコアが10点以上アップしました",
       locked_description: "初回診断からスコアが10点以上上がると獲得できます",
       share_text:         "📈 初回診断からスコアが10点以上アップしました！継続の成果を実感中。 #BeMyStyle #Singing #上達中"
+    }.freeze,
+
+    "recap_movie_first_share" => {
+      label:              "My Singing Recap",
+      short_label:        "Recap",
+      emoji:              "🎬",
+      rarity:             :rare,
+      category:           :sharing,
+      plan:               :all,
+      share_image_plan:   :core,
+      description:        "Recap Movieを初めてシェアした",
+      locked_description: "Recap Movieをシェアすると獲得できます",
+      share_text:         "🎬 BeMyStyle Singing で一年間の歌声をRecap Movieにまとめてシェアしました！ #BeMyStyle #Singing #SingingRecap"
+    }.freeze,
+
+    "recap_movie_first_download" => {
+      label:              "Saved My Recap",
+      short_label:        "Saved",
+      emoji:              "📥",
+      rarity:             :common,
+      category:           :sharing,
+      plan:               :all,
+      share_image_plan:   :core,
+      description:        "Recap Movieをダウンロードした",
+      locked_description: "Recap Movieをダウンロードすると獲得できます",
+      share_text:         "📥 BeMyStyle Singing の一年間のRecap Movieを保存しました！ #BeMyStyle #Singing #SingingRecap"
+    }.freeze,
+
+    "recap_movie_instagram_share" => {
+      label:              "Instagram Ready",
+      short_label:        "Insta",
+      emoji:              "📱",
+      rarity:             :rare,
+      category:           :sharing,
+      plan:               :all,
+      share_image_plan:   :core,
+      description:        "Recap MovieのInstagram投稿に挑戦した",
+      locked_description: "Recap MovieのInstagram投稿導線をクリックすると獲得できます",
+      share_text:         "📱 BeMyStyle Singing のRecap MovieをInstagramでシェアしました！ #BeMyStyle #Singing #SingingRecap"
     }.freeze
   }.freeze
 
@@ -109,7 +148,7 @@ class SingingAchievementBadge < ApplicationRecord
 
   RARITIES = %i[common rare epic legendary].freeze
 
-  CATEGORIES = %i[milestone streak score growth ranking skill challenge special].freeze
+  CATEGORIES = %i[milestone streak score growth ranking skill challenge special sharing].freeze
 
   RARITY_ORDER = %i[legendary epic rare common].freeze
 

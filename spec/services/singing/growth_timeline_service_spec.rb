@@ -84,6 +84,82 @@ RSpec.describe Singing::GrowthTimelineService do
       expect(events).to be_empty
     end
 
+    context "Recap Movie イベント" do
+      it "シェア済み Recap Movie のシェアイベントを返すこと" do
+        FactoryBot.create(
+          :singing_generated_recap_movie,
+          customer: customer,
+          year: 2024,
+          status: :completed,
+          first_shared_at: 1.month.ago
+        )
+
+        events = described_class.call(customer)
+
+        expect(events.map(&:title)).to include("🎬 Recap Movieをシェアしました")
+      end
+
+      it "ダウンロード済み Recap Movie のダウンロードイベントを返すこと" do
+        FactoryBot.create(
+          :singing_generated_recap_movie,
+          customer: customer,
+          year: 2024,
+          status: :completed,
+          last_downloaded_at: 1.month.ago
+        )
+
+        events = described_class.call(customer)
+
+        expect(events.map(&:title)).to include("📥 Recap Movieをダウンロードしました")
+      end
+
+      it "Instagram導線クリック済みの Recap Movie のイベントを返すこと" do
+        FactoryBot.create(
+          :singing_generated_recap_movie,
+          customer: customer,
+          year: 2024,
+          status: :completed,
+          last_instagram_hint_clicked_at: 1.month.ago
+        )
+
+        events = described_class.call(customer)
+
+        expect(events.map(&:title)).to include("📱 Instagram投稿に挑戦しました")
+      end
+
+      it "活動のない Recap Movie はイベントを生成しないこと" do
+        FactoryBot.create(
+          :singing_generated_recap_movie,
+          customer: customer,
+          year: 2024,
+          status: :completed,
+          first_shared_at: nil,
+          last_downloaded_at: nil,
+          last_instagram_hint_clicked_at: nil
+        )
+
+        events = described_class.call(customer)
+
+        recap_events = events.select { |e| e.key.start_with?("recap_movie_") }
+        expect(recap_events).to be_empty
+      end
+
+      it "他ユーザーの Recap Movie イベントを含まないこと" do
+        FactoryBot.create(
+          :singing_generated_recap_movie,
+          customer: other_customer,
+          year: 2024,
+          status: :completed,
+          first_shared_at: 1.month.ago
+        )
+
+        events = described_class.call(customer)
+
+        recap_events = events.select { |e| e.key.start_with?("recap_movie_") }
+        expect(recap_events).to be_empty
+      end
+    end
+
     it "nilスコアや前回データ不足があっても落ちずに診断完了イベントを返すこと" do
       diagnosis = FactoryBot.create(
         :singing_diagnosis,

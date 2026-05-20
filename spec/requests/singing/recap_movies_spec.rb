@@ -267,6 +267,19 @@ RSpec.describe "Singing::RecapMovies", type: :request do
           }.to change { movie.reload.share_count }.by(1)
         end
 
+        it "recap_movie_first_share バッジが付与されること" do
+          expect {
+            post track_share_singing_recap_movie_path(movie), params: { kind: "x" }, as: :json
+          }.to change { SingingAchievementBadge.where(customer: owner, badge_key: "recap_movie_first_share").count }.by(1)
+        end
+
+        it "2回シェアしてもバッジは1件のみであること" do
+          post track_share_singing_recap_movie_path(movie), params: { kind: "x" }, as: :json
+          expect {
+            post track_share_singing_recap_movie_path(movie), params: { kind: "x" }, as: :json
+          }.not_to change { SingingAchievementBadge.where(customer: owner, badge_key: "recap_movie_first_share").count }
+        end
+
         it "first_shared_at が初回のみセットされること" do
           post track_share_singing_recap_movie_path(movie), params: { kind: "x" }, as: :json
           first_at = movie.reload.first_shared_at
@@ -295,6 +308,12 @@ RSpec.describe "Singing::RecapMovies", type: :request do
           }.to change { movie.reload.download_count }.by(1)
         end
 
+        it "recap_movie_first_download バッジが付与されること" do
+          expect {
+            post track_share_singing_recap_movie_path(movie), params: { kind: "download" }, as: :json
+          }.to change { SingingAchievementBadge.where(customer: owner, badge_key: "recap_movie_first_download").count }.by(1)
+        end
+
         it "last_downloaded_at が更新されること" do
           post track_share_singing_recap_movie_path(movie), params: { kind: "download" }, as: :json
           expect(movie.reload.last_downloaded_at).to be_present
@@ -311,6 +330,12 @@ RSpec.describe "Singing::RecapMovies", type: :request do
           expect {
             post track_share_singing_recap_movie_path(movie), params: { kind: "instagram" }, as: :json
           }.to change { movie.reload.instagram_hint_click_count }.by(1)
+        end
+
+        it "recap_movie_instagram_share バッジが付与されること" do
+          expect {
+            post track_share_singing_recap_movie_path(movie), params: { kind: "instagram" }, as: :json
+          }.to change { SingingAchievementBadge.where(customer: owner, badge_key: "recap_movie_instagram_share").count }.by(1)
         end
 
         it "last_instagram_hint_clicked_at が更新されること" do

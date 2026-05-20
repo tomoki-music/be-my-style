@@ -35,7 +35,7 @@ module Singing
     def call
       return [] if customer.blank?
 
-      (diagnosis_events + challenge_events)
+      (diagnosis_events + challenge_events + recap_movie_events)
         .compact
         .sort_by { |event| [event.occurred_at || Time.zone.at(0), event.key.to_s] }
         .reverse
@@ -195,6 +195,64 @@ module Singing
         title: "#{definition[:label]}バッジ獲得",
         description: definition[:earned_description],
         event_type: :challenge_badge
+      )
+    end
+
+    def recap_movie_events
+      recap_movies_with_activity.flat_map do |movie|
+        [
+          recap_movie_shared_event(movie),
+          recap_movie_downloaded_event(movie),
+          recap_movie_instagram_event(movie)
+        ].compact
+      end
+    end
+
+    def recap_movies_with_activity
+      @recap_movies_with_activity ||= customer.singing_generated_recap_movies
+                                              .where(
+                                                "first_shared_at IS NOT NULL OR " \
+                                                "last_downloaded_at IS NOT NULL OR " \
+                                                "last_instagram_hint_clicked_at IS NOT NULL"
+                                              )
+                                              .order(year: :desc)
+                                              .limit(5)
+                                              .to_a
+    end
+
+    def recap_movie_shared_event(movie)
+      return nil unless movie.first_shared_at.present?
+
+      Event.new(
+        key:         "recap_movie_shared_#{movie.id}",
+        occurred_at: movie.first_shared_at,
+        title:       "🎬 Recap Movieをシェアしました",
+        description: "#{movie.year}年のRecap Movieをシェアしました。",
+        event_type:  :recap_movie_shared
+      )
+    end
+
+    def recap_movie_downloaded_event(movie)
+      return nil unless movie.last_downloaded_at.present?
+
+      Event.new(
+        key:         "recap_movie_downloaded_#{movie.id}",
+        occurred_at: movie.last_downloaded_at,
+        title:       "📥 Recap Movieをダウンロードしました",
+        description: "#{movie.year}年のRecap Movieを保存しました。",
+        event_type:  :recap_movie_downloaded
+      )
+    end
+
+    def recap_movie_instagram_event(movie)
+      return nil unless movie.last_instagram_hint_clicked_at.present?
+
+      Event.new(
+        key:         "recap_movie_instagram_#{movie.id}",
+        occurred_at: movie.last_instagram_hint_clicked_at,
+        title:       "📱 Instagram投稿に挑戦しました",
+        description: "#{movie.year}年のRecap MovieのInstagram投稿に挑戦しました。",
+        event_type:  :recap_movie_instagram
       )
     end
 

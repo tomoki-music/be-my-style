@@ -37,6 +37,7 @@ class Singing::RecapMoviesController < Singing::BaseController
     end
 
     @recap_movie.save!
+    Singing::AwardRecapMovieBadgesService.call(@recap_movie, params[:kind])
     render json: { ok: true }, status: :ok
   end
 
