@@ -407,6 +407,95 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
         end
       end
     end
+
+    describe "POST /admin/singing/recap_movies/generate_yearly_batch" do
+      let(:valid_year) { Time.zone.today.year }
+
+      context "正しい year を指定した場合" do
+        it "GenerateYearlyRecapMoviesJob が enqueue されること" do
+          expect {
+            post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          }.to have_enqueued_job(Singing::GenerateYearlyRecapMoviesJob).with(valid_year)
+        end
+
+        it "notice flash が表示されること" do
+          post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          follow_redirect!
+          expect(response.body).to include("#{valid_year}年のRecap Movie一括生成を開始しました。")
+        end
+
+        it "index にリダイレクトされること" do
+          post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          expect(response).to redirect_to(admin_singing_recap_movies_path)
+        end
+      end
+
+      context "year が文字列（不正値）の場合" do
+        it "GenerateYearlyRecapMoviesJob が enqueue されないこと" do
+          expect {
+            post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: "abc" }
+          }.not_to have_enqueued_job(Singing::GenerateYearlyRecapMoviesJob)
+        end
+
+        it "alert flash が表示されること" do
+          post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: "abc" }
+          follow_redirect!
+          expect(response.body).to include("年の指定が不正です。")
+        end
+      end
+
+      context "year が空の場合" do
+        it "GenerateYearlyRecapMoviesJob が enqueue されないこと" do
+          expect {
+            post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: "" }
+          }.not_to have_enqueued_job(Singing::GenerateYearlyRecapMoviesJob)
+        end
+
+        it "alert flash が表示されること" do
+          post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: "" }
+          follow_redirect!
+          expect(response.body).to include("年の指定が不正です。")
+        end
+      end
+
+      context "year が許可範囲外（2019）の場合" do
+        it "GenerateYearlyRecapMoviesJob が enqueue されないこと" do
+          expect {
+            post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: "2019" }
+          }.not_to have_enqueued_job(Singing::GenerateYearlyRecapMoviesJob)
+        end
+
+        it "alert flash が表示されること" do
+          post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: "2019" }
+          follow_redirect!
+          expect(response.body).to include("年の指定が不正です。")
+        end
+      end
+
+      context "year が許可範囲外（未来すぎる年）の場合" do
+        it "GenerateYearlyRecapMoviesJob が enqueue されないこと" do
+          future_year = Time.zone.today.year + 2
+          expect {
+            post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: future_year }
+          }.not_to have_enqueued_job(Singing::GenerateYearlyRecapMoviesJob)
+        end
+
+        it "alert flash が表示されること" do
+          future_year = Time.zone.today.year + 2
+          post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: future_year }
+          follow_redirect!
+          expect(response.body).to include("年の指定が不正です。")
+        end
+      end
+
+      context "index に一括生成フォームが表示されること" do
+        it "一括生成フォームが表示されること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("年間Recap Movie一括生成")
+          expect(response.body).to include("一括生成を開始")
+        end
+      end
+    end
   end
 
   describe "非管理者のアクセス" do

@@ -45,6 +45,9 @@ Rails.application.routes.draw do
         member do
           post :regenerate
         end
+        collection do
+          post :generate_yearly_batch
+        end
       end
     end
   end

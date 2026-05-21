@@ -9,6 +9,7 @@ class Admin::Singing::RecapMoviesController < ApplicationController
   VALID_STATUSES = %w[pending processing completed failed expired].freeze
   PER_PAGE_DEFAULT = 30
   PER_PAGE_MAX = 100
+  VALID_YEAR_RANGE = (2020..(Time.zone.today.year + 1)).freeze
 
   def index
     scope = build_filtered_scope
@@ -59,6 +60,24 @@ class Admin::Singing::RecapMoviesController < ApplicationController
   end
 
   def show
+  end
+
+  def generate_yearly_batch
+    year = Integer(params[:year], exception: false)
+
+    unless year
+      redirect_to admin_singing_recap_movies_path, alert: "年の指定が不正です。"
+      return
+    end
+
+    unless VALID_YEAR_RANGE.include?(year)
+      redirect_to admin_singing_recap_movies_path, alert: "年の指定が不正です。"
+      return
+    end
+
+    Singing::GenerateYearlyRecapMoviesJob.perform_later(year)
+    redirect_to admin_singing_recap_movies_path,
+                notice: "#{year}年のRecap Movie一括生成を開始しました。"
   end
 
   def regenerate
