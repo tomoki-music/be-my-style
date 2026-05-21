@@ -263,5 +263,85 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
 
       expect(logged).to include(match(/\[RecapMovieBatch\] year=#{year} enqueued=1 skipped=1/))
     end
+
+    describe "actual result summary 保存" do
+      let(:execution) do
+        FactoryBot.create(:singing_recap_movie_batch_execution, year: year, status: :enqueued)
+      end
+
+      it "新規作成した件数が actual_created_movies_count に保存されること" do
+        customer = singing_customer
+        completed_diagnosis(customer)
+
+        described_class.perform_now(year, execution.id)
+
+        expect(execution.reload.actual_created_movies_count).to eq(1)
+      end
+
+      it "再生成した件数が actual_regenerated_movies_count に保存されること" do
+        customer = singing_customer
+        completed_diagnosis(customer)
+        create(:singing_generated_recap_movie, :failed, customer: customer, year: year)
+
+        described_class.perform_now(year, execution.id)
+
+        expect(execution.reload.actual_regenerated_movies_count).to eq(1)
+        expect(execution.reload.actual_created_movies_count).to eq(0)
+      end
+
+      it "スキップした件数が actual_skipped_movies_count に保存されること" do
+        customer = singing_customer
+        completed_diagnosis(customer)
+        create(:singing_generated_recap_movie, :completed, customer: customer, year: year)
+
+        described_class.perform_now(year, execution.id)
+
+        expect(execution.reload.actual_skipped_movies_count).to eq(1)
+      end
+
+      it "新規・再生成・スキップが混在する場合に正しく集計されること" do
+        customer1 = singing_customer
+        completed_diagnosis(customer1)
+
+        customer2 = singing_customer
+        completed_diagnosis(customer2)
+        create(:singing_generated_recap_movie, :failed, customer: customer2, year: year)
+
+        customer3 = singing_customer
+        completed_diagnosis(customer3)
+        create(:singing_generated_recap_movie, :completed, customer: customer3, year: year)
+
+        described_class.perform_now(year, execution.id)
+
+        exec = execution.reload
+        expect(exec.actual_created_movies_count).to eq(1)
+        expect(exec.actual_regenerated_movies_count).to eq(1)
+        expect(exec.actual_skipped_movies_count).to eq(1)
+      end
+
+      it "対象なしの場合は actual_* がすべて 0 になること" do
+        described_class.perform_now(year, execution.id)
+
+        exec = execution.reload
+        expect(exec.actual_created_movies_count).to eq(0)
+        expect(exec.actual_regenerated_movies_count).to eq(0)
+        expect(exec.actual_skipped_movies_count).to eq(0)
+      end
+
+      it "enqueue 例外が発生した場合は actual_skipped に計上されないこと" do
+        customer = singing_customer
+        completed_diagnosis(customer)
+
+        allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
+          .and_raise(StandardError, "enqueue error")
+
+        described_class.perform_now(year, execution.id)
+
+        exec = execution.reload
+        expect(exec.actual_created_movies_count).to eq(0)
+        expect(exec.actual_skipped_movies_count).to eq(0)
+        expect(exec.failed_movies_count).to eq(1)
+      end
+    end
   end
 end

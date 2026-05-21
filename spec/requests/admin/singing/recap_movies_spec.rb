@@ -682,9 +682,14 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
           expect(response.body).to include("進捗")
         end
 
-        it "completed / total 列が表示されること" do
+        it "実績: 新規 列が表示されること" do
           get admin_singing_recap_movies_path
-          expect(response.body).to include("completed / total")
+          expect(response.body).to include("実績: 新規")
+        end
+
+        it "成功率列が表示されること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("成功率")
         end
 
         it "実行時間列が表示されること" do

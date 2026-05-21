@@ -21,6 +21,20 @@ class SingingRecapMovieBatchExecution < ApplicationRecord
     status.in?(%w[enqueued running])
   end
 
+  def result_summary_available?
+    actual_created_movies_count > 0 ||
+      actual_regenerated_movies_count > 0 ||
+      actual_skipped_movies_count > 0
+  end
+
+  def enqueue_success_rate
+    total = actual_created_movies_count + actual_regenerated_movies_count + failed_movies_count
+    return nil if total.zero?
+
+    success = actual_created_movies_count + actual_regenerated_movies_count
+    (success.to_f / total * 100).round(1)
+  end
+
   def skipped_breakdown_hash
     skipped_breakdown.presence || {}
   end

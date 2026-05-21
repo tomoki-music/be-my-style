@@ -254,12 +254,12 @@
                 %th 年
                 %th 管理者
                 %th 対象
-                %th 新規
-                %th 再生成
-                %th スキップ
                 %th 進捗
-                %th completed / total
-                %th failed
+                %th.text-success 実績: 新規
+                %th.text-primary 実績: 再生成
+                %th 実績: スキップ
+                %th.text-danger 失敗
+                %th 成功率
                 %th 実行時間
                 %th ステータス
             %tbody
@@ -273,9 +273,6 @@
                     - else
                       %small.text-muted (不明)
                   %td.text-center= exec.target_customers_count
-                  %td.text-center= exec.new_movies_count
-                  %td.text-center= exec.regenerate_movies_count
-                  %td.text-center= exec.skipped_movies_count
                   %td.text-center
                     - if exec.total_movies_count > 0
                       - pct = exec.progress_percent
@@ -289,8 +286,18 @@
                     - else
                       %span.text-muted —
                   %td.text-center
-                    - if exec.total_movies_count > 0
-                      = "#{exec.completed_movies_count} / #{exec.total_movies_count}"
+                    - if exec.result_summary_available?
+                      %span.text-success= exec.actual_created_movies_count
+                    - else
+                      %span.text-muted —
+                  %td.text-center
+                    - if exec.result_summary_available?
+                      %span.text-primary= exec.actual_regenerated_movies_count
+                    - else
+                      %span.text-muted —
+                  %td.text-center
+                    - if exec.result_summary_available?
+                      = exec.actual_skipped_movies_count
                     - else
                       %span.text-muted —
                   %td.text-center
@@ -298,6 +305,13 @@
                       %span.text-danger= exec.failed_movies_count
                     - else
                       = exec.failed_movies_count
+                  %td.text-center
+                    - rate = exec.enqueue_success_rate
+                    - if rate
+                      - rate_cls = rate >= 90 ? "success" : (rate >= 70 ? "warning" : "danger")
+                      %span{ class: "text-#{rate_cls}" }= "#{rate}%"
+                    - else
+                      %span.text-muted —
                   %td.text-nowrap
                     - d = exec.duration_seconds
                     - if d

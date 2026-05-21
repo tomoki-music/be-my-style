@@ -157,6 +157,75 @@ RSpec.describe SingingRecapMovieBatchExecution, type: :model do
       expect(execution.completed_movies_count).to eq(0)
       expect(execution.failed_movies_count).to eq(0)
     end
+
+    it "actual_* カラムのデフォルト値が 0 であること" do
+      execution = SingingRecapMovieBatchExecution.new(year: 2025, status: :enqueued)
+      expect(execution.actual_created_movies_count).to eq(0)
+      expect(execution.actual_regenerated_movies_count).to eq(0)
+      expect(execution.actual_skipped_movies_count).to eq(0)
+    end
+  end
+
+  describe "#result_summary_available?" do
+    it "actual_* がすべて 0 の場合は false を返すこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution,
+                              actual_created_movies_count:     0,
+                              actual_regenerated_movies_count: 0,
+                              actual_skipped_movies_count:     0)
+      expect(exec.result_summary_available?).to be false
+    end
+
+    it "actual_created が 1 以上の場合は true を返すこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution,
+                              actual_created_movies_count: 5)
+      expect(exec.result_summary_available?).to be true
+    end
+
+    it "actual_regenerated が 1 以上の場合は true を返すこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution,
+                              actual_regenerated_movies_count: 3)
+      expect(exec.result_summary_available?).to be true
+    end
+
+    it "actual_skipped が 1 以上の場合は true を返すこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution,
+                              actual_skipped_movies_count: 2)
+      expect(exec.result_summary_available?).to be true
+    end
+  end
+
+  describe "#enqueue_success_rate" do
+    it "actual_* と failed がすべて 0 の場合は nil を返すこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution,
+                              actual_created_movies_count:     0,
+                              actual_regenerated_movies_count: 0,
+                              failed_movies_count:             0)
+      expect(exec.enqueue_success_rate).to be_nil
+    end
+
+    it "failed が 0 で全件 enqueue 成功の場合は 100.0 を返すこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution,
+                              actual_created_movies_count:     7,
+                              actual_regenerated_movies_count: 3,
+                              failed_movies_count:             0)
+      expect(exec.enqueue_success_rate).to eq(100.0)
+    end
+
+    it "一部 failed がある場合は正しい割合を返すこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution,
+                              actual_created_movies_count:     8,
+                              actual_regenerated_movies_count: 0,
+                              failed_movies_count:             2)
+      expect(exec.enqueue_success_rate).to eq(80.0)
+    end
+
+    it "全件 failed の場合は 0.0 を返すこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution,
+                              actual_created_movies_count:     0,
+                              actual_regenerated_movies_count: 0,
+                              failed_movies_count:             5)
+      expect(exec.enqueue_success_rate).to eq(0.0)
+    end
   end
 
   describe "#progress_percent" do
