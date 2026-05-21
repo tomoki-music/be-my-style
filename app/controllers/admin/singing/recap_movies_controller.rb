@@ -16,39 +16,7 @@ class Admin::Singing::RecapMoviesController < ApplicationController
 
     respond_to do |format|
       format.html do
-        @stats = {
-          total:                  SingingGeneratedRecapMovie.count,
-          completed:              SingingGeneratedRecapMovie.completed.count,
-          failed:                 SingingGeneratedRecapMovie.failed.count,
-          processing:             SingingGeneratedRecapMovie.processing.count,
-          pending:                SingingGeneratedRecapMovie.pending.count,
-          expired:                SingingGeneratedRecapMovie.expired.count,
-          total_shares:           SingingGeneratedRecapMovie.sum(:share_count),
-          total_downloads:        SingingGeneratedRecapMovie.sum(:download_count),
-          total_instagram_clicks: SingingGeneratedRecapMovie.sum(:instagram_hint_click_count),
-        }
-
-        per_page = (params[:per_page].to_i > 0) ? params[:per_page].to_i : PER_PAGE_DEFAULT
-        per_page = [per_page, PER_PAGE_MAX].min
-        @per_page = per_page
-
-        page = [params[:page].to_i, 1].max
-        @page = page
-
-        @total_count = scope.count
-        @movies = scope.offset((page - 1) * per_page).limit(per_page)
-        @total_pages = (@total_count.to_f / per_page).ceil
-
-        @failed_movies = SingingGeneratedRecapMovie.includes(:customer).failed.order(updated_at: :desc).limit(20)
-
-        @status_counts = VALID_STATUSES.each_with_object({}) do |s, h|
-          h[s] = @stats[s.to_sym]
-        end
-
-        raw_year_counts = SingingGeneratedRecapMovie.group(:year).order(year: :desc).count
-        @year_counts = raw_year_counts.each_with_object({}) do |(year, count), h|
-          h[year.presence || "不明"] = count
-        end
+        prepare_html_vars(scope)
       end
 
       format.csv do
@@ -59,18 +27,29 @@ class Admin::Singing::RecapMoviesController < ApplicationController
     end
   end
 
-  def show
-  end
-
-  def generate_yearly_batch
-    year = Integer(params[:year], exception: false)
+  def preview_yearly_batch
+    year = parse_batch_year
 
     unless year
       redirect_to admin_singing_recap_movies_path, alert: "年の指定が不正です。"
       return
     end
 
-    unless VALID_YEAR_RANGE.include?(year)
+    @batch_preview = Singing::RecapMovieBatchPreviewService.call(year)
+    @preview_year  = year
+
+    scope = build_filtered_scope
+    prepare_html_vars(scope)
+    render :index
+  end
+
+  def show
+  end
+
+  def generate_yearly_batch
+    year = parse_batch_year
+
+    unless year
       redirect_to admin_singing_recap_movies_path, alert: "年の指定が不正です。"
       return
     end
@@ -98,6 +77,50 @@ class Admin::Singing::RecapMoviesController < ApplicationController
   end
 
   private
+
+  def parse_batch_year
+    year = Integer(params[:year], exception: false)
+    return nil unless year
+    return nil unless VALID_YEAR_RANGE.include?(year)
+
+    year
+  end
+
+  def prepare_html_vars(scope)
+    @stats = {
+      total:                  SingingGeneratedRecapMovie.count,
+      completed:              SingingGeneratedRecapMovie.completed.count,
+      failed:                 SingingGeneratedRecapMovie.failed.count,
+      processing:             SingingGeneratedRecapMovie.processing.count,
+      pending:                SingingGeneratedRecapMovie.pending.count,
+      expired:                SingingGeneratedRecapMovie.expired.count,
+      total_shares:           SingingGeneratedRecapMovie.sum(:share_count),
+      total_downloads:        SingingGeneratedRecapMovie.sum(:download_count),
+      total_instagram_clicks: SingingGeneratedRecapMovie.sum(:instagram_hint_click_count),
+    }
+
+    per_page = (params[:per_page].to_i > 0) ? params[:per_page].to_i : PER_PAGE_DEFAULT
+    per_page = [per_page, PER_PAGE_MAX].min
+    @per_page = per_page
+
+    page = [params[:page].to_i, 1].max
+    @page = page
+
+    @total_count = scope.count
+    @movies = scope.offset((page - 1) * per_page).limit(per_page)
+    @total_pages = (@total_count.to_f / per_page).ceil
+
+    @failed_movies = SingingGeneratedRecapMovie.includes(:customer).failed.order(updated_at: :desc).limit(20)
+
+    @status_counts = VALID_STATUSES.each_with_object({}) do |s, h|
+      h[s] = @stats[s.to_sym]
+    end
+
+    raw_year_counts = SingingGeneratedRecapMovie.group(:year).order(year: :desc).count
+    @year_counts = raw_year_counts.each_with_object({}) do |(year, count), h|
+      h[year.presence || "不明"] = count
+    end
+  end
 
   def set_recap_movie
     @movie = SingingGeneratedRecapMovie.includes(:customer).find(params[:id])

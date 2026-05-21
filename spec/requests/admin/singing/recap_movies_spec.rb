@@ -495,6 +495,107 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
           expect(response.body).to include("一括生成を開始")
         end
       end
+
+      context "index にプレビューフォームが表示されること" do
+        it "プレビューフォームが表示されること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("対象件数プレビュー")
+          expect(response.body).to include("対象件数を確認")
+        end
+      end
+    end
+
+    describe "GET /admin/singing/recap_movies/preview_yearly_batch" do
+      let(:valid_year) { Time.zone.today.year }
+
+      let!(:singing_customer) { FactoryBot.create(:customer, domain_name: "singing") }
+      let!(:completed_diagnosis) do
+        FactoryBot.create(:singing_diagnosis, :completed,
+                          customer: singing_customer,
+                          created_at: Time.zone.local(valid_year, 6, 1))
+      end
+
+      context "正しい year を指定した場合" do
+        it "200 OK を返すこと" do
+          get preview_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "プレビュー結果セクションが表示されること" do
+          get preview_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          expect(response.body).to include("プレビュー結果")
+          expect(response.body).to include("#{valid_year}年")
+        end
+
+        it "対象ユーザー数が表示されること" do
+          get preview_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          expect(response.body).to include("対象ユーザー")
+        end
+
+        it "新規生成 / 再生成 / スキップ が表示されること" do
+          get preview_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          expect(response.body).to include("新規生成")
+          expect(response.body).to include("再生成")
+          expect(response.body).to include("スキップ")
+        end
+
+        it "preview 後に一括生成ボタンが表示されること" do
+          get preview_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          expect(response.body).to include("この内容で#{valid_year}年の一括生成を開始")
+        end
+
+        it "一括生成ボタンに year が引き継がれること" do
+          get preview_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          expect(response.body).to include("value=\"#{valid_year}\"")
+        end
+      end
+
+      context "year が文字列（不正値）の場合" do
+        it "alert flash が表示されること" do
+          get preview_yearly_batch_admin_singing_recap_movies_path, params: { year: "abc" }
+          follow_redirect!
+          expect(response.body).to include("年の指定が不正です。")
+        end
+
+        it "index にリダイレクトされること" do
+          get preview_yearly_batch_admin_singing_recap_movies_path, params: { year: "abc" }
+          expect(response).to redirect_to(admin_singing_recap_movies_path)
+        end
+      end
+
+      context "year が空の場合" do
+        it "alert flash が表示されること" do
+          get preview_yearly_batch_admin_singing_recap_movies_path, params: { year: "" }
+          follow_redirect!
+          expect(response.body).to include("年の指定が不正です。")
+        end
+      end
+
+      context "year が許可範囲外（2019）の場合" do
+        it "alert flash が表示されること" do
+          get preview_yearly_batch_admin_singing_recap_movies_path, params: { year: "2019" }
+          follow_redirect!
+          expect(response.body).to include("年の指定が不正です。")
+        end
+      end
+
+      context "year が許可範囲外（未来すぎる年）の場合" do
+        it "alert flash が表示されること" do
+          future_year = Time.zone.today.year + 2
+          get preview_yearly_batch_admin_singing_recap_movies_path, params: { year: future_year }
+          follow_redirect!
+          expect(response.body).to include("年の指定が不正です。")
+        end
+      end
+
+      context "対象ユーザーが 0 人の場合" do
+        it "200 OK を返しプレビュー結果が表示されること" do
+          other_year = 2020
+          get preview_yearly_batch_admin_singing_recap_movies_path, params: { year: other_year }
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("プレビュー結果")
+        end
+      end
     end
   end
 

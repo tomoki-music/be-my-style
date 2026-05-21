@@ -47,6 +47,7 @@ Rails.application.routes.draw do
         end
         collection do
           post :generate_yearly_batch
+          get  :preview_yearly_batch
         end
       end
     end

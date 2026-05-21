@@ -126,6 +126,48 @@
                     %small= movie.error_message.to_s.truncate(60)
                   %td.text-nowrap= l(movie.updated_at, format: :short)
 
+  .card.shadow-sm.border-info.mb-4
+    .card-header.bg-info.text-white
+      %strong 年間Recap Movie一括生成 — 対象件数プレビュー
+    .card-body
+      %p.mb-2 一括生成を実行する前に対象件数を確認できます。
+      = form_with url: preview_yearly_batch_admin_singing_recap_movies_path, method: :get, local: true do |f|
+        .form-row.align-items-end
+          .col-auto
+            = f.label :year, "対象年", class: "mb-1 font-weight-bold"
+            = f.number_field :year, value: params[:year].presence || Time.zone.today.year, min: 2020, max: Time.zone.today.year + 1, class: "form-control form-control-sm", style: "width: 100px"
+          .col-auto.align-self-end
+            = f.submit "対象件数を確認", class: "btn btn-info btn-sm"
+      - if @batch_preview
+        %hr
+        %h6.font-weight-bold.mt-3 プレビュー結果（#{@preview_year}年）
+        %ul.list-unstyled.mb-2
+          %li
+            %span.badge.badge-secondary.mr-1 対象ユーザー
+            = @batch_preview[:target_customers_count]
+            人
+          %li
+            %span.badge.badge-primary.mr-1 新規生成
+            = @batch_preview[:new_movies_count]
+            件
+          %li
+            %span.badge.badge-warning.mr-1 再生成
+            = @batch_preview[:regenerate_movies_count]
+            件
+          %li
+            %span.badge.badge-secondary.mr-1 スキップ
+            = @batch_preview[:skipped_movies_count]
+            件
+            - breakdown = @batch_preview[:skipped_breakdown]
+            - if breakdown.values.any?(&:positive?)
+              %small.text-muted
+                （pending: #{breakdown[:pending]}, processing: #{breakdown[:processing]}, completed: #{breakdown[:completed]}）
+        = form_with url: generate_yearly_batch_admin_singing_recap_movies_path, method: :post, local: true do |f|
+          = f.hidden_field :year, value: @preview_year
+          = f.submit "この内容で#{@preview_year}年の一括生成を開始",
+              class: "btn btn-warning btn-sm",
+              data: { confirm: "#{@preview_year}年のRecap Movie一括生成を開始します。よろしいですか？" }
+
   .card.shadow-sm.border-warning.mb-4
     .card-header.bg-warning
       %strong 年間Recap Movie一括生成
