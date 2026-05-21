@@ -32,6 +32,7 @@ module Singing
       actual_skipped_count = 0
 
       enqueue_targets.each do |customer|
+        movie = nil
         movie, action = find_or_prepare_movie!(customer, year)
 
         if movie
@@ -49,6 +50,17 @@ module Singing
       rescue StandardError => e
         Rails.logger.error("[RecapMovieBatch] error customer_id=#{customer.id} year=#{year}: #{e.message}")
         execution&.increment!(:failed_movies_count)
+        if execution
+          execution.failures.create!(
+            customer:          customer,
+            year:              year,
+            recap_movie_id:    movie&.id,
+            error_class:       e.class.name,
+            error_message:     e.message.to_s.truncate(1000),
+            backtrace_excerpt: e.backtrace&.first(5)&.join("\n"),
+            failed_at:         Time.current,
+          )
+        end
         skipped_count += 1
       end
 

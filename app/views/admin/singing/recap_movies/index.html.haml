@@ -262,6 +262,7 @@
                 %th 成功率
                 %th 実行時間
                 %th ステータス
+                %th
             %tbody
               - @recent_batch_executions.each do |exec|
                 %tr
@@ -335,6 +336,10 @@
                       %span.badge.badge-dark cancelled
                     - else
                       %span.badge.badge-light= exec.status
+                  %td
+                    = link_to "詳細",
+                        admin_singing_recap_movie_batch_execution_path(exec),
+                        class: "btn btn-sm btn-outline-secondary"
 
   .card.shadow-sm.border-warning.mb-4
     .card-header.bg-warning

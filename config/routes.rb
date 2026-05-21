@@ -50,6 +50,8 @@ Rails.application.routes.draw do
           get  :preview_yearly_batch
         end
       end
+
+      resources :recap_movie_batch_executions, only: [:show]
     end
   end
   

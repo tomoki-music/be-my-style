@@ -1,5 +1,6 @@
 class SingingRecapMovieBatchExecution < ApplicationRecord
   belongs_to :admin, optional: true
+  has_many :failures, class_name: "SingingRecapMovieBatchFailure", dependent: :destroy
 
   enum status: {
     enqueued:  "enqueued",

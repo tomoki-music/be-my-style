@@ -1,0 +1,196 @@
+= render 'layouts/admin_header_menu'
+
+.container.py-4
+  .d-flex.justify-content-between.align-items-center.mb-4
+    %h2.mb-0
+      Batch実行詳細
+      %small.text-muted.ml-2 ##{@execution.id}
+    = link_to "← 一覧に戻る", admin_singing_recap_movies_path, class: "btn btn-outline-secondary btn-sm"
+
+  -# ========== 基本情報 ==========
+  .card.shadow-sm.mb-4
+    .card-header
+      %strong 基本情報
+    .card-body
+      .row
+        .col-md-6
+          %dl.row.mb-0
+            %dt.col-5 年
+            %dd.col-7= @execution.year
+            %dt.col-5 ステータス
+            %dd.col-7
+              - case @execution.status
+              - when "enqueued"
+                %span.badge.badge-secondary enqueued
+              - when "running"
+                %span.badge.badge-warning running
+              - when "completed"
+                %span.badge.badge-success completed
+              - when "failed"
+                %span.badge.badge-danger failed
+              - when "cancelled"
+                %span.badge.badge-dark cancelled
+            %dt.col-5 実行管理者
+            %dd.col-7
+              - if @execution.admin
+                = "#{@execution.admin.name} / #{@execution.admin.email}"
+              - else
+                %span.text-muted (不明)
+        .col-md-6
+          %dl.row.mb-0
+            %dt.col-5 作成日時
+            %dd.col-7= l(@execution.created_at, format: :short)
+            %dt.col-5 開始日時
+            %dd.col-7
+              - if @execution.started_at
+                = l(@execution.started_at, format: :short)
+              - else
+                %span.text-muted —
+            %dt.col-5 終了日時
+            %dd.col-7
+              - if @execution.finished_at
+                = l(@execution.finished_at, format: :short)
+              - else
+                %span.text-muted —
+            %dt.col-5 実行時間
+            %dd.col-7
+              - d = @execution.duration_seconds
+              - if d
+                - if d < 60
+                  = "#{d}秒"
+                - else
+                  = "#{d / 60}分#{d % 60}秒"
+              - else
+                %span.text-muted —
+
+  -# ========== Progress Summary ==========
+  .card.shadow-sm.mb-4
+    .card-header
+      %strong 進捗サマリー
+    .card-body
+      - if @execution.total_movies_count > 0
+        .mb-3
+          .d-flex.justify-content-between.mb-1
+            %span.font-weight-bold 進捗
+            %span= "#{@execution.completed_movies_count + @execution.failed_movies_count} / #{@execution.total_movies_count} (#{@execution.progress_percent}%)"
+          .progress{ style: "height: 20px;" }
+            - bar_cls = @execution.completed? ? "success" : (@execution.failed? ? "danger" : "warning")
+            .progress-bar{ class: "bg-#{bar_cls}",
+                role: "progressbar",
+                style: "width: #{@execution.progress_percent}%",
+                aria: { valuenow: @execution.progress_percent, valuemin: 0, valuemax: 100 } }
+              = "#{@execution.progress_percent}%"
+      .row.text-center.mt-3
+        .col-3
+          %p.h4.mb-1= @execution.total_movies_count
+          %p.text-muted.small.mb-0 合計対象
+        .col-3
+          %p.h4.mb-1.text-success= @execution.completed_movies_count
+          %p.text-muted.small.mb-0 enqueue済
+        .col-3
+          %p.h4.mb-1.text-danger= @execution.failed_movies_count
+          %p.text-muted.small.mb-0 失敗
+        .col-3
+          %p.h4.mb-1= @execution.remaining_movies_count
+          %p.text-muted.small.mb-0 残件数
+
+  -# ========== Result Summary ==========
+  .card.shadow-sm.mb-4
+    .card-header
+      %strong 実績サマリー
+    .card-body
+      - if @execution.result_summary_available?
+        .row.text-center
+          .col-3
+            %p.h4.mb-1.text-success= @execution.actual_created_movies_count
+            %p.text-muted.small.mb-0 新規作成
+          .col-3
+            %p.h4.mb-1.text-primary= @execution.actual_regenerated_movies_count
+            %p.text-muted.small.mb-0 再生成
+          .col-3
+            %p.h4.mb-1= @execution.actual_skipped_movies_count
+            %p.text-muted.small.mb-0 スキップ
+          .col-3
+            %p.h4.mb-1.text-danger= @execution.failed_movies_count
+            %p.text-muted.small.mb-0 失敗
+        - rate = @execution.enqueue_success_rate
+        - if rate
+          %hr
+          .text-center
+            - rate_cls = rate >= 90 ? "success" : (rate >= 70 ? "warning" : "danger")
+            %p.mb-0
+              enqueue成功率:
+              %strong{ class: "text-#{rate_cls}" }= "#{rate}%"
+      - else
+        %p.text-muted.mb-0 実績データはまだありません。
+
+  -# ========== Preview Summary ==========
+  .card.shadow-sm.mb-4
+    .card-header
+      %strong プレビューサマリー（実行前見込み）
+    .card-body
+      .row.text-center
+        .col-3
+          %p.h5.mb-1= @execution.target_customers_count
+          %p.text-muted.small.mb-0 対象ユーザー
+        .col-3
+          %p.h5.mb-1.text-success= @execution.new_movies_count
+          %p.text-muted.small.mb-0 新規生成
+        .col-3
+          %p.h5.mb-1.text-primary= @execution.regenerate_movies_count
+          %p.text-muted.small.mb-0 再生成
+        .col-3
+          %p.h5.mb-1= @execution.skipped_movies_count
+          %p.text-muted.small.mb-0 スキップ
+      - breakdown = @execution.skipped_breakdown_hash
+      - if breakdown.values.any?(&:positive?)
+        %hr
+        %p.mb-1.small.font-weight-bold スキップ内訳:
+        %p.text-muted.small.mb-0
+          = "pending: #{breakdown["pending"].to_i}件、processing: #{breakdown["processing"].to_i}件、completed: #{breakdown["completed"].to_i}件"
+
+  -# ========== Failure Analysis ==========
+  .card.shadow-sm{ class: @failures.present? ? "border-danger" : "" }
+    - if @failures.present?
+      .card-header.bg-danger.text-white
+        %strong
+          失敗ユーザー一覧（#{@failures.count} 件）
+      .card-body.p-0
+        .table-responsive
+          %table.table.table-sm.table-striped.mb-0
+            %thead.thead-light
+              %tr
+                %th ユーザー
+                %th 年
+                %th Recap Movie
+                %th エラークラス
+                %th エラーメッセージ
+                %th 失敗日時
+            %tbody
+              - @failures.each do |failure|
+                %tr
+                  %td
+                    - if failure.customer
+                      = link_to failure.customer.name,
+                          admin_customer_path(failure.customer),
+                          class: "text-body"
+                    - else
+                      %span.text-muted (削除済)
+                  %td= failure.year
+                  %td
+                    - if failure.recap_movie
+                      = link_to "Movie ##{failure.recap_movie_id}",
+                          admin_singing_recap_movie_path(failure.recap_movie),
+                          class: "text-body"
+                    - else
+                      %span.text-muted —
+                  %td
+                    %code.small= failure.error_class
+                  %td.text-danger
+                    %small= failure.error_message.to_s.truncate(80)
+                  %td.text-nowrap= l(failure.failed_at, format: :short)
+    - else
+      .card-header
+        %strong 失敗ユーザー一覧
+      .card-body
+        %p.text-muted.mb-0 失敗はありません。

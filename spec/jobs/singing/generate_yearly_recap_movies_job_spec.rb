@@ -343,5 +343,82 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
         expect(exec.failed_movies_count).to eq(1)
       end
     end
+
+    describe "failure tracking" do
+      let(:execution) do
+        FactoryBot.create(:singing_recap_movie_batch_execution, year: year, status: :enqueued)
+      end
+
+      it "enqueue 例外時に failure record が作成されること" do
+        customer = singing_customer
+        completed_diagnosis(customer)
+
+        allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
+          .and_raise(StandardError, "enqueue failed")
+
+        described_class.perform_now(year, execution.id)
+
+        failure = execution.failures.last
+        expect(failure).to be_present
+        expect(failure.customer).to eq(customer)
+        expect(failure.year).to eq(year)
+        expect(failure.error_class).to eq("StandardError")
+        expect(failure.error_message).to eq("enqueue failed")
+        expect(failure.failed_at).to be_present
+      end
+
+      it "failure record に backtrace_excerpt が保存されること" do
+        customer = singing_customer
+        completed_diagnosis(customer)
+
+        allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
+          .and_raise(StandardError, "enqueue failed")
+
+        described_class.perform_now(year, execution.id)
+
+        failure = execution.failures.last
+        expect(failure.backtrace_excerpt).to be_present
+      end
+
+      it "find_or_prepare_movie! 例外時に recap_movie_id が nil の failure が作成されること" do
+        customer = singing_customer
+        completed_diagnosis(customer)
+
+        allow_any_instance_of(described_class).to receive(:find_or_prepare_movie!)
+          .and_raise(StandardError, "db error in prepare")
+
+        described_class.perform_now(year, execution.id)
+
+        failure = execution.failures.last
+        expect(failure).to be_present
+        expect(failure.recap_movie_id).to be_nil
+      end
+
+      it "execution なしでは failure record を作成しないこと" do
+        customer = singing_customer
+        completed_diagnosis(customer)
+
+        allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
+          .and_raise(StandardError, "enqueue failed")
+
+        expect {
+          described_class.perform_now(year, nil)
+        }.not_to change(SingingRecapMovieBatchFailure, :count)
+      end
+
+      it "複数 customer で失敗した場合に複数の failure record が作成されること" do
+        customer1 = singing_customer
+        completed_diagnosis(customer1)
+        customer2 = singing_customer
+        completed_diagnosis(customer2)
+
+        allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
+          .and_raise(StandardError, "enqueue failed")
+
+        described_class.perform_now(year, execution.id)
+
+        expect(execution.failures.count).to eq(2)
+      end
+    end
   end
 end

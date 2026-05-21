@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_21_000003) do
+ActiveRecord::Schema.define(version: 2026_05_21_000004) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -1011,6 +1011,23 @@ ActiveRecord::Schema.define(version: 2026_05_21_000003) do
     t.index ["year"], name: "index_singing_recap_movie_batch_executions_on_year"
   end
 
+  create_table "singing_recap_movie_batch_failures", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "singing_recap_movie_batch_execution_id", null: false
+    t.bigint "customer_id", null: false
+    t.integer "year", null: false
+    t.bigint "recap_movie_id"
+    t.string "error_class", null: false
+    t.string "error_message", limit: 1000
+    t.text "backtrace_excerpt"
+    t.datetime "failed_at", null: false
+    t.json "metadata"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_singing_recap_movie_batch_failures_on_customer_id"
+    t.index ["singing_recap_movie_batch_execution_id", "customer_id"], name: "idx_batch_failures_on_execution_and_customer"
+    t.index ["singing_recap_movie_batch_execution_id"], name: "idx_batch_failures_on_execution_id"
+  end
+
   create_table "singing_season_ranking_entries", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "singing_ranking_season_id", null: false
     t.bigint "customer_id", null: false
@@ -1214,6 +1231,8 @@ ActiveRecord::Schema.define(version: 2026_05_21_000003) do
   add_foreign_key "singing_profile_reactions", "customers"
   add_foreign_key "singing_profile_reactions", "customers", column: "target_customer_id"
   add_foreign_key "singing_recap_movie_batch_executions", "admins"
+  add_foreign_key "singing_recap_movie_batch_failures", "customers"
+  add_foreign_key "singing_recap_movie_batch_failures", "singing_recap_movie_batch_executions"
   add_foreign_key "singing_season_ranking_entries", "customers"
   add_foreign_key "singing_season_ranking_entries", "singing_diagnoses"
   add_foreign_key "singing_season_ranking_entries", "singing_ranking_seasons"
