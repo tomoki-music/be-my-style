@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_20_000002) do
+ActiveRecord::Schema.define(version: 2026_05_21_000001) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -987,6 +987,22 @@ ActiveRecord::Schema.define(version: 2026_05_20_000002) do
     t.index ["status"], name: "index_singing_ranking_seasons_on_status"
   end
 
+  create_table "singing_recap_movie_batch_executions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.integer "year", null: false
+    t.bigint "admin_id"
+    t.integer "target_customers_count", default: 0, null: false
+    t.integer "new_movies_count", default: 0, null: false
+    t.integer "regenerate_movies_count", default: 0, null: false
+    t.integer "skipped_movies_count", default: 0, null: false
+    t.json "skipped_breakdown"
+    t.string "status", default: "enqueued", null: false
+    t.datetime "enqueued_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["admin_id"], name: "index_singing_recap_movie_batch_executions_on_admin_id"
+    t.index ["year"], name: "index_singing_recap_movie_batch_executions_on_year"
+  end
+
   create_table "singing_season_ranking_entries", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "singing_ranking_season_id", null: false
     t.bigint "customer_id", null: false
@@ -1189,6 +1205,7 @@ ActiveRecord::Schema.define(version: 2026_05_20_000002) do
   add_foreign_key "singing_generated_recap_movies", "customers"
   add_foreign_key "singing_profile_reactions", "customers"
   add_foreign_key "singing_profile_reactions", "customers", column: "target_customer_id"
+  add_foreign_key "singing_recap_movie_batch_executions", "admins"
   add_foreign_key "singing_season_ranking_entries", "customers"
   add_foreign_key "singing_season_ranking_entries", "singing_diagnoses"
   add_foreign_key "singing_season_ranking_entries", "singing_ranking_seasons"

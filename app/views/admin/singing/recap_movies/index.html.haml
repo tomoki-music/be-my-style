@@ -168,6 +168,43 @@
               class: "btn btn-warning btn-sm",
               data: { confirm: "#{@preview_year}年のRecap Movie一括生成を開始します。よろしいですか？" }
 
+  .card.shadow-sm.mb-4
+    .card-header
+      %strong 一括生成 実行履歴（直近 10 件）
+    - if @recent_batch_executions.blank?
+      .card-body
+        %p.text-muted.mb-0 まだ一括生成の実行履歴はありません。
+    - else
+      .card-body.p-0
+        .table-responsive
+          %table.table.table-sm.table-striped.mb-0
+            %thead.thead-light
+              %tr
+                %th 実行日時
+                %th 年
+                %th 管理者
+                %th 対象
+                %th 新規
+                %th 再生成
+                %th スキップ
+                %th ステータス
+            %tbody
+              - @recent_batch_executions.each do |exec|
+                %tr
+                  %td.text-nowrap= l(exec.created_at, format: :short)
+                  %td= exec.year
+                  %td
+                    - if exec.admin
+                      %small= "#{exec.admin.name} / #{exec.admin.email}"
+                    - else
+                      %small.text-muted (不明)
+                  %td.text-center= exec.target_customers_count
+                  %td.text-center= exec.new_movies_count
+                  %td.text-center= exec.regenerate_movies_count
+                  %td.text-center= exec.skipped_movies_count
+                  %td
+                    %span.badge.badge-info= exec.status
+
   .card.shadow-sm.border-warning.mb-4
     .card-header.bg-warning
       %strong 年間Recap Movie一括生成

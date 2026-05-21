@@ -428,6 +428,51 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
           post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
           expect(response).to redirect_to(admin_singing_recap_movies_path)
         end
+
+        it "BatchExecution ログが作成されること" do
+          expect {
+            post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          }.to change(SingingRecapMovieBatchExecution, :count).by(1)
+        end
+
+        it "BatchExecution に year が保存されること" do
+          post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          log = SingingRecapMovieBatchExecution.last
+          expect(log.year).to eq(valid_year)
+        end
+
+        it "BatchExecution に admin が保存されること" do
+          post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          log = SingingRecapMovieBatchExecution.last
+          expect(log.admin).to eq(admin)
+        end
+
+        it "BatchExecution に preview counts が保存されること" do
+          post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          log = SingingRecapMovieBatchExecution.last
+          expect(log.target_customers_count).to be_a(Integer)
+          expect(log.new_movies_count).to be_a(Integer)
+          expect(log.regenerate_movies_count).to be_a(Integer)
+          expect(log.skipped_movies_count).to be_a(Integer)
+        end
+
+        it "BatchExecution に skipped_breakdown が保存されること" do
+          post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          log = SingingRecapMovieBatchExecution.last
+          expect(log.skipped_breakdown).to be_a(Hash)
+        end
+
+        it "BatchExecution の status が enqueued であること" do
+          post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          log = SingingRecapMovieBatchExecution.last
+          expect(log.status).to eq("enqueued")
+        end
+
+        it "BatchExecution の enqueued_at が記録されること" do
+          post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+          log = SingingRecapMovieBatchExecution.last
+          expect(log.enqueued_at).to be_present
+        end
       end
 
       context "year が文字列（不正値）の場合" do
@@ -441,6 +486,12 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
           post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: "abc" }
           follow_redirect!
           expect(response.body).to include("年の指定が不正です。")
+        end
+
+        it "BatchExecution ログが作成されないこと" do
+          expect {
+            post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: "abc" }
+          }.not_to change(SingingRecapMovieBatchExecution, :count)
         end
       end
 
@@ -456,6 +507,12 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
           follow_redirect!
           expect(response.body).to include("年の指定が不正です。")
         end
+
+        it "BatchExecution ログが作成されないこと" do
+          expect {
+            post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: "" }
+          }.not_to change(SingingRecapMovieBatchExecution, :count)
+        end
       end
 
       context "year が許可範囲外（2019）の場合" do
@@ -469,6 +526,12 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
           post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: "2019" }
           follow_redirect!
           expect(response.body).to include("年の指定が不正です。")
+        end
+
+        it "BatchExecution ログが作成されないこと" do
+          expect {
+            post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: "2019" }
+          }.not_to change(SingingRecapMovieBatchExecution, :count)
         end
       end
 
@@ -501,6 +564,46 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
           get admin_singing_recap_movies_path
           expect(response.body).to include("対象件数プレビュー")
           expect(response.body).to include("対象件数を確認")
+        end
+      end
+
+      context "index に実行履歴が表示されること" do
+        it "実行履歴セクションが表示されること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("一括生成 実行履歴")
+        end
+
+        context "実行履歴が 0 件の場合" do
+          it "index が落ちないこと" do
+            get admin_singing_recap_movies_path
+            expect(response).to have_http_status(:ok)
+          end
+
+          it "履歴なしメッセージが表示されること" do
+            get admin_singing_recap_movies_path
+            expect(response.body).to include("まだ一括生成の実行履歴はありません。")
+          end
+        end
+
+        context "実行履歴が存在する場合" do
+          let!(:execution) do
+            FactoryBot.create(:singing_recap_movie_batch_execution, admin: admin, year: valid_year)
+          end
+
+          it "実行履歴の year が表示されること" do
+            get admin_singing_recap_movies_path
+            expect(response.body).to include(valid_year.to_s)
+          end
+
+          it "実行履歴の管理者名が表示されること" do
+            get admin_singing_recap_movies_path
+            expect(response.body).to include(admin.name)
+          end
+
+          it "実行履歴の status が表示されること" do
+            get admin_singing_recap_movies_path
+            expect(response.body).to include("enqueued")
+          end
         end
       end
     end

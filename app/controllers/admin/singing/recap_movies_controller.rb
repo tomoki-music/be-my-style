@@ -54,7 +54,22 @@ class Admin::Singing::RecapMoviesController < ApplicationController
       return
     end
 
+    preview = Singing::RecapMovieBatchPreviewService.call(year)
+
     Singing::GenerateYearlyRecapMoviesJob.perform_later(year)
+
+    SingingRecapMovieBatchExecution.create!(
+      year:                    year,
+      admin:                   current_admin,
+      target_customers_count:  preview[:target_customers_count],
+      new_movies_count:        preview[:new_movies_count],
+      regenerate_movies_count: preview[:regenerate_movies_count],
+      skipped_movies_count:    preview[:skipped_movies_count],
+      skipped_breakdown:       preview[:skipped_breakdown],
+      status:                  :enqueued,
+      enqueued_at:             Time.current,
+    )
+
     redirect_to admin_singing_recap_movies_path,
                 notice: "#{year}年のRecap Movie一括生成を開始しました。"
   end
@@ -111,6 +126,11 @@ class Admin::Singing::RecapMoviesController < ApplicationController
     @total_pages = (@total_count.to_f / per_page).ceil
 
     @failed_movies = SingingGeneratedRecapMovie.includes(:customer).failed.order(updated_at: :desc).limit(20)
+
+    @recent_batch_executions = SingingRecapMovieBatchExecution
+      .includes(:admin)
+      .order(created_at: :desc)
+      .limit(10)
 
     @status_counts = VALID_STATUSES.each_with_object({}) do |s, h|
       h[s] = @stats[s.to_sym]
