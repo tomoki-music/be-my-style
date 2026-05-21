@@ -51,7 +51,17 @@ Rails.application.routes.draw do
         end
       end
 
-      resources :recap_movie_batch_executions, only: [:show]
+      resources :recap_movie_batch_executions, only: [:show] do
+        member do
+          post :retry_failures
+        end
+      end
+
+      resources :recap_movie_batch_failures, only: [] do
+        member do
+          post :retry
+        end
+      end
     end
   end
   

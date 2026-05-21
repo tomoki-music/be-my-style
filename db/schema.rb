@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_21_000004) do
+ActiveRecord::Schema.define(version: 2026_05_21_000005) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -1023,7 +1023,13 @@ ActiveRecord::Schema.define(version: 2026_05_21_000004) do
     t.json "metadata"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "retry_status", default: "pending", null: false
+    t.datetime "retried_at"
+    t.bigint "retried_by_id"
+    t.string "retry_error_message", limit: 1000
     t.index ["customer_id"], name: "index_singing_recap_movie_batch_failures_on_customer_id"
+    t.index ["retried_by_id"], name: "idx_batch_failures_on_retried_by"
+    t.index ["retry_status"], name: "idx_batch_failures_on_retry_status"
     t.index ["singing_recap_movie_batch_execution_id", "customer_id"], name: "idx_batch_failures_on_execution_and_customer"
     t.index ["singing_recap_movie_batch_execution_id"], name: "idx_batch_failures_on_execution_id"
   end
@@ -1231,6 +1237,7 @@ ActiveRecord::Schema.define(version: 2026_05_21_000004) do
   add_foreign_key "singing_profile_reactions", "customers"
   add_foreign_key "singing_profile_reactions", "customers", column: "target_customer_id"
   add_foreign_key "singing_recap_movie_batch_executions", "admins"
+  add_foreign_key "singing_recap_movie_batch_failures", "admins", column: "retried_by_id"
   add_foreign_key "singing_recap_movie_batch_failures", "customers"
   add_foreign_key "singing_recap_movie_batch_failures", "singing_recap_movie_batch_executions"
   add_foreign_key "singing_season_ranking_entries", "customers"

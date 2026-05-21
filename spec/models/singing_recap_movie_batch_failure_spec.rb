@@ -112,4 +112,70 @@ RSpec.describe SingingRecapMovieBatchFailure, type: :model do
       expect(failure.reload.metadata).to eq(meta)
     end
   end
+
+  describe "retry_status enum" do
+    subject(:failure) do
+      FactoryBot.create(:singing_recap_movie_batch_failure,
+                        singing_recap_movie_batch_execution: execution,
+                        customer: customer)
+    end
+
+    it "デフォルトが pending であること" do
+      expect(failure.retry_status).to eq("pending")
+    end
+
+    it "retried に遷移できること" do
+      failure.update!(retry_status: :retried)
+      expect(failure.reload.retry_status).to eq("retried")
+    end
+
+    it "skipped に遷移できること" do
+      failure.update!(retry_status: :skipped)
+      expect(failure.reload.retry_status).to eq("skipped")
+    end
+
+    it "retry_failed に遷移できること" do
+      failure.update!(retry_status: :retry_failed)
+      expect(failure.reload.retry_status).to eq("retry_failed")
+    end
+  end
+
+  describe "#retryable?" do
+    it "retry_status が pending の場合 true を返すこと" do
+      failure = FactoryBot.create(:singing_recap_movie_batch_failure,
+                                  singing_recap_movie_batch_execution: execution,
+                                  customer: customer,
+                                  retry_status: "pending")
+      expect(failure.retryable?).to be true
+    end
+
+    it "retry_status が retried の場合 false を返すこと" do
+      failure = FactoryBot.create(:singing_recap_movie_batch_failure, :retried,
+                                  singing_recap_movie_batch_execution: execution,
+                                  customer: customer)
+      expect(failure.retryable?).to be false
+    end
+
+    it "retry_status が skipped の場合 false を返すこと" do
+      failure = FactoryBot.create(:singing_recap_movie_batch_failure, :skipped,
+                                  singing_recap_movie_batch_execution: execution,
+                                  customer: customer)
+      expect(failure.retryable?).to be false
+    end
+  end
+
+  describe ".retryable scope" do
+    it "retry_status が pending の failure のみを返すこと" do
+      pending_failure = FactoryBot.create(:singing_recap_movie_batch_failure,
+                                          singing_recap_movie_batch_execution: execution,
+                                          customer: customer,
+                                          retry_status: "pending")
+      retried_failure = FactoryBot.create(:singing_recap_movie_batch_failure, :retried,
+                                          singing_recap_movie_batch_execution: execution,
+                                          customer: FactoryBot.create(:customer))
+      result = SingingRecapMovieBatchFailure.retryable
+      expect(result).to include(pending_failure)
+      expect(result).not_to include(retried_failure)
+    end
+  end
 end

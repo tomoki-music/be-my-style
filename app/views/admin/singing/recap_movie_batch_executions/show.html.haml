@@ -152,9 +152,28 @@
   -# ========== Failure Analysis ==========
   .card.shadow-sm{ class: @failures.present? ? "border-danger" : "" }
     - if @failures.present?
-      .card-header.bg-danger.text-white
+      .card-header.bg-danger.text-white.d-flex.justify-content-between.align-items-center
         %strong
           失敗ユーザー一覧（#{@failures.count} 件）
+        - retryable_count = @failures.count(&:retryable?)
+        - active_batch = SingingRecapMovieBatchExecution.active_for_year(@execution.year).where.not(id: @execution.id).exists?
+        - batch_running = @execution.active?
+        - can_retry_all = retryable_count > 0 && !active_batch && !batch_running
+        - if can_retry_all
+          = button_to "失敗分をまとめて再実行（#{retryable_count}件）",
+              retry_failures_admin_singing_recap_movie_batch_execution_path(@execution),
+              method: :post,
+              class: "btn btn-warning btn-sm font-weight-bold",
+              data: { confirm: "#{retryable_count}件の失敗ユーザーの再実行を予約します。よろしいですか？" }
+        - elsif batch_running
+          %button.btn.btn-warning.btn-sm{ disabled: true }
+            Batch実行中のため再実行不可
+        - elsif active_batch
+          %button.btn.btn-warning.btn-sm{ disabled: true }
+            同一年のBatch実行中
+        - elsif retryable_count == 0
+          %button.btn.btn-warning.btn-sm{ disabled: true }
+            再実行対象なし
       .card-body.p-0
         .table-responsive
           %table.table.table-sm.table-striped.mb-0
@@ -166,6 +185,8 @@
                 %th エラークラス
                 %th エラーメッセージ
                 %th 失敗日時
+                %th Retry状態
+                %th 操作
             %tbody
               - @failures.each do |failure|
                 %tr
@@ -189,6 +210,47 @@
                   %td.text-danger
                     %small= failure.error_message.to_s.truncate(80)
                   %td.text-nowrap= l(failure.failed_at, format: :short)
+                  %td
+                    - case failure.retry_status
+                    - when "pending"
+                      %span.badge.badge-secondary pending
+                    - when "retried"
+                      %span.badge.badge-success retried
+                      - if failure.retried_at
+                        %br
+                        %small.text-muted= l(failure.retried_at, format: :short)
+                    - when "skipped"
+                      %span.badge.badge-dark skipped
+                      - if failure.retry_error_message.present?
+                        %br
+                        %small.text-muted= failure.retry_error_message.truncate(40)
+                    - when "retry_failed"
+                      %span.badge.badge-danger retry_failed
+                      - if failure.retry_error_message.present?
+                        %br
+                        %small.text-muted= failure.retry_error_message.truncate(40)
+                  %td.text-nowrap
+                    - if failure.retryable? && !active_batch && !batch_running
+                      = button_to "再実行",
+                          retry_admin_singing_recap_movie_batch_failure_path(failure),
+                          method: :post,
+                          class: "btn btn-sm btn-outline-warning",
+                          data: { confirm: "#{failure.customer&.name} の Recap Movie を再実行しますか？" }
+                    - elsif !failure.retryable?
+                      %span.text-muted.small
+                        - case failure.retry_status
+                        - when "retried"
+                          = "実行済 (#{failure.retried_by&.name || '不明'})"
+                        - when "skipped"
+                          スキップ済
+                        - when "retry_failed"
+                          retry失敗
+                    - else
+                      %button.btn.btn-sm.btn-outline-secondary{ disabled: true }
+                        - if batch_running
+                          Batch実行中
+                        - else
+                          同一年Batch中
     - else
       .card-header
         %strong 失敗ユーザー一覧

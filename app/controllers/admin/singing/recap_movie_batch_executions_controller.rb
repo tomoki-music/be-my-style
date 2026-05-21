@@ -2,13 +2,65 @@ class Admin::Singing::RecapMovieBatchExecutionsController < ApplicationControlle
   skip_before_action :authenticate_customer!
   skip_before_action :ensure_music_domain_access_for_public_routes!, raise: false
   before_action :authenticate_admin!
+  before_action :set_execution
 
   def show
+    @failures = @execution.failures
+      .includes(:customer, :recap_movie, :retried_by)
+      .order(failed_at: :desc)
+  end
+
+  def retry_failures
+    if @execution.active?
+      redirect_to admin_singing_recap_movie_batch_execution_path(@execution),
+                  alert: "このBatch はまだ実行中です。完了後に再実行してください。"
+      return
+    end
+
+    if SingingRecapMovieBatchExecution.active_for_year(@execution.year)
+                                      .where.not(id: @execution.id).exists?
+      redirect_to admin_singing_recap_movie_batch_execution_path(@execution),
+                  alert: "#{@execution.year}年の Batch が別途実行中のため再実行できません。"
+      return
+    end
+
+    retryable_failures = @execution.failures.retry_pending
+    if retryable_failures.empty?
+      redirect_to admin_singing_recap_movie_batch_execution_path(@execution),
+                  alert: "再実行対象の failure がありません。"
+      return
+    end
+
+    success_count = 0
+    skip_count    = 0
+    fail_count    = 0
+
+    retryable_failures.each do |failure|
+      result = Singing::RecapMovieFailureRetryService.call(
+        failure: failure,
+        admin:   current_admin
+      )
+      if result.success?
+        success_count += 1
+      elsif failure.reload.retry_skipped?
+        skip_count += 1
+      else
+        fail_count += 1
+      end
+    end
+
+    message = "#{success_count}件の再実行を予約しました"
+    message += "（スキップ: #{skip_count}件）" if skip_count > 0
+    message += "（エラー: #{fail_count}件）"   if fail_count > 0
+
+    redirect_to admin_singing_recap_movie_batch_execution_path(@execution), notice: message
+  end
+
+  private
+
+  def set_execution
     @execution = SingingRecapMovieBatchExecution
       .includes(:admin, failures: :customer)
       .find(params[:id])
-    @failures = @execution.failures
-      .includes(:customer, :recap_movie)
-      .order(failed_at: :desc)
   end
 end
