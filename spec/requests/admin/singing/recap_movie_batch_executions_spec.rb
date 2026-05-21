@@ -88,7 +88,47 @@ RSpec.describe "Admin::Singing::RecapMovieBatchExecutions", type: :request do
 
         it "retry_status が表示されること" do
           get admin_singing_recap_movie_batch_execution_path(execution)
-          expect(response.body).to include("pending")
+          expect(response.body).to include("Pending")
+        end
+
+        it "Retry サマリーカードが表示されること" do
+          get admin_singing_recap_movie_batch_execution_path(execution)
+          expect(response.body).to include("Retry サマリー")
+        end
+      end
+
+      context "retry_status フィルタ" do
+        let(:customer2) { FactoryBot.create(:customer, domain_name: "singing") }
+        let!(:pending_failure) do
+          FactoryBot.create(:singing_recap_movie_batch_failure,
+                            singing_recap_movie_batch_execution: execution,
+                            customer: customer,
+                            year: execution.year)
+        end
+        let!(:retried_failure) do
+          FactoryBot.create(:singing_recap_movie_batch_failure, :retried,
+                            singing_recap_movie_batch_execution: execution,
+                            customer: customer2,
+                            year: execution.year)
+        end
+
+        it "retry_status=pending でフィルタされること" do
+          get admin_singing_recap_movie_batch_execution_path(execution, retry_status: "pending")
+          expect(response.body).to include(customer.name)
+          expect(response.body).not_to include(customer2.name)
+        end
+
+        it "retry_status=retried でフィルタされること" do
+          get admin_singing_recap_movie_batch_execution_path(execution, retry_status: "retried")
+          expect(response.body).to include(customer2.name)
+          expect(response.body).not_to include(customer.name)
+        end
+
+        it "不正な retry_status は無視されて全件表示されること" do
+          get admin_singing_recap_movie_batch_execution_path(execution, retry_status: "invalid_value")
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include(customer.name)
+          expect(response.body).to include(customer2.name)
         end
       end
 
@@ -125,7 +165,7 @@ RSpec.describe "Admin::Singing::RecapMovieBatchExecutions", type: :request do
 
         it "成功 flash メッセージが表示されること" do
           post retry_failures_admin_singing_recap_movie_batch_execution_path(execution)
-          expect(flash[:notice]).to include("再実行を予約しました")
+          expect(flash[:notice]).to include("再実行予約しました")
         end
 
         it "failure の retry_status が retried になること" do

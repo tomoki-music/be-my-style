@@ -59,4 +59,32 @@ class SingingRecapMovieBatchExecution < ApplicationRecord
 
     (base - started_at).to_i
   end
+
+  def retry_pending_count
+    failures.retry_pending.count
+  end
+
+  def retry_retried_count
+    failures.retry_retried.count
+  end
+
+  def retry_skipped_count
+    failures.retry_skipped.count
+  end
+
+  def retry_failed_count
+    failures.retry_retry_failed.count
+  end
+
+  def retry_success_rate
+    retried = retry_retried_count
+    total   = retried + retry_failed_count + retry_skipped_count
+    return nil if total.zero?
+
+    (retried.to_f / total * 100).round(1)
+  end
+
+  def has_any_retried?
+    failures.where.not(retry_status: "pending").exists?
+  end
 end

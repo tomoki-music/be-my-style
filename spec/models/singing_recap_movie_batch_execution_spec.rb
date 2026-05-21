@@ -282,6 +282,72 @@ RSpec.describe SingingRecapMovieBatchExecution, type: :model do
     end
   end
 
+  describe "retry summary メソッド" do
+    let!(:execution) { FactoryBot.create(:singing_recap_movie_batch_execution, :completed, admin: admin) }
+    let(:customer1)  { FactoryBot.create(:customer) }
+    let(:customer2)  { FactoryBot.create(:customer) }
+    let(:customer3)  { FactoryBot.create(:customer) }
+    let(:customer4)  { FactoryBot.create(:customer) }
+
+    before do
+      FactoryBot.create(:singing_recap_movie_batch_failure,
+                        singing_recap_movie_batch_execution: execution,
+                        customer: customer1, retry_status: "pending")
+      FactoryBot.create(:singing_recap_movie_batch_failure, :retried,
+                        singing_recap_movie_batch_execution: execution,
+                        customer: customer2)
+      FactoryBot.create(:singing_recap_movie_batch_failure, :skipped,
+                        singing_recap_movie_batch_execution: execution,
+                        customer: customer3)
+      FactoryBot.create(:singing_recap_movie_batch_failure, :retry_failed,
+                        singing_recap_movie_batch_execution: execution,
+                        customer: customer4)
+    end
+
+    it "#retry_pending_count が pending 件数を返すこと" do
+      expect(execution.retry_pending_count).to eq(1)
+    end
+
+    it "#retry_retried_count が retried 件数を返すこと" do
+      expect(execution.retry_retried_count).to eq(1)
+    end
+
+    it "#retry_skipped_count が skipped 件数を返すこと" do
+      expect(execution.retry_skipped_count).to eq(1)
+    end
+
+    it "#retry_failed_count が retry_failed 件数を返すこと" do
+      expect(execution.retry_failed_count).to eq(1)
+    end
+
+    it "#retry_success_rate が retried / (retried + failed + skipped) * 100 を返すこと" do
+      # retried=1, failed=1, skipped=1 → 1/3 ≒ 33.3
+      expect(execution.retry_success_rate).to eq(33.3)
+    end
+
+    it "#retry_success_rate は処理済みがない場合 nil を返すこと" do
+      exec2 = FactoryBot.create(:singing_recap_movie_batch_execution, :completed, admin: admin)
+      FactoryBot.create(:singing_recap_movie_batch_failure,
+                        singing_recap_movie_batch_execution: exec2,
+                        customer: FactoryBot.create(:customer),
+                        retry_status: "pending")
+      expect(exec2.retry_success_rate).to be_nil
+    end
+
+    it "#has_any_retried? は非pending failure がある場合 true を返すこと" do
+      expect(execution.has_any_retried?).to be true
+    end
+
+    it "#has_any_retried? は全 pending の場合 false を返すこと" do
+      exec2 = FactoryBot.create(:singing_recap_movie_batch_execution, :completed, admin: admin)
+      FactoryBot.create(:singing_recap_movie_batch_failure,
+                        singing_recap_movie_batch_execution: exec2,
+                        customer: FactoryBot.create(:customer),
+                        retry_status: "pending")
+      expect(exec2.has_any_retried?).to be false
+    end
+  end
+
   describe "#duration_seconds" do
     it "started_at が nil の場合は nil を返すこと" do
       exec = FactoryBot.build(:singing_recap_movie_batch_execution, started_at: nil, finished_at: nil)

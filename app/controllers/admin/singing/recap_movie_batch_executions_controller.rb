@@ -4,10 +4,16 @@ class Admin::Singing::RecapMovieBatchExecutionsController < ApplicationControlle
   before_action :authenticate_admin!
   before_action :set_execution
 
+  VALID_RETRY_STATUS_FILTERS = %w[pending retried skipped retry_failed].freeze
+
   def show
+    @retry_status_filter = params[:retry_status].presence
+    @retry_status_filter = nil unless VALID_RETRY_STATUS_FILTERS.include?(@retry_status_filter)
+
     @failures = @execution.failures
       .includes(:customer, :recap_movie, :retried_by)
       .order(failed_at: :desc)
+    @failures = @failures.where(retry_status: @retry_status_filter) if @retry_status_filter
   end
 
   def retry_failures
@@ -49,9 +55,11 @@ class Admin::Singing::RecapMovieBatchExecutionsController < ApplicationControlle
       end
     end
 
-    message = "#{success_count}件の再実行を予約しました"
-    message += "（スキップ: #{skip_count}件）" if skip_count > 0
-    message += "（エラー: #{fail_count}件）"   if fail_count > 0
+    parts = []
+    parts << "#{success_count}件を再実行予約しました" if success_count > 0
+    parts << "#{skip_count}件はスキップされました（完了済みのため）" if skip_count > 0
+    parts << "#{fail_count}件のRetryが失敗しました" if fail_count > 0
+    message = parts.join("、")
 
     redirect_to admin_singing_recap_movie_batch_execution_path(@execution), notice: message
   end

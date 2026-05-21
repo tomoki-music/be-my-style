@@ -22,4 +22,32 @@ class SingingRecapMovieBatchFailure < ApplicationRecord
   def retryable?
     retry_pending?
   end
+
+  def retry_status_badge_class
+    case retry_status
+    when "pending"      then "badge-secondary"
+    when "retried"      then "badge-success"
+    when "skipped"      then "badge-dark"
+    when "retry_failed" then "badge-danger"
+    end
+  end
+
+  def retry_status_label
+    case retry_status
+    when "pending"      then "Pending"
+    when "retried"      then "Retried"
+    when "skipped"      then "Skipped"
+    when "retry_failed" then "Retry Failed"
+    end
+  end
+
+  def retry_disabled_reason
+    return nil if retryable?
+
+    case retry_status
+    when "retried"      then "Retry済み（#{retried_by&.name || '不明'}）"
+    when "skipped"      then "Completed済みのためSkip"
+    when "retry_failed" then "Retry失敗"
+    end
+  end
 end

@@ -178,4 +178,104 @@ RSpec.describe SingingRecapMovieBatchFailure, type: :model do
       expect(result).not_to include(retried_failure)
     end
   end
+
+  describe "enum が生成する named scope" do
+    let!(:pending_f)  { FactoryBot.create(:singing_recap_movie_batch_failure,
+                                          singing_recap_movie_batch_execution: execution,
+                                          customer: customer) }
+    let!(:retried_f)  { FactoryBot.create(:singing_recap_movie_batch_failure, :retried,
+                                          singing_recap_movie_batch_execution: execution,
+                                          customer: FactoryBot.create(:customer)) }
+    let!(:skipped_f)  { FactoryBot.create(:singing_recap_movie_batch_failure, :skipped,
+                                          singing_recap_movie_batch_execution: execution,
+                                          customer: FactoryBot.create(:customer)) }
+    let!(:rfailed_f)  { FactoryBot.create(:singing_recap_movie_batch_failure, :retry_failed,
+                                          singing_recap_movie_batch_execution: execution,
+                                          customer: FactoryBot.create(:customer)) }
+
+    it ".retry_pending が pending のみを返すこと" do
+      expect(SingingRecapMovieBatchFailure.retry_pending).to include(pending_f)
+      expect(SingingRecapMovieBatchFailure.retry_pending).not_to include(retried_f, skipped_f, rfailed_f)
+    end
+
+    it ".retry_retried が retried のみを返すこと" do
+      expect(SingingRecapMovieBatchFailure.retry_retried).to include(retried_f)
+      expect(SingingRecapMovieBatchFailure.retry_retried).not_to include(pending_f)
+    end
+
+    it ".retry_skipped が skipped のみを返すこと" do
+      expect(SingingRecapMovieBatchFailure.retry_skipped).to include(skipped_f)
+      expect(SingingRecapMovieBatchFailure.retry_skipped).not_to include(pending_f)
+    end
+
+    it ".retry_retry_failed が retry_failed のみを返すこと" do
+      expect(SingingRecapMovieBatchFailure.retry_retry_failed).to include(rfailed_f)
+      expect(SingingRecapMovieBatchFailure.retry_retry_failed).not_to include(pending_f)
+    end
+  end
+
+  describe "#retry_status_badge_class" do
+    {
+      "pending"      => "badge-secondary",
+      "retried"      => "badge-success",
+      "skipped"      => "badge-dark",
+      "retry_failed" => "badge-danger"
+    }.each do |status, expected_class|
+      it "#{status} のとき #{expected_class} を返すこと" do
+        failure = FactoryBot.build(:singing_recap_movie_batch_failure,
+                                   singing_recap_movie_batch_execution: execution,
+                                   customer: customer,
+                                   retry_status: status)
+        expect(failure.retry_status_badge_class).to eq(expected_class)
+      end
+    end
+  end
+
+  describe "#retry_status_label" do
+    {
+      "pending"      => "Pending",
+      "retried"      => "Retried",
+      "skipped"      => "Skipped",
+      "retry_failed" => "Retry Failed"
+    }.each do |status, expected_label|
+      it "#{status} のとき '#{expected_label}' を返すこと" do
+        failure = FactoryBot.build(:singing_recap_movie_batch_failure,
+                                   singing_recap_movie_batch_execution: execution,
+                                   customer: customer,
+                                   retry_status: status)
+        expect(failure.retry_status_label).to eq(expected_label)
+      end
+    end
+  end
+
+  describe "#retry_disabled_reason" do
+    it "pending のとき nil を返すこと" do
+      failure = FactoryBot.build(:singing_recap_movie_batch_failure,
+                                 singing_recap_movie_batch_execution: execution,
+                                 customer: customer,
+                                 retry_status: "pending")
+      expect(failure.retry_disabled_reason).to be_nil
+    end
+
+    it "retried のとき 'Retry済み' を含む文字列を返すこと" do
+      failure = FactoryBot.create(:singing_recap_movie_batch_failure, :retried,
+                                  singing_recap_movie_batch_execution: execution,
+                                  customer: customer)
+      expect(failure.retry_disabled_reason).to include("Retry済み")
+    end
+
+    it "skipped のとき 'Completed済み' を含む文字列を返すこと" do
+      failure = FactoryBot.create(:singing_recap_movie_batch_failure, :skipped,
+                                  singing_recap_movie_batch_execution: execution,
+                                  customer: customer)
+      expect(failure.retry_disabled_reason).to include("Completed済み")
+    end
+
+    it "retry_failed のとき 'Retry失敗' を返すこと" do
+      failure = FactoryBot.create(:singing_recap_movie_batch_failure, :retry_failed,
+                                  singing_recap_movie_batch_execution: execution,
+                                  customer: customer)
+      expect(failure.retry_disabled_reason).to eq("Retry失敗")
+    end
+  end
 end
