@@ -10,6 +10,64 @@
         %strong.mr-2 ⚠️
         = "#{active_year}年の一括生成が実行中です。完了するまで同じ年の一括生成は開始できません。"
 
+  - if @active_executions.present?
+    - @active_executions.each do |exec|
+      - bar_color = exec.running? ? "warning" : "secondary"
+      .card.shadow-sm.border-warning.mb-3
+        .card-header.bg-warning
+          %strong
+            = "#{exec.year}年 Recap Movie Batch — 進行中"
+          .float-right
+            - case exec.status
+            - when "running"
+              %span.badge.badge-warning running
+            - when "enqueued"
+              %span.badge.badge-secondary enqueued
+        .card-body
+          .row
+            .col-md-8
+              .d-flex.justify-content-between.mb-1
+                %span.small.font-weight-bold
+                  進捗
+                %span.small
+                  = "#{exec.completed_movies_count + exec.failed_movies_count} / #{exec.total_movies_count} (#{exec.progress_percent}%)"
+              .progress.mb-3{ style: "height: 20px;" }
+                .progress-bar.progress-bar-striped.progress-bar-animated{ class: "bg-#{bar_color}",
+                    role: "progressbar",
+                    style: "width: #{exec.progress_percent}%",
+                    aria: { valuenow: exec.progress_percent, valuemin: 0, valuemax: 100 } }
+                  = "#{exec.progress_percent}%"
+              .row.text-center
+                .col-4
+                  %p.h5.mb-0.text-success= exec.completed_movies_count
+                  %p.text-muted.small.mb-0 completed（enqueue済）
+                .col-4
+                  %p.h5.mb-0.text-danger= exec.failed_movies_count
+                  %p.text-muted.small.mb-0 failed（enqueue失敗）
+                .col-4
+                  %p.h5.mb-0= exec.remaining_movies_count
+                  %p.text-muted.small.mb-0 残件数
+            .col-md-4.border-left
+              %dl.row.mb-0.small
+                %dt.col-6 合計対象
+                %dd.col-6= exec.total_movies_count
+                %dt.col-6 開始日時
+                %dd.col-6
+                  - if exec.started_at
+                    = l(exec.started_at, format: :short)
+                  - else
+                    %span.text-muted —
+                %dt.col-6 実行時間
+                %dd.col-6
+                  - if exec.duration_seconds
+                    - d = exec.duration_seconds
+                    - if d < 60
+                      = "#{d}秒"
+                    - else
+                      = "#{d / 60}分#{d % 60}秒"
+                  - else
+                    %span.text-muted —
+
   .row.mb-4
     .col-md-3.col-6.mb-3
       .card.text-center.shadow-sm
@@ -199,6 +257,10 @@
                 %th 新規
                 %th 再生成
                 %th スキップ
+                %th 進捗
+                %th completed / total
+                %th failed
+                %th 実行時間
                 %th ステータス
             %tbody
               - @recent_batch_executions.each do |exec|
@@ -214,6 +276,37 @@
                   %td.text-center= exec.new_movies_count
                   %td.text-center= exec.regenerate_movies_count
                   %td.text-center= exec.skipped_movies_count
+                  %td.text-center
+                    - if exec.total_movies_count > 0
+                      - pct = exec.progress_percent
+                      - bar_cls = exec.completed? ? "success" : (exec.failed? ? "danger" : "warning")
+                      .progress{ style: "height: 14px; min-width: 80px;" }
+                        .progress-bar{ class: "bg-#{bar_cls}",
+                            role: "progressbar",
+                            style: "width: #{pct}%",
+                            aria: { valuenow: pct, valuemin: 0, valuemax: 100 } }
+                      %small.text-muted= "#{pct}%"
+                    - else
+                      %span.text-muted —
+                  %td.text-center
+                    - if exec.total_movies_count > 0
+                      = "#{exec.completed_movies_count} / #{exec.total_movies_count}"
+                    - else
+                      %span.text-muted —
+                  %td.text-center
+                    - if exec.failed_movies_count > 0
+                      %span.text-danger= exec.failed_movies_count
+                    - else
+                      = exec.failed_movies_count
+                  %td.text-nowrap
+                    - d = exec.duration_seconds
+                    - if d
+                      - if d < 60
+                        = "#{d}秒"
+                      - else
+                        = "#{d / 60}分#{d % 60}秒"
+                    - else
+                      %span.text-muted —
                   %td
                     - case exec.status
                     - when "enqueued"

@@ -591,6 +591,113 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
         end
       end
 
+      context "Batch Progress Dashboard" do
+        context "running batch がある場合" do
+          let!(:running_exec) do
+            FactoryBot.create(:singing_recap_movie_batch_execution,
+                              year: valid_year,
+                              status: :running,
+                              started_at: 1.minute.ago,
+                              total_movies_count: 100,
+                              completed_movies_count: 40,
+                              failed_movies_count: 5)
+          end
+
+          it "Progress Card が表示されること" do
+            get admin_singing_recap_movies_path
+            expect(response.body).to include("Recap Movie Batch — 進行中")
+          end
+
+          it "progress % が表示されること" do
+            get admin_singing_recap_movies_path
+            expect(response.body).to include("45%")
+          end
+
+          it "completed 数が表示されること" do
+            get admin_singing_recap_movies_path
+            expect(response.body).to include("40")
+          end
+
+          it "failed 数が表示されること" do
+            get admin_singing_recap_movies_path
+            expect(response.body).to include("5")
+          end
+
+          it "残件数が表示されること" do
+            get admin_singing_recap_movies_path
+            expect(response.body).to include("55")
+          end
+        end
+
+        context "active batch がない場合" do
+          it "Progress Card が表示されないこと" do
+            get admin_singing_recap_movies_path
+            expect(response.body).not_to include("Recap Movie Batch — 進行中")
+          end
+
+          it "index が落ちないこと" do
+            get admin_singing_recap_movies_path
+            expect(response).to have_http_status(:ok)
+          end
+        end
+
+        context "total_movies_count が 0 の場合" do
+          let!(:zero_exec) do
+            FactoryBot.create(:singing_recap_movie_batch_execution,
+                              year: valid_year,
+                              status: :running,
+                              started_at: 1.minute.ago,
+                              total_movies_count: 0,
+                              completed_movies_count: 0,
+                              failed_movies_count: 0)
+          end
+
+          it "index が落ちないこと" do
+            get admin_singing_recap_movies_path
+            expect(response).to have_http_status(:ok)
+          end
+
+          it "Progress Card が表示されること" do
+            get admin_singing_recap_movies_path
+            expect(response.body).to include("Recap Movie Batch — 進行中")
+          end
+        end
+      end
+
+      context "実行履歴テーブルの拡張列" do
+        let!(:exec_with_progress) do
+          FactoryBot.create(:singing_recap_movie_batch_execution,
+                            admin: admin,
+                            year: valid_year,
+                            status: :completed,
+                            started_at: 2.minutes.ago,
+                            finished_at: 1.minute.ago,
+                            total_movies_count: 10,
+                            completed_movies_count: 9,
+                            failed_movies_count: 1)
+        end
+
+        it "進捗列が表示されること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("進捗")
+        end
+
+        it "completed / total 列が表示されること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("completed / total")
+        end
+
+        it "実行時間列が表示されること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("実行時間")
+        end
+
+        it "progress % が表示されること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("100%").or include("90%")
+        end
+      end
+
       context "year が文字列（不正値）の場合" do
         it "GenerateYearlyRecapMoviesJob が enqueue されないこと" do
           expect {

@@ -150,5 +150,88 @@ RSpec.describe SingingRecapMovieBatchExecution, type: :model do
       expect(execution.regenerate_movies_count).to eq(0)
       expect(execution.skipped_movies_count).to eq(0)
     end
+
+    it "progress カラムのデフォルト値が 0 であること" do
+      execution = SingingRecapMovieBatchExecution.new(year: 2025, status: :enqueued)
+      expect(execution.total_movies_count).to eq(0)
+      expect(execution.completed_movies_count).to eq(0)
+      expect(execution.failed_movies_count).to eq(0)
+    end
+  end
+
+  describe "#progress_percent" do
+    it "total が 0 の場合は 0 を返すこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution, total_movies_count: 0)
+      expect(exec.progress_percent).to eq(0)
+    end
+
+    it "completed + failed / total を % で返すこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution,
+                              total_movies_count: 10,
+                              completed_movies_count: 6,
+                              failed_movies_count: 2)
+      expect(exec.progress_percent).to eq(80)
+    end
+
+    it "100% を超えないこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution,
+                              total_movies_count: 10,
+                              completed_movies_count: 10,
+                              failed_movies_count: 5)
+      expect(exec.progress_percent).to eq(100)
+    end
+
+    it "すべて completed の場合は 100 を返すこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution,
+                              total_movies_count: 5,
+                              completed_movies_count: 5,
+                              failed_movies_count: 0)
+      expect(exec.progress_percent).to eq(100)
+    end
+  end
+
+  describe "#remaining_movies_count" do
+    it "total が 0 の場合は 0 を返すこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution, total_movies_count: 0)
+      expect(exec.remaining_movies_count).to eq(0)
+    end
+
+    it "total - completed - failed を返すこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution,
+                              total_movies_count: 10,
+                              completed_movies_count: 6,
+                              failed_movies_count: 1)
+      expect(exec.remaining_movies_count).to eq(3)
+    end
+
+    it "0 未満にならないこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution,
+                              total_movies_count: 5,
+                              completed_movies_count: 5,
+                              failed_movies_count: 5)
+      expect(exec.remaining_movies_count).to eq(0)
+    end
+  end
+
+  describe "#duration_seconds" do
+    it "started_at が nil の場合は nil を返すこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution, started_at: nil, finished_at: nil)
+      expect(exec.duration_seconds).to be_nil
+    end
+
+    it "finished_at がある場合は started_at から finished_at までの秒数を返すこと" do
+      t = Time.current
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution,
+                              started_at: t - 90.seconds,
+                              finished_at: t)
+      expect(exec.duration_seconds).to eq(90)
+    end
+
+    it "finished_at が nil の場合は現在時刻との差を返すこと" do
+      exec = FactoryBot.build(:singing_recap_movie_batch_execution,
+                              started_at: 1.minute.ago,
+                              finished_at: nil)
+      expect(exec.duration_seconds).to be_between(58, 62)
+    end
   end
 end

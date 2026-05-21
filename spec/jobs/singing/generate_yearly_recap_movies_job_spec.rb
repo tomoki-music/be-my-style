@@ -185,6 +185,67 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
         described_class.perform_now(year, nil)
       }.not_to raise_error
     end
+
+    describe "progress 更新" do
+      it "job 開始時に started_at がセットされること" do
+        described_class.perform_now(year, execution.id)
+        expect(execution.reload.started_at).to be_present
+      end
+
+      it "job 開始時に total_movies_count が更新されること" do
+        customer = singing_customer
+        completed_diagnosis(customer)
+
+        described_class.perform_now(year, execution.id)
+
+        expect(execution.reload.total_movies_count).to eq(1)
+      end
+
+      it "対象なし（0件）の場合も total_movies_count が 0 になること" do
+        described_class.perform_now(year, execution.id)
+        expect(execution.reload.total_movies_count).to eq(0)
+      end
+
+      it "enqueue 成功で completed_movies_count が増加すること" do
+        customer = singing_customer
+        completed_diagnosis(customer)
+
+        described_class.perform_now(year, execution.id)
+
+        expect(execution.reload.completed_movies_count).to eq(1)
+      end
+
+      it "enqueue 例外時に failed_movies_count が増加すること" do
+        customer = singing_customer
+        completed_diagnosis(customer)
+
+        call_count = 0
+        allow(Singing::GenerateRecapMovieJob).to receive(:perform_later) do
+          call_count += 1
+          raise StandardError, "enqueue error"
+        end
+
+        described_class.perform_now(year, execution.id)
+
+        expect(execution.reload.failed_movies_count).to eq(1)
+        expect(execution.reload.completed_movies_count).to eq(0)
+      end
+
+      it "正常終了時に finished_at がセットされること" do
+        described_class.perform_now(year, execution.id)
+        expect(execution.reload.finished_at).to be_present
+      end
+
+      it "job 例外時にも finished_at がセットされること" do
+        allow(Customer).to receive(:joins).and_raise(RuntimeError, "db error")
+
+        expect {
+          described_class.perform_now(year, execution.id)
+        }.to raise_error(RuntimeError)
+
+        expect(execution.reload.finished_at).to be_present
+      end
+    end
   end
 
   it "enqueued/skipped 件数をログに出力する" do

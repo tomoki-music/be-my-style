@@ -24,4 +24,24 @@ class SingingRecapMovieBatchExecution < ApplicationRecord
   def skipped_breakdown_hash
     skipped_breakdown.presence || {}
   end
+
+  def progress_percent
+    return 0 if total_movies_count.zero?
+
+    processed = completed_movies_count + failed_movies_count
+    [(processed.to_f / total_movies_count * 100).round, 100].min
+  end
+
+  def remaining_movies_count
+    return 0 if total_movies_count.zero?
+
+    [total_movies_count - completed_movies_count - failed_movies_count, 0].max
+  end
+
+  def duration_seconds
+    base = finished_at || Time.current
+    return nil unless started_at
+
+    (base - started_at).to_i
+  end
 end

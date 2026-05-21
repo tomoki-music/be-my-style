@@ -4,7 +4,6 @@ module Singing
 
     def perform(year, execution_id = nil)
       execution = find_execution(execution_id, year)
-      execution&.update!(status: :running)
 
       year_range = Time.zone.local(year, 1, 1).all_year
 
@@ -18,27 +17,37 @@ module Singing
         })
         .distinct
 
+      enqueue_targets = customers.to_a
+
+      execution&.update!(
+        status:              :running,
+        started_at:          Time.current,
+        total_movies_count:  enqueue_targets.size,
+      )
+
       enqueued_count = 0
       skipped_count = 0
 
-      customers.find_each do |customer|
+      enqueue_targets.each do |customer|
         movie = find_or_prepare_movie!(customer, year)
 
         if movie
           Singing::GenerateRecapMovieJob.perform_later(movie.id)
+          execution&.increment!(:completed_movies_count)
           enqueued_count += 1
         else
           skipped_count += 1
         end
       rescue StandardError => e
         Rails.logger.error("[RecapMovieBatch] error customer_id=#{customer.id} year=#{year}: #{e.message}")
+        execution&.increment!(:failed_movies_count)
         skipped_count += 1
       end
 
       Rails.logger.info("[RecapMovieBatch] year=#{year} enqueued=#{enqueued_count} skipped=#{skipped_count}")
-      execution&.update!(status: :completed)
+      execution&.update!(status: :completed, finished_at: Time.current)
     rescue StandardError => e
-      execution&.update!(status: :failed) rescue nil
+      execution&.update!(status: :failed, finished_at: Time.current) rescue nil
       raise
     end
 

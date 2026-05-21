@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_21_000001) do
+ActiveRecord::Schema.define(version: 2026_05_21_000002) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -999,6 +999,11 @@ ActiveRecord::Schema.define(version: 2026_05_21_000001) do
     t.datetime "enqueued_at"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.integer "total_movies_count", default: 0, null: false
+    t.integer "completed_movies_count", default: 0, null: false
+    t.integer "failed_movies_count", default: 0, null: false
+    t.datetime "started_at"
+    t.datetime "finished_at"
     t.index ["admin_id"], name: "index_singing_recap_movie_batch_executions_on_admin_id"
     t.index ["year"], name: "index_singing_recap_movie_batch_executions_on_year"
   end

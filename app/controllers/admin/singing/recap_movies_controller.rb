@@ -138,10 +138,12 @@ class Admin::Singing::RecapMoviesController < ApplicationController
       .order(created_at: :desc)
       .limit(10)
 
-    @active_batch_years = SingingRecapMovieBatchExecution
+    @active_executions = SingingRecapMovieBatchExecution
+      .includes(:admin)
       .where(status: %w[enqueued running])
-      .pluck(:year)
-      .uniq
+      .order(created_at: :desc)
+
+    @active_batch_years = @active_executions.map(&:year).uniq
 
     @status_counts = VALID_STATUSES.each_with_object({}) do |s, h|
       h[s] = @stats[s.to_sym]
