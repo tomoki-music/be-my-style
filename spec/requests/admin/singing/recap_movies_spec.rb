@@ -415,7 +415,7 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
         it "GenerateYearlyRecapMoviesJob が enqueue されること" do
           expect {
             post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
-          }.to have_enqueued_job(Singing::GenerateYearlyRecapMoviesJob).with(valid_year)
+          }.to have_enqueued_job(Singing::GenerateYearlyRecapMoviesJob).with(valid_year, instance_of(Integer))
         end
 
         it "notice flash が表示されること" do
@@ -472,6 +472,122 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
           post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
           log = SingingRecapMovieBatchExecution.last
           expect(log.enqueued_at).to be_present
+        end
+      end
+
+      context "Concurrency Guard" do
+        context "同じ year の enqueued batch が既にある場合" do
+          before do
+            FactoryBot.create(:singing_recap_movie_batch_execution, year: valid_year, status: :enqueued)
+          end
+
+          it "GenerateYearlyRecapMoviesJob が enqueue されないこと" do
+            expect {
+              post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+            }.not_to have_enqueued_job(Singing::GenerateYearlyRecapMoviesJob)
+          end
+
+          it "BatchExecution ログが新たに作成されないこと" do
+            expect {
+              post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+            }.not_to change(SingingRecapMovieBatchExecution, :count)
+          end
+
+          it "alert flash が表示されること" do
+            post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+            follow_redirect!
+            expect(response.body).to include("#{valid_year}年のRecap Movie一括生成は既に実行中です。")
+          end
+
+          it "index にリダイレクトされること" do
+            post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+            expect(response).to redirect_to(admin_singing_recap_movies_path)
+          end
+        end
+
+        context "同じ year の running batch が既にある場合" do
+          before do
+            FactoryBot.create(:singing_recap_movie_batch_execution, year: valid_year, status: :running)
+          end
+
+          it "GenerateYearlyRecapMoviesJob が enqueue されないこと" do
+            expect {
+              post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+            }.not_to have_enqueued_job(Singing::GenerateYearlyRecapMoviesJob)
+          end
+
+          it "BatchExecution ログが新たに作成されないこと" do
+            expect {
+              post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+            }.not_to change(SingingRecapMovieBatchExecution, :count)
+          end
+
+          it "alert flash が表示されること" do
+            post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+            follow_redirect!
+            expect(response.body).to include("#{valid_year}年のRecap Movie一括生成は既に実行中です。")
+          end
+        end
+
+        context "completed batch がある場合は再実行できること" do
+          before do
+            FactoryBot.create(:singing_recap_movie_batch_execution, year: valid_year, status: :completed)
+          end
+
+          it "GenerateYearlyRecapMoviesJob が enqueue されること" do
+            expect {
+              post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+            }.to have_enqueued_job(Singing::GenerateYearlyRecapMoviesJob)
+          end
+
+          it "BatchExecution ログが作成されること" do
+            expect {
+              post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+            }.to change(SingingRecapMovieBatchExecution, :count).by(1)
+          end
+        end
+
+        context "failed batch がある場合は再実行できること" do
+          before do
+            FactoryBot.create(:singing_recap_movie_batch_execution, year: valid_year, status: :failed)
+          end
+
+          it "GenerateYearlyRecapMoviesJob が enqueue されること" do
+            expect {
+              post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+            }.to have_enqueued_job(Singing::GenerateYearlyRecapMoviesJob)
+          end
+        end
+
+        context "別の year の active batch がある場合は実行できること" do
+          before do
+            FactoryBot.create(:singing_recap_movie_batch_execution, year: valid_year - 1, status: :running)
+          end
+
+          it "GenerateYearlyRecapMoviesJob が enqueue されること" do
+            expect {
+              post generate_yearly_batch_admin_singing_recap_movies_path, params: { year: valid_year }
+            }.to have_enqueued_job(Singing::GenerateYearlyRecapMoviesJob)
+          end
+        end
+      end
+
+      context "index に active batch がある場合 warning が表示されること" do
+        it "enqueued batch があれば warning メッセージが表示されること" do
+          FactoryBot.create(:singing_recap_movie_batch_execution, year: valid_year, status: :enqueued)
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("#{valid_year}年の一括生成が実行中です")
+        end
+
+        it "running batch があれば warning メッセージが表示されること" do
+          FactoryBot.create(:singing_recap_movie_batch_execution, year: valid_year, status: :running)
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("#{valid_year}年の一括生成が実行中です")
+        end
+
+        it "active batch がなければ warning メッセージが表示されないこと" do
+          get admin_singing_recap_movies_path
+          expect(response.body).not_to include("一括生成が実行中です")
         end
       end
 

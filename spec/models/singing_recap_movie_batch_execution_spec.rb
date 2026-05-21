@@ -62,6 +62,72 @@ RSpec.describe SingingRecapMovieBatchExecution, type: :model do
       execution = FactoryBot.create(:singing_recap_movie_batch_execution, admin: admin)
       expect(execution.enqueued?).to be true
     end
+
+    it "running ステータスが使えること" do
+      execution = FactoryBot.create(:singing_recap_movie_batch_execution, admin: admin, status: :running)
+      expect(execution.running?).to be true
+    end
+
+    it "completed ステータスが使えること" do
+      execution = FactoryBot.create(:singing_recap_movie_batch_execution, admin: admin, status: :completed)
+      expect(execution.completed?).to be true
+    end
+
+    it "failed ステータスが使えること" do
+      execution = FactoryBot.create(:singing_recap_movie_batch_execution, admin: admin, status: :failed)
+      expect(execution.failed?).to be true
+    end
+  end
+
+  describe ".active_for_year" do
+    let(:year) { 2025 }
+
+    it "enqueued のレコードを返すこと" do
+      exec = FactoryBot.create(:singing_recap_movie_batch_execution, year: year, status: :enqueued)
+      expect(SingingRecapMovieBatchExecution.active_for_year(year)).to include(exec)
+    end
+
+    it "running のレコードを返すこと" do
+      exec = FactoryBot.create(:singing_recap_movie_batch_execution, year: year, status: :running)
+      expect(SingingRecapMovieBatchExecution.active_for_year(year)).to include(exec)
+    end
+
+    it "completed のレコードは返さないこと" do
+      FactoryBot.create(:singing_recap_movie_batch_execution, year: year, status: :completed)
+      expect(SingingRecapMovieBatchExecution.active_for_year(year)).to be_empty
+    end
+
+    it "failed のレコードは返さないこと" do
+      FactoryBot.create(:singing_recap_movie_batch_execution, year: year, status: :failed)
+      expect(SingingRecapMovieBatchExecution.active_for_year(year)).to be_empty
+    end
+
+    it "別の year のレコードは返さないこと" do
+      FactoryBot.create(:singing_recap_movie_batch_execution, year: year + 1, status: :enqueued)
+      expect(SingingRecapMovieBatchExecution.active_for_year(year)).to be_empty
+    end
+  end
+
+  describe "#active?" do
+    it "enqueued の場合は true を返すこと" do
+      execution = FactoryBot.build(:singing_recap_movie_batch_execution, status: :enqueued)
+      expect(execution.active?).to be true
+    end
+
+    it "running の場合は true を返すこと" do
+      execution = FactoryBot.build(:singing_recap_movie_batch_execution, status: :running)
+      expect(execution.active?).to be true
+    end
+
+    it "completed の場合は false を返すこと" do
+      execution = FactoryBot.build(:singing_recap_movie_batch_execution, status: :completed)
+      expect(execution.active?).to be false
+    end
+
+    it "failed の場合は false を返すこと" do
+      execution = FactoryBot.build(:singing_recap_movie_batch_execution, status: :failed)
+      expect(execution.active?).to be false
+    end
   end
 
   describe "belongs_to :admin" do

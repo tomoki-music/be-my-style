@@ -4,6 +4,12 @@
   .d-flex.justify-content-between.align-items-center.mb-4
     %h2.mb-0 Recap Movie 管理ダッシュボード
 
+  - if @active_batch_years.present?
+    - @active_batch_years.each do |active_year|
+      .alert.alert-warning.d-flex.align-items-center.mb-3{ role: "alert" }
+        %strong.mr-2 ⚠️
+        = "#{active_year}年の一括生成が実行中です。完了するまで同じ年の一括生成は開始できません。"
+
   .row.mb-4
     .col-md-3.col-6.mb-3
       .card.text-center.shadow-sm
@@ -164,9 +170,15 @@
                 （pending: #{breakdown[:pending]}, processing: #{breakdown[:processing]}, completed: #{breakdown[:completed]}）
         = form_with url: generate_yearly_batch_admin_singing_recap_movies_path, method: :post, local: true do |f|
           = f.hidden_field :year, value: @preview_year
-          = f.submit "この内容で#{@preview_year}年の一括生成を開始",
-              class: "btn btn-warning btn-sm",
-              data: { confirm: "#{@preview_year}年のRecap Movie一括生成を開始します。よろしいですか？" }
+          - if @active_batch_years.include?(@preview_year)
+            = f.submit "この内容で#{@preview_year}年の一括生成を開始",
+                class: "btn btn-warning btn-sm",
+                disabled: true,
+                title: "#{@preview_year}年の一括生成は既に実行中です"
+          - else
+            = f.submit "この内容で#{@preview_year}年の一括生成を開始",
+                class: "btn btn-warning btn-sm",
+                data: { confirm: "#{@preview_year}年のRecap Movie一括生成を開始します。よろしいですか？" }
 
   .card.shadow-sm.mb-4
     .card-header
@@ -203,7 +215,19 @@
                   %td.text-center= exec.regenerate_movies_count
                   %td.text-center= exec.skipped_movies_count
                   %td
-                    %span.badge.badge-info= exec.status
+                    - case exec.status
+                    - when "enqueued"
+                      %span.badge.badge-secondary enqueued
+                    - when "running"
+                      %span.badge.badge-warning running
+                    - when "completed"
+                      %span.badge.badge-success completed
+                    - when "failed"
+                      %span.badge.badge-danger failed
+                    - when "cancelled"
+                      %span.badge.badge-dark cancelled
+                    - else
+                      %span.badge.badge-light= exec.status
 
   .card.shadow-sm.border-warning.mb-4
     .card-header.bg-warning
@@ -211,14 +235,22 @@
     .card-body
       %p.mb-2 指定した年に診断実績のあるSingingユーザー向けにRecap Movie生成Jobを投入します。
       = form_with url: generate_yearly_batch_admin_singing_recap_movies_path, method: :post, local: true do |f|
+        - default_year = Time.zone.today.year
+        - batch_active = @active_batch_years.include?(default_year)
         .form-row.align-items-end
           .col-auto
             = f.label :year, "対象年", class: "mb-1 font-weight-bold"
-            = f.number_field :year, value: Time.zone.today.year, min: 2020, max: Time.zone.today.year + 1, class: "form-control form-control-sm", style: "width: 100px"
+            = f.number_field :year, value: default_year, min: 2020, max: Time.zone.today.year + 1, class: "form-control form-control-sm", style: "width: 100px"
           .col-auto.align-self-end
-            = f.submit "一括生成を開始",
-                class: "btn btn-warning btn-sm",
-                data: { confirm: "指定年のRecap Movie一括生成を開始します。よろしいですか？" }
+            - if batch_active
+              = f.submit "一括生成を開始",
+                  class: "btn btn-warning btn-sm",
+                  disabled: true,
+                  title: "#{default_year}年の一括生成は既に実行中です"
+            - else
+              = f.submit "一括生成を開始",
+                  class: "btn btn-warning btn-sm",
+                  data: { confirm: "指定年のRecap Movie一括生成を開始します。よろしいですか？" }
       %p.text-muted.small.mt-2.mb-0
         ※ Job 投入のみ行います。生成完了まで数分〜数十分かかる場合があります。
 

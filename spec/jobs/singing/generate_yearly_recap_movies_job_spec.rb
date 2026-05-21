@@ -132,7 +132,62 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
       end
     end
 
-    it "enqueued/skipped 件数をログに出力する" do
+    describe "execution status 更新" do
+    let(:execution) do
+      FactoryBot.create(:singing_recap_movie_batch_execution, year: year, status: :enqueued)
+    end
+
+    it "job 開始時に execution status が running になること" do
+      customer = singing_customer
+      completed_diagnosis(customer)
+
+      described_class.perform_now(year, execution.id)
+
+      expect(execution.reload.status).to eq("completed")
+    end
+
+    it "execution_id を渡すと job 正常終了後に completed になること" do
+      described_class.perform_now(year, execution.id)
+      expect(execution.reload.status).to eq("completed")
+    end
+
+    it "execution_id なしで最新 enqueued を自動検出して completed にすること" do
+      execution  # 事前に生成しておく（lazy let を強制評価）
+      described_class.perform_now(year)
+      expect(execution.reload.status).to eq("completed")
+    end
+
+    it "job が例外を raise した場合 execution status が failed になること" do
+      # Customer.joins がループ外で例外を raise → 外側の rescue で failed になる
+      allow(Customer).to receive(:joins).and_raise(RuntimeError, "db error")
+
+      expect {
+        described_class.perform_now(year, execution.id)
+      }.to raise_error(RuntimeError, "db error")
+
+      expect(execution.reload.status).to eq("failed")
+    end
+
+    it "execution log が存在しない execution_id でも job が落ちないこと" do
+      customer = singing_customer
+      completed_diagnosis(customer)
+
+      expect {
+        described_class.perform_now(year, 999_999)
+      }.not_to raise_error
+    end
+
+    it "execution log が存在しない（nil）場合でも job が落ちないこと" do
+      customer = singing_customer
+      completed_diagnosis(customer)
+
+      expect {
+        described_class.perform_now(year, nil)
+      }.not_to raise_error
+    end
+  end
+
+  it "enqueued/skipped 件数をログに出力する" do
       customer = singing_customer
       completed_diagnosis(customer)
       create(:singing_generated_recap_movie, :completed, customer: customer, year: year)

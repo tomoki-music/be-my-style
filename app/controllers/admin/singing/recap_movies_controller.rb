@@ -54,11 +54,15 @@ class Admin::Singing::RecapMoviesController < ApplicationController
       return
     end
 
+    if SingingRecapMovieBatchExecution.active_for_year(year).exists?
+      redirect_to admin_singing_recap_movies_path,
+                  alert: "#{year}年のRecap Movie一括生成は既に実行中です。"
+      return
+    end
+
     preview = Singing::RecapMovieBatchPreviewService.call(year)
 
-    Singing::GenerateYearlyRecapMoviesJob.perform_later(year)
-
-    SingingRecapMovieBatchExecution.create!(
+    execution = SingingRecapMovieBatchExecution.create!(
       year:                    year,
       admin:                   current_admin,
       target_customers_count:  preview[:target_customers_count],
@@ -69,6 +73,8 @@ class Admin::Singing::RecapMoviesController < ApplicationController
       status:                  :enqueued,
       enqueued_at:             Time.current,
     )
+
+    Singing::GenerateYearlyRecapMoviesJob.perform_later(year, execution.id)
 
     redirect_to admin_singing_recap_movies_path,
                 notice: "#{year}年のRecap Movie一括生成を開始しました。"
@@ -131,6 +137,11 @@ class Admin::Singing::RecapMoviesController < ApplicationController
       .includes(:admin)
       .order(created_at: :desc)
       .limit(10)
+
+    @active_batch_years = SingingRecapMovieBatchExecution
+      .where(status: %w[enqueued running])
+      .pluck(:year)
+      .uniq
 
     @status_counts = VALID_STATUSES.each_with_object({}) do |s, h|
       h[s] = @stats[s.to_sym]
