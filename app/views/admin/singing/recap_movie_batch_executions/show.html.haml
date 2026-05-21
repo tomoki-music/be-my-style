@@ -154,24 +154,28 @@
   - if all_failures.exists?
     - pending_cnt  = @execution.retry_pending_count
     - retried_cnt  = @execution.retry_retried_count
+    - resolved_cnt = @execution.retry_resolved_count
     - skipped_cnt  = @execution.retry_skipped_count
     - rfailed_cnt  = @execution.retry_failed_count
-    - rate         = @execution.retry_success_rate
+    - rate         = @execution.resolved_rate
     .card.shadow-sm.mb-4
       .card-header.d-flex.justify-content-between.align-items-center
         %strong Retry サマリー
         - if rate
           - rate_cls = rate >= 80 ? "success" : (rate >= 50 ? "warning" : "danger")
           %span{ class: "badge badge-#{rate_cls}" }
-            成功率 #{rate}%
+            復旧率 #{rate}%
       .card-body
         .row.text-center
           .col
             %p.h5.mb-1.text-secondary= pending_cnt
             %p.text-muted.small.mb-0 Pending
           .col
-            %p.h5.mb-1.text-success= retried_cnt
+            %p.h5.mb-1.text-info= retried_cnt
             %p.text-muted.small.mb-0 Retried
+          .col
+            %p.h5.mb-1.text-success= resolved_cnt
+            %p.text-muted.small.mb-0 Resolved ✅
           .col
             %p.h5.mb-1.text-dark= skipped_cnt
             %p.text-muted.small.mb-0 Skipped
@@ -208,7 +212,7 @@
               再実行対象なし
         -# Filter tabs
         .mt-2
-          - filter_items = [["すべて", nil], ["Pending", "pending"], ["Retried", "retried"], ["Skipped", "skipped"], ["Retry Failed", "retry_failed"]]
+          - filter_items = [["すべて", nil], ["Pending", "pending"], ["Retried", "retried"], ["Resolved ✅", "resolved"], ["Skipped", "skipped"], ["Retry Failed", "retry_failed"]]
           - filter_items.each do |label, value|
             - active = @retry_status_filter == value
             - path = admin_singing_recap_movie_batch_execution_path(@execution, retry_status: value)
@@ -236,7 +240,7 @@
                   %th 操作
               %tbody
                 - @failures.each do |failure|
-                  %tr
+                  %tr{ class: failure.resolved? ? "table-success" : "" }
                     %td
                       - if failure.customer
                         = link_to failure.customer.name,
@@ -246,9 +250,10 @@
                         %span.text-muted (削除済)
                     %td= failure.year
                     %td
-                      - if failure.recap_movie
-                        = link_to "Movie ##{failure.recap_movie_id}",
-                            admin_singing_recap_movie_path(failure.recap_movie),
+                      - movie_to_show = failure.resolved_movie || failure.recap_movie
+                      - if movie_to_show
+                        = link_to "Movie ##{movie_to_show.id}",
+                            admin_singing_recap_movie_path(movie_to_show),
                             class: "text-body"
                       - else
                         %span.text-muted —
@@ -267,6 +272,13 @@
                           = failure.retried_by&.name || "不明"
                           \—
                           = failure.retried_at ? l(failure.retried_at, format: :short) : "—"
+                      - when "resolved"
+                        %br
+                        %small.text-success
+                          ✅ Recovered via retry
+                        - if failure.resolved_at
+                          %br
+                          %small.text-muted= l(failure.resolved_at, format: :short)
                       - when "skipped", "retry_failed"
                         - if failure.retry_error_message.present?
                           %br

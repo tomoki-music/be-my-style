@@ -13,9 +13,19 @@ module Singing
       return unless movie.pending?
 
       Singing::RecapMovieRenderer.new(movie).call
+      reconcile(movie)
     rescue StandardError => e
       Rails.logger.error("[Singing::GenerateRecapMovieJob] error movie_id=#{movie_id}: #{e.message}")
       movie&.mark_failed!(e.message)
+      reconcile(movie) if movie
+    end
+
+    private
+
+    def reconcile(movie)
+      Singing::RecapMovieRetryReconciliationService.call(movie.reload)
+    rescue => e
+      Rails.logger.error("[Singing::GenerateRecapMovieJob] reconciliation error movie_id=#{movie.id}: #{e.message}")
     end
   end
 end

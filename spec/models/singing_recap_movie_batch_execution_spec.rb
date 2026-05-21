@@ -320,12 +320,33 @@ RSpec.describe SingingRecapMovieBatchExecution, type: :model do
       expect(execution.retry_failed_count).to eq(1)
     end
 
-    it "#retry_success_rate が retried / (retried + failed + skipped) * 100 を返すこと" do
-      # retried=1, failed=1, skipped=1 → 1/3 ≒ 33.3
-      expect(execution.retry_success_rate).to eq(33.3)
+    it "#retry_resolved_count が resolved 件数を返すこと" do
+      customer5 = FactoryBot.create(:customer)
+      FactoryBot.create(:singing_recap_movie_batch_failure, :resolved,
+                        singing_recap_movie_batch_execution: execution,
+                        customer: customer5)
+      expect(execution.retry_resolved_count).to eq(1)
     end
 
-    it "#retry_success_rate は処理済みがない場合 nil を返すこと" do
+    it "#resolved_rate が resolved / (resolved + failed + skipped) * 100 を返すこと" do
+      # resolved=0, failed=1, skipped=1 → 0/2 = 0.0
+      expect(execution.resolved_rate).to eq(0.0)
+    end
+
+    it "#resolved_rate は resolved がある場合に正しい率を返すこと" do
+      customer5 = FactoryBot.create(:customer)
+      FactoryBot.create(:singing_recap_movie_batch_failure, :resolved,
+                        singing_recap_movie_batch_execution: execution,
+                        customer: customer5)
+      # resolved=1, failed=1, skipped=1 → 1/3 ≒ 33.3
+      expect(execution.resolved_rate).to eq(33.3)
+    end
+
+    it "#retry_success_rate は resolved_rate のエイリアスであること" do
+      expect(execution.retry_success_rate).to eq(execution.resolved_rate)
+    end
+
+    it "#retry_success_rate は resolved がなく全 pending の場合 nil を返すこと" do
       exec2 = FactoryBot.create(:singing_recap_movie_batch_execution, :completed, admin: admin)
       FactoryBot.create(:singing_recap_movie_batch_failure,
                         singing_recap_movie_batch_execution: exec2,

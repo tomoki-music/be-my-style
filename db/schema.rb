@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_21_000005) do
+ActiveRecord::Schema.define(version: 2026_05_21_000006) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -1027,7 +1027,10 @@ ActiveRecord::Schema.define(version: 2026_05_21_000005) do
     t.datetime "retried_at"
     t.bigint "retried_by_id"
     t.string "retry_error_message", limit: 1000
+    t.datetime "resolved_at"
+    t.bigint "resolved_movie_id"
     t.index ["customer_id"], name: "index_singing_recap_movie_batch_failures_on_customer_id"
+    t.index ["resolved_movie_id"], name: "idx_batch_failures_on_resolved_movie"
     t.index ["retried_by_id"], name: "idx_batch_failures_on_retried_by"
     t.index ["retry_status"], name: "idx_batch_failures_on_retry_status"
     t.index ["singing_recap_movie_batch_execution_id", "customer_id"], name: "idx_batch_failures_on_execution_and_customer"
@@ -1239,6 +1242,7 @@ ActiveRecord::Schema.define(version: 2026_05_21_000005) do
   add_foreign_key "singing_recap_movie_batch_executions", "admins"
   add_foreign_key "singing_recap_movie_batch_failures", "admins", column: "retried_by_id"
   add_foreign_key "singing_recap_movie_batch_failures", "customers"
+  add_foreign_key "singing_recap_movie_batch_failures", "singing_generated_recap_movies", column: "resolved_movie_id"
   add_foreign_key "singing_recap_movie_batch_failures", "singing_recap_movie_batch_executions"
   add_foreign_key "singing_season_ranking_entries", "customers"
   add_foreign_key "singing_season_ranking_entries", "singing_diagnoses"

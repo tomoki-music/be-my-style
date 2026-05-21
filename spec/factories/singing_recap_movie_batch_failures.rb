@@ -32,5 +32,12 @@ FactoryBot.define do
       retry_status        { "retry_failed" }
       retry_error_message { "Unexpected error during retry" }
     end
+
+    trait :resolved do
+      retry_status      { "resolved" }
+      retried_at        { Time.current - 1.hour }
+      resolved_at       { Time.current }
+      association :resolved_movie, factory: :singing_generated_recap_movie
+    end
   end
 end

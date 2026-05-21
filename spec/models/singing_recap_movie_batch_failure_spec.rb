@@ -129,6 +129,11 @@ RSpec.describe SingingRecapMovieBatchFailure, type: :model do
       expect(failure.reload.retry_status).to eq("retried")
     end
 
+    it "resolved に遷移できること" do
+      failure.update!(retry_status: :resolved)
+      expect(failure.reload.retry_status).to eq("resolved")
+    end
+
     it "skipped に遷移できること" do
       failure.update!(retry_status: :skipped)
       expect(failure.reload.retry_status).to eq("skipped")
@@ -186,6 +191,9 @@ RSpec.describe SingingRecapMovieBatchFailure, type: :model do
     let!(:retried_f)  { FactoryBot.create(:singing_recap_movie_batch_failure, :retried,
                                           singing_recap_movie_batch_execution: execution,
                                           customer: FactoryBot.create(:customer)) }
+    let!(:resolved_f) { FactoryBot.create(:singing_recap_movie_batch_failure, :resolved,
+                                          singing_recap_movie_batch_execution: execution,
+                                          customer: FactoryBot.create(:customer)) }
     let!(:skipped_f)  { FactoryBot.create(:singing_recap_movie_batch_failure, :skipped,
                                           singing_recap_movie_batch_execution: execution,
                                           customer: FactoryBot.create(:customer)) }
@@ -203,6 +211,11 @@ RSpec.describe SingingRecapMovieBatchFailure, type: :model do
       expect(SingingRecapMovieBatchFailure.retry_retried).not_to include(pending_f)
     end
 
+    it ".retry_resolved が resolved のみを返すこと" do
+      expect(SingingRecapMovieBatchFailure.retry_resolved).to include(resolved_f)
+      expect(SingingRecapMovieBatchFailure.retry_resolved).not_to include(pending_f, retried_f)
+    end
+
     it ".retry_skipped が skipped のみを返すこと" do
       expect(SingingRecapMovieBatchFailure.retry_skipped).to include(skipped_f)
       expect(SingingRecapMovieBatchFailure.retry_skipped).not_to include(pending_f)
@@ -217,7 +230,8 @@ RSpec.describe SingingRecapMovieBatchFailure, type: :model do
   describe "#retry_status_badge_class" do
     {
       "pending"      => "badge-secondary",
-      "retried"      => "badge-success",
+      "retried"      => "badge-info",
+      "resolved"     => "badge-success",
       "skipped"      => "badge-dark",
       "retry_failed" => "badge-danger"
     }.each do |status, expected_class|
@@ -235,6 +249,7 @@ RSpec.describe SingingRecapMovieBatchFailure, type: :model do
     {
       "pending"      => "Pending",
       "retried"      => "Retried",
+      "resolved"     => "Resolved",
       "skipped"      => "Skipped",
       "retry_failed" => "Retry Failed"
     }.each do |status, expected_label|
@@ -264,6 +279,13 @@ RSpec.describe SingingRecapMovieBatchFailure, type: :model do
       expect(failure.retry_disabled_reason).to include("Retry済み")
     end
 
+    it "resolved のとき '復旧確認済み' を含む文字列を返すこと" do
+      failure = FactoryBot.create(:singing_recap_movie_batch_failure, :resolved,
+                                  singing_recap_movie_batch_execution: execution,
+                                  customer: customer)
+      expect(failure.retry_disabled_reason).to include("復旧確認済み")
+    end
+
     it "skipped のとき 'Completed済み' を含む文字列を返すこと" do
       failure = FactoryBot.create(:singing_recap_movie_batch_failure, :skipped,
                                   singing_recap_movie_batch_execution: execution,
@@ -276,6 +298,36 @@ RSpec.describe SingingRecapMovieBatchFailure, type: :model do
                                   singing_recap_movie_batch_execution: execution,
                                   customer: customer)
       expect(failure.retry_disabled_reason).to eq("Retry失敗")
+    end
+  end
+
+  describe "#resolved? / #resolved_label" do
+    it "retry_status が resolved のとき resolved? が true を返すこと" do
+      failure = FactoryBot.create(:singing_recap_movie_batch_failure, :resolved,
+                                  singing_recap_movie_batch_execution: execution,
+                                  customer: customer)
+      expect(failure.resolved?).to be true
+    end
+
+    it "retry_status が resolved のとき resolved_label が文字列を返すこと" do
+      failure = FactoryBot.create(:singing_recap_movie_batch_failure, :resolved,
+                                  singing_recap_movie_batch_execution: execution,
+                                  customer: customer)
+      expect(failure.resolved_label).to eq("Recovered via retry")
+    end
+
+    it "retry_status が pending のとき resolved? が false を返すこと" do
+      failure = FactoryBot.build(:singing_recap_movie_batch_failure,
+                                 singing_recap_movie_batch_execution: execution,
+                                 customer: customer)
+      expect(failure.resolved?).to be false
+    end
+
+    it "retry_status が pending のとき resolved_label が nil を返すこと" do
+      failure = FactoryBot.build(:singing_recap_movie_batch_failure,
+                                 singing_recap_movie_batch_execution: execution,
+                                 customer: customer)
+      expect(failure.resolved_label).to be_nil
     end
   end
 end

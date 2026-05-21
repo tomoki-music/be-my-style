@@ -5,6 +5,8 @@ class SingingRecapMovieBatchFailure < ApplicationRecord
              foreign_key: :recap_movie_id, optional: true
   belongs_to :retried_by, class_name: "Admin",
              foreign_key: :retried_by_id, optional: true
+  belongs_to :resolved_movie, class_name: "SingingGeneratedRecapMovie",
+             foreign_key: :resolved_movie_id, optional: true
 
   validates :year,        presence: true, numericality: { only_integer: true }
   validates :error_class, presence: true
@@ -13,6 +15,7 @@ class SingingRecapMovieBatchFailure < ApplicationRecord
   enum retry_status: {
     pending:      "pending",
     retried:      "retried",
+    resolved:     "resolved",
     skipped:      "skipped",
     retry_failed: "retry_failed"
   }, _prefix: :retry
@@ -23,10 +26,15 @@ class SingingRecapMovieBatchFailure < ApplicationRecord
     retry_pending?
   end
 
+  def resolved?
+    retry_resolved?
+  end
+
   def retry_status_badge_class
     case retry_status
     when "pending"      then "badge-secondary"
-    when "retried"      then "badge-success"
+    when "retried"      then "badge-info"
+    when "resolved"     then "badge-success"
     when "skipped"      then "badge-dark"
     when "retry_failed" then "badge-danger"
     end
@@ -36,9 +44,16 @@ class SingingRecapMovieBatchFailure < ApplicationRecord
     case retry_status
     when "pending"      then "Pending"
     when "retried"      then "Retried"
+    when "resolved"     then "Resolved"
     when "skipped"      then "Skipped"
     when "retry_failed" then "Retry Failed"
     end
+  end
+
+  def resolved_label
+    return nil unless resolved?
+
+    "Recovered via retry"
   end
 
   def retry_disabled_reason
@@ -46,6 +61,7 @@ class SingingRecapMovieBatchFailure < ApplicationRecord
 
     case retry_status
     when "retried"      then "Retry済み（#{retried_by&.name || '不明'}）"
+    when "resolved"     then "Retry済み・復旧確認済み"
     when "skipped"      then "Completed済みのためSkip"
     when "retry_failed" then "Retry失敗"
     end

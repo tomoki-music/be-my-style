@@ -68,6 +68,10 @@ class SingingRecapMovieBatchExecution < ApplicationRecord
     failures.retry_retried.count
   end
 
+  def retry_resolved_count
+    failures.retry_resolved.count
+  end
+
   def retry_skipped_count
     failures.retry_skipped.count
   end
@@ -76,12 +80,18 @@ class SingingRecapMovieBatchExecution < ApplicationRecord
     failures.retry_retry_failed.count
   end
 
-  def retry_success_rate
-    retried = retry_retried_count
-    total   = retried + retry_failed_count + retry_skipped_count
+  # resolved / (resolved + retry_failed + skipped) で確定済み復旧率を示す
+  def resolved_rate
+    resolved = retry_resolved_count
+    total    = resolved + retry_failed_count + retry_skipped_count
     return nil if total.zero?
 
-    (retried.to_f / total * 100).round(1)
+    (resolved.to_f / total * 100).round(1)
+  end
+
+  # 後方互換: retried + resolved を "成功" とみなした旧互換レート
+  def retry_success_rate
+    resolved_rate
   end
 
   def has_any_retried?
