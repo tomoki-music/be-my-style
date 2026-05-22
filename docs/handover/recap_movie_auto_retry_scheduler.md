@@ -1,5 +1,15 @@
 # Recap Movie Auto Retry Scheduler
 
+## 関連ドキュメント
+
+| ドキュメント | 内容 |
+|------------|------|
+| [recap_movie_auto_retry_production_checklist.md](recap_movie_auto_retry_production_checklist.md) | **Phase 7-D：本番有効化チェックリスト・Runbook・disable基準・監視手順** |
+| [recap_movie_e2e_check.md](recap_movie_e2e_check.md) | E2E 手順・Remotion 動作確認 |
+| [recap_movie_cleanup_scheduler.md](recap_movie_cleanup_scheduler.md) | Movie 期限切れ cleanup スケジューラ |
+
+---
+
 ## 目的
 
 `SingingRecapMovieBatchFailure` のうち `auto_retry_due` スコープに該当するレコード（次回リトライ時刻が到来済み・上限未到達）に対して、自動的にリトライをかける定期バッチ。
