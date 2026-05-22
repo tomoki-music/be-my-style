@@ -51,6 +51,7 @@ Rails.application.routes.draw do
           get  :health
           post :run_auto_retries
           post :run_cleanup
+          post :run_storage_repair
         end
       end
 

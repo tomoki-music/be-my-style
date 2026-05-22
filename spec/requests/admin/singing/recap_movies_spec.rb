@@ -1242,6 +1242,82 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
     end
   end
 
+  describe "POST /admin/singing/recap_movies/run_storage_repair" do
+    let(:dry_run_result) do
+      Singing::RecapMovieStorageRepairService::Result.new(
+        repaired_cba_count: 1,
+        repaired_cwf_count: 0,
+        dry_run:            true,
+      )
+    end
+
+    let(:repair_result) do
+      Singing::RecapMovieStorageRepairService::Result.new(
+        repaired_cba_count: 1,
+        repaired_cwf_count: 2,
+        dry_run:            false,
+      )
+    end
+
+    before do
+      sign_in admin
+      allow(Singing::RepairRecapMovieStorageIssuesJob).to receive(:perform_now).and_return(dry_run_result)
+    end
+
+    context "dry_run=true (デフォルト)" do
+      it "health ダッシュボードにリダイレクトされること" do
+        post run_storage_repair_admin_singing_recap_movies_path
+        expect(response).to redirect_to(health_admin_singing_recap_movies_path)
+      end
+
+      it "RepairRecapMovieStorageIssuesJob.perform_now が dry_run: true で呼ばれること" do
+        post run_storage_repair_admin_singing_recap_movies_path
+        expect(Singing::RepairRecapMovieStorageIssuesJob)
+          .to have_received(:perform_now).with(dry_run: true)
+      end
+
+      it "notice flash に [DRY RUN] が含まれること" do
+        post run_storage_repair_admin_singing_recap_movies_path
+        follow_redirect!
+        expect(response.body).to include("[DRY RUN]")
+        expect(response.body).to include("Storage Repair 完了")
+      end
+    end
+
+    context "dry_run=false (実際の修復)" do
+      before do
+        allow(Singing::RepairRecapMovieStorageIssuesJob).to receive(:perform_now).and_return(repair_result)
+      end
+
+      it "RepairRecapMovieStorageIssuesJob.perform_now が dry_run: false で呼ばれること" do
+        post run_storage_repair_admin_singing_recap_movies_path, params: { dry_run: "false" }
+        expect(Singing::RepairRecapMovieStorageIssuesJob)
+          .to have_received(:perform_now).with(dry_run: false)
+      end
+
+      it "notice flash に Storage Repair 完了 が含まれること" do
+        post run_storage_repair_admin_singing_recap_movies_path, params: { dry_run: "false" }
+        follow_redirect!
+        expect(response.body).to include("Storage Repair 完了")
+      end
+
+      it "[DRY RUN] が含まれないこと" do
+        post run_storage_repair_admin_singing_recap_movies_path, params: { dry_run: "false" }
+        follow_redirect!
+        expect(response.body).not_to include("[DRY RUN]")
+      end
+    end
+
+    context "管理者未ログイン" do
+      before { sign_out admin }
+
+      it "アクセスできないこと" do
+        post run_storage_repair_admin_singing_recap_movies_path
+        expect(response).not_to have_http_status(:ok)
+      end
+    end
+  end
+
   describe "非管理者のアクセス" do
     shared_examples "管理者画面にアクセスできない" do
       it "index にアクセスできないこと" do

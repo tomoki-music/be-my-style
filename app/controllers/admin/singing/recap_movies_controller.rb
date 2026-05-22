@@ -105,6 +105,18 @@ class Admin::Singing::RecapMoviesController < ApplicationController
                 notice: "Cleanup Job 実行完了。残り cleanup pending: #{pending}件"
   end
 
+  def run_storage_repair
+    dry_run = params[:dry_run] != "false"
+    result  = Singing::RepairRecapMovieStorageIssuesJob.perform_now(dry_run: dry_run)
+
+    label  = dry_run ? "[DRY RUN] " : ""
+    notice = "#{label}Storage Repair 完了 — " \
+             "cleaned_but_attached: #{result.repaired_cba_count}件 / " \
+             "completed_without_file: #{result.repaired_cwf_count}件"
+
+    redirect_to health_admin_singing_recap_movies_path, notice: notice
+  end
+
   def regenerate
     unless @movie.failed? || @movie.expired?
       redirect_to admin_singing_recap_movie_path(@movie),

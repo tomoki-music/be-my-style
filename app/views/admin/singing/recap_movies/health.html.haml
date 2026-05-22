@@ -396,6 +396,68 @@
         %code cleaned_up_at
         を記録します。
 
+  -# ── Storage Auto Repair ────────────────────────────────────────
+  .card.shadow-sm.mb-4{ class: storage_audit[:has_anomalies] ? "border-warning" : "" }
+    .card-header.d-flex.justify-content-between.align-items-center
+      %strong
+        Storage Auto Repair
+        - if storage_audit[:has_anomalies]
+          - total_repairable = storage_audit[:completed_without_file_count] + storage_audit[:cleaned_but_attached_count]
+          %span.badge.badge-warning.ml-1= "#{total_repairable} 件修復可能"
+        - else
+          %span.badge.badge-success.ml-1 修復対象なし
+      .d-flex.gap-2
+        = button_to "Dry Run で確認",
+                    run_storage_repair_admin_singing_recap_movies_path(dry_run: "true"),
+                    method: :post,
+                    class: "btn btn-sm btn-outline-secondary mr-2",
+                    data: { confirm: "Dry Run モードで修復対象を確認しますか？（実際の変更は行いません）" }
+        - if storage_audit[:has_anomalies]
+          = button_to "修復を実行",
+                      run_storage_repair_admin_singing_recap_movies_path(dry_run: "false"),
+                      method: :post,
+                      class: "btn btn-sm btn-outline-danger",
+                      data: { confirm: "Storage 修復を実行しますか？\n\n【cleaned_but_attached】purge_later を再実行します。\n【completed_without_file】status を failed に変更します。\n\n実行前に Dry Run での確認を推奨します。" }
+    .card-body
+      .alert.alert-warning.d-flex.align-items-start.mb-3
+        .mr-3
+          %i.fas.fa-tools
+        %div
+          %strong Storage 整合性の自動修復
+          %br
+          %small
+            【cleaned_but_attached】purge_later を再実行してファイルを削除します（S3 直接操作は行いません）。
+            %br
+            【completed_without_file】status を failed に変更します（自動再生成・ファイル削除は行いません）。
+            %br
+            必ず Dry Run で確認してから実行してください。
+
+      .row.mb-2
+        .col-md-6.mb-3
+          - cwf = storage_audit[:completed_without_file_count]
+          .card.text-center.bhdash__card{ class: cwf > 0 ? "border-danger" : "" }
+            .card-body
+              %p.bhdash__card-label Completed without File
+              %h3.bhdash__card-value{ class: cwf > 0 ? "text-danger" : "text-success" }= cwf
+              %p.bhdash__card-sub
+                修復: status → failed
+                %br
+                %small.text-muted 自動再生成・削除はしない
+        .col-md-6.mb-3
+          - cba = storage_audit[:cleaned_but_attached_count]
+          .card.text-center.bhdash__card{ class: cba > 0 ? "border-warning" : "" }
+            .card-body
+              %p.bhdash__card-label Cleaned but Attached
+              %h3.bhdash__card-value{ class: cba > 0 ? "text-warning" : "text-success" }= cba
+              %p.bhdash__card-sub
+                修復: purge_later 再実行
+                %br
+                %small.text-muted S3 直接削除は行わない
+
+      - unless storage_audit[:has_anomalies]
+        %p.text-success.mb-0
+          ✓ 修復対象の Storage 異常は検知されていません。
+
   -# ── Storage Audit (検知のみ・削除なし) ──────────────────────────
   .card.shadow-sm.mb-4{ class: storage_audit[:has_anomalies] ? "border-danger" : "" }
     .card-header.d-flex.justify-content-between.align-items-center
@@ -415,7 +477,7 @@
         %div
           このセクションは Storage の整合性チェック結果を表示します。
           %strong 削除・更新は行いません。
-          異常が検知された場合は手動で原因を調査してください。
+          異常が検知された場合は Storage Auto Repair セクションから修復できます。
 
       .row.mb-3
         .col-md-6.mb-3
