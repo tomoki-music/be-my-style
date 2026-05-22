@@ -81,7 +81,7 @@ module Singing
       @failure.update!(
         retry_status:  :retried,
         retried_at:    Time.current,
-        retried_by_id: @admin.id
+        retried_by_id: @admin&.id
       )
     end
 

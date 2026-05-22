@@ -110,5 +110,77 @@ RSpec.describe Singing::RecapMovieRetryReconciliationService, type: :service do
         expect(other_failure.reload.retry_status).to eq("retried")
       end
     end
+
+    context "auto retry 実行中（auto_retry_status: running）で movie が failed の場合" do
+      before { movie.update!(status: "failed", error_message: "render error") }
+
+      context "attempts が MAX 未満の場合" do
+        let!(:auto_retried_failure) do
+          FactoryBot.create(:singing_recap_movie_batch_failure,
+                            :auto_retry_running,
+                            singing_recap_movie_batch_execution: execution,
+                            customer: customer,
+                            year:     execution.year,
+                            retry_status: "retried",
+                            auto_retry_attempts_count: 1)
+        end
+
+        it "retry_status が pending にリセットされること" do
+          described_class.call(movie)
+          expect(auto_retried_failure.reload.retry_status).to eq("pending")
+        end
+
+        it "auto_retry_status が scheduled になること" do
+          described_class.call(movie)
+          expect(auto_retried_failure.reload.auto_retry_status).to eq("scheduled")
+        end
+
+        it "next_auto_retry_at が設定されること" do
+          described_class.call(movie)
+          expect(auto_retried_failure.reload.next_auto_retry_at).not_to be_nil
+        end
+
+        it "auto_retry_error_message に movie の error_message が入ること" do
+          described_class.call(movie)
+          expect(auto_retried_failure.reload.auto_retry_error_message).to eq("render error")
+        end
+      end
+
+      context "attempts が MAX 以上の場合" do
+        let!(:exhausted_failure) do
+          FactoryBot.create(:singing_recap_movie_batch_failure,
+                            :auto_retry_running,
+                            singing_recap_movie_batch_execution: execution,
+                            customer: customer,
+                            year:     execution.year,
+                            retry_status: "retried",
+                            auto_retry_attempts_count: SingingRecapMovieBatchFailure::AUTO_RETRY_MAX_ATTEMPTS)
+        end
+
+        it "retry_status が retry_failed になること" do
+          described_class.call(movie)
+          expect(exhausted_failure.reload.retry_status).to eq("retry_failed")
+        end
+
+        it "auto_retry_status が exhausted になること" do
+          described_class.call(movie)
+          expect(exhausted_failure.reload.auto_retry_status).to eq("exhausted")
+        end
+      end
+    end
+
+    context "通常の手動 retry（auto_retry_status: not_applicable）で movie が failed の場合" do
+      before { movie.update!(status: "failed", error_message: "render error") }
+
+      it "retry_status が retry_failed になること（既存の動作）" do
+        described_class.call(movie)
+        expect(retried_failure.reload.retry_status).to eq("retry_failed")
+      end
+
+      it "auto_retry_status は not_applicable のままであること" do
+        described_class.call(movie)
+        expect(retried_failure.reload.auto_retry_status).to eq("not_applicable")
+      end
+    end
   end
 end

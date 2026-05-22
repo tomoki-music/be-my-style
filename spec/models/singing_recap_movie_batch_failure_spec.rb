@@ -301,6 +301,106 @@ RSpec.describe SingingRecapMovieBatchFailure, type: :model do
     end
   end
 
+  describe "auto_retry_status enum" do
+    subject(:failure) do
+      FactoryBot.create(:singing_recap_movie_batch_failure,
+                        singing_recap_movie_batch_execution: execution,
+                        customer: customer)
+    end
+
+    it "デフォルトが not_applicable であること" do
+      expect(failure.auto_retry_status).to eq("not_applicable")
+    end
+
+    it "scheduled に遷移できること" do
+      failure.update!(auto_retry_status: :scheduled)
+      expect(failure.reload.auto_retry_status).to eq("scheduled")
+    end
+
+    it "running に遷移できること" do
+      failure.update!(auto_retry_status: :running)
+      expect(failure.reload.auto_retry_status).to eq("running")
+    end
+
+    it "exhausted に遷移できること" do
+      failure.update!(auto_retry_status: :exhausted)
+      expect(failure.reload.auto_retry_status).to eq("exhausted")
+    end
+
+    it "disabled に遷移できること" do
+      failure.update!(auto_retry_status: :disabled)
+      expect(failure.reload.auto_retry_status).to eq("disabled")
+    end
+  end
+
+  describe "#auto_retry_status_badge_class" do
+    {
+      "not_applicable" => "badge-light",
+      "scheduled"      => "badge-info",
+      "running"        => "badge-warning",
+      "exhausted"      => "badge-danger",
+      "disabled"       => "badge-dark"
+    }.each do |status, expected_class|
+      it "#{status} のとき #{expected_class} を返すこと" do
+        failure = FactoryBot.build(:singing_recap_movie_batch_failure,
+                                   singing_recap_movie_batch_execution: execution,
+                                   customer: customer,
+                                   auto_retry_status: status)
+        expect(failure.auto_retry_status_badge_class).to eq(expected_class)
+      end
+    end
+  end
+
+  describe "#auto_retry_status_label" do
+    {
+      "not_applicable" => "N/A",
+      "scheduled"      => "Scheduled",
+      "running"        => "Running",
+      "exhausted"      => "Exhausted",
+      "disabled"       => "Disabled"
+    }.each do |status, expected_label|
+      it "#{status} のとき '#{expected_label}' を返すこと" do
+        failure = FactoryBot.build(:singing_recap_movie_batch_failure,
+                                   singing_recap_movie_batch_execution: execution,
+                                   customer: customer,
+                                   auto_retry_status: status)
+        expect(failure.auto_retry_status_label).to eq(expected_label)
+      end
+    end
+  end
+
+  describe ".auto_retry_due scope" do
+    let!(:due_failure) do
+      FactoryBot.create(:singing_recap_movie_batch_failure,
+                        :auto_retry_due,
+                        singing_recap_movie_batch_execution: execution,
+                        customer: customer)
+    end
+    let!(:not_due_failure) do
+      FactoryBot.create(:singing_recap_movie_batch_failure,
+                        :auto_retry_scheduled,
+                        singing_recap_movie_batch_execution: execution,
+                        customer: FactoryBot.create(:customer))
+    end
+    let!(:not_applicable_failure) do
+      FactoryBot.create(:singing_recap_movie_batch_failure,
+                        singing_recap_movie_batch_execution: execution,
+                        customer: FactoryBot.create(:customer))
+    end
+
+    it "期限到来済み scheduled failure だけを返すこと" do
+      result = SingingRecapMovieBatchFailure.auto_retry_due
+      expect(result).to include(due_failure)
+      expect(result).not_to include(not_due_failure, not_applicable_failure)
+    end
+  end
+
+  describe "AUTO_RETRY_MAX_ATTEMPTS 定数" do
+    it "3 であること" do
+      expect(SingingRecapMovieBatchFailure::AUTO_RETRY_MAX_ATTEMPTS).to eq(3)
+    end
+  end
+
   describe "#resolved? / #resolved_label" do
     it "retry_status が resolved のとき resolved? が true を返すこと" do
       failure = FactoryBot.create(:singing_recap_movie_batch_failure, :resolved,

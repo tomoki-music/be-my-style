@@ -1036,6 +1036,47 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
     end
   end
 
+  describe "POST /admin/singing/recap_movies/run_auto_retries" do
+    let(:dummy_result) do
+      Singing::RecapMovieAutoRetryService::Result.new(
+        processed_count: 2,
+        succeeded_count: 1,
+        skipped_count:   1,
+        failed_count:    0
+      )
+    end
+
+    before do
+      sign_in admin
+      allow(Singing::RunRecapMovieAutoRetriesJob).to receive(:perform_now).and_return(dummy_result)
+    end
+
+    it "200 / redirect で完了すること" do
+      post run_auto_retries_admin_singing_recap_movies_path
+      expect(response).to redirect_to(health_admin_singing_recap_movies_path)
+    end
+
+    it "RunRecapMovieAutoRetriesJob.perform_now が呼ばれること" do
+      post run_auto_retries_admin_singing_recap_movies_path
+      expect(Singing::RunRecapMovieAutoRetriesJob).to have_received(:perform_now).once
+    end
+
+    it "notice flash に処理件数が表示されること" do
+      post run_auto_retries_admin_singing_recap_movies_path
+      follow_redirect!
+      expect(response.body).to include("Auto Retry 実行完了")
+    end
+
+    context "管理者未ログイン" do
+      before { sign_out admin }
+
+      it "アクセスできないこと" do
+        post run_auto_retries_admin_singing_recap_movies_path
+        expect(response).not_to have_http_status(:ok)
+      end
+    end
+  end
+
   describe "非管理者のアクセス" do
     shared_examples "管理者画面にアクセスできない" do
       it "index にアクセスできないこと" do

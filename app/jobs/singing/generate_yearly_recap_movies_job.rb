@@ -51,7 +51,7 @@ module Singing
         Rails.logger.error("[RecapMovieBatch] error customer_id=#{customer.id} year=#{year}: #{e.message}")
         execution&.increment!(:failed_movies_count)
         if execution
-          execution.failures.create!(
+          failure = execution.failures.create!(
             customer:          customer,
             year:              year,
             recap_movie_id:    movie&.id,
@@ -60,6 +60,7 @@ module Singing
             backtrace_excerpt: e.backtrace&.first(5)&.join("\n"),
             failed_at:         Time.current,
           )
+          Singing::RecapMovieAutoRetryPolicy.schedule_auto_retry_if_eligible!(failure)
         end
         skipped_count += 1
       end

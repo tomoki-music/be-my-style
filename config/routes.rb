@@ -49,6 +49,7 @@ Rails.application.routes.draw do
           post :generate_yearly_batch
           get  :preview_yearly_batch
           get  :health
+          post :run_auto_retries
         end
       end
 

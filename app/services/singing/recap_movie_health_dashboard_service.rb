@@ -11,11 +11,12 @@ module Singing
 
     def call
       {
-        summary:        build_summary,
-        trends:         build_trends,
-        error_analysis: build_error_analysis,
-        open_failures:  build_open_failures,
-        slow_batches:   build_slow_batches,
+        summary:            build_summary,
+        trends:             build_trends,
+        error_analysis:     build_error_analysis,
+        open_failures:      build_open_failures,
+        slow_batches:       build_slow_batches,
+        auto_retry_summary: build_auto_retry_summary,
       }
     end
 
@@ -122,6 +123,25 @@ module Singing
         .where.not(started_at: nil, finished_at: nil)
         .sort_by { |b| -(b.finished_at - b.started_at) }
         .first(SLOW_BATCHES_LIMIT)
+    end
+
+    def build_auto_retry_summary
+      scheduled  = SingingRecapMovieBatchFailure.auto_retry_scheduled.count
+      running    = SingingRecapMovieBatchFailure.auto_retry_running.count
+      exhausted  = SingingRecapMovieBatchFailure.auto_retry_exhausted.count
+      due_now    = SingingRecapMovieBatchFailure.auto_retry_due.count
+      next_due   = SingingRecapMovieBatchFailure
+        .auto_retry_scheduled
+        .where("next_auto_retry_at > ?", Time.current)
+        .minimum(:next_auto_retry_at)
+
+      {
+        scheduled:  scheduled,
+        running:    running,
+        exhausted:  exhausted,
+        due_now:    due_now,
+        next_due_at: next_due,
+      }
     end
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_21_000006) do
+ActiveRecord::Schema.define(version: 2026_05_22_000001) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -1029,7 +1029,14 @@ ActiveRecord::Schema.define(version: 2026_05_21_000006) do
     t.string "retry_error_message", limit: 1000
     t.datetime "resolved_at"
     t.bigint "resolved_movie_id"
+    t.string "auto_retry_status", default: "not_applicable", null: false
+    t.integer "auto_retry_attempts_count", default: 0, null: false
+    t.datetime "next_auto_retry_at"
+    t.datetime "last_auto_retry_at"
+    t.string "auto_retry_error_message", limit: 1000
+    t.index ["auto_retry_status"], name: "index_singing_recap_movie_batch_failures_on_auto_retry_status"
     t.index ["customer_id"], name: "index_singing_recap_movie_batch_failures_on_customer_id"
+    t.index ["next_auto_retry_at"], name: "index_singing_recap_movie_batch_failures_on_next_auto_retry_at"
     t.index ["resolved_movie_id"], name: "idx_batch_failures_on_resolved_movie"
     t.index ["retried_by_id"], name: "idx_batch_failures_on_retried_by"
     t.index ["retry_status"], name: "idx_batch_failures_on_retry_status"

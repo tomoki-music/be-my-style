@@ -20,7 +20,22 @@ class SingingRecapMovieBatchFailure < ApplicationRecord
     retry_failed: "retry_failed"
   }, _prefix: :retry
 
-  scope :retryable, -> { where(retry_status: "pending") }
+  enum auto_retry_status: {
+    not_applicable: "not_applicable",
+    scheduled:      "scheduled",
+    running:        "running",
+    exhausted:      "exhausted",
+    disabled:       "disabled"
+  }, _prefix: :auto_retry
+
+  AUTO_RETRY_MAX_ATTEMPTS = 3
+
+  scope :retryable,            -> { where(retry_status: "pending") }
+  scope :auto_retry_due,       -> {
+    auto_retry_scheduled
+      .where(retry_status: "pending")
+      .where("next_auto_retry_at <= ?", Time.current)
+  }
 
   def retryable?
     retry_pending?
@@ -47,6 +62,26 @@ class SingingRecapMovieBatchFailure < ApplicationRecord
     when "resolved"     then "Resolved"
     when "skipped"      then "Skipped"
     when "retry_failed" then "Retry Failed"
+    end
+  end
+
+  def auto_retry_status_badge_class
+    case auto_retry_status
+    when "not_applicable" then "badge-light"
+    when "scheduled"      then "badge-info"
+    when "running"        then "badge-warning"
+    when "exhausted"      then "badge-danger"
+    when "disabled"       then "badge-dark"
+    end
+  end
+
+  def auto_retry_status_label
+    case auto_retry_status
+    when "not_applicable" then "N/A"
+    when "scheduled"      then "Scheduled"
+    when "running"        then "Running"
+    when "exhausted"      then "Exhausted"
+    when "disabled"       then "Disabled"
     end
   end
 

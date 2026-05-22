@@ -84,6 +84,17 @@ class Admin::Singing::RecapMoviesController < ApplicationController
     @dashboard = Singing::RecapMovieHealthDashboardService.call
   end
 
+  def run_auto_retries
+    result = Singing::RunRecapMovieAutoRetriesJob.perform_now
+
+    redirect_to health_admin_singing_recap_movies_path,
+                notice: "Auto Retry 実行完了 — " \
+                        "処理: #{result.processed_count}件 / " \
+                        "成功: #{result.succeeded_count}件 / " \
+                        "スキップ: #{result.skipped_count}件 / " \
+                        "失敗: #{result.failed_count}件"
+  end
+
   def regenerate
     unless @movie.failed? || @movie.expired?
       redirect_to admin_singing_recap_movie_path(@movie),

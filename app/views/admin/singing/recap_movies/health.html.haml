@@ -1,10 +1,11 @@
 = render 'layouts/admin_header_menu'
 
-- summary       = @dashboard[:summary]
-- trends        = @dashboard[:trends]
-- error_analysis = @dashboard[:error_analysis]
-- open_failures = @dashboard[:open_failures]
-- slow_batches  = @dashboard[:slow_batches]
+- summary            = @dashboard[:summary]
+- trends             = @dashboard[:trends]
+- error_analysis     = @dashboard[:error_analysis]
+- open_failures      = @dashboard[:open_failures]
+- slow_batches       = @dashboard[:slow_batches]
+- auto_retry_summary = @dashboard[:auto_retry_summary]
 
 .container-fluid.py-4.bhdash
 
@@ -157,6 +158,7 @@
                 %th Year
                 %th Error Class
                 %th Retry Status
+                %th Auto Retry
                 %th Failed At
                 %th Batch
             %tbody
@@ -168,12 +170,61 @@
                     %code= f.error_class.presence || "—"
                   %td
                     %span.badge{ class: f.retry_status_badge_class }= f.retry_status_label
+                  %td
+                    %span.badge{ class: f.auto_retry_status_badge_class }= f.auto_retry_status_label
+                    - if f.auto_retry_scheduled? && f.next_auto_retry_at
+                      %br
+                      %small.text-muted= l(f.next_auto_retry_at, format: :short)
                   %td.small= f.failed_at ? l(f.failed_at, format: :short) : "—"
                   %td.small
                     - exec = f.singing_recap_movie_batch_execution
                     = link_to "Batch ##{exec.id}", admin_singing_recap_movie_batch_execution_path(exec), class: "badge badge-light"
         - if open_failures.size >= 50
           %p.text-muted.small.mt-2.mb-0 ※ 最大50件を表示しています。
+
+  -# ── Auto Retry Status ───────────────────────────────────────────
+  .card.shadow-sm.mb-4
+    .card-header.d-flex.justify-content-between.align-items-center
+      %strong
+        Auto Retry — Self Healing Status
+        - if auto_retry_summary[:due_now] > 0
+          %span.badge.badge-warning.ml-1= "#{auto_retry_summary[:due_now]} due"
+      = button_to "Auto Retry 対象を実行",
+                  run_auto_retries_admin_singing_recap_movies_path,
+                  method: :post,
+                  class: "btn btn-sm btn-outline-primary",
+                  data: { confirm: "Auto Retry 対象を今すぐ実行しますか？" }
+    .card-body
+      .row.mb-3
+        .col-md-3.col-6.mb-2
+          .card.text-center.border-info
+            .card-body.py-2
+              %p.small.text-muted.mb-0 Scheduled
+              - sc = auto_retry_summary[:scheduled]
+              %h5.mb-0{ class: sc > 0 ? "text-info" : "text-muted" }= sc
+        .col-md-3.col-6.mb-2
+          .card.text-center.border-warning
+            .card-body.py-2
+              %p.small.text-muted.mb-0 Running
+              %h5.mb-0.text-warning= auto_retry_summary[:running]
+        .col-md-3.col-6.mb-2
+          .card.text-center.border-danger
+            .card-body.py-2
+              %p.small.text-muted.mb-0 Exhausted
+              - ex = auto_retry_summary[:exhausted]
+              %h5.mb-0{ class: ex > 0 ? "text-danger" : "text-muted" }= ex
+        .col-md-3.col-6.mb-2
+          .card.text-center
+            .card-body.py-2
+              %p.small.text-muted.mb-0 Next Due At
+              %h6.mb-0
+                - if auto_retry_summary[:next_due_at]
+                  = l(auto_retry_summary[:next_due_at], format: :short)
+                - else
+                  %span.text-muted —
+      %p.small.text-muted.mb-0
+        Auto Retry 対象: timeout / process exit / FFmpeg / Chromium などの一時的エラー（最大#{SingingRecapMovieBatchFailure::AUTO_RETRY_MAX_ATTEMPTS}回）。
+        Interval: 1回目 5分後 → 2回目 15分後 → 3回目 30分後。
 
   -# ── Slow Batch Analysis ─────────────────────────────────────────
   .card.shadow-sm.mb-4
