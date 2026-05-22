@@ -63,6 +63,33 @@
   }
 }
 
+// ── Auto Retry cards ──────────────────────────────────────────────
+
+.bhdash__ar-card {
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+
+  &:hover {
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+  }
+
+  &--active {
+    background-color: #f0f8ff;
+    box-shadow: 0 0 0 2px #17a2b8;
+  }
+
+  // exhausted カードが 1件以上あるとき点滅させる
+  &--alert {
+    animation: bhdash-pulse 1.8s ease-in-out infinite;
+  }
+}
+
+@keyframes bhdash-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}
+
 // ── Bar chart ──────────────────────────────────────────────────────
 
 .admin-recap-bar__track {

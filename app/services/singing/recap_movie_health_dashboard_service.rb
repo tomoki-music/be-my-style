@@ -1,22 +1,30 @@
 module Singing
   class RecapMovieHealthDashboardService
-    TREND_DAYS       = 30
-    OPEN_FAILURES_LIMIT = 50
-    SLOW_BATCHES_LIMIT  = 10
-    ERROR_ANALYSIS_LIMIT = 10
+    TREND_DAYS            = 30
+    OPEN_FAILURES_LIMIT   = 50
+    SLOW_BATCHES_LIMIT    = 10
+    ERROR_ANALYSIS_LIMIT  = 10
+    AUTO_RETRY_FAILURES_LIMIT = 100
 
-    def self.call
-      new.call
+    VALID_AUTO_RETRY_FILTERS = %w[scheduled running exhausted due_now].freeze
+
+    def self.call(auto_retry_filter: nil)
+      new(auto_retry_filter: auto_retry_filter).call
+    end
+
+    def initialize(auto_retry_filter: nil)
+      @auto_retry_filter = VALID_AUTO_RETRY_FILTERS.include?(auto_retry_filter) ? auto_retry_filter : nil
     end
 
     def call
       {
-        summary:            build_summary,
-        trends:             build_trends,
-        error_analysis:     build_error_analysis,
-        open_failures:      build_open_failures,
-        slow_batches:       build_slow_batches,
-        auto_retry_summary: build_auto_retry_summary,
+        summary:             build_summary,
+        trends:              build_trends,
+        error_analysis:      build_error_analysis,
+        open_failures:       build_open_failures,
+        slow_batches:        build_slow_batches,
+        auto_retry_summary:  build_auto_retry_summary,
+        auto_retry_failures: build_auto_retry_failures,
       }
     end
 
@@ -126,22 +134,44 @@ module Singing
     end
 
     def build_auto_retry_summary
-      scheduled  = SingingRecapMovieBatchFailure.auto_retry_scheduled.count
-      running    = SingingRecapMovieBatchFailure.auto_retry_running.count
-      exhausted  = SingingRecapMovieBatchFailure.auto_retry_exhausted.count
-      due_now    = SingingRecapMovieBatchFailure.auto_retry_due.count
-      next_due   = SingingRecapMovieBatchFailure
+      scheduled = SingingRecapMovieBatchFailure.auto_retry_scheduled.count
+      running   = SingingRecapMovieBatchFailure.auto_retry_running.count
+      exhausted = SingingRecapMovieBatchFailure.auto_retry_exhausted.count
+      due_now   = SingingRecapMovieBatchFailure.auto_retry_due.count
+      next_due  = SingingRecapMovieBatchFailure
         .auto_retry_scheduled
         .where("next_auto_retry_at > ?", Time.current)
         .minimum(:next_auto_retry_at)
 
+      avg_attempts = SingingRecapMovieBatchFailure
+        .where(auto_retry_status: %w[scheduled running exhausted])
+        .average(:auto_retry_attempts_count)
+        &.round(1)
+
       {
-        scheduled:  scheduled,
-        running:    running,
-        exhausted:  exhausted,
-        due_now:    due_now,
-        next_due_at: next_due,
+        scheduled:    scheduled,
+        running:      running,
+        exhausted:    exhausted,
+        due_now:      due_now,
+        next_due_at:  next_due,
+        avg_attempts: avg_attempts,
       }
+    end
+
+    def build_auto_retry_failures
+      scope = SingingRecapMovieBatchFailure
+        .includes(:customer, :singing_recap_movie_batch_execution)
+        .where.not(auto_retry_status: %w[not_applicable disabled])
+        .order(failed_at: :desc)
+        .limit(AUTO_RETRY_FAILURES_LIMIT)
+
+      case @auto_retry_filter
+      when "scheduled" then scope.auto_retry_scheduled
+      when "running"   then scope.auto_retry_running
+      when "exhausted" then scope.auto_retry_exhausted
+      when "due_now"   then scope.auto_retry_due
+      else scope
+      end
     end
   end
 end

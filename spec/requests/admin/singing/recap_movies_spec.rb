@@ -1026,6 +1026,112 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
           expect(response.body).to include("##{execution.id}")
         end
       end
+
+      context "Auto Retry Monitor section" do
+        it "Auto Retry Monitor セクションを表示すること" do
+          get health_admin_singing_recap_movies_path
+          expect(response.body).to include("Auto Retry — Self Healing Monitor")
+        end
+
+        it "Avg Attempts カードを表示すること" do
+          get health_admin_singing_recap_movies_path
+          expect(response.body).to include("Avg Attempts")
+        end
+
+        it "Auto Retry Failure 一覧セクションを表示すること" do
+          get health_admin_singing_recap_movies_path
+          expect(response.body).to include("Auto Retry — Failure 一覧")
+        end
+
+        context "exhausted failure が存在する場合" do
+          let!(:exhausted_failure) do
+            FactoryBot.create(:singing_recap_movie_batch_failure, :auto_retry_exhausted,
+                              singing_recap_movie_batch_execution: execution,
+                              customer: customer)
+          end
+
+          it "exhausted バッジを header に表示すること" do
+            get health_admin_singing_recap_movies_path
+            expect(response.body).to include("exhausted")
+          end
+
+          it "要手動確認アラートを表示すること" do
+            get health_admin_singing_recap_movies_path
+            expect(response.body).to include("要手動確認")
+          end
+
+          it "failure テーブルに customer 名を表示すること" do
+            get health_admin_singing_recap_movies_path
+            expect(response.body).to include(customer.name)
+          end
+        end
+
+        context "scheduled failure が存在する場合" do
+          let!(:scheduled_failure) do
+            FactoryBot.create(:singing_recap_movie_batch_failure, :auto_retry_scheduled,
+                              singing_recap_movie_batch_execution: execution,
+                              customer: customer)
+          end
+
+          it "failure テーブルに Scheduled バッジを表示すること" do
+            get health_admin_singing_recap_movies_path
+            expect(response.body).to include("Scheduled")
+          end
+        end
+      end
+
+      context "auto_retry_status filter" do
+        let!(:exhausted_failure) do
+          FactoryBot.create(:singing_recap_movie_batch_failure, :auto_retry_exhausted,
+                            singing_recap_movie_batch_execution: execution,
+                            customer: FactoryBot.create(:customer, domain_name: "singing"))
+        end
+        let!(:scheduled_failure) do
+          FactoryBot.create(:singing_recap_movie_batch_failure, :auto_retry_scheduled,
+                            singing_recap_movie_batch_execution: execution,
+                            customer: FactoryBot.create(:customer, domain_name: "singing"))
+        end
+
+        it "?auto_retry_status=exhausted で 200 OK を返すこと" do
+          get health_admin_singing_recap_movies_path, params: { auto_retry_status: "exhausted" }
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "?auto_retry_status=exhausted でフィルター表示されること" do
+          get health_admin_singing_recap_movies_path, params: { auto_retry_status: "exhausted" }
+          expect(response.body).to include(exhausted_failure.customer.name)
+        end
+
+        it "?auto_retry_status=scheduled で 200 OK を返すこと" do
+          get health_admin_singing_recap_movies_path, params: { auto_retry_status: "scheduled" }
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "?auto_retry_status=running で 200 OK を返すこと" do
+          get health_admin_singing_recap_movies_path, params: { auto_retry_status: "running" }
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "?auto_retry_status=due_now で 200 OK を返すこと" do
+          get health_admin_singing_recap_movies_path, params: { auto_retry_status: "due_now" }
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "不正な auto_retry_status は無視して 200 OK を返すこと" do
+          get health_admin_singing_recap_movies_path, params: { auto_retry_status: "invalid_filter" }
+          expect(response).to have_http_status(:ok)
+        end
+
+        it "フィルター適用時にクリアリンクを表示すること" do
+          get health_admin_singing_recap_movies_path, params: { auto_retry_status: "exhausted" }
+          expect(response.body).to include("× クリア")
+        end
+
+        it "フィルター未指定時にクリアリンクを表示しないこと" do
+          get health_admin_singing_recap_movies_path
+          expect(response.body).not_to include("× クリア")
+        end
+      end
     end
 
     context "管理者未ログイン" do

@@ -10,6 +10,7 @@ class Admin::Singing::RecapMoviesController < ApplicationController
   PER_PAGE_DEFAULT = 30
   PER_PAGE_MAX = 100
   VALID_YEAR_RANGE = (2020..(Time.zone.today.year + 1)).freeze
+  VALID_AUTO_RETRY_FILTERS = Singing::RecapMovieHealthDashboardService::VALID_AUTO_RETRY_FILTERS
 
   def index
     scope = build_filtered_scope
@@ -81,7 +82,8 @@ class Admin::Singing::RecapMoviesController < ApplicationController
   end
 
   def health
-    @dashboard = Singing::RecapMovieHealthDashboardService.call
+    @auto_retry_filter = parse_auto_retry_filter
+    @dashboard = Singing::RecapMovieHealthDashboardService.call(auto_retry_filter: @auto_retry_filter)
   end
 
   def run_auto_retries
@@ -113,6 +115,11 @@ class Admin::Singing::RecapMoviesController < ApplicationController
   end
 
   private
+
+  def parse_auto_retry_filter
+    f = params[:auto_retry_status]
+    VALID_AUTO_RETRY_FILTERS.include?(f) ? f : nil
+  end
 
   def parse_batch_year
     year = Integer(params[:year], exception: false)

@@ -8,7 +8,10 @@ RSpec.describe Singing::RecapMovieHealthDashboardService do
 
   describe ".call" do
     it "必要なキーを全て返すこと" do
-      expect(result.keys).to contain_exactly(:summary, :trends, :error_analysis, :open_failures, :slow_batches, :auto_retry_summary)
+      expect(result.keys).to contain_exactly(
+        :summary, :trends, :error_analysis, :open_failures, :slow_batches,
+        :auto_retry_summary, :auto_retry_failures
+      )
     end
   end
 
@@ -210,6 +213,160 @@ RSpec.describe Singing::RecapMovieHealthDashboardService do
 
       it "customer を eager load していること" do
         expect(open_failures.first.association(:customer).loaded?).to be(true)
+      end
+    end
+  end
+
+  describe "#build_auto_retry_summary" do
+    subject(:auto_retry_summary) { result[:auto_retry_summary] }
+
+    let(:execution) { FactoryBot.create(:singing_recap_movie_batch_execution, :completed, admin: admin) }
+
+    it "必要なキーを全て返すこと" do
+      expect(auto_retry_summary.keys).to contain_exactly(
+        :scheduled, :running, :exhausted, :due_now, :next_due_at, :avg_attempts
+      )
+    end
+
+    context "auto retry failure が存在しない場合" do
+      it "scheduled が 0 であること" do
+        expect(auto_retry_summary[:scheduled]).to eq(0)
+      end
+
+      it "avg_attempts が nil であること" do
+        expect(auto_retry_summary[:avg_attempts]).to be_nil
+      end
+    end
+
+    context "scheduled / running / exhausted が混在する場合" do
+      before do
+        FactoryBot.create(:singing_recap_movie_batch_failure, :auto_retry_scheduled,
+                          singing_recap_movie_batch_execution: execution, customer: customer,
+                          auto_retry_attempts_count: 1)
+        FactoryBot.create(:singing_recap_movie_batch_failure, :auto_retry_running,
+                          singing_recap_movie_batch_execution: execution, customer: customer,
+                          auto_retry_attempts_count: 2)
+        FactoryBot.create(:singing_recap_movie_batch_failure, :auto_retry_exhausted,
+                          singing_recap_movie_batch_execution: execution, customer: customer,
+                          auto_retry_attempts_count: 3)
+      end
+
+      it "scheduled カウントが正しいこと" do
+        expect(auto_retry_summary[:scheduled]).to eq(1)
+      end
+
+      it "running カウントが正しいこと" do
+        expect(auto_retry_summary[:running]).to eq(1)
+      end
+
+      it "exhausted カウントが正しいこと" do
+        expect(auto_retry_summary[:exhausted]).to eq(1)
+      end
+
+      it "avg_attempts が平均試行回数を返すこと" do
+        expect(auto_retry_summary[:avg_attempts]).to eq(2.0)
+      end
+    end
+
+    context "due_now の failure が存在する場合" do
+      before do
+        FactoryBot.create(:singing_recap_movie_batch_failure, :auto_retry_due,
+                          singing_recap_movie_batch_execution: execution, customer: customer)
+      end
+
+      it "due_now カウントが 1 であること" do
+        expect(auto_retry_summary[:due_now]).to eq(1)
+      end
+    end
+  end
+
+  describe "#build_auto_retry_failures" do
+    subject(:auto_retry_failures) { result[:auto_retry_failures] }
+
+    let(:execution) { FactoryBot.create(:singing_recap_movie_batch_execution, :completed, admin: admin) }
+
+    context "auto retry failure が存在しない場合" do
+      it "空の結果を返すこと" do
+        expect(auto_retry_failures).to be_empty
+      end
+    end
+
+    context "scheduled / exhausted / not_applicable が混在する場合" do
+      let!(:scheduled_failure) do
+        FactoryBot.create(:singing_recap_movie_batch_failure, :auto_retry_scheduled,
+                          singing_recap_movie_batch_execution: execution, customer: customer)
+      end
+      let!(:exhausted_failure) do
+        FactoryBot.create(:singing_recap_movie_batch_failure, :auto_retry_exhausted,
+                          singing_recap_movie_batch_execution: execution, customer: customer)
+      end
+      let!(:not_applicable_failure) do
+        FactoryBot.create(:singing_recap_movie_batch_failure,
+                          singing_recap_movie_batch_execution: execution, customer: customer,
+                          auto_retry_status: "not_applicable")
+      end
+
+      it "not_applicable を除外すること" do
+        ids = auto_retry_failures.map(&:id)
+        expect(ids).to include(scheduled_failure.id, exhausted_failure.id)
+        expect(ids).not_to include(not_applicable_failure.id)
+      end
+
+      it "customer を eager load していること" do
+        expect(auto_retry_failures.first.association(:customer).loaded?).to be(true)
+      end
+    end
+
+    context "auto_retry_filter: 'exhausted' を指定した場合" do
+      subject(:filtered_result) { described_class.call(auto_retry_filter: "exhausted") }
+
+      let!(:scheduled_failure) do
+        FactoryBot.create(:singing_recap_movie_batch_failure, :auto_retry_scheduled,
+                          singing_recap_movie_batch_execution: execution, customer: customer)
+      end
+      let!(:exhausted_failure) do
+        FactoryBot.create(:singing_recap_movie_batch_failure, :auto_retry_exhausted,
+                          singing_recap_movie_batch_execution: execution, customer: customer)
+      end
+
+      it "exhausted のみを返すこと" do
+        ids = filtered_result[:auto_retry_failures].map(&:id)
+        expect(ids).to include(exhausted_failure.id)
+        expect(ids).not_to include(scheduled_failure.id)
+      end
+    end
+
+    context "auto_retry_filter: 'due_now' を指定した場合" do
+      subject(:filtered_result) { described_class.call(auto_retry_filter: "due_now") }
+
+      let!(:due_failure) do
+        FactoryBot.create(:singing_recap_movie_batch_failure, :auto_retry_due,
+                          singing_recap_movie_batch_execution: execution, customer: customer)
+      end
+      let!(:future_failure) do
+        FactoryBot.create(:singing_recap_movie_batch_failure, :auto_retry_scheduled,
+                          singing_recap_movie_batch_execution: execution, customer: customer,
+                          next_auto_retry_at: 10.minutes.from_now)
+      end
+
+      it "次回実行時刻が過去の scheduled のみを返すこと" do
+        ids = filtered_result[:auto_retry_failures].map(&:id)
+        expect(ids).to include(due_failure.id)
+        expect(ids).not_to include(future_failure.id)
+      end
+    end
+
+    context "不正な auto_retry_filter を指定した場合" do
+      subject(:filtered_result) { described_class.call(auto_retry_filter: "invalid_filter") }
+
+      let!(:scheduled_failure) do
+        FactoryBot.create(:singing_recap_movie_batch_failure, :auto_retry_scheduled,
+                          singing_recap_movie_batch_execution: execution, customer: customer)
+      end
+
+      it "フィルターを無視して全件返すこと" do
+        ids = filtered_result[:auto_retry_failures].map(&:id)
+        expect(ids).to include(scheduled_failure.id)
       end
     end
   end

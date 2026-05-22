@@ -1,11 +1,12 @@
 = render 'layouts/admin_header_menu'
 
-- summary            = @dashboard[:summary]
-- trends             = @dashboard[:trends]
-- error_analysis     = @dashboard[:error_analysis]
-- open_failures      = @dashboard[:open_failures]
-- slow_batches       = @dashboard[:slow_batches]
-- auto_retry_summary = @dashboard[:auto_retry_summary]
+- summary              = @dashboard[:summary]
+- trends               = @dashboard[:trends]
+- error_analysis       = @dashboard[:error_analysis]
+- open_failures        = @dashboard[:open_failures]
+- slow_batches         = @dashboard[:slow_batches]
+- auto_retry_summary   = @dashboard[:auto_retry_summary]
+- auto_retry_failures  = @dashboard[:auto_retry_failures]
 
 .container-fluid.py-4.bhdash
 
@@ -182,12 +183,14 @@
         - if open_failures.size >= 50
           %p.text-muted.small.mt-2.mb-0 ※ 最大50件を表示しています。
 
-  -# ── Auto Retry Status ───────────────────────────────────────────
+  -# ── Auto Retry Monitoring Dashboard ────────────────────────────
   .card.shadow-sm.mb-4
     .card-header.d-flex.justify-content-between.align-items-center
       %strong
-        Auto Retry — Self Healing Status
-        - if auto_retry_summary[:due_now] > 0
+        Auto Retry — Self Healing Monitor
+        - if auto_retry_summary[:exhausted] > 0
+          %span.badge.badge-danger.ml-1= "#{auto_retry_summary[:exhausted]} exhausted"
+        - elsif auto_retry_summary[:due_now] > 0
           %span.badge.badge-warning.ml-1= "#{auto_retry_summary[:due_now]} due"
       = button_to "Auto Retry 対象を実行",
                   run_auto_retries_admin_singing_recap_movies_path,
@@ -195,36 +198,149 @@
                   class: "btn btn-sm btn-outline-primary",
                   data: { confirm: "Auto Retry 対象を今すぐ実行しますか？" }
     .card-body
+      -# Summary cards
       .row.mb-3
-        .col-md-3.col-6.mb-2
-          .card.text-center.border-info
-            .card-body.py-2
-              %p.small.text-muted.mb-0 Scheduled
-              - sc = auto_retry_summary[:scheduled]
-              %h5.mb-0{ class: sc > 0 ? "text-info" : "text-muted" }= sc
-        .col-md-3.col-6.mb-2
-          .card.text-center.border-warning
-            .card-body.py-2
-              %p.small.text-muted.mb-0 Running
-              %h5.mb-0.text-warning= auto_retry_summary[:running]
-        .col-md-3.col-6.mb-2
-          .card.text-center.border-danger
-            .card-body.py-2
-              %p.small.text-muted.mb-0 Exhausted
-              - ex = auto_retry_summary[:exhausted]
-              %h5.mb-0{ class: ex > 0 ? "text-danger" : "text-muted" }= ex
-        .col-md-3.col-6.mb-2
+        .col-md-2.col-6.mb-2
+          - sc = auto_retry_summary[:scheduled]
+          = link_to health_admin_singing_recap_movies_path(auto_retry_status: "scheduled"),
+                    class: "text-decoration-none" do
+            .card.text-center.bhdash__ar-card{ class: @auto_retry_filter == "scheduled" ? "bhdash__ar-card--active border-info" : "border-info" }
+              .card-body.py-2
+                %p.small.text-muted.mb-1 Scheduled
+                %h5.mb-0{ class: sc > 0 ? "text-info" : "text-muted" }= sc
+        .col-md-2.col-6.mb-2
+          - rn = auto_retry_summary[:running]
+          = link_to health_admin_singing_recap_movies_path(auto_retry_status: "running"),
+                    class: "text-decoration-none" do
+            .card.text-center.bhdash__ar-card{ class: @auto_retry_filter == "running" ? "bhdash__ar-card--active border-warning" : "border-warning" }
+              .card-body.py-2
+                %p.small.text-muted.mb-1 Running
+                %h5.mb-0{ class: rn > 0 ? "text-warning" : "text-muted" }= rn
+        .col-md-2.col-6.mb-2
+          - ex = auto_retry_summary[:exhausted]
+          = link_to health_admin_singing_recap_movies_path(auto_retry_status: "exhausted"),
+                    class: "text-decoration-none" do
+            .card.text-center.bhdash__ar-card{ class: @auto_retry_filter == "exhausted" ? "bhdash__ar-card--active border-danger" : (ex > 0 ? "bhdash__ar-card--alert border-danger" : "border-danger") }
+              .card-body.py-2
+                %p.small.text-muted.mb-1
+                  Exhausted
+                  - if ex > 0
+                    %i.fas.fa-exclamation-circle.text-danger
+                %h5.mb-0{ class: ex > 0 ? "text-danger font-weight-bold" : "text-muted" }= ex
+        .col-md-2.col-6.mb-2
+          - dn = auto_retry_summary[:due_now]
+          = link_to health_admin_singing_recap_movies_path(auto_retry_status: "due_now"),
+                    class: "text-decoration-none" do
+            .card.text-center.bhdash__ar-card{ class: @auto_retry_filter == "due_now" ? "bhdash__ar-card--active border-warning" : "border-warning" }
+              .card-body.py-2
+                %p.small.text-muted.mb-1 Due Now
+                %h5.mb-0{ class: dn > 0 ? "text-warning" : "text-muted" }= dn
+        .col-md-2.col-6.mb-2
           .card.text-center
             .card-body.py-2
-              %p.small.text-muted.mb-0 Next Due At
-              %h6.mb-0
-                - if auto_retry_summary[:next_due_at]
-                  = l(auto_retry_summary[:next_due_at], format: :short)
-                - else
-                  %span.text-muted —
-      %p.small.text-muted.mb-0
+              %p.small.text-muted.mb-1 Next Due At
+              - if auto_retry_summary[:next_due_at]
+                %small.text-info= l(auto_retry_summary[:next_due_at], format: :short)
+              - else
+                %small.text-muted —
+        .col-md-2.col-6.mb-2
+          .card.text-center
+            .card-body.py-2
+              %p.small.text-muted.mb-1 Avg Attempts
+              %h5.mb-0.text-secondary= auto_retry_summary[:avg_attempts] || "—"
+
+      -# Active filter display
+      - if @auto_retry_filter
+        .d-flex.align-items-center.mb-3
+          %span.mr-2.small.text-muted フィルター:
+          %span.badge.badge-secondary.mr-2= @auto_retry_filter
+          = link_to "× クリア", health_admin_singing_recap_movies_path, class: "btn btn-sm btn-outline-secondary"
+
+      %p.small.text-muted.mb-3
         Auto Retry 対象: timeout / process exit / FFmpeg / Chromium などの一時的エラー（最大#{SingingRecapMovieBatchFailure::AUTO_RETRY_MAX_ATTEMPTS}回）。
         Interval: 1回目 5分後 → 2回目 15分後 → 3回目 30分後。
+
+  -# ── Auto Retry Failure Table ────────────────────────────────────
+  .card.shadow-sm.mb-4
+    .card-header.d-flex.justify-content-between.align-items-center
+      %strong
+        Auto Retry — Failure 一覧
+        - if @auto_retry_filter
+          %span.badge.badge-secondary.ml-1= @auto_retry_filter
+        - total_ar = auto_retry_summary[:scheduled] + auto_retry_summary[:running] + auto_retry_summary[:exhausted]
+        - if total_ar > 0
+          %span.badge.badge-light.ml-1= "計 #{total_ar} 件"
+    .card-body
+      - if auto_retry_failures.empty?
+        %p.text-success.mb-0
+          - if @auto_retry_filter
+            = "「#{@auto_retry_filter}」に該当する Auto Retry 記録はありません。"
+          - else
+            ✓ Auto Retry 対象の障害はありません。
+      - else
+        - if auto_retry_summary[:exhausted] > 0 && (@auto_retry_filter.nil? || @auto_retry_filter == "exhausted")
+          .alert.alert-danger.d-flex.align-items-start.mb-3
+            .mr-3
+              %strong 要手動確認
+            %div
+              %strong= "#{auto_retry_summary[:exhausted]} 件"
+              が Auto Retry 上限 (#{SingingRecapMovieBatchFailure::AUTO_RETRY_MAX_ATTEMPTS}回) に達しました。自動復旧できないため手動対応が必要です。
+              = link_to "Exhausted のみ表示 →",
+                        health_admin_singing_recap_movies_path(auto_retry_status: "exhausted"),
+                        class: "ml-2 btn btn-sm btn-outline-danger"
+        .table-responsive
+          %table.table.table-sm.table-hover.mb-0
+            %thead.thead-light
+              %tr
+                %th Customer
+                %th Year
+                %th Batch
+                %th Retry Status
+                %th Auto Retry
+                %th Attempts
+                %th Next Retry At
+                %th Last Retry At
+                %th Error Class
+                %th Auto Retry Error
+                %th Failed At
+            %tbody
+              - auto_retry_failures.each do |f|
+                - is_exhausted = f.auto_retry_exhausted?
+                %tr{ class: is_exhausted ? "table-danger" : nil }
+                  %td= f.customer&.name || "(不明)"
+                  %td= f.year
+                  %td.small
+                    - exec = f.singing_recap_movie_batch_execution
+                    = link_to "##{exec.id}", admin_singing_recap_movie_batch_execution_path(exec), class: "badge badge-light"
+                  %td
+                    %span.badge{ class: f.retry_status_badge_class }= f.retry_status_label
+                  %td
+                    %span.badge{ class: f.auto_retry_status_badge_class }= f.auto_retry_status_label
+                    - if is_exhausted
+                      %br
+                      %small.text-danger.font-weight-bold 要手動確認
+                  %td.text-center= f.auto_retry_attempts_count
+                  %td.small
+                    - if f.next_auto_retry_at && f.auto_retry_scheduled?
+                      = l(f.next_auto_retry_at, format: :short)
+                    - else
+                      %span.text-muted —
+                  %td.small
+                    - if f.last_auto_retry_at
+                      = l(f.last_auto_retry_at, format: :short)
+                    - else
+                      %span.text-muted —
+                  %td
+                    %code= f.error_class.presence || "—"
+                  %td.small{ style: "max-width: 200px;" }
+                    - if f.auto_retry_error_message.present?
+                      %span{ title: f.auto_retry_error_message }
+                        = truncate(f.auto_retry_error_message, length: 60)
+                    - else
+                      %span.text-muted —
+                  %td.small= f.failed_at ? l(f.failed_at, format: :short) : "—"
+        - if auto_retry_failures.size >= Singing::RecapMovieHealthDashboardService::AUTO_RETRY_FAILURES_LIMIT
+          %p.text-muted.small.mt-2.mb-0 ※ 最大#{Singing::RecapMovieHealthDashboardService::AUTO_RETRY_FAILURES_LIMIT}件を表示しています。
 
   -# ── Slow Batch Analysis ─────────────────────────────────────────
   .card.shadow-sm.mb-4
