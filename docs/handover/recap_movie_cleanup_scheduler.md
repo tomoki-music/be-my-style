@@ -34,7 +34,7 @@ DISABLE_SPRING=1 ~/.rbenv/shims/bundle exec rails runner 'Singing::CleanupGenera
 
 ```bash
 cd /home/ec2-user/be-my-style
-APP_ROOT=/home/ec2-user/be-my-style /home/ec2-user/be-my-style/bin/cleanup_generated_recap_movies
+APP_ROOT=/home/ec2-user/be-my-style /home/ec2-user/be-my-style/bin/cleanup_expired_recap_movies
 ```
 
 正常終了時はログに `start` と `finish exit_status=0` が出る。
@@ -48,15 +48,15 @@ RAILS_ENV=production DISABLE_SPRING=1 ~/.rbenv/shims/bundle exec rails runner 'S
 
 ## cron 登録例
 
-1 時間に 1 回、毎時 0 分に実行する。
+深夜 3 時に 1 日 1 回実行する。
 
 ```cron
-0 * * * * APP_ROOT=/home/ec2-user/be-my-style /home/ec2-user/be-my-style/bin/cleanup_generated_recap_movies >> /home/ec2-user/be-my-style/log/cron_recap_movie_cleanup.log 2>&1
+0 3 * * * APP_ROOT=/home/ec2-user/be-my-style /home/ec2-user/be-my-style/bin/cleanup_expired_recap_movies >> /home/ec2-user/be-my-style/log/cron_recap_movie_cleanup.log 2>&1
 ```
 
 ## 実行頻度
 
-1 時間に 1 回（毎時 0 分）
+1 日 1 回（深夜 3 時 / `0 3 * * *`）
 
 ## ログ出力先
 
@@ -80,8 +80,8 @@ grep RecapMovieCleanup /home/ec2-user/be-my-style/log/production.log
 期待するログ例:
 
 ```text
-[2026-05-19 00:00:00 +0900] cleanup_generated_recap_movies start app_root=/home/ec2-user/be-my-style bundle_bin=/home/ec2-user/.rbenv/shims/bundle
-[2026-05-19 00:00:05 +0900] cleanup_generated_recap_movies finish exit_status=0
+[2026-05-19 03:00:00 +0900] cleanup_expired_recap_movies start app_root=/home/ec2-user/be-my-style env=production
+[2026-05-19 03:00:05 +0900] cleanup_expired_recap_movies finish exit_status=0
 ```
 
 Rails ログ（job 内部）:
@@ -151,15 +151,17 @@ Redis + Solid Queue / Sidekiq の場合: 別プロセスが処理する。キュ
 
 ## 本番適用手順（実施する際）
 
+詳細な本番投入チェックリストは [recap_movie_cleanup_production_checklist.md](recap_movie_cleanup_production_checklist.md) を参照。
+
 1. 本番 EC2 に SSH 接続（事前確認必須）
-2. デプロイ済みの `bin/cleanup_generated_recap_movies` が存在することを確認
+2. デプロイ済みの `bin/cleanup_expired_recap_movies` が存在することを確認
    ```bash
-   ls -l /home/ec2-user/be-my-style/bin/cleanup_generated_recap_movies
+   ls -l /home/ec2-user/be-my-style/bin/cleanup_expired_recap_movies
    ```
 3. 実行権限を確認（`-rwxr-xr-x` であること）
 4. 手動実行で動作確認
    ```bash
-   APP_ROOT=/home/ec2-user/be-my-style /home/ec2-user/be-my-style/bin/cleanup_generated_recap_movies
+   APP_ROOT=/home/ec2-user/be-my-style /home/ec2-user/be-my-style/bin/cleanup_expired_recap_movies
    ```
 5. cron 登録
    ```bash
@@ -167,13 +169,13 @@ Redis + Solid Queue / Sidekiq の場合: 別プロセスが処理する。キュ
    ```
    追加する行:
    ```cron
-   0 * * * * APP_ROOT=/home/ec2-user/be-my-style /home/ec2-user/be-my-style/bin/cleanup_generated_recap_movies >> /home/ec2-user/be-my-style/log/cron_recap_movie_cleanup.log 2>&1
+   0 3 * * * APP_ROOT=/home/ec2-user/be-my-style /home/ec2-user/be-my-style/bin/cleanup_expired_recap_movies >> /home/ec2-user/be-my-style/log/cron_recap_movie_cleanup.log 2>&1
    ```
 6. 登録確認
    ```bash
    crontab -l
    ```
-7. 1 時間後にログを確認
+7. 翌日 3 時以降にログを確認
    ```bash
    tail -n 50 /home/ec2-user/be-my-style/log/cron_recap_movie_cleanup.log
    ```
@@ -183,9 +185,9 @@ Redis + Solid Queue / Sidekiq の場合: 別プロセスが処理する。キュ
 本番 APP_ROOT は `/home/ec2-user/be-my-style`（`/var/www/be-my-style/current` は存在しないことを確認済み）。
 
 スクリプトの default APP_ROOT は `/var/www/be-my-style/current` のまま（汎用値として保持）。
-cron 登録時は必ず `APP_ROOT=/home/ec2-user/be-my-style` を明示すること（B案採用）。
+cron 登録時は必ず `APP_ROOT=/home/ec2-user/be-my-style` を明示すること。
 
-本番 EC2 への cron 登録は未実施。登録タイミングはユーザーが判断してから行う。
+cron の有効化は Phase 8-C で実施。詳細は [recap_movie_cleanup_production_checklist.md](recap_movie_cleanup_production_checklist.md) を参照。
 
 ---
 
@@ -220,18 +222,3 @@ puts "has_anomalies: #{result[:has_anomalies]}"
 |------|------|
 | Completed without File | S3 直接確認 / journalctl で purge_later ログを追って原因調査 |
 | Cleaned but Attached | `purge_later` の再実行または S3 直接削除を検討（**要ユーザー確認**） |
-
-### cron runner スクリプト（Phase 8-B 追加）
-
-```
-bin/cleanup_expired_recap_movies
-```
-
-`bin/cleanup_generated_recap_movies` と同等機能。`RAILS_ENV` も環境変数で切り替え可能。
-cron 登録する場合は APP_ROOT を必ず明示すること。
-
-```cron
-0 3 * * * APP_ROOT=/home/ec2-user/be-my-style \
-  /home/ec2-user/be-my-style/bin/cleanup_expired_recap_movies \
-  >> /home/ec2-user/be-my-style/log/cron_recap_movie_cleanup.log 2>&1
-```
