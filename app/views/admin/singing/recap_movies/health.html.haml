@@ -7,6 +7,7 @@
 - slow_batches         = @dashboard[:slow_batches]
 - auto_retry_summary   = @dashboard[:auto_retry_summary]
 - auto_retry_failures  = @dashboard[:auto_retry_failures]
+- storage_expiry       = @dashboard[:storage_expiry]
 
 .container-fluid.py-4.bhdash
 
@@ -341,6 +342,58 @@
                   %td.small= f.failed_at ? l(f.failed_at, format: :short) : "—"
         - if auto_retry_failures.size >= Singing::RecapMovieHealthDashboardService::AUTO_RETRY_FAILURES_LIMIT
           %p.text-muted.small.mt-2.mb-0 ※ 最大#{Singing::RecapMovieHealthDashboardService::AUTO_RETRY_FAILURES_LIMIT}件を表示しています。
+
+  -# ── Storage & Expiry ────────────────────────────────────────────
+  .card.shadow-sm.mb-4
+    .card-header.d-flex.justify-content-between.align-items-center
+      %strong
+        Storage & Expiry — Cleanup Monitor
+        - if storage_expiry[:cleanup_pending] > 0
+          %span.badge.badge-warning.ml-1= "#{storage_expiry[:cleanup_pending]} pending"
+      = button_to "Cleanup Job を実行",
+                  run_cleanup_admin_singing_recap_movies_path,
+                  method: :post,
+                  class: "btn btn-sm btn-outline-warning",
+                  data: { confirm: "期限切れ Movie #{storage_expiry[:cleanup_pending]}件を今すぐCleanupしますか？" }
+    .card-body
+      .row.mb-2
+        .col-md-3.col-6.mb-3
+          - cp = storage_expiry[:cleanup_pending]
+          - cp_cls = cp.zero? ? "text-success" : cp < 50 ? "text-warning" : "text-danger"
+          .card.text-center.bhdash__card
+            .card-body
+              %p.bhdash__card-label Cleanup Pending
+              %h3.bhdash__card-value{ class: cp_cls }= cp
+              %p.bhdash__card-sub expires_at 超過・未処理
+        .col-md-3.col-6.mb-3
+          .card.text-center.bhdash__card
+            .card-body
+              %p.bhdash__card-label Expired (処理済)
+              %h3.bhdash__card-value.text-secondary= storage_expiry[:expired_total]
+              %p.bhdash__card-sub status = expired
+        .col-md-3.col-6.mb-3
+          .card.text-center.bhdash__card
+            .card-body
+              %p.bhdash__card-label Recently Cleaned
+              %h3.bhdash__card-value.text-info= storage_expiry[:recently_cleaned]
+              %p.bhdash__card-sub 直近7日で cleanup 済み
+        .col-md-3.col-6.mb-3
+          - es = storage_expiry[:expiring_soon]
+          - es_cls = es.zero? ? "text-muted" : es < 20 ? "text-warning" : "text-danger"
+          .card.text-center.bhdash__card
+            .card-body
+              %p.bhdash__card-label Expiring Soon
+              %h3.bhdash__card-value{ class: es_cls }= es
+              %p.bhdash__card-sub 7日以内に期限切れ予定
+      %p.small.text-muted.mb-0
+        Cleanup Job:
+        %code Singing::CleanupGeneratedRecapMoviesJob
+        (バッチ上限 #{Singing::CleanupGeneratedRecapMoviesJob::BATCH_LIMIT}件/回)。
+        期限切れ Movie の S3 ファイルを
+        %code purge_later
+        し、
+        %code cleaned_up_at
+        を記録します。
 
   -# ── Slow Batch Analysis ─────────────────────────────────────────
   .card.shadow-sm.mb-4

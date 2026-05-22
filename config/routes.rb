@@ -50,6 +50,7 @@ Rails.application.routes.draw do
           get  :preview_yearly_batch
           get  :health
           post :run_auto_retries
+          post :run_cleanup
         end
       end
 
@@ -255,6 +256,7 @@ Rails.application.routes.draw do
     resources :recap_movies, only: [:index, :show] do
       member do
         post :track_share
+        post :request_regeneration
       end
     end
     resources :users, only: [:show, :edit, :update] do

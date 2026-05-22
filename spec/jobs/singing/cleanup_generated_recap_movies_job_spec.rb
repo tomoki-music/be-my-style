@@ -65,12 +65,37 @@ RSpec.describe Singing::CleanupGeneratedRecapMoviesJob, type: :job do
       end
     end
 
+    it "expire! 後に cleaned_up_at が記録される" do
+      movie = create(:singing_generated_recap_movie, :completed, customer: customer, expires_at: 1.second.ago)
+      described_class.perform_now
+      expect(movie.reload.cleaned_up_at).to be_present
+    end
+
     it "cleanup ログを出力する" do
       create(:singing_generated_recap_movie, :completed, customer: customer, expires_at: 1.second.ago)
       logged = []
       allow(Rails.logger).to receive(:info) { |msg| logged << msg }
       described_class.perform_now
       expect(logged).to include(match(/\[RecapMovieCleanup\] expired movie_id=\d+ year=\d+ customer_id=\d+/))
+    end
+
+    it "完了サマリーログを出力する" do
+      create(:singing_generated_recap_movie, :completed, customer: customer, expires_at: 1.second.ago)
+      logged = []
+      allow(Rails.logger).to receive(:info) { |msg| logged << msg }
+      described_class.perform_now
+      expect(logged).to include(match(/\[RecapMovieCleanup\] done — total=1 succeeded=1 failed=0/))
+    end
+
+    it "BATCH_LIMIT 件を超えるターゲットがあっても BATCH_LIMIT 件しか処理しない" do
+      stub_const("Singing::CleanupGeneratedRecapMoviesJob::BATCH_LIMIT", 2)
+      3.times do
+        c = create(:customer, domain_name: "singing")
+        create(:singing_generated_recap_movie, customer: c, status: :pending, expires_at: 1.second.ago)
+      end
+
+      expect { described_class.perform_now }
+        .to change { SingingGeneratedRecapMovie.expired.count }.by(2)
     end
 
     it "1 件が expire! で例外を起こしても残りを処理し、job 自体は例外を raise しない" do

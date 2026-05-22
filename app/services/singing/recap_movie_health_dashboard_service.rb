@@ -25,6 +25,7 @@ module Singing
         slow_batches:        build_slow_batches,
         auto_retry_summary:  build_auto_retry_summary,
         auto_retry_failures: build_auto_retry_failures,
+        storage_expiry:      build_storage_expiry,
       }
     end
 
@@ -155,6 +156,23 @@ module Singing
         due_now:      due_now,
         next_due_at:  next_due,
         avg_attempts: avg_attempts,
+      }
+    end
+
+    def build_storage_expiry
+      cleanup_pending    = SingingGeneratedRecapMovie.cleanup_pending.count
+      expired_total      = SingingGeneratedRecapMovie.expired.count
+      recently_cleaned   = SingingGeneratedRecapMovie.recently_cleaned(7.days.ago).count
+      expiring_soon      = SingingGeneratedRecapMovie
+        .completed
+        .where("expires_at BETWEEN ? AND ?", Time.current, 7.days.from_now)
+        .count
+
+      {
+        cleanup_pending:  cleanup_pending,
+        expired_total:    expired_total,
+        recently_cleaned: recently_cleaned,
+        expiring_soon:    expiring_soon,
       }
     end
 

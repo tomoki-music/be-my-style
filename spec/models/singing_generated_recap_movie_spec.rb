@@ -84,10 +84,25 @@ RSpec.describe SingingGeneratedRecapMovie, type: :model do
     it "status を completed に、generated_at を記録する" do
       movie = create(:singing_generated_recap_movie, customer: customer, status: :processing)
       freeze_time = Time.current
+      allow(customer).to receive(:plan).and_return("free")
       movie.mark_completed!(generated_time: freeze_time)
       movie.reload
       expect(movie.status).to eq("completed")
       expect(movie.generated_at).to be_within(1.second).of(freeze_time)
+    end
+
+    it "ExpiryPolicy に基づいて expires_at をセットする（free = 30日後）" do
+      allow(customer).to receive(:plan).and_return("free")
+      movie = create(:singing_generated_recap_movie, customer: customer, status: :processing)
+      movie.mark_completed!
+      expect(movie.reload.expires_at).to be_within(5.seconds).of(30.days.from_now)
+    end
+
+    it "premium プランなら expires_at は nil（無期限）" do
+      allow(customer).to receive(:plan).and_return("premium")
+      movie = create(:singing_generated_recap_movie, customer: customer, status: :processing)
+      movie.mark_completed!
+      expect(movie.reload.expires_at).to be_nil
     end
   end
 
@@ -162,7 +177,7 @@ RSpec.describe SingingGeneratedRecapMovie, type: :model do
 
   describe "#expire!" do
     context "completed でファイルが添付されている場合" do
-      it "video_file を purge_later し、status を expired に、error_message を nil にする" do
+      it "video_file を purge_later し、status を expired に、error_message を nil にし、cleaned_up_at を記録する" do
         movie = create(:singing_generated_recap_movie, :completed, customer: customer, expires_at: 1.second.ago, error_message: nil)
         expect(movie.video_file).to be_attached
 
@@ -172,11 +187,12 @@ RSpec.describe SingingGeneratedRecapMovie, type: :model do
 
         expect(movie.status).to eq("expired")
         expect(movie.error_message).to be_nil
+        expect(movie.cleaned_up_at).to be_within(5.seconds).of(Time.current)
       end
     end
 
     context "completed でファイルが添付されていない場合" do
-      it "purge_later を呼ばずに status を expired にする" do
+      it "purge_later を呼ばずに status を expired にし、cleaned_up_at を記録する" do
         movie = create(:singing_generated_recap_movie, customer: customer, status: :completed, generated_at: Time.current, expires_at: 1.second.ago)
         expect(movie.video_file).not_to be_attached
 
@@ -184,14 +200,17 @@ RSpec.describe SingingGeneratedRecapMovie, type: :model do
         movie.expire!
 
         expect(movie.reload.status).to eq("expired")
+        expect(movie.reload.cleaned_up_at).to be_present
       end
     end
 
     context "pending の場合" do
-      it "status を expired にする" do
+      it "status を expired にし cleaned_up_at を記録する" do
         movie = create(:singing_generated_recap_movie, customer: customer, status: :pending, expires_at: 1.second.ago)
         movie.expire!
-        expect(movie.reload.status).to eq("expired")
+        movie.reload
+        expect(movie.status).to eq("expired")
+        expect(movie.cleaned_up_at).to be_present
       end
     end
 
@@ -210,6 +229,34 @@ RSpec.describe SingingGeneratedRecapMovie, type: :model do
         expect(movie.reload.status).to eq("expired")
         expect(movie.reload.error_message).to eq("Remotion render failed")
       end
+    end
+  end
+
+  describe "#cleaned_up?" do
+    it "cleaned_up_at が present なら true" do
+      movie = build(:singing_generated_recap_movie, :expired, customer: customer, cleaned_up_at: Time.current)
+      expect(movie).to be_cleaned_up
+    end
+
+    it "cleaned_up_at が nil なら false" do
+      movie = build(:singing_generated_recap_movie, :expired, customer: customer, cleaned_up_at: nil)
+      expect(movie).not_to be_cleaned_up
+    end
+  end
+
+  describe ".recently_cleaned scope" do
+    it "7日以内に cleaned_up_at が設定された expired movie を返す" do
+      cleaned = create(:singing_generated_recap_movie, :expired, customer: customer, cleaned_up_at: 1.day.ago)
+      old_customer = create(:customer, domain_name: "singing")
+      _old = create(:singing_generated_recap_movie, :expired, customer: old_customer, cleaned_up_at: 10.days.ago)
+
+      expect(SingingGeneratedRecapMovie.recently_cleaned(7.days.ago)).to include(cleaned)
+    end
+
+    it "7日より前の cleaned_up_at のレコードは含まない" do
+      old_customer = create(:customer, domain_name: "singing")
+      create(:singing_generated_recap_movie, :expired, customer: old_customer, cleaned_up_at: 10.days.ago)
+      expect(SingingGeneratedRecapMovie.recently_cleaned(7.days.ago)).to be_empty
     end
   end
 end

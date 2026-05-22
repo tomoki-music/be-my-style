@@ -17,17 +17,20 @@ class SingingGeneratedRecapMovie < ApplicationRecord
 
   scope :reusable,        -> { completed.where("expires_at IS NULL OR expires_at > ?", Time.current) }
   scope :expired_targets, -> { where(status: %w[pending processing completed failed]).where("expires_at < ?", Time.current) }
+  scope :cleanup_pending, -> { expired_targets }
+  scope :recently_cleaned, ->(since = 7.days.ago) { expired.where("cleaned_up_at >= ?", since) }
 
-  def completed? = status == "completed"
-  def failed?    = status == "failed"
-  def expired?   = status == "expired"
+  def completed?  = status == "completed"
+  def failed?     = status == "failed"
+  def expired?    = status == "expired"
+  def cleaned_up? = cleaned_up_at.present?
 
   def expire!
     if completed?
       video_file.purge_later if video_file.attached?
-      update!(status: :expired, error_message: nil)
+      update!(status: :expired, error_message: nil, cleaned_up_at: Time.current)
     else
-      update!(status: :expired)
+      update!(status: :expired, cleaned_up_at: Time.current)
     end
   end
 
@@ -44,7 +47,8 @@ class SingingGeneratedRecapMovie < ApplicationRecord
   end
 
   def mark_completed!(generated_time: Time.current)
-    update!(status: :completed, generated_at: generated_time)
+    new_expires_at = Singing::RecapMovieExpiryPolicy.expires_at_for(customer)
+    update!(status: :completed, generated_at: generated_time, expires_at: new_expires_at)
   end
 
   def mark_failed!(message)

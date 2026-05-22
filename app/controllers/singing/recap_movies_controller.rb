@@ -1,6 +1,6 @@
 class Singing::RecapMoviesController < Singing::BaseController
   before_action :authenticate_customer!
-  before_action :set_recap_movie, only: [:show, :track_share]
+  before_action :set_recap_movie, only: [:show, :track_share, :request_regeneration]
 
   SCORE_GROWTH_LABELS = {
     overall_score:    "総合力",
@@ -15,6 +15,31 @@ class Singing::RecapMoviesController < Singing::BaseController
 
   def show
     @movie_props = build_movie_props(@recap_movie)
+  end
+
+  def request_regeneration
+    unless @recap_movie.expired?
+      redirect_to singing_recap_movie_path(@recap_movie),
+                  alert: "このRecap Movieは期限切れではないため再生成できません。"
+      return
+    end
+
+    result = Singing::RecapMovieRequestService.call(current_customer, year: @recap_movie.year)
+
+    case result.status
+    when :reset_pending
+      redirect_to singing_recap_movie_path(result.movie),
+                  notice: "Recap Movie の再生成リクエストを受け付けました。数分後に完成します。"
+    when :already_pending, :already_processing
+      redirect_to singing_recap_movie_path(@recap_movie),
+                  notice: "すでに再生成処理中です。しばらくお待ちください。"
+    when :empty_source
+      redirect_to singing_recap_movie_path(@recap_movie),
+                  alert: "生成に必要なデータが見つかりません。診断を追加してからお試しください。"
+    else
+      redirect_to singing_recap_movie_path(@recap_movie),
+                  notice: "処理を開始しました。"
+    end
   end
 
   def track_share

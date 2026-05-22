@@ -97,6 +97,14 @@ class Admin::Singing::RecapMoviesController < ApplicationController
                         "失敗: #{result.failed_count}件"
   end
 
+  def run_cleanup
+    Singing::CleanupGeneratedRecapMoviesJob.perform_now
+    pending = SingingGeneratedRecapMovie.cleanup_pending.count
+
+    redirect_to health_admin_singing_recap_movies_path,
+                notice: "Cleanup Job 実行完了。残り cleanup pending: #{pending}件"
+  end
+
   def regenerate
     unless @movie.failed? || @movie.expired?
       redirect_to admin_singing_recap_movie_path(@movie),

@@ -88,8 +88,14 @@
         .srm-status-panel.srm-status-panel--expired
           .srm-status-panel__icon ⏰
           %p.srm-status-panel__title 動画の保存期限が切れました
-          %p.srm-status-panel__desc Recap Movie の保存期限が過ぎました。再生成はバッジページからリクエストできます。
-          = link_to "バッジページへ", singing_badges_path, class: "srm-btn srm-btn--secondary"
+          %p.srm-status-panel__desc Recap Movie の動画ファイルは保存期限が過ぎたため削除されました。もう一度生成することができます。
+          .srm-status-panel__actions
+            = button_to "もう一度生成する",
+                        request_regeneration_singing_recap_movie_path(@recap_movie),
+                        method: :post,
+                        class: "srm-btn srm-btn--primary",
+                        data: { confirm: "Recap Movie を再生成しますか？" }
+            = link_to "バッジページへ", singing_badges_path, class: "srm-btn srm-btn--secondary"
 
     - if @recap_movie.completed? && @recap_movie.video_file.attached?
       - _share_text = CGI.escape("🎤 My Singing Recap #{@recap_movie.year}\n今年の歌の成長をまとめました✨\n#BeMyStyle #SingingRecap")
