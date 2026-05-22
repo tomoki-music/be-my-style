@@ -930,6 +930,112 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
     end
   end
 
+  describe "GET /admin/singing/recap_movies/health (health dashboard)" do
+    let(:execution) do
+      FactoryBot.create(:singing_recap_movie_batch_execution, :completed, admin: admin, year: 2024)
+    end
+
+    context "管理者ログイン済み" do
+      before { sign_in admin }
+
+      it "200 OK を返すこと" do
+        get health_admin_singing_recap_movies_path
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "ページタイトルを表示すること" do
+        get health_admin_singing_recap_movies_path
+        expect(response.body).to include("Batch Health Dashboard")
+      end
+
+      it "Summary Cards セクションを表示すること" do
+        get health_admin_singing_recap_movies_path
+        expect(response.body).to include("Total Batches")
+        expect(response.body).to include("Batch Success Rate")
+        expect(response.body).to include("Retry Recovery Rate")
+        expect(response.body).to include("Open Failures")
+        expect(response.body).to include("Avg Render Duration")
+      end
+
+      it "Trend Graph セクションを表示すること" do
+        get health_admin_singing_recap_movies_path
+        expect(response.body).to include("直近30日 Failure Trend")
+      end
+
+      it "Error Analysis セクションを表示すること" do
+        get health_admin_singing_recap_movies_path
+        expect(response.body).to include("Top Error Classes")
+      end
+
+      it "Open Failures セクションを表示すること" do
+        get health_admin_singing_recap_movies_path
+        expect(response.body).to include("Open Failures")
+      end
+
+      it "Slow Batch Analysis セクションを表示すること" do
+        get health_admin_singing_recap_movies_path
+        expect(response.body).to include("Slow Batch Analysis")
+      end
+
+      context "open failure が存在する場合" do
+        let!(:open_failure) do
+          FactoryBot.create(:singing_recap_movie_batch_failure,
+                            singing_recap_movie_batch_execution: execution,
+                            customer: customer,
+                            retry_status: "pending",
+                            error_class: "Open3::Timeout")
+        end
+
+        it "failure の error_class を表示すること" do
+          get health_admin_singing_recap_movies_path
+          expect(response.body).to include("Open3::Timeout")
+        end
+
+        it "customer 名を表示すること" do
+          get health_admin_singing_recap_movies_path
+          expect(response.body).to include(customer.name)
+        end
+
+        it "Batch へのリンクを含むこと" do
+          get health_admin_singing_recap_movies_path
+          expect(response.body).to include("Batch ##{execution.id}")
+        end
+      end
+
+      context "error_analysis にエラーが存在する場合" do
+        before do
+          FactoryBot.create(:singing_recap_movie_batch_failure,
+                            singing_recap_movie_batch_execution: execution,
+                            customer: customer,
+                            error_class: "FFmpegError")
+        end
+
+        it "Error Class テーブルに表示されること" do
+          get health_admin_singing_recap_movies_path
+          expect(response.body).to include("FFmpegError")
+        end
+      end
+
+      context "slow batch が存在する場合" do
+        before do
+          execution.update!(started_at: 10.minutes.ago, finished_at: Time.current)
+        end
+
+        it "slow batch のリンクを表示すること" do
+          get health_admin_singing_recap_movies_path
+          expect(response.body).to include("##{execution.id}")
+        end
+      end
+    end
+
+    context "管理者未ログイン" do
+      it "アクセスできないこと" do
+        get health_admin_singing_recap_movies_path
+        expect(response).not_to have_http_status(:ok)
+      end
+    end
+  end
+
   describe "非管理者のアクセス" do
     shared_examples "管理者画面にアクセスできない" do
       it "index にアクセスできないこと" do

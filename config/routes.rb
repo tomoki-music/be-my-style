@@ -48,6 +48,7 @@ Rails.application.routes.draw do
         collection do
           post :generate_yearly_batch
           get  :preview_yearly_batch
+          get  :health
         end
       end
 

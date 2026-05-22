@@ -1,3 +1,70 @@
+// ── Batch Health Dashboard ──────────────────────────────────────────
+
+.bhdash {
+  &__card {
+    border-top: 3px solid #6f42c1;
+  }
+
+  &__card-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+  }
+
+  &__card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    line-height: 1;
+  }
+
+  &__card-sub {
+    font-size: 0.72rem;
+    color: #adb5bd;
+    margin-bottom: 0;
+  }
+
+  // SVG trend chart
+  &__chart-wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  &__chart {
+    display: block;
+    width: 100%;
+    min-width: 360px;
+    height: 100px;
+  }
+
+  &__chart-bar--failure {
+    fill: #dc3545;
+    opacity: 0.75;
+  }
+
+  &__chart-bar--resolved {
+    fill: #28a745;
+    opacity: 0.75;
+  }
+
+  &__legend-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    margin-right: 4px;
+    vertical-align: middle;
+
+    &--failure { background: #dc3545; }
+    &--resolved { background: #28a745; }
+  }
+}
+
+// ── Bar chart ──────────────────────────────────────────────────────
+
 .admin-recap-bar__track {
   height: 14px;
   background-color: #e9ecef;

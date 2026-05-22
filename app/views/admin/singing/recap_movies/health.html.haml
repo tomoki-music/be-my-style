@@ -1,0 +1,220 @@
+= render 'layouts/admin_header_menu'
+
+- summary       = @dashboard[:summary]
+- trends        = @dashboard[:trends]
+- error_analysis = @dashboard[:error_analysis]
+- open_failures = @dashboard[:open_failures]
+- slow_batches  = @dashboard[:slow_batches]
+
+.container-fluid.py-4.bhdash
+
+  .d-flex.justify-content-between.align-items-center.mb-4
+    %h2.mb-0
+      Recap Movie — Batch Health Dashboard
+    = link_to "← 管理ダッシュボード", admin_singing_recap_movies_path, class: "btn btn-sm btn-outline-secondary"
+
+  %p.text-muted.mb-4
+    Recap Movie システム全体の健康状態を横断的に監視します。
+
+  -# ── Summary Cards ──────────────────────────────────────────────
+  .row.mb-4
+    .col-md-4.col-6.mb-3
+      .card.text-center.shadow-sm.bhdash__card
+        .card-body
+          %p.bhdash__card-label Total Batches
+          %h3.bhdash__card-value= summary[:total_batches]
+          %p.bhdash__card-sub 全バッチ実行数
+
+    .col-md-4.col-6.mb-3
+      - rate = summary[:batch_success_rate]
+      - color_cls = rate >= 80 ? "text-success" : rate >= 50 ? "text-warning" : "text-danger"
+      .card.text-center.shadow-sm.bhdash__card
+        .card-body
+          %p.bhdash__card-label Batch Success Rate
+          %h3.bhdash__card-value{ class: color_cls }= "#{rate}%"
+          %p.bhdash__card-sub completed / total
+
+    .col-md-4.col-6.mb-3
+      - rr = summary[:retry_recovery_rate]
+      - rr_cls = rr >= 70 ? "text-success" : rr >= 40 ? "text-warning" : "text-danger"
+      .card.text-center.shadow-sm.bhdash__card
+        .card-body
+          %p.bhdash__card-label Retry Recovery Rate
+          %h3.bhdash__card-value{ class: rr_cls }= "#{rr}%"
+          %p.bhdash__card-sub resolved / retry_attempted
+
+    .col-md-4.col-6.mb-3
+      - of = summary[:open_failures]
+      - of_cls = of.zero? ? "text-success" : of < 10 ? "text-warning" : "text-danger"
+      .card.text-center.shadow-sm.bhdash__card
+        .card-body
+          %p.bhdash__card-label Open Failures
+          %h3.bhdash__card-value{ class: of_cls }= of
+          %p.bhdash__card-sub pending + retry_failed
+
+    .col-md-4.col-6.mb-3
+      .card.text-center.shadow-sm.bhdash__card
+        .card-body
+          %p.bhdash__card-label Avg Render Duration
+          %h3.bhdash__card-value
+            - if summary[:avg_render_duration]
+              - d = summary[:avg_render_duration]
+              - if d < 60
+                = "#{d}s"
+              - else
+                = "#{d / 60}m #{d % 60}s"
+            - else
+              %span.text-muted —
+          %p.bhdash__card-sub 平均バッチ実行時間
+
+  -# ── Trend Graph (直近30日) ──────────────────────────────────────
+  .card.shadow-sm.mb-4
+    .card-header
+      %strong 直近30日 Failure Trend
+    .card-body
+      - max_failures = trends.map { |t| t[:failure_count] }.max.to_i
+      - max_failures = 1 if max_failures.zero?
+      - chart_h = 80
+      .bhdash__chart-wrap
+        %svg.bhdash__chart{ viewBox: "0 0 #{trends.size * 12} #{chart_h + 20}", preserveAspectRatio: "none" }
+          - trends.each_with_index do |t, i|
+            - bar_h  = (t[:failure_count].to_f / max_failures * chart_h).round
+            - res_h  = (t[:resolved_count].to_f / max_failures * chart_h).round
+            - x      = i * 12
+            - bar_y  = chart_h - bar_h
+            - res_y  = chart_h - res_h
+            - if bar_h > 0
+              %rect.bhdash__chart-bar--failure{ x: x, y: bar_y, width: 5, height: bar_h,
+                "data-date": t[:date].to_s,
+                "data-failures": t[:failure_count],
+                "data-resolved": t[:resolved_count] }
+            - if res_h > 0
+              %rect.bhdash__chart-bar--resolved{ x: x + 6, y: res_y, width: 5, height: res_h }
+        .d-flex.mt-1.small.text-muted
+          .mr-3
+            %span.bhdash__legend-dot.bhdash__legend-dot--failure
+            Failures
+          .mr-3
+            %span.bhdash__legend-dot.bhdash__legend-dot--resolved
+            Resolved
+      .row.mt-3
+        .col-md-4.text-center.small
+          %strong.text-danger= trends.sum { |t| t[:failure_count] }
+          %div 30日合計 Failures
+        .col-md-4.text-center.small
+          %strong.text-success= trends.sum { |t| t[:resolved_count] }
+          %div 30日合計 Resolved
+        .col-md-4.text-center.small
+          - total_f = trends.sum { |t| t[:failure_count] }
+          - total_r = trends.sum { |t| t[:resolved_count] }
+          - trend_rr = total_f > 0 ? (total_r.to_f / total_f * 100).round(1) : 0
+          %strong{ class: trend_rr >= 70 ? "text-success" : "text-warning" }= "#{trend_rr}%"
+          %div 30日 Recovery Rate
+
+  -# ── Error Analysis ──────────────────────────────────────────────
+  .card.shadow-sm.mb-4
+    .card-header
+      %strong Top Error Classes
+    .card-body
+      - if error_analysis.empty?
+        %p.text-muted.mb-0 障害レコードがありません。
+      - else
+        - max_count = error_analysis.values.max.to_f
+        .table-responsive
+          %table.table.table-sm.table-hover.mb-0
+            %thead.thead-light
+              %tr
+                %th Error Class
+                %th Count
+                %th 割合
+            %tbody
+              - error_analysis.each do |klass, count|
+                %tr
+                  %td
+                    %code= klass.presence || "(不明)"
+                  %td.text-danger.font-weight-bold= count
+                  %td{ style: "min-width: 160px;" }
+                    .admin-recap-bar__track
+                      .admin-recap-bar__fill.admin-recap-bar__fill--failed{ style: "width: #{(count / max_count * 100).round}%" }
+
+  -# ── Open Failures ───────────────────────────────────────────────
+  .card.shadow-sm.mb-4
+    .card-header.d-flex.justify-content-between.align-items-center
+      %strong
+        Open Failures
+        - if summary[:open_failures] > 0
+          %span.badge.badge-danger.ml-1= summary[:open_failures]
+    .card-body
+      - if open_failures.empty?
+        %p.text-success.mb-0
+          ✓ 未解決の障害はありません。
+      - else
+        .table-responsive
+          %table.table.table-sm.table-hover.mb-0
+            %thead.thead-light
+              %tr
+                %th Customer
+                %th Year
+                %th Error Class
+                %th Retry Status
+                %th Failed At
+                %th Batch
+            %tbody
+              - open_failures.each do |f|
+                %tr
+                  %td= f.customer&.name || "(不明)"
+                  %td= f.year
+                  %td
+                    %code= f.error_class.presence || "—"
+                  %td
+                    %span.badge{ class: f.retry_status_badge_class }= f.retry_status_label
+                  %td.small= f.failed_at ? l(f.failed_at, format: :short) : "—"
+                  %td.small
+                    - exec = f.singing_recap_movie_batch_execution
+                    = link_to "Batch ##{exec.id}", admin_singing_recap_movie_batch_execution_path(exec), class: "badge badge-light"
+        - if open_failures.size >= 50
+          %p.text-muted.small.mt-2.mb-0 ※ 最大50件を表示しています。
+
+  -# ── Slow Batch Analysis ─────────────────────────────────────────
+  .card.shadow-sm.mb-4
+    .card-header
+      %strong Slow Batch Analysis (Top 10)
+    .card-body
+      - if slow_batches.empty?
+        %p.text-muted.mb-0 バッチ実行履歴がありません。
+      - else
+        .table-responsive
+          %table.table.table-sm.table-hover.mb-0
+            %thead.thead-light
+              %tr
+                %th Batch
+                %th Year
+                %th Status
+                %th Duration
+                %th Total Movies
+                %th Failures
+                %th Started At
+            %tbody
+              - max_dur = slow_batches.map { |b| (b.finished_at - b.started_at).to_i }.max.to_f
+              - slow_batches.each do |b|
+                - dur = (b.finished_at - b.started_at).to_i
+                %tr
+                  %td= link_to "##{b.id}", admin_singing_recap_movie_batch_execution_path(b)
+                  %td= b.year
+                  %td
+                    - badge_cls = { "completed" => "badge-success", "failed" => "badge-danger",
+                                    "running" => "badge-warning", "enqueued" => "badge-secondary",
+                                    "cancelled" => "badge-dark" }[b.status] || "badge-light"
+                    %span.badge{ class: badge_cls }= b.status
+                  %td
+                    .d-flex.align-items-center
+                      .admin-recap-bar__track.flex-grow-1.mr-2{ style: "max-width: 80px;" }
+                        .admin-recap-bar__fill{ style: "width: #{max_dur > 0 ? (dur / max_dur * 100).round : 0}%; background: #6f42c1;" }
+                      %span.small
+                        - if dur < 60
+                          = "#{dur}s"
+                        - else
+                          = "#{dur / 60}m #{dur % 60}s"
+                  %td= b.total_movies_count
+                  %td.text-danger= b.failed_movies_count
+                  %td.small= b.started_at ? l(b.started_at, format: :short) : "—"

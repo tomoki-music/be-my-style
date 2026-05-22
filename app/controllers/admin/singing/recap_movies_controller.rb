@@ -80,6 +80,10 @@ class Admin::Singing::RecapMoviesController < ApplicationController
                 notice: "#{year}年のRecap Movie一括生成を開始しました。"
   end
 
+  def health
+    @dashboard = Singing::RecapMovieHealthDashboardService.call
+  end
+
   def regenerate
     unless @movie.failed? || @movie.expired?
       redirect_to admin_singing_recap_movie_path(@movie),
