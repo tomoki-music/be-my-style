@@ -10,7 +10,16 @@ RSpec.describe Singing::RecapMovieHealthDashboardService do
     it "必要なキーを全て返すこと" do
       expect(result.keys).to contain_exactly(
         :summary, :trends, :error_analysis, :open_failures, :slow_batches,
-        :auto_retry_summary, :auto_retry_failures, :storage_expiry
+        :auto_retry_summary, :auto_retry_failures, :storage_expiry, :storage_audit
+      )
+    end
+
+    it "storage_audit に必要なキーが含まれること" do
+      expect(result[:storage_audit].keys).to include(
+        :completed_without_file_count,
+        :cleaned_but_attached_count,
+        :has_anomalies,
+        :audited_at,
       )
     end
   end

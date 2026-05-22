@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# bin/cleanup_expired_recap_movies
+#
+# Cron runner: Singing::CleanupGeneratedRecapMoviesJob を実行し
+# 期限切れ Recap Movie の S3 ファイルを削除する。
+#
+# 使い方:
+#   /path/to/app/bin/cleanup_expired_recap_movies
+#
+# 環境変数 (任意):
+#   APP_ROOT    アプリルートを上書きする場合に指定
+#   BUNDLE_BIN  bundle exec のパスを上書きする場合に指定
+#   RAILS_ENV   デフォルト: production
+#
+# cron 登録例 (本番サーバー上):
+#   0 3 * * * APP_ROOT=/home/ec2-user/be-my-style \
+#     /home/ec2-user/be-my-style/bin/cleanup_expired_recap_movies \
+#     >> /home/ec2-user/be-my-style/log/cron_recap_movie_cleanup.log 2>&1
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APP_ROOT="${APP_ROOT:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
+BUNDLE_BIN="${BUNDLE_BIN:-${HOME:-/home/deploy}/.rbenv/shims/bundle}"
+RAILS_ENV="${RAILS_ENV:-production}"
+
+cd "${APP_ROOT}"
+
+timestamp() { date '+%Y-%m-%d %H:%M:%S %z'; }
+
+echo "[$(timestamp)] cleanup_expired_recap_movies start app_root=${APP_ROOT} env=${RAILS_ENV}"
+
+if RAILS_ENV="${RAILS_ENV}" DISABLE_SPRING=1 "${BUNDLE_BIN}" exec rails runner \
+  'Singing::CleanupGeneratedRecapMoviesJob.perform_now'; then
+  echo "[$(timestamp)] cleanup_expired_recap_movies finish exit_status=0"
+else
+  status=$?
+  echo "[$(timestamp)] cleanup_expired_recap_movies failed exit_status=${status}" >&2
+  exit "${status}"
+fi

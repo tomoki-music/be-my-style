@@ -8,6 +8,7 @@
 - auto_retry_summary   = @dashboard[:auto_retry_summary]
 - auto_retry_failures  = @dashboard[:auto_retry_failures]
 - storage_expiry       = @dashboard[:storage_expiry]
+- storage_audit        = @dashboard[:storage_audit]
 
 .container-fluid.py-4.bhdash
 
@@ -394,6 +395,111 @@
         し、
         %code cleaned_up_at
         を記録します。
+
+  -# ── Storage Audit (検知のみ・削除なし) ──────────────────────────
+  .card.shadow-sm.mb-4{ class: storage_audit[:has_anomalies] ? "border-danger" : "" }
+    .card-header.d-flex.justify-content-between.align-items-center
+      %strong
+        Storage Audit — 孤立 / 不整合 検知
+        - if storage_audit[:has_anomalies]
+          %span.badge.badge-danger.ml-1 異常あり
+        - else
+          %span.badge.badge-success.ml-1 異常なし
+      %small.text-muted
+        検知のみ（削除は行いません）
+        = "／ 最終確認: #{l(storage_audit[:audited_at], format: :short)}"
+    .card-body
+      .alert.alert-info.d-flex.align-items-start.mb-3
+        .mr-3
+          %i.fas.fa-info-circle
+        %div
+          このセクションは Storage の整合性チェック結果を表示します。
+          %strong 削除・更新は行いません。
+          異常が検知された場合は手動で原因を調査してください。
+
+      .row.mb-3
+        .col-md-6.mb-3
+          - cwf_count = storage_audit[:completed_without_file_count]
+          - cwf_cls   = cwf_count.zero? ? "text-success" : "text-danger"
+          .card.text-center.bhdash__card{ class: cwf_count > 0 ? "border-danger" : "" }
+            .card-body
+              %p.bhdash__card-label Completed without File
+              %h3.bhdash__card-value{ class: cwf_cls }= cwf_count
+              %p.bhdash__card-sub
+                status=completed だが video_file が存在しない
+                %br
+                %small.text-muted (S3 消失 / purge 競合の可能性)
+        .col-md-6.mb-3
+          - cba_count = storage_audit[:cleaned_but_attached_count]
+          - cba_cls   = cba_count.zero? ? "text-success" : "text-warning"
+          .card.text-center.bhdash__card{ class: cba_count > 0 ? "border-warning" : "" }
+            .card-body
+              %p.bhdash__card-label Cleaned but Attached
+              %h3.bhdash__card-value{ class: cba_cls }= cba_count
+              %p.bhdash__card-sub
+                cleaned_up_at 記録済みだが video_file がまだ存在する
+                %br
+                %small.text-muted (purge_later 遅延 / 失敗の可能性)
+
+      -# Completed without File 詳細テーブル
+      - unless storage_audit[:completed_without_file].empty?
+        %h6.font-weight-bold.text-danger.mt-3.mb-2
+          Completed without File — 詳細
+          %span.badge.badge-danger.ml-1= storage_audit[:completed_without_file_count]
+        .table-responsive
+          %table.table.table-sm.table-hover.mb-3
+            %thead.thead-light
+              %tr
+                %th ID
+                %th Customer
+                %th Year
+                %th expires_at
+                %th generated_at
+                %th updated_at
+            %tbody
+              - storage_audit[:completed_without_file].each do |m|
+                %tr.table-danger
+                  %td= m.id
+                  %td= m.customer&.name || "(不明)"
+                  %td= m.year
+                  %td.small= m.expires_at ? l(m.expires_at, format: :short) : "—"
+                  %td.small= m.generated_at ? l(m.generated_at, format: :short) : "—"
+                  %td.small= l(m.updated_at, format: :short)
+        - if storage_audit[:completed_without_file_count] > Singing::RecapMovieStorageAuditService::AUDIT_RECORD_LIMIT
+          %p.text-muted.small.mb-0
+            = "※ 最大#{Singing::RecapMovieStorageAuditService::AUDIT_RECORD_LIMIT}件を表示しています。"
+
+      -# Cleaned but Attached 詳細テーブル
+      - unless storage_audit[:cleaned_but_attached].empty?
+        %h6.font-weight-bold.text-warning.mt-3.mb-2
+          Cleaned but Attached — 詳細
+          %span.badge.badge-warning.ml-1= storage_audit[:cleaned_but_attached_count]
+        .table-responsive
+          %table.table.table-sm.table-hover.mb-3
+            %thead.thead-light
+              %tr
+                %th ID
+                %th Customer
+                %th Year
+                %th cleaned_up_at
+                %th expires_at
+                %th updated_at
+            %tbody
+              - storage_audit[:cleaned_but_attached].each do |m|
+                %tr.table-warning
+                  %td= m.id
+                  %td= m.customer&.name || "(不明)"
+                  %td= m.year
+                  %td.small= m.cleaned_up_at ? l(m.cleaned_up_at, format: :short) : "—"
+                  %td.small= m.expires_at ? l(m.expires_at, format: :short) : "—"
+                  %td.small= l(m.updated_at, format: :short)
+        - if storage_audit[:cleaned_but_attached_count] > Singing::RecapMovieStorageAuditService::AUDIT_RECORD_LIMIT
+          %p.text-muted.small.mb-0
+            = "※ 最大#{Singing::RecapMovieStorageAuditService::AUDIT_RECORD_LIMIT}件を表示しています。"
+
+      - if !storage_audit[:has_anomalies]
+        %p.text-success.mb-0
+          ✓ Storage の整合性に問題は検知されませんでした。
 
   -# ── Slow Batch Analysis ─────────────────────────────────────────
   .card.shadow-sm.mb-4

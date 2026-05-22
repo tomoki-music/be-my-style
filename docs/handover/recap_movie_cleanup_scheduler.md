@@ -186,3 +186,52 @@ Redis + Solid Queue / Sidekiq の場合: 別プロセスが処理する。キュ
 cron 登録時は必ず `APP_ROOT=/home/ec2-user/be-my-style` を明示すること（B案採用）。
 
 本番 EC2 への cron 登録は未実施。登録タイミングはユーザーが判断してから行う。
+
+---
+
+## Phase 8-B: Storage Audit（孤立 / 不整合 検知）
+
+### 概要
+
+`Singing::RecapMovieStorageAuditService` を Phase 8-B で追加。
+Admin Health Dashboard の "Storage Audit" セクションに表示。
+
+**検知のみ・削除は行わない。**
+
+### 検知項目
+
+| 項目 | 条件 | 意味 |
+|------|------|------|
+| Completed without File | `status=completed` かつ `video_file` なし | S3 消失 / purge 競合の可能性 |
+| Cleaned but Attached | `status=expired` + `cleaned_up_at` あり + `video_file` あり | `purge_later` 遅延 / 失敗の可能性 |
+
+### Rails console で確認
+
+```ruby
+result = Singing::RecapMovieStorageAuditService.call
+puts "completed_without_file: #{result[:completed_without_file_count]}"
+puts "cleaned_but_attached:   #{result[:cleaned_but_attached_count]}"
+puts "has_anomalies: #{result[:has_anomalies]}"
+```
+
+### 異常が検知された場合の対応
+
+| 異常 | 対応 |
+|------|------|
+| Completed without File | S3 直接確認 / journalctl で purge_later ログを追って原因調査 |
+| Cleaned but Attached | `purge_later` の再実行または S3 直接削除を検討（**要ユーザー確認**） |
+
+### cron runner スクリプト（Phase 8-B 追加）
+
+```
+bin/cleanup_expired_recap_movies
+```
+
+`bin/cleanup_generated_recap_movies` と同等機能。`RAILS_ENV` も環境変数で切り替え可能。
+cron 登録する場合は APP_ROOT を必ず明示すること。
+
+```cron
+0 3 * * * APP_ROOT=/home/ec2-user/be-my-style \
+  /home/ec2-user/be-my-style/bin/cleanup_expired_recap_movies \
+  >> /home/ec2-user/be-my-style/log/cron_recap_movie_cleanup.log 2>&1
+```

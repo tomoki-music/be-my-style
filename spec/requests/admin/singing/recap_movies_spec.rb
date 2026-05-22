@@ -1132,6 +1132,65 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
           expect(response.body).not_to include("× クリア")
         end
       end
+
+      context "Storage Audit セクション" do
+        it "Storage Audit セクションを表示すること" do
+          get health_admin_singing_recap_movies_path
+          expect(response.body).to include("Storage Audit")
+          expect(response.body).to include("孤立 / 不整合 検知")
+        end
+
+        it "異常なし時に「異常なし」バッジを表示すること" do
+          get health_admin_singing_recap_movies_path
+          expect(response.body).to include("異常なし")
+        end
+
+        it "検知のみ文言を表示すること" do
+          get health_admin_singing_recap_movies_path
+          expect(response.body).to include("検知のみ")
+        end
+
+        context "completed だが video_file が存在しない movie がある場合" do
+          let!(:broken_movie) do
+            m = create(:singing_generated_recap_movie, :completed, customer: customer, year: 2023)
+            m.video_file.detach
+            m
+          end
+
+          it "異常ありバッジを表示すること" do
+            get health_admin_singing_recap_movies_path
+            expect(response.body).to include("異常あり")
+          end
+
+          it "Completed without File セクションを表示すること" do
+            get health_admin_singing_recap_movies_path
+            expect(response.body).to include("Completed without File")
+          end
+        end
+
+        context "cleaned_up_at あり + video_file が残っている expired movie がある場合" do
+          let!(:lingering_movie) do
+            m = create(:singing_generated_recap_movie, :expired, customer: customer,
+                       year: 2022, cleaned_up_at: 1.hour.ago)
+            m.video_file.attach(
+              io:           StringIO.new("MP4"),
+              filename:     "recap_test.mp4",
+              content_type: "video/mp4",
+            )
+            m
+          end
+
+          it "異常ありバッジを表示すること" do
+            get health_admin_singing_recap_movies_path
+            expect(response.body).to include("異常あり")
+          end
+
+          it "Cleaned but Attached セクションを表示すること" do
+            get health_admin_singing_recap_movies_path
+            expect(response.body).to include("Cleaned but Attached")
+          end
+        end
+      end
     end
 
     context "管理者未ログイン" do
