@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(DISABLE_SPRING=1 bundle exec rails learning:seed_training_masters)"
+      "Bash(DISABLE_SPRING=1 bundle exec rails learning:seed_training_masters)",
+      "Bash(DISABLE_SPRING=1 bundle exec rspec spec/services/singing/recap_movie_storage_metrics_service_spec.rb --format documentation)",
+      "Bash(DISABLE_SPRING=1 bundle exec rspec spec/services/singing/recap_movie_health_dashboard_service_spec.rb spec/requests/admin/singing/recap_movies_spec.rb --format progress)",
+      "Bash(DISABLE_SPRING=1 bundle exec rspec spec/services/singing/ spec/requests/admin/singing/recap_movies_spec.rb --format progress)"
     ]
   }
 }
