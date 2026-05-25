@@ -9,6 +9,7 @@
 - auto_retry_failures  = @dashboard[:auto_retry_failures]
 - storage_expiry       = @dashboard[:storage_expiry]
 - storage_audit        = @dashboard[:storage_audit]
+- storage_metrics      = @dashboard[:storage_metrics]
 
 .container-fluid.py-4.bhdash
 
@@ -343,6 +344,130 @@
                   %td.small= f.failed_at ? l(f.failed_at, format: :short) : "—"
         - if auto_retry_failures.size >= Singing::RecapMovieHealthDashboardService::AUTO_RETRY_FAILURES_LIMIT
           %p.text-muted.small.mt-2.mb-0 ※ 最大#{Singing::RecapMovieHealthDashboardService::AUTO_RETRY_FAILURES_LIMIT}件を表示しています。
+
+  -# ── Storage Metrics & Cost Dashboard ───────────────────────────
+  - cost   = storage_metrics[:cost_estimation]
+  - fmt_bytes = ->(b) do
+    - gb = b.to_f / Singing::RecapMovieStorageMetricsService::BYTES_PER_GB
+    - if gb >= 1
+      - "#{gb.round(2)} GB"
+    - elsif b.to_f >= 1_048_576
+      - "#{(b.to_f / 1_048_576).round(1)} MB"
+    - elsif b.to_f >= 1_024
+      - "#{(b.to_f / 1_024).round(1)} KB"
+    - else
+      - "#{b} B"
+  .card.shadow-sm.mb-4
+    .card-header
+      %strong
+        Storage Metrics &amp; Cost Dashboard
+      %small.text-muted.ml-2
+        = "集計: #{l(storage_metrics[:collected_at], format: :short)}"
+    .card-body
+      -# ── Summary Cards
+      .row.mb-3
+        .col-md-3.col-6.mb-3
+          .card.text-center.bhdash__card
+            .card-body
+              %p.bhdash__card-label Attached Movies
+              %h3.bhdash__card-value= storage_metrics[:attached_movie_count]
+              %p.bhdash__card-sub video_file が存在する件数
+        .col-md-3.col-6.mb-3
+          .card.text-center.bhdash__card
+            .card-body
+              %p.bhdash__card-label Total Stored
+              %h3.bhdash__card-value= fmt_bytes.call(storage_metrics[:total_bytes])
+              %p.bhdash__card-sub ActiveStorage Blob 合計
+        .col-md-3.col-6.mb-3
+          .card.text-center.bhdash__card
+            .card-body
+              %p.bhdash__card-label Avg Movie Size
+              %h3.bhdash__card-value= fmt_bytes.call(storage_metrics[:avg_bytes])
+              %p.bhdash__card-sub 1本あたりの平均サイズ
+        .col-md-3.col-6.mb-3
+          .card.text-center.bhdash__card
+            .card-body
+              %p.bhdash__card-label Est. Monthly Cost
+              %h3.bhdash__card-value
+                = "$#{cost[:monthly_cost_usd]}"
+              %p.bhdash__card-sub
+                S3 #{cost[:price_per_gb_usd]} USD/GB/月
+                %br
+                %small.text-muted= cost[:note]
+
+      -# ── Status 別ストレージ
+      .row.mb-3
+        .col-md-4.col-6.mb-2
+          .card.text-center.bhdash__card
+            .card-body
+              %p.bhdash__card-label Completed
+              %h4.bhdash__card-value.text-success= fmt_bytes.call(storage_metrics[:completed_bytes])
+              %p.bhdash__card-sub completed 動画の合計
+        .col-md-4.col-6.mb-2
+          - eb = storage_metrics[:expired_attached_bytes]
+          .card.text-center.bhdash__card{ class: eb > 0 ? "border-warning" : "" }
+            .card-body
+              %p.bhdash__card-label Expired (未削除)
+              %h4.bhdash__card-value{ class: eb > 0 ? "text-warning" : "text-muted" }
+                = fmt_bytes.call(eb)
+              %p.bhdash__card-sub expired だがファイルが残存
+        .col-md-4.col-6.mb-2
+          .card.text-center.bhdash__card
+            .card-body
+              %p.bhdash__card-label 直近#{Singing::RecapMovieStorageMetricsService::RECENT_DAYS}日 生成
+              %h4.bhdash__card-value.text-info= fmt_bytes.call(storage_metrics[:recent_bytes])
+              %p.bhdash__card-sub 直近30日 generated
+
+      -# ── Year Breakdown
+      - unless storage_metrics[:year_breakdown].empty?
+        %h6.font-weight-bold.mt-2.mb-2 Year Breakdown
+        - max_year_bytes = storage_metrics[:year_breakdown].map { |r| r[:bytes] }.max.to_f
+        - max_year_bytes = 1.0 if max_year_bytes.zero?
+        .table-responsive
+          %table.table.table-sm.mb-3
+            %thead.thead-light
+              %tr
+                %th Year
+                %th 件数
+                %th ストレージ
+                %th 割合
+            %tbody
+              - storage_metrics[:year_breakdown].each do |row|
+                %tr
+                  %td.font-weight-bold= row[:year]
+                  %td= row[:count]
+                  %td= fmt_bytes.call(row[:bytes])
+                  %td{ style: "min-width: 120px;" }
+                    .admin-recap-bar__track
+                      .admin-recap-bar__fill{ style: "width: #{(row[:bytes].to_f / max_year_bytes * 100).round}%; background: #2258d8;" }
+
+      -# ── Plan Breakdown
+      - unless storage_metrics[:plan_breakdown].empty?
+        %h6.font-weight-bold.mt-2.mb-2 Plan Breakdown
+        - max_plan_bytes = storage_metrics[:plan_breakdown].map { |r| r[:bytes] }.max.to_f
+        - max_plan_bytes = 1.0 if max_plan_bytes.zero?
+        - plan_colors = { "premium" => "#ef6c3f", "core" => "#2258d8", "light" => "#6f42c1", "free" => "#6c757d" }
+        .table-responsive
+          %table.table.table-sm.mb-0
+            %thead.thead-light
+              %tr
+                %th Plan
+                %th 件数
+                %th ストレージ
+                %th 割合
+            %tbody
+              - storage_metrics[:plan_breakdown].each do |row|
+                - bar_color = plan_colors[row[:plan]] || "#adb5bd"
+                %tr
+                  %td
+                    %span.badge.badge-secondary= row[:plan]
+                  %td= row[:count]
+                  %td= fmt_bytes.call(row[:bytes])
+                  %td{ style: "min-width: 120px;" }
+                    .admin-recap-bar__track
+                      .admin-recap-bar__fill{ style: "width: #{(row[:bytes].to_f / max_plan_bytes * 100).round}%; background: #{bar_color};" }
+      - if storage_metrics[:attached_movie_count].zero?
+        %p.text-muted.mb-0 まだ動画ファイルが存在しません。
 
   -# ── Storage & Expiry ────────────────────────────────────────────
   .card.shadow-sm.mb-4

@@ -27,6 +27,7 @@ module Singing
         auto_retry_failures: build_auto_retry_failures,
         storage_expiry:      build_storage_expiry,
         storage_audit:       build_storage_audit,
+        storage_metrics:     build_storage_metrics,
       }
     end
 
@@ -162,6 +163,10 @@ module Singing
 
     def build_storage_audit
       Singing::RecapMovieStorageAuditService.call
+    end
+
+    def build_storage_metrics
+      Singing::RecapMovieStorageMetricsService.call
     end
 
     def build_storage_expiry

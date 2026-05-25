@@ -1193,6 +1193,33 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
       end
     end
 
+    context "Storage Metrics セクション" do
+      before { sign_in admin }
+
+      it "Storage Metrics セクションを表示すること" do
+        get health_admin_singing_recap_movies_path
+        expect(response.body).to include("Storage Metrics")
+        expect(response.body).to include("Attached Movies")
+        expect(response.body).to include("Total Stored")
+        expect(response.body).to include("Avg Movie Size")
+        expect(response.body).to include("Est. Monthly Cost")
+      end
+
+      it "Cost Dashboard の注意書きを表示すること" do
+        get health_admin_singing_recap_movies_path
+        expect(response.body).to include("概算")
+        expect(response.body).to include("転送料")
+      end
+
+      it "completed 動画がある場合に Year Breakdown を表示すること" do
+        another = create(:customer, domain_name: "singing")
+        create(:singing_generated_recap_movie, :completed, customer: another, year: 2024)
+        get health_admin_singing_recap_movies_path
+        expect(response.body).to include("Year Breakdown")
+        expect(response.body).to include("2024")
+      end
+    end
+
     context "管理者未ログイン" do
       it "アクセスできないこと" do
         get health_admin_singing_recap_movies_path
