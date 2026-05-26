@@ -584,7 +584,35 @@ RSpec.describe "Singing::RecapMovies", type: :request do
       end
     end
 
-    context "ログイン済み・診断がある場合（eligible）" do
+    context "ログイン済み・診断が15件未満の場合（not_enough_diagnoses）" do
+      let(:current_year) { Time.current.year }
+
+      before do
+        sign_in owner
+        FactoryBot.create_list(:singing_diagnosis, 8, customer: owner, status: :completed,
+                               created_at: Time.zone.local(current_year, 6, 1))
+      end
+
+      it "一覧ページにリダイレクトされること" do
+        post request_generation_singing_recap_movies_path
+
+        expect(response).to redirect_to(singing_recap_movies_path)
+      end
+
+      it "alert flash に残り件数を含むこと" do
+        post request_generation_singing_recap_movies_path
+
+        expect(flash[:alert]).to include("7件")
+      end
+
+      it "RecapMovieRequestService を呼び出さないこと" do
+        expect(Singing::RecapMovieRequestService).not_to receive(:call)
+
+        post request_generation_singing_recap_movies_path
+      end
+    end
+
+    context "ログイン済み・診断が 15 件以上ある場合（eligible）" do
       let(:current_year) { Time.current.year }
       let(:pending_movie) do
         FactoryBot.build_stubbed(:singing_generated_recap_movie,
@@ -603,8 +631,8 @@ RSpec.describe "Singing::RecapMovies", type: :request do
 
       before do
         sign_in owner
-        FactoryBot.create(:singing_diagnosis, customer: owner, status: :completed,
-                          created_at: Time.zone.local(current_year, 6, 1))
+        FactoryBot.create_list(:singing_diagnosis, 15, customer: owner, status: :completed,
+                               created_at: Time.zone.local(current_year, 6, 1))
         allow(Singing::RecapMovieRequestService).to receive(:call).and_return(service_result)
       end
 
@@ -627,13 +655,13 @@ RSpec.describe "Singing::RecapMovies", type: :request do
       end
     end
 
-    context "ログイン済み・すでに pending がある場合" do
+    context "ログイン済み・すでに pending がある場合（15件以上）" do
       let(:current_year) { Time.current.year }
 
       before do
         sign_in owner
-        FactoryBot.create(:singing_diagnosis, customer: owner, status: :completed,
-                          created_at: Time.zone.local(current_year, 6, 1))
+        FactoryBot.create_list(:singing_diagnosis, 15, customer: owner, status: :completed,
+                               created_at: Time.zone.local(current_year, 6, 1))
         FactoryBot.create(:singing_generated_recap_movie,
                           customer: owner, year: current_year, status: :pending)
       end

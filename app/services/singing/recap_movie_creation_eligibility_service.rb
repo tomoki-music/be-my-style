@@ -4,6 +4,11 @@ module Singing
       :eligible,
       :year,
       :completed_diagnoses_count,
+      :required_diagnoses_count,
+      :remaining_diagnoses_count,
+      :period_start,
+      :period_end,
+      :period_label,
       :existing_movie,
       :existing_movie_status,
       :reason,
@@ -13,23 +18,23 @@ module Singing
       def eligible? = eligible
     end
 
-    MIN_DIAGNOSES = 1
+    MIN_DIAGNOSES = 15
 
     def self.call(customer, year: nil)
       new(customer, year: year).call
     end
 
     def initialize(customer, year: nil)
-      @customer      = customer
+      @customer       = customer
       @requested_year = year&.to_i
     end
 
     def call
-      target_year = resolve_year
-      return no_diagnosis_result if target_year.nil?
-
+      target_year = @requested_year || Time.current.year
       count = completed_diagnoses_count(target_year)
-      return no_diagnosis_result if count < MIN_DIAGNOSES
+
+      return no_diagnosis_result(target_year)        if count == 0
+      return not_enough_diagnoses_result(target_year, count) if count < MIN_DIAGNOSES
 
       movie = @customer.singing_generated_recap_movies.find_by(year: target_year)
 
@@ -42,25 +47,16 @@ module Singing
 
     private
 
-    def resolve_year
-      return @requested_year if @requested_year
-
-      current_year = Time.current.year
-      return current_year if completed_diagnoses_count(current_year) >= MIN_DIAGNOSES
-
-      # 過去の診断がある最新年を探す
-      past_cutoff = Time.zone.local(current_year).beginning_of_year
-      latest_past = @customer.singing_diagnoses
-        .completed
-        .where(created_at: ...past_cutoff)
-        .maximum(:created_at)
-
-      latest_past&.year
-    end
-
     def completed_diagnoses_count(year)
       year_range = Time.zone.local(year).all_year
       @customer.singing_diagnoses.completed.where(created_at: year_range).count
+    end
+
+    def period_for(year)
+      start  = Date.new(year, 1, 1)
+      finish = Date.new(year, 12, 31)
+      label  = "#{year}年1月1日〜#{year}年12月31日"
+      [start, finish, label]
     end
 
     def result_for_existing(movie, year, count)
@@ -90,11 +86,17 @@ module Singing
     end
 
     def eligible_result(year, count, movie, reason: :eligible, message: nil)
-      msg = message || "#{year}年のRecap Movieを作成できます。（診断 #{count} 件）"
+      start, finish, label = period_for(year)
+      msg = message || "条件を満たしています。#{year}年のRecap Movieを作成できます。"
       Result.new(
         eligible:                  true,
         year:                      year,
         completed_diagnoses_count: count,
+        required_diagnoses_count:  MIN_DIAGNOSES,
+        remaining_diagnoses_count: 0,
+        period_start:              start,
+        period_end:                finish,
+        period_label:              label,
         existing_movie:            movie,
         existing_movie_status:     movie&.status,
         reason:                    reason,
@@ -103,10 +105,16 @@ module Singing
     end
 
     def ineligible_result(year, count, movie, reason, message)
+      start, finish, label = period_for(year)
       Result.new(
         eligible:                  false,
         year:                      year,
         completed_diagnoses_count: count,
+        required_diagnoses_count:  MIN_DIAGNOSES,
+        remaining_diagnoses_count: 0,
+        period_start:              start,
+        period_end:                finish,
+        period_label:              label,
         existing_movie:            movie,
         existing_movie_status:     movie&.status,
         reason:                    reason,
@@ -114,15 +122,40 @@ module Singing
       )
     end
 
-    def no_diagnosis_result
+    def not_enough_diagnoses_result(year, count)
+      start, finish, label = period_for(year)
+      remaining = MIN_DIAGNOSES - count
       Result.new(
         eligible:                  false,
-        year:                      nil,
+        year:                      year,
+        completed_diagnoses_count: count,
+        required_diagnoses_count:  MIN_DIAGNOSES,
+        remaining_diagnoses_count: remaining,
+        period_start:              start,
+        period_end:                finish,
+        period_label:              label,
+        existing_movie:            nil,
+        existing_movie_status:     nil,
+        reason:                    :not_enough_diagnoses,
+        message:                   "あと#{remaining}件の診断を完了するとRecap Movieを作成できます。（現在#{count}件 / 必要#{MIN_DIAGNOSES}件）"
+      )
+    end
+
+    def no_diagnosis_result(year)
+      start, finish, label = period_for(year)
+      Result.new(
+        eligible:                  false,
+        year:                      year,
         completed_diagnoses_count: 0,
+        required_diagnoses_count:  MIN_DIAGNOSES,
+        remaining_diagnoses_count: MIN_DIAGNOSES,
+        period_start:              start,
+        period_end:                finish,
+        period_label:              label,
         existing_movie:            nil,
         existing_movie_status:     nil,
         reason:                    :no_diagnosis,
-        message:                   "歌声診断を完了すると、Recap Movieを作成できるようになります。"
+        message:                   "歌声診断を完了すると、Recap Movieを作成できるようになります。（必要#{MIN_DIAGNOSES}件）"
       )
     end
   end

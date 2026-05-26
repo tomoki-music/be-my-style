@@ -6,9 +6,25 @@
     .srm-creation-panel__about-body
       %p.srm-creation-panel__about-title Recap Movie とは？
       %p.srm-creation-panel__about-desc
-        歌声診断の記録をもとに、1年間の成長を短い動画にまとめる機能です。
-        通常は運営による一括生成タイミングで自動作成されます。
-        条件を満たしている場合は、ご自身でも作成をリクエストできます。
+        対象年の完了済み歌声診断をもとに、1年間の成長を短い動画にまとめる機能です。
+        対象年内に完了済み診断が#{e.required_diagnoses_count}件以上あると作成できます。
+
+  .srm-creation-panel__requirement
+    %p.srm-creation-panel__requirement-title Recap Movie 作成条件
+    .srm-creation-panel__requirement-grid
+      .srm-creation-panel__requirement-row
+        %span.srm-creation-panel__requirement-label 対象期間
+        %span.srm-creation-panel__requirement-value= e.period_label
+      .srm-creation-panel__requirement-row
+        %span.srm-creation-panel__requirement-label 必要な完了済み診断
+        %span.srm-creation-panel__requirement-value= "#{e.required_diagnoses_count}件"
+      .srm-creation-panel__requirement-row
+        %span.srm-creation-panel__requirement-label 現在の完了済み診断
+        %span.srm-creation-panel__requirement-value= "#{e.completed_diagnoses_count}件"
+      - if e.remaining_diagnoses_count > 0
+        .srm-creation-panel__requirement-row.srm-creation-panel__requirement-row--progress
+          %span.srm-creation-panel__requirement-label あと
+          %span.srm-creation-panel__requirement-value= "#{e.remaining_diagnoses_count}件で作成できます"
 
   .srm-creation-panel__status
     - case e.reason
@@ -21,11 +37,20 @@
         .srm-creation-status__action
           = link_to "歌声診断を始める", new_singing_diagnosis_path, class: "srm-btn srm-btn--primary srm-btn--sm"
 
+    - when :not_enough_diagnoses
+      .srm-creation-status.srm-creation-status--neutral
+        .srm-creation-status__icon ⬆
+        .srm-creation-status__body
+          %p.srm-creation-status__label= "あと#{e.remaining_diagnoses_count}件で作成できます"
+          %p.srm-creation-status__desc= "現在#{e.completed_diagnoses_count}件 / 必要#{e.required_diagnoses_count}件。診断を続けて条件を満たしましょう。"
+        .srm-creation-status__action
+          = link_to "歌声診断を始める", new_singing_diagnosis_path, class: "srm-btn srm-btn--primary srm-btn--sm"
+
     - when :eligible
       .srm-creation-status.srm-creation-status--eligible
         .srm-creation-status__icon ✦
         .srm-creation-status__body
-          %p.srm-creation-status__label= "#{e.year}年のRecap Movieを作成できます"
+          %p.srm-creation-status__label= "条件を満たしています。#{e.year}年のRecap Movieを作成できます。"
           %p.srm-creation-status__desc= "完了済み診断 #{e.completed_diagnoses_count} 件が対象です。"
         .srm-creation-status__action
           = button_to "Recap Movieを作成する", request_generation_singing_recap_movies_path,

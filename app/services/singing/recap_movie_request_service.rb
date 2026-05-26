@@ -42,7 +42,6 @@ module Singing
 
     def create_new
       source = build_source_json
-      return empty_source_result if source.nil?
 
       movie = @customer.singing_generated_recap_movies.create!(
         year:        @year,
@@ -62,7 +61,6 @@ module Singing
 
     def reset_to_pending(movie)
       source = build_source_json
-      return empty_source_result if source.nil?
 
       movie.update!(status: :pending, source_json: source, error_message: nil)
 
@@ -106,17 +104,6 @@ module Singing
         queued:  false,
         status:  :already_processing,
         message: "既に processing 状態です"
-      )
-    end
-
-    def empty_source_result
-      Result.new(
-        movie:   nil,
-        created: false,
-        reused:  false,
-        queued:  false,
-        status:  :empty_source,
-        message: "生成対象の Achievement データがありません"
       )
     end
 

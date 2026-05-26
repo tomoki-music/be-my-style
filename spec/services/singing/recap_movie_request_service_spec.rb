@@ -6,7 +6,6 @@ RSpec.describe Singing::RecapMovieRequestService, type: :service do
 
   subject(:result) { described_class.call(customer, year: year) }
 
-  # builder を stub して DB クエリを最小化するヘルパー
   def stub_builder_empty
     allow(Singing::AchievementRecapMovieBuilder).to receive(:call)
       .with(customer, year: year)
@@ -100,8 +99,8 @@ RSpec.describe Singing::RecapMovieRequestService, type: :service do
     end
   end
 
-  # --- failed を pending にリセット ---
-  context "failed レコードがある場合" do
+  # --- failed を pending にリセット（Achievement データあり）---
+  context "failed レコードがある場合（Achievement データあり）" do
     let!(:movie) do
       create(:singing_generated_recap_movie, :failed, customer: customer, year: year)
     end
@@ -125,6 +124,29 @@ RSpec.describe Singing::RecapMovieRequestService, type: :service do
     it "source_json が保存される" do
       result
       expect(movie.reload.source_json).to be_present
+    end
+  end
+
+  # --- failed を pending にリセット（Achievement データなし）---
+  context "failed レコードがあり、Achievement データが空の場合" do
+    let!(:movie) do
+      create(:singing_generated_recap_movie, :failed, customer: customer, year: year)
+    end
+
+    before { stub_builder_empty }
+
+    it "status が :reset_pending になること（source_json なしでも進む）" do
+      expect(result.status).to eq(:reset_pending)
+    end
+
+    it "movie の status が pending に更新される" do
+      result
+      expect(movie.reload.status).to eq("pending")
+    end
+
+    it "source_json が nil になる" do
+      result
+      expect(movie.reload.source_json).to be_nil
     end
   end
 
@@ -165,8 +187,8 @@ RSpec.describe Singing::RecapMovieRequestService, type: :service do
     end
   end
 
-  # --- 新規 pending 作成 ---
-  context "レコードが存在しない場合" do
+  # --- 新規 pending 作成（Achievement データあり）---
+  context "レコードが存在しない場合（Achievement データあり）" do
     before { stub_builder_with_data }
 
     it "status が :created_pending になる" do
@@ -196,38 +218,24 @@ RSpec.describe Singing::RecapMovieRequestService, type: :service do
     end
   end
 
-  # --- empty source の場合 ---
-  context "Achievement データが空で empty source の場合" do
+  # --- 新規 pending 作成（Achievement データなし）---
+  context "レコードが存在せず Achievement データも空の場合" do
     before { stub_builder_empty }
 
-    it "status が :empty_source になる" do
-      expect(result.status).to eq(:empty_source)
+    it "status が :created_pending になること（source_json なしでも作成する）" do
+      expect(result.status).to eq(:created_pending)
     end
 
-    it "movie が nil" do
-      expect(result.movie).to be_nil
+    it "新しい SingingGeneratedRecapMovie が作成される" do
+      expect { result }.to change(SingingGeneratedRecapMovie, :count).by(1)
     end
 
-    it "レコードが作成されない" do
-      expect { result }.not_to change(SingingGeneratedRecapMovie, :count)
-    end
-  end
-
-  # --- failed + empty source の場合はリセットせず empty_source を返す ---
-  context "failed レコードがあり、かつ Achievement データが空の場合" do
-    let!(:movie) do
-      create(:singing_generated_recap_movie, :failed, customer: customer, year: year)
+    it "movie の status が pending" do
+      expect(result.movie.status).to eq("pending")
     end
 
-    before { stub_builder_empty }
-
-    it "status が :empty_source になる" do
-      expect(result.status).to eq(:empty_source)
-    end
-
-    it "movie の status が変わらない" do
-      result
-      expect(movie.reload.status).to eq("failed")
+    it "source_json が nil" do
+      expect(result.movie.source_json).to be_nil
     end
   end
 
