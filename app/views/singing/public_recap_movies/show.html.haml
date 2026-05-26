@@ -5,11 +5,14 @@
 - line_text = CGI.escape("🎤 #{@customer.name}さんの #{@recap_movie.year} Singing Recap\n#{share_url}")
 - line_url = "https://line.me/R/msg/text/?#{line_text}"
 
-- content_for(:title) { "#{@customer.name}さんの #{@recap_movie.year} Singing Recap | BeMyStyle" }
-- content_for(:og_title) { "#{@customer.name}さんの #{@recap_movie.year} Singing Recap | BeMyStyle" }
-- content_for(:og_description) { "BeMyStyleで記録した#{@recap_movie.year}年の歌声の成長をご覧ください。" }
-- content_for(:og_url) { share_url }
-- content_for(:robots) { "noindex" }
+- ogp = Singing::RecapMovieOgpPresenter.new(@recap_movie, @customer)
+- content_for(:title)        { ogp.title }
+- content_for(:og_title)     { ogp.title }
+- content_for(:og_description) { ogp.description }
+- content_for(:og_url)       { share_url }
+- content_for(:og_image)     { image_url(ogp.image_asset_name) }
+- content_for(:twitter_card) { ogp.twitter_card }
+- content_for(:robots)       { "noindex" }
 
 .srm-public-share
   .srm-public-share__inner

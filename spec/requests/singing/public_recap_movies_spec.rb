@@ -29,6 +29,45 @@ RSpec.describe "Singing::PublicRecapMovies", type: :request do
         expect(response.body).to include("2025")
       end
 
+      it "og:title にユーザー名と年を含むこと" do
+        FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner,
+                          year: 2025, share_token: "tok_og_title")
+
+        get singing_public_recap_movie_share_path(share_token: "tok_og_title")
+
+        expect(response.body).to include("og:title")
+        expect(response.body).to include(owner.name)
+        expect(response.body).to include("2025 Singing Recap")
+      end
+
+      it "twitter:card が summary_large_image であること" do
+        FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner,
+                          share_token: "tok_tw_card")
+
+        get singing_public_recap_movie_share_path(share_token: "tok_tw_card")
+
+        expect(response.body).to include("summary_large_image")
+      end
+
+      it "og:image メタタグが含まれること" do
+        FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner,
+                          share_token: "tok_og_image")
+
+        get singing_public_recap_movie_share_path(share_token: "tok_og_image")
+
+        expect(response.body).to include("og:image")
+      end
+
+      it "og:url に share_token の URL が含まれること" do
+        FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner,
+                          share_token: "tok_og_url")
+
+        get singing_public_recap_movie_share_path(share_token: "tok_og_url")
+
+        expect(response.body).to include("og:url")
+        expect(response.body).to include("tok_og_url")
+      end
+
       it "video タグを含むこと" do
         FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner,
                           share_token: "tok_video")
