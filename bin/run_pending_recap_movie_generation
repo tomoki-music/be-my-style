@@ -4,12 +4,25 @@ set -euo pipefail
 APP_ROOT="${APP_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 BUNDLE_BIN="${BUNDLE_BIN:-bundle}"
 RAILS_ENV="${RAILS_ENV:-production}"
+DRY_RUN="${DRY_RUN:-0}"
+TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-900}"
+LOCK_FILE="${APP_ROOT}/tmp/recap_movie_generation.lock"
 
 export RAILS_ENV
 
-log() { echo "[run_pending_recap_movie] $*"; }
+log() { echo "[Runner] $*"; }
 
-log "Starting (RAILS_ENV=${RAILS_ENV})"
+# ── 多重起動防止 ──────────────────────────────────────────────
+if [ -f "$LOCK_FILE" ]; then
+  log "skipped because lock file exists (${LOCK_FILE})"
+  exit 0
+fi
+
+trap 'rm -f "$LOCK_FILE"' EXIT INT TERM
+touch "$LOCK_FILE"
+
+# ── pending movie 取得 ────────────────────────────────────────
+log "Starting (RAILS_ENV=${RAILS_ENV} DRY_RUN=${DRY_RUN} TIMEOUT=${TIMEOUT_SECONDS}s)"
 
 movie_id=$(
   cd "$APP_ROOT" && \
@@ -23,14 +36,34 @@ if [ -z "$movie_id" ]; then
   exit 0
 fi
 
-log "[Runner] picked pending movie_id=${movie_id}"
+log "picked pending movie_id=${movie_id}"
 
-if cd "$APP_ROOT" && \
-    RAILS_ENV="$RAILS_ENV" "$BUNDLE_BIN" exec rails runner \
-      "Singing::GenerateRecapMovieJob.perform_now(${movie_id})"; then
-  log "[Runner] completed movie_id=${movie_id}"
+# ── dry-run モード ────────────────────────────────────────────
+if [ "$DRY_RUN" = "1" ]; then
+  log "dry-run picked pending movie_id=${movie_id}"
+  log "dry-run completed without generation"
+  exit 0
+fi
+
+# ── 事前リソースログ ──────────────────────────────────────────
+log "resource snapshot before generation"
+free -h 2>/dev/null || true
+df -h "${APP_ROOT}" 2>/dev/null || df -h / 2>/dev/null || true
+ps aux --sort=-%mem 2>/dev/null | head -10 || true
+
+# ── 生成実行（timeout 付き）──────────────────────────────────
+log "generating movie_id=${movie_id} (timeout=${TIMEOUT_SECONDS}s)"
+
+if timeout "$TIMEOUT_SECONDS" \
+    bash -c "cd '$APP_ROOT' && RAILS_ENV='$RAILS_ENV' '$BUNDLE_BIN' exec rails runner \
+      'Singing::GenerateRecapMovieJob.perform_now(${movie_id})'"; then
+  log "completed movie_id=${movie_id}"
 else
   exit_code=$?
-  log "[Runner] failed movie_id=${movie_id}"
-  exit $exit_code
+  if [ $exit_code -eq 124 ]; then
+    log "TIMEOUT movie_id=${movie_id} (exceeded ${TIMEOUT_SECONDS}s)"
+  else
+    log "failed movie_id=${movie_id} (exit_code=${exit_code})"
+  fi
+  exit 1
 fi

@@ -7,6 +7,31 @@
     %code bin/run_pending_recap_movie_generation
     を実行してください。
 
+.card.border-info.mb-4
+  .card-header.bg-info.text-white
+    %strong 本番での安全な手動実行手順
+  .card-body
+    %p.mb-2
+      %strong 動画生成は Puma 外プロセスで以下の順序で実施してください。
+    %ol.mb-3
+      %li
+        %strong Step 1 — dry-run で pending を確認
+        %pre.bg-light.p-2.rounded.mb-1
+          DRY_RUN=1 bin/run_pending_recap_movie_generation
+        %small.text-muted movie_id が表示され、生成は行われません。問題なければ Step 2 へ。
+      %li
+        %strong Step 2 — 1件だけ実際に生成
+        %pre.bg-light.p-2.rounded.mb-1
+          bin/run_pending_recap_movie_generation
+        %small.text-muted 1件のみ処理します。完了後にこの画面でステータスを確認してください。
+      %li
+        %strong Step 3 — ログ確認
+        %pre.bg-light.p-2.rounded.mb-1
+          sudo journalctl -u puma -n 50 --no-pager | grep -i "GenerateRecapMovie"
+    .alert.alert-danger.mb-0{ role: "alert" }
+      %strong 注意：
+      cron 登録・自動実行・大量生成・Web リクエストからの生成は次フェーズまで行わないこと。
+
 .container.py-4
   .d-flex.justify-content-between.align-items-center.mb-4
     %h2.mb-0 Recap Movie ##{@movie.id}
