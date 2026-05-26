@@ -101,31 +101,55 @@
       - _share_text = CGI.escape("🎤 My Singing Recap #{@recap_movie.year}\n今年の歌の成長をまとめました✨\n#BeMyStyle #SingingRecap")
       - _track_url = track_share_singing_recap_movie_path(@recap_movie)
       - _generate_share_link_url = generate_share_link_singing_recap_movie_path(@recap_movie)
+      - _update_visibility_url = update_share_visibility_singing_recap_movie_path(@recap_movie)
       - _existing_share_url = @recap_movie.share_token.present? ? singing_public_recap_movie_share_url(share_token: @recap_movie.share_token) : nil
       - _twitter_direct_url = "https://twitter.com/intent/tweet?text=#{_share_text}"
+
+      - if @recap_movie.share_token.present?
+        .srm-visibility-panel{ data: { share_enabled: @recap_movie.share_enabled.to_s,
+                                        update_visibility_url: _update_visibility_url } }
+          .srm-visibility-panel__status
+            - if @recap_movie.share_enabled?
+              %span.srm-visibility-badge.srm-visibility-badge--on 公開中
+              %span.srm-visibility-panel__label 共有リンクは有効です
+            - else
+              %span.srm-visibility-badge.srm-visibility-badge--off 停止中
+              %span.srm-visibility-panel__label この共有リンクは現在無効です
+          %button.srm-btn.srm-btn--visibility-toggle{ type: "button",
+              data: { toggle_to: @recap_movie.share_enabled? ? "false" : "true" } }
+            - if @recap_movie.share_enabled?
+              共有を停止する
+            - else
+              共有を再開する
+          %span.srm-visibility-panel__feedback{ style: "display:none" }
+
       .srm-share-area{ data: { track_share_url: _track_url } }
         .srm-share-area__heading
           %span.srm-share-area__icon ✨
           %span.srm-share-area__title Share Your Recap
-        .srm-share-area__btns
-          %button.srm-btn.srm-btn--share-link{ type: "button",
-              data: { generate_share_link_url: _generate_share_link_url,
-                      existing_share_url: _existing_share_url.to_s } }
-            🔗 共有リンクをコピー
-          = link_to _twitter_direct_url, class: "srm-btn srm-btn--twitter", target: "_blank", rel: "noopener noreferrer", data: { track_share_kind: "x" } do
-            ✨ Xでシェア
-          - _line_share_base = "https://line.me/R/msg/text/?"
-          %a.srm-btn.srm-btn--line{ href: "#",
-              data: { line_share_base: _line_share_base,
-                      generate_share_link_url: _generate_share_link_url,
-                      existing_share_url: _existing_share_url.to_s,
-                      share_year: @recap_movie.year } }
-            LINE でシェア
-          = link_to rails_blob_path(@recap_movie.video_file, disposition: "attachment"),
-            class: "srm-btn srm-btn--download",
-            download: "singing_recap_#{@recap_movie.year}.mp4",
-            data: { track_share_kind: "download" } do
-            ⬇ 動画を保存
+        - if !@recap_movie.share_token.present? || @recap_movie.share_enabled?
+          .srm-share-area__btns
+            %button.srm-btn.srm-btn--share-link{ type: "button",
+                data: { generate_share_link_url: _generate_share_link_url,
+                        existing_share_url: _existing_share_url.to_s } }
+              🔗 共有リンクをコピー
+            = link_to _twitter_direct_url, class: "srm-btn srm-btn--twitter", target: "_blank", rel: "noopener noreferrer", data: { track_share_kind: "x" } do
+              ✨ Xでシェア
+            - _line_share_base = "https://line.me/R/msg/text/?"
+            %a.srm-btn.srm-btn--line{ href: "#",
+                data: { line_share_base: _line_share_base,
+                        generate_share_link_url: _generate_share_link_url,
+                        existing_share_url: _existing_share_url.to_s,
+                        share_year: @recap_movie.year } }
+              LINE でシェア
+        - else
+          .srm-share-area__disabled-note
+            共有を再開すると、同じURLで再度シェアできます
+        = link_to rails_blob_path(@recap_movie.video_file, disposition: "attachment"),
+          class: "srm-btn srm-btn--download",
+          download: "singing_recap_#{@recap_movie.year}.mp4",
+          data: { track_share_kind: "download" } do
+          ⬇ 動画を保存
         .srm-share-area__copy-feedback{ style: "display:none" }
           ✓ リンクをコピーしました
         .srm-instagram-hint{ data: { track_share_kind: "instagram" } }

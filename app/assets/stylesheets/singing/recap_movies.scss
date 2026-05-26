@@ -589,6 +589,73 @@ $srm-green:      #22c55e;
   line-height: 1;
 }
 
+// ── Visibility Toggle Panel ──────────────────────────────────────────────────
+
+.srm-visibility-panel {
+  align-items: center;
+  background: rgba($srm-surface-2, 0.7);
+  border: 1px solid $srm-border;
+  border-radius: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 14px 18px;
+}
+
+.srm-visibility-panel__status {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.srm-visibility-badge {
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  text-transform: uppercase;
+
+  &--on  { background: rgba($srm-green, 0.15); color: $srm-green; }
+  &--off { background: rgba($srm-red,   0.15); color: $srm-red;   }
+}
+
+.srm-visibility-panel__label {
+  color: $srm-muted;
+  font-size: 0.88rem;
+}
+
+.srm-btn--visibility-toggle {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid $srm-border;
+  border-radius: 999px;
+  color: $srm-muted;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 7px 16px;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+
+  &:hover  { background: rgba(255, 255, 255, 0.1); color: $srm-text; }
+  &:disabled { opacity: 0.5; cursor: wait; }
+}
+
+.srm-visibility-panel__feedback {
+  color: $srm-green;
+  font-size: 0.82rem;
+  font-weight: 700;
+  width: 100%;
+}
+
+.srm-share-area__disabled-note {
+  color: $srm-muted;
+  font-size: 0.88rem;
+  margin-bottom: 16px;
+}
+
 // ── Show フッター ────────────────────────────────────────────────────────────
 
 .srm-show-footer {

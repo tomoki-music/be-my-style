@@ -43,6 +43,10 @@ class SingingGeneratedRecapMovie < ApplicationRecord
     completed? && video_file.attached? && (expires_at.nil? || expires_at > Time.current)
   end
 
+  def share_publicly_accessible?
+    share_enabled? && shareable? && share_token.present?
+  end
+
   def generate_share_token!
     return share_token if share_token.present?
 

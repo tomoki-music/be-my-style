@@ -256,9 +256,10 @@ Rails.application.routes.draw do
     end
     resources :recap_movies, only: [:index, :show] do
       member do
-        post :track_share
-        post :request_regeneration
-        post :generate_share_link
+        post  :track_share
+        post  :request_regeneration
+        post  :generate_share_link
+        patch :update_share_visibility
       end
     end
     get "recap_movies/share/:share_token", to: "public_recap_movies#show", as: :public_recap_movie_share

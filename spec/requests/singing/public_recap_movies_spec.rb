@@ -138,5 +138,27 @@ RSpec.describe "Singing::PublicRecapMovies", type: :request do
         expect(response).to have_http_status(:not_found)
       end
     end
+
+    context "share_enabled が false の movie" do
+      it "404 を返すこと（公開停止中は見られない）" do
+        FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner,
+                          share_token: "tok_disabled", share_enabled: false)
+
+        get singing_public_recap_movie_share_path(share_token: "tok_disabled")
+
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    context "share_enabled が true の movie" do
+      it "200 を返すこと" do
+        FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner,
+                          share_token: "tok_enabled", share_enabled: true)
+
+        get singing_public_recap_movie_share_path(share_token: "tok_enabled")
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
   end
 end

@@ -299,6 +299,46 @@ RSpec.describe SingingGeneratedRecapMovie, type: :model do
     end
   end
 
+  describe "#share_publicly_accessible?" do
+    it "share_enabled true・shareable・share_token あり → true" do
+      movie = create(:singing_generated_recap_movie, :completed, customer: customer,
+                     share_token: "tok_pub", share_enabled: true, expires_at: 1.day.from_now)
+      expect(movie).to be_share_publicly_accessible
+    end
+
+    it "share_enabled false なら false" do
+      movie = create(:singing_generated_recap_movie, :completed, customer: customer,
+                     share_token: "tok_off", share_enabled: false, expires_at: 1.day.from_now)
+      expect(movie).not_to be_share_publicly_accessible
+    end
+
+    it "share_token が nil なら false" do
+      movie = create(:singing_generated_recap_movie, :completed, customer: customer,
+                     share_token: nil, share_enabled: true, expires_at: 1.day.from_now)
+      expect(movie).not_to be_share_publicly_accessible
+    end
+
+    it "expired なら false（shareable? が false になるため）" do
+      movie = build(:singing_generated_recap_movie, :expired, customer: customer,
+                    share_token: "tok_exp", share_enabled: true)
+      expect(movie).not_to be_share_publicly_accessible
+    end
+
+    it "video_file 未添付なら false（shareable? が false になるため）" do
+      movie = create(:singing_generated_recap_movie, customer: customer, status: :completed,
+                     generated_at: Time.current, expires_at: 1.day.from_now,
+                     share_token: "tok_novideo", share_enabled: true)
+      expect(movie).not_to be_share_publicly_accessible
+    end
+  end
+
+  describe "share_enabled デフォルト値" do
+    it "新規レコードは share_enabled が true であること" do
+      movie = create(:singing_generated_recap_movie, customer: customer)
+      expect(movie.share_enabled).to be true
+    end
+  end
+
   describe "#generate_share_token!" do
     it "share_token を生成して DB に保存すること" do
       movie = create(:singing_generated_recap_movie, :completed, customer: customer)

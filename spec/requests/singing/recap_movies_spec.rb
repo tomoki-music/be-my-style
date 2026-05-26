@@ -455,4 +455,98 @@ RSpec.describe "Singing::RecapMovies", type: :request do
       end
     end
   end
+
+  # ─── update_share_visibility ────────────────────────────────────────────────
+
+  describe "PATCH /singing/recap_movies/:id/update_share_visibility" do
+    context "未ログイン" do
+      it "ログインページにリダイレクトされること" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner)
+
+        patch update_share_visibility_singing_recap_movie_path(movie),
+              params: { share_enabled: "false" }, as: :json
+
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    context "ログイン済み・自分の completed movie" do
+      before { sign_in owner }
+
+      it "share_enabled を false にできること" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner,
+                                  share_enabled: true)
+
+        patch update_share_visibility_singing_recap_movie_path(movie),
+              params: { share_enabled: "false" }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(movie.reload.share_enabled).to be false
+        expect(JSON.parse(response.body)["share_enabled"]).to be false
+      end
+
+      it "share_enabled を true に戻せること" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner,
+                                  share_enabled: false)
+
+        patch update_share_visibility_singing_recap_movie_path(movie),
+              params: { share_enabled: "true" }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(movie.reload.share_enabled).to be true
+      end
+    end
+
+    context "expired movie" do
+      before { sign_in owner }
+
+      it "422 を返すこと" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, :expired, customer: owner)
+
+        patch update_share_visibility_singing_recap_movie_path(movie),
+              params: { share_enabled: "false" }, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+
+    context "failed movie" do
+      before { sign_in owner }
+
+      it "422 を返すこと" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, :failed, customer: owner)
+
+        patch update_share_visibility_singing_recap_movie_path(movie),
+              params: { share_enabled: "false" }, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+
+    context "processing movie" do
+      before { sign_in owner }
+
+      it "422 を返すこと" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, customer: owner, status: :processing)
+
+        patch update_share_visibility_singing_recap_movie_path(movie),
+              params: { share_enabled: "false" }, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+
+    context "他人の recap movie" do
+      before { sign_in owner }
+
+      it "一覧ページにリダイレクトされること" do
+        other_movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: other)
+
+        patch update_share_visibility_singing_recap_movie_path(other_movie),
+              params: { share_enabled: "false" }, as: :json
+
+        expect(response).to redirect_to(singing_recap_movies_path)
+      end
+    end
+  end
 end

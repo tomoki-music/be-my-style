@@ -7,7 +7,7 @@ class Singing::PublicRecapMoviesController < Singing::BaseController
       .joins(:customer)
       .find_by(share_token: params[:share_token])
 
-    unless @recap_movie&.shareable?
+    unless @recap_movie&.share_publicly_accessible?
       render :not_found, status: :not_found
       return
     end
