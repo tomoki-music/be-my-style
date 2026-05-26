@@ -383,4 +383,76 @@ RSpec.describe "Singing::RecapMovies", type: :request do
       end
     end
   end
+
+  # ─── generate_share_link ────────────────────────────────────────────────────
+
+  describe "POST /singing/recap_movies/:id/generate_share_link" do
+    context "未ログイン" do
+      it "ルートにリダイレクトされること" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner)
+
+        post generate_share_link_singing_recap_movie_path(movie), as: :json
+
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    context "ログイン済み・自分の completed movie" do
+      before { sign_in owner }
+
+      it "200 と share_url を返すこと" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner)
+
+        post generate_share_link_singing_recap_movie_path(movie), as: :json
+
+        expect(response).to have_http_status(:ok)
+        json = JSON.parse(response.body)
+        expect(json["share_url"]).to include("/singing/recap_movies/share/")
+      end
+
+      it "share_token が DB に保存されること" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner)
+
+        post generate_share_link_singing_recap_movie_path(movie), as: :json
+
+        expect(movie.reload.share_token).to be_present
+      end
+
+      it "2回呼んでも同じ URL が返ること" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: owner)
+
+        post generate_share_link_singing_recap_movie_path(movie), as: :json
+        url1 = JSON.parse(response.body)["share_url"]
+
+        post generate_share_link_singing_recap_movie_path(movie), as: :json
+        url2 = JSON.parse(response.body)["share_url"]
+
+        expect(url1).to eq(url2)
+      end
+    end
+
+    context "expired movie" do
+      before { sign_in owner }
+
+      it "422 を返すこと" do
+        movie = FactoryBot.create(:singing_generated_recap_movie, :expired, customer: owner)
+
+        post generate_share_link_singing_recap_movie_path(movie), as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+
+    context "他人の recap movie" do
+      before { sign_in owner }
+
+      it "一覧ページにリダイレクトされること" do
+        other_movie = FactoryBot.create(:singing_generated_recap_movie, :completed, customer: other)
+
+        post generate_share_link_singing_recap_movie_path(other_movie), as: :json
+
+        expect(response).to redirect_to(singing_recap_movies_path)
+      end
+    end
+  end
 end

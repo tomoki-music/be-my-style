@@ -1,0 +1,172 @@
+- content_for(:suppress_singing_nav) { true }
+- share_url = singing_public_recap_movie_share_url(share_token: @recap_movie.share_token)
+- share_text_raw = "🎤 #{@customer.name}さんの #{@recap_movie.year} Singing Recap\n歌声の軌跡をBeMyStyleで記録中✨\n#BeMyStyle #SingingRecap"
+- twitter_url = "https://twitter.com/intent/tweet?text=#{CGI.escape(share_text_raw)}&url=#{CGI.escape(share_url)}"
+- line_text = CGI.escape("🎤 #{@customer.name}さんの #{@recap_movie.year} Singing Recap\n#{share_url}")
+- line_url = "https://line.me/R/msg/text/?#{line_text}"
+
+- content_for(:title) { "#{@customer.name}さんの #{@recap_movie.year} Singing Recap | BeMyStyle" }
+- content_for(:og_title) { "#{@customer.name}さんの #{@recap_movie.year} Singing Recap | BeMyStyle" }
+- content_for(:og_description) { "BeMyStyleで記録した#{@recap_movie.year}年の歌声の成長をご覧ください。" }
+- content_for(:og_url) { share_url }
+- content_for(:robots) { "noindex" }
+
+.srm-public-share
+  .srm-public-share__inner
+    .srm-public-share__header
+      = link_to "https://be-my-style.com", class: "srm-public-share__logo" do
+        BeMyStyle
+
+    .srm-public-share__hero
+      .srm-public-share__eyebrow Singing Recap
+      %h1.srm-public-share__title
+        = "#{@customer.name}さんの"
+        %br
+        = "#{@recap_movie.year} Recap Movie"
+
+    .srm-public-share__video-wrap
+      = video_tag(url_for(@recap_movie.video_file), controls: true, playsinline: true, class: "srm-public-share__video")
+
+    .srm-public-share__note スマホを縦向きにすると見やすくなります。
+
+    .srm-public-share__actions
+      = link_to(twitter_url, class: "srm-public-share__btn srm-public-share__btn--twitter", target: "_blank", rel: "noopener noreferrer") do
+        Xでシェア
+      = link_to(line_url, class: "srm-public-share__btn srm-public-share__btn--line", target: "_blank", rel: "noopener noreferrer") do
+        LINEでシェア
+
+    .srm-public-share__cta
+      .srm-public-share__cta-body
+        %p.srm-public-share__cta-heading あなたも歌声を記録してみませんか？
+        %p.srm-public-share__cta-desc BeMyStyleで音程・リズム・表現を見える化。毎回の練習が次のステップになります。
+        = link_to("無料ではじめる", "https://be-my-style.com/singing/sign_up", class: "srm-public-share__cta-btn")
+
+  %footer.srm-public-share__foot © BeMyStyle
+
+%style
+  :plain
+    .srm-public-share {
+      min-height: 100dvh;
+      background: linear-gradient(180deg, #0d1b2b 0%, #1a2e44 100%);
+      color: #fff;
+      font-family: "Avenir Next", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+    }
+    .srm-public-share__inner {
+      width: min(680px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 48px;
+    }
+    .srm-public-share__logo {
+      display: inline-block;
+      margin-bottom: 32px;
+      color: rgba(255,255,255,0.7);
+      font-size: 0.95rem;
+      font-weight: 800;
+      text-decoration: none;
+      letter-spacing: 0.04em;
+    }
+    .srm-public-share__eyebrow {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 6px 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.8);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .srm-public-share__title {
+      margin: 0 0 28px;
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 900;
+      line-height: 1.3;
+    }
+    .srm-public-share__video-wrap {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #000;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .srm-public-share__video {
+      width: 100%;
+      display: block;
+      max-height: 72vh;
+    }
+    .srm-public-share__note {
+      margin: 10px 0 24px;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.82rem;
+      text-align: center;
+    }
+    .srm-public-share__actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 36px;
+    }
+    .srm-public-share__btn {
+      flex: 1 1 0;
+      display: inline-flex;
+      min-height: 48px;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: transform 0.15s ease;
+    }
+    .srm-public-share__btn:hover { transform: translateY(-2px); }
+    .srm-public-share__btn--twitter {
+      background: #000;
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff;
+    }
+    .srm-public-share__btn--line {
+      background: #06c755;
+      color: #fff;
+    }
+    .srm-public-share__cta {
+      padding: 28px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .srm-public-share__cta-heading {
+      margin: 0 0 8px;
+      font-size: 1.08rem;
+      font-weight: 900;
+    }
+    .srm-public-share__cta-desc {
+      margin: 0 0 18px;
+      color: rgba(255,255,255,0.7);
+      font-size: 0.93rem;
+      line-height: 1.6;
+    }
+    .srm-public-share__cta-btn {
+      display: inline-flex;
+      min-height: 46px;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 28px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #ef6c3f, #d94c30);
+      color: #fff;
+      font-weight: 850;
+      text-decoration: none;
+      box-shadow: 0 12px 28px rgba(217,76,48,0.3);
+      transition: transform 0.15s ease;
+    }
+    .srm-public-share__cta-btn:hover { transform: translateY(-2px); }
+    .srm-public-share__foot {
+      padding: 20px 0;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.35);
+      text-align: center;
+      font-size: 0.82rem;
+    }

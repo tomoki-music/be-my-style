@@ -1,6 +1,6 @@
 class Singing::RecapMoviesController < Singing::BaseController
   before_action :authenticate_customer!
-  before_action :set_recap_movie, only: [:show, :track_share, :request_regeneration]
+  before_action :set_recap_movie, only: [:show, :track_share, :request_regeneration, :generate_share_link]
 
   SCORE_GROWTH_LABELS = {
     overall_score:    "総合力",
@@ -40,6 +40,17 @@ class Singing::RecapMoviesController < Singing::BaseController
       redirect_to singing_recap_movie_path(@recap_movie),
                   notice: "処理を開始しました。"
     end
+  end
+
+  def generate_share_link
+    unless @recap_movie.shareable?
+      render json: { error: "この Recap Movie は共有できません" }, status: :unprocessable_entity
+      return
+    end
+
+    token = @recap_movie.generate_share_token!
+    share_url = singing_public_recap_movie_share_url(share_token: token)
+    render json: { share_url: share_url }, status: :ok
   end
 
   def track_share

@@ -244,6 +244,83 @@ RSpec.describe SingingGeneratedRecapMovie, type: :model do
     end
   end
 
+  describe "share_token バリデーション" do
+    it "share_token が nil なら valid であること" do
+      movie = build(:singing_generated_recap_movie, customer: customer, share_token: nil)
+      expect(movie).to be_valid
+    end
+
+    it "share_token が重複すると invalid になること" do
+      create(:singing_generated_recap_movie, customer: customer, share_token: "abc123")
+      other = create(:customer, domain_name: "singing")
+      dup = build(:singing_generated_recap_movie, customer: other, share_token: "abc123")
+      expect(dup).not_to be_valid
+      expect(dup.errors[:share_token]).to be_present
+    end
+
+    it "異なる share_token は valid であること" do
+      create(:singing_generated_recap_movie, customer: customer, share_token: "token_a")
+      other = create(:customer, domain_name: "singing")
+      movie = build(:singing_generated_recap_movie, customer: other, share_token: "token_b")
+      expect(movie).to be_valid
+    end
+  end
+
+  describe "#shareable?" do
+    it "completed・video_file あり・expires_at 未来 → true" do
+      movie = create(:singing_generated_recap_movie, :completed, customer: customer, expires_at: 1.day.from_now)
+      expect(movie).to be_shareable
+    end
+
+    it "completed・video_file あり・expires_at nil → true" do
+      movie = create(:singing_generated_recap_movie, :completed, customer: customer, expires_at: nil)
+      expect(movie).to be_shareable
+    end
+
+    it "completed・video_file あり・expires_at 過去 → false" do
+      movie = create(:singing_generated_recap_movie, :completed, customer: customer, expires_at: 1.second.ago)
+      expect(movie).not_to be_shareable
+    end
+
+    it "expired → false" do
+      movie = build(:singing_generated_recap_movie, :expired, customer: customer)
+      expect(movie).not_to be_shareable
+    end
+
+    it "failed → false" do
+      movie = build(:singing_generated_recap_movie, :failed, customer: customer)
+      expect(movie).not_to be_shareable
+    end
+
+    it "completed でも video_file 未添付 → false" do
+      movie = create(:singing_generated_recap_movie, customer: customer, status: :completed,
+                     generated_at: Time.current, expires_at: 1.day.from_now)
+      expect(movie).not_to be_shareable
+    end
+  end
+
+  describe "#generate_share_token!" do
+    it "share_token を生成して DB に保存すること" do
+      movie = create(:singing_generated_recap_movie, :completed, customer: customer)
+      token = movie.generate_share_token!
+      expect(token).to be_present
+      expect(movie.reload.share_token).to eq(token)
+    end
+
+    it "2回呼んでも同じトークンを返すこと" do
+      movie = create(:singing_generated_recap_movie, :completed, customer: customer)
+      token1 = movie.generate_share_token!
+      token2 = movie.generate_share_token!
+      expect(token1).to eq(token2)
+    end
+
+    it "生成されたトークンは URL セーフな文字のみであること" do
+      movie = create(:singing_generated_recap_movie, :completed, customer: customer)
+      token = movie.generate_share_token!
+      expect(token).to match(/\A[A-Za-z0-9\-_]+\z/)
+    end
+  end
+
   describe ".recently_cleaned scope" do
     it "7日以内に cleaned_up_at が設定された expired movie を返す" do
       cleaned = create(:singing_generated_recap_movie, :expired, customer: customer, cleaned_up_at: 1.day.ago)

@@ -14,6 +14,7 @@ class SingingGeneratedRecapMovie < ApplicationRecord
                      numericality: { only_integer: true, greater_than: 2000, less_than_or_equal_to: 2100 }
   validates :status, presence: true
   validates :customer_id, uniqueness: { scope: :year, message: "はすでにこの年の Recap Movie を持っています" }
+  validates :share_token, uniqueness: true, allow_nil: true
 
   scope :reusable,        -> { completed.where("expires_at IS NULL OR expires_at > ?", Time.current) }
   scope :expired_targets, -> { where(status: %w[pending processing completed failed]).where("expires_at < ?", Time.current) }
@@ -36,6 +37,22 @@ class SingingGeneratedRecapMovie < ApplicationRecord
 
   def reusable?
     completed? && (expires_at.nil? || expires_at > Time.current)
+  end
+
+  def shareable?
+    completed? && video_file.attached? && (expires_at.nil? || expires_at > Time.current)
+  end
+
+  def generate_share_token!
+    return share_token if share_token.present?
+
+    loop do
+      token = SecureRandom.urlsafe_base64(32)
+      unless self.class.exists?(share_token: token)
+        update!(share_token: token)
+        return token
+      end
+    end
   end
 
   def generated_props_hash

@@ -258,8 +258,10 @@ Rails.application.routes.draw do
       member do
         post :track_share
         post :request_regeneration
+        post :generate_share_link
       end
     end
+    get "recap_movies/share/:share_token", to: "public_recap_movies#show", as: :public_recap_movie_share
     resources :users, only: [:show, :edit, :update] do
       resource :profile_reaction, only: [:create]
     end

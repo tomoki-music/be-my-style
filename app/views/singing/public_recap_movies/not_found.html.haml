@@ -1,0 +1,70 @@
+- content_for(:suppress_singing_nav) { true }
+- content_for(:title) { "共有リンクが無効です | BeMyStyle" }
+- content_for(:robots) { "noindex" }
+
+.srm-public-share
+  .srm-public-share__inner
+    .srm-public-share__logo BeMyStyle
+
+    .srm-public-share__not-found
+      %p.srm-public-share__nf-icon 🔒
+      %h1.srm-public-share__nf-title この共有リンクは無効です
+      %p.srm-public-share__nf-desc
+        リンクの有効期限が切れたか、存在しないリンクです。
+        %br
+        オーナーに新しいリンクを発行してもらうか、BeMyStyleで自分の歌声を診断してみましょう。
+      = link_to "BeMyStyleをはじめる", "https://be-my-style.com/singing/sign_up",
+          class: "srm-public-share__cta-btn"
+
+%style
+  :plain
+    .srm-public-share {
+      min-height: 100dvh;
+      background: linear-gradient(180deg, #0d1b2b 0%, #1a2e44 100%);
+      color: #fff;
+      font-family: "Avenir Next", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+    }
+    .srm-public-share__inner {
+      width: min(680px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 48px;
+    }
+    .srm-public-share__logo {
+      margin-bottom: 48px;
+      color: rgba(255,255,255,0.7);
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+    .srm-public-share__not-found {
+      text-align: center;
+      padding: 48px 24px;
+    }
+    .srm-public-share__nf-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+    }
+    .srm-public-share__nf-title {
+      margin: 0 0 16px;
+      font-size: 1.4rem;
+      font-weight: 900;
+    }
+    .srm-public-share__nf-desc {
+      margin: 0 0 28px;
+      color: rgba(255,255,255,0.65);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+    .srm-public-share__cta-btn {
+      display: inline-flex;
+      min-height: 46px;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 28px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #ef6c3f, #d94c30);
+      color: #fff;
+      font-weight: 850;
+      text-decoration: none;
+      box-shadow: 0 12px 28px rgba(217,76,48,0.3);
+    }
