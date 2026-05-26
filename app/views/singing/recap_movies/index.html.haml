@@ -7,18 +7,26 @@
     .srm-header
       %p.srm-header__eyebrow Singing / Recap Movie
       %h1.srm-header__title Recap Movie
-      %p.srm-header__subtitle あなたの1年間の成長をまとめた動画です。SNSでシェアして、続けてきた自分を振り返りましょう。
+      %p.srm-header__subtitle
+        歌声診断の記録から自動生成される、あなたの1年間の成長ムービーです。
+        SNSでシェアして、続けてきた自分を振り返りましょう。
+
+    = render "singing/recap_movies/creation_panel", eligibility: @eligibility
 
     - if @recap_movies.empty?
       .srm-empty
         .srm-empty__icon 🎬
         %p.srm-empty__title まだ Recap Movie はありません
         %p.srm-empty__desc
-          診断を続けると、あなただけの年間Recap Movieが生成されます。
+          Recap Movie は、あなたの歌声診断の記録をもとに、
           %br
-          まずは歌声診断を始めてみましょう。
+          1年間の成長を短い動画にまとめる機能です。
         .srm-empty__actions
-          = link_to "診断を始める", new_singing_diagnosis_path, class: "srm-btn srm-btn--primary"
+          - if @eligibility.eligible?
+            = button_to "Recap Movieを作成する", request_generation_singing_recap_movies_path,
+                method: :post, class: "srm-btn srm-btn--primary"
+          - else
+            = link_to "歌声診断を始める", new_singing_diagnosis_path, class: "srm-btn srm-btn--primary"
           = link_to "バッジ・リワード", singing_badges_path, class: "srm-btn srm-btn--secondary"
     - else
       .srm-list

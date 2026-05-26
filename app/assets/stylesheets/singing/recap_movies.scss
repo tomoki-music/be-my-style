@@ -663,3 +663,133 @@ $srm-green:      #22c55e;
   padding-top: 24px;
   text-align: center;
 }
+
+// ── Creation Panel ───────────────────────────────────────────────────────────
+
+.srm-creation-panel {
+  background: $srm-surface;
+  border: 1px solid $srm-border;
+  border-radius: 20px;
+  margin-bottom: 32px;
+  overflow: hidden;
+}
+
+.srm-creation-panel__about {
+  align-items: flex-start;
+  border-bottom: 1px solid $srm-border;
+  display: flex;
+  gap: 14px;
+  padding: 20px 22px;
+}
+
+.srm-creation-panel__about-icon {
+  flex-shrink: 0;
+  font-size: 1.4rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.srm-creation-panel__about-title {
+  color: $srm-text;
+  font-size: 0.88rem;
+  font-weight: 800;
+  margin: 0 0 5px;
+}
+
+.srm-creation-panel__about-desc {
+  color: $srm-muted;
+  font-size: 0.85rem;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.srm-creation-panel__status {
+  padding: 18px 22px;
+}
+
+// ── Creation Status ──────────────────────────────────────────────────────────
+
+.srm-creation-status {
+  align-items: center;
+  border-radius: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 16px 18px;
+
+  &--neutral  { background: rgba($srm-muted,  0.08); border: 1px solid rgba($srm-muted, 0.18); }
+  &--eligible { background: rgba($srm-purple, 0.1);  border: 1px solid rgba($srm-purple-lt, 0.3); }
+  &--warning  { background: rgba($srm-red,    0.07); border: 1px solid rgba($srm-red, 0.2); }
+  &--progress { background: rgba($srm-gold,   0.07); border: 1px solid rgba($srm-gold, 0.22); }
+  &--done     { background: rgba($srm-green,  0.07); border: 1px solid rgba($srm-green, 0.22); }
+}
+
+.srm-creation-status__icon {
+  color: $srm-purple-lt;
+  flex-shrink: 0;
+  font-size: 1.3rem;
+  line-height: 1;
+  min-width: 24px;
+  text-align: center;
+
+  .srm-creation-status--eligible & { color: $srm-purple-lt; }
+  .srm-creation-status--warning  & { color: $srm-red; }
+  .srm-creation-status--progress & { color: $srm-gold; }
+  .srm-creation-status--done     & { color: $srm-green; }
+}
+
+.srm-creation-status__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.srm-creation-status__label {
+  color: $srm-text;
+  font-size: 0.92rem;
+  font-weight: 800;
+  margin: 0 0 3px;
+}
+
+.srm-creation-status__desc {
+  color: $srm-muted;
+  font-size: 0.83rem;
+  margin: 0;
+}
+
+.srm-creation-status__action {
+  flex-shrink: 0;
+
+  @media (max-width: 480px) {
+    width: 100%;
+
+    .srm-btn { width: 100%; }
+  }
+}
+
+// ── Button 追加バリエーション ─────────────────────────────────────────────────
+
+.srm-btn--sm {
+  font-size: 13px;
+  min-height: auto;
+  padding: 8px 18px;
+}
+
+.srm-btn--coral {
+  background: linear-gradient(135deg, #ef6c3f, #d94c30);
+  box-shadow: 0 8px 20px rgba(217, 76, 48, 0.25);
+  color: #fff;
+
+  &:hover { filter: brightness(1.1); }
+}
+
+// ── スモールスピナー ──────────────────────────────────────────────────────────
+
+.srm-spinner-sm {
+  animation: srm-spin 0.8s linear infinite;
+  border: 2px solid rgba($srm-gold, 0.25);
+  border-radius: 50%;
+  border-top-color: $srm-gold;
+  display: inline-block;
+  height: 18px;
+  width: 18px;
+}

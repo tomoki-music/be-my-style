@@ -53,11 +53,18 @@ RSpec.describe "Singing::RecapMovies", type: :request do
         expect(response.body).to include("まだ Recap Movie はありません")
       end
 
-      it "空状態に診断への導線を表示すること" do
+      it "空状態に Creation Panel の説明を表示すること" do
         get singing_recap_movies_path
 
-        expect(response.body).to include("診断を続けると、あなただけの年間Recap Movieが生成されます")
-        expect(response.body).to include("診断を始める")
+        expect(response.body).to include("Recap Movie とは？")
+        expect(response.body).to include("1年間の成長を短い動画にまとめる機能です")
+      end
+
+      it "診断がない場合に診断への導線を表示すること" do
+        get singing_recap_movies_path
+
+        expect(response.body).to include("診断がまだありません")
+        expect(response.body).to include("歌声診断を始める")
       end
 
       it "processing 状態のカードに生成中バッジを表示すること" do
@@ -546,6 +553,109 @@ RSpec.describe "Singing::RecapMovies", type: :request do
               params: { share_enabled: "false" }, as: :json
 
         expect(response).to redirect_to(singing_recap_movies_path)
+      end
+    end
+  end
+
+  # ─── request_generation ─────────────────────────────────────────────────────
+
+  describe "POST /singing/recap_movies/request_generation" do
+    context "未ログイン" do
+      it "ログインページにリダイレクトされること" do
+        post request_generation_singing_recap_movies_path
+
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    context "ログイン済み・診断がない場合" do
+      before { sign_in owner }
+
+      it "一覧ページにリダイレクトされること" do
+        post request_generation_singing_recap_movies_path
+
+        expect(response).to redirect_to(singing_recap_movies_path)
+      end
+
+      it "alert flash を設定すること" do
+        post request_generation_singing_recap_movies_path
+
+        expect(flash[:alert]).to include("歌声診断を完了すると")
+      end
+    end
+
+    context "ログイン済み・診断がある場合（eligible）" do
+      let(:current_year) { Time.current.year }
+      let(:pending_movie) do
+        FactoryBot.build_stubbed(:singing_generated_recap_movie,
+                                 customer: owner, year: current_year, status: :pending)
+      end
+      let(:service_result) do
+        Singing::RecapMovieRequestService::Result.new(
+          movie:   pending_movie,
+          created: true,
+          reused:  false,
+          queued:  false,
+          status:  :created_pending,
+          message: "新規 pending レコードを作成しました"
+        )
+      end
+
+      before do
+        sign_in owner
+        FactoryBot.create(:singing_diagnosis, customer: owner, status: :completed,
+                          created_at: Time.zone.local(current_year, 6, 1))
+        allow(Singing::RecapMovieRequestService).to receive(:call).and_return(service_result)
+      end
+
+      it "一覧ページにリダイレクトされること" do
+        post request_generation_singing_recap_movies_path
+
+        expect(response).to redirect_to(singing_recap_movies_path)
+      end
+
+      it "notice flash を設定すること" do
+        post request_generation_singing_recap_movies_path
+
+        expect(flash[:notice]).to include("Recap Movie作成をリクエストしました")
+      end
+
+      it "RecapMovieRequestService を呼び出すこと" do
+        post request_generation_singing_recap_movies_path
+
+        expect(Singing::RecapMovieRequestService).to have_received(:call).with(owner, year: current_year)
+      end
+    end
+
+    context "ログイン済み・すでに pending がある場合" do
+      let(:current_year) { Time.current.year }
+
+      before do
+        sign_in owner
+        FactoryBot.create(:singing_diagnosis, customer: owner, status: :completed,
+                          created_at: Time.zone.local(current_year, 6, 1))
+        FactoryBot.create(:singing_generated_recap_movie,
+                          customer: owner, year: current_year, status: :pending)
+      end
+
+      it "一覧ページにリダイレクトされること" do
+        post request_generation_singing_recap_movies_path
+
+        expect(response).to redirect_to(singing_recap_movies_path)
+      end
+
+      it "alert flash を設定すること（already_pending）" do
+        post request_generation_singing_recap_movies_path
+
+        expect(flash[:alert]).to include("生成待ちです")
+      end
+
+      it "レコードが増えないこと" do
+        expect {
+          post request_generation_singing_recap_movies_path
+        }.not_to change {
+          owner.singing_generated_recap_movies.count
+        }
       end
     end
   end

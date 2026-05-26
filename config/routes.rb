@@ -255,6 +255,9 @@ Rails.application.routes.draw do
       end
     end
     resources :recap_movies, only: [:index, :show] do
+      collection do
+        post :request_generation
+      end
       member do
         post  :track_share
         post  :request_regeneration

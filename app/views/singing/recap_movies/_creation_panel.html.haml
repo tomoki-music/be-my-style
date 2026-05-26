@@ -1,0 +1,84 @@
+- e = eligibility
+
+.srm-creation-panel
+  .srm-creation-panel__about
+    .srm-creation-panel__about-icon 🎬
+    .srm-creation-panel__about-body
+      %p.srm-creation-panel__about-title Recap Movie とは？
+      %p.srm-creation-panel__about-desc
+        歌声診断の記録をもとに、1年間の成長を短い動画にまとめる機能です。
+        通常は運営による一括生成タイミングで自動作成されます。
+        条件を満たしている場合は、ご自身でも作成をリクエストできます。
+
+  .srm-creation-panel__status
+    - case e.reason
+    - when :no_diagnosis
+      .srm-creation-status.srm-creation-status--neutral
+        .srm-creation-status__icon 🎤
+        .srm-creation-status__body
+          %p.srm-creation-status__label 診断がまだありません
+          %p.srm-creation-status__desc 歌声診断を完了すると、Recap Movieを作成できるようになります。
+        .srm-creation-status__action
+          = link_to "歌声診断を始める", new_singing_diagnosis_path, class: "srm-btn srm-btn--primary srm-btn--sm"
+
+    - when :eligible
+      .srm-creation-status.srm-creation-status--eligible
+        .srm-creation-status__icon ✦
+        .srm-creation-status__body
+          %p.srm-creation-status__label= "#{e.year}年のRecap Movieを作成できます"
+          %p.srm-creation-status__desc= "完了済み診断 #{e.completed_diagnoses_count} 件が対象です。"
+        .srm-creation-status__action
+          = button_to "Recap Movieを作成する", request_generation_singing_recap_movies_path,
+              method: :post, class: "srm-btn srm-btn--coral srm-btn--sm"
+
+    - when :retry_failed
+      .srm-creation-status.srm-creation-status--warning
+        .srm-creation-status__icon ✕
+        .srm-creation-status__body
+          %p.srm-creation-status__label= "#{e.year}年の生成に失敗しました"
+          %p.srm-creation-status__desc 再生成をリクエストできます。
+        .srm-creation-status__action
+          = button_to "再生成をリクエスト", request_generation_singing_recap_movies_path,
+              method: :post, class: "srm-btn srm-btn--coral srm-btn--sm"
+
+    - when :retry_expired
+      .srm-creation-status.srm-creation-status--neutral
+        .srm-creation-status__icon ⊘
+        .srm-creation-status__body
+          %p.srm-creation-status__label= "#{e.year}年のRecap Movieの期限が切れています"
+          %p.srm-creation-status__desc 再生成できます。
+        .srm-creation-status__action
+          = button_to "もう一度作成する", request_generation_singing_recap_movies_path,
+              method: :post, class: "srm-btn srm-btn--coral srm-btn--sm"
+
+    - when :already_pending
+      .srm-creation-status.srm-creation-status--progress
+        .srm-creation-status__icon
+          %span.srm-spinner-sm
+        .srm-creation-status__body
+          %p.srm-creation-status__label= "#{e.year}年のRecap Movie：生成待ちです"
+          %p.srm-creation-status__desc キューに追加済みです。しばらくお待ちください。
+        .srm-creation-status__action
+          - if e.existing_movie
+            = link_to "状況を確認する", singing_recap_movie_path(e.existing_movie), class: "srm-btn srm-btn--secondary srm-btn--sm"
+
+    - when :already_processing
+      .srm-creation-status.srm-creation-status--progress
+        .srm-creation-status__icon
+          %span.srm-spinner-sm
+        .srm-creation-status__body
+          %p.srm-creation-status__label= "#{e.year}年のRecap Movie：作成中です"
+          %p.srm-creation-status__desc 数分後に完成します。このページを再読み込みしてご確認ください。
+        .srm-creation-status__action
+          - if e.existing_movie
+            = link_to "状況を確認する", singing_recap_movie_path(e.existing_movie), class: "srm-btn srm-btn--secondary srm-btn--sm"
+
+    - when :already_completed
+      .srm-creation-status.srm-creation-status--done
+        .srm-creation-status__icon ✦
+        .srm-creation-status__body
+          %p.srm-creation-status__label= "#{e.year}年のRecap Movieは作成済みです"
+          %p.srm-creation-status__desc 下の一覧から動画を確認・シェアできます。
+        .srm-creation-status__action
+          - if e.existing_movie
+            = link_to "Recapを見る", singing_recap_movie_path(e.existing_movie), class: "srm-btn srm-btn--primary srm-btn--sm"

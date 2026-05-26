@@ -11,6 +11,35 @@ class Singing::RecapMoviesController < Singing::BaseController
 
   def index
     @recap_movies = current_customer.singing_generated_recap_movies.order(year: :desc)
+    @eligibility  = Singing::RecapMovieCreationEligibilityService.call(current_customer)
+  end
+
+  def request_generation
+    eligibility = Singing::RecapMovieCreationEligibilityService.call(current_customer)
+
+    unless eligibility.eligible?
+      redirect_to singing_recap_movies_path, alert: eligibility.message
+      return
+    end
+
+    result = Singing::RecapMovieRequestService.call(current_customer, year: eligibility.year)
+
+    case result.status
+    when :created_pending, :reset_pending
+      redirect_to singing_recap_movies_path,
+                  notice: "#{eligibility.year}年のRecap Movie作成をリクエストしました。数分後に完成します。"
+    when :reused_completed
+      redirect_to singing_recap_movie_path(result.movie),
+                  notice: "作成済みのRecap Movieを確認できます。"
+    when :already_pending, :already_processing
+      redirect_to singing_recap_movies_path,
+                  notice: "すでに生成処理中です。しばらくお待ちください。"
+    when :empty_source
+      redirect_to singing_recap_movies_path,
+                  alert: "生成に必要な診断データが見つかりません。診断を追加してからお試しください。"
+    else
+      redirect_to singing_recap_movies_path, notice: "処理を開始しました。"
+    end
   end
 
   def show
