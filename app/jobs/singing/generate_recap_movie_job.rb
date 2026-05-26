@@ -12,6 +12,13 @@ module Singing
 
       return unless movie.pending?
 
+      if SingingGeneratedRecapMovie.processing.where.not(id: movie.id).exists?
+        Rails.logger.warn(
+          "[RecapMovieGenerationSafety] skipped movie_id=#{movie.id} because another movie is processing"
+        )
+        return
+      end
+
       Singing::RecapMovieRenderer.new(movie).call
       reconcile(movie)
     rescue StandardError => e

@@ -53,7 +53,7 @@
           %p.srm-creation-status__label= "条件を満たしています。#{e.year}年のRecap Movieを作成できます。"
           %p.srm-creation-status__desc= "完了済み診断 #{e.completed_diagnoses_count} 件が対象です。"
         .srm-creation-status__action
-          = button_to "Recap Movieを作成する", request_generation_singing_recap_movies_path,
+          = button_to "Recap Movieの作成を予約する", request_generation_singing_recap_movies_path,
               method: :post, class: "srm-btn srm-btn--coral srm-btn--sm"
 
     - when :retry_failed
@@ -81,8 +81,11 @@
         .srm-creation-status__icon
           %span.srm-spinner-sm
         .srm-creation-status__body
-          %p.srm-creation-status__label= "#{e.year}年のRecap Movie：生成待ちです"
-          %p.srm-creation-status__desc キューに追加済みです。しばらくお待ちください。
+          %p.srm-creation-status__label= "#{e.year}年のRecap Movie：作成予約済みです"
+          %p.srm-creation-status__desc
+            作成予約済みです。動画生成はサーバー負荷を避けるため、順番に作成されます。
+            %br
+            完成後、このページに表示されます。
         .srm-creation-status__action
           - if e.existing_movie
             = link_to "状況を確認する", singing_recap_movie_path(e.existing_movie), class: "srm-btn srm-btn--secondary srm-btn--sm"
@@ -93,7 +96,7 @@
           %span.srm-spinner-sm
         .srm-creation-status__body
           %p.srm-creation-status__label= "#{e.year}年のRecap Movie：作成中です"
-          %p.srm-creation-status__desc 数分後に完成します。このページを再読み込みしてご確認ください。
+          %p.srm-creation-status__desc 作成中です。しばらくしてからページを更新してください。
         .srm-creation-status__action
           - if e.existing_movie
             = link_to "状況を確認する", singing_recap_movie_path(e.existing_movie), class: "srm-btn srm-btn--secondary srm-btn--sm"

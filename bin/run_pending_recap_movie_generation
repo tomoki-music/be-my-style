@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+BUNDLE_BIN="${BUNDLE_BIN:-bundle}"
+RAILS_ENV="${RAILS_ENV:-production}"
+
+export RAILS_ENV
+
+log() { echo "[run_pending_recap_movie] $*"; }
+
+log "Starting (RAILS_ENV=${RAILS_ENV})"
+
+movie_id=$(
+  cd "$APP_ROOT" && \
+  RAILS_ENV="$RAILS_ENV" "$BUNDLE_BIN" exec rails runner \
+    'puts SingingGeneratedRecapMovie.pending.order(created_at: :asc).first&.id.to_s' \
+    2>/dev/null
+)
+
+if [ -z "$movie_id" ]; then
+  log "No pending movie found. Nothing to do."
+  exit 0
+fi
+
+log "Processing movie_id=${movie_id}"
+
+cd "$APP_ROOT" && \
+  RAILS_ENV="$RAILS_ENV" "$BUNDLE_BIN" exec rails runner \
+    "Singing::GenerateRecapMovieJob.perform_now(${movie_id})"
+
+log "Done."

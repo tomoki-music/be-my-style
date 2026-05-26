@@ -1072,7 +1072,7 @@ RSpec.describe "Singing::Badges", type: :request do
         end
       end
 
-      context "Job enqueue（enqueueされる場合）" do
+      context "Job enqueue（Puma クラッシュ防止のため常に enqueue しない）" do
         include ActiveJob::TestHelper
 
         context "新規リクエストの場合（created_pending）" do
@@ -1085,17 +1085,17 @@ RSpec.describe "Singing::Badges", type: :request do
             )
           end
 
-          it "Singing::GenerateRecapMovieJob が enqueue されること" do
+          it "Singing::GenerateRecapMovieJob が enqueue されないこと（runner 経由のため）" do
             expect {
               post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
-            }.to have_enqueued_job(Singing::GenerateRecapMovieJob)
+            }.not_to have_enqueued_job(Singing::GenerateRecapMovieJob)
           end
 
-          it "response に queued: true が含まれること" do
+          it "response に queued: false が含まれること" do
             post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
 
             json = JSON.parse(response.body, symbolize_names: true)
-            expect(json[:queued]).to be true
+            expect(json[:queued]).to be false
           end
         end
 
@@ -1111,17 +1111,17 @@ RSpec.describe "Singing::Badges", type: :request do
             )
           end
 
-          it "Singing::GenerateRecapMovieJob が enqueue されること" do
+          it "Singing::GenerateRecapMovieJob が enqueue されないこと（runner 経由のため）" do
             expect {
               post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
-            }.to have_enqueued_job(Singing::GenerateRecapMovieJob)
+            }.not_to have_enqueued_job(Singing::GenerateRecapMovieJob)
           end
 
-          it "response に queued: true が含まれること" do
+          it "response に queued: false が含まれること" do
             post recap_movie_request_singing_badges_path, params: { year: year }, as: :json
 
             json = JSON.parse(response.body, symbolize_names: true)
-            expect(json[:queued]).to be true
+            expect(json[:queued]).to be false
           end
         end
       end

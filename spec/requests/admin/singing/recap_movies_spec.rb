@@ -316,10 +316,10 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
           expect(failed_movie.reload.error_message).to be_nil
         end
 
-        it "GenerateRecapMovieJob が enqueue されること" do
+        it "GenerateRecapMovieJob が enqueue されないこと（runner 経由のため）" do
           expect {
             post regenerate_admin_singing_recap_movie_path(failed_movie)
-          }.to have_enqueued_job(Singing::GenerateRecapMovieJob).with(failed_movie.id)
+          }.not_to have_enqueued_job(Singing::GenerateRecapMovieJob)
         end
 
         it "show 画面にリダイレクトされること" do
@@ -327,10 +327,10 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
           expect(response).to redirect_to(admin_singing_recap_movie_path(failed_movie))
         end
 
-        it "success flash が表示されること" do
+        it "pending 化の notice flash が表示されること" do
           post regenerate_admin_singing_recap_movie_path(failed_movie)
           follow_redirect!
-          expect(response.body).to include("Recap Movieの再生成を開始しました。")
+          expect(response.body).to include("pending にしました")
         end
       end
 
@@ -346,10 +346,10 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
           expect(expired_movie.reload.status).to eq("pending")
         end
 
-        it "GenerateRecapMovieJob が enqueue されること" do
+        it "GenerateRecapMovieJob が enqueue されないこと（runner 経由のため）" do
           expect {
             post regenerate_admin_singing_recap_movie_path(expired_movie)
-          }.to have_enqueued_job(Singing::GenerateRecapMovieJob).with(expired_movie.id)
+          }.not_to have_enqueued_job(Singing::GenerateRecapMovieJob)
         end
 
         it "show 画面にリダイレクトされること" do

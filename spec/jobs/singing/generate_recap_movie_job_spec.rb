@@ -31,6 +31,33 @@ RSpec.describe Singing::GenerateRecapMovieJob, type: :job do
       end
     end
 
+    context "別の movie が processing 中の場合" do
+      let(:movie)            { create(:singing_generated_recap_movie, customer: customer) }
+      let!(:other_customer)  { create(:customer, domain_name: "singing") }
+      let!(:processing_movie) do
+        create(:singing_generated_recap_movie, :processing, customer: other_customer)
+      end
+
+      it "Renderer を呼ばない" do
+        expect(Singing::RecapMovieRenderer).not_to receive(:new)
+        described_class.perform_now(movie.id)
+      end
+
+      it "movie の status が pending のまま変わらない" do
+        expect { described_class.perform_now(movie.id) }
+          .not_to change { movie.reload.status }
+      end
+    end
+
+    context "自分自身が processing の場合（既に processing 開始済み）" do
+      let(:movie) { create(:singing_generated_recap_movie, :processing, customer: customer) }
+
+      it "pending でないため何もしない" do
+        expect(Singing::RecapMovieRenderer).not_to receive(:new)
+        described_class.perform_now(movie.id)
+      end
+    end
+
     context "perform 中に例外が発生した場合" do
       let(:movie) { create(:singing_generated_recap_movie, customer: customer) }
 

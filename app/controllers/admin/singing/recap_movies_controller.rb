@@ -125,13 +125,12 @@ class Admin::Singing::RecapMoviesController < ApplicationController
     end
 
     @movie.update!(
-      status:          :pending,
-      error_message:   nil
+      status:        :pending,
+      error_message: nil
     )
-    Singing::GenerateRecapMovieJob.perform_later(@movie.id)
 
     redirect_to admin_singing_recap_movie_path(@movie),
-                notice: "Recap Movieの再生成を開始しました。"
+                notice: "Recap Movie を pending にしました。専用 runner での生成をお待ちください。"
   end
 
   private
