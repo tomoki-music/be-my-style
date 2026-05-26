@@ -28,10 +28,6 @@ RSpec.describe Singing::RecapMovieAutoRetryService, type: :service do
                           year: execution.year)
       end
 
-      before do
-        allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
-      end
-
       it "processed_count が 1 であること" do
         expect(result.processed_count).to eq(1)
       end
@@ -54,9 +50,11 @@ RSpec.describe Singing::RecapMovieAutoRetryService, type: :service do
         expect(failure.reload.retry_status).to eq("retried")
       end
 
-      it "GenerateRecapMovieJob が enqueue されること" do
+      it "retry 後に movie が pending 状態であること" do
         result
-        expect(Singing::GenerateRecapMovieJob).to have_received(:perform_later)
+        movie = SingingGeneratedRecapMovie.find_by(customer: customer, year: execution.year)
+        expect(movie).to be_present
+        expect(movie.status).to eq("pending")
       end
 
       it "last_auto_retry_at が設定されること" do
@@ -135,7 +133,6 @@ RSpec.describe Singing::RecapMovieAutoRetryService, type: :service do
       end
 
       before do
-        allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
         allow(Singing::RecapMovieAutoRetryService).to receive(:new).and_call_original
       end
 

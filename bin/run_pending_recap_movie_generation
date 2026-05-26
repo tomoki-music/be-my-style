@@ -23,10 +23,14 @@ if [ -z "$movie_id" ]; then
   exit 0
 fi
 
-log "Processing movie_id=${movie_id}"
+log "[Runner] picked pending movie_id=${movie_id}"
 
-cd "$APP_ROOT" && \
-  RAILS_ENV="$RAILS_ENV" "$BUNDLE_BIN" exec rails runner \
-    "Singing::GenerateRecapMovieJob.perform_now(${movie_id})"
-
-log "Done."
+if cd "$APP_ROOT" && \
+    RAILS_ENV="$RAILS_ENV" "$BUNDLE_BIN" exec rails runner \
+      "Singing::GenerateRecapMovieJob.perform_now(${movie_id})"; then
+  log "[Runner] completed movie_id=${movie_id}"
+else
+  exit_code=$?
+  log "[Runner] failed movie_id=${movie_id}"
+  exit $exit_code
+fi

@@ -12,13 +12,9 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
     create(:singing_diagnosis, :completed, customer: customer, created_at: created_at)
   end
 
-  before do
-    allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
-  end
-
   describe "#perform" do
     context "指定年に completed diagnosis がある Singing ユーザー" do
-      it "movie を作成して GenerateRecapMovieJob を enqueue する" do
+      it "movie を pending として作成する" do
         customer = singing_customer
         completed_diagnosis(customer)
 
@@ -27,35 +23,32 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
         movie = SingingGeneratedRecapMovie.find_by(customer: customer, year: year)
         expect(movie).to be_present
         expect(movie.status).to eq("pending")
-        expect(Singing::GenerateRecapMovieJob).to have_received(:perform_later).with(movie.id)
       end
     end
 
     context "completed diagnosis がないユーザー" do
-      it "対象外のため movie を作成せず enqueue もしない" do
+      it "対象外のため movie を作成しない" do
         singing_customer
 
         described_class.perform_now(year)
 
         expect(SingingGeneratedRecapMovie.count).to eq(0)
-        expect(Singing::GenerateRecapMovieJob).not_to have_received(:perform_later)
       end
     end
 
     context "指定年以外の diagnosis しかないユーザー" do
-      it "対象外のため movie を作成せず enqueue もしない" do
+      it "対象外のため movie を作成しない" do
         customer = singing_customer
         completed_diagnosis(customer, created_at: Time.zone.local(year - 1, 6, 1))
 
         described_class.perform_now(year)
 
         expect(SingingGeneratedRecapMovie.where(customer: customer, year: year)).to be_empty
-        expect(Singing::GenerateRecapMovieJob).not_to have_received(:perform_later)
       end
     end
 
     context "pending movie が既にある場合" do
-      it "重複作成せず enqueue もしない" do
+      it "重複作成しない" do
         customer = singing_customer
         completed_diagnosis(customer)
         existing = create(:singing_generated_recap_movie, customer: customer, year: year, status: :pending)
@@ -63,13 +56,12 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
         described_class.perform_now(year)
 
         expect(SingingGeneratedRecapMovie.where(customer: customer, year: year).count).to eq(1)
-        expect(Singing::GenerateRecapMovieJob).not_to have_received(:perform_later)
         expect(existing.reload.status).to eq("pending")
       end
     end
 
     context "processing movie が既にある場合" do
-      it "重複作成せず enqueue もしない" do
+      it "重複作成しない" do
         customer = singing_customer
         completed_diagnosis(customer)
         existing = create(:singing_generated_recap_movie, :processing, customer: customer, year: year)
@@ -77,24 +69,24 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
         described_class.perform_now(year)
 
         expect(SingingGeneratedRecapMovie.where(customer: customer, year: year).count).to eq(1)
-        expect(Singing::GenerateRecapMovieJob).not_to have_received(:perform_later)
+        expect(existing.reload.status).to eq("processing")
       end
     end
 
     context "completed movie が既にある場合" do
-      it "enqueue しない" do
+      it "ステータスを変更しない" do
         customer = singing_customer
         completed_diagnosis(customer)
-        create(:singing_generated_recap_movie, :completed, customer: customer, year: year)
+        existing = create(:singing_generated_recap_movie, :completed, customer: customer, year: year)
 
         described_class.perform_now(year)
 
-        expect(Singing::GenerateRecapMovieJob).not_to have_received(:perform_later)
+        expect(existing.reload.status).to eq("completed")
       end
     end
 
     context "failed movie が既にある場合" do
-      it "status を pending に戻して enqueue する" do
+      it "status を pending に戻す" do
         customer = singing_customer
         completed_diagnosis(customer)
         movie = create(:singing_generated_recap_movie, :failed, customer: customer, year: year)
@@ -103,12 +95,11 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
 
         expect(movie.reload.status).to eq("pending")
         expect(movie.reload.error_message).to be_nil
-        expect(Singing::GenerateRecapMovieJob).to have_received(:perform_later).with(movie.id)
       end
     end
 
     context "expired movie が既にある場合" do
-      it "status を pending に戻して enqueue する" do
+      it "status を pending に戻す" do
         customer = singing_customer
         completed_diagnosis(customer)
         movie = create(:singing_generated_recap_movie, :expired, customer: customer, year: year)
@@ -116,7 +107,6 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
         described_class.perform_now(year)
 
         expect(movie.reload.status).to eq("pending")
-        expect(Singing::GenerateRecapMovieJob).to have_received(:perform_later).with(movie.id)
       end
     end
 
@@ -206,7 +196,7 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
         expect(execution.reload.total_movies_count).to eq(0)
       end
 
-      it "enqueue 成功で completed_movies_count が増加すること" do
+      it "pending 化成功で completed_movies_count が増加すること" do
         customer = singing_customer
         completed_diagnosis(customer)
 
@@ -215,15 +205,12 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
         expect(execution.reload.completed_movies_count).to eq(1)
       end
 
-      it "enqueue 例外時に failed_movies_count が増加すること" do
+      it "prepare 例外時に failed_movies_count が増加すること" do
         customer = singing_customer
         completed_diagnosis(customer)
 
-        call_count = 0
-        allow(Singing::GenerateRecapMovieJob).to receive(:perform_later) do
-          call_count += 1
-          raise StandardError, "enqueue error"
-        end
+        allow_any_instance_of(described_class).to receive(:find_or_prepare_movie!)
+          .and_raise(StandardError, "prepare error")
 
         described_class.perform_now(year, execution.id)
 
@@ -248,7 +235,7 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
     end
   end
 
-  it "enqueued/skipped 件数をログに出力する" do
+  it "pending/skipped 件数をログに出力する" do
       customer = singing_customer
       completed_diagnosis(customer)
       create(:singing_generated_recap_movie, :completed, customer: customer, year: year)
@@ -261,7 +248,7 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
 
       described_class.perform_now(year)
 
-      expect(logged).to include(match(/\[RecapMovieBatch\] year=#{year} enqueued=1 skipped=1/))
+      expect(logged).to include(match(/\[RecapMovieBatch\] year=#{year} pending=1 skipped=1/))
     end
 
     describe "actual result summary 保存" do
@@ -328,12 +315,12 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
         expect(exec.actual_skipped_movies_count).to eq(0)
       end
 
-      it "enqueue 例外が発生した場合は actual_skipped に計上されないこと" do
+      it "prepare 例外が発生した場合は actual_skipped に計上されないこと" do
         customer = singing_customer
         completed_diagnosis(customer)
 
-        allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
-          .and_raise(StandardError, "enqueue error")
+        allow_any_instance_of(described_class).to receive(:find_or_prepare_movie!)
+          .and_raise(StandardError, "prepare error")
 
         described_class.perform_now(year, execution.id)
 
@@ -349,12 +336,12 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
         FactoryBot.create(:singing_recap_movie_batch_execution, year: year, status: :enqueued)
       end
 
-      it "enqueue 例外時に failure record が作成されること" do
+      it "prepare 例外時に failure record が作成されること" do
         customer = singing_customer
         completed_diagnosis(customer)
 
-        allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
-          .and_raise(StandardError, "enqueue failed")
+        allow_any_instance_of(described_class).to receive(:find_or_prepare_movie!)
+          .and_raise(StandardError, "prepare failed")
 
         described_class.perform_now(year, execution.id)
 
@@ -363,7 +350,7 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
         expect(failure.customer).to eq(customer)
         expect(failure.year).to eq(year)
         expect(failure.error_class).to eq("StandardError")
-        expect(failure.error_message).to eq("enqueue failed")
+        expect(failure.error_message).to eq("prepare failed")
         expect(failure.failed_at).to be_present
       end
 
@@ -371,8 +358,8 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
         customer = singing_customer
         completed_diagnosis(customer)
 
-        allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
-          .and_raise(StandardError, "enqueue failed")
+        allow_any_instance_of(described_class).to receive(:find_or_prepare_movie!)
+          .and_raise(StandardError, "prepare failed")
 
         described_class.perform_now(year, execution.id)
 
@@ -398,8 +385,8 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
         customer = singing_customer
         completed_diagnosis(customer)
 
-        allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
-          .and_raise(StandardError, "enqueue failed")
+        allow_any_instance_of(described_class).to receive(:find_or_prepare_movie!)
+          .and_raise(StandardError, "prepare failed")
 
         expect {
           described_class.perform_now(year, nil)
@@ -412,8 +399,8 @@ RSpec.describe Singing::GenerateYearlyRecapMoviesJob, type: :job do
         customer2 = singing_customer
         completed_diagnosis(customer2)
 
-        allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
-          .and_raise(StandardError, "enqueue failed")
+        allow_any_instance_of(described_class).to receive(:find_or_prepare_movie!)
+          .and_raise(StandardError, "prepare failed")
 
         described_class.perform_now(year, execution.id)
 

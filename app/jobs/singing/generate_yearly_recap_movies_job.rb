@@ -25,7 +25,7 @@ module Singing
         total_movies_count:  enqueue_targets.size,
       )
 
-      enqueued_count    = 0
+      pending_count     = 0
       skipped_count     = 0
       created_count     = 0
       regenerated_count = 0
@@ -36,9 +36,9 @@ module Singing
         movie, action = find_or_prepare_movie!(customer, year)
 
         if movie
-          Singing::GenerateRecapMovieJob.perform_later(movie.id)
+          Rails.logger.info("[RecapMovieBatch] queued movie_id=#{movie.id} as pending")
           execution&.increment!(:completed_movies_count)
-          enqueued_count += 1
+          pending_count += 1
           case action
           when :created     then created_count += 1
           when :regenerated then regenerated_count += 1
@@ -65,7 +65,7 @@ module Singing
         skipped_count += 1
       end
 
-      Rails.logger.info("[RecapMovieBatch] year=#{year} enqueued=#{enqueued_count} skipped=#{skipped_count} (created=#{created_count} regenerated=#{regenerated_count} actual_skipped=#{actual_skipped_count})")
+      Rails.logger.info("[RecapMovieBatch] year=#{year} pending=#{pending_count} skipped=#{skipped_count} (created=#{created_count} regenerated=#{regenerated_count} actual_skipped=#{actual_skipped_count})")
       execution&.update!(
         status:                          :completed,
         finished_at:                     Time.current,

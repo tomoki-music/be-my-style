@@ -16,10 +16,6 @@ RSpec.describe Singing::RecapMovieFailureRetryService, type: :service do
   subject(:result) { described_class.call(failure: failure, admin: admin) }
 
   describe "正常系: retry_status が pending で active batch がない場合" do
-    before do
-      allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
-    end
-
     context "recap_movie が存在しない場合" do
       it "成功を返すこと" do
         expect(result.success?).to be true
@@ -29,9 +25,10 @@ RSpec.describe Singing::RecapMovieFailureRetryService, type: :service do
         expect { result }.to change(SingingGeneratedRecapMovie, :count).by(1)
       end
 
-      it "GenerateRecapMovieJob を enqueue すること" do
+      it "新規作成した movie が pending 状態であること" do
         result
-        expect(Singing::GenerateRecapMovieJob).to have_received(:perform_later)
+        movie = SingingGeneratedRecapMovie.find_by(customer: customer, year: execution.year)
+        expect(movie.status).to eq("pending")
       end
 
       it "failure の retry_status を retried に更新すること" do
@@ -105,12 +102,6 @@ RSpec.describe Singing::RecapMovieFailureRetryService, type: :service do
     it "エラーメッセージを返すこと" do
       expect(result.message).to include("retry済み")
     end
-
-    it "Job を enqueue しないこと" do
-      allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
-      result
-      expect(Singing::GenerateRecapMovieJob).not_to have_received(:perform_later)
-    end
   end
 
   describe "異常系: 同一年の active batch が存在する場合" do
@@ -143,10 +134,7 @@ RSpec.describe Singing::RecapMovieFailureRetryService, type: :service do
                         expires_at: nil)
     end
 
-    before do
-      failure.update!(recap_movie_id: movie.id)
-      allow(Singing::GenerateRecapMovieJob).to receive(:perform_later)
-    end
+    before { failure.update!(recap_movie_id: movie.id) }
 
     it "失敗を返すこと" do
       expect(result.success?).to be false

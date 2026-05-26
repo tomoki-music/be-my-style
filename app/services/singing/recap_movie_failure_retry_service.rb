@@ -22,10 +22,10 @@ module Singing
       end
 
       movie = ensure_movie_ready(movie)
-      enqueue_job(movie)
       mark_retried!(movie)
 
-      Result.new(success?: true, message: "再実行を予約しました", movie: movie)
+      Rails.logger.info("[RecapMovieRetry] reset movie_id=#{movie.id} to pending")
+      Result.new(success?: true, message: "runner待ちに戻しました", movie: movie)
     rescue => e
       mark_retry_failed!(e.message.to_s.truncate(1000))
       Result.new(success?: false, message: "再実行中にエラーが発生しました: #{e.message.truncate(100)}", movie: nil)
@@ -71,10 +71,6 @@ module Singing
         @failure.update!(recap_movie_id: new_movie.id)
         new_movie
       end
-    end
-
-    def enqueue_job(movie)
-      Singing::GenerateRecapMovieJob.perform_later(movie.id)
     end
 
     def mark_retried!(movie)
