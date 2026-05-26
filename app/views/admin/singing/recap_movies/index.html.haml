@@ -119,6 +119,57 @@
           %h4.card-title.mb-1= @stats[:total_instagram_clicks]
           %p.card-text.text-muted.mb-0 Instagram導線クリック数
 
+  -# ── Safety Dashboard ──────────────────────────────────────────
+  - stuck = @safety[:stuck_processing_count]
+  .card.mb-4{ class: stuck > 0 ? "shadow-sm border-danger" : "shadow-sm border-secondary" }
+    .card-header{ class: stuck > 0 ? "bg-danger text-white" : "" }
+      %strong Runner Safety Dashboard
+    .card-body
+      .row.mb-3
+        .col-md-3.col-6.mb-2
+          .border.rounded.p-2.text-center
+            %div.font-weight-bold.mb-1 pending
+            %div.h4.mb-0= @stats[:pending]
+        .col-md-3.col-6.mb-2
+          .border.rounded.p-2.text-center
+            %div.font-weight-bold.mb-1 processing
+            %div.h4.mb-0= @stats[:processing]
+        .col-md-3.col-6.mb-2
+          .border.rounded.p-2.text-center
+            %div.font-weight-bold.mb-1 failed
+            %div{ class: "h4 mb-0 #{@stats[:failed] > 0 ? 'text-danger' : ''}" }= @stats[:failed]
+        .col-md-3.col-6.mb-2
+          .border.rounded.p-2.text-center{ class: stuck > 0 ? "border-danger bg-danger text-white" : "" }
+            %div.font-weight-bold.mb-1 stuck processing（30分超）
+            %div.h4.mb-0= stuck
+      - if stuck > 0
+        .alert.alert-danger.py-2.mb-2
+          %strong 30分以上 processing の Recap Movie が #{stuck} 件あります。手動確認してください。
+      .row.mb-2
+        .col-md-6
+          %small.text-muted
+            最古の pending 作成日時:
+            - if @safety[:oldest_pending_created_at]
+              %strong= l(@safety[:oldest_pending_created_at], format: :short)
+            - else
+              なし
+        .col-md-6
+          %small.text-muted
+            最新の failed 日時:
+            - if @safety[:latest_failed_at]
+              %strong= l(@safety[:latest_failed_at], format: :short)
+            - else
+              なし
+      %hr.my-2
+      %p.mb-1.font-weight-bold.small Runner コマンド
+      %dl.row.small.mb-0
+        %dt.col-sm-3 dry-run
+        %dd.col-sm-9
+          %code DRY_RUN=1 RAILS_ENV=production bin/run_pending_recap_movie_generation
+        %dt.col-sm-3 1件生成
+        %dd.col-sm-9
+          %code RAILS_ENV=production TIMEOUT_SECONDS=900 MIN_AVAILABLE_MB=350 bin/run_pending_recap_movie_generation
+
   .row.mb-4
     .col-md-6.mb-3
       .card.shadow-sm.h-100

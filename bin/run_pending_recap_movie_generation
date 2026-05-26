@@ -7,6 +7,8 @@ RAILS_ENV="${RAILS_ENV:-production}"
 DRY_RUN="${DRY_RUN:-0}"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-900}"
 LOCK_FILE="${APP_ROOT}/tmp/recap_movie_generation.lock"
+MIN_AVAILABLE_MB="${MIN_AVAILABLE_MB:-350}"
+MIN_DISK_AVAILABLE_MB="${MIN_DISK_AVAILABLE_MB:-1024}"
 
 export RAILS_ENV
 
@@ -20,6 +22,39 @@ fi
 
 trap 'rm -f "$LOCK_FILE"' EXIT INT TERM
 touch "$LOCK_FILE"
+
+# ── メモリチェック ────────────────────────────────────────────
+available_mb=$(free -m 2>/dev/null | awk '/^Mem:/ { print $7 }' || echo "")
+if [ -n "$available_mb" ] && [ "$available_mb" -lt "$MIN_AVAILABLE_MB" ] 2>/dev/null; then
+  log "skipped because available memory is too low available_mb=${available_mb} min_available_mb=${MIN_AVAILABLE_MB}"
+  exit 0
+fi
+
+# ── ディスク空き容量チェック ──────────────────────────────────
+disk_available_mb=$(df -m "${APP_ROOT}" 2>/dev/null | awk 'NR==2 { print $4 }' || echo "")
+if [ -n "$disk_available_mb" ] && [ "$disk_available_mb" -lt "$MIN_DISK_AVAILABLE_MB" ] 2>/dev/null; then
+  log "skipped because disk space is too low available_mb=${disk_available_mb} min_available_mb=${MIN_DISK_AVAILABLE_MB}"
+  exit 0
+fi
+
+# ── 重いメディアプロセス確認 ──────────────────────────────────
+heavy_procs=$(pgrep -fa "node|chromium|chrome|ffmpeg" 2>/dev/null || true)
+if [ -n "$heavy_procs" ]; then
+  log "skipped because heavy media process is already running"
+  log "processes: $(echo "$heavy_procs" | head -5)"
+  exit 0
+fi
+
+# ── stuck processing 警告 ─────────────────────────────────────
+stuck_count=$(
+  cd "$APP_ROOT" && \
+  RAILS_ENV="$RAILS_ENV" "$BUNDLE_BIN" exec rails runner \
+    'puts SingingGeneratedRecapMovie.processing.where("updated_at < ?", 30.minutes.ago).count' \
+    2>/dev/null || echo ""
+)
+if [ -n "$stuck_count" ] && [ "$stuck_count" -gt 0 ] 2>/dev/null; then
+  log "WARNING: ${stuck_count}件の Recap Movie が30分以上 processing のままです。手動確認してください。"
+fi
 
 # ── pending movie 取得 ────────────────────────────────────────
 log "Starting (RAILS_ENV=${RAILS_ENV} DRY_RUN=${DRY_RUN} TIMEOUT=${TIMEOUT_SECONDS}s)"

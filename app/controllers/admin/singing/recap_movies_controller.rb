@@ -161,6 +161,12 @@ class Admin::Singing::RecapMoviesController < ApplicationController
       total_instagram_clicks: SingingGeneratedRecapMovie.sum(:instagram_hint_click_count),
     }
 
+    @safety = {
+      stuck_processing_count:   SingingGeneratedRecapMovie.processing.where("updated_at < ?", 30.minutes.ago).count,
+      oldest_pending_created_at: SingingGeneratedRecapMovie.pending.order(created_at: :asc).pick(:created_at),
+      latest_failed_at:          SingingGeneratedRecapMovie.failed.order(updated_at: :desc).pick(:updated_at),
+    }
+
     per_page = (params[:per_page].to_i > 0) ? params[:per_page].to_i : PER_PAGE_DEFAULT
     per_page = [per_page, PER_PAGE_MAX].min
     @per_page = per_page

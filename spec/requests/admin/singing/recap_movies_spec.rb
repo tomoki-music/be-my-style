@@ -107,6 +107,41 @@ RSpec.describe "Admin::Singing::RecapMovies", type: :request do
         end
       end
 
+      context "Runner Safety Dashboard" do
+        it "Safety Dashboard セクションを表示すること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("Runner Safety Dashboard")
+        end
+
+        it "Runner コマンドを表示すること" do
+          get admin_singing_recap_movies_path
+          expect(response.body).to include("DRY_RUN=1")
+          expect(response.body).to include("run_pending_recap_movie_generation")
+        end
+
+        context "stuck processing が 0 件の場合" do
+          it "stuck 警告を表示しないこと" do
+            get admin_singing_recap_movies_path
+            expect(response.body).not_to include("30分以上 processing")
+          end
+        end
+
+        context "30分以上 processing の movie がある場合" do
+          let!(:stuck_movie) do
+            m = FactoryBot.create(:singing_generated_recap_movie, :processing,
+                                  customer: FactoryBot.create(:customer, domain_name: "singing"),
+                                  year: 2025)
+            m.update_columns(updated_at: 40.minutes.ago)
+            m
+          end
+
+          it "stuck 警告メッセージを表示すること" do
+            get admin_singing_recap_movies_path
+            expect(response.body).to include("30分以上 processing")
+          end
+        end
+      end
+
       context "status filter" do
         it "?status=completed で completed のみ返すこと" do
           get admin_singing_recap_movies_path, params: { status: "completed" }
