@@ -18,16 +18,18 @@ module Singing
 
     def call
       {
-        summary:             build_summary,
-        trends:              build_trends,
-        error_analysis:      build_error_analysis,
-        open_failures:       build_open_failures,
-        slow_batches:        build_slow_batches,
-        auto_retry_summary:  build_auto_retry_summary,
-        auto_retry_failures: build_auto_retry_failures,
-        storage_expiry:      build_storage_expiry,
-        storage_audit:       build_storage_audit,
-        storage_metrics:     build_storage_metrics,
+        summary:                build_summary,
+        trends:                 build_trends,
+        error_analysis:         build_error_analysis,
+        open_failures:          build_open_failures,
+        slow_batches:           build_slow_batches,
+        auto_retry_summary:     build_auto_retry_summary,
+        auto_retry_failures:    build_auto_retry_failures,
+        storage_expiry:         build_storage_expiry,
+        storage_audit:          build_storage_audit,
+        storage_metrics:        build_storage_metrics,
+        storage_trends_7d:      build_storage_trends(7),
+        storage_trends_30d:     build_storage_trends(30),
       }
     end
 
@@ -163,6 +165,10 @@ module Singing
 
     def build_storage_audit
       Singing::RecapMovieStorageAuditService.call
+    end
+
+    def build_storage_trends(days)
+      Singing::RecapMovieStorageTrendService.call(days: days)
     end
 
     def build_storage_metrics

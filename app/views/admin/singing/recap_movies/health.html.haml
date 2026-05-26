@@ -10,6 +10,8 @@
 - storage_expiry       = @dashboard[:storage_expiry]
 - storage_audit        = @dashboard[:storage_audit]
 - storage_metrics      = @dashboard[:storage_metrics]
+- storage_trends_7d    = @dashboard[:storage_trends_7d]
+- storage_trends_30d   = @dashboard[:storage_trends_30d]
 
 .container-fluid.py-4.bhdash
 
@@ -468,6 +470,147 @@
                       .admin-recap-bar__fill{ style: "width: #{(row[:bytes].to_f / max_plan_bytes * 100).round}%; background: #{bar_color};" }
       - if storage_metrics[:attached_movie_count].zero?
         %p.text-muted.mb-0 まだ動画ファイルが存在しません。
+
+  -# ── Storage Trend Analytics ─────────────────────────────────────
+  - trend30 = storage_trends_30d
+  - trend7  = storage_trends_7d
+  - fmt_bytes_trend = ->(b) do
+    - gb = b.to_f / Singing::RecapMovieStorageMetricsService::BYTES_PER_GB
+    - if gb >= 1
+      - "#{gb.round(2)} GB"
+    - elsif b.to_f >= 1_048_576
+      - "#{(b.to_f / 1_048_576).round(1)} MB"
+    - else
+      - "#{b} B"
+  .card.shadow-sm.mb-4
+    .card-header.d-flex.justify-content-between.align-items-center
+      %strong
+        Storage Trend Analytics
+        - if trend30[:has_data]
+          %span.badge.badge-info.ml-2= "#{trend30[:snapshot_count]} snapshots"
+        - else
+          %span.badge.badge-secondary.ml-2 データ蓄積中
+      %small.text-muted
+        日次スナップショットによる推移可視化
+    .card-body
+      - unless trend30[:has_data]
+        .alert.alert-info.mb-0
+          %strong データがまだ不足しています
+          %br
+          %small
+            Storage Snapshot を最低2日分蓄積すると推移グラフが表示されます。
+            %br
+            cron または
+            %code bin/capture_recap_movie_storage_snapshot
+            を実行してください。
+
+      - if trend30[:has_data]
+        -# ── 期間サマリーカード (30日)
+        .row.mb-4
+          .col-md-3.col-6.mb-3
+            - g30 = trend30[:storage_growth]
+            - delta_cls = g30[:delta_bytes] >= 0 ? "text-warning" : "text-success"
+            .card.text-center.bhdash__card
+              .card-body
+                %p.bhdash__card-label 30日 Storage 増減
+                %h4.bhdash__card-value{ class: delta_cls }
+                  = g30[:delta_bytes] >= 0 ? "+" : ""
+                  = fmt_bytes_trend.call(g30[:delta_bytes].abs)
+                %p.bhdash__card-sub
+                  = "#{g30[:first_total_bytes] == 0 ? "—" : "#{g30[:growth_pct]}%"} 増減"
+          .col-md-3.col-6.mb-3
+            - g30 = trend30[:storage_growth]
+            .card.text-center.bhdash__card
+              .card-body
+                %p.bhdash__card-label 日平均増加量
+                %h4.bhdash__card-value.text-info= fmt_bytes_trend.call(g30[:daily_avg_bytes].abs)
+                %p.bhdash__card-sub 30日平均
+          .col-md-3.col-6.mb-3
+            - c30 = trend30[:cost_trend]
+            - delta_cost = c30[:delta_usd].to_f
+            - dcls = delta_cost >= 0 ? "text-warning" : "text-success"
+            .card.text-center.bhdash__card
+              .card-body
+                %p.bhdash__card-label 30日 コスト増減
+                %h4.bhdash__card-value{ class: dcls }
+                  - if c30[:delta_usd]
+                    = delta_cost >= 0 ? "+" : ""
+                    = "$#{c30[:delta_usd].abs}"
+                  - else
+                    %span.text-muted —
+                %p.bhdash__card-sub
+                  = c30[:first_usd] ? "$#{c30[:first_usd]} → $#{c30[:last_usd]}" : "—"
+          .col-md-3.col-6.mb-3
+            - cl30 = trend30[:cleanup_effect]
+            .card.text-center.bhdash__card{ class: cl30[:reduced_bytes] > 0 ? "border-success" : "" }
+              .card-body
+                %p.bhdash__card-label Cleanup削減効果
+                %h4.bhdash__card-value{ class: cl30[:reduced_bytes] > 0 ? "text-success" : "text-muted" }
+                  = fmt_bytes_trend.call(cl30[:reduced_bytes])
+                %p.bhdash__card-sub expired bytes 最大→最小
+
+        -# ── SVG グラフ (30日 total_bytes 推移)
+        - series30 = trend30[:snapshots]
+        - if series30.size >= 2
+          %h6.font-weight-bold.mb-2 30日 Total Storage 推移
+          - max_bytes30 = series30.map { |s| s[:total_bytes] }.max.to_f
+          - max_bytes30 = 1.0 if max_bytes30.zero?
+          - chart_h30  = 80
+          - chart_w30  = series30.size * 14
+          .bhdash__chart-wrap.mb-3
+            %svg.bhdash__chart{ viewBox: "0 0 #{chart_w30} #{chart_h30 + 20}", preserveAspectRatio: "none", style: "width: 100%; height: 110px;" }
+              -# completed_bytes 塗り (青)
+              - series30.each_with_index do |s, i|
+                - bar_h  = (s[:completed_bytes].to_f / max_bytes30 * chart_h30).round
+                - x      = i * 14
+                - bar_y  = chart_h30 - bar_h
+                - if bar_h > 0
+                  %rect{ x: x, y: bar_y, width: 10, height: bar_h, fill: "#2258d8", opacity: "0.7",
+                    "data-date": s[:date].to_s,
+                    "data-total": s[:total_bytes],
+                    "data-completed": s[:completed_bytes] }
+              -# expired_attached_bytes (オレンジ)
+              - series30.each_with_index do |s, i|
+                - exp_h = (s[:expired_attached_bytes].to_f / max_bytes30 * chart_h30).round
+                - x     = i * 14
+                - exp_y = chart_h30 - exp_h
+                - if exp_h > 0
+                  %rect{ x: x, y: exp_y, width: 10, height: exp_h, fill: "#ef6c3f", opacity: "0.6" }
+            .d-flex.mt-1.small.text-muted
+              .mr-3
+                %span{ style: "display:inline-block;width:10px;height:10px;background:#2258d8;border-radius:2px;margin-right:4px;" }
+                Completed
+              .mr-3
+                %span{ style: "display:inline-block;width:10px;height:10px;background:#ef6c3f;border-radius:2px;margin-right:4px;" }
+                Expired (未削除)
+
+        -# ── 7日推移テーブル
+        - series7 = trend7[:snapshots]
+        - if series7.present?
+          %h6.font-weight-bold.mb-2.mt-4 直近7日 スナップショット詳細
+          .table-responsive
+            %table.table.table-sm.table-hover.mb-0
+              %thead.thead-light
+                %tr
+                  %th Date
+                  %th Movies
+                  %th Total Stored
+                  %th Completed
+                  %th Expired (残存)
+                  %th Est. Cost/月
+              %tbody
+                - series7.reverse.each do |s|
+                  %tr
+                    %td.font-weight-bold= s[:date]
+                    %td= s[:attached_movie_count]
+                    %td= fmt_bytes_trend.call(s[:total_bytes])
+                    %td.text-success= fmt_bytes_trend.call(s[:completed_bytes])
+                    %td{ class: s[:expired_attached_bytes] > 0 ? "text-warning" : "text-muted" }
+                      = fmt_bytes_trend.call(s[:expired_attached_bytes])
+                    %td= "$#{s[:estimated_monthly_cost_usd].round(4)}"
+          - if trend7[:oldest_snapshot_at]
+            %p.small.text-muted.mt-2.mb-0
+              = "集計期間: #{trend7[:oldest_snapshot_at]} 〜 #{trend7[:latest_snapshot_at]}"
 
   -# ── Storage & Expiry ────────────────────────────────────────────
   .card.shadow-sm.mb-4

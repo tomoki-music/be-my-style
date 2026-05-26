@@ -11,7 +11,7 @@ RSpec.describe Singing::RecapMovieHealthDashboardService do
       expect(result.keys).to contain_exactly(
         :summary, :trends, :error_analysis, :open_failures, :slow_batches,
         :auto_retry_summary, :auto_retry_failures, :storage_expiry, :storage_audit,
-        :storage_metrics
+        :storage_metrics, :storage_trends_7d, :storage_trends_30d
       )
     end
 

@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+# Usage:
+#   bin/capture_recap_movie_storage_snapshot
+#   bin/capture_recap_movie_storage_snapshot 2026-05-01
+#
+# Cron 例 (毎日 2:00 AM):
+#   0 2 * * * cd /var/www/be-my-style && RAILS_ENV=production bin/capture_recap_movie_storage_snapshot >> log/storage_snapshot.log 2>&1
+
+require_relative "../config/environment"
+
+date_str = ARGV[0]
+date     = date_str ? Date.parse(date_str) : Date.current
+
+puts "[#{Time.current}] Capturing storage snapshot for #{date}..."
+
+result = Singing::RecapMovieStorageSnapshotService.call(date: date)
+
+if result.skipped
+  puts "[#{Time.current}] Skipped: snapshot already exists for #{date} (id=#{result.snapshot.id})"
+  exit 0
+end
+
+s = result.snapshot
+puts "[#{Time.current}] Done: id=#{s.id} date=#{s.snapshot_date} " \
+     "movies=#{s.attached_movie_count} total_bytes=#{s.total_bytes} " \
+     "cost_usd=#{s.estimated_monthly_cost_usd}"

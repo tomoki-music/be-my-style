@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_22_000002) do
+ActiveRecord::Schema.define(version: 2026_05_26_000001) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -1044,6 +1044,20 @@ ActiveRecord::Schema.define(version: 2026_05_22_000002) do
     t.index ["retry_status"], name: "idx_batch_failures_on_retry_status"
     t.index ["singing_recap_movie_batch_execution_id", "customer_id"], name: "idx_batch_failures_on_execution_and_customer"
     t.index ["singing_recap_movie_batch_execution_id"], name: "idx_batch_failures_on_execution_id"
+  end
+
+  create_table "singing_recap_movie_storage_snapshots", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.date "snapshot_date", null: false
+    t.integer "attached_movie_count", default: 0, null: false
+    t.bigint "total_bytes", default: 0, null: false
+    t.bigint "avg_bytes", default: 0, null: false
+    t.bigint "completed_bytes", default: 0, null: false
+    t.bigint "expired_attached_bytes", default: 0, null: false
+    t.bigint "recent_bytes", default: 0, null: false
+    t.decimal "estimated_monthly_cost_usd", precision: 10, scale: 4, default: "0.0", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["snapshot_date"], name: "index_singing_recap_movie_storage_snapshots_on_snapshot_date", unique: true
   end
 
   create_table "singing_season_ranking_entries", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
