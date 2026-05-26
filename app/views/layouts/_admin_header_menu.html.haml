@@ -26,6 +26,8 @@
       %li
         = link_to "分析", admin_analytics_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
       %li
+        = link_to "🎛 Recap Health", health_admin_singing_recap_movies_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
         %i.fa-solid.fa-right-from-bracket
         = link_to "管理者ログアウト", destroy_admin_session_path, method: :delete, class: "btn btn-secondary", data: { 'turbolinks': false }
     - else
@@ -52,6 +54,8 @@
         = link_to "イベントコメント", admin_event_comments_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
       %li
         = link_to "分析", admin_analytics_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        = link_to "🎛 Recap Health", health_admin_singing_recap_movies_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
       %li
         %i.fa-solid.fa-right-from-bracket
         = link_to "管理者ログアウト", destroy_admin_session_path, method: :delete, class: "btn btn-secondary", data: { 'turbolinks': false }
