@@ -62,8 +62,11 @@
             %h2 診断タイプを選ぶ
           .singing-diagnosis-new__step-body
             .diagnosis-part-selector
-              %p.diagnosis-part-selector__lead
-                歌・楽器・バンド演奏から、今回チェックしたい内容を選んでください。
+              .diagnosis-part-selector__header
+                %p.diagnosis-part-selector__eyebrow 診断タイプ
+                %h2.diagnosis-part-selector__title どのパートで診断しますか？
+                %p.diagnosis-part-selector__description
+                  歌・楽器・バンド演奏から、今回チェックしたい内容を選んでください。
               .diagnosis-part-selector__grid
                 - singing_performance_type_cards.each_with_index do |card, i|
                   - card_classes = ["diagnosis-part-card"]
@@ -74,11 +77,11 @@
                       .diagnosis-part-card__icon= card[:icon]
                       .diagnosis-part-card__content
                         %span.diagnosis-part-card__label= card[:label]
-                        %span.diagnosis-part-card__description= card[:description]
-                      - if card[:badges].present?
-                        .diagnosis-part-card__badges
-                          - card[:badges].each do |badge|
-                            %span.diagnosis-part-card__badge= badge
+                        %span.diagnosis-part-card__text= card[:description]
+                        - if card[:badges].present?
+                          .diagnosis-part-card__badges
+                            - card[:badges].each do |badge|
+                              %span.diagnosis-part-card__badge= badge
                       .diagnosis-part-card__check ✓
             - if SingingDiagnosis.future_performance_type_labels.present?
               %small.form-text.text-muted= "#{SingingDiagnosis.future_performance_type_labels.join(' / ')}は今後対応予定です。"

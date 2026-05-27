@@ -66,8 +66,9 @@ RSpec.describe "Singing::Diagnoses", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("「うまいのにバンドだと微妙」を、アンサンブル力から見える化。")
-      expect(response.body).to include("バンド演奏診断")
-      expect(response.body).to include("音量バランス・リズムの揃い・グルーヴ・一体感を診断")
+      # カードラベルは短縮形で表示される
+      expect(response.body).to include("バンド演奏")
+      expect(response.body).to include("全体のまとまりを診断")
       expect(response.body).to include("30秒以上のバンド演奏音源がおすすめです。")
       expect(response.body).to include("NEW")
       expect(response.body).to include("アンサンブル対応")
@@ -91,6 +92,12 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get new_singing_diagnosis_path
 
       expect(response).to have_http_status(:ok)
+      # ヘッダーセクション（eyebrow / title / description）が表示されること
+      expect(response.body).to include("diagnosis-part-selector__header")
+      expect(response.body).to include("diagnosis-part-selector__eyebrow")
+      expect(response.body).to include("診断タイプ")
+      expect(response.body).to include("diagnosis-part-selector__title")
+      expect(response.body).to include("どのパートで診断しますか？")
       # カード型UIのグリッドが表示されること
       expect(response.body).to include("diagnosis-part-selector")
       expect(response.body).to include("diagnosis-part-selector__grid")
@@ -106,11 +113,14 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("🎸")
       expect(response.body).to include("🥁")
       expect(response.body).to include("🎹")
-      # カードのlabel・descriptionが表示されること
-      expect(response.body).to include("ボーカル診断")
-      expect(response.body).to include("音程・リズム・表現のバランスから、歌声の今を確認できます。")
-      expect(response.body).to include("ドラム診断")
-      expect(response.body).to include("テンポ安定、リズム精度、強弱からビートの芯を見直せます。")
+      expect(response.body).to include("🎶")
+      # カードのlabel・descriptionが表示されること（短縮ラベル）
+      expect(response.body).to include("ボーカル")
+      expect(response.body).to include("歌声・音程・表現を診断")
+      expect(response.body).to include("ドラム")
+      expect(response.body).to include("リズムキープ・安定感を診断")
+      expect(response.body).to include("バンド演奏")
+      expect(response.body).to include("全体のまとまりを診断")
       # 旧来のselectボックスは使わないこと
       expect(response.body).not_to include("singing-diagnosis-new__select")
     end
