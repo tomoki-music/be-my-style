@@ -1,0 +1,13 @@
+# ローカル開発用 Procfile
+# 使い方: foreman start -f Procfile.dev
+#         （foreman: gem install foreman）
+#
+# または手動で2つのターミナルから起動:
+#   [ターミナル1] cd singing_analyzer && source .venv/bin/activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+#   [ターミナル2] bin/rails s
+#
+# 注意: singing 診断を使う場合は analyzer を先に起動すること。
+#       未起動のまま診断を実行すると diagnosis.status が :failed になる。
+
+web:      bin/rails s
+analyzer: bash -c 'cd singing_analyzer && source .venv/bin/activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000'
