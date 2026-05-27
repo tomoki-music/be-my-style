@@ -850,6 +850,41 @@
         = link_to singing_badges_path, class: "singing-diagnosis__next-goal-link" do
           バッジ一覧を見る →
 
+    - if @diagnosis.completed?
+      - if @diagnosis.performance_type.to_s == "vocal"
+        - repeat_cta_other = { icon: "🎸", title: "ギター・バンドでも試す", body: "ギター・ベース・バンド演奏も診断できます。別の角度から自分の演奏を確かめよう。" }
+      - elsif @diagnosis.performance_type.to_s == "guitar"
+        - repeat_cta_other = { icon: "🎤", title: "ボーカルも診断してみる", body: "ボーカル診断も人気です。歌声のスコアも確認してみましょう。" }
+      - elsif @diagnosis.performance_type.to_s == "band"
+        - repeat_cta_other = { icon: "🎤", title: "ボーカル診断も試してみる", body: "バンド演奏の次は、ボーカル診断で歌声の個性も確かめよう。" }
+      - else
+        - repeat_cta_other = { icon: "🎵", title: "他のパートも診断してみる", body: "ギター・ボーカル・バンド演奏など、他のパートの診断も受けられます。" }
+      .singing-repeat-cta
+        .singing-repeat-cta__header
+          %p.singing-repeat-cta__eyebrow Next Step
+          %h2.singing-repeat-cta__title 次はどうしますか？
+        .singing-repeat-cta__grid
+          = link_to new_singing_diagnosis_path, class: "singing-repeat-card singing-repeat-card--primary" do
+            .singing-repeat-card__icon 🎤
+            .singing-repeat-card__content
+              %h3 もう一度診断する
+              %p 今の感覚のまま、もう一度チャレンジしてみましょう。
+          = link_to new_singing_diagnosis_path, class: "singing-repeat-card" do
+            .singing-repeat-card__icon= repeat_cta_other[:icon]
+            .singing-repeat-card__content
+              %h3= repeat_cta_other[:title]
+              %p= repeat_cta_other[:body]
+          = link_to singing_rankings_path, class: "singing-repeat-card" do
+            .singing-repeat-card__icon 🏆
+            .singing-repeat-card__content
+              %h3 ランキングを見る
+              %p 他ユーザーの成長や高スコアもチェックできます。
+          = link_to edit_singing_user_path(current_customer), class: "singing-repeat-card" do
+            .singing-repeat-card__icon 👤
+            .singing-repeat-card__content
+              %h3 プロフィールを整える
+              %p 好きなジャンルや活動内容をプロフィールに追加しましょう。
+
     .singing-diagnosis__actions
       = link_to "もう一度診断する", new_singing_diagnosis_path, class: "btn btn-primary"
       = link_to "診断履歴へ戻る", singing_diagnoses_path, class: "btn btn-secondary"

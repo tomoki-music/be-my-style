@@ -2184,5 +2184,114 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).not_to include("今回のあなたの実績")
     end
+
+    # --- Phase 10-S: Repeat CTA / Retention UX ---
+
+    it "完了済み診断には次のアクションCTAセクションを表示すること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("singing-repeat-cta")
+      expect(response.body).to include("次はどうしますか？")
+      expect(response.body).to include("Next Step")
+    end
+
+    it "完了済み診断の CTAセクションに「もう一度診断する」リンクが存在すること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("もう一度診断する")
+      expect(response.body).to include(new_singing_diagnosis_path)
+    end
+
+    it "完了済み診断の CTAセクションにランキング導線が存在すること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("ランキングを見る")
+      expect(response.body).to include(singing_rankings_path)
+    end
+
+    it "完了済み診断の CTAセクションにプロフィール編集導線が存在すること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("プロフィールを整える")
+      expect(response.body).to include(edit_singing_user_path(singing_customer))
+    end
+
+    it "vocal診断の CTAセクションにはギター・バンドへの出し分けメッセージを表示すること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        performance_type: :vocal
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("ギター・バンドでも試す")
+    end
+
+    it "guitar診断の CTAセクションにはボーカルへの出し分けメッセージを表示すること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        performance_type: :guitar
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("ボーカルも診断してみる")
+    end
+
+    it "band診断の CTAセクションにはボーカル診断への出し分けメッセージを表示すること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        performance_type: :band,
+        result_payload: {
+          "specific" => {
+            "balance" => 70, "tightness" => 68, "groove" => 65,
+            "role_clarity" => 70, "dynamics" => 64, "cohesion" => 67
+          }
+        }
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("ボーカル診断も試してみる")
+    end
+
+    it "未完了の診断にはリピートCTAセクションを表示しないこと" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :queued)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("singing-repeat-cta")
+      expect(response.body).not_to include("次はどうしますか？")
+    end
   end
 end
