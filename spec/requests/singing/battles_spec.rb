@@ -36,6 +36,12 @@ RSpec.describe "Singing::Battles", type: :request do
         expect(response.body).to include(expected_url)
       end
 
+      it "コピーボタンに data-copy-target='battle-link-input' が設定されていること" do
+        get singing_battle_path(battle)
+        # HAML はシングルクォートで属性を出力する
+        expect(response.body).to include("data-copy-target='battle-link-input'")
+      end
+
       it "対象曲のタイトルを表示すること" do
         get singing_battle_path(battle)
         expect(response.body).to include(battle.song_title)

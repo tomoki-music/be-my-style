@@ -1,0 +1,253 @@
+// Singing::Battles — show / join page styles
+// Scoped under .score-battle to avoid leaking into other pages.
+
+.score-battle {
+  max-width: 720px;
+  margin: 40px auto;
+  padding: 0 16px 64px;
+
+  &__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  &__eyebrow {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin: 0;
+  }
+
+  // ── invite (show page) ──────────────────────────────────────────
+  &__invite,
+  &__challenge {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  }
+
+  &__invite-header,
+  &__challenge-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  &__invite-icon,
+  &__challenge-icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  &__invite-title,
+  &__challenge-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 0 0 4px;
+    color: #111827;
+  }
+
+  &__invite-lead {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.95rem;
+  }
+
+  // ── song info ───────────────────────────────────────────────────
+  &__song {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+
+  &__song-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__song-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #111827;
+  }
+
+  &__song-type {
+    font-size: 0.82rem;
+    color: #6b7280;
+    background: #e5e7eb;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+
+  // ── share link box (show page) ──────────────────────────────────
+  &__link-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__link-label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #374151;
+    margin: 0;
+  }
+
+  &__link-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #f9fafb;
+    color: #374151;
+    font-size: 0.88rem;
+    font-family: monospace;
+
+    &:focus {
+      outline: none;
+      border-color: #6366f1;
+      background: #fff;
+    }
+  }
+
+  &__link-copy {
+    align-self: flex-start;
+    padding: 9px 20px;
+    background: #4f46e5;
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+
+    &:hover {
+      background: #4338ca;
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+
+    // コピー成功フィードバック
+    &.is-copied {
+      background: #16a34a;
+      cursor: default;
+    }
+
+    // コピー失敗フィードバック
+    &.is-copy-error {
+      background: #dc2626;
+    }
+  }
+
+  // ── score grid ──────────────────────────────────────────────────
+  &__your-score,
+  &__challenger-score {
+    h2 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #6b7280;
+      margin: 0 0 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+  }
+
+  &__score-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+
+    @media (max-width: 480px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  &__score-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 14px 8px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+
+    span {
+      font-size: 0.78rem;
+      color: #9ca3af;
+      font-weight: 600;
+    }
+
+    strong {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #111827;
+    }
+  }
+
+  // ── expiry notice ───────────────────────────────────────────────
+  &__expires {
+    font-size: 0.88rem;
+    color: #9ca3af;
+    margin: 0;
+
+    span {
+      margin-right: 4px;
+    }
+
+    strong {
+      color: #6b7280;
+    }
+  }
+
+  // ── CTA (join page) ─────────────────────────────────────────────
+  &__cta {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #374151;
+    }
+
+    .btn {
+      align-self: flex-start;
+    }
+  }
+
+  &__accept-btn {
+    // Inherits Bootstrap .btn .btn-primary, just ensuring full width on mobile
+    @media (max-width: 480px) {
+      width: 100%;
+    }
+  }
+
+  // ── bottom actions (show page) ──────────────────────────────────
+  &__actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+}
