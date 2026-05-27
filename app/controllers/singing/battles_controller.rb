@@ -33,8 +33,8 @@ class Singing::BattlesController < Singing::BaseController
   def accept
     return redirect_to singing_root_path, alert: "この挑戦状は期限切れです。" if @battle.expired?
     return redirect_to singing_root_path, alert: "このバトルは既に完了しています。" if @battle.completed?
-    return redirect_to singing_join_battle_path(token: @battle.token), alert: "ログインが必要です。" unless current_customer
-    return redirect_to singing_join_battle_path(token: @battle.token), alert: "自分への挑戦状には受けられません。" if current_customer == @battle.challenger
+    return redirect_to join_singing_battles_path(token: @battle.token), alert: "ログインが必要です。" unless current_customer
+    return redirect_to join_singing_battles_path(token: @battle.token), alert: "自分への挑戦状には受けられません。" if current_customer == @battle.challenger
 
     redirect_to new_singing_diagnosis_path(
       battle_token: @battle.token,

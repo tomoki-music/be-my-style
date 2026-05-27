@@ -37,8 +37,8 @@
       .score-battle__cta
         - if current_customer.present?
           %p この曲を診断して、スコアで勝負しよう！
-          = button_to "挑戦を受ける！", singing_accept_battle_path(token: @battle.token), method: :post, class: "btn btn-primary score-battle__accept-btn"
+          = button_to "挑戦を受ける！", accept_singing_battles_path(token: @battle.token), method: :post, class: "btn btn-primary score-battle__accept-btn"
         - else
           %p 挑戦を受けるにはログインが必要です。
-          = link_to "ログインして挑戦する", new_singing_session_path(after_sign_in_url: request.original_url), class: "btn btn-primary"
-          = link_to "無料で登録する", new_singing_registration_path, class: "btn btn-secondary"
+          = link_to "ログインして挑戦する", new_singing_customer_session_path(after_sign_in_url: request.original_url), class: "btn btn-primary"
+          = link_to "無料で登録する", new_singing_customer_registration_path, class: "btn btn-secondary"

@@ -17,7 +17,7 @@
 
       .score-battle__link-box
         %p.score-battle__link-label 挑戦リンク（コピーして共有）
-        %input.score-battle__link-input{ type: "text", value: singing_join_battle_url(token: @battle.token), readonly: true, id: "battle-link-input" }
+        %input.score-battle__link-input{ type: "text", value: join_singing_battles_url(token: @battle.token), readonly: true, id: "battle-link-input" }
         %button.score-battle__link-copy{ type: "button", data: { target: "battle-link-input" } } コピー
 
       .score-battle__your-score
