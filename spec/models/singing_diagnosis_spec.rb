@@ -125,6 +125,48 @@ RSpec.describe SingingDiagnosis, type: :model do
       expect(current.previous_completed_diagnosis).to be_nil
     end
 
+    describe '#previous_completed_diagnoses' do
+      it '直近3件の前回completed診断を新しい順で返すこと' do
+        d1 = FactoryBot.create(:singing_diagnosis, customer: customer, status: :completed, created_at: 3.days.ago)
+        d2 = FactoryBot.create(:singing_diagnosis, customer: customer, status: :completed, created_at: 2.days.ago)
+        d3 = FactoryBot.create(:singing_diagnosis, customer: customer, status: :completed, created_at: 1.day.ago)
+        FactoryBot.create(:singing_diagnosis, customer: customer, status: :failed, created_at: 12.hours.ago)
+        current = FactoryBot.create(:singing_diagnosis, customer: customer, status: :completed, created_at: Time.current)
+
+        result = current.previous_completed_diagnoses(limit: 3)
+
+        expect(result).to eq [d3, d2, d1]
+      end
+
+      it 'limit を超える件数は返さないこと' do
+        5.times { |i| FactoryBot.create(:singing_diagnosis, customer: customer, status: :completed, created_at: (i + 1).days.ago) }
+        current = FactoryBot.create(:singing_diagnosis, customer: customer, status: :completed, created_at: Time.current)
+
+        expect(current.previous_completed_diagnoses(limit: 3).size).to eq 3
+      end
+
+      it '前回診断がない場合は空配列を返すこと' do
+        current = FactoryBot.create(:singing_diagnosis, customer: customer, status: :completed, created_at: Time.current)
+
+        expect(current.previous_completed_diagnoses).to eq []
+      end
+
+      it 'completedでない診断では空配列を返すこと' do
+        FactoryBot.create(:singing_diagnosis, customer: customer, status: :completed, created_at: 1.day.ago)
+        current = FactoryBot.create(:singing_diagnosis, customer: customer, status: :processing, created_at: Time.current)
+
+        expect(current.previous_completed_diagnoses).to eq []
+      end
+
+      it '別ユーザーの診断は含まないこと' do
+        other = FactoryBot.create(:customer, domain_name: "singing")
+        FactoryBot.create(:singing_diagnosis, customer: other, status: :completed, created_at: 1.day.ago)
+        current = FactoryBot.create(:singing_diagnosis, customer: customer, status: :completed, created_at: Time.current)
+
+        expect(current.previous_completed_diagnoses).to eq []
+      end
+    end
+
     it 'スコア差分を今回から前回を引いて計算すること' do
       previous_completed = FactoryBot.create(
         :singing_diagnosis,

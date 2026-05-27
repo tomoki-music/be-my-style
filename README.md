@@ -60,8 +60,10 @@ sudo yum install -y nodejs
 ## 歌唱・演奏診断APIのローカル接続
 
 歌唱・演奏診断はRailsからFastAPIの `/diagnoses` に音声ファイルを送信します。
-ローカルでは先にFastAPIを起動してください。スマホ録音で多い `m4a` や `mp3` を読むため、
-FastAPI側では `ffmpeg` を使います。
+ローカルで診断を実行するには、Rails とは別に `singing_analyzer/` の FastAPI analyzer を起動する必要があります。
+スマホ録音で多い `m4a` や `mp3` を読むため、FastAPI側では `ffmpeg` を使います。
+
+### 初回セットアップ
 
 ```bash
 brew install ffmpeg
@@ -70,25 +72,47 @@ python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
+```
+
+### 起動方法
+
+#### 方法A：foreman を使う（推奨）
+
+```bash
+gem install foreman  # 初回のみ
+foreman start -f Procfile.dev
+```
+
+Rails と analyzer が同時に起動します。
+
+#### 方法B：ターミナルを2つ使う
+
+ターミナル1（analyzer）:
+
+```bash
+cd singing_analyzer
+source .venv/bin/activate
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-別ターミナルでRailsを起動します。
+ターミナル2（Rails）:
 
 ```bash
 export SINGING_ANALYZER_DIAGNOSES_URL=http://localhost:8000/diagnoses
 bin/rails s
 ```
 
+### 疎通確認
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+`ECONNREFUSED` が出る場合は analyzer が起動していません。
+
 Rails development環境では、`SINGING_ANALYZER_DIAGNOSES_URL` とcredentialsが未設定の場合に
 `http://localhost:8000/diagnoses` をデフォルトとして使います。FastAPIを別ポートで起動する場合は、
 上記の環境変数を設定してからRailsを再起動してください。
-
-疎通確認:
-
-```bash
-curl http://localhost:8000/health
-```
 
 `/singing/diagnoses/new` から診断を作成し、詳細画面で `completed` になれば接続成功です。
 

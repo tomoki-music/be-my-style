@@ -1,6 +1,13 @@
 module SingingDiagnoses
   class AiCommentGenerator
     MAX_COMMENT_LENGTH = 2000
+
+    FOCUS_METRIC_LABELS = {
+      pitch: "音程",
+      rhythm: "リズム",
+      expression: "表現"
+    }.freeze
+
     PERFORMANCE_TYPE_INSTRUCTIONS = {
       "vocal" => [
         "vocalでは、歌唱指導寄りに、音程・リズム・表現・声量・発音・リラックス・ミックスボイスを必要に応じて扱ってください。",
@@ -112,6 +119,7 @@ module SingingDiagnoses
         "Premium診断では、利用可能な詳細診断項目も踏まえてください。",
         "reference_comparisonがある場合は、曲のキーやテンポにどれくらい近いかを、断定しすぎず練習の目安として自然に触れてください。",
         "weekly_coach_contextがある場合は、今週の練習テーマや曲基準メモも踏まえて、次の一歩が一貫して見えるようにまとめてください。",
+        step_up_instruction,
         performance_type_instruction,
         output_instruction
       ].flatten.join("\n")
@@ -175,7 +183,8 @@ module SingingDiagnoses
         end,
         weekly_coach_context: weekly_coach_context,
         reference_comparison: reference_comparison,
-        reference_context: reference_context
+        reference_context: reference_context,
+        previous_context: previous_comment_context
       }
       data[:guitar_context] = guitar_context if diagnosis.performance_type_guitar?
       data[:bass_context] = bass_context if diagnosis.performance_type_bass?
@@ -662,6 +671,100 @@ module SingingDiagnoses
 
     def comparison_rows
       @comparison_rows ||= helper.singing_score_comparison_rows(diagnosis)
+    end
+
+    # ── 前回コンテキスト / マンネリ防止 ─────────────────────────────────────
+
+    # 同一 customer・同一 performance_type の直近完了済み診断（最大3件）を返す
+    def previous_diagnoses
+      @previous_diagnoses ||= diagnosis.previous_completed_diagnoses(limit: 3).to_a
+    end
+
+    # 最もスコアが低い項目を :pitch / :rhythm / :expression で返す
+    def focus_metric
+      @focus_metric ||= begin
+        candidates = {
+          pitch: diagnosis.pitch_score,
+          rhythm: diagnosis.rhythm_score,
+          expression: diagnosis.expression_score
+        }.reject { |_, score| score.nil? }
+        candidates.min_by { |_, score| score.to_i }&.first
+      end
+    end
+
+    def focus_metric_label
+      FOCUS_METRIC_LABELS[focus_metric] || "全体のまとまり"
+    end
+
+    # 今回と直前診断のスコア差を文字列 ("+4" / "-2" / "±0") で返す
+    def score_delta_summary(previous)
+      return {} if previous.nil?
+
+      {
+        overall: delta_string(diagnosis.overall_score, previous.overall_score),
+        pitch: delta_string(diagnosis.pitch_score, previous.pitch_score),
+        rhythm: delta_string(diagnosis.rhythm_score, previous.rhythm_score),
+        expression: delta_string(diagnosis.expression_score, previous.expression_score)
+      }.compact
+    end
+
+    def delta_string(current, previous)
+      return nil if current.nil? || previous.nil?
+
+      delta = current.to_i - previous.to_i
+      if delta.positive?
+        "+#{delta}"
+      elsif delta.negative?
+        delta.to_s
+      else
+        "±0"
+      end
+    end
+
+    # prompt に渡す前回コンテキスト
+    # first_time: true のとき → 初回診断
+    # first_time: false のとき → 直近 history・score_delta・focus_metric を含む
+    def previous_comment_context
+      if previous_diagnoses.empty?
+        { first_time: true }
+      else
+        {
+          first_time: false,
+          focus_metric: focus_metric_label,
+          score_delta: score_delta_summary(previous_diagnoses.first),
+          history: previous_diagnoses.map do |d|
+            {
+              overall: d.overall_score,
+              pitch: d.pitch_score,
+              rhythm: d.rhythm_score,
+              expression: d.expression_score,
+              ai_comment: d.ai_comment.to_s.truncate(200)
+            }
+          end
+        }
+      end
+    end
+
+    # instructions に追加するマンネリ防止・step-up ガイダンス
+    def step_up_instruction
+      base = [
+        "previous_contextのfocus_metricが示す項目を今回の練習テーマとして扱ってください。",
+        "コメントには必ず: ①今回の良かった点を1つ具体的に褒める ②focus_metricの練習テーマを1つに絞る ③すぐ試せる練習方法を1つ入れる、の3点を含めてください。",
+        "専門用語を使いすぎず、ユーザーが続けたくなるやさしく前向きな文体にしてください。"
+      ]
+
+      if previous_diagnoses.any?
+        base += [
+          "previous_context（first_time: false）: historyの直近ai_commentに含まれる表現・フレーズ・語尾をなるべく避け、今回のコメントを新鮮にしてください。",
+          "score_deltaの中で絶対値が最も大きく変化した項目について1文だけ自然に触れてください（称賛・振り返りどちらでも可）。"
+        ]
+      else
+        base += [
+          "previous_context（first_time: true）: 初回診断として、はじめての挑戦に温かく応えるトーンで一文添えてください。"
+        ]
+      end
+
+      base
     end
   end
 end

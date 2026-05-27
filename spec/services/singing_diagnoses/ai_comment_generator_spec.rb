@@ -910,5 +910,173 @@ RSpec.describe SingingDiagnoses::AiCommentGenerator do
 
       expect { described_class.call(diagnosis, client: client) }.to raise_error(ArgumentError)
     end
+
+    describe "マンネリ防止・step-up コンテキスト" do
+      it "初回診断の場合は previous_context に first_time: true が渡ること" do
+        diagnosis = FactoryBot.create(
+          :singing_diagnosis,
+          status: :completed,
+          pitch_score: 70,
+          rhythm_score: 65,
+          expression_score: 72
+        )
+        client = instance_double(
+          SingingDiagnoses::OpenAiResponsesClient,
+          generate_text: "初回コメントです。"
+        )
+
+        described_class.call(diagnosis, client: client)
+
+        expect(client).to have_received(:generate_text) do |args|
+          input = JSON.parse(args[:input])
+
+          expect(input.dig("previous_context", "first_time")).to eq true
+          expect(args[:instructions]).to include("first_time: true")
+          expect(args[:instructions]).to include("初回診断")
+        end
+      end
+
+      it "前回診断がある場合は previous_context に履歴と score_delta が渡ること" do
+        customer = FactoryBot.create(:customer, domain_name: "singing")
+        previous = FactoryBot.create(
+          :singing_diagnosis,
+          customer: customer,
+          status: :completed,
+          overall_score: 68,
+          pitch_score: 65,
+          rhythm_score: 70,
+          expression_score: 60,
+          ai_comment: "前回のAIコメントサンプルです。",
+          created_at: 1.day.ago
+        )
+        diagnosis = FactoryBot.create(
+          :singing_diagnosis,
+          customer: customer,
+          status: :completed,
+          overall_score: 74,
+          pitch_score: 70,
+          rhythm_score: 72,
+          expression_score: 68,
+          created_at: Time.current
+        )
+        client = instance_double(
+          SingingDiagnoses::OpenAiResponsesClient,
+          generate_text: "前回ありコメントです。"
+        )
+
+        described_class.call(diagnosis, client: client)
+
+        expect(client).to have_received(:generate_text) do |args|
+          input = JSON.parse(args[:input])
+
+          expect(input.dig("previous_context", "first_time")).to eq false
+          expect(input.dig("previous_context", "history").first["ai_comment"]).to include("前回のAIコメント")
+          expect(input.dig("previous_context", "score_delta", "overall")).to eq "+6"
+          expect(input.dig("previous_context", "score_delta", "pitch")).to eq "+5"
+          expect(input.dig("previous_context", "score_delta", "rhythm")).to eq "+2"
+          expect(input.dig("previous_context", "score_delta", "expression")).to eq "+8"
+          expect(args[:instructions]).to include("first_time: false")
+          expect(args[:instructions]).to include("score_delta")
+          expect(args[:instructions]).to include("ai_comment")
+        end
+      end
+
+      it "最もスコアが低い項目が focus_metric として previous_context に含まれること" do
+        customer = FactoryBot.create(:customer, domain_name: "singing")
+        FactoryBot.create(
+          :singing_diagnosis,
+          customer: customer,
+          status: :completed,
+          overall_score: 70,
+          pitch_score: 70,
+          rhythm_score: 70,
+          expression_score: 70,
+          created_at: 1.day.ago
+        )
+        diagnosis = FactoryBot.create(
+          :singing_diagnosis,
+          customer: customer,
+          status: :completed,
+          overall_score: 72,
+          pitch_score: 80,
+          rhythm_score: 58,
+          expression_score: 74,
+          created_at: Time.current
+        )
+        client = instance_double(
+          SingingDiagnoses::OpenAiResponsesClient,
+          generate_text: "focus_metricコメントです。"
+        )
+
+        described_class.call(diagnosis, client: client)
+
+        expect(client).to have_received(:generate_text) do |args|
+          input = JSON.parse(args[:input])
+
+          # rhythm が最低スコア（58）なので focus_metric は "リズム"
+          expect(input.dig("previous_context", "focus_metric")).to eq "リズム"
+          expect(args[:instructions]).to include("focus_metric")
+        end
+      end
+
+      it "直近3件の前回診断の ai_comment が history に含まれること" do
+        customer = FactoryBot.create(:customer, domain_name: "singing")
+        3.times do |i|
+          FactoryBot.create(
+            :singing_diagnosis,
+            customer: customer,
+            status: :completed,
+            overall_score: 70 + i,
+            pitch_score: 70,
+            rhythm_score: 70,
+            expression_score: 70,
+            ai_comment: "コメント#{i + 1}回目",
+            created_at: (3 - i).days.ago
+          )
+        end
+        diagnosis = FactoryBot.create(
+          :singing_diagnosis,
+          customer: customer,
+          status: :completed,
+          overall_score: 75,
+          pitch_score: 75,
+          rhythm_score: 75,
+          expression_score: 75,
+          created_at: Time.current
+        )
+        client = instance_double(
+          SingingDiagnoses::OpenAiResponsesClient,
+          generate_text: "3件コメントです。"
+        )
+
+        described_class.call(diagnosis, client: client)
+
+        expect(client).to have_received(:generate_text) do |args|
+          input = JSON.parse(args[:input])
+          history = input.dig("previous_context", "history")
+
+          expect(history.size).to eq 3
+          expect(history.map { |h| h["ai_comment"] }).to include("コメント3回目", "コメント2回目", "コメント1回目")
+        end
+      end
+
+      it "前回診断がない初回でもコメント生成が成功すること" do
+        diagnosis = FactoryBot.create(
+          :singing_diagnosis,
+          status: :completed,
+          overall_score: 72,
+          pitch_score: 68,
+          rhythm_score: 74,
+          expression_score: 70
+        )
+        client = instance_double(
+          SingingDiagnoses::OpenAiResponsesClient,
+          generate_text: "初回でも生成成功。"
+        )
+
+        expect { described_class.call(diagnosis, client: client) }.not_to raise_error
+        expect(client).to have_received(:generate_text)
+      end
+    end
   end
 end

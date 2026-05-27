@@ -97,11 +97,16 @@ module SingingDiagnoses
       overall = normalized_score(diagnosis&.overall_score)
       performance_label = diagnosis&.performance_type_label.presence || "今回の診断"
 
-      [
+      previous = diagnosis.respond_to?(:previous_completed_diagnosis) ? diagnosis.previous_completed_diagnosis : nil
+      opening = fallback_opening(diagnosis, previous)
+
+      parts = [
         "今回の#{performance_label}では、#{strength_sentence(strongest_label, strongest_score, overall)}",
         "#{focus_sentence(focus_label, focus_score)}",
         "#{practice_sentence(focus_label, diagnosis)}"
-      ].join
+      ]
+      parts.prepend(opening) if opening.present?
+      parts.join
     end
 
     def normalized_score(value)
@@ -148,6 +153,22 @@ module SingingDiagnoses
         else
           "次回は一番気になる短い範囲を選び、ゆっくり録音してから少しずつテンポを戻してみましょう。"
         end
+      end
+    end
+
+    # 初回 / 前回比に応じた書き出し一文（fallback用）
+    # 初回 → 温かく迎える一文
+    # 2回目以降 → 前回比の傾向を一文（大きな変化がある場合のみ）
+    def fallback_opening(diagnosis, previous)
+      return "はじめての診断、よく録音できました。" if previous.nil?
+
+      overall_delta = diagnosis.overall_score.to_i - previous.overall_score.to_i
+      if overall_delta > 3
+        "前回より全体スコアが伸びています。"
+      elsif overall_delta < -3
+        "前回と比べながら、引き続き積み上げていきましょう。"
+      else
+        nil
       end
     end
   end

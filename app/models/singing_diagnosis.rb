@@ -97,15 +97,21 @@ class SingingDiagnosis < ApplicationRecord
   end
 
   def previous_completed_diagnosis
-    return nil if customer.blank? || created_at.blank?
-    return nil unless completed?
+    previous_completed_diagnoses(limit: 1).first
+  end
+
+  # 同一 customer・同一 performance_type の完了済み診断を新しい順で最大 limit 件返す。
+  # AI コメントのマンネリ防止・前回比分析に使う。
+  def previous_completed_diagnoses(limit: 3)
+    return [] if customer.blank? || created_at.blank?
+    return [] unless completed?
 
     customer.singing_diagnoses
       .completed
       .where(performance_type: performance_type)
       .where("created_at < ? OR (created_at = ? AND id < ?)", created_at, created_at, id)
       .order(created_at: :desc, id: :desc)
-      .first
+      .limit(limit)
   end
 
   def score_comparison(previous_diagnosis = previous_completed_diagnosis)
