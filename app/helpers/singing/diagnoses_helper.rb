@@ -3509,4 +3509,66 @@ module Singing::DiagnosesHelper
     week_start = Date.today.beginning_of_week
     diagnoses.select(&:completed?).any? { |d| d.diagnosed_at&.to_date&.>=(week_start) }
   end
+
+  # === Phase 10-T: Diagnosis History Comparison UI ===
+
+  # 2つのスコアの差分を返す。どちらかが nil の場合は nil を返す。
+  def diagnosis_score_delta(current, previous)
+    return nil unless current && previous
+
+    current.to_i - previous.to_i
+  end
+
+  # 差分を "+4" / "-1" / "±0" 形式の文字列に変換する。
+  def diagnosis_delta_label(delta)
+    return "±0" if delta.nil? || delta.zero?
+
+    delta.positive? ? "+#{delta}" : delta.to_s
+  end
+
+  # 差分の正負に応じた CSS クラスを返す。
+  def diagnosis_delta_class(delta)
+    return "is-neutral" if delta.nil? || delta.zero?
+
+    delta.positive? ? "is-positive" : "is-negative"
+  end
+
+  # 差分の大きさに応じたアイコン絵文字を返す。
+  # +5以上 → 🚀 / +1〜4 → 📈 / ±0 → ➖ / マイナス → 🔥（改善中）
+  def diagnosis_delta_icon(delta)
+    return "➖" if delta.nil? || delta.zero?
+    return "🚀" if delta >= 5
+    return "📈" if delta.positive?
+
+    "🔥"
+  end
+
+  # 診断と前回診断から比較カードに使う items 配列を返す。
+  # performance_type ごとのラベルに対応する。
+  def diagnosis_comparison_items(diagnosis, previous_diagnosis)
+    return [] if previous_diagnosis.blank?
+
+    configs = COMMON_SCORE_CARD_CONFIGS[diagnosis.performance_type.to_s] || COMMON_SCORE_CARD_CONFIGS["vocal"]
+    pitch_label      = configs.find { |c| c[:key] == :pitch_score }&.dig(:label)      || "音程"
+    rhythm_label     = configs.find { |c| c[:key] == :rhythm_score }&.dig(:label)     || "リズム"
+    expression_label = configs.find { |c| c[:key] == :expression_score }&.dig(:label) || "表現"
+
+    [
+      { label: "総合",          key: :overall_score,    current: diagnosis.overall_score,    previous: previous_diagnosis.overall_score },
+      { label: pitch_label,      key: :pitch_score,      current: diagnosis.pitch_score,      previous: previous_diagnosis.pitch_score },
+      { label: rhythm_label,     key: :rhythm_score,     current: diagnosis.rhythm_score,     previous: previous_diagnosis.rhythm_score },
+      { label: expression_label, key: :expression_score, current: diagnosis.expression_score, previous: previous_diagnosis.expression_score }
+    ]
+  end
+
+  # items 配列の中でもっとも delta が大きい（かつプラスの）項目を返す。
+  # 全項目がマイナス・ゼロの場合は nil を返す。
+  def diagnosis_best_growth_item(items)
+    return nil if items.blank?
+
+    items
+      .map  { |item| item.merge(delta: diagnosis_score_delta(item[:current], item[:previous])) }
+      .select { |item| item[:delta].present? && item[:delta].positive? }
+      .max_by { |item| item[:delta] }
+  end
 end

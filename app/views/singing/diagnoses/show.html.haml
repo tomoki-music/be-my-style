@@ -85,6 +85,34 @@
               %small= card[:short_label]
               %p= card[:comment]
 
+      - previous_diagnosis = @diagnosis.previous_completed_diagnosis
+      - comparison_items   = diagnosis_comparison_items(@diagnosis, previous_diagnosis)
+      - if previous_diagnosis.present?
+        - best_growth = diagnosis_best_growth_item(comparison_items)
+        .diagnosis-comparison
+          .diagnosis-comparison__header
+            %p.diagnosis-comparison__eyebrow Growth
+            %h2.diagnosis-comparison__title 前回との比較
+            - if best_growth.present?
+              .diagnosis-comparison__highlight
+                %span.diagnosis-comparison__highlight-icon 🎉
+                %span.diagnosis-comparison__highlight-text
+                  = "今回もっとも伸びたのは「#{best_growth[:label]}」です！"
+          .diagnosis-comparison__grid
+            - comparison_items.each do |item|
+              - delta = diagnosis_score_delta(item[:current], item[:previous])
+              .diagnosis-comparison-card{ class: diagnosis_delta_class(delta) }
+                .diagnosis-comparison-card__label= item[:label]
+                .diagnosis-comparison-card__scores
+                  %span.diagnosis-comparison-card__prev= item[:previous] || "-"
+                  %span.diagnosis-comparison-card__arrow →
+                  %span.diagnosis-comparison-card__current= item[:current] || "-"
+                .diagnosis-comparison-card__delta
+                  %span.diagnosis-comparison-card__icon= diagnosis_delta_icon(delta)
+                  %span.diagnosis-comparison-card__value= diagnosis_delta_label(delta)
+      - else
+        %p.diagnosis-comparison-first-visit 次回から成長比較が表示されます。
+
       - if @daily_challenge
         .daily-challenge-result{ class: (@daily_challenge_progress&.completed? ? "daily-challenge-result--cleared" : "") }
           .daily-challenge-result__header

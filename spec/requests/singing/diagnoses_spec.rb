@@ -1757,6 +1757,178 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("比較できる前回診断がまだありません")
     end
 
+    # ---- Phase 10-T: Diagnosis History Comparison UI ----
+
+    it "初回診断（previous がない）でも正常に表示されること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        overall_score: 78,
+        pitch_score: 74,
+        rhythm_score: 80,
+        expression_score: 77
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("次回から成長比較が表示されます")
+      expect(response.body).not_to include("diagnosis-comparison__grid")
+    end
+
+    it "previous がある場合は比較セクション(.diagnosis-comparison)が表示されること" do
+      sign_in singing_customer
+      FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        overall_score: 75,
+        pitch_score: 70,
+        rhythm_score: 78,
+        expression_score: 72,
+        created_at: 2.days.ago
+      )
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        overall_score: 79,
+        pitch_score: 77,
+        rhythm_score: 78,
+        expression_score: 72,
+        created_at: Time.current
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("diagnosis-comparison")
+      expect(response.body).to include("前回との比較")
+    end
+
+    it "delta label(+4 / ±0 など)が比較カードに表示されること" do
+      sign_in singing_customer
+      FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        overall_score: 75,
+        pitch_score: 70,
+        rhythm_score: 80,
+        expression_score: 72,
+        created_at: 2.days.ago
+      )
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        overall_score: 79,
+        pitch_score: 74,
+        rhythm_score: 80,
+        expression_score: 69,
+        created_at: Time.current
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("+4")
+      expect(response.body).to include("±0")
+      expect(response.body).to include("-3")
+    end
+
+    it "スコアが上がった項目には is-positive クラスが付くこと" do
+      sign_in singing_customer
+      FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        overall_score: 70,
+        pitch_score: 65,
+        rhythm_score: 75,
+        expression_score: 68,
+        created_at: 2.days.ago
+      )
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        overall_score: 78,
+        pitch_score: 72,
+        rhythm_score: 75,
+        expression_score: 65,
+        created_at: Time.current
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("is-positive")
+    end
+
+    it "スコアが下がった項目には is-negative クラスが付くこと" do
+      sign_in singing_customer
+      FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        overall_score: 80,
+        pitch_score: 75,
+        rhythm_score: 80,
+        expression_score: 78,
+        created_at: 2.days.ago
+      )
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        overall_score: 77,
+        pitch_score: 73,
+        rhythm_score: 78,
+        expression_score: 75,
+        created_at: Time.current
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("is-negative")
+    end
+
+    it "+5以上伸びた項目がある場合は🎉ハイライトと項目名が表示されること" do
+      sign_in singing_customer
+      FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        overall_score: 70,
+        pitch_score: 60,
+        rhythm_score: 70,
+        expression_score: 70,
+        created_at: 2.days.ago
+      )
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        overall_score: 75,
+        pitch_score: 67,
+        rhythm_score: 70,
+        expression_score: 70,
+        created_at: Time.current
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("diagnosis-comparison__highlight")
+      expect(response.body).to include("もっとも伸びたのは")
+    end
+
+    # ---- Phase 10-T ここまで ----
+
     it "freeユーザーには詳細フィードバック本文を表示せず導線を表示すること" do
       sign_in singing_customer
       diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :completed)
