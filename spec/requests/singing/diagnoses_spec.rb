@@ -2465,5 +2465,64 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).not_to include("singing-repeat-cta")
       expect(response.body).not_to include("次はどうしますか？")
     end
+
+    # ── Streak / Challenge UI (Phase 10-U) ─────────────────────────────────
+
+    it "完了した診断にはstreakセクションが表示されること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("singing-streak-card")
+      expect(response.body).to include("Challenge")
+    end
+
+    it "未完了の診断にはstreakセクションが表示されないこと" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, customer: singing_customer, status: :queued)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("singing-streak-card")
+    end
+
+    it "初回診断（streak=0）でも正常にレンダリングされること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("singing-streak-card")
+    end
+
+    it "「もう一度診断する」リンクがstreakセクション内に含まれること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("もう一度診断する")
+      expect(response.body).to include("バッジを見る")
+    end
+
+    it "2日以上連続診断しているユーザーには連続日数が表示されること" do
+      sign_in singing_customer
+      FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer,
+                        created_at: 2.days.ago)
+      FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer,
+                        created_at: 1.day.ago)
+      diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer,
+                                    created_at: Time.zone.now)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("3日連続で診断中")
+    end
   end
 end

@@ -879,6 +879,8 @@
           バッジ一覧を見る →
 
     - if @diagnosis.completed?
+      = render "streak_challenge"
+
       - if @diagnosis.performance_type.to_s == "vocal"
         - repeat_cta_other = { icon: "🎸", title: "ギター・バンドでも試す", body: "ギター・ベース・バンド演奏も診断できます。別の角度から自分の演奏を確かめよう。" }
       - elsif @diagnosis.performance_type.to_s == "guitar"

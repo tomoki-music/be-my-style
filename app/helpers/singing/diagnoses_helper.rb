@@ -3571,4 +3571,68 @@ module Singing::DiagnosesHelper
       .select { |item| item[:delta].present? && item[:delta].positive? }
       .max_by { |item| item[:delta] }
   end
+
+  # ── Streak / Challenge UI ───────────────────────────────────────────────
+
+  # 診断継続日数サマリーを返す。
+  # { days:, title:, message:, next_goal: } の Hash を返す。
+  def singing_diagnosis_streak_summary(customer)
+    unless customer
+      return {
+        days:      0,
+        title:     "今日がスタートです！",
+        message:   "次回の診断から継続記録が伸びていきます。",
+        next_goal: nil
+      }
+    end
+
+    streak_days = Singing::StreakCalculator.call(customer)
+    {
+      days:      streak_days,
+      title:     diagnosis_streak_title(streak_days),
+      message:   diagnosis_streak_message(streak_days),
+      next_goal: diagnosis_next_streak_goal(streak_days)
+    }
+  end
+
+  private
+
+  def diagnosis_streak_title(days)
+    return "今日がスタートです！" if days <= 0
+    return "診断をはじめました"   if days == 1
+
+    "🔥 #{days}日連続で診断中！"
+  end
+
+  def diagnosis_streak_message(days)
+    case days
+    when 0
+      "次回の診断から継続記録が伸びていきます。"
+    when 1
+      "いいスタートです！明日も診断すると記録が伸びていきます。"
+    when 2..6
+      "この調子で続けると、歌の変化が見えやすくなります。"
+    when 7..29
+      "すごい！着実に記録が積み上がっています。継続の力を感じてみましょう。"
+    else
+      "長期にわたって続けています。その積み重ねが着実な成長につながっています。"
+    end
+  end
+
+  def diagnosis_next_streak_goal(days)
+    case days
+    when 0
+      "まずは2回目の診断へ。継続記録がスタートします。"
+    when 1..2
+      "あと#{3 - days}日で「3日継続」達成！"
+    when 3..6
+      "あと#{7 - days}日で「7日継続」達成！"
+    when 7..13
+      "あと#{14 - days}日で「14日継続」達成！"
+    when 14..29
+      "あと#{30 - days}日で「30日継続」達成！"
+    else
+      nil
+    end
+  end
 end

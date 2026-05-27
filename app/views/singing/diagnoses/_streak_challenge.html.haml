@@ -1,0 +1,20 @@
+- streak_summary = singing_diagnosis_streak_summary(current_customer)
+
+.singing-streak-card
+  .singing-streak-card__icon 🔥
+
+  .singing-streak-card__body
+    %p.singing-streak-card__eyebrow Challenge
+    %h2.singing-streak-card__title
+      = streak_summary[:title]
+
+    %p.singing-streak-card__message
+      = streak_summary[:message]
+
+    - if streak_summary[:next_goal].present?
+      %p.singing-streak-card__goal
+        = streak_summary[:next_goal]
+
+    .singing-streak-card__actions
+      = link_to "もう一度診断する", new_singing_diagnosis_path, class: "singing-streak-card__button"
+      = link_to "バッジを見る", singing_badges_path, class: "singing-streak-card__link"
