@@ -983,32 +983,44 @@ module Singing::DiagnosesHelper
   def singing_performance_type_cards
     [
       {
+        value: "vocal",
         key: "vocal",
+        icon: "🎤",
         label: "ボーカル診断",
         description: "音程・リズム・表現のバランスから、歌声の今を確認できます。"
       },
       {
+        value: "guitar",
         key: "guitar",
+        icon: "🎸",
         label: "ギター診断",
         description: "アタックやミュート、安定感をもとに演奏の輪郭を振り返れます。"
       },
       {
+        value: "bass",
         key: "bass",
+        icon: "🎸",
         label: "ベース診断",
         description: "グルーヴ、音価、土台の安定感から低音の支え方を確認できます。"
       },
       {
+        value: "drums",
         key: "drums",
+        icon: "🥁",
         label: "ドラム診断",
         description: "テンポ安定、リズム精度、強弱からビートの芯を見直せます。"
       },
       {
+        value: "keyboard",
         key: "keyboard",
+        icon: "🎹",
         label: "キーボード診断",
         description: "和音の安定、音のつながり、タッチから伴奏のまとまりを見られます。"
       },
       {
+        value: "band",
         key: "band",
+        icon: "🎵",
         label: "バンド演奏診断",
         description: "音量バランス・リズムの揃い・グルーヴ・一体感を診断",
         badges: ["NEW", "アンサンブル対応", "Premium相性◎"],

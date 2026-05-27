@@ -61,20 +61,25 @@
             %span.singing-diagnosis-new__step-num 01
             %h2 診断タイプを選ぶ
           .singing-diagnosis-new__step-body
-            .singing-diagnosis-new__type-select-wrap
-              = f.select :performance_type, SingingDiagnosis.performance_type_options, {}, class: "form-control singing-diagnosis-new__select"
-            .singing-diagnosis__type-grid
-              - singing_performance_type_cards.each do |card|
-                - card_classes = ["singing-diagnosis__type-card"]
-                - card_classes << "singing-diagnosis__type-card--featured" if card[:featured]
-                %div{ class: card_classes.join(" ") }
-                  .singing-diagnosis__type-card-header
-                    %strong= card[:label]
-                    - if card[:badges].present?
-                      .singing-diagnosis__type-card-badges
-                        - card[:badges].each do |badge|
-                          %span= badge
-                  %p= card[:description]
+            .diagnosis-part-selector
+              %p.diagnosis-part-selector__lead
+                歌・楽器・バンド演奏から、今回チェックしたい内容を選んでください。
+              .diagnosis-part-selector__grid
+                - singing_performance_type_cards.each_with_index do |card, i|
+                  - card_classes = ["diagnosis-part-card"]
+                  - card_classes << "diagnosis-part-card--featured" if card[:featured]
+                  %label{ class: card_classes.join(" ") }
+                    = f.radio_button :performance_type, card[:value], class: "diagnosis-part-card__input", checked: i.zero?
+                    .diagnosis-part-card__body
+                      .diagnosis-part-card__icon= card[:icon]
+                      .diagnosis-part-card__content
+                        %span.diagnosis-part-card__label= card[:label]
+                        %span.diagnosis-part-card__description= card[:description]
+                      - if card[:badges].present?
+                        .diagnosis-part-card__badges
+                          - card[:badges].each do |badge|
+                            %span.diagnosis-part-card__badge= badge
+                      .diagnosis-part-card__check ✓
             - if SingingDiagnosis.future_performance_type_labels.present?
               %small.form-text.text-muted= "#{SingingDiagnosis.future_performance_type_labels.join(' / ')}は今後対応予定です。"
 

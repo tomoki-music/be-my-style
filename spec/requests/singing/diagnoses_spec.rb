@@ -85,6 +85,36 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("録音チェックポイント")
     end
 
+    it "診断タイプがカード型UIのradioボタンとして表示されること" do
+      sign_in singing_customer
+
+      get new_singing_diagnosis_path
+
+      expect(response).to have_http_status(:ok)
+      # カード型UIのグリッドが表示されること
+      expect(response.body).to include("diagnosis-part-selector")
+      expect(response.body).to include("diagnosis-part-selector__grid")
+      # 各パートのradio inputが含まれること（enumに存在する値のみ）
+      expect(response.body).to include('value="vocal"')
+      expect(response.body).to include('value="guitar"')
+      expect(response.body).to include('value="bass"')
+      expect(response.body).to include('value="drums"')
+      expect(response.body).to include('value="keyboard"')
+      expect(response.body).to include('value="band"')
+      # アイコンが表示されること
+      expect(response.body).to include("🎤")
+      expect(response.body).to include("🎸")
+      expect(response.body).to include("🥁")
+      expect(response.body).to include("🎹")
+      # カードのlabel・descriptionが表示されること
+      expect(response.body).to include("ボーカル診断")
+      expect(response.body).to include("音程・リズム・表現のバランスから、歌声の今を確認できます。")
+      expect(response.body).to include("ドラム診断")
+      expect(response.body).to include("テンポ安定、リズム精度、強弱からビートの芯を見直せます。")
+      # 旧来のselectボックスは使わないこと
+      expect(response.body).not_to include("singing-diagnosis-new__select")
+    end
+
     it "lightユーザーに月5回の診断回数を表示すること" do
       singing_customer.create_subscription!(status: "active", plan: "light")
       sign_in singing_customer
