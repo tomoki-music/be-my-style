@@ -74,6 +74,8 @@
       .singing-diagnosis__ranking-banner-right
         %span ランキングを見る &rarr;
 
+    = render "growth_journey_timeline", items: @growth_journey_items
+
     = render "singing/shared/recap_movie_cta"
 
     - if @polling_required

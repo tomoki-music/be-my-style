@@ -1,0 +1,30 @@
+- premium_available = current_customer.has_feature?(:singing_ai_challenge_progress)
+.singing-journey
+  .singing-journey__header
+    %span.singing-journey__eyebrow 🎤 Singing Growth Journey
+    %h2.singing-journey__headline あなたの成長の軌跡
+    %p.singing-journey__lead 診断を重ねてきた、あなたの音楽の歩みです
+
+  - if items.present?
+    .singing-journey__timeline
+      - items.each do |item|
+        .singing-journey__item{ class: ["singing-journey__item--#{item.type}", ("singing-journey__item--highlight" if item.highlight)].compact.join(" ") }
+          .singing-journey__item-connector
+            .singing-journey__item-dot= item.icon
+          .singing-journey__item-content
+            %span.singing-journey__item-date= item.date_label
+            %strong.singing-journey__item-title= item.title
+            - if item.body.present?
+              %p.singing-journey__item-body= item.body
+            - if item.premium_detail.present?
+              %p.singing-journey__item-premium-detail= item.premium_detail
+  - else
+    .singing-journey__empty
+      %p まだ完了済みの診断がありません。
+      = link_to "最初の診断を始める", new_singing_diagnosis_path, class: "btn btn-primary btn-sm"
+
+  - unless premium_available
+    .singing-journey__premium-teaser
+      %span.singing-journey__premium-lock 🔒
+      %p.singing-journey__premium-text Coreプランで、AIコメントの軌跡・ミッション詳細もタイムラインに表示されます。
+      = link_to "Coreプランを見る", public_singing_lp_path(anchor: "lp-section"), class: "singing-journey__premium-btn"
