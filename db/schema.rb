@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_26_000003) do
+ActiveRecord::Schema.define(version: 2026_05_28_000001) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -931,6 +931,8 @@ ActiveRecord::Schema.define(version: 2026_05_26_000003) do
     t.datetime "ai_commented_at"
     t.integer "performance_type", default: 0, null: false
     t.boolean "ranking_opt_in", default: false, null: false
+    t.string "next_mission_title", limit: 100
+    t.string "next_mission_body", limit: 300
     t.index ["ai_comment_status"], name: "index_singing_diagnoses_on_ai_comment_status"
     t.index ["customer_id"], name: "index_singing_diagnoses_on_customer_id"
     t.index ["diagnosed_at"], name: "index_singing_diagnoses_on_diagnosed_at"

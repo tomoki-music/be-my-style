@@ -665,6 +665,27 @@
             %p.singing-diagnosis__ai-comment-lead AIコメントの生成に失敗しました。スコア・比較・補足スコアは通常どおり確認できます。
           - else
             %p.singing-diagnosis__ai-comment-lead AIコメントは、Premium向けに解析完了後の診断から生成されます。
+
+        - if diagnosis_has_next_mission?(@diagnosis)
+          - prev_diagnosis = @diagnosis.previous_completed_diagnosis
+          - mission_result = diagnosis_previous_mission_result(@diagnosis, prev_diagnosis)
+          .next-mission-card
+            - if mission_result.present? && prev_diagnosis.present?
+              .next-mission-card__prev-result{ class: mission_result[:success] ? "next-mission-card__prev-result--success" : "" }
+                %span.next-mission-card__prev-result-eyebrow 前回ミッション結果
+                %p.next-mission-card__prev-result-mission
+                  = prev_diagnosis.next_mission_title.presence || prev_diagnosis.next_mission_body
+                %p.next-mission-card__prev-result-message
+                  = mission_result[:success] ? "📈 " : "🔄 "
+                  = mission_result[:message]
+            .next-mission-card__body
+              %span.next-mission-card__eyebrow 次回ミッション
+              - if @diagnosis.next_mission_title.present?
+                %h3.next-mission-card__title= @diagnosis.next_mission_title
+              - if @diagnosis.next_mission_body.present?
+                %p.next-mission-card__text= @diagnosis.next_mission_body
+              %p.next-mission-card__encourage= diagnosis_mission_encourage_text(@diagnosis)
+
       - else
         .singing-diagnosis__ai-comment.singing-diagnosis__ai-comment--locked
           %h2 AIコメント

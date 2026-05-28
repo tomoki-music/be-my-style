@@ -3635,4 +3635,56 @@ module Singing::DiagnosesHelper
       nil
     end
   end
+
+  # ── Next Mission Card helpers ──────────────────────────────────────────
+
+  # 診断に次回ミッションが保存されているか
+  def diagnosis_has_next_mission?(diagnosis)
+    diagnosis&.next_mission_title.present? || diagnosis&.next_mission_body.present?
+  end
+
+  # 前回診断のミッション達成結果を返す。
+  # { success: bool, score_label: string, delta: integer, message: string } or nil
+  def diagnosis_previous_mission_result(current_diagnosis, previous_diagnosis)
+    return nil unless previous_diagnosis
+    return nil unless diagnosis_has_next_mission?(previous_diagnosis)
+
+    result = Singing::MissionProgressAnalyzer.call(current_diagnosis, previous_diagnosis)
+    return nil if result.nil?
+
+    message = if result.success?
+      "#{result.score_label}スコアが +#{result.delta} 伸びました"
+    elsif result.delta.present? && result.delta.positive?
+      "#{result.score_label}スコアが +#{result.delta} 上昇しています"
+    elsif result.delta.present? && result.delta.negative?
+      "#{result.score_label}スコアは今回 #{result.delta} ですが、継続が力になります"
+    else
+      "引き続き#{result.score_label}を意識していきましょう"
+    end
+
+    {
+      success:     result.success?,
+      score_label: result.score_label,
+      delta:       result.delta,
+      message:     message
+    }
+  end
+
+  # ミッションカードに表示する継続応援メッセージ
+  def diagnosis_mission_encourage_text(diagnosis)
+    count = diagnosis&.customer&.singing_diagnoses
+              &.completed
+              &.where(performance_type: diagnosis.performance_type)
+              &.count
+              .to_i
+
+    case count
+    when 1
+      "最初のミッションです。意識するだけで十分です"
+    when 2..5
+      "次回の診断で意識してみましょう"
+    else
+      "積み重ねが確実に演奏を変えていきます"
+    end
+  end
 end

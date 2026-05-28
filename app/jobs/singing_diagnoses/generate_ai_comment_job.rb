@@ -14,22 +14,29 @@ module SingingDiagnoses
       )
 
       comment = AiCommentGenerator.call(diagnosis)
+      mission = Singing::NextMissionExtractor.call(comment)
 
       diagnosis.update!(
         ai_comment: comment,
         ai_comment_status: :ai_comment_completed,
         ai_comment_failure_reason: nil,
-        ai_commented_at: Time.current
+        ai_commented_at: Time.current,
+        next_mission_title: mission&.dig(:title),
+        next_mission_body:  mission&.dig(:body)
       )
     rescue OpenAiResponsesClient::ConfigurationError => e
       Rails.logger.error(ai_comment_error_log(diagnosis_id, e, category: "configuration"))
       if Rails.env.development?
         Rails.logger.info("[GenerateAiCommentJob] Using development fallback ai comment: diagnosis_id=#{diagnosis_id}")
+        fallback_comment  = development_fallback_comment(diagnosis)
+        fallback_mission  = Singing::NextMissionExtractor.call(fallback_comment)
         diagnosis&.update!(
-          ai_comment: development_fallback_comment(diagnosis),
-          ai_comment_status: :ai_comment_completed,
+          ai_comment:         fallback_comment,
+          ai_comment_status:  :ai_comment_completed,
           ai_comment_failure_reason: nil,
-          ai_commented_at: Time.current
+          ai_commented_at:    Time.current,
+          next_mission_title: fallback_mission&.dig(:title),
+          next_mission_body:  fallback_mission&.dig(:body)
         )
       else
         record_failure(diagnosis, e, category: "configuration")

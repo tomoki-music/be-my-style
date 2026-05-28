@@ -36,6 +36,8 @@ class SingingDiagnosis < ApplicationRecord
   validates :ai_comment_status, presence: true
   validates :song_title, length: { maximum: 100 }, allow_blank: true
   validates :ai_comment, length: { maximum: 2000 }, allow_blank: true
+  validates :next_mission_title, length: { maximum: 100 }, allow_blank: true
+  validates :next_mission_body, length: { maximum: 300 }, allow_blank: true
   validates :overall_score, :pitch_score, :rhythm_score, :expression_score,
             numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 100 },
             allow_nil: true

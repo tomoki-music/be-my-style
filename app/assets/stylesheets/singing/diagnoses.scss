@@ -11443,3 +11443,99 @@ $ranking-accent: #7c4dff;
     font-size: 18px;
   }
 }
+
+// ── Next Mission Card ────────────────────────────────────────────────────────
+
+.next-mission-card {
+  margin: 24px 0 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1040 0%, #0f172a 100%);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  box-shadow: 0 4px 24px rgba(99, 60, 200, 0.18);
+}
+
+.next-mission-card__prev-result {
+  padding: 12px 20px;
+  background: rgba(99, 60, 200, 0.12);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.next-mission-card__prev-result--success {
+  background: rgba(52, 211, 153, 0.12);
+  border-bottom-color: rgba(52, 211, 153, 0.25);
+}
+
+.next-mission-card__prev-result-eyebrow {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.8);
+  margin-bottom: 4px;
+}
+
+.next-mission-card__prev-result--success .next-mission-card__prev-result-eyebrow {
+  color: rgba(52, 211, 153, 0.9);
+}
+
+.next-mission-card__prev-result-mission {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 4px;
+  font-style: italic;
+}
+
+.next-mission-card__prev-result-message {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.next-mission-card__body {
+  padding: 20px;
+}
+
+.next-mission-card__eyebrow {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a78bfa;
+  margin-bottom: 10px;
+}
+
+.next-mission-card__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+
+.next-mission-card__text {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin: 0 0 12px;
+}
+
+.next-mission-card__encourage {
+  font-size: 12px;
+  color: rgba(167, 139, 250, 0.7);
+  margin: 0;
+  font-style: italic;
+}
+
+@media (max-width: 480px) {
+  .next-mission-card__body {
+    padding: 16px;
+  }
+
+  .next-mission-card__title {
+    font-size: 15px;
+  }
+}
