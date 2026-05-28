@@ -8,6 +8,14 @@ module SingingDiagnoses
       expression: "表現"
     }.freeze
 
+    VARIATION_SEEDS = %w[
+      growth_focus
+      emotion_focus
+      rhythm_focus
+      confidence_focus
+      artist_focus
+    ].freeze
+
     PERFORMANCE_TYPE_INSTRUCTIONS = {
       "vocal" => [
         "vocalでは、歌唱指導寄りに、音程・リズム・表現・声量・発音・リラックス・ミックスボイスを必要に応じて扱ってください。",
@@ -224,20 +232,29 @@ module SingingDiagnoses
     end
 
     def output_instruction
-      if diagnosis.performance_type_vocal?
-        "出力は見出し付きで、総評、ワンポイントアドバイス、歌声タイプの3項目を中心に900文字以内にしてください。"
-      elsif diagnosis.performance_type_guitar?
-        "出力は見出し付きで、総評、ワンポイントアドバイス、次に意識する練習の3項目を中心に900文字以内にしてください。ギター演奏としてどう聴こえるかがイメージできる自然な日本語にしてください。"
-      elsif diagnosis.performance_type_bass?
-        "出力は見出し付きで、総評、ワンポイントアドバイス、次に意識する練習の3項目を中心に900文字以内にしてください。ベース演奏として曲をどう支えているかがイメージできる自然な日本語にしてください。"
-      elsif diagnosis.performance_type_drums?
-        "出力は見出し付きで、総評、ワンポイントアドバイス、次に意識する練習の3項目を中心に900文字以内にしてください。ドラム演奏としてビートがどう聴こえるか、バンド全体を前に進める土台としてどう機能しているか、テンポ・叩きの粒・強弱・フィルをどう整えるとまとまりやすいかがイメージできる自然な日本語にしてください。"
-      elsif diagnosis.performance_type_keyboard?
-        "出力は見出し付きで、総評、ワンポイントアドバイス、次に意識する練習の3項目を中心に900文字以内にしてください。キーボード演奏として和音のまとまりや音のつながり、タッチの安定がどう聴こえるかがイメージできる自然な日本語にしてください。"
-      elsif diagnosis.performance_type_band?
-        "出力は見出し付きで、総評、ワンポイントアドバイス、次に意識する練習の3項目を中心に900文字以内にしてください。バンド全体として、各パートの噛み合い方、音量バランス、リズムの揃い、グルーヴ、ダイナミクスがどう聴こえるかをイメージできる自然な日本語にしてください。"
+      base = type_specific_output_instruction
+      if diagnosis.priority_analysis?
+        base + "前回との比較・成長ストーリー・次回ミッションを含め、900文字以内で詳しく作成してください。"
       else
-        "出力は見出し付きで、総評、ワンポイントアドバイス、次に意識する練習の3項目を中心に900文字以内にしてください。"
+        base + "良かった点・改善テーマ・次回ミッションを簡潔にまとめてください。500文字以内を目安にしてください。"
+      end
+    end
+
+    def type_specific_output_instruction
+      if diagnosis.performance_type_vocal?
+        "出力は見出し付きで、総評、ワンポイントアドバイス、歌声タイプの3項目を中心にしてください。"
+      elsif diagnosis.performance_type_guitar?
+        "出力は見出し付きで、総評、ワンポイントアドバイス、次に意識する練習の3項目を中心にしてください。ギター演奏としてどう聴こえるかがイメージできる自然な日本語にしてください。"
+      elsif diagnosis.performance_type_bass?
+        "出力は見出し付きで、総評、ワンポイントアドバイス、次に意識する練習の3項目を中心にしてください。ベース演奏として曲をどう支えているかがイメージできる自然な日本語にしてください。"
+      elsif diagnosis.performance_type_drums?
+        "出力は見出し付きで、総評、ワンポイントアドバイス、次に意識する練習の3項目を中心にしてください。ドラム演奏としてビートがどう聴こえるか、バンド全体を前に進める土台としてどう機能しているか、テンポ・叩きの粒・強弱・フィルをどう整えるとまとまりやすいかがイメージできる自然な日本語にしてください。"
+      elsif diagnosis.performance_type_keyboard?
+        "出力は見出し付きで、総評、ワンポイントアドバイス、次に意識する練習の3項目を中心にしてください。キーボード演奏として和音のまとまりや音のつながり、タッチの安定がどう聴こえるかがイメージできる自然な日本語にしてください。"
+      elsif diagnosis.performance_type_band?
+        "出力は見出し付きで、総評、ワンポイントアドバイス、次に意識する練習の3項目を中心にしてください。バンド全体として、各パートの噛み合い方、音量バランス、リズムの揃い、グルーヴ、ダイナミクスがどう聴こえるかをイメージできる自然な日本語にしてください。"
+      else
+        "出力は見出し付きで、総評、ワンポイントアドバイス、次に意識する練習の3項目を中心にしてください。"
       end
     end
 
@@ -723,20 +740,27 @@ module SingingDiagnoses
 
     # prompt に渡す前回コンテキスト
     # first_time: true のとき → 初回診断
-    # first_time: false のとき → 直近 history・score_delta・focus_metric を含む
+    # first_time: false のとき → 直近 history・score_delta・focus_metric・best_growth を含む
     def previous_comment_context
       if previous_diagnoses.empty?
-        { first_time: true }
+        {
+          first_time:     true,
+          streak_days:    streak_days,
+          variation_seed: variation_seed
+        }
       else
         {
-          first_time: false,
-          focus_metric: focus_metric_label,
-          score_delta: score_delta_summary(previous_diagnoses.first),
+          first_time:     false,
+          focus_metric:   focus_metric_label,
+          score_delta:    score_delta_summary(previous_diagnoses.first),
+          best_growth:    best_growth_context,
+          streak_days:    streak_days,
+          variation_seed: variation_seed,
           history: previous_diagnoses.map do |d|
             {
-              overall: d.overall_score,
-              pitch: d.pitch_score,
-              rhythm: d.rhythm_score,
+              overall:    d.overall_score,
+              pitch:      d.pitch_score,
+              rhythm:     d.rhythm_score,
               expression: d.expression_score,
               ai_comment: d.ai_comment.to_s.truncate(200)
             }
@@ -748,9 +772,10 @@ module SingingDiagnoses
     # instructions に追加するマンネリ防止・step-up ガイダンス
     def step_up_instruction
       base = [
-        "previous_contextのfocus_metricが示す項目を今回の練習テーマとして扱ってください。",
-        "コメントには必ず: ①今回の良かった点を1つ具体的に褒める ②focus_metricの練習テーマを1つに絞る ③すぐ試せる練習方法を1つ入れる、の3点を含めてください。",
-        "専門用語を使いすぎず、ユーザーが続けたくなるやさしく前向きな文体にしてください。"
+        "コメントは必ず「① 今回の具体的な良かった点を褒める」→「② 現在の改善テーマを1点絞る」→「③ すぐ試せる次回ミッション（小さな挑戦）を1つ示す」の順で構成してください。",
+        "previous_contextのfocus_metric（最も低いスコア項目）を今回の改善テーマとして扱ってください。",
+        "専門用語を使いすぎず、ユーザーが続けたくなるやさしく前向きな文体にしてください。",
+        "「素晴らしいです」「頑張りましょう」を毎回使うことは禁止。同じ締め・フレーズ・語尾を繰り返さないでください。"
       ]
 
       if previous_diagnoses.any?
@@ -758,13 +783,85 @@ module SingingDiagnoses
           "previous_context（first_time: false）: historyの直近ai_commentに含まれる表現・フレーズ・語尾をなるべく避け、今回のコメントを新鮮にしてください。",
           "score_deltaの中で絶対値が最も大きく変化した項目について1文だけ自然に触れてください（称賛・振り返りどちらでも可）。"
         ]
+
+        bg = best_growth_context
+        if bg[:label].present?
+          base << "previous_contextのbest_growth（「#{bg[:label]}」が#{bg[:delta_label]}伸びた）を褒めのメインテーマとして使ってください。"
+        end
+
+        if streak_days >= 3
+          base << "previous_contextのstreak_days（#{streak_days}日連続継続）を、ユーザーの努力への共感として1文自然に添えてください。"
+        end
       else
         base += [
           "previous_context（first_time: true）: 初回診断として、はじめての挑戦に温かく応えるトーンで一文添えてください。"
         ]
       end
 
-      base
+      base + variation_instruction
+    end
+
+    def variation_instruction
+      case variation_seed
+      when "growth_focus"
+        ["variation（growth_focus）: 成長の軌跡を中心に据えてください。スコアの変化や積み上げを前向きに描写してください。"]
+      when "emotion_focus"
+        ["variation（emotion_focus）: 感情表現・音楽への気持ちを中心に据えてください。技術より歌への気持ちを引き出す表現にしてください。"]
+      when "rhythm_focus"
+        ["variation（rhythm_focus）: リズムとグルーヴ感を中心に据えてください。ノリや体の動かし方を練習ヒントに盛り込んでください。"]
+      when "confidence_focus"
+        ["variation（confidence_focus）: 自信と楽しさを中心に据えてください。「もっと歌いたい」気持ちを引き出すトーンにしてください。"]
+      when "artist_focus"
+        ["variation（artist_focus）: アーティスト性・個性を中心に据えてください。その人だけの歌の魅力を言語化するトーンにしてください。"]
+      else
+        []
+      end
+    end
+
+    # ── Phase 10-W: パーソナライズ補助メソッド ──────────────────────────────
+
+    def variation_seed
+      @variation_seed ||= VARIATION_SEEDS.sample
+    end
+
+    def streak_days
+      @streak_days ||= begin
+        return 0 unless diagnosis.customer
+        Singing::StreakCalculator.call(diagnosis.customer)
+      rescue StandardError
+        0
+      end
+    end
+
+    # 今回と直前診断を比較して最も伸びた項目を返す
+    def best_growth_context
+      @best_growth_context ||= begin
+        previous = previous_diagnoses.first
+        return {} if previous.nil?
+
+        items = [
+          { label: "音程",  current: diagnosis.pitch_score,      previous: previous.pitch_score },
+          { label: "リズム", current: diagnosis.rhythm_score,     previous: previous.rhythm_score },
+          { label: "表現",  current: diagnosis.expression_score,  previous: previous.expression_score },
+          { label: "総合",  current: diagnosis.overall_score,     previous: previous.overall_score }
+        ]
+
+        best = items
+          .reject { |item| item[:current].nil? || item[:previous].nil? }
+          .map    { |item| item.merge(delta: item[:current].to_i - item[:previous].to_i) }
+          .select { |item| item[:delta].positive? }
+          .max_by { |item| item[:delta] }
+
+        return {} if best.nil?
+
+        {
+          label:       best[:label],
+          delta:       best[:delta],
+          delta_label: "+#{best[:delta]}"
+        }
+      rescue StandardError
+        {}
+      end
     end
   end
 end

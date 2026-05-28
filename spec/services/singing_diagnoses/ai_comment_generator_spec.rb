@@ -1078,5 +1078,198 @@ RSpec.describe SingingDiagnoses::AiCommentGenerator do
         expect(client).to have_received(:generate_text)
       end
     end
+
+    describe "Phase 10-W: AIコメントパーソナライズ v2" do
+      it "best_growth が previous_context に含まれること（前回より表現が伸びた場合）" do
+        customer = FactoryBot.create(:customer, domain_name: "singing")
+        FactoryBot.create(
+          :singing_diagnosis,
+          customer: customer,
+          status: :completed,
+          overall_score: 70,
+          pitch_score: 68,
+          rhythm_score: 66,
+          expression_score: 60,
+          created_at: 1.day.ago
+        )
+        diagnosis = FactoryBot.create(
+          :singing_diagnosis,
+          customer: customer,
+          status: :completed,
+          overall_score: 76,
+          pitch_score: 70,
+          rhythm_score: 68,
+          expression_score: 72,
+          created_at: Time.current
+        )
+        client = instance_double(
+          SingingDiagnoses::OpenAiResponsesClient,
+          generate_text: "成長コメントです。"
+        )
+
+        described_class.call(diagnosis, client: client)
+
+        expect(client).to have_received(:generate_text) do |args|
+          input = JSON.parse(args[:input])
+          best_growth = input.dig("previous_context", "best_growth")
+
+          expect(best_growth).to be_present
+          expect(best_growth["label"]).to eq "表現"
+          expect(best_growth["delta"]).to eq 12
+          expect(best_growth["delta_label"]).to eq "+12"
+          expect(args[:instructions]).to include("best_growth")
+        end
+      end
+
+      it "streak_days が previous_context に含まれること" do
+        customer = FactoryBot.create(:customer, domain_name: "singing")
+        FactoryBot.create(
+          :singing_diagnosis,
+          customer: customer,
+          status: :completed,
+          overall_score: 70,
+          pitch_score: 70,
+          rhythm_score: 70,
+          expression_score: 70,
+          created_at: 1.day.ago
+        )
+        diagnosis = FactoryBot.create(
+          :singing_diagnosis,
+          customer: customer,
+          status: :completed,
+          overall_score: 74,
+          pitch_score: 72,
+          rhythm_score: 72,
+          expression_score: 72,
+          created_at: Time.current
+        )
+        client = instance_double(
+          SingingDiagnoses::OpenAiResponsesClient,
+          generate_text: "streakコメントです。"
+        )
+
+        described_class.call(diagnosis, client: client)
+
+        expect(client).to have_received(:generate_text) do |args|
+          input = JSON.parse(args[:input])
+          expect(input.dig("previous_context", "streak_days")).to be_a(Integer)
+        end
+      end
+
+      it "variation_seed が previous_context に含まれること（初回・リピートどちらも）" do
+        diagnosis = FactoryBot.create(
+          :singing_diagnosis,
+          status: :completed,
+          overall_score: 72,
+          pitch_score: 70,
+          rhythm_score: 68,
+          expression_score: 74
+        )
+        client = instance_double(
+          SingingDiagnoses::OpenAiResponsesClient,
+          generate_text: "variationコメントです。"
+        )
+
+        described_class.call(diagnosis, client: client)
+
+        expect(client).to have_received(:generate_text) do |args|
+          input = JSON.parse(args[:input])
+          seed = input.dig("previous_context", "variation_seed")
+
+          expect(seed).to be_present
+          expect(SingingDiagnoses::AiCommentGenerator::VARIATION_SEEDS).to include(seed)
+          expect(args[:instructions]).to include("variation")
+        end
+      end
+
+      it "全スコアが前回より下がった場合 best_growth は空であること" do
+        customer = FactoryBot.create(:customer, domain_name: "singing")
+        FactoryBot.create(
+          :singing_diagnosis,
+          customer: customer,
+          status: :completed,
+          overall_score: 80,
+          pitch_score: 80,
+          rhythm_score: 80,
+          expression_score: 80,
+          created_at: 1.day.ago
+        )
+        diagnosis = FactoryBot.create(
+          :singing_diagnosis,
+          customer: customer,
+          status: :completed,
+          overall_score: 74,
+          pitch_score: 72,
+          rhythm_score: 70,
+          expression_score: 76,
+          created_at: Time.current
+        )
+        client = instance_double(
+          SingingDiagnoses::OpenAiResponsesClient,
+          generate_text: "下降コメントです。"
+        )
+
+        expect { described_class.call(diagnosis, client: client) }.not_to raise_error
+        expect(client).to have_received(:generate_text) do |args|
+          input = JSON.parse(args[:input])
+          expect(input.dig("previous_context", "best_growth")).to eq({})
+        end
+      end
+
+      it "customerがnilでも streak_days が 0 として落ちないこと" do
+        diagnosis = FactoryBot.build_stubbed(
+          :singing_diagnosis,
+          status: :completed,
+          overall_score: 72,
+          pitch_score: 70,
+          rhythm_score: 68,
+          expression_score: 74
+        )
+        allow(diagnosis).to receive(:customer).and_return(nil)
+        allow(diagnosis).to receive(:previous_completed_diagnoses).and_return([])
+
+        generator = described_class.new(diagnosis)
+        expect(generator.send(:streak_days)).to eq 0
+      end
+
+      it "streak_days >= 3 の場合 instructions に streak_days への言及が含まれること" do
+        customer = FactoryBot.create(:customer, domain_name: "singing")
+        3.times do |i|
+          FactoryBot.create(
+            :singing_diagnosis,
+            customer: customer,
+            status: :completed,
+            overall_score: 70 + i,
+            pitch_score: 70,
+            rhythm_score: 70,
+            expression_score: 70,
+            created_at: (3 - i).days.ago
+          )
+        end
+        diagnosis = FactoryBot.create(
+          :singing_diagnosis,
+          customer: customer,
+          status: :completed,
+          overall_score: 75,
+          pitch_score: 75,
+          rhythm_score: 75,
+          expression_score: 75,
+          created_at: Time.current
+        )
+        allow(Singing::StreakCalculator).to receive(:call).and_return(4)
+
+        client = instance_double(
+          SingingDiagnoses::OpenAiResponsesClient,
+          generate_text: "streakコメントです。"
+        )
+
+        described_class.call(diagnosis, client: client)
+
+        expect(client).to have_received(:generate_text) do |args|
+          expect(args[:instructions]).to include("streak_days")
+          expect(args[:instructions]).to include("4日連続")
+        end
+      end
+    end
   end
 end
