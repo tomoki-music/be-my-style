@@ -51,6 +51,17 @@ jobs:
           echo "[deploy] START: $(date '+%H:%M:%S')"
           echo "[deploy] FORCE_ASSETS_CLOBBER: ${FORCE_ASSETS_CLOBBER:-false}"
 
+          echo "[deploy] === resource snapshot ==="
+          echo "[deploy] memory:"
+          free -h
+          echo "[deploy] disk:"
+          df -h
+          echo "[deploy] swap:"
+          swapon --show 2>/dev/null || echo "[deploy] WARNING: No swap detected — OOM risk during assets:precompile"
+          echo "[deploy] disk usage (assets/tmp/log):"
+          du -sh "${DEPLOY_PATH}/public/assets" "${DEPLOY_PATH}/public/packs" "${DEPLOY_PATH}/tmp" "${DEPLOY_PATH}/log" 2>/dev/null || true
+          echo "[deploy] ========================="
+
           log_step_start() {
             echo "[deploy] $1 start: $(date '+%H:%M:%S')"
           }
@@ -167,11 +178,22 @@ jobs:
           fi
 
           if [ "$SHOULD_PRECOMPILE_ASSETS" = "true" ]; then
+            echo "[deploy] --- pre-precompile resource check ---"
+            echo "[deploy] memory:"
+            free -h
+            echo "[deploy] disk:"
+            df -h
+            echo "[deploy] swap:"
+            swapon --show 2>/dev/null || echo "[deploy] WARNING: No swap — OOM risk"
+            echo "[deploy] -------------------------------------"
+
             echo "[deploy] assets:precompile start: $(date '+%H:%M:%S')"
-            (RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:precompile) &
+            LOOP_COUNT=0
+            (RAILS_ENV=production NODE_OPTIONS=--max_old_space_size=256 ~/.rbenv/shims/bundle exec rails assets:precompile) &
             PRECOMPILE_PID=$!
             while kill -0 "$PRECOMPILE_PID" 2>/dev/null; do
-              echo "[deploy] assets:precompile still running: $(date '+%H:%M:%S')"
+              echo "[deploy] assets:precompile still running: $(date '+%H:%M:%S') mem=$(free -h | awk '/^Mem:/{print $3"/"$2}') disk=$(df -h / | awk 'NR==2{print $5}')"
+              LOOP_COUNT=$((LOOP_COUNT + 1))
               sleep 30
             done
 
@@ -183,6 +205,21 @@ jobs:
               fi
             else
               echo "[deploy] ERROR: assets:precompile FAILED. Aborting deploy."
+              echo "[deploy] === failure diagnostics ==="
+              echo "[deploy] memory:"
+              free -h
+              echo "[deploy] disk:"
+              df -h
+              echo "[deploy] recent OOM events:"
+              dmesg --time-format reltime 2>/dev/null | grep -iE "killed process|oom.killer|out of memory" | tail -5 || true
+              SWAP_TOTAL=$(free -h | awk '/^Swap:/{print $2}')
+              DISK_FREE=$(df -h / | awk 'NR==2{print $4}')
+              echo "[deploy] HINT: precompile failed — check the above."
+              echo "[deploy] HINT:   swap total: ${SWAP_TOTAL} (0 or small → OOM risk)"
+              echo "[deploy] HINT:   disk free : ${DISK_FREE} (< 500MB → disk full risk)"
+              echo "[deploy] HINT: Fix swap: sudo dd if=/dev/zero of=/swapfile bs=1M count=512 && sudo mkswap /swapfile && sudo swapon /swapfile"
+              echo "[deploy] HINT: Fix disk: du -sh ~/be-my-style/log/* ~/be-my-style/tmp/cache 2>/dev/null"
+              echo "[deploy] =============================="
               if [ "$FORCE_CLOBBER" = "true" ] && [ -d "$BACKUP_DIR" ]; then
                 echo "[deploy] Restoring assets from backup: $BACKUP_DIR"
                 rm -rf public/assets public/packs
