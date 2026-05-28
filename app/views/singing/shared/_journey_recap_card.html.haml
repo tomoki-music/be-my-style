@@ -1,0 +1,26 @@
+- recap = local_assigns[:recap]
+
+.journey-recap-card
+  .journey-recap-card__inner
+    %p.journey-recap-card__eyebrow YOUR JOURNEY
+
+    .journey-recap-card__stats
+      .journey-recap-card__stat
+        %span.journey-recap-card__stat-value= recap.diagnosis_count
+        %span.journey-recap-card__stat-label Diagnoses
+      .journey-recap-card__stat
+        %span.journey-recap-card__stat-value= "#{recap.streak_days}日"
+        %span.journey-recap-card__stat-label Streak
+      - if recap.most_improved_label.present? && recap.most_improved_delta.to_i > 0
+        .journey-recap-card__stat.journey-recap-card__stat--highlight
+          %span.journey-recap-card__stat-value= "+#{recap.most_improved_delta}"
+          %span.journey-recap-card__stat-label= recap.most_improved_label
+
+    .journey-recap-card__stories
+      - if recap.growth_story.present?
+        %p.journey-recap-card__growth-story= recap.growth_story
+      - if recap.journey_story.present?
+        %p.journey-recap-card__journey-story= recap.journey_story
+
+    - if recap.coach_reflection.present?
+      %p.journey-recap-card__reflection= recap.coach_reflection

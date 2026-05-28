@@ -69,6 +69,9 @@
     - if dashboard&.growth_type_card.present?
       = render "singing/shared/growth_type_card", card: dashboard.growth_type_card
 
+    - if dashboard&.journey_recap&.has_story
+      = render "singing/shared/journey_recap_card", recap: dashboard.journey_recap
+
     - if dashboard&.singer_rank.present?
       .home-growth-dashboard__level
         .home-growth-dashboard__level-header

@@ -19,6 +19,7 @@ module Singing
       :singer_next_rank,
       :singing_xp,
       :growth_type_card,
+      :journey_recap,
       keyword_init: true
     )
 
@@ -65,7 +66,8 @@ module Singing
           streak:          summary.streak_days,
           level:           @customer.singer_rank&.level,
           diagnosis_count: summary.diagnosis_count
-        )
+        ),
+        journey_recap:        Singing::JourneyRecapBuilder.call(@customer)
       )
     end
 
@@ -84,7 +86,8 @@ module Singing
         singer_rank_progress: nil,
         singer_next_rank:     nil,
         singing_xp:           0,
-        growth_type_card:     nil
+        growth_type_card:     nil,
+        journey_recap:        nil
       )
     end
   end
