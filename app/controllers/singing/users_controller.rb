@@ -68,6 +68,7 @@ class Singing::UsersController < Singing::BaseController
       :profile_image,
       :url,
       :singing_profile_comment,
+      :singing_coach_personality,
       part_ids: [],
       genre_ids: []
     )

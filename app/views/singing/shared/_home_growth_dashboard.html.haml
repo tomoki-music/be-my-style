@@ -4,6 +4,14 @@
   .home-growth-dashboard__inner
     %p.home-growth-dashboard__eyebrow 今日のSinging Dashboard
 
+    - if dashboard&.coach_message.present?
+      - cm = dashboard.coach_message
+      .home-growth-dashboard__coach{ class: "home-growth-dashboard__coach--#{cm.personality}" }
+        .home-growth-dashboard__coach-header
+          %span.home-growth-dashboard__coach-icon= cm.coach_icon
+          %span.home-growth-dashboard__coach-label= cm.coach_label
+        %p.home-growth-dashboard__coach-message= cm.message
+
     - if dashboard&.has_diagnoses
       .home-growth-dashboard__stats
         .home-growth-dashboard__stat
@@ -26,24 +34,23 @@
             = dashboard.summary.recent_growth_label
             %span.home-growth-dashboard__growth-delta= dashboard.summary.recent_growth_delta_label
 
+      - if dashboard.daily_mission.present?
+        .home-growth-dashboard__daily-mission
+          %p.home-growth-dashboard__daily-mission-eyebrow 今日のミッション
+          %h3.home-growth-dashboard__daily-mission-title= dashboard.daily_mission.title
+          %p.home-growth-dashboard__daily-mission-body= dashboard.daily_mission.body
+
       .home-growth-dashboard__mission
         - if dashboard.next_mission_title.present? || dashboard.next_mission_body.present?
           .home-growth-dashboard__mission-inner
-            %p.home-growth-dashboard__mission-eyebrow 次回ミッション
+            %p.home-growth-dashboard__mission-eyebrow 前回診断からのポイント
             - if dashboard.next_mission_title.present?
               %h3.home-growth-dashboard__mission-title= dashboard.next_mission_title
             - if dashboard.next_mission_body.present?
               %p.home-growth-dashboard__mission-body= dashboard.next_mission_body
         - else
           .home-growth-dashboard__mission-empty
-            %p 次の診断で、あなた専用のミッションが表示されます
-
-      .home-growth-dashboard__cta
-        = link_to "歌唱診断をはじめる", new_singing_diagnosis_path, class: "home-growth-dashboard__cta-primary"
-        = link_to "Growth Journeyを見る", singing_diagnoses_path, class: "home-growth-dashboard__cta-secondary"
-      .home-growth-dashboard__sub-cta
-        = link_to "ランキング", singing_rankings_path, class: "home-growth-dashboard__sub-cta-link"
-        = link_to "プロフィール", singing_user_path(current_customer), class: "home-growth-dashboard__sub-cta-link"
+            %p 次の診断で、あなた専用のフィードバックが表示されます
 
     - else
       .home-growth-dashboard__empty
@@ -51,5 +58,35 @@
         %p.home-growth-dashboard__empty-body
           最初の診断をすると、
           %br
-          スコア・成長記録・次回ミッションがここに表示されます。
-        = link_to "歌唱診断をはじめる", new_singing_diagnosis_path, class: "home-growth-dashboard__cta-primary"
+          スコア・成長記録・AIコーチからのメッセージがここに表示されます。
+
+      - if dashboard&.daily_mission.present?
+        .home-growth-dashboard__daily-mission
+          %p.home-growth-dashboard__daily-mission-eyebrow 今日のミッション
+          %h3.home-growth-dashboard__daily-mission-title= dashboard.daily_mission.title
+          %p.home-growth-dashboard__daily-mission-body= dashboard.daily_mission.body
+
+    - if dashboard&.singer_rank.present?
+      .home-growth-dashboard__level
+        .home-growth-dashboard__level-header
+          %span.home-growth-dashboard__level-icon= dashboard.singer_rank.icon
+          %span.home-growth-dashboard__level-label= dashboard.singer_rank.label
+          %span.home-growth-dashboard__level-xp= "#{dashboard.singing_xp} XP"
+        - if dashboard.singer_next_rank.present? && dashboard.singer_rank_progress.present?
+          - prog = dashboard.singer_rank_progress
+          .home-growth-dashboard__level-bar-wrap
+            .home-growth-dashboard__level-bar{ style: "width: #{prog[:percent]}%" }
+          %p.home-growth-dashboard__level-next
+            Next:
+            %strong= dashboard.singer_next_rank.label
+            \— あと
+            %strong= "#{prog[:xp_to_next]} XP"
+        - else
+          %p.home-growth-dashboard__level-max MAX レベル達成
+
+    .home-growth-dashboard__cta
+      = link_to "歌唱診断をはじめる", new_singing_diagnosis_path, class: "home-growth-dashboard__cta-primary"
+      = link_to "Growth Journeyを見る", singing_diagnoses_path, class: "home-growth-dashboard__cta-secondary"
+    .home-growth-dashboard__sub-cta
+      = link_to "ランキング", singing_rankings_path, class: "home-growth-dashboard__sub-cta-link"
+      = link_to "プロフィール", singing_user_path(current_customer), class: "home-growth-dashboard__sub-cta-link"

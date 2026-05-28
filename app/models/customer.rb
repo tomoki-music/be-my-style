@@ -367,6 +367,12 @@ class Customer < ApplicationRecord
 
   enum is_owner: { general: 0, admin: 1, community_owner: 2 }
 
+  enum singing_coach_personality: {
+    passionate: 0,
+    gentle:     1,
+    artist:     2
+  }, _prefix: :coach
+
   def self.is_owners_i18n
     is_owners.keys.index_with { |k| I18n.t("activerecord.attributes.customer.is_owner.#{k}") }
   end

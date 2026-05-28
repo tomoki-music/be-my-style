@@ -27,6 +27,13 @@
             = f.label :singing_profile_comment, "一言コメント"
             = f.text_field :singing_profile_comment, maxlength: 120, placeholder: "例：高音を安定させる練習中です"
           .singing-profile-edit__field
+            = f.label :singing_coach_personality, "AIコーチのスタイル"
+            %p.singing-profile-edit__hint ホームに表示されるAIコーチのメッセージトーンが変わります。
+            = f.select :singing_coach_personality,
+                [["🔥 熱血コーチ", "passionate"], ["🌿 優しい先生", "gentle"], ["🎨 アーティスト", "artist"]],
+                {},
+                class: "singing-profile-edit__select"
+          .singing-profile-edit__field
             = f.label :url, "SNSリンク・Webサイト"
             = f.url_field :url, placeholder: "https://..."
 

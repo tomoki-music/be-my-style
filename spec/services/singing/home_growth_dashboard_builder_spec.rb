@@ -101,5 +101,59 @@ RSpec.describe Singing::HomeGrowthDashboardBuilder do
         expect(described_class.call(customer).summary.diagnosis_count).to eq 2
       end
     end
+
+    context "Phase 11-A: 新フィールド" do
+      context "customer が nil の場合" do
+        it "coach_message が nil であること" do
+          expect(described_class.call(nil).coach_message).to be_nil
+        end
+
+        it "daily_mission が nil であること" do
+          expect(described_class.call(nil).daily_mission).to be_nil
+        end
+
+        it "singer_rank が nil であること" do
+          expect(described_class.call(nil).singer_rank).to be_nil
+        end
+
+        it "singing_xp が 0 であること" do
+          expect(described_class.call(nil).singing_xp).to eq(0)
+        end
+      end
+
+      context "診断なしの customer" do
+        it "coach_message が存在すること" do
+          result = described_class.call(customer)
+          expect(result.coach_message).to be_present
+          expect(result.coach_message.message).to be_present
+        end
+
+        it "singer_rank が返ること" do
+          result = described_class.call(customer)
+          expect(result.singer_rank).to be_a(Singing::SingerRankService::Rank)
+        end
+      end
+
+      context "完了済み診断がある customer" do
+        before { completed_diagnosis(overall: 70) }
+
+        it "coach_message が存在すること" do
+          result = described_class.call(customer)
+          expect(result.coach_message).to be_present
+        end
+
+        it "daily_mission が存在すること" do
+          result = described_class.call(customer)
+          expect(result.daily_mission).to be_a(Singing::DailyMissionSelector::Result)
+          expect(result.daily_mission.title).to be_present
+        end
+
+        it "singer_rank_progress が Hash であること" do
+          result = described_class.call(customer)
+          expect(result.singer_rank_progress).to be_a(Hash)
+          expect(result.singer_rank_progress[:percent]).to be_between(0, 100)
+        end
+      end
+    end
   end
 end

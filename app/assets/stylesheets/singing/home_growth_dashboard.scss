@@ -37,6 +37,60 @@
     padding: 20px 4px 8px;
   }
 
+  // ── Coach message ────────────────────────────────────────────────────────────
+
+  &__coach {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(167, 139, 250, 0.25);
+    border-left: 3px solid rgba(167, 139, 250, 0.7);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+
+    &--passionate {
+      border-left-color: rgba(251, 113, 133, 0.8);
+      background: rgba(251, 113, 133, 0.06);
+    }
+
+    &--gentle {
+      border-left-color: rgba(74, 222, 128, 0.7);
+      background: rgba(74, 222, 128, 0.05);
+    }
+
+    &--artist {
+      border-left-color: rgba(167, 139, 250, 0.8);
+      background: rgba(167, 139, 250, 0.06);
+    }
+  }
+
+  &__coach-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  &__coach-icon {
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  &__coach-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  &__coach-message {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.65;
+    margin: 0;
+  }
+
   // ── Eyebrow ─────────────────────────────────────────────────────────────────
 
   &__eyebrow {
@@ -165,6 +219,116 @@
     margin: 0;
 
     p { margin: 0; }
+  }
+
+  // ── Daily mission card ───────────────────────────────────────────────────────
+
+  &__daily-mission {
+    background: rgba(250, 204, 21, 0.06);
+    border: 1px solid rgba(250, 204, 21, 0.22);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+
+  &__daily-mission-eyebrow {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(250, 204, 21, 0.85);
+    margin: 0 0 6px;
+
+    &::before {
+      content: '✦ ';
+    }
+  }
+
+  &__daily-mission-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 4px;
+    line-height: 1.4;
+  }
+
+  &__daily-mission-body {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  // ── Growth level bar ─────────────────────────────────────────────────────────
+
+  &__level {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+  }
+
+  &__level-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  &__level-icon {
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  &__level-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    flex: 1;
+  }
+
+  &__level-xp {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(167, 139, 250, 0.8);
+    letter-spacing: 0.04em;
+  }
+
+  &__level-bar-wrap {
+    width: 100%;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+
+  &__level-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 100%);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+    min-width: 4px;
+  }
+
+  &__level-next {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0;
+
+    strong {
+      color: rgba(255, 255, 255, 0.65);
+      font-weight: 600;
+    }
+  }
+
+  &__level-max {
+    font-size: 11px;
+    color: rgba(250, 204, 21, 0.7);
+    margin: 4px 0 0;
+    text-align: center;
+    letter-spacing: 0.08em;
   }
 
   // ── CTA buttons ─────────────────────────────────────────────────────────────
