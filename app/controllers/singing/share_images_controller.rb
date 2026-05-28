@@ -20,6 +20,8 @@ class Singing::ShareImagesController < Singing::BaseController
     @wrapped_year = wrapped_reference_time.year if capture_target == "monthly-wrapped"
     @wrapped_month = wrapped_reference_time.month if capture_target == "monthly-wrapped"
     @wrapped_year = yearly_wrapped_reference_time.year if capture_target == "yearly-wrapped"
+    @singer_story_year = wrapped_reference_time.year if capture_target == "singer-story"
+    @singer_story_month = wrapped_reference_time.month if capture_target == "singer-story"
     @achievement_wrapped_month_str = achievement_wrapped_month_str if capture_target == "monthly-achievement-wrapped"
     @yearly_rewind_year = yearly_rewind_year if capture_target == "yearly-achievement-rewind"
     @diagnosis_id = params[:diagnosis_id].to_i if capture_target == "diagnosis-result"
@@ -226,6 +228,11 @@ class Singing::ShareImagesController < Singing::BaseController
       diagnosis = share_image_customer.singing_diagnoses.completed.find_by(id: params[:diagnosis_id].to_i)
       diagnosis ||= share_image_customer.singing_diagnoses.completed.order(created_at: :desc, id: :desc).first
       Singing::ShareImages::DiagnosisResultCardBuilder.call(diagnosis)
+    when "singer-story"
+      Singing::ShareImages::SingerStoryCardBuilder.call(
+        share_image_customer,
+        reference_time: wrapped_reference_time
+      )
     end
   end
 
@@ -238,6 +245,8 @@ class Singing::ShareImagesController < Singing::BaseController
 
   def capture_no_data_message
     case capture_target
+    when "singer-story"
+      "この月の診断記録がないため、Singer Story を生成できませんでした。"
     when "yearly-achievement-rewind"
       "この年のバッジがないため、シェアカードを生成できませんでした。診断を続けてバッジを獲得すると表示されます。"
     when "monthly-achievement-wrapped"
@@ -261,6 +270,8 @@ class Singing::ShareImagesController < Singing::BaseController
 
   def share_image_unavailable_message
     case capture_target
+    when "singer-story"
+      "この月の診断記録がないため、Singer Story は表示できません。"
     when "yearly-achievement-rewind"
       "この年のバッジがないため、Yearly Achievement Rewind は表示できません。"
     when "diagnosis-result"

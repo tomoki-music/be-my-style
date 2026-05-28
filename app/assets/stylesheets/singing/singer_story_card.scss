@@ -1,0 +1,263 @@
+.singer-story-card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  min-height: 560px;
+  margin: 0 auto;
+  background: #080812;
+  border: 1px solid rgba(120, 60, 220, 0.35);
+  border-radius: 20px;
+  overflow: hidden;
+
+  &__bg-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% -10%, rgba(110, 40, 200, 0.22) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 90% 80%, rgba(30, 60, 180, 0.15) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 10% 60%, rgba(140, 20, 180, 0.10) 0%, transparent 70%);
+  }
+
+  &__inner {
+    position: relative;
+    z-index: 1;
+    padding: 32px 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  // ── Header ──────────────────────────────────────────
+  &__header {
+    text-align: center;
+  }
+
+  &__eyebrow {
+    margin: 0 0 6px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(160, 110, 255, 0.65);
+  }
+
+  &__period {
+    margin: 0 0 4px;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 6px;
+    color: #ede0ff;
+    text-shadow: 0 0 24px rgba(180, 100, 255, 0.5);
+  }
+
+  &__brand {
+    margin: 0;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: rgba(140, 100, 200, 0.5);
+    text-transform: uppercase;
+  }
+
+  // ── Growth Type ──────────────────────────────────────
+  &__type {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 20px;
+    background: rgba(120, 50, 220, 0.12);
+    border: 1px solid rgba(130, 60, 220, 0.28);
+    border-radius: 12px;
+  }
+
+  &__type-icon {
+    font-size: 22px;
+  }
+
+  &__type-label {
+    font-size: 16px;
+    font-weight: 700;
+    color: #d8b8ff;
+    letter-spacing: 0.5px;
+  }
+
+  // ── Stats ────────────────────────────────────────────
+  &__stats {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  &__stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 72px;
+    padding: 12px 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(180, 140, 255, 0.12);
+    border-radius: 10px;
+
+    &--streak {
+      border-color: rgba(100, 180, 255, 0.3);
+      background: rgba(60, 100, 220, 0.1);
+
+      .singer-story-card__stat-num {
+        color: #93c5fd;
+        text-shadow: 0 0 12px rgba(100, 180, 255, 0.5);
+      }
+    }
+
+    &--growth {
+      border-color: rgba(160, 100, 255, 0.35);
+      background: rgba(120, 50, 200, 0.12);
+
+      .singer-story-card__stat-num {
+        color: #c084fc;
+        text-shadow: 0 0 12px rgba(192, 132, 252, 0.5);
+      }
+    }
+  }
+
+  &__stat-num {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #e8d5ff;
+  }
+
+  &__stat-unit {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(180, 150, 220, 0.55);
+  }
+
+  // ── Singer Rank ──────────────────────────────────────
+  &__rank {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  &__rank-icon {
+    font-size: 14px;
+  }
+
+  &__rank-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(200, 170, 240, 0.65);
+    letter-spacing: 1px;
+  }
+
+  // ── Message ──────────────────────────────────────────
+  &__message {
+    padding: 16px 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 2px solid rgba(140, 60, 230, 0.5);
+    border-radius: 0 10px 10px 0;
+  }
+
+  &__message-line {
+    margin: 0 0 6px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: rgba(220, 200, 255, 0.88);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // ── Coach Reflection (Premium) ───────────────────────
+  &__reflection {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(100, 40, 180, 0.1);
+    border: 1px solid rgba(130, 60, 200, 0.2);
+    border-radius: 10px;
+  }
+
+  &__reflection-icon {
+    flex-shrink: 0;
+    font-size: 10px;
+    color: rgba(180, 130, 255, 0.6);
+    margin-top: 3px;
+  }
+
+  &__reflection-text {
+    font-size: 12px;
+    line-height: 1.7;
+    color: rgba(190, 160, 240, 0.8);
+    font-style: italic;
+    letter-spacing: 0.3px;
+  }
+
+  // ── Premium hint (Free plan) ─────────────────────────
+  &__premium-hint {
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed rgba(140, 100, 200, 0.2);
+    border-radius: 8px;
+    font-size: 10px;
+    color: rgba(160, 130, 200, 0.45);
+    text-align: center;
+    letter-spacing: 0.3px;
+  }
+
+  // ── Footer ───────────────────────────────────────────
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 4px;
+    border-top: 1px solid rgba(140, 80, 220, 0.15);
+
+    span {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(160, 110, 240, 0.55);
+      letter-spacing: 1px;
+    }
+
+    small {
+      font-size: 9px;
+      color: rgba(140, 100, 200, 0.35);
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .singer-story-card {
+    border-radius: 16px;
+
+    &__inner {
+      padding: 24px 18px 20px;
+      gap: 16px;
+    }
+
+    &__period {
+      font-size: 24px;
+      letter-spacing: 4px;
+    }
+
+    &__stats {
+      gap: 10px;
+    }
+
+    &__stat {
+      min-width: 64px;
+      padding: 10px 8px;
+    }
+  }
+}

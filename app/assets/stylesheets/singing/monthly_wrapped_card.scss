@@ -146,4 +146,32 @@
     font-style: italic;
     letter-spacing: 0.5px;
   }
+
+  &__share-cta {
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  &__share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    background: rgba(120, 50, 220, 0.18);
+    border: 1px solid rgba(140, 70, 240, 0.4);
+    color: rgba(210, 170, 255, 0.9);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    transition: background 0.2s, border-color 0.2s;
+
+    &:hover {
+      background: rgba(120, 50, 220, 0.3);
+      border-color: rgba(160, 100, 255, 0.6);
+      color: #d8b8ff;
+      text-decoration: none;
+    }
+  }
 }

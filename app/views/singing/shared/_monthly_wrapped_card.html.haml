@@ -38,3 +38,8 @@
 
     - if wrapped.coach_reflection.present?
       %p.monthly-wrapped-card__reflection= wrapped.coach_reflection
+
+    .monthly-wrapped-card__share-cta
+      = link_to singing_share_image_path(target: "singer-story"), class: "monthly-wrapped-card__share-btn" do
+        %span ✦
+        %span シェアカードを作る

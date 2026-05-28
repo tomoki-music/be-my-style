@@ -1,0 +1,56 @@
+- card = local_assigns[:share_image]
+
+.singer-story-card{ role: "img",
+                    "aria-label": "#{card.period_label} Singer Story シェアカード",
+                    data: { share_capture_target: "singer-story" } }
+  .singer-story-card__bg-glow
+  .singer-story-card__inner
+
+    .singer-story-card__header
+      %p.singer-story-card__eyebrow YOUR SINGING STORY
+      %p.singer-story-card__period= card.period_label
+      %p.singer-story-card__brand BeMyStyle Singing
+
+    - if card.growth_type_label.present?
+      .singer-story-card__type
+        %span.singer-story-card__type-icon= card.growth_type_icon
+        %span.singer-story-card__type-label= card.growth_type_label
+
+    .singer-story-card__stats
+      .singer-story-card__stat
+        %span.singer-story-card__stat-num= card.diagnosis_count
+        %span.singer-story-card__stat-unit Diagnoses
+      - if card.streak.to_i >= 2
+        .singer-story-card__stat.singer-story-card__stat--streak
+          %span.singer-story-card__stat-num= "#{card.streak} Day"
+          %span.singer-story-card__stat-unit Streak
+      - elsif card.active_days.to_i >= 1
+        .singer-story-card__stat
+          %span.singer-story-card__stat-num= card.active_days
+          %span.singer-story-card__stat-unit Active Days
+      - if card.most_improved_delta.to_i > 0 && card.most_improved_label.present?
+        .singer-story-card__stat.singer-story-card__stat--growth
+          %span.singer-story-card__stat-num= "+#{card.most_improved_delta}"
+          %span.singer-story-card__stat-unit= card.most_improved_label
+
+    - if card.singer_rank_label.present?
+      .singer-story-card__rank
+        %span.singer-story-card__rank-icon= card.singer_rank_icon
+        %span.singer-story-card__rank-label= card.singer_rank_label
+
+    - if card.wrapped_message.present?
+      .singer-story-card__message
+        - card.wrapped_message.split("\n").each do |line|
+          %p.singer-story-card__message-line= line
+
+    - if card.coach_reflection.present?
+      .singer-story-card__reflection
+        %span.singer-story-card__reflection-icon ✦
+        %span.singer-story-card__reflection-text= card.coach_reflection
+    - elsif !card.has_premium_features
+      .singer-story-card__premium-hint
+        %span Core プランでAIコーチのメッセージが追加されます
+
+    .singer-story-card__footer
+      %span #BeMyStyle
+      %small 継続が、あなたの声を変える

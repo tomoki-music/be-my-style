@@ -47,6 +47,10 @@ module Singing
       "diagnosis-result" => {
         selector: "[data-share-capture-target='diagnosis-result']",
         path_helper: :singing_share_image_path
+      },
+      "singer-story" => {
+        selector: "[data-share-capture-target='singer-story']",
+        path_helper: :singing_share_image_path
       }
     }.freeze
 

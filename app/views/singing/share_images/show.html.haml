@@ -20,6 +20,9 @@
 - elsif @capture_target == "diagnosis-result"
   - page_title = "診断結果シェアカード"
   - og_title = "歌唱診断スコア #{@share_image.overall_score}点"
+- elsif @capture_target == "singer-story"
+  - page_title = "#{@share_image.period_label} Singer Story"
+  - og_title = "#{@share_image.period_label} の歌の記録をシェア"
 - else
   - page_title = "Singing Ranking シェアカード"
   - og_title = "Singing Rankingに挑戦しました"
@@ -44,6 +47,7 @@
     - achievement_badge_active           = @capture_target == "achievement-badge"
     - monthly_achievement_wrapped_active = @capture_target == "monthly-achievement-wrapped"
     - diagnosis_result_active            = @capture_target == "diagnosis-result"
+    - singer_story_active                = @capture_target == "singer-story"
     .singing-share-image__tabs{ role: "tablist", "aria-label": "シェア画像の種類" }
       = link_to singing_share_image_path(target: "diagnosis-result", diagnosis_id: @diagnosis_id), class: "singing-share-image__tab #{'singing-share-image__tab--active' if diagnosis_result_active}", role: "tab", "aria-selected": diagnosis_result_active do
         %span 診断結果
@@ -70,6 +74,9 @@
       = link_to singing_share_image_path(target: "monthly-achievement-wrapped"), class: "singing-share-image__tab #{'singing-share-image__tab--active' if monthly_achievement_wrapped_active}", role: "tab", "aria-selected": monthly_achievement_wrapped_active do
         %span 月別Achievement
         %small 月の達成をまとめて1枚に
+      = link_to singing_share_image_path(target: "singer-story"), class: "singing-share-image__tab #{'singing-share-image__tab--active' if singer_story_active}", role: "tab", "aria-selected": singer_story_active do
+        %span Singer Story
+        %small 成長をアーティスト風に1枚に
 
     = render "share_actions", variant: :toolbar, share_text: @share_text, share_url: request.original_url
 
@@ -92,6 +99,8 @@
         = render "achievement_badge_card", share_image: @share_image
       - elsif @capture_target == "monthly-achievement-wrapped"
         = render "monthly_achievement_wrapped_card", share_image: @share_image
+      - elsif @capture_target == "singer-story"
+        = render "singer_story_card", share_image: @share_image
       - else
         = render "share_card", share_image: @share_image, singer_rank: @singer_rank
 
