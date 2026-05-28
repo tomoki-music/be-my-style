@@ -22,6 +22,7 @@ class Singing::ShareImagesController < Singing::BaseController
     @wrapped_year = yearly_wrapped_reference_time.year if capture_target == "yearly-wrapped"
     @achievement_wrapped_month_str = achievement_wrapped_month_str if capture_target == "monthly-achievement-wrapped"
     @yearly_rewind_year = yearly_rewind_year if capture_target == "yearly-achievement-rewind"
+    @diagnosis_id = params[:diagnosis_id].to_i if capture_target == "diagnosis-result"
   end
 
   def capture
@@ -137,6 +138,7 @@ class Singing::ShareImagesController < Singing::BaseController
         format.json { render json: { error: "Yearly Achievement Rewind シェアカードはCoreプラン以上で利用できます。" }, status: :forbidden }
       end
     end
+    # "diagnosis-result" は全プランに開放
   end
 
   def share_image_customer
@@ -176,6 +178,8 @@ class Singing::ShareImagesController < Singing::BaseController
       { reference_time: Time.zone.parse("#{achievement_wrapped_month_str}-01") }
     when "yearly-achievement-rewind"
       { reference_time: Time.zone.local(yearly_rewind_year, 6, 1) }
+    when "diagnosis-result"
+      { diagnosis_id: params[:diagnosis_id].to_i }
     else
       {}
     end
@@ -218,6 +222,10 @@ class Singing::ShareImagesController < Singing::BaseController
         share_image_customer,
         year: yearly_rewind_year
       )
+    when "diagnosis-result"
+      diagnosis = share_image_customer.singing_diagnoses.completed.find_by(id: params[:diagnosis_id].to_i)
+      diagnosis ||= share_image_customer.singing_diagnoses.completed.order(created_at: :desc, id: :desc).first
+      Singing::ShareImages::DiagnosisResultCardBuilder.call(diagnosis)
     end
   end
 
@@ -240,6 +248,8 @@ class Singing::ShareImagesController < Singing::BaseController
       "今年の診断記録がないため、シェアカードを生成できませんでした。"
     when "achievement-badge"
       "まだバッジを獲得していないため、シェアカードを生成できませんでした。診断を完了するとバッジが獲得できます。"
+    when "diagnosis-result"
+      "診断結果が見つかりません。診断を完了してからお試しください。"
     when "daily-challenge"
       "Daily Challenge のシェアカードをまだ生成できません。今日の診断を完了してください。"
     when "ranking"
@@ -253,6 +263,8 @@ class Singing::ShareImagesController < Singing::BaseController
     case capture_target
     when "yearly-achievement-rewind"
       "この年のバッジがないため、Yearly Achievement Rewind は表示できません。"
+    when "diagnosis-result"
+      "診断結果のシェアカードを表示できません。診断を完了してからお試しください。"
     when "daily-challenge"
       "Daily Challenge のシェアカードはまだ表示できません。"
     when "ranking"

@@ -43,6 +43,10 @@ module Singing
         feature: :singing_achievement_badge_share_image,
         selector: "[data-share-capture-target='yearly-achievement-rewind']",
         path_helper: :singing_share_image_path
+      },
+      "diagnosis-result" => {
+        selector: "[data-share-capture-target='diagnosis-result']",
+        path_helper: :singing_share_image_path
       }
     }.freeze
 
@@ -54,11 +58,12 @@ module Singing
       new(...).call
     end
 
-    def initialize(customer:, base_url:, capture_target: "yearly-growth", reference_time: Time.current, output_root: Rails.root.join("tmp/share_images"), browser: nil)
+    def initialize(customer:, base_url:, capture_target: "yearly-growth", reference_time: Time.current, diagnosis_id: nil, output_root: Rails.root.join("tmp/share_images"), browser: nil)
       @customer = customer
       @base_url = base_url.to_s.delete_suffix("/")
       @capture_target = (capture_target.to_s.presence || "yearly-growth").tr("_", "-")
       @reference_time = reference_time
+      @diagnosis_id = diagnosis_id.to_i
       @output_root = Pathname(output_root)
       @browser = browser
       @owns_browser = browser.nil?
@@ -97,7 +102,7 @@ module Singing
 
     private
 
-    attr_reader :customer, :base_url, :capture_target, :reference_time, :output_root, :browser, :owns_browser
+    attr_reader :customer, :base_url, :capture_target, :reference_time, :diagnosis_id, :output_root, :browser, :owns_browser
 
     def validate!
       raise UnsupportedCaptureTarget, "unsupported capture target: #{capture_target}" unless target_config
@@ -132,6 +137,10 @@ module Singing
                               Singing::ShareImages::MonthlyAchievementWrappedCardBuilder.call(
                                 customer, achievement_wrapped_month_str
                               )
+                            when "diagnosis-result"
+                              diag = customer.singing_diagnoses.completed.find_by(id: diagnosis_id) if diagnosis_id.positive?
+                              diag ||= customer.singing_diagnoses.completed.order(created_at: :desc, id: :desc).first
+                              Singing::ShareImages::DiagnosisResultCardBuilder.call(diag)
                             end
     end
 
@@ -212,6 +221,16 @@ module Singing
           month_label: share_image_data.month_label,
           total_count: share_image_data.total_count
         }.compact
+      when "diagnosis-result"
+        {
+          title:                  "歌唱診断結果 #{share_image_data.overall_score}点",
+          description:            share_image_data.headline,
+          share_text:             share_image_data.x_share_text,
+          overall_score:          share_image_data.overall_score,
+          overall_delta_label:    share_image_data.overall_delta_label,
+          best_growth_label:      share_image_data.best_growth_label,
+          streak_days:            share_image_data.streak_days
+        }.compact
       else
         {}
       end
@@ -223,6 +242,7 @@ module Singing
                      when "monthly-wrapped"             then { year: reference_time.year, month: reference_time.month }
                      when "yearly-wrapped"              then { year: reference_time.year }
                      when "monthly-achievement-wrapped" then { month: achievement_wrapped_month_str }
+                     when "diagnosis-result"            then diagnosis_id.positive? ? { diagnosis_id: diagnosis_id } : {}
                      else {}
                      end
       path = Rails.application.routes.url_helpers.public_send(

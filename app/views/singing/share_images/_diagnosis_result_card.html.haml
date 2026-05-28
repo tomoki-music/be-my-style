@@ -1,0 +1,53 @@
+.singing-share-image__card.singing-share-image__card--diagnosis-result{ role: "img", "aria-label": "診断結果シェアカード", data: { share_capture_target: "diagnosis-result" } }
+  .singing-share-image__topline
+    %span= share_image.performance_type_label
+    %strong BeMyStyle Singing
+
+  .singing-share-image__dr-hero
+    %p.singing-share-image__kicker DIAGNOSIS RESULT
+    %h1 総合スコア
+    .singing-share-image__dr-score
+      %span.singing-share-image__dr-score-value= share_image.overall_score
+      %span.singing-share-image__dr-score-unit 点
+      - if share_image.overall_delta_label.present?
+        %span.singing-share-image__dr-delta{ class: share_image.overall_delta.to_i >= 0 ? "is-positive" : "is-negative" }= share_image.overall_delta_label
+
+  - if share_image.has_previous
+    .singing-share-image__dr-growth
+      - if share_image.best_growth_label.present?
+        .singing-share-image__dr-growth-item
+          %span もっとも伸びた項目
+          %strong= share_image.best_growth_label
+          - if share_image.best_growth_delta_label.present?
+            %em= share_image.best_growth_delta_label
+      - else
+        .singing-share-image__dr-growth-item
+          %span 前回との比較
+          %strong= share_image.headline
+  - else
+    .singing-share-image__dr-first
+      %span.singing-share-image__dr-first-badge 初回診断
+      %p ここから成長記録がはじまります
+
+  .singing-share-image__metric-grid.singing-share-image__metric-grid--dr
+    .singing-share-image__metric
+      %span 継続
+      %strong= share_image.streak_days.to_i.positive? ? "#{share_image.streak_days}日" : "はじめて"
+      %small keep going
+    .singing-share-image__metric
+      %span 前回比
+      %strong= share_image.overall_delta_label.presence || "初回"
+      %small overall delta
+    .singing-share-image__metric
+      %span 伸びた項目
+      %strong= share_image.best_growth_label.presence || "記録中"
+      %small best growth
+
+  - if share_image.streak_days.to_i >= 2
+    .singing-share-image__dr-streak
+      %span 🔥
+      %strong= share_image.streak_label
+
+  .singing-share-image__footer
+    %span #BeMyStyle
+    %small 歌声成長の記録

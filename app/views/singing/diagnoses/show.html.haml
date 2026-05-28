@@ -287,6 +287,10 @@
                 %strong 年間レポート
                 %p 今年の診断を1枚にまとめられます
                 = link_to "Coreプランを見る", public_singing_lp_path(anchor: "lp-section"), class: "singing-diagnosis__share-card-cta-link"
+            = link_to singing_share_image_path(target: "diagnosis-result", diagnosis_id: @diagnosis.id), class: "singing-diagnosis__share-image-option singing-diagnosis__share-image-option--result" do
+              %span.singing-diagnosis__share-card-badge 今回の結果
+              %strong この診断結果をシェア
+              %p 総合スコア・前回比・伸びた項目を1枚に
             = link_to singing_share_image_path(target: "daily-challenge"), class: "singing-diagnosis__share-image-option singing-diagnosis__share-image-option--daily" do
               %span.singing-diagnosis__share-card-badge Daily
               %strong Daily Challengeをシェア
