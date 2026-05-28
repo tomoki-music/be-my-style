@@ -72,6 +72,9 @@
     - if dashboard&.journey_recap&.has_story
       = render "singing/shared/journey_recap_card", recap: dashboard.journey_recap
 
+    - if dashboard&.monthly_wrapped&.has_wrapped
+      = render "singing/shared/monthly_wrapped_card", wrapped: dashboard.monthly_wrapped
+
     - if dashboard&.singer_rank.present?
       .home-growth-dashboard__level
         .home-growth-dashboard__level-header

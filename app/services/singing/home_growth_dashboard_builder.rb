@@ -20,6 +20,7 @@ module Singing
       :singing_xp,
       :growth_type_card,
       :journey_recap,
+      :monthly_wrapped,
       keyword_init: true
     )
 
@@ -67,7 +68,8 @@ module Singing
           level:           @customer.singer_rank&.level,
           diagnosis_count: summary.diagnosis_count
         ),
-        journey_recap:        Singing::JourneyRecapBuilder.call(@customer)
+        journey_recap:        Singing::JourneyRecapBuilder.call(@customer),
+        monthly_wrapped:      Singing::MonthlyWrappedBuilder.call(@customer)
       )
     end
 
@@ -87,7 +89,8 @@ module Singing
         singer_next_rank:     nil,
         singing_xp:           0,
         growth_type_card:     nil,
-        journey_recap:        nil
+        journey_recap:        nil,
+        monthly_wrapped:      nil
       )
     end
   end

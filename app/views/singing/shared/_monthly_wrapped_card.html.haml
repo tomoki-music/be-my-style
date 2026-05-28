@@ -1,0 +1,40 @@
+- wrapped = local_assigns[:wrapped]
+
+.monthly-wrapped-card
+  .monthly-wrapped-card__inner
+    .monthly-wrapped-card__header
+      %p.monthly-wrapped-card__eyebrow YOUR SINGING WRAPPED
+      %p.monthly-wrapped-card__period= "#{wrapped.year}.#{wrapped.month.to_s.rjust(2, '0')}"
+
+    .monthly-wrapped-card__stats
+      .monthly-wrapped-card__stat
+        %span.monthly-wrapped-card__stat-value= wrapped.diagnosis_count
+        %span.monthly-wrapped-card__stat-label Diagnoses
+      .monthly-wrapped-card__stat
+        %span.monthly-wrapped-card__stat-value= wrapped.active_days_count
+        %span.monthly-wrapped-card__stat-label Active Days
+      - if wrapped.most_improved_label.present? && wrapped.most_improved_delta.to_i > 0
+        .monthly-wrapped-card__stat.monthly-wrapped-card__stat--highlight
+          %span.monthly-wrapped-card__stat-value= "+#{wrapped.most_improved_delta}"
+          %span.monthly-wrapped-card__stat-label= wrapped.most_improved_label
+
+    .monthly-wrapped-card__badges
+      - if wrapped.growth_type.present?
+        .monthly-wrapped-card__badge
+          %span.monthly-wrapped-card__badge-icon= wrapped.growth_type.icon
+          %span.monthly-wrapped-card__badge-label= wrapped.growth_type.label
+      - if wrapped.singer_rank.present?
+        .monthly-wrapped-card__badge
+          %span.monthly-wrapped-card__badge-icon= wrapped.singer_rank.icon
+          %span.monthly-wrapped-card__badge-label= wrapped.singer_rank.label
+      .monthly-wrapped-card__badge
+        %span.monthly-wrapped-card__badge-icon ✨
+        %span.monthly-wrapped-card__badge-label= "XP +#{wrapped.monthly_xp}"
+
+    - if wrapped.wrapped_message.present?
+      .monthly-wrapped-card__message
+        - wrapped.wrapped_message.split("\n").each do |line|
+          %p.monthly-wrapped-card__message-line= line
+
+    - if wrapped.coach_reflection.present?
+      %p.monthly-wrapped-card__reflection= wrapped.coach_reflection
