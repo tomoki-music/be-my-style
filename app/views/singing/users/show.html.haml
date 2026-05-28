@@ -7,6 +7,10 @@
       .singing-profile__identity
         .singing-profile__eyebrow Music Growth Profile
         %h1.singing-profile__name= @user.name
+        - if @growth_type.present?
+          .growth-type-badge
+            %span.growth-type-badge__icon= @growth_type.icon
+            %span.growth-type-badge__label= @growth_type.label
         .singing-profile__title-card
           %span.singing-profile__title-icon= @profile_title.icon
           .singing-profile__title-body

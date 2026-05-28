@@ -1,0 +1,18 @@
+- card = local_assigns[:card]
+- return unless card.present?
+
+.growth-type-card
+  .growth-type-card__eyebrow YOUR GROWTH TYPE
+  .growth-type-card__main
+    %span.growth-type-card__icon= card.icon
+    %h3.growth-type-card__label= card.label
+  %p.growth-type-card__description= card.description
+  .growth-type-card__meta
+    - if card.level.present?
+      %span.growth-type-card__meta-item= "Lv.#{card.level}"
+    - if card.streak.to_i > 0
+      %span.growth-type-card__meta-item= "Streak #{card.streak} days"
+    - if card.diagnosis_count.to_i > 0
+      %span.growth-type-card__meta-item= "#{card.diagnosis_count} diagnoses"
+  - if card.hint.present?
+    %p.growth-type-card__hint= card.hint

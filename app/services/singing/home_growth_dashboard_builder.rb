@@ -1,5 +1,11 @@
 module Singing
   class HomeGrowthDashboardBuilder
+    GrowthTypeCard = Struct.new(
+      :type_key, :label, :icon, :description,
+      :hint, :streak, :level, :diagnosis_count,
+      keyword_init: true
+    )
+
     Result = Struct.new(
       :summary,
       :latest_diagnosis,
@@ -12,6 +18,7 @@ module Singing
       :singer_rank_progress,
       :singer_next_rank,
       :singing_xp,
+      :growth_type_card,
       keyword_init: true
     )
 
@@ -34,6 +41,9 @@ module Singing
                         .order(created_at: :desc, id: :desc)
                         .first
 
+      growth_type = Singing::GrowthTypeAnalyzer.call(@customer)
+      hint        = Singing::GrowthEvolutionHintBuilder.call(growth_type.type_key)
+
       Result.new(
         summary:              summary,
         latest_diagnosis:     latest,
@@ -45,7 +55,17 @@ module Singing
         singer_rank:          @customer.singer_rank,
         singer_rank_progress: @customer.singer_rank_progress,
         singer_next_rank:     @customer.singer_next_rank,
-        singing_xp:           @customer.singing_xp
+        singing_xp:           @customer.singing_xp,
+        growth_type_card:     GrowthTypeCard.new(
+          type_key:        growth_type.type_key,
+          label:           growth_type.label,
+          icon:            growth_type.icon,
+          description:     growth_type.description,
+          hint:            hint.hint,
+          streak:          summary.streak_days,
+          level:           @customer.singer_rank&.level,
+          diagnosis_count: summary.diagnosis_count
+        )
       )
     end
 
@@ -63,7 +83,8 @@ module Singing
         singer_rank:          nil,
         singer_rank_progress: nil,
         singer_next_rank:     nil,
-        singing_xp:           0
+        singing_xp:           0,
+        growth_type_card:     nil
       )
     end
   end

@@ -1,0 +1,139 @@
+// Growth Type Card — ミステリアス・アーティスト感・夜・ネオン・紫〜青系
+
+.growth-type-card {
+  background: linear-gradient(
+    145deg,
+    rgba(22, 10, 50, 0.95),
+    rgba(10, 18, 50, 0.98)
+  );
+  border: 1px solid rgba(130, 70, 255, 0.28);
+  border-radius: 18px;
+  padding: 20px 22px 18px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 16px;
+
+  box-shadow:
+    0 0 24px rgba(90, 40, 200, 0.12),
+    0 4px 20px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(170, 120, 255, 0.08);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(120, 60, 255, 0.1), transparent 65%);
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: 10px;
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, rgba(60, 80, 220, 0.07), transparent 70%);
+    pointer-events: none;
+  }
+
+  &__eyebrow {
+    display: block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: rgba(150, 110, 255, 0.6);
+    text-transform: uppercase;
+    margin: 0 0 10px;
+  }
+
+  &__main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  &__icon {
+    font-size: 26px;
+    line-height: 1;
+    filter: drop-shadow(0 0 6px rgba(160, 100, 255, 0.5));
+  }
+
+  &__label {
+    font-size: 21px;
+    font-weight: 700;
+    color: #d0b0ff;
+    margin: 0;
+    letter-spacing: -0.01em;
+    text-shadow: 0 0 20px rgba(140, 80, 255, 0.3);
+  }
+
+  &__description {
+    font-size: 13px;
+    color: rgba(195, 170, 240, 0.75);
+    margin: 0 0 14px;
+    line-height: 1.65;
+  }
+
+  &__meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  &__meta-item {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(160, 130, 220, 0.75);
+    background: rgba(90, 50, 180, 0.12);
+    border: 1px solid rgba(110, 70, 200, 0.22);
+    border-radius: 100px;
+    padding: 3px 11px;
+    letter-spacing: 0.03em;
+  }
+
+  &__hint {
+    font-size: 12px;
+    color: rgba(170, 140, 255, 0.55);
+    margin: 0;
+    line-height: 1.55;
+    border-top: 1px solid rgba(90, 50, 180, 0.2);
+    padding-top: 12px;
+    font-style: italic;
+
+    &::before {
+      content: '→ ';
+      opacity: 0.65;
+    }
+  }
+}
+
+// プロフィール名の下に表示するコンパクトバッジ
+.growth-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 4px 0 8px;
+  padding: 4px 12px;
+  background: rgba(80, 40, 160, 0.18);
+  border: 1px solid rgba(120, 70, 220, 0.25);
+  border-radius: 100px;
+
+  &__icon {
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  &__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(190, 155, 255, 0.85);
+    letter-spacing: 0.04em;
+  }
+}

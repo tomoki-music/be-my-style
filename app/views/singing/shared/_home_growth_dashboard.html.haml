@@ -66,6 +66,9 @@
           %h3.home-growth-dashboard__daily-mission-title= dashboard.daily_mission.title
           %p.home-growth-dashboard__daily-mission-body= dashboard.daily_mission.body
 
+    - if dashboard&.growth_type_card.present?
+      = render "singing/shared/growth_type_card", card: dashboard.growth_type_card
+
     - if dashboard&.singer_rank.present?
       .home-growth-dashboard__level
         .home-growth-dashboard__level-header
