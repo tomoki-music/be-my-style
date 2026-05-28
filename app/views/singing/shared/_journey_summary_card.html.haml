@@ -1,0 +1,45 @@
+- summary        = local_assigns[:summary]
+- viewer_is_owner = local_assigns.fetch(:viewer_is_owner, false)
+- card_title      = local_assigns.fetch(:title, "あなたの成長記録")
+
+.journey-summary-card
+  .journey-summary-card__header
+    %p.journey-summary-card__eyebrow Growth Journey
+    %h2.journey-summary-card__title= card_title
+
+  - if summary&.has_diagnoses
+    .journey-summary-card__stats
+      .journey-summary-card__stat
+        %span.journey-summary-card__stat-value= "#{summary.diagnosis_count}回"
+        %span.journey-summary-card__stat-label 診断回数
+      .journey-summary-card__stat
+        %span.journey-summary-card__stat-value= "#{summary.best_score}点"
+        %span.journey-summary-card__stat-label 最高スコア
+      .journey-summary-card__stat
+        %span.journey-summary-card__stat-value= "#{summary.latest_score}点"
+        %span.journey-summary-card__stat-label 最新スコア
+      .journey-summary-card__stat
+        %span.journey-summary-card__stat-value= "#{summary.streak_days}日"
+        %span.journey-summary-card__stat-label 連続診断
+
+    - if summary.recent_growth_label.present?
+      .journey-summary-card__growth
+        %span.journey-summary-card__growth-prefix 最近伸びた項目：
+        %strong.journey-summary-card__growth-item
+          = summary.recent_growth_label
+          %span.journey-summary-card__growth-delta= summary.recent_growth_delta_label
+    - else
+      .journey-summary-card__growth.journey-summary-card__growth--first
+        %span 初回診断から記録中
+
+    - if viewer_is_owner
+      = link_to singing_diagnoses_path, class: "journey-summary-card__cta" do
+        Growth Journeyを見る
+        %span.journey-summary-card__cta-arrow →
+
+  - else
+    .journey-summary-card__empty
+      %p.journey-summary-card__empty-title まだ成長記録はありません
+      %p.journey-summary-card__empty-sub 最初の診断から、あなたの歌の旅が始まります
+      - if viewer_is_owner
+        = link_to "歌唱診断をはじめる", new_singing_diagnosis_path, class: "btn btn-primary"

@@ -208,6 +208,13 @@
             %p 完了した診断が増えると、成長の軌跡がここに表示されます。
 
       %section.singing-profile__section
+        - summary_title = (current_customer == @user) ? "あなたの成長記録" : "#{@user.name}さんの成長記録"
+        = render "singing/shared/journey_summary_card",
+                 summary: @journey_summary,
+                 viewer_is_owner: (current_customer == @user),
+                 title: summary_title
+
+      %section.singing-profile__section
         .singing-profile__section-head
           %p.singing-profile__section-kicker Activity
           %h2 最近の活動報告

@@ -84,6 +84,7 @@ class Singing::DiagnosesController < Singing::BaseController
         current_customer,
         earned_badge_keys: current_customer.singing_achievement_badges.pluck(:badge_key).to_set
       )
+      @journey_summary = Singing::JourneySummaryBuilder.call(current_customer)
       @singer_rank = current_customer.singer_rank
       @singer_rank_progress = current_customer.singer_rank_progress
       @singer_next_rank = current_customer.singer_next_rank

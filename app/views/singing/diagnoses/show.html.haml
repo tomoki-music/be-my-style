@@ -914,6 +914,11 @@
         - repeat_cta_other = { icon: "🎤", title: "ボーカル診断も試してみる", body: "バンド演奏の次は、ボーカル診断で歌声の個性も確かめよう。" }
       - else
         - repeat_cta_other = { icon: "🎵", title: "他のパートも診断してみる", body: "ギター・ボーカル・バンド演奏など、他のパートの診断も受けられます。" }
+      = render "singing/shared/journey_summary_card",
+               summary: @journey_summary,
+               viewer_is_owner: true,
+               title: "あなたの成長記録"
+
       .singing-repeat-cta
         .singing-repeat-cta__header
           %p.singing-repeat-cta__eyebrow Next Step
