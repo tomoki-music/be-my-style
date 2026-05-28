@@ -1,0 +1,291 @@
+// Home Growth Dashboard (Phase 10-Z+)
+// .home-growth-dashboard 配下にスコープ化
+
+.home-growth-dashboard {
+  padding: 16px;
+  background: linear-gradient(160deg, #0f0830 0%, #1a1060 40%, #12083a 100%);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 240px;
+    height: 240px;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -40px;
+    left: -40px;
+    width: 160px;
+    height: 160px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  &__inner {
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px 4px 8px;
+  }
+
+  // ── Eyebrow ─────────────────────────────────────────────────────────────────
+
+  &__eyebrow {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(167, 139, 250, 0.75);
+    margin-bottom: 16px;
+  }
+
+  // ── Stats grid ──────────────────────────────────────────────────────────────
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  &__stat {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+  }
+
+  &__stat-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  &__stat-label {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.45);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  // ── Growth row ──────────────────────────────────────────────────────────────
+
+  &__growth {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(74, 222, 128, 0.07);
+    border: 1px solid rgba(74, 222, 128, 0.2);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__growth-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  &__growth-item {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__growth-delta {
+    font-size: 13px;
+    font-weight: 800;
+    color: #4ade80;
+  }
+
+  // ── Mission card ────────────────────────────────────────────────────────────
+
+  &__mission {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+
+  &__mission-eyebrow {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(167, 139, 250, 0.8);
+    margin: 0 0 6px;
+
+    &::before {
+      content: '🎯 ';
+    }
+  }
+
+  &__mission-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 4px;
+    line-height: 1.4;
+  }
+
+  &__mission-body {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.65);
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  &__mission-empty {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+    padding: 4px 0;
+    margin: 0;
+
+    p { margin: 0; }
+  }
+
+  // ── CTA buttons ─────────────────────────────────────────────────────────────
+
+  &__cta {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  &__cta-primary {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    text-align: center;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 0.88;
+      color: #fff;
+      text-decoration: none;
+    }
+  }
+
+  &__cta-secondary {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.85);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    transition: background 0.2s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff;
+      text-decoration: none;
+    }
+  }
+
+  // ── Sub CTA ─────────────────────────────────────────────────────────────────
+
+  &__sub-cta {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    padding-bottom: 8px;
+  }
+
+  &__sub-cta-link {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.45);
+    text-decoration: none;
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: none;
+    }
+  }
+
+  // ── Empty state ──────────────────────────────────────────────────────────────
+
+  &__empty {
+    text-align: center;
+    padding: 8px 0 16px;
+  }
+
+  &__empty-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+
+  &__empty-body {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.55);
+    line-height: 1.7;
+    margin: 0 0 20px;
+  }
+
+  // ── Mobile ──────────────────────────────────────────────────────────────────
+
+  @media (max-width: 480px) {
+    &__stats {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    &__stat-value {
+      font-size: 19px;
+    }
+
+    &__cta {
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    &__cta-primary,
+    &__cta-secondary {
+      padding: 13px 16px;
+    }
+
+    &__empty-title {
+      font-size: 16px;
+    }
+  }
+}

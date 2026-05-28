@@ -1,0 +1,55 @@
+- dashboard = local_assigns[:dashboard]
+
+.home-growth-dashboard
+  .home-growth-dashboard__inner
+    %p.home-growth-dashboard__eyebrow 今日のSinging Dashboard
+
+    - if dashboard&.has_diagnoses
+      .home-growth-dashboard__stats
+        .home-growth-dashboard__stat
+          %span.home-growth-dashboard__stat-value= "#{dashboard.summary.diagnosis_count}回"
+          %span.home-growth-dashboard__stat-label 診断回数
+        .home-growth-dashboard__stat
+          %span.home-growth-dashboard__stat-value= "#{dashboard.summary.best_score}点"
+          %span.home-growth-dashboard__stat-label 最高スコア
+        .home-growth-dashboard__stat
+          %span.home-growth-dashboard__stat-value= "#{dashboard.summary.latest_score}点"
+          %span.home-growth-dashboard__stat-label 最新スコア
+        .home-growth-dashboard__stat
+          %span.home-growth-dashboard__stat-value= "#{dashboard.summary.streak_days}日"
+          %span.home-growth-dashboard__stat-label 連続診断
+
+      - if dashboard.summary.recent_growth_label.present?
+        .home-growth-dashboard__growth
+          %span.home-growth-dashboard__growth-label 最近伸びた項目：
+          %strong.home-growth-dashboard__growth-item
+            = dashboard.summary.recent_growth_label
+            %span.home-growth-dashboard__growth-delta= dashboard.summary.recent_growth_delta_label
+
+      .home-growth-dashboard__mission
+        - if dashboard.next_mission_title.present? || dashboard.next_mission_body.present?
+          .home-growth-dashboard__mission-inner
+            %p.home-growth-dashboard__mission-eyebrow 次回ミッション
+            - if dashboard.next_mission_title.present?
+              %h3.home-growth-dashboard__mission-title= dashboard.next_mission_title
+            - if dashboard.next_mission_body.present?
+              %p.home-growth-dashboard__mission-body= dashboard.next_mission_body
+        - else
+          .home-growth-dashboard__mission-empty
+            %p 次の診断で、あなた専用のミッションが表示されます
+
+      .home-growth-dashboard__cta
+        = link_to "歌唱診断をはじめる", new_singing_diagnosis_path, class: "home-growth-dashboard__cta-primary"
+        = link_to "Growth Journeyを見る", singing_diagnoses_path, class: "home-growth-dashboard__cta-secondary"
+      .home-growth-dashboard__sub-cta
+        = link_to "ランキング", singing_rankings_path, class: "home-growth-dashboard__sub-cta-link"
+        = link_to "プロフィール", singing_user_path(current_customer), class: "home-growth-dashboard__sub-cta-link"
+
+    - else
+      .home-growth-dashboard__empty
+        %h2.home-growth-dashboard__empty-title あなたの歌の旅を始めよう
+        %p.home-growth-dashboard__empty-body
+          最初の診断をすると、
+          %br
+          スコア・成長記録・次回ミッションがここに表示されます。
+        = link_to "歌唱診断をはじめる", new_singing_diagnosis_path, class: "home-growth-dashboard__cta-primary"

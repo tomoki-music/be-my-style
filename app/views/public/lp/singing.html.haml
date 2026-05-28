@@ -63,6 +63,9 @@
       .lp-hero-back
         = link_to singing_lp_hero_back_label, singing_lp_back_path
 
+  - if customer_signed_in? && @growth_dashboard
+    = render "singing/shared/home_growth_dashboard", dashboard: @growth_dashboard
+
   - if customer_signed_in?
     .singing-plan-status-card
       .singing-plan-status-card__inner
