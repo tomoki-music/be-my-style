@@ -1,0 +1,80 @@
+-# locals: item (Singing::GrowthFeedBuilder::FeedItem)
+- customer_id  = item.customer.id
+- my_reactions = @my_reactions&.fetch(customer_id, Set.new) || Set.new
+- counts       = @reaction_counts&.fetch(customer_id, {}) || {}
+
+.growth-card{ data: { customer_id: customer_id } }
+  .growth-card__feed-label{ class: "growth-card__feed-label--#{item.feed_type}" }
+    %span.growth-card__feed-icon= item.feed_icon
+    %span= item.feed_label
+
+  .growth-card__header
+    .growth-card__avatar
+      = customer_avatar_tag(item.customer, class_name: "growth-card__avatar-img", fallback: "no_image")
+    .growth-card__identity
+      .growth-card__name-row
+        %p.growth-card__name= item.customer.name
+        - if item.growth_circle_badge
+          .growth-circle-chip{ style: "border-color: #{item.growth_circle_badge.color}; color: #{item.growth_circle_badge.color};" }
+            %span.growth-circle-chip__icon= item.growth_circle_badge.icon
+            %span.growth-circle-chip__title= item.growth_circle_badge.title
+      - if item.growth_type
+        .growth-card__type-badge
+          %span.growth-card__type-icon= item.growth_type.icon
+          %span.growth-card__type-label= item.growth_type.label
+    %time.growth-card__time{ datetime: item.shared_at.iso8601 }= item.shared_at.strftime("%-m/%-d")
+
+  .growth-card__body
+    %h2.growth-card__headline= item.headline
+
+    .growth-card__growth
+      %p.growth-card__growth-eyebrow Community Beat
+      - if item.most_improved_label && item.most_improved_delta
+        .growth-card__growth-metric
+          %span.growth-card__growth-label= item.most_improved_label
+          %span.growth-card__growth-delta= "+#{item.most_improved_delta.round(1)}"
+      - else
+        %p.growth-card__growth-note 今日の歌が、次の成長につながっています。
+
+    - if item.streak_days >= 3
+      .growth-card__streak
+        %span.growth-card__streak-icon 🔥
+        %span.growth-card__streak-text= "#{item.streak_days}日継続中"
+
+    - if item.milestones.present?
+      .growth-card__milestones
+        - item.milestones.each do |milestone|
+          .growth-card__milestone
+            %span.growth-card__milestone-icon= milestone.icon
+            .growth-card__milestone-copy
+              %strong= milestone.label
+              %span= milestone.message
+
+    - if item.completed_challenge_keys.present?
+      .growth-card__challenge-achievements
+        - item.completed_challenge_keys.each do |key|
+          - defn = Singing::ChallengeCircleBuilder::CHALLENGE_DEFINITIONS.find { |d| d[:id] == key }
+          - next unless defn
+          .growth-card__challenge-chip
+            %span.growth-card__challenge-icon= defn[:icon]
+            %span.growth-card__challenge-label= "#{defn[:title]} 達成！"
+
+  .growth-card__reactions
+    .growth-card__reaction-heading
+      %span 🔥
+      %strong 応援する
+    - SingingCheerReaction::REACTION_TYPES.each do |rtype|
+      - count   = counts[rtype].to_i
+      - reacted = my_reactions.include?(rtype)
+      %button.growth-card__reaction-btn.js-cheer-btn{
+        type:  "button",
+        class: ("is-reacted" if reacted),
+        data:  {
+          reaction_type:      rtype,
+          target_customer_id: customer_id,
+          reacted:            reacted.to_s
+        }
+      }
+        %span.growth-card__reaction-emoji= SingingCheerReaction.emoji_for(rtype)
+        %span.growth-card__reaction-label= SingingCheerReaction.label_for(rtype)
+        %span.growth-card__reaction-count{ class: ("is-hidden" if count.zero?) }= count

@@ -1,0 +1,392 @@
+// Growth Circle Badge styles
+
+// ─── ページ全体 ──────────────────────────────────────────────────────
+.growth-circle-page {
+  background: #0d0f14;
+  min-height: calc(100vh - 80px);
+  padding: 48px 16px 80px;
+  color: #e2e8f0;
+
+  &__inner {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  &__header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  &__eyebrow {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(180, 130, 255, 0.7);
+    margin: 0 0 10px;
+  }
+
+  &__title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #e8d5ff;
+    margin: 0 0 12px;
+    text-shadow: 0 0 20px rgba(180, 100, 255, 0.3);
+  }
+
+  &__lead {
+    font-size: 13px;
+    color: rgba(200, 180, 255, 0.6);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  &__primary {
+    margin-bottom: 40px;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 40px 24px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    margin-bottom: 40px;
+
+    &-icon {
+      font-size: 40px;
+      margin: 0 0 12px;
+    }
+
+    &-text {
+      font-size: 14px;
+      color: rgba(200, 180, 255, 0.6);
+      line-height: 1.7;
+      margin: 0;
+    }
+  }
+
+  &__all-badges {
+    margin-bottom: 40px;
+  }
+
+  &__premium-cta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: rgba(180, 130, 255, 0.08);
+    border: 1px solid rgba(180, 130, 255, 0.2);
+    border-radius: 12px;
+    margin-bottom: 40px;
+
+    &-icon {
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    &-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    &-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #e8d5ff;
+      margin: 0 0 4px;
+    }
+
+    &-desc {
+      font-size: 12px;
+      color: rgba(200, 180, 255, 0.6);
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    &-btn {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      background: rgba(180, 130, 255, 0.15);
+      border: 1px solid rgba(180, 130, 255, 0.4);
+      border-radius: 8px;
+      font-size: 13px;
+      color: #e8d5ff;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.2s;
+
+      &:hover {
+        background: rgba(180, 130, 255, 0.25);
+      }
+    }
+  }
+
+  &__unearned {
+    margin-bottom: 40px;
+  }
+
+  &__section-head {
+    margin-bottom: 20px;
+  }
+
+  &__section-kicker {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(180, 130, 255, 0.5);
+    margin: 0 0 6px;
+  }
+
+  &__section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #e8d5ff;
+    margin: 0;
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  &__nav-link {
+    font-size: 13px;
+    color: rgba(200, 180, 255, 0.7);
+    text-decoration: none;
+
+    &:hover {
+      color: #e8d5ff;
+    }
+  }
+
+  &__nav-btn {
+    font-size: 13px;
+  }
+}
+
+// ─── バッジカード（詳細ページ用） ─────────────────────────────────────
+.growth-circle-badge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+
+  &--primary {
+    padding: 32px 28px;
+    margin-bottom: 0;
+  }
+
+  &--locked {
+    opacity: 0.5;
+    filter: grayscale(0.6);
+  }
+
+  &__glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: 16px;
+  }
+
+  &__icon {
+    font-size: 40px;
+    flex-shrink: 0;
+    line-height: 1;
+
+    &--locked {
+      filter: grayscale(1);
+      opacity: 0.5;
+    }
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__kicker {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0 0 4px;
+  }
+
+  &__title {
+    display: block;
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0 0 6px;
+    letter-spacing: -0.3px;
+
+    &--locked {
+      color: rgba(255, 255, 255, 0.4) !important;
+    }
+  }
+
+  &__desc {
+    font-size: 13px;
+    color: rgba(200, 180, 255, 0.7);
+    margin: 0 0 4px;
+    line-height: 1.6;
+  }
+
+  &__condition {
+    font-size: 11px;
+    color: rgba(200, 180, 255, 0.4);
+    margin: 4px 0 0;
+  }
+}
+
+.growth-circle-badge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &--locked {
+    .growth-circle-badge {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// ─── ミニバッジ（プロフィールヒーロー用） ─────────────────────────────
+.growth-circle-mini-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 1px solid;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-top: 6px;
+
+  &__icon {
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  &__title {
+    line-height: 1;
+  }
+}
+
+// ─── プロフィール専用バッジ ──────────────────────────────────────────
+.growth-circle-profile-badge {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  margin-bottom: 12px;
+
+  &__icon {
+    font-size: 32px;
+    flex-shrink: 0;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+
+  &__desc {
+    font-size: 12px;
+    color: rgba(200, 180, 255, 0.6);
+    margin: 0;
+  }
+}
+
+// ─── バッジ一覧ページのインラインプレビュー ──────────────────────────
+.growth-circle-index-badge {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  margin-bottom: 12px;
+
+  &--empty {
+    opacity: 0.7;
+  }
+
+  &__icon {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 3px;
+  }
+
+  &__desc {
+    font-size: 12px;
+    color: rgba(200, 180, 255, 0.6);
+    margin: 0;
+  }
+}
+
+// ─── Growth Feed チップ（名前横） ─────────────────────────────────────
+.growth-circle-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px solid;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &__icon {
+    font-size: 11px;
+    line-height: 1;
+  }
+
+  &__title {
+    line-height: 1;
+  }
+}
+
+.growth-card__name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}

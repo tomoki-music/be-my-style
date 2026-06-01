@@ -1,0 +1,311 @@
+// ─── Coach Letter ────────────────────────────────────────────────────────────
+
+.singing-coach-letter {
+  background: #f7f8fb;
+  min-height: calc(100vh - 80px);
+  padding: 32px 16px 80px;
+
+  @media (min-width: 640px) {
+    padding: 48px 24px 96px;
+  }
+}
+
+.scl-inner {
+  margin: 0 auto;
+  max-width: 600px;
+}
+
+// ── Navigation ───────────────────────────────────────────────────────────────
+
+.scl-nav {
+  margin-bottom: 24px;
+}
+
+.scl-back-link {
+  color: #586174;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover { color: #1f2937; }
+}
+
+// ── Page Header ──────────────────────────────────────────────────────────────
+
+.scl-page-header {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.scl-page-header__eyebrow {
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.scl-page-header__title {
+  color: #1f2937;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  margin: 0;
+
+  @media (min-width: 640px) {
+    font-size: 26px;
+  }
+}
+
+// ── Letter Card ──────────────────────────────────────────────────────────────
+
+.scl-letter-card {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07), 0 1px 4px rgba(0, 0, 0, 0.04);
+  padding: 40px 32px 32px;
+  position: relative;
+
+  @media (min-width: 640px) {
+    padding: 52px 48px 40px;
+  }
+}
+
+// personality tints (left border accent)
+.scl-letter-card--passionate {
+  border-left: 4px solid #ef4444;
+}
+
+.scl-letter-card--gentle {
+  border-left: 4px solid #22c55e;
+}
+
+.scl-letter-card--artist {
+  border-left: 4px solid #8b5cf6;
+}
+
+.scl-letter-card__top-rule,
+.scl-letter-card__bottom-rule {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 0 0 28px;
+}
+
+.scl-letter-card__bottom-rule {
+  margin: 28px 0 0;
+}
+
+// ── Letter Sections ──────────────────────────────────────────────────────────
+
+.scl-letter-section {
+  margin-bottom: 24px;
+
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+}
+
+.scl-letter-section--greeting {
+  margin-bottom: 20px;
+}
+
+.scl-letter-section--encouragement {
+  border-top: 1px dashed #e5e7eb;
+  padding-top: 24px;
+}
+
+.scl-greeting {
+  color: #374151;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.scl-letter-line {
+  color: #374151;
+  font-size: 15px;
+  line-height: 1.9;
+  margin: 0 0 4px;
+
+  &:empty {
+    display: none;
+  }
+
+  @media (min-width: 640px) {
+    font-size: 16px;
+  }
+}
+
+// ── Signature ────────────────────────────────────────────────────────────────
+
+.scl-letter-signature {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.scl-signature__icon {
+  font-size: 18px;
+}
+
+.scl-signature__name {
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+// ── Share Section ────────────────────────────────────────────────────────────
+
+.scl-share-section {
+  margin-top: 28px;
+  text-align: center;
+}
+
+.scl-share-section__label {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.scl-share-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.scl-share-btn {
+  align-items: center;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 6px;
+  padding: 10px 18px;
+  text-decoration: none;
+  transition: filter 0.15s ease, transform 0.1s ease;
+
+  &:hover { filter: brightness(0.93); }
+  &:active { transform: scale(0.97); }
+}
+
+.scl-share-btn--save {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.scl-share-btn--x {
+  background: #000;
+  color: #fff;
+}
+
+// ── Premium Banner ───────────────────────────────────────────────────────────
+
+.scl-premium-banner {
+  background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 100%);
+  border: 1px solid #c4b5fd;
+  border-radius: 16px;
+  margin-top: 28px;
+  padding: 24px;
+  text-align: center;
+}
+
+.scl-premium-banner__icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.scl-premium-banner__title {
+  color: #5b21b6;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.scl-premium-banner__list {
+  color: #6d28d9;
+  font-size: 13px;
+  line-height: 1.8;
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+
+  li::before {
+    content: "✓ ";
+    font-weight: 700;
+  }
+}
+
+.scl-premium-banner__cta {
+  background: #7c3aed;
+  border-radius: 10px;
+  color: #fff;
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 24px;
+  text-decoration: none;
+  transition: filter 0.15s ease;
+
+  &:hover { filter: brightness(0.9); color: #fff; }
+}
+
+// ── Empty State ──────────────────────────────────────────────────────────────
+
+.scl-empty {
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.scl-empty__icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.scl-empty__title {
+  color: #1f2937;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.scl-empty__desc {
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 0 0 24px;
+}
+
+.scl-empty__actions {
+  display: flex;
+  justify-content: center;
+}
+
+.scl-btn {
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 24px;
+  text-align: center;
+  text-decoration: none;
+  transition: filter 0.15s ease, transform 0.1s ease;
+
+  &:hover { filter: brightness(0.95); }
+  &:active { transform: scale(0.97); }
+}
+
+.scl-btn--primary {
+  background: #4f46e5;
+  color: #fff;
+}

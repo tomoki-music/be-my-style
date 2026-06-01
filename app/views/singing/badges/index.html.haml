@@ -136,6 +136,28 @@
         = link_to "診断に挑戦する", new_singing_diagnosis_path, class: "btn btn-primary"
         = link_to "ランキングに参加する", singing_rankings_path, class: "btn btn-secondary"
 
+    -# ── Growth Circle Badge ────────────────────────────────────────
+    %section.singing-badges__section.singing-badges__section--growth-circle
+      .singing-badges__section-head
+        %p.singing-badges__section-kicker Growth Circle
+        %h2 Growth Circle Badge
+        %p.singing-badges__section-desc 挑戦・応援・継続という行動があなただけの称号を生み出します。
+      - growth_circle_badges = Singing::GrowthCircleBadgeAnalyzer.call(current_customer)
+      - primary_badge = growth_circle_badges.first
+      - if primary_badge
+        .growth-circle-index-badge{ style: "border-color: #{primary_badge.color};" }
+          %span.growth-circle-index-badge__icon{ style: "color: #{primary_badge.color};" }= primary_badge.icon
+          .growth-circle-index-badge__body
+            %strong.growth-circle-index-badge__title{ style: "color: #{primary_badge.color};" }= primary_badge.title
+            %p.growth-circle-index-badge__desc= primary_badge.description
+      - else
+        .growth-circle-index-badge.growth-circle-index-badge--empty
+          %span.growth-circle-index-badge__icon 🌱
+          .growth-circle-index-badge__body
+            %p.growth-circle-index-badge__desc まだ称号がありません。応援したり診断を続けると付与されます。
+      = link_to growth_circle_singing_badges_path, class: "singing-badges__sub-link" do
+        Growth Circle をすべて見る →
+
     .singing-badges__nav
       = link_to singing_season_histories_path, class: "singing-badges__nav-link" do
         過去のシーズン成績を見る →

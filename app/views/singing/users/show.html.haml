@@ -11,6 +11,10 @@
           .growth-type-badge
             %span.growth-type-badge__icon= @growth_type.icon
             %span.growth-type-badge__label= @growth_type.label
+        - if @growth_circle_primary.present?
+          .growth-circle-mini-badge{ style: "border-color: #{@growth_circle_primary.color}; color: #{@growth_circle_primary.color};" }
+            %span.growth-circle-mini-badge__icon= @growth_circle_primary.icon
+            %span.growth-circle-mini-badge__title= @growth_circle_primary.title
         .singing-profile__title-card
           %span.singing-profile__title-icon= @profile_title.icon
           .singing-profile__title-body
@@ -102,6 +106,19 @@
                   %p.singing-profile__pinned-badge-date= badge.earned_at.strftime("%-m月%-d日 達成")
           - if current_customer == @user
             = link_to "バッジを管理する →", singing_badges_path, class: "singing-profile__pinned-manage-link"
+
+      - if @growth_circle_primary.present?
+        %section.singing-profile__section.singing-profile__section--growth-circle
+          .singing-profile__section-head
+            %p.singing-profile__section-kicker Growth Circle
+            %h2 あなたの称号
+          .growth-circle-profile-badge{ style: "border-color: #{@growth_circle_primary.color}; box-shadow: 0 0 20px #{@growth_circle_primary.color}33;" }
+            %span.growth-circle-profile-badge__icon{ style: "color: #{@growth_circle_primary.color};" }= @growth_circle_primary.icon
+            .growth-circle-profile-badge__body
+              %strong.growth-circle-profile-badge__title{ style: "color: #{@growth_circle_primary.color};" }= @growth_circle_primary.title
+              %p.growth-circle-profile-badge__desc= @growth_circle_primary.description
+          = link_to growth_circle_singing_badges_path, class: "singing-profile__sub-link" do
+            すべての称号を見る →
 
       %section.singing-profile__section
         .singing-profile__section-head

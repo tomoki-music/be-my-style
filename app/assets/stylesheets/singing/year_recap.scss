@@ -1,0 +1,435 @@
+.singing-year-recap {
+  background: #f7f8fb;
+  min-height: calc(100vh - 80px);
+  padding: 32px 16px 64px;
+
+  @media (min-width: 640px) {
+    padding: 48px 24px 80px;
+  }
+}
+
+.syw-inner {
+  margin: 0 auto;
+  max-width: 720px;
+}
+
+// ── Navigation ──────────────────────────────────────────────────────────────
+
+.syw-nav {
+  margin-bottom: 24px;
+}
+
+.syw-back-link {
+  color: #586174;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover { color: #1f2937; }
+}
+
+// ── Buttons ──────────────────────────────────────────────────────────────────
+
+.syw-btn {
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  transition: filter 0.15s ease, transform 0.1s ease;
+
+  &:hover { filter: brightness(0.95); }
+  &:active { transform: scale(0.97); }
+}
+
+.syw-btn--primary {
+  background: #4f46e5;
+  color: #fff;
+}
+
+.syw-btn--secondary {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.syw-btn--ghost {
+  background: transparent;
+  border: 1.5px solid #d1d5db;
+  color: #4b5563;
+}
+
+// ── Section Label ─────────────────────────────────────────────────────────────
+
+.syw-section-label {
+  color: #586174;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
+  text-transform: uppercase;
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+.syw-empty {
+  padding: 64px 0;
+  text-align: center;
+}
+
+.syw-empty__icon {
+  font-size: 52px;
+  margin-bottom: 16px;
+
+  @media (min-width: 640px) { font-size: 72px; }
+}
+
+.syw-empty__title {
+  color: #1f2937;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+
+  @media (min-width: 640px) { font-size: 26px; }
+}
+
+.syw-empty__desc {
+  color: #6b7280;
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+
+.syw-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+// ── Hero ─────────────────────────────────────────────────────────────────────
+
+.syw-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+  border-radius: 20px;
+  color: #fff;
+  margin-bottom: 20px;
+  padding: 36px 28px;
+  position: relative;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: syw-hero-in 0.5s ease both;
+  }
+}
+
+@keyframes syw-hero-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.syw-hero__eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  margin-bottom: 8px;
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+
+.syw-hero__title {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 12px;
+
+  @media (min-width: 640px) { font-size: 30px; }
+}
+
+.syw-hero__type {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  display: inline-flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  padding: 6px 14px;
+}
+
+.syw-hero__type-icon {
+  font-size: 16px;
+}
+
+.syw-hero__type-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.syw-hero__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 4px;
+}
+
+.syw-hero__stat {
+  align-items: baseline;
+  display: flex;
+  gap: 4px;
+}
+
+.syw-hero__stat-num {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+
+  @media (min-width: 640px) { font-size: 40px; }
+}
+
+.syw-hero__stat-unit {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+// ── Stats Grid ────────────────────────────────────────────────────────────────
+
+.syw-stats-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, 1fr);
+  margin-bottom: 20px;
+
+  @media (min-width: 480px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.syw-stat-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(31, 41, 55, 0.07);
+  padding: 18px 16px;
+}
+
+.syw-stat-card--highlight {
+  background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+  border: 1.5px solid #c7d2fe;
+}
+
+.syw-stat-card__label {
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.syw-stat-card--highlight .syw-stat-card__label {
+  color: #4338ca;
+}
+
+.syw-stat-card__value {
+  color: #1f2937;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 2px;
+
+  @media (min-width: 640px) { font-size: 22px; }
+}
+
+.syw-stat-card--highlight .syw-stat-card__value {
+  color: #3730a3;
+}
+
+.syw-stat-card__sub {
+  color: #4f46e5;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+// ── Milestones ────────────────────────────────────────────────────────────────
+
+.syw-milestones {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(31, 41, 55, 0.07);
+  margin-bottom: 20px;
+  padding: 24px;
+}
+
+.syw-milestone-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.syw-milestone-item {
+  align-items: flex-start;
+  display: flex;
+  gap: 14px;
+  padding: 12px 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid #f3f4f6;
+  }
+}
+
+.syw-milestone-item__dot {
+  background: #4f46e5;
+  border-radius: 50%;
+  flex-shrink: 0;
+  height: 10px;
+  margin-top: 5px;
+  width: 10px;
+}
+
+.syw-milestone-item__label {
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.syw-milestone-item__date {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+// ── AI Narration ──────────────────────────────────────────────────────────────
+
+.syw-narration {
+  margin-bottom: 20px;
+}
+
+.syw-narration__card {
+  background: linear-gradient(135deg, #0f172a, #1e1b4b);
+  border-radius: 16px;
+  color: #fff;
+  padding: 24px;
+}
+
+.syw-narration__head {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.syw-narration__icon {
+  font-size: 18px;
+}
+
+.syw-narration__title {
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.syw-narration__text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+.syw-narration__streak {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 14px;
+  padding: 10px 14px;
+}
+
+// ── Growth Type ───────────────────────────────────────────────────────────────
+
+.syw-growth-type {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(31, 41, 55, 0.07);
+  margin-bottom: 20px;
+  padding: 24px;
+}
+
+.syw-growth-type__card {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+}
+
+.syw-growth-type__icon {
+  flex-shrink: 0;
+  font-size: 36px;
+
+  @media (min-width: 640px) { font-size: 44px; }
+}
+
+.syw-growth-type__label {
+  color: #1f2937;
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.syw-growth-type__desc {
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+// ── Coach Reflection ──────────────────────────────────────────────────────────
+
+.syw-coach {
+  margin-bottom: 20px;
+}
+
+.syw-coach__card {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-radius: 16px;
+  padding: 22px 24px;
+}
+
+.syw-coach__head {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.syw-coach__icon {
+  font-size: 18px;
+}
+
+.syw-coach__title {
+  color: #78350f;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.syw-coach__text {
+  color: #92400e;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+
+.syw-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-start;
+  margin-top: 8px;
+}
+
+// ── Reduced motion ────────────────────────────────────────────────────────────
+
+@media (prefers-reduced-motion: reduce) {
+  .syw-hero { animation: none; }
+  .syw-btn  { transition: none; }
+}

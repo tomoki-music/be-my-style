@@ -114,6 +114,18 @@ module Singing
       BG_STYLE_LABELS[bg_style.to_sym] || bg_style.to_s
     end
 
+    GROWTH_CIRCLE_CONDITIONS = {
+      community_supporter:  "仲間に3回以上応援リアクションを送ると獲得できます",
+      growth_inspirer:      "3人以上から応援リアクションを受け取ると獲得できます",
+      motivation_booster:   "3人以上の異なるユーザーに応援リアクションを送ると獲得できます",
+      consistency_champion: "診断を7日連続で続けると獲得できます",
+      rising_singer:        "直近5回の診断で3点以上スコアが伸びると獲得できます"
+    }.freeze
+
+    def growth_circle_condition_text(key)
+      GROWTH_CIRCLE_CONDITIONS[key.to_sym] || ""
+    end
+
     def achievement_badge_modal_data(key:, definition:, earned:, progress_hint:, can_share:, show_pin:, earned_achievement_keys: nil)
       is_earned  = earned.present?
       is_pinned  = is_earned && earned.pinned?

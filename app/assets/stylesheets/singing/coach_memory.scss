@@ -1,0 +1,148 @@
+.coach-memory-card {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border-radius: 16px;
+  color: #e8eaf6;
+  margin: 32px 0;
+  overflow: hidden;
+}
+
+.coach-memory-card__header {
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px 16px;
+}
+
+.coach-memory-card__icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.coach-memory-card__title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.coach-memory-card__title {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.coach-memory-card__label {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.coach-memory-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 4px 0;
+}
+
+.coach-memory-card__section {
+  padding: 16px 24px;
+  position: relative;
+
+  &::before {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 0;
+    bottom: 0;
+    content: "";
+    left: 24px;
+    position: absolute;
+    right: 24px;
+    top: 0;
+    opacity: 0;
+  }
+
+  &:nth-child(odd)::before {
+    opacity: 1;
+  }
+}
+
+.coach-memory-card__section-label {
+  color: rgba(255, 255, 255, 0.5);
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.coach-memory-card__section--remember .coach-memory-card__section-label {
+  color: #90caf9;
+}
+
+.coach-memory-card__section--recognize .coach-memory-card__section-label {
+  color: #a5d6a7;
+}
+
+.coach-memory-card__section--next .coach-memory-card__section-label {
+  color: #ffcc80;
+}
+
+.coach-memory-card__text {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.coach-memory-card__stats {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  padding: 16px 24px;
+}
+
+.coach-memory-card__stat {
+  align-items: baseline;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 72px;
+  padding: 4px 12px 4px 0;
+}
+
+.coach-memory-card__stat-value {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.coach-memory-card__stat-label {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+@media (max-width: 480px) {
+  .coach-memory-card__header {
+    padding: 16px 16px 12px;
+  }
+
+  .coach-memory-card__section {
+    padding: 14px 16px;
+  }
+
+  .coach-memory-card__stats {
+    padding: 14px 16px;
+  }
+
+  .coach-memory-card__text {
+    font-size: 13px;
+  }
+}

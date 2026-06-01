@@ -1,0 +1,52 @@
+- content_for :title, "Growth Circle | BeMyStyle"
+
+.growth-feed
+  .growth-feed__inner
+
+    .growth-feed__header
+      .growth-feed__header-eyebrow Growth Circle
+      %h1.growth-feed__header-title コミュニティの鼓動
+      %p.growth-feed__header-sub
+        今週の挑戦と応援が流れる、みんなの成長フィードです。
+
+    .growth-feed__pulse
+      .growth-feed__pulse-copy
+        %p.growth-feed__pulse-eyebrow 🔥 今週の挑戦
+        %h2.growth-feed__pulse-title ✨ 応援が飛び交っています
+        %p.growth-feed__pulse-sub 🎤 あなたも歌ってみませんか？
+      .growth-feed__pulse-stats
+        .growth-feed__pulse-stat
+          %strong= "#{@feed_summary&.weekly_singer_count.to_i}人"
+          %span 今週歌いました
+        .growth-feed__pulse-stat
+          %strong= "#{@feed_summary&.weekly_cheer_count.to_i}件"
+          %span 応援が届きました
+        .growth-feed__pulse-stat
+          %strong= "#{@feed_summary&.weekly_challenge_completion_count.to_i}件"
+          %span チャレンジ達成
+      - if @feed_summary&.growth_type_highlights.present?
+        .growth-feed__type-highlights
+          - @feed_summary.growth_type_highlights.each do |highlight|
+            .growth-feed__type-highlight
+              %span= highlight.icon
+              %strong= highlight.message
+
+    - if @feed_items.empty?
+      .growth-feed__empty
+        %p.growth-feed__empty-icon 🎤
+        %p.growth-feed__empty-text
+          ようこそ。まだ仲間の成長ストーリーはありません。
+          %br
+          まずは今日の挑戦から、音楽を楽しんでみよう。
+    - else
+      .growth-feed__list
+        - @feed_items.each do |item|
+          = render "singing/growth_feeds/feed_item", item: item
+
+    .growth-feed__nav
+      = link_to singing_challenges_path, class: "growth-feed__nav-primary" do
+        今日の挑戦を見る
+      = link_to new_singing_diagnosis_path, class: "growth-feed__nav-primary" do
+        自分も歌ってみる
+      = link_to singing_diagnoses_path, class: "growth-feed__nav-link" do
+        成長記録を見る

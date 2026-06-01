@@ -1,13 +1,14 @@
-- content_for :title, "歌唱・演奏診断 | BeMyStyle"
+- content_for :title, "BeMyStyle Singing | 音楽コミュニティ"
 - content_for :suppress_singing_nav, "1"
 
-- lp_cta_label = customer_signed_in? ? "診断を始める" : "無料登録して診断する"
+- lp_cta_label = customer_signed_in? ? "診断してみる" : "無料登録して参加する"
 - lp_primary_cta_path = customer_signed_in? ? new_singing_diagnosis_path : new_customer_registration_path
 - lp_cta_options = { class: "lp-btn" }
 - lp_cta_options[:data] = { turbolinks: false } unless customer_signed_in?
-- singing_lp_back_label = @singing_lp_back_label || "歌唱・演奏診断トップへ"
+- singing_lp_back_label = @singing_lp_back_label || "Singingホームへ"
 - singing_lp_back_path = @singing_lp_back_path || singing_root_path
-- singing_lp_hero_back_label = @singing_lp_hero_back_label || "歌唱・演奏診断トップへ戻る"
+- singing_lp_hero_back_label = @singing_lp_hero_back_label || "Singingホームへ戻る"
+- music_home = @music_community_home
 
 .lp-container.lp-container--singing
 
@@ -17,9 +18,9 @@
         %span.logo-main BeMyStyle
       .lp-singing-nav.lp-singing-nav--desktop
         - if customer_signed_in?
-          = link_to "診断を始める", new_singing_diagnosis_path, class: "lp-singing-nav__link lp-singing-nav__link--primary"
+          = link_to "今日の挑戦", singing_challenges_path, class: "lp-singing-nav__link lp-singing-nav__link--primary"
+          = link_to "みんなの成長", singing_growth_feed_path, class: "lp-singing-nav__link"
           = link_to "成長記録", singing_diagnoses_path, class: "lp-singing-nav__link"
-          = link_to "ランキング", singing_rankings_path, class: "lp-singing-nav__link lp-singing-nav__link--ranking"
           = link_to "プランを変更する", "#lp-section", class: "lp-singing-nav__link"
           = button_to "ログアウト",
             destroy_customer_session_path,
@@ -36,9 +37,9 @@
         .lp-singing-mobile-nav__panel
           .lp-singing-nav.lp-singing-nav--mobile
             - if customer_signed_in?
-              = link_to "診断を始める", new_singing_diagnosis_path, class: "lp-singing-nav__link lp-singing-nav__link--primary"
+              = link_to "今日の挑戦", singing_challenges_path, class: "lp-singing-nav__link lp-singing-nav__link--primary"
+              = link_to "みんなの成長", singing_growth_feed_path, class: "lp-singing-nav__link"
               = link_to "成長記録", singing_diagnoses_path, class: "lp-singing-nav__link"
-              = link_to "ランキング", singing_rankings_path, class: "lp-singing-nav__link lp-singing-nav__link--ranking"
               = link_to "プランを変更する", "#lp-section", class: "lp-singing-nav__link"
               = button_to "ログアウト",
                 destroy_customer_session_path,
@@ -49,19 +50,107 @@
 
   .lp-hero
     .lp-hero-inner
-      %p.lp-eyebrow Singing / Performance Diagnosis
+      %p.lp-eyebrow Singing Music Community
       %h1.lp-hero-title
-        %span 歌声の今を知る。
-        %span 練習の次を決める。
+        %span おかえりなさい。
+        %span 今日も音楽を楽しもう。
       %p
-        音程・リズム・表現を見える化し、あなたの歌声や演奏に合った振り返りと練習のヒントを届けます。
+        = music_home&.hero_message || "まずは楽しむところから始めよう"
       .lp-hero-points
-        %span.lp-chip スコアで見える
-        %span.lp-chip 前回比較で続けやすい
-        %span.lp-chip PremiumはAIコメント対応
-      = link_to lp_cta_label, lp_primary_cta_path, lp_cta_options.merge(class: "lp-btn lp-btn--hero-cta")
+        %span.lp-chip 今日の挑戦
+        %span.lp-chip 仲間とつながる
+        %span.lp-chip イベントに出会う
+        %span.lp-chip 成長を続ける
+      = link_to "今日のホームを見る", "#music-community-home", class: "lp-btn lp-btn--hero-cta"
       .lp-hero-back
         = link_to singing_lp_hero_back_label, singing_lp_back_path
+
+  - if music_home.present?
+    .lp-section.singing-community-home#music-community-home
+      .singing-community-home__inner
+        %p.singing-community-home__eyebrow Music Community Home
+        %h2 今日は何をしようかな
+        %p.lp-section-lead
+          診断だけで終わらず、今日の挑戦、仲間、イベント、成長へ自然につながるホームです。
+
+        .singing-community-home__mission
+          .singing-community-home__section-label Today's Mission
+          %h3= music_home.today_mission&.title || "今日はここだけ歌ってみよう"
+          %p= music_home.today_mission&.description || "好きな曲から、歌いたい部分を少しだけ選んで歌ってみよう。"
+          - if music_home.today_mission&.coach_message.present?
+            %p.singing-community-home__coach-message= music_home.today_mission.coach_message
+
+        .singing-community-home__network
+          .singing-community-home__band-header
+            %span.singing-community-home__section-label Community Network
+            %h3 あなたと近い仲間
+            %p= music_home.community_network&.message || "音楽を楽しむ仲間が増えています。これからつながりが広がっていきます。"
+          - if music_home.community_network&.connections.present?
+            .singing-community-home__network-list
+              - music_home.community_network.connections.each do |connection|
+                .singing-community-home__network-item{ class: "singing-community-home__network-item--#{connection.connection_type}" }
+                  .singing-community-home__network-avatar
+                    %span= connection.growth_type_icon || "🎤"
+                  .singing-community-home__network-copy
+                    %strong= connection.display_name
+                    %span= connection.reason
+                    - if connection.growth_type_label.present?
+                      %em= connection.growth_type_label
+          - else
+            .singing-community-home__network-empty
+              %strong 音楽を楽しむ仲間が増えています。
+              %span これからつながりが広がっていきます。
+
+        .singing-community-home__band
+          .singing-community-home__band-header
+            %span.singing-community-home__section-label 仲間
+            %h3= music_home.community_summary.title
+            %p= music_home.community_summary.message
+          .singing-community-home__cards
+            - music_home.community_summary.items.each do |item|
+              .singing-community-home__card
+                %span.singing-community-home__card-label= item.label
+                %h4= item.title
+                %p= item.message
+                - if item.meta.present?
+                  %span.singing-community-home__meta= item.meta
+          = link_to music_home.community_summary.cta_label, music_home.community_summary.cta_url, class: "singing-community-home__link"
+
+        .singing-community-home__band
+          .singing-community-home__band-header
+            %span.singing-community-home__section-label イベント
+            %h3= music_home.recommended_event.title
+            %p= music_home.recommended_event.message
+          .singing-community-home__cards.singing-community-home__cards--two
+            - music_home.recommended_event.items.each do |item|
+              .singing-community-home__card
+                %span.singing-community-home__card-label= item.label
+                %h4= item.title
+                %p= item.message
+                - if item.meta.present?
+                  %span.singing-community-home__meta= item.meta
+          = link_to music_home.recommended_event.cta_label, music_home.recommended_event.cta_url, class: "singing-community-home__link"
+
+        .singing-community-home__band
+          .singing-community-home__band-header
+            %span.singing-community-home__section-label 成長
+            %h3= music_home.growth_summary.title
+            %p= music_home.growth_summary.message
+          .singing-community-home__cards.singing-community-home__cards--two
+            - music_home.growth_summary.items.each do |item|
+              .singing-community-home__card
+                %span.singing-community-home__card-label= item.label
+                %h4= item.title
+                %p= item.message
+                - if item.meta.present?
+                  %span.singing-community-home__meta= item.meta
+          = link_to music_home.growth_summary.cta_label, music_home.growth_summary.cta_url, class: "singing-community-home__link"
+
+        .singing-community-home__diagnosis-cta
+          %p 記録したくなったら、最後に今の声を残してみよう。
+          .singing-community-home__diagnosis-actions
+            = link_to "みんなの成長を見る", singing_growth_feed_path, class: "singing-community-home__feed-link"
+            = link_to lp_cta_label, lp_primary_cta_path, lp_cta_options.merge(class: "lp-btn")
 
   - if customer_signed_in? && @growth_dashboard
     = render "singing/shared/home_growth_dashboard", dashboard: @growth_dashboard

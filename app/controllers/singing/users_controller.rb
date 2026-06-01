@@ -30,7 +30,9 @@ class Singing::UsersController < Singing::BaseController
     @growth_position = @growth_index.present? ? @growth_index + 1 : nil
     @safe_profile_url = safe_external_url(@user.url)
     @journey_summary = Singing::JourneySummaryBuilder.call(@user)
-    @growth_type = Singing::GrowthTypeAnalyzer.call(@user)
+    @growth_type           = Singing::GrowthTypeAnalyzer.call(@user)
+    @growth_circle_badges  = Singing::GrowthCircleBadgeAnalyzer.call(@user)
+    @growth_circle_primary = @growth_circle_badges.first
     @profile_reaction_counts = @user.received_singing_profile_reactions.group(:reaction_type).count
     @current_customer_profile_reactions = if current_customer.present?
       current_customer.singing_profile_reactions.where(target_customer: @user).pluck(:reaction_type)

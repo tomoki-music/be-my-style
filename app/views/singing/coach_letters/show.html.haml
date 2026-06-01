@@ -1,0 +1,88 @@
+- content_for :title, "コーチからの手紙 | BeMyStyle"
+
+.singing-coach-letter
+  .scl-inner
+
+    -# ── Nav ────────────────────────────────────────────────────────────
+    .scl-nav
+      = link_to "← Memory Album", singing_memory_album_path, class: "scl-back-link"
+
+    - if @letter.has_letter
+
+      -# ── Header ──────────────────────────────────────────────────────
+      .scl-page-header
+        .scl-page-header__eyebrow
+          = @letter.coach_icon
+          コーチからの手紙
+        %h1.scl-page-header__title あなたへの、ひとつの手紙
+
+      -# ── Letter Card ─────────────────────────────────────────────────
+      .scl-letter-card{ class: "scl-letter-card--#{@letter.personality}" }
+
+        .scl-letter-card__top-rule
+
+        -# Greeting
+        .scl-letter-section.scl-letter-section--greeting
+          %p.scl-greeting= @letter.greeting
+
+        -# Introduction
+        .scl-letter-section
+          - @letter.introduction.split("\n").each do |line|
+            %p.scl-letter-line= line
+
+        -# Journey
+        .scl-letter-section
+          - @letter.journey.split("\n").each do |line|
+            %p.scl-letter-line= line
+
+        -# Growth
+        .scl-letter-section
+          - @letter.growth.split("\n").each do |line|
+            %p.scl-letter-line= line
+
+        -# Encouragement
+        .scl-letter-section.scl-letter-section--encouragement
+          - @letter.encouragement.split("\n").each do |line|
+            %p.scl-letter-line= line
+
+        -# Signature
+        .scl-letter-signature
+          %span.scl-signature__icon= @letter.coach_icon
+          %span.scl-signature__name= @letter.coach_label
+
+        .scl-letter-card__bottom-rule
+
+      -# ── Share Actions ────────────────────────────────────────────────
+      .scl-share-section
+        %p.scl-share-section__label この手紙を保存・シェアする
+        .scl-share-actions
+          %button.scl-share-btn.scl-share-btn--save{ type: "button", id: "js-coach-letter-save" }
+            📷 画像で保存
+          = link_to "https://twitter.com/intent/tweet?text=#{URI.encode_www_form_component("AIコーチから手紙が届きました。 #BeMyStyle")}", target: "_blank", rel: "noopener", class: "scl-share-btn scl-share-btn--x" do
+            𝕏 でシェア
+
+      -# ── Premium Upsell ──────────────────────────────────────────────
+      - unless @is_premium
+        .scl-premium-banner
+          .scl-premium-banner__icon ✨
+          %h3.scl-premium-banner__title Premium で、もっと深く
+          %ul.scl-premium-banner__list
+            %li 毎月届く「月次コーチレター」
+            %li 年末に届く「年次コーチレター」
+            %li 節目に届く「特別コーチレター」
+          = link_to singing_join_path, class: "scl-premium-banner__cta" do
+            Premium を見る →
+
+    - else
+
+      -# ── Empty ────────────────────────────────────────────────────────
+      .scl-empty
+        .scl-empty__icon 🎤
+        %h2.scl-empty__title まだ手紙が届いていません
+        %p.scl-empty__desc
+          診断を続けると、AIコーチからあなただけの手紙が届きます。
+          %br
+          まずは歌声診断を始めてみましょう。
+        .scl-empty__actions
+          = link_to new_singing_diagnosis_path, class: "scl-btn scl-btn--primary" do
+            診断を始める

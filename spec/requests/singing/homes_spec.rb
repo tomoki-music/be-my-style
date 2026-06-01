@@ -15,9 +15,12 @@ RSpec.describe "Singing::Homes", type: :request do
       get singing_root_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("歌声の今を知る")
+      expect(response.body).to include("今日も音楽を楽しもう")
+      expect(response.body).to include("今日は何をしようかな")
+      expect(response.body).to include("あなたと近い仲間")
       expect(response.body).to include("歌唱・演奏診断プラン")
-      expect(response.body).to include("診断履歴を見る")
+      expect(response.body).to include("成長記録を見る")
+      expect(response.body).to include("みんなの成長")
     end
 
     context "Recap Movie CTA（ログイン済み）" do

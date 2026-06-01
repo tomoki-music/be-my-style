@@ -41,7 +41,8 @@ class Customer < ApplicationRecord
     singing_diagnosis_ai_comment: %w[premium],
     singing_monthly_wrapped_share_image: %w[core premium],
     singing_yearly_wrapped_share_image: %w[premium],
-    singing_achievement_badge_share_image: %w[core premium]
+    singing_achievement_badge_share_image: %w[core premium],
+    singing_growth_circle_all_badges:       %w[premium]
   }.freeze
 
   # Include default devise modules. Others available are:
@@ -142,6 +143,11 @@ class Customer < ApplicationRecord
   has_many :singing_profile_reactions, dependent: :destroy
   has_many :received_singing_profile_reactions,
            class_name: "SingingProfileReaction",
+           foreign_key: "target_customer_id",
+           dependent: :destroy
+  has_many :singing_cheer_reactions, dependent: :destroy
+  has_many :received_singing_cheer_reactions,
+           class_name: "SingingCheerReaction",
            foreign_key: "target_customer_id",
            dependent: :destroy
 
@@ -526,6 +532,26 @@ class Customer < ApplicationRecord
     return if current_customer.blank? || current_customer.id == id
 
     action = SingingProfileReaction.notification_action_for(reaction_type)
+    return if action.blank?
+
+    temp = Notification.where(
+      visitor_id: current_customer.id,
+      visited_id: id,
+      action: action
+    )
+    if temp.blank?
+      notification = current_customer.active_notifications.new(
+        visited_id: id,
+        action: action
+      )
+      notification.save if notification.valid?
+    end
+  end
+
+  def create_notification_singing_cheer_reaction(current_customer, reaction_type)
+    return if current_customer.blank? || current_customer.id == id
+
+    action = SingingCheerReaction.notification_action_for(reaction_type)
     return if action.blank?
 
     temp = Notification.where(

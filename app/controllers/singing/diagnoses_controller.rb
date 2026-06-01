@@ -84,7 +84,9 @@ class Singing::DiagnosesController < Singing::BaseController
         current_customer,
         earned_badge_keys: current_customer.singing_achievement_badges.pluck(:badge_key).to_set
       )
-      @journey_summary = Singing::JourneySummaryBuilder.call(current_customer)
+      @journey_summary  = Singing::JourneySummaryBuilder.call(current_customer)
+      @coach_memory     = Singing::CoachMemoryBuilder.call(current_customer)
+      @coach_reflection = Singing::CoachReflectionBuilder.call(current_customer, @diagnosis, @coach_memory)
       @singer_rank = current_customer.singer_rank
       @singer_rank_progress = current_customer.singer_rank_progress
       @singer_next_rank = current_customer.singer_next_rank

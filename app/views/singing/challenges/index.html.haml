@@ -1,0 +1,240 @@
+- content_for :title, "Challenge Circle | BeMyStyle"
+
+.challenge-circle
+  .challenge-circle__inner
+
+    .challenge-circle__header
+      %p.challenge-circle__eyebrow Challenge Circle
+      %h1.challenge-circle__title 今日の挑戦を見つける
+      %p.challenge-circle__lead
+        今日の挑戦、仲間の応援、次の成長ルートを
+        %br
+        歌いながらひとつずつ見つけていこう。
+
+    .challenge-circle__period
+      - first = @challenges.first
+      - if first
+        %span.challenge-circle__period-label
+          今週のチャレンジ期間：
+          %strong= "#{first.start_date.strftime('%-m/%-d')} 〜 #{first.end_date.strftime('%-m/%-d')}"
+
+    .challenge-circle__story
+      .challenge-circle__story-heading
+        %span.challenge-circle__story-step 1
+        .challenge-circle__story-copy
+          %p.challenge-circle__story-eyebrow 今日の挑戦
+          %h2.challenge-circle__story-title まずは、今日できる一歩から
+
+      - if @todays_mission
+        %section.today-mission
+          .today-mission__topline
+            %span.today-mission__badge 今日のミッション
+            %span.today-mission__score= "挑戦しやすさ #{@todays_mission.recommended_score}%"
+          .today-mission__body
+            %p.today-mission__label 今日はここだけ
+            %h2.today-mission__title= @todays_mission.title
+            %p.today-mission__description= @todays_mission.description
+          .today-mission__reason
+            %span.today-mission__reason-label 今これが合いそうな理由
+            %p= @todays_mission.reason
+          %p.today-mission__coach= @todays_mission.coach_message
+          .today-mission__footer
+            %span.today-mission__difficulty= "目安 #{@todays_mission.difficulty}"
+            = link_to new_singing_diagnosis_path, class: "today-mission__button" do
+              今日のミッションに挑戦する
+
+      .challenge-circle__story-heading
+        %span.challenge-circle__story-step 2
+        .challenge-circle__story-copy
+          %p.challenge-circle__story-eyebrow 仲間とつながる
+          %h2.challenge-circle__story-title 同じ方向へ進む人がいる
+
+      - if @mission_matching
+        %section.mission-matching
+          .mission-matching__header
+            %span.mission-matching__icon 🎤
+            .mission-matching__heading
+              %p.mission-matching__eyebrow Mission Matching
+              %h2.mission-matching__title= @mission_matching.title
+          .mission-matching__count
+            %span.mission-matching__count-label 今週、同じ方向に挑戦している仲間
+            %strong= "#{@mission_matching.matched_count}人"
+          %p.mission-matching__message= @mission_matching.message
+          = link_to @mission_matching.cta_label, @mission_matching.cta_url, class: "mission-matching__button"
+
+      - if @community_challenge
+        %section.community-challenge
+          .community-challenge__header
+            %span.community-challenge__icon 🤝
+            .community-challenge__heading
+              %p.community-challenge__eyebrow 仲間と応援
+              %h2.community-challenge__title 今週この挑戦をしている仲間
+          - if @community_challenge.has_activity?
+            .community-challenge__stats
+              .community-challenge__stat
+                %span.community-challenge__stat-value= "#{@community_challenge.participant_count}人"
+                %span.community-challenge__stat-label 挑戦中
+              .community-challenge__stat
+                %span.community-challenge__stat-value= "#{@community_challenge.cheer_count}件"
+                %span.community-challenge__stat-label 応援
+              .community-challenge__stat
+                %span.community-challenge__stat-value= "#{@community_challenge.completion_count}件"
+                %span.community-challenge__stat-label 達成
+          - else
+            .community-challenge__empty
+              %strong あなたが最初の挑戦者です
+          %p.community-challenge__message= @community_challenge.message
+
+      - if @growth_type_community
+        %section.growth-type-community
+          .growth-type-community__header
+            %span.growth-type-community__icon 👥
+            .growth-type-community__heading
+              %p.growth-type-community__eyebrow GrowthType Community
+              %h2.growth-type-community__title= @growth_type_community.title
+          .growth-type-community__type
+            %span.growth-type-community__type-label あなたの成長タイプ
+            %strong= @growth_type_community.description
+          %p.growth-type-community__message= @growth_type_community.community_message
+          .growth-type-community__footer
+            %span.growth-type-community__count= "#{@growth_type_community.member_count}人の仲間"
+            = link_to @growth_type_community.cta_label, @growth_type_community.cta_url, class: "growth-type-community__button"
+
+      .challenge-circle__story-heading
+        %span.challenge-circle__story-step 3
+        .challenge-circle__story-copy
+          %p.challenge-circle__story-eyebrow 歌ってみよう
+          %h2.challenge-circle__story-title 音楽の場へ、少し近づく
+
+      - if @session_recommendation
+        %section.session-recommendation
+          .session-recommendation__header
+            %span.session-recommendation__icon 🎵
+            .session-recommendation__heading
+              %p.session-recommendation__eyebrow Session Recommendation
+              %h2.session-recommendation__title= @session_recommendation.title
+          .session-recommendation__event
+            %span.session-recommendation__event-label おすすめの歌う場所
+            %strong= @session_recommendation.event_name
+          %p.session-recommendation__message= @session_recommendation.message
+          %p.session-recommendation__reason= @session_recommendation.reason
+          = link_to @session_recommendation.cta_label, @session_recommendation.event_url, class: "session-recommendation__button"
+
+      - if @mmm_connection
+        %section.mmm-connection
+          .mmm-connection__header
+            %span.mmm-connection__icon 🎸
+            .mmm-connection__heading
+              %p.mmm-connection__eyebrow MMM Connection
+              %h2.mmm-connection__title= @mmm_connection.title
+          %p.mmm-connection__message= @mmm_connection.message
+          = link_to @mmm_connection.cta_label, @mmm_connection.cta_url, class: "mmm-connection__button"
+
+      .challenge-circle__story-heading
+        %span.challenge-circle__story-step 4
+        .challenge-circle__story-copy
+          %p.challenge-circle__story-eyebrow 次の成長へ
+          %h2.challenge-circle__story-title 今月の道しるべを見る
+
+      - if @recommended_journey
+        %section.recommended-journey
+          .recommended-journey__coach
+            %span.recommended-journey__coach-icon= @recommended_journey.coach_icon
+            %span.recommended-journey__coach-label= @recommended_journey.coach_label
+          .recommended-journey__body
+            %p.recommended-journey__eyebrow 次に伸ばす挑戦
+            %h2.recommended-journey__title= @recommended_journey.title
+            %p.recommended-journey__message= @recommended_journey.message
+            %p.recommended-journey__reason= @recommended_journey.reason
+            .recommended-journey__target
+              %span.recommended-journey__target-icon= @recommended_journey.challenge.icon
+              %span.recommended-journey__target-title= @recommended_journey.challenge.title
+              %span.recommended-journey__target-progress= @recommended_journey.progress.progress_label
+
+      - if @personal_growth_roadmap
+        %section.growth-roadmap
+          .growth-roadmap__header
+            %p.growth-roadmap__eyebrow 今月の成長ルート
+            %h2.growth-roadmap__title= @personal_growth_roadmap.title
+            %p.growth-roadmap__subtitle= @personal_growth_roadmap.subtitle
+          .growth-roadmap__steps
+            - @personal_growth_roadmap.steps.each do |step|
+              .growth-roadmap__step{ class: "growth-roadmap__step--#{step.status}" }
+                .growth-roadmap__step-marker
+                  - if step.completed?
+                    %span.growth-roadmap__step-check ✓
+                  - else
+                    %span.growth-roadmap__step-number= step.number
+                .growth-roadmap__step-body
+                  %span.growth-roadmap__step-label= step.label
+                  %h3.growth-roadmap__step-title= step.title
+                  %p.growth-roadmap__step-desc= step.description
+          %p.growth-roadmap__coach-message= @personal_growth_roadmap.coach_message
+
+    .challenge-circle__section-heading
+      %p.challenge-circle__section-eyebrow More Challenges
+      %h2.challenge-circle__section-title 今日の挑戦をもう少し見る
+
+    .challenge-circle__list
+      - @challenges.each do |challenge|
+        - progress = @progress_by_id[challenge.id]
+        - is_premium = challenge.premium_only?
+        - is_locked  = is_premium && !@can_see_premium
+
+        .challenge-card{ class: [
+          ("challenge-card--completed" if progress&.completed),
+          ("challenge-card--locked"    if is_locked),
+          ("challenge-card--premium"   if is_premium)
+        ].compact.join(" ") }
+
+          .challenge-card__header
+            %span.challenge-card__icon= challenge.icon
+            .challenge-card__meta
+              %strong.challenge-card__title= challenge.title
+              - if is_premium
+                %span.challenge-card__premium-tag Premium
+            - if progress&.completed
+              %span.challenge-card__done-badge
+                🎉 達成！
+
+          %p.challenge-card__desc= challenge.description
+
+          - if is_locked
+            .challenge-card__locked-body
+              %p.challenge-card__locked-msg
+                Premiumプランで参加できます。
+              = link_to public_singing_lp_path(anchor: "lp-section"), class: "challenge-card__locked-btn" do
+                Premiumを見る
+
+          - elsif progress
+            .challenge-card__progress
+              .challenge-card__progress-header
+                %span.challenge-card__progress-label= progress.progress_label
+                %span.challenge-card__progress-pct= "#{progress.progress_percent}%"
+              .challenge-card__progress-track
+                .challenge-card__progress-fill{ style: "width: #{progress.progress_percent}%;" }
+
+            .challenge-card__community
+              .challenge-card__community-item
+                %span.challenge-card__community-icon 👥
+                %span.challenge-card__community-num= "#{challenge.participant_count}人"
+                %span.challenge-card__community-lbl 参加中
+              .challenge-card__community-item
+                %span.challenge-card__community-icon 🏆
+                %span.challenge-card__community-num= "#{challenge.completion_rate}%"
+                %span.challenge-card__community-lbl 達成率
+
+            - unless progress.completed
+              .challenge-card__action
+                = link_to new_singing_diagnosis_path, class: "challenge-card__action-btn" do
+                  この挑戦も進める
+
+    .challenge-circle__nav
+      = link_to singing_growth_feed_path, class: "challenge-circle__nav-link" do
+        仲間の成長を見る →
+      = link_to singing_root_path, class: "challenge-circle__nav-link" do
+        音楽コミュニティホームへ
+      = link_to singing_badges_path, class: "challenge-circle__nav-link" do
+        バッジ一覧 →
+      = link_to new_singing_diagnosis_path, class: "btn btn-primary challenge-circle__nav-btn" do
+        診断してみる

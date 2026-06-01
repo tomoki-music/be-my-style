@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_28_084131) do
+ActiveRecord::Schema.define(version: 2026_06_01_000001) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -888,6 +888,18 @@ ActiveRecord::Schema.define(version: 2026_05_28_084131) do
     t.index ["token"], name: "index_singing_battles_on_token", unique: true
   end
 
+  create_table "singing_cheer_reactions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "target_customer_id", null: false
+    t.string "reaction_type", limit: 40, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id", "target_customer_id", "reaction_type"], name: "index_singing_cheer_reactions_unique", unique: true
+    t.index ["customer_id"], name: "index_singing_cheer_reactions_on_customer_id"
+    t.index ["target_customer_id", "reaction_type"], name: "index_singing_cheer_reactions_on_target_and_type"
+    t.index ["target_customer_id"], name: "index_singing_cheer_reactions_on_target_customer_id"
+  end
+
   create_table "singing_daily_challenge_progresses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "singing_daily_challenge_id", null: false
@@ -1262,6 +1274,8 @@ ActiveRecord::Schema.define(version: 2026_05_28_084131) do
   add_foreign_key "singing_battles", "customers", column: "opponent_id", name: "fk_singing_battles_opponent"
   add_foreign_key "singing_battles", "singing_diagnoses", column: "challenger_diagnosis_id", name: "fk_singing_battles_challenger_diagnosis"
   add_foreign_key "singing_battles", "singing_diagnoses", column: "opponent_diagnosis_id", name: "fk_singing_battles_opponent_diagnosis"
+  add_foreign_key "singing_cheer_reactions", "customers"
+  add_foreign_key "singing_cheer_reactions", "customers", column: "target_customer_id"
   add_foreign_key "singing_daily_challenge_progresses", "customers"
   add_foreign_key "singing_daily_challenge_progresses", "singing_daily_challenges", name: "fk_sdcp_on_singing_daily_challenge"
   add_foreign_key "singing_diagnoses", "customers"

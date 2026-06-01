@@ -1,0 +1,210 @@
+.cheers-page {
+  background: #0d0f14;
+  min-height: calc(100vh - 80px);
+  padding: 48px 16px;
+  color: #e2e8f0;
+
+  &__inner {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  &__header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  &__header-eyebrow {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(180, 130, 255, 0.7);
+    margin: 0 0 10px;
+  }
+
+  &__header-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #e8d5ff;
+    margin: 0 0 10px;
+  }
+
+  &__header-sub {
+    font-size: 14px;
+    color: rgba(200, 200, 220, 0.6);
+    margin: 0;
+  }
+
+  &__nav {
+    margin-top: 48px;
+    text-align: center;
+  }
+
+  &__nav-link {
+    color: rgba(180, 130, 255, 0.7);
+    font-size: 14px;
+    text-decoration: none;
+
+    &:hover {
+      color: rgba(180, 130, 255, 1);
+    }
+  }
+}
+
+.cheers-summary {
+  background: linear-gradient(135deg, #13141f 0%, #1a1025 100%);
+  border: 1px solid rgba(138, 43, 226, 0.2);
+  border-radius: 16px;
+  padding: 24px 20px;
+  margin-bottom: 32px;
+
+  &--empty {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  &__message {
+    font-size: 15px;
+    color: #c4b5fd;
+    line-height: 1.7;
+    margin: 0 0 20px;
+    text-align: center;
+  }
+
+  &__empty-text {
+    font-size: 14px;
+    color: rgba(200, 200, 220, 0.5);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  &__item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: border-color 0.15s;
+
+    &.is-top {
+      border-color: rgba(138, 43, 226, 0.4);
+      background: rgba(138, 43, 226, 0.1);
+    }
+  }
+
+  &__emoji {
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  &__count {
+    font-size: 18px;
+    font-weight: 800;
+    color: #c4b5fd;
+  }
+
+  &__label {
+    font-size: 11px;
+    color: rgba(200, 200, 220, 0.6);
+  }
+}
+
+.cheers-history {
+  margin-top: 8px;
+
+  &__title {
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: rgba(200, 200, 220, 0.5);
+    margin: 0 0 16px;
+    text-transform: uppercase;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+  }
+
+  &__avatar-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    color: rgba(200, 200, 220, 0.8);
+    line-height: 1.5;
+  }
+
+  &__name {
+    font-weight: 700;
+    color: #e8d5ff;
+  }
+
+  &__text {
+    margin-left: 2px;
+  }
+
+  &__reaction {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  &__reaction-emoji {
+    font-size: 14px;
+  }
+
+  &__reaction-label {
+    font-size: 12px;
+    color: rgba(180, 130, 255, 0.8);
+  }
+
+  &__time {
+    font-size: 12px;
+    color: rgba(200, 200, 220, 0.4);
+    flex-shrink: 0;
+  }
+}
+
+// growth-card の count 表示追加
+.growth-card {
+  &__reaction-count {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(180, 130, 255, 0.9);
+    margin-left: 2px;
+
+    &.is-hidden {
+      display: none;
+    }
+  }
+}

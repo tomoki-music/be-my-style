@@ -239,11 +239,19 @@ Rails.application.routes.draw do
     resources :ranking_seasons, only: [:index, :show]
     resources :season_histories, only: [:index]
     resources :notifications, only: [:index]
+    resource :memory_album, only: [:show]
+    resource :coach_letter, only: [:show]
+    get  'growth_feed',  to: 'growth_feeds#index',   as: :growth_feed
+    get  'challenges',   to: 'challenges#index',      as: :challenges
+    post 'cheer_reactions', to: 'cheer_reactions#create', as: :cheer_reactions
+    get  'cheers', to: 'cheers#index', as: :cheers
     resources :badges, only: [:index] do
       collection do
+        get :growth_circle
         get :timeline
         get :monthly_wrapped
         get :yearly_rewind
+        get :year_recap
         get  :recap_movie_preview
         get  :recap_movie
         get  :recap_movie_status

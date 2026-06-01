@@ -227,6 +227,281 @@
   margin-top: 30px;
 }
 
+/* ===== SINGING COMMUNITY HOME ===== */
+.singing-community-home {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 249, 252, 0.94));
+  text-align: left;
+
+  h2,
+  .lp-section-lead {
+    text-align: center;
+  }
+}
+
+.singing-community-home__inner {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.singing-community-home__eyebrow,
+.singing-community-home__section-label,
+.singing-community-home__card-label {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.singing-community-home__eyebrow {
+  margin: 0 auto 12px;
+  padding: 7px 13px;
+  background: #eef5f2;
+  color: #2d7157;
+  text-transform: uppercase;
+}
+
+.singing-community-home__section-label {
+  margin-bottom: 12px;
+  padding: 6px 11px;
+  background: rgba(239, 108, 63, 0.1);
+  color: #c54f2d;
+}
+
+.singing-community-home__mission {
+  margin: 0 auto 26px;
+  padding: 28px;
+  border: 1px solid rgba(28, 36, 48, 0.08);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 16px 38px rgba(18, 31, 53, 0.07);
+
+  h3 {
+    margin: 0 0 10px;
+    color: #1c2430;
+    font-size: clamp(1.35rem, 2.5vw, 2rem);
+    line-height: 1.35;
+  }
+
+  p {
+    margin: 0;
+    color: #4f5c6d;
+  }
+}
+
+.singing-community-home__coach-message {
+  margin-top: 16px !important;
+  padding: 14px 16px;
+  border-left: 4px solid #2d7157;
+  background: #f2f8f5;
+  color: #2f4b3f !important;
+  font-weight: 700;
+}
+
+.singing-community-home__network {
+  margin-bottom: 26px;
+  padding: 24px;
+  border: 1px solid rgba(45, 113, 87, 0.14);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(242, 248, 245, 0.98), rgba(255, 247, 242, 0.92));
+  box-shadow: 0 14px 34px rgba(18, 31, 53, 0.06);
+}
+
+.singing-community-home__network-list {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.singing-community-home__network-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-height: 92px;
+  padding: 14px;
+  border: 1px solid rgba(28, 36, 48, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.singing-community-home__network-avatar {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #eef5f2;
+  color: #2d7157;
+  font-size: 1.2rem;
+}
+
+.singing-community-home__network-copy {
+  min-width: 0;
+
+  strong,
+  span,
+  em {
+    display: block;
+  }
+
+  strong {
+    overflow: hidden;
+    color: #1c2430;
+    font-size: 1rem;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    margin-top: 3px;
+    color: #2d7157;
+    font-size: 0.9rem;
+    font-weight: 800;
+  }
+
+  em {
+    margin-top: 4px;
+    color: #6a7482;
+    font-size: 0.82rem;
+    font-style: normal;
+  }
+}
+
+.singing-community-home__network-empty {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border: 1px dashed rgba(45, 113, 87, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.64);
+
+  strong {
+    color: #2d7157;
+  }
+
+  span {
+    color: #5e6775;
+  }
+}
+
+.singing-community-home__band {
+  padding: 28px 0;
+  border-top: 1px solid rgba(28, 36, 48, 0.08);
+}
+
+.singing-community-home__band-header {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+
+  h3 {
+    margin: 0;
+    color: #1c2430;
+    font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+    line-height: 1.35;
+  }
+
+  p {
+    max-width: 760px;
+    margin: 0;
+    color: #5e6775;
+  }
+}
+
+.singing-community-home__cards {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.singing-community-home__cards--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.singing-community-home__card {
+  min-height: 220px;
+  padding: 20px;
+  border: 1px solid rgba(28, 36, 48, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 30px rgba(18, 31, 53, 0.06);
+
+  h4 {
+    margin: 10px 0 8px;
+    color: #1c2430;
+    font-size: 1.04rem;
+    line-height: 1.45;
+  }
+
+  p {
+    margin: 0;
+    color: #5e6775;
+    font-size: 0.95rem;
+    line-height: 1.75;
+  }
+}
+
+.singing-community-home__card-label {
+  padding: 5px 9px;
+  background: #edf2ff;
+  color: #2347c9;
+}
+
+.singing-community-home__meta {
+  display: block;
+  margin-top: 14px;
+  color: #2d7157;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.singing-community-home__link {
+  display: inline-flex;
+  margin-top: 18px;
+  color: #2347c9;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.singing-community-home__diagnosis-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 28px;
+  padding: 22px 24px;
+  border: 1px solid rgba(239, 108, 63, 0.2);
+  border-radius: 8px;
+  background: #fff7f2;
+
+  p {
+    margin: 0;
+    color: #5e4337;
+    font-weight: 800;
+  }
+}
+
+.singing-community-home__diagnosis-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.singing-community-home__feed-link {
+  color: #2347c9;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 /* ===== LIST ===== */
 .lp-list {
   list-style: none;
@@ -1186,6 +1461,41 @@
       font-size: 0.95rem;
       text-align: left;
     }
+  }
+
+  .singing-community-home {
+    h2,
+    .lp-section-lead {
+      text-align: left;
+    }
+  }
+
+  .singing-community-home__mission,
+  .singing-community-home__network,
+  .singing-community-home__card,
+  .singing-community-home__diagnosis-cta {
+    padding: 18px;
+  }
+
+  .singing-community-home__cards,
+  .singing-community-home__cards--two,
+  .singing-community-home__network-list {
+    grid-template-columns: 1fr;
+  }
+
+  .singing-community-home__card {
+    min-height: auto;
+  }
+
+  .singing-community-home__diagnosis-cta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .singing-community-home__diagnosis-actions {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
   }
 
   .lp-btn {

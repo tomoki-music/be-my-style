@@ -1,0 +1,61 @@
+- content_for :title, "Singing Memory Album | BeMyStyle"
+
+.singing-memory-album
+  .sma-inner
+
+    -# ── Nav ────────────────────────────────────────────────────────────
+    .sma-nav
+      = link_to "← Achievement Timeline", timeline_singing_badges_path, class: "sma-back-link"
+
+    -# ── Hero ────────────────────────────────────────────────────────────
+    .sma-hero
+      .sma-hero__icon 🎤
+      %h1.sma-hero__title Singing Memory Album
+      %p.sma-hero__desc あなたの歌の成長記録。これまで積み重ねた挑戦と変化を振り返りましょう。
+
+    - if @album.items.any?
+
+      -# ── Timeline ─────────────────────────────────────────────────────
+      .sma-timeline
+        - current_year = nil
+        - @album.items.each do |item|
+
+          - if item.occurred_at.year != current_year
+            - current_year = item.occurred_at.year
+            .sma-year-marker
+              %span.sma-year-marker__label= current_year
+
+          .sma-timeline-item{ class: "sma-timeline-item--#{item.type}" }
+            .sma-timeline-item__line
+            .sma-timeline-item__card
+              .sma-card__header
+                .sma-card__badge= item.badge
+                .sma-card__meta
+                  .sma-card__date= item.occurred_at.strftime("%-Y年%-m月")
+                  .sma-card__type-label= album_item_type_label(item.type)
+
+              .sma-card__body
+                %h3.sma-card__title= item.title
+                - if item.subtitle.present?
+                  .sma-card__subtitle= item.subtitle
+                - if item.summary.present?
+                  %p.sma-card__summary= item.summary
+
+              - if item.detail_url.present?
+                .sma-card__footer
+                  = link_to item.detail_url, class: "sma-card__link" do
+                    詳しく見る →
+
+    - else
+
+      -# ── Empty ─────────────────────────────────────────────────────────
+      .sma-empty
+        .sma-empty__icon 🎤
+        %h2.sma-empty__title まだアルバムがありません
+        %p.sma-empty__desc
+          診断を受けると、ここに歌の成長記録が積み重なっていきます。
+          %br
+          まずは診断を始めてみましょう。
+        .sma-empty__actions
+          = link_to new_singing_diagnosis_path, class: "sma-btn sma-btn--primary" do
+            診断を始める

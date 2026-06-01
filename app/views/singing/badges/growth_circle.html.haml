@@ -1,0 +1,70 @@
+- content_for :title, "Growth Circle Badge | BeMyStyle"
+
+.growth-circle-page
+  .growth-circle-page__inner
+
+    .growth-circle-page__header
+      %p.growth-circle-page__eyebrow Growth Circle Badge
+      %h1.growth-circle-page__title あなたらしさが価値になる
+      %p.growth-circle-page__lead
+        歌の上手さだけでなく、挑戦・応援・継続という行動が
+        %br
+        あなただけの称号を生み出します。
+
+    - if @primary
+      .growth-circle-page__primary
+        .growth-circle-badge.growth-circle-badge--primary{ style: "border-color: #{@primary.color}; box-shadow: 0 0 32px #{@primary.color}44;" }
+          .growth-circle-badge__glow{ style: "background: #{@primary.color}22;" }
+          %span.growth-circle-badge__icon{ style: "color: #{@primary.color};" }= @primary.icon
+          .growth-circle-badge__body
+            %p.growth-circle-badge__kicker あなたの称号
+            %strong.growth-circle-badge__title{ style: "color: #{@primary.color};" }= @primary.title
+            %p.growth-circle-badge__desc= @primary.description
+    - else
+      .growth-circle-page__empty
+        %p.growth-circle-page__empty-icon 🌱
+        %p.growth-circle-page__empty-text
+          まだ称号を獲得していません。
+          %br
+          診断に挑戦したり、仲間を応援することで称号が付与されます。
+
+    - if @can_see_all && @displayed_badges.size > 1
+      .growth-circle-page__all-badges
+        .growth-circle-page__section-head
+          %p.growth-circle-page__section-kicker All Badges
+          %h2.growth-circle-page__section-title 獲得した全称号
+        .growth-circle-badge-list
+          - @displayed_badges.each do |badge|
+            .growth-circle-badge{ style: "border-color: #{badge.color};" }
+              %span.growth-circle-badge__icon{ style: "color: #{badge.color};" }= badge.icon
+              .growth-circle-badge__body
+                %strong.growth-circle-badge__title{ style: "color: #{badge.color};" }= badge.title
+                %p.growth-circle-badge__desc= badge.description
+    - elsif !@can_see_all && @displayed_badges.size >= 1
+      .growth-circle-page__premium-cta
+        .growth-circle-page__premium-cta-icon 🏆
+        .growth-circle-page__premium-cta-body
+          %p.growth-circle-page__premium-cta-title Premiumで全称号を解放
+          %p.growth-circle-page__premium-cta-desc 複数の称号を獲得した場合、Premiumプランですべて表示できます。
+        = link_to public_singing_lp_path(anchor: "lp-section"), class: "growth-circle-page__premium-cta-btn" do
+          Premiumを見る
+
+    - if @unearned_definitions.any?
+      .growth-circle-page__unearned
+        .growth-circle-page__section-head
+          %p.growth-circle-page__section-kicker Locked
+          %h2.growth-circle-page__section-title まだ獲得していない称号
+        .growth-circle-badge-list.growth-circle-badge-list--locked
+          - @unearned_definitions.each do |defn|
+            .growth-circle-badge.growth-circle-badge--locked
+              %span.growth-circle-badge__icon.growth-circle-badge__icon--locked= defn[:icon]
+              .growth-circle-badge__body
+                %strong.growth-circle-badge__title.growth-circle-badge__title--locked= defn[:title]
+                %p.growth-circle-badge__desc= defn[:description]
+                %p.growth-circle-badge__condition= growth_circle_condition_text(defn[:key])
+
+    .growth-circle-page__nav
+      = link_to singing_badges_path, class: "growth-circle-page__nav-link" do
+        ← バッジ一覧に戻る
+      = link_to new_singing_diagnosis_path, class: "btn btn-primary growth-circle-page__nav-btn" do
+        診断に挑戦する

@@ -1,0 +1,130 @@
+- content_for :title, "#{@year}年 Singing Wrapped | BeMyStyle"
+
+.singing-year-recap
+  .syw-inner
+
+    .syw-nav
+      = link_to "← Achievement Timeline", timeline_singing_badges_path, class: "syw-back-link"
+
+    - if @recap.has_recap
+
+      -# ── Hero ────────────────────────────────────────────────────────
+      .syw-hero
+        .syw-hero__eyebrow Singing Wrapped #{@year}
+        %h1.syw-hero__title
+          #{@year}年、あなたの歌の記録
+        - if @recap.growth_type
+          .syw-hero__type
+            %span.syw-hero__type-icon= @recap.growth_type.icon
+            %span.syw-hero__type-label= @recap.growth_type.label
+
+        .syw-hero__stats
+          .syw-hero__stat
+            %span.syw-hero__stat-num= @recap.diagnosis_count
+            %span.syw-hero__stat-unit 回の診断
+
+          - if @recap.max_streak >= 2
+            .syw-hero__stat
+              %span.syw-hero__stat-num= @recap.max_streak
+              %span.syw-hero__stat-unit 日 最長連続
+
+          - if @recap.personal_best_score
+            .syw-hero__stat
+              %span.syw-hero__stat-num= @recap.personal_best_score
+              %span.syw-hero__stat-unit 点 自己ベスト
+
+      -# ── Summary Stats Cards ─────────────────────────────────────────
+      .syw-stats-grid
+
+        - if @recap.most_improved_label && @recap.most_improved_delta.to_i > 0
+          .syw-stat-card.syw-stat-card--highlight
+            .syw-stat-card__label 最も成長した能力
+            .syw-stat-card__value= @recap.most_improved_label
+            .syw-stat-card__sub= "+#{@recap.most_improved_delta}pt"
+
+        - if @recap.most_active_month_label
+          .syw-stat-card
+            .syw-stat-card__label 最もアクティブな月
+            .syw-stat-card__value= @recap.most_active_month_label
+            .syw-stat-card__sub= "#{@recap.most_active_month_count}回"
+
+        - if @recap.personal_best_score
+          .syw-stat-card
+            .syw-stat-card__label 自己ベストスコア
+            .syw-stat-card__value= "#{@recap.personal_best_score}点"
+            - if @recap.personal_best_date
+              .syw-stat-card__sub= @recap.personal_best_date.strftime("%-m月%-d日")
+
+        - if @recap.max_streak >= 2
+          .syw-stat-card
+            .syw-stat-card__label 最長連続診断
+            .syw-stat-card__value= "#{@recap.max_streak}日"
+
+      -# ── Journey Highlights ──────────────────────────────────────────
+      - if @recap.milestones.any?
+        .syw-milestones
+          %p.syw-section-label Journey Highlights
+          .syw-milestone-list
+            - @recap.milestones.each do |m|
+              .syw-milestone-item
+                .syw-milestone-item__dot
+                .syw-milestone-item__body
+                  %p.syw-milestone-item__label= m.label
+                  - if m.date
+                    %p.syw-milestone-item__date= m.date.strftime("%-m月%-d日")
+
+      -# ── AI Narration ────────────────────────────────────────────────
+      - if @recap.ai_summary.present?
+        .syw-narration
+          .syw-narration__card
+            .syw-narration__head
+              %span.syw-narration__icon 🎤
+              %strong.syw-narration__title #{@year}年のあなたへ
+            %p.syw-narration__text= @recap.ai_summary
+
+            - if @recap.streak_message.present?
+              .syw-narration__streak= @recap.streak_message
+
+      -# ── Growth Type ─────────────────────────────────────────────────
+      - if @recap.growth_type
+        .syw-growth-type
+          %p.syw-section-label #{@year}年の Growth Type
+          .syw-growth-type__card
+            .syw-growth-type__icon= @recap.growth_type.icon
+            .syw-growth-type__body
+              %p.syw-growth-type__label= @recap.growth_type.label
+              %p.syw-growth-type__desc= @recap.growth_type.description
+
+      -# ── Coach Reflection ────────────────────────────────────────────
+      - if @recap.coach_reflection.present?
+        .syw-coach
+          .syw-coach__card
+            .syw-coach__head
+              %span.syw-coach__icon 💬
+              %strong.syw-coach__title コーチからのひとこと
+            %p.syw-coach__text= @recap.coach_reflection
+
+      -# ── Navigation ──────────────────────────────────────────────────
+      .syw-actions
+        = link_to year_recap_singing_badges_path(year: @year - 1), class: "syw-btn syw-btn--ghost" do
+          ← #{@year - 1}年を見る
+        = link_to timeline_singing_badges_path, class: "syw-btn syw-btn--secondary" do
+          Achievement Timeline
+        = link_to new_singing_diagnosis_path, class: "syw-btn syw-btn--primary" do
+          今すぐ診断する
+
+    - else
+
+      -# ── Empty ───────────────────────────────────────────────────────
+      .syw-empty
+        .syw-empty__icon 🎤
+        %h1.syw-empty__title #{@year}年のSinging Wrappedはまだありません
+        %p.syw-empty__desc
+          診断を受けると、1年間の歌の記録がここに積み重なっていきます。
+          %br
+          まずは診断を始めてみましょう。
+        .syw-empty__actions
+          = link_to new_singing_diagnosis_path, class: "syw-btn syw-btn--primary" do
+            診断を始める
+          = link_to timeline_singing_badges_path, class: "syw-btn syw-btn--ghost" do
+            Achievement Timeline へ

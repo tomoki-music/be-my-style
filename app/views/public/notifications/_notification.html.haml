@@ -7,14 +7,20 @@
   - activity_id = notification.activity_id
 - if notification.event_id.present?
   - event_id = notification.event_id
-- if notification.action.to_s.start_with?(SingingProfileReaction::NOTIFICATION_ACTION_PREFIX)
+- if notification.action.to_s.start_with?(SingingCheerReaction::NOTIFICATION_ACTION_PREFIX)
+  - singing_cheer_reaction_type = SingingCheerReaction.reaction_type_from_notification_action(notification.action)
+  - singing_cheer_reaction_emoji = SingingCheerReaction.emoji_for(singing_cheer_reaction_type)
+  - singing_cheer_reaction_label = SingingCheerReaction.label_for(singing_cheer_reaction_type)
+- elsif notification.action.to_s.start_with?(SingingProfileReaction::NOTIFICATION_ACTION_PREFIX)
   - singing_profile_reaction_type = SingingProfileReaction.reaction_type_from_notification_action(notification.action)
   - singing_profile_reaction_label = SingingProfileReaction.label_for(singing_profile_reaction_type)
 - elsif notification.action.to_s.start_with?("reaction_")
   - reaction_type = ActivityReaction.reaction_type_from_notification_action(notification.action)
   - reaction_emoji = ActivityReaction.emoji_for(reaction_type)
   - reaction_label = reaction_type == "fire" ? "応援" : "リアクション"
-- visitor_path = notification.action.to_s.start_with?(SingingProfileReaction::NOTIFICATION_ACTION_PREFIX) ? singing_user_path(visitor) : public_customer_path(visitor)
+- is_singing_cheer = notification.action.to_s.start_with?(SingingCheerReaction::NOTIFICATION_ACTION_PREFIX)
+- is_singing_profile = notification.action.to_s.start_with?(SingingProfileReaction::NOTIFICATION_ACTION_PREFIX)
+- visitor_path = (is_singing_cheer || is_singing_profile) ? singing_user_path(visitor) : public_customer_path(visitor)
 
 .col-md-6.mx-auto
   .form-inline
@@ -58,6 +64,9 @@
         - else
           %strong あなたの活動ログ
         = "に#{reaction_emoji}#{reaction_label}しました"
+      - when /^singing_cheer_reaction_/ then
+        = link_to 'あなたの成長ストーリー', singing_growth_feed_path, data: { 'turbolinks': false }, style: "font-weight: bold;"
+        = "を#{singing_cheer_reaction_emoji}「#{singing_cheer_reaction_label}」で応援しました"
       - when /^singing_profile_reaction_/ then
         = link_to 'あなたのプロフィール', singing_user_path(visited), data: { 'turbolinks': false }, style: "font-weight: bold;"
         = "に『#{singing_profile_reaction_label}』を送りました"

@@ -650,6 +650,43 @@
               %p.singing-diagnosis__premium-report-lead= singing_premium_type_diagnosis_locked_lead(@diagnosis)
             = link_to "Premiumプランを見る", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"
 
+      - if @coach_reflection&.has_reflection
+        .coach-memory-card
+          .coach-memory-card__header
+            %span.coach-memory-card__icon= @coach_reflection.coach_icon
+            .coach-memory-card__title-wrap
+              %h2.coach-memory-card__title Coach Memory
+              %small.coach-memory-card__label= @coach_reflection.coach_label
+          .coach-memory-card__body
+            - if @coach_reflection.remember.present?
+              .coach-memory-card__section.coach-memory-card__section--remember
+                %span.coach-memory-card__section-label 📖 これまでの歩み
+                %p.coach-memory-card__text= @coach_reflection.remember
+            - if @coach_reflection.recognize.present?
+              .coach-memory-card__section.coach-memory-card__section--recognize
+                %span.coach-memory-card__section-label ✨ 今のあなたへ
+                %p.coach-memory-card__text= @coach_reflection.recognize
+            - if @coach_reflection.next_step.present?
+              .coach-memory-card__section.coach-memory-card__section--next
+                %span.coach-memory-card__section-label 🎯 次へ向けて
+                %p.coach-memory-card__text= @coach_reflection.next_step
+          .coach-memory-card__stats
+            .coach-memory-card__stat
+              %span.coach-memory-card__stat-value= @coach_memory.diagnosis_count
+              %span.coach-memory-card__stat-label 回の診断
+            - if @coach_memory.max_streak >= 2
+              .coach-memory-card__stat
+                %span.coach-memory-card__stat-value= @coach_memory.max_streak
+                %span.coach-memory-card__stat-label 日連続
+            - if @coach_memory.strongest_growth_label.present?
+              .coach-memory-card__stat
+                %span.coach-memory-card__stat-value= @coach_memory.strongest_growth_label
+                %span.coach-memory-card__stat-label が最も伸びた
+            - if @coach_memory.growth_type
+              .coach-memory-card__stat
+                %span.coach-memory-card__stat-value= @coach_memory.growth_type.icon
+                %span.coach-memory-card__stat-label= @coach_memory.growth_type.label
+
       - if current_customer.has_feature?(:singing_diagnosis_ai_comment)
         .singing-diagnosis__ai-comment{ class: "singing-diagnosis__ai-comment--#{@diagnosis.ai_comment_status}" }
           %h2 AIコメント

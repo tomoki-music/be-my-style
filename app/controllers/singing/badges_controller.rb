@@ -43,6 +43,19 @@ class Singing::BadgesController < Singing::BaseController
   RENDERER_NOT_IMPLEMENTED_ERROR = "Renderer is not implemented."
   RENDERER_PREPARING_MESSAGE     = "動画生成機能は現在準備中です。"
 
+  def growth_circle
+    @badges     = Singing::GrowthCircleBadgeAnalyzer.call(current_customer)
+    @primary    = @badges.first
+    @can_see_all = current_customer.has_feature?(:singing_growth_circle_all_badges)
+    @displayed_badges = @can_see_all ? @badges : [@primary].compact
+
+    all_keys    = Singing::GrowthCircleBadgeAnalyzer::BADGE_DEFINITIONS.keys
+    earned_keys = @badges.map(&:key).to_set
+    @unearned_definitions = all_keys
+      .reject { |key| earned_keys.include?(key) }
+      .map { |key| { key: key, **Singing::GrowthCircleBadgeAnalyzer::BADGE_DEFINITIONS[key] } }
+  end
+
   def timeline
     @timeline_groups = Singing::AchievementTimelineBuilder.call(current_customer)
     @can_share_achievement = current_customer.has_feature?(:singing_achievement_badge_share_image)
@@ -61,6 +74,12 @@ class Singing::BadgesController < Singing::BaseController
     @rewind = Singing::YearlyAchievementRewindBuilder.call(current_customer, year: year)
     @year   = year
     @can_share_achievement = current_customer.has_feature?(:singing_achievement_badge_share_image)
+  end
+
+  def year_recap
+    year = sanitize_year(params[:year])
+    @recap = Singing::YearRecapBuilder.call(current_customer, year: year)
+    @year  = year
   end
 
   def recap_movie_preview

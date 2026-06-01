@@ -1,0 +1,48 @@
+- content_for :title, "応援履歴 | BeMyStyle"
+
+.cheers-page
+  .cheers-page__inner
+
+    .cheers-page__header
+      .cheers-page__header-eyebrow Cheer History
+      %h1.cheers-page__header-title 受け取った応援
+      %p.cheers-page__header-sub
+        仲間からの応援が届いています。
+
+    - if @summary.has_summary
+      .cheers-summary
+        %p.cheers-summary__message= @summary.summary_message
+        .cheers-summary__grid
+          - SingingCheerReaction::REACTION_TYPES.each do |rtype|
+            - count = @summary.counts_by_type[rtype].to_i
+            .cheers-summary__item{ class: ("is-top" if rtype == @summary.top_reaction_type) }
+              %span.cheers-summary__emoji= SingingCheerReaction.emoji_for(rtype)
+              %span.cheers-summary__count= "#{count}件"
+              %span.cheers-summary__label= SingingCheerReaction.label_for(rtype)
+    - else
+      .cheers-summary.cheers-summary--empty
+        %p.cheers-summary__empty-text
+          まだ応援が届いていません。
+          %br
+          Growth Feed で活動するとここに応援が届きます。
+
+    - if @recent_reactions.any?
+      .cheers-history
+        %p.cheers-history__title 受け取った応援一覧
+        .cheers-history__list
+          - @recent_reactions.each do |reaction|
+            .cheers-history__item
+              .cheers-history__avatar
+                = customer_avatar_tag(reaction.customer, class_name: "cheers-history__avatar-img", fallback: "no_image")
+              .cheers-history__body
+                %span.cheers-history__name= reaction.customer.name
+                %span.cheers-history__text さんが応援しました
+                .cheers-history__reaction
+                  %span.cheers-history__reaction-emoji= SingingCheerReaction.emoji_for(reaction.reaction_type)
+                  %span.cheers-history__reaction-label= SingingCheerReaction.label_for(reaction.reaction_type)
+              %time.cheers-history__time{ datetime: reaction.created_at.iso8601 }
+                = reaction.created_at.strftime("%-m/%-d")
+
+    .cheers-page__nav
+      = link_to singing_growth_feed_path, class: "cheers-page__nav-link" do
+        ← Growth Feed に戻る
