@@ -4,6 +4,7 @@ module Singing
       :hero_message,
       :today_mission,
       :community_network,
+      :growth_circles,
       :community_summary,
       :recommended_event,
       :growth_summary,
@@ -43,6 +44,7 @@ module Singing
         hero_message: hero_message,
         today_mission: experience.todays_mission,
         community_network: Singing::CommunityNetworkBuilder.call(@customer),
+        growth_circles: Singing::GrowthCirclesBuilder.call(@customer),
         community_summary: community_summary(experience),
         recommended_event: recommended_event(experience),
         growth_summary: growth_summary(experience)

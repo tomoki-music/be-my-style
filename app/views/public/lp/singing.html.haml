@@ -101,6 +101,24 @@
               %strong 音楽を楽しむ仲間が増えています。
               %span これからつながりが広がっていきます。
 
+        - if music_home.growth_circles.present?
+          .singing-community-home__circles
+            .singing-community-home__band-header
+              %span.singing-community-home__section-label Growth Circles
+              %h3 近い仲間たちの小さな輪
+              %p 同じ方向を向いて歌っている仲間たちがいます。あなたも、その輪の一員です。
+            .singing-community-home__circles-list
+              - music_home.growth_circles.each do |circle|
+                .singing-community-home__circle-item
+                  %h4.singing-community-home__circle-title= circle.title
+                  %p.singing-community-home__circle-count
+                    %strong= "#{circle.member_count}人"
+                    が参加中
+                  %p.singing-community-home__circle-desc= circle.description
+          - else
+            .singing-community-home__circles-empty
+              %p 音楽を楽しむ仲間が集まっています。あなたらしい輪が見つかります。
+
         .singing-community-home__band
           .singing-community-home__band-header
             %span.singing-community-home__section-label 仲間

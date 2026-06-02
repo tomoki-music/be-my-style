@@ -389,6 +389,62 @@
   }
 }
 
+.singing-community-home__circles {
+  margin-bottom: 26px;
+  padding: 24px;
+  border: 1px solid rgba(45, 113, 87, 0.14);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(248, 248, 255, 0.98), rgba(242, 248, 245, 0.92));
+  box-shadow: 0 14px 34px rgba(18, 31, 53, 0.06);
+}
+
+.singing-community-home__circles-list {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.singing-community-home__circle-item {
+  padding: 16px;
+  border: 1px solid rgba(28, 36, 48, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.singing-community-home__circle-title {
+  margin: 0 0 8px;
+  color: #1c2430;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.singing-community-home__circle-count {
+  margin: 0 0 6px;
+  color: #5e6775;
+  font-size: 0.88rem;
+
+  strong {
+    color: #2d7157;
+    font-size: 1.05rem;
+  }
+}
+
+.singing-community-home__circle-desc {
+  margin: 0;
+  color: #6a7482;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.singing-community-home__circles-empty {
+  margin-bottom: 26px;
+  padding: 16px;
+  border: 1px dashed rgba(45, 113, 87, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.64);
+  color: #5e6775;
+}
+
 .singing-community-home__band {
   padding: 28px 0;
   border-top: 1px solid rgba(28, 36, 48, 0.08);
