@@ -10,9 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_06_01_000001) do
+ActiveRecord::Schema.define(version: 2026_06_02_000002) do
 
-  create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "active_admin_comments", force: :cascade do |t|
     t.string "namespace"
     t.text "body"
     t.string "resource_type"
@@ -26,17 +26,17 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["resource_type", "resource_id"], name: "index_active_admin_comments_on_resource"
   end
 
-  create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
-    t.bigint "record_id", null: false
-    t.bigint "blob_id", null: false
+    t.integer "record_id", null: false
+    t.integer "blob_id", null: false
     t.datetime "created_at", null: false
     t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
     t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
   end
 
-  create_table "active_storage_blobs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "active_storage_blobs", force: :cascade do |t|
     t.string "key", null: false
     t.string "filename", null: false
     t.string "content_type"
@@ -48,14 +48,14 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
   end
 
-  create_table "active_storage_variant_records", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "blob_id", null: false
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.integer "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
-  create_table "activities", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "activities", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.string "title"
     t.text "introduction"
     t.text "keep"
@@ -69,9 +69,9 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_activities_on_customer_id"
   end
 
-  create_table "activity_reactions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "activity_id", null: false
+  create_table "activity_reactions", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "activity_id", null: false
     t.string "reaction_type", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
@@ -80,9 +80,9 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_activity_reactions_on_customer_id"
   end
 
-  create_table "admin_notifications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "admin_id", null: false
-    t.bigint "customer_id", null: false
+  create_table "admin_notifications", force: :cascade do |t|
+    t.integer "admin_id", null: false
+    t.integer "customer_id", null: false
     t.string "action", limit: 50, default: "", null: false
     t.string "plan", limit: 30, null: false
     t.string "stripe_subscription_id", limit: 100
@@ -95,7 +95,7 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_admin_notifications_on_customer_id"
   end
 
-  create_table "admin_users", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "admin_users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "reset_password_token"
@@ -107,7 +107,7 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true
   end
 
-  create_table "admins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "admins", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "reset_password_token"
@@ -120,11 +120,11 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
   end
 
-  create_table "chat_messages", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "chat_room_id", null: false
-    t.bigint "customer_id", null: false
+  create_table "chat_messages", force: :cascade do |t|
+    t.integer "chat_room_id", null: false
+    t.integer "customer_id", null: false
     t.text "content"
-    t.bigint "community_id"
+    t.integer "community_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.string "stamp_type"
@@ -133,10 +133,10 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_chat_messages_on_customer_id"
   end
 
-  create_table "chat_room_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "chat_room_id"
-    t.bigint "customer_id"
-    t.bigint "community_id"
+  create_table "chat_room_customers", force: :cascade do |t|
+    t.integer "chat_room_id"
+    t.integer "customer_id"
+    t.integer "community_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["chat_room_id"], name: "index_chat_room_customers_on_chat_room_id"
@@ -144,15 +144,15 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_chat_room_customers_on_customer_id"
   end
 
-  create_table "chat_rooms", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "chat_rooms", force: :cascade do |t|
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table "comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "comments", force: :cascade do |t|
     t.string "comment"
-    t.bigint "customer_id", null: false
-    t.bigint "activity_id", null: false
+    t.integer "customer_id", null: false
+    t.integer "activity_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.string "stamp_type"
@@ -160,7 +160,7 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_comments_on_customer_id"
   end
 
-  create_table "communities", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "communities", force: :cascade do |t|
     t.string "name"
     t.text "introduction"
     t.integer "owner_id"
@@ -174,50 +174,50 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.integer "prefecture_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.bigint "domain_id", null: false
+    t.integer "domain_id", null: false
     t.string "required_plan_for_event_creation", default: "core", null: false
     t.index ["domain_id"], name: "index_communities_on_domain_id"
   end
 
-  create_table "community_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id"
-    t.bigint "community_id"
+  create_table "community_customers", force: :cascade do |t|
+    t.integer "customer_id"
+    t.integer "community_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["community_id"], name: "index_community_customers_on_community_id"
     t.index ["customer_id"], name: "index_community_customers_on_customer_id"
   end
 
-  create_table "community_domains", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "community_id", null: false
-    t.bigint "domain_id", null: false
+  create_table "community_domains", force: :cascade do |t|
+    t.integer "community_id", null: false
+    t.integer "domain_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["community_id"], name: "index_community_domains_on_community_id"
     t.index ["domain_id"], name: "index_community_domains_on_domain_id"
   end
 
-  create_table "community_genres", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "community_id", null: false
-    t.bigint "genre_id", null: false
+  create_table "community_genres", force: :cascade do |t|
+    t.integer "community_id", null: false
+    t.integer "genre_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["community_id"], name: "index_community_genres_on_community_id"
     t.index ["genre_id"], name: "index_community_genres_on_genre_id"
   end
 
-  create_table "community_owners", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "community_id", null: false
+  create_table "community_owners", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "community_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["community_id"], name: "index_community_owners_on_community_id"
     t.index ["customer_id"], name: "index_community_owners_on_customer_id"
   end
 
-  create_table "community_posts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "community_id", null: false
+  create_table "community_posts", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "community_id", null: false
     t.text "body"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
@@ -225,9 +225,9 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_community_posts_on_customer_id"
   end
 
-  create_table "customer_domains", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "domain_id", null: false
+  create_table "customer_domains", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "domain_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["customer_id", "domain_id"], name: "index_customer_domains_on_customer_id_and_domain_id", unique: true
@@ -235,25 +235,25 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["domain_id"], name: "index_customer_domains_on_domain_id"
   end
 
-  create_table "customer_genres", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "genre_id", null: false
+  create_table "customer_genres", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "genre_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["customer_id"], name: "index_customer_genres_on_customer_id"
     t.index ["genre_id"], name: "index_customer_genres_on_genre_id"
   end
 
-  create_table "customer_parts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "part_id", null: false
+  create_table "customer_parts", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "part_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["customer_id"], name: "index_customer_parts_on_customer_id"
     t.index ["part_id"], name: "index_customer_parts_on_part_id"
   end
 
-  create_table "customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "customers", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "reset_password_token"
@@ -300,16 +300,16 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["reset_password_token"], name: "index_customers_on_reset_password_token", unique: true
   end
 
-  create_table "domains", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "domains", force: :cascade do |t|
     t.string "name", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["name"], name: "index_domains_on_name", unique: true
   end
 
-  create_table "events", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "community_id", null: false
+  create_table "events", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "community_id", null: false
     t.string "event_name", null: false
     t.datetime "event_start_time", null: false
     t.datetime "event_end_time", null: false
@@ -329,24 +329,24 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_events_on_customer_id"
   end
 
-  create_table "favorites", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "activity_id", null: false
+  create_table "favorites", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "activity_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["activity_id"], name: "index_favorites_on_activity_id"
     t.index ["customer_id"], name: "index_favorites_on_customer_id"
   end
 
-  create_table "genres", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "genres", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table "join_part_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "join_part_id", null: false
+  create_table "join_part_customers", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "join_part_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.boolean "session_credit_applied", default: false, null: false
@@ -356,17 +356,17 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["join_part_id"], name: "index_join_part_customers_on_join_part_id"
   end
 
-  create_table "join_parts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "song_id", null: false
+  create_table "join_parts", force: :cascade do |t|
+    t.integer "song_id", null: false
     t.string "join_part_name", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["song_id"], name: "index_join_parts_on_song_id"
   end
 
-  create_table "learning_assignment_review_histories", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "learning_assignment_id", null: false
-    t.bigint "reviewer_id"
+  create_table "learning_assignment_review_histories", force: :cascade do |t|
+    t.integer "learning_assignment_id", null: false
+    t.integer "reviewer_id"
     t.string "action", null: false
     t.text "comment"
     t.datetime "submitted_at"
@@ -378,9 +378,9 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["reviewer_id"], name: "idx_review_hist_on_reviewer_id"
   end
 
-  create_table "learning_assignments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "learning_student_id", null: false
+  create_table "learning_assignments", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "learning_student_id", null: false
     t.string "title", null: false
     t.text "description"
     t.string "status", default: "pending", null: false
@@ -389,10 +389,10 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.string "assignment_group_key"
-    t.bigint "learning_student_training_id"
+    t.integer "learning_student_training_id"
     t.datetime "submitted_at"
     t.datetime "reviewed_at"
-    t.bigint "reviewed_by_id"
+    t.integer "reviewed_by_id"
     t.text "review_comment"
     t.string "reaction_message"
     t.index ["customer_id", "assignment_group_key"], name: "index_learning_assignments_on_customer_group_key"
@@ -407,9 +407,9 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["status"], name: "index_learning_assignments_on_status"
   end
 
-  create_table "learning_band_memberships", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "learning_band_id", null: false
-    t.bigint "learning_student_id", null: false
+  create_table "learning_band_memberships", force: :cascade do |t|
+    t.integer "learning_band_id", null: false
+    t.integer "learning_student_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["learning_band_id", "learning_student_id"], name: "index_learning_band_memberships_on_band_and_student", unique: true
@@ -417,10 +417,10 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["learning_student_id"], name: "index_learning_band_memberships_on_learning_student_id"
   end
 
-  create_table "learning_band_trainings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "learning_band_id", null: false
-    t.bigint "learning_training_master_id"
+  create_table "learning_band_trainings", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "learning_band_id", null: false
+    t.integer "learning_training_master_id"
     t.string "part", default: "band", null: false
     t.string "period", null: false
     t.string "level", null: false
@@ -441,8 +441,8 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["learning_training_master_id"], name: "index_learning_band_trainings_on_learning_training_master_id"
   end
 
-  create_table "learning_bands", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "learning_bands", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.string "name", null: false
     t.text "memo"
     t.datetime "created_at", precision: 6, null: false
@@ -451,9 +451,9 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_learning_bands_on_customer_id"
   end
 
-  create_table "learning_effort_points", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "learning_student_id", null: false
+  create_table "learning_effort_points", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "learning_student_id", null: false
     t.string "point_type", null: false
     t.integer "points", default: 0, null: false
     t.string "description", limit: 100
@@ -466,9 +466,9 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["learning_student_id"], name: "index_learning_effort_points_on_learning_student_id"
   end
 
-  create_table "learning_line_connections", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "learning_student_id"
+  create_table "learning_line_connections", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "learning_student_id"
     t.string "line_user_id"
     t.string "display_name"
     t.string "status", default: "pending", null: false
@@ -487,8 +487,8 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["status"], name: "index_learning_line_connections_on_status"
   end
 
-  create_table "learning_line_message_templates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "learning_line_message_templates", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.string "title", null: false
     t.string "category", null: false
     t.text "body", null: false
@@ -500,8 +500,8 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_learning_line_message_templates_on_customer_id"
   end
 
-  create_table "learning_monthly_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "learning_monthly_reports", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.date "report_month", null: false
     t.integer "total_students", default: 0, null: false
     t.integer "total_progress_logs", default: 0, null: false
@@ -514,9 +514,9 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_learning_monthly_reports_on_customer_id"
   end
 
-  create_table "learning_notification_logs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "learning_student_id"
+  create_table "learning_notification_logs", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "learning_student_id"
     t.string "notification_type", null: false
     t.string "level"
     t.string "delivery_channel", default: "manual", null: false
@@ -543,8 +543,8 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["status"], name: "index_learning_notification_logs_on_status"
   end
 
-  create_table "learning_notification_settings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "learning_notification_settings", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.boolean "reminder_enabled", default: true, null: false
     t.boolean "teacher_summary_enabled", default: true, null: false
     t.boolean "student_reactivation_enabled", default: true, null: false
@@ -556,8 +556,8 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_learning_notification_settings_on_customer_id", unique: true
   end
 
-  create_table "learning_portal_accesses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "learning_student_id", null: false
+  create_table "learning_portal_accesses", force: :cascade do |t|
+    t.integer "learning_student_id", null: false
     t.date "accessed_on", null: false
     t.integer "streak_count", default: 1, null: false
     t.datetime "created_at", precision: 6, null: false
@@ -566,10 +566,10 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["learning_student_id"], name: "index_learning_portal_accesses_on_learning_student_id"
   end
 
-  create_table "learning_progress_logs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "learning_student_id", null: false
-    t.bigint "learning_student_training_id"
+  create_table "learning_progress_logs", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "learning_student_id", null: false
+    t.integer "learning_student_training_id"
     t.string "part", null: false
     t.string "training_title", null: false
     t.date "practiced_on", null: false
@@ -584,7 +584,7 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["learning_student_training_id"], name: "index_learning_progress_logs_on_learning_student_training_id"
   end
 
-  create_table "learning_school_applications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "learning_school_applications", force: :cascade do |t|
     t.string "school_name", limit: 100, null: false
     t.string "advisor_name", limit: 50, null: false
     t.string "email", null: false
@@ -597,8 +597,8 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["status"], name: "index_learning_school_applications_on_status"
   end
 
-  create_table "learning_school_groups", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "learning_school_groups", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.string "name", null: false
     t.text "memo"
     t.datetime "created_at", precision: 6, null: false
@@ -610,8 +610,8 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_learning_school_groups_on_customer_id"
   end
 
-  create_table "learning_student_parts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "learning_student_id", null: false
+  create_table "learning_student_parts", force: :cascade do |t|
+    t.integer "learning_student_id", null: false
     t.string "part", null: false
     t.boolean "primary", default: false, null: false
     t.datetime "created_at", precision: 6, null: false
@@ -620,10 +620,10 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["learning_student_id"], name: "index_learning_student_parts_on_learning_student_id"
   end
 
-  create_table "learning_student_trainings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "learning_student_id", null: false
-    t.bigint "learning_training_master_id"
+  create_table "learning_student_trainings", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "learning_student_id", null: false
+    t.integer "learning_training_master_id"
     t.string "part", null: false
     t.string "period", null: false
     t.string "level", null: false
@@ -645,8 +645,8 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["learning_training_master_id"], name: "index_learning_student_trainings_on_learning_training_master_id"
   end
 
-  create_table "learning_students", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "learning_students", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.string "name", null: false
     t.string "main_part", null: false
     t.string "grade"
@@ -654,7 +654,7 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.string "status", default: "active", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.bigint "learning_school_group_id"
+    t.integer "learning_school_group_id"
     t.string "email"
     t.string "public_access_token"
     t.string "nickname", limit: 30
@@ -671,8 +671,8 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["public_access_token"], name: "index_learning_students_on_public_access_token", unique: true
   end
 
-  create_table "learning_training_masters", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "learning_training_masters", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.string "part", null: false
     t.string "period", null: false
     t.string "level", null: false
@@ -692,17 +692,17 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["judge_type"], name: "index_learning_training_masters_on_judge_type"
   end
 
-  create_table "likes", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "post_id", null: false
+  create_table "likes", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "post_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["customer_id"], name: "index_likes_on_customer_id"
     t.index ["post_id"], name: "index_likes_on_post_id"
   end
 
-  create_table "member_profiles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "member_profiles", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.string "entry_source"
     t.text "join_reason"
     t.text "want_to_do"
@@ -716,9 +716,9 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_member_profiles_on_customer_id"
   end
 
-  create_table "messages", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "post_id", null: false
+  create_table "messages", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "post_id", null: false
     t.text "body"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
@@ -727,7 +727,7 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["post_id"], name: "index_messages_on_post_id"
   end
 
-  create_table "notifications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "notifications", force: :cascade do |t|
     t.integer "visitor_id", null: false
     t.integer "visited_id", null: false
     t.integer "event_id"
@@ -748,23 +748,38 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["visitor_id"], name: "index_notifications_on_visitor_id"
   end
 
-  create_table "parts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "parts", force: :cascade do |t|
     t.string "name", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table "permits", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "community_id", null: false
+  create_table "pending_stripe_checkouts", force: :cascade do |t|
+    t.string   "stripe_session_id",      null: false
+    t.string   "stripe_customer_id"
+    t.string   "stripe_subscription_id"
+    t.string   "stripe_email"
+    t.string   "plan_key"
+    t.bigint   "customer_id"
+    t.datetime "processed_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_pending_stripe_checkouts_on_customer_id"
+    t.index ["stripe_session_id"], name: "index_pending_stripe_checkouts_on_session_id_unique", unique: true
+    t.index ["stripe_email"], name: "index_pending_stripe_checkouts_on_stripe_email"
+  end
+
+  create_table "permits", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "community_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["community_id"], name: "index_permits_on_community_id"
     t.index ["customer_id"], name: "index_permits_on_customer_id"
   end
 
-  create_table "posts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "posts", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.string "title"
     t.text "body"
     t.integer "category"
@@ -775,9 +790,9 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_posts_on_customer_id"
   end
 
-  create_table "project_chats", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "project_id", null: false
-    t.bigint "customer_id", null: false
+  create_table "project_chats", force: :cascade do |t|
+    t.integer "project_id", null: false
+    t.integer "customer_id", null: false
     t.text "body"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
@@ -785,18 +800,18 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["project_id"], name: "index_project_chats_on_project_id"
   end
 
-  create_table "project_members", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "project_id", null: false
-    t.bigint "customer_id", null: false
+  create_table "project_members", force: :cascade do |t|
+    t.integer "project_id", null: false
+    t.integer "customer_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["customer_id"], name: "index_project_members_on_customer_id"
     t.index ["project_id"], name: "index_project_members_on_project_id"
   end
 
-  create_table "projects", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "community_id", null: false
-    t.bigint "customer_id", null: false
+  create_table "projects", force: :cascade do |t|
+    t.integer "community_id", null: false
+    t.integer "customer_id", null: false
     t.string "title"
     t.text "description"
     t.datetime "created_at", precision: 6, null: false
@@ -808,17 +823,17 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_projects_on_customer_id"
   end
 
-  create_table "relationships", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "relationships", force: :cascade do |t|
     t.integer "follower_id"
     t.integer "followed_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table "requests", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "requests", force: :cascade do |t|
     t.string "request"
-    t.bigint "customer_id", null: false
-    t.bigint "event_id", null: false
+    t.integer "customer_id", null: false
+    t.integer "event_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.string "stamp_type"
@@ -826,10 +841,10 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["event_id"], name: "index_requests_on_event_id"
   end
 
-  create_table "singing_achievement_badges", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "singing_achievement_badges", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.string "badge_key", null: false
-    t.bigint "singing_diagnosis_id"
+    t.integer "singing_diagnosis_id"
     t.datetime "earned_at", null: false
     t.json "metadata"
     t.datetime "created_at", precision: 6, null: false
@@ -842,8 +857,8 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["singing_diagnosis_id"], name: "index_singing_achievement_badges_on_singing_diagnosis_id"
   end
 
-  create_table "singing_ai_challenge_progresses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "singing_ai_challenge_progresses", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.string "target_key", null: false
     t.date "challenge_month", null: false
     t.boolean "tried", default: false, null: false
@@ -857,9 +872,9 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["customer_id"], name: "index_singing_ai_challenge_progresses_on_customer_id"
   end
 
-  create_table "singing_badges", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "singing_ranking_season_id", null: false
+  create_table "singing_badges", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "singing_ranking_season_id", null: false
     t.string "badge_type", null: false
     t.datetime "awarded_at", null: false
     t.datetime "created_at", precision: 6, null: false
@@ -869,16 +884,16 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["singing_ranking_season_id"], name: "index_singing_badges_on_season_id"
   end
 
-  create_table "singing_battles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "singing_battles", force: :cascade do |t|
     t.string "token", null: false
     t.string "song_title"
     t.string "performance_type"
     t.integer "status", default: 0, null: false
     t.datetime "expires_at", null: false
-    t.bigint "challenger_id", null: false
-    t.bigint "opponent_id"
-    t.bigint "challenger_diagnosis_id", null: false
-    t.bigint "opponent_diagnosis_id"
+    t.integer "challenger_id", null: false
+    t.integer "opponent_id"
+    t.integer "challenger_diagnosis_id", null: false
+    t.integer "opponent_diagnosis_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["challenger_diagnosis_id"], name: "index_singing_battles_on_challenger_diagnosis_id"
@@ -888,9 +903,9 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["token"], name: "index_singing_battles_on_token", unique: true
   end
 
-  create_table "singing_cheer_reactions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "target_customer_id", null: false
+  create_table "singing_cheer_reactions", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "target_customer_id", null: false
     t.string "reaction_type", limit: 40, null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
@@ -900,9 +915,9 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["target_customer_id"], name: "index_singing_cheer_reactions_on_target_customer_id"
   end
 
-  create_table "singing_daily_challenge_progresses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "singing_daily_challenge_id", null: false
+  create_table "singing_daily_challenge_progresses", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "singing_daily_challenge_id", null: false
     t.datetime "completed_at"
     t.integer "xp_rewarded", default: 0, null: false
     t.datetime "created_at", precision: 6, null: false
@@ -911,7 +926,7 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["singing_daily_challenge_id"], name: "fk_sdcp_on_singing_daily_challenge"
   end
 
-  create_table "singing_daily_challenges", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "singing_daily_challenges", force: :cascade do |t|
     t.date "challenge_date", null: false
     t.string "challenge_type", null: false
     t.string "target_attribute", null: false
@@ -924,8 +939,8 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["challenge_date"], name: "index_singing_daily_challenges_on_challenge_date", unique: true
   end
 
-  create_table "singing_diagnoses", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "singing_diagnoses", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.string "song_title"
     t.text "memo"
     t.integer "status", default: 0, null: false
@@ -954,8 +969,8 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["status"], name: "index_singing_diagnoses_on_status"
   end
 
-  create_table "singing_generated_recap_movies", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "singing_generated_recap_movies", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.integer "year", null: false
     t.string "status", default: "pending", null: false
     t.json "source_json"
@@ -982,9 +997,9 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["status"], name: "index_singing_generated_recap_movies_on_status"
   end
 
-  create_table "singing_profile_reactions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "target_customer_id", null: false
+  create_table "singing_profile_reactions", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "target_customer_id", null: false
     t.string "reaction_type", limit: 40, null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
@@ -994,7 +1009,7 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["target_customer_id"], name: "index_singing_profile_reactions_on_target_customer_id"
   end
 
-  create_table "singing_ranking_seasons", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "singing_ranking_seasons", force: :cascade do |t|
     t.string "name", null: false
     t.date "starts_on", null: false
     t.date "ends_on", null: false
@@ -1007,9 +1022,9 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["status"], name: "index_singing_ranking_seasons_on_status"
   end
 
-  create_table "singing_recap_movie_batch_executions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "singing_recap_movie_batch_executions", force: :cascade do |t|
     t.integer "year", null: false
-    t.bigint "admin_id"
+    t.integer "admin_id"
     t.integer "target_customers_count", default: 0, null: false
     t.integer "new_movies_count", default: 0, null: false
     t.integer "regenerate_movies_count", default: 0, null: false
@@ -1031,11 +1046,11 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["year"], name: "index_singing_recap_movie_batch_executions_on_year"
   end
 
-  create_table "singing_recap_movie_batch_failures", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "singing_recap_movie_batch_execution_id", null: false
-    t.bigint "customer_id", null: false
+  create_table "singing_recap_movie_batch_failures", force: :cascade do |t|
+    t.integer "singing_recap_movie_batch_execution_id", null: false
+    t.integer "customer_id", null: false
     t.integer "year", null: false
-    t.bigint "recap_movie_id"
+    t.integer "recap_movie_id"
     t.string "error_class", null: false
     t.string "error_message", limit: 1000
     t.text "backtrace_excerpt"
@@ -1045,10 +1060,10 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.datetime "updated_at", precision: 6, null: false
     t.string "retry_status", default: "pending", null: false
     t.datetime "retried_at"
-    t.bigint "retried_by_id"
+    t.integer "retried_by_id"
     t.string "retry_error_message", limit: 1000
     t.datetime "resolved_at"
-    t.bigint "resolved_movie_id"
+    t.integer "resolved_movie_id"
     t.string "auto_retry_status", default: "not_applicable", null: false
     t.integer "auto_retry_attempts_count", default: 0, null: false
     t.datetime "next_auto_retry_at"
@@ -1064,7 +1079,7 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["singing_recap_movie_batch_execution_id"], name: "idx_batch_failures_on_execution_id"
   end
 
-  create_table "singing_recap_movie_storage_snapshots", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "singing_recap_movie_storage_snapshots", force: :cascade do |t|
     t.date "snapshot_date", null: false
     t.integer "attached_movie_count", default: 0, null: false
     t.bigint "total_bytes", default: 0, null: false
@@ -1078,10 +1093,10 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["snapshot_date"], name: "index_singing_recap_movie_storage_snapshots_on_snapshot_date", unique: true
   end
 
-  create_table "singing_season_ranking_entries", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "singing_ranking_season_id", null: false
-    t.bigint "customer_id", null: false
-    t.bigint "singing_diagnosis_id"
+  create_table "singing_season_ranking_entries", force: :cascade do |t|
+    t.integer "singing_ranking_season_id", null: false
+    t.integer "customer_id", null: false
+    t.integer "singing_diagnosis_id"
     t.integer "rank", null: false
     t.integer "score", null: false
     t.string "category", default: "overall", null: false
@@ -1097,8 +1112,8 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["singing_ranking_season_id"], name: "index_season_entries_on_season_id"
   end
 
-  create_table "singing_share_images", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "singing_share_images", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.string "capture_target", null: false
     t.integer "status", default: 0, null: false
     t.datetime "expires_at", null: false
@@ -1113,17 +1128,17 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["status"], name: "index_singing_share_images_on_status"
   end
 
-  create_table "song_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "song_id", null: false
+  create_table "song_customers", force: :cascade do |t|
+    t.integer "customer_id", null: false
+    t.integer "song_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["customer_id"], name: "index_song_customers_on_customer_id"
     t.index ["song_id"], name: "index_song_customers_on_song_id"
   end
 
-  create_table "songs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "event_id", null: false
+  create_table "songs", force: :cascade do |t|
+    t.integer "event_id", null: false
     t.string "song_name", null: false
     t.string "youtube_url"
     t.text "introduction"
@@ -1135,8 +1150,8 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["event_id"], name: "index_songs_on_event_id"
   end
 
-  create_table "subscriptions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
+  create_table "subscriptions", force: :cascade do |t|
+    t.integer "customer_id", null: false
     t.string "stripe_customer_id"
     t.string "stripe_subscription_id"
     t.string "status"
@@ -1144,14 +1159,15 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["customer_id"], name: "index_subscriptions_on_customer_id"
+    t.index ["stripe_subscription_id"], name: "index_subscriptions_on_stripe_subscription_id_unique", unique: true
   end
 
-  create_table "taggings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "tag_id"
+  create_table "taggings", force: :cascade do |t|
+    t.integer "tag_id"
     t.string "taggable_type"
-    t.bigint "taggable_id"
+    t.integer "taggable_id"
     t.string "tagger_type"
-    t.bigint "tagger_id"
+    t.integer "tagger_id"
     t.string "context", limit: 128
     t.datetime "created_at"
     t.string "tenant", limit: 128
@@ -1169,7 +1185,7 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
     t.index ["tenant"], name: "index_taggings_on_tenant"
   end
 
-  create_table "tags", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "tags", force: :cascade do |t|
     t.string "name", collation: "utf8mb3_bin"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
@@ -1270,14 +1286,14 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
   add_foreign_key "singing_ai_challenge_progresses", "customers"
   add_foreign_key "singing_badges", "customers"
   add_foreign_key "singing_badges", "singing_ranking_seasons"
-  add_foreign_key "singing_battles", "customers", column: "challenger_id", name: "fk_singing_battles_challenger"
-  add_foreign_key "singing_battles", "customers", column: "opponent_id", name: "fk_singing_battles_opponent"
-  add_foreign_key "singing_battles", "singing_diagnoses", column: "challenger_diagnosis_id", name: "fk_singing_battles_challenger_diagnosis"
-  add_foreign_key "singing_battles", "singing_diagnoses", column: "opponent_diagnosis_id", name: "fk_singing_battles_opponent_diagnosis"
+  add_foreign_key "singing_battles", "customers", column: "challenger_id"
+  add_foreign_key "singing_battles", "customers", column: "opponent_id"
+  add_foreign_key "singing_battles", "singing_diagnoses", column: "challenger_diagnosis_id"
+  add_foreign_key "singing_battles", "singing_diagnoses", column: "opponent_diagnosis_id"
   add_foreign_key "singing_cheer_reactions", "customers"
   add_foreign_key "singing_cheer_reactions", "customers", column: "target_customer_id"
   add_foreign_key "singing_daily_challenge_progresses", "customers"
-  add_foreign_key "singing_daily_challenge_progresses", "singing_daily_challenges", name: "fk_sdcp_on_singing_daily_challenge"
+  add_foreign_key "singing_daily_challenge_progresses", "singing_daily_challenges"
   add_foreign_key "singing_diagnoses", "customers"
   add_foreign_key "singing_generated_recap_movies", "customers"
   add_foreign_key "singing_profile_reactions", "customers"
@@ -1294,6 +1310,7 @@ ActiveRecord::Schema.define(version: 2026_06_01_000001) do
   add_foreign_key "song_customers", "customers"
   add_foreign_key "song_customers", "songs"
   add_foreign_key "songs", "events"
+  add_foreign_key "pending_stripe_checkouts", "customers"
   add_foreign_key "subscriptions", "customers"
   add_foreign_key "taggings", "tags"
 end

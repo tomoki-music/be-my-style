@@ -225,6 +225,13 @@ Rails.application.routes.draw do
 
   namespace :singing do
     root to: "homes#top"
+
+    # 外部LP → Stripe Checkout 直接遷移（認証不要）
+    # success は :plan より先に定義してルート衝突を防ぐ
+    get 'checkout/success', to: 'checkout#success', as: :checkout_success
+    get 'checkout/:plan',   to: 'checkout#redirect', as: :lp_checkout,
+        constraints: { plan: /light|core|premium/ }
+
     resources :diagnoses, only: [:index, :new, :create, :show] do
       member do
         get :newly_awarded_badges

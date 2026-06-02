@@ -12,13 +12,14 @@ module StripeSubscriptionSync
 
   def detect_plan(price_id)
     prices = Rails.application.credentials.dig(:stripe, :price)
+    return nil if prices.nil? || price_id.blank?
 
     case price_id
-    when prices[:light][:test], prices[:light][:live]
+    when prices.dig(:light, :test), prices.dig(:light, :live)
       "light"
-    when prices[:core][:test], prices[:core][:live]
+    when prices.dig(:core, :test), prices.dig(:core, :live)
       "core"
-    when prices[:premium][:test], prices[:premium][:live]
+    when prices.dig(:premium, :test), prices.dig(:premium, :live)
       "premium"
     end
   end
@@ -41,7 +42,19 @@ module StripeSubscriptionSync
 
     return false if plan.blank? || session.subscription.blank? || session.customer.blank?
 
-    record = Subscription.find_by(stripe_subscription_id: session.subscription) || customer.subscription || customer.build_subscription
+    existing = Subscription.find_by(stripe_subscription_id: session.subscription)
+
+    # 別顧客のサブスクにはタッチしない（クロス汚染防止）
+    if existing && existing.customer_id != customer.id
+      Rails.logger.warn(
+        "LP Checkout sync skipped: stripe_subscription=#{session.subscription} " \
+        "is already linked to customer_id=#{existing.customer_id}, " \
+        "requested by customer_id=#{customer.id}"
+      )
+      return false
+    end
+
+    record = existing || customer.subscription || customer.build_subscription
     previous_plan = record.plan
     previous_status = record.status
     record.assign_attributes(
