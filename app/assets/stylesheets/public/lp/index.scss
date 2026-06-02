@@ -274,16 +274,9 @@
   margin: 0 auto 26px;
   padding: 28px;
   border: 1px solid rgba(28, 36, 48, 0.08);
-  border-radius: 8px;
+  border-radius: 12px;
   background: #ffffff;
   box-shadow: 0 16px 38px rgba(18, 31, 53, 0.07);
-
-  h3 {
-    margin: 0 0 10px;
-    color: #1c2430;
-    font-size: clamp(1.35rem, 2.5vw, 2rem);
-    line-height: 1.35;
-  }
 
   p {
     margin: 0;
@@ -304,10 +297,10 @@
   margin-bottom: 26px;
   padding: 24px;
   border: 1px solid rgba(45, 113, 87, 0.14);
-  border-radius: 8px;
+  border-radius: 12px;
   background:
     linear-gradient(135deg, rgba(242, 248, 245, 0.98), rgba(255, 247, 242, 0.92));
-  box-shadow: 0 14px 34px rgba(18, 31, 53, 0.06);
+  box-shadow: 0 8px 24px rgba(18, 31, 53, 0.06);
 }
 
 .singing-community-home__network-list {
@@ -372,30 +365,24 @@
   }
 }
 
-.singing-community-home__network-empty {
-  display: grid;
-  gap: 4px;
-  padding: 16px;
-  border: 1px dashed rgba(45, 113, 87, 0.28);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.64);
 
-  strong {
-    color: #2d7157;
-  }
-
-  span {
-    color: #5e6775;
-  }
+.singing-community-home__network-footer {
+  margin: 14px 0 0;
+  font-size: 0.8rem;
+  color: #7a6aaa;
+  text-align: center;
+  font-style: italic;
+  padding-top: 12px;
+  border-top: 1px solid rgba(45, 113, 87, 0.1);
 }
 
 .singing-community-home__circles {
   margin-bottom: 26px;
   padding: 24px;
-  border: 1px solid rgba(45, 113, 87, 0.14);
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(248, 248, 255, 0.98), rgba(242, 248, 245, 0.92));
-  box-shadow: 0 14px 34px rgba(18, 31, 53, 0.06);
+  border: 1px solid rgba(90, 60, 200, 0.15);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(248, 246, 255, 0.98), rgba(242, 248, 255, 0.92));
+  box-shadow: 0 8px 24px rgba(80, 50, 180, 0.07);
 }
 
 .singing-community-home__circles-list {
@@ -436,15 +423,6 @@
   line-height: 1.5;
 }
 
-.singing-community-home__circles-empty {
-  margin-bottom: 26px;
-  padding: 16px;
-  border: 1px dashed rgba(45, 113, 87, 0.28);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.64);
-  color: #5e6775;
-}
-
 // ─── Music Community Ecosystem ────────────────────────────────────────
 .music-community-ecosystem {
   margin-bottom: 26px;
@@ -455,15 +433,17 @@
   box-shadow: 0 8px 24px rgba(100, 60, 180, 0.07);
 
   &__header {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
 
   &__eyebrow {
-    font-size: 12px;
+    display: block;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: rgba(90, 50, 200, 0.7);
+    margin-bottom: 4px;
   }
 
   &__membership {
@@ -529,15 +509,17 @@
   box-shadow: 0 8px 24px rgba(80, 50, 180, 0.08);
 
   &__header {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
 
   &__eyebrow {
-    font-size: 12px;
+    display: block;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: rgba(80, 45, 180, 0.65);
+    margin-bottom: 4px;
   }
 
   &__level {
@@ -592,6 +574,304 @@
   border-radius: 99px;
   min-width: 4px;
   transition: width 0.4s ease;
+}
+
+// ─── Growth Partnerships ──────────────────────────────────────────────
+.growth-partnerships {
+  margin-bottom: 26px;
+  padding: 24px;
+  border: 1px solid rgba(90, 60, 200, 0.2);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(242, 240, 255, 0.98), rgba(236, 244, 255, 0.95));
+  box-shadow: 0 8px 24px rgba(80, 50, 180, 0.08);
+
+  &__header {
+    margin-bottom: 20px;
+  }
+
+  &__eyebrow {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(80, 45, 180, 0.65);
+    margin-bottom: 4px;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__footer {
+    margin: 16px 0 0;
+    font-size: 0.8rem;
+    color: #7a6aaa;
+    text-align: center;
+    font-style: italic;
+    padding-top: 12px;
+    border-top: 1px solid rgba(90, 60, 200, 0.1);
+  }
+
+  &__empty {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #7a6aaa;
+    text-align: center;
+    padding: 8px 0;
+  }
+}
+
+.growth-partnership-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 8px rgba(80, 50, 180, 0.06);
+  border: 1px solid rgba(90, 60, 200, 0.1);
+
+  &__avatar {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(124, 92, 224, 0.15), rgba(167, 139, 250, 0.15));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+  }
+
+  &__meta {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    strong {
+      font-size: 0.95rem;
+      color: #1c2430;
+      font-weight: 700;
+    }
+
+    em {
+      font-style: normal;
+      font-size: 0.78rem;
+      color: #5b3dc8;
+      font-weight: 600;
+    }
+
+    span {
+      font-size: 0.75rem;
+      color: #7a6aaa;
+    }
+  }
+
+  &__reason {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: #4a3a8a;
+    font-weight: 600;
+    padding: 4px 10px;
+    background: rgba(124, 92, 224, 0.08);
+    border-radius: 20px;
+    white-space: nowrap;
+    align-self: flex-start;
+  }
+
+  @media (max-width: 480px) {
+    flex-wrap: wrap;
+
+    &__reason {
+      width: 100%;
+    }
+  }
+}
+
+.music-social-graph {
+  margin-bottom: 26px;
+  padding: 24px;
+  border: 1px solid rgba(90, 60, 200, 0.2);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(238, 236, 255, 0.98), rgba(230, 242, 255, 0.95));
+  box-shadow: 0 8px 24px rgba(80, 50, 180, 0.08);
+
+  &__header {
+    margin-bottom: 20px;
+  }
+
+  &__eyebrow {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(80, 45, 180, 0.65);
+    margin-bottom: 4px;
+  }
+
+  &__summary {
+    font-size: 0.95rem;
+    color: #3a3060;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  &__count {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #5b3dc8;
+    margin: 0 4px;
+  }
+
+  &__connections {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+
+    @media (max-width: 380px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__connection {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.65);
+    border: 1px solid rgba(90, 60, 200, 0.1);
+    box-shadow: 0 2px 6px rgba(80, 50, 180, 0.05);
+  }
+
+  &__connection-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  &__connection-label {
+    flex: 1;
+    font-size: 0.78rem;
+    color: #5e6775;
+  }
+
+  &__connection-count {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #5b3dc8;
+  }
+
+  &__message {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #4a3a8a;
+    text-align: center;
+    padding-top: 12px;
+    border-top: 1px solid rgba(90, 60, 200, 0.1);
+    font-style: italic;
+  }
+}
+
+// ─── Home Empty State ─────────────────────────────────────────────────
+.singing-home-empty-state {
+  padding: 28px 24px;
+  border: 1px dashed rgba(45, 113, 87, 0.28);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  text-align: center;
+
+  &__icon {
+    display: block;
+    font-size: 2rem;
+    margin: 0 0 12px;
+  }
+
+  &__title {
+    margin: 0 0 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1c2430;
+    line-height: 1.4;
+  }
+
+  &__text {
+    max-width: 420px;
+    margin: 0 auto 18px;
+    font-size: 0.88rem;
+    color: #5e6775;
+    line-height: 1.75;
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 22px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #7c3aed, #ec4899);
+    color: #fff;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 8px 20px rgba(124, 58, 237, 0.22);
+    transition: 0.2s;
+
+    &:hover {
+      color: #fff;
+      text-decoration: none;
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(124, 58, 237, 0.3);
+    }
+  }
+}
+
+.singing-community-home__mission-cta {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(28, 36, 48, 0.07);
+  text-align: right;
+}
+
+// ─── Unified Section Helpers ──────────────────────────────────────────
+.singing-home-section__eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(80, 45, 180, 0.6);
+  margin-bottom: 6px;
+}
+
+.singing-home-section__title {
+  margin: 0 0 6px;
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  font-weight: 700;
+  color: #1c2430;
+  line-height: 1.35;
+}
+
+.singing-home-section__description {
+  margin: 0 0 16px;
+  font-size: 0.85rem;
+  color: #5e6775;
+  line-height: 1.6;
+}
+
+.singing-home-story-copy {
+  margin: 4px 0 22px;
+  padding: 12px 20px;
+  text-align: center;
+  font-size: 0.86rem;
+  font-style: italic;
+  color: #7a6aaa;
+  border-top: 1px solid rgba(90, 60, 200, 0.08);
+  border-bottom: 1px solid rgba(90, 60, 200, 0.08);
 }
 
 .singing-community-home__band {
@@ -705,6 +985,79 @@
   font-weight: 800;
   text-decoration: underline;
   text-underline-offset: 4px;
+}
+
+// ─── Home CTA ─────────────────────────────────────────────────────────
+.singing-home-cta {
+  margin-top: 28px;
+  padding: 32px 28px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #121f31, #1d2f49 55%, #2f4567);
+  color: #fff;
+  text-align: center;
+
+  &__message {
+    max-width: 580px;
+    margin: 0 auto 24px;
+    font-size: 1.05rem;
+    line-height: 1.85;
+    opacity: 0.9;
+  }
+
+  &__buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 13px 28px;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: 0.2s;
+
+    &--primary {
+      background: linear-gradient(135deg, #7c3aed, #ec4899);
+      color: #fff;
+      box-shadow: 0 10px 26px rgba(124, 58, 237, 0.26);
+
+      &:hover {
+        color: #fff;
+        text-decoration: none;
+        transform: translateY(-1px);
+        box-shadow: 0 14px 32px rgba(124, 58, 237, 0.36);
+      }
+    }
+
+    &--secondary {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      color: rgba(255, 255, 255, 0.9);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+        text-decoration: none;
+      }
+    }
+
+    &--ghost {
+      color: rgba(255, 255, 255, 0.75);
+      text-decoration: underline;
+      text-underline-offset: 4px;
+
+      &:hover {
+        color: #fff;
+        text-decoration: none;
+      }
+    }
+  }
 }
 
 /* ===== LIST ===== */
@@ -1677,9 +2030,23 @@
 
   .singing-community-home__mission,
   .singing-community-home__network,
+  .singing-community-home__circles,
   .singing-community-home__card,
-  .singing-community-home__diagnosis-cta {
+  .singing-community-home__diagnosis-cta,
+  .community-reputation,
+  .growth-partnerships,
+  .music-social-graph,
+  .music-community-ecosystem {
     padding: 18px;
+  }
+
+  .singing-home-empty-state {
+    padding: 22px 18px;
+  }
+
+  .singing-home-story-copy {
+    padding: 10px 16px;
+    font-size: 0.82rem;
   }
 
   .singing-community-home__cards,
@@ -1696,15 +2063,18 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .singing-community-home__diagnosis-cta {
-    align-items: flex-start;
-    flex-direction: column;
-  }
+  .singing-home-cta {
+    padding: 24px 18px;
 
-  .singing-community-home__diagnosis-actions {
-    align-items: stretch;
-    flex-direction: column;
-    width: 100%;
+    &__buttons {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    &__button {
+      width: 100%;
+      max-width: 320px;
+    }
   }
 
   .lp-btn {

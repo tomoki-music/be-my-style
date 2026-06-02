@@ -52,8 +52,12 @@
     .lp-hero-inner
       %p.lp-eyebrow Singing Music Community
       %h1.lp-hero-title
-        %span おかえりなさい。
-        %span 今日も音楽を楽しもう。
+        - if customer_signed_in?
+          %span おかえりなさい。
+          %span 今日も音楽を楽しもう。
+        - else
+          %span 音楽を楽しみながら、
+          %span 自分らしく成長しよう。
       %p
         = music_home&.hero_message || "まずは楽しむところから始めよう"
       .lp-hero-points
@@ -74,15 +78,162 @@
           診断だけで終わらず、今日の挑戦、仲間、イベント、成長へ自然につながるホームです。
 
         .singing-community-home__mission
-          .singing-community-home__section-label Today's Mission
-          %h3= music_home.today_mission&.title || "今日はここだけ歌ってみよう"
-          %p= music_home.today_mission&.description || "好きな曲から、歌いたい部分を少しだけ選んで歌ってみよう。"
+          %span.singing-home-section__eyebrow Today's Mission
+          %h3.singing-home-section__title= music_home.today_mission&.title || "今日はここだけ歌ってみよう"
+          %p.singing-home-section__description= music_home.today_mission&.description || "好きな曲から、歌いたい部分を少しだけ選んで歌ってみよう。"
           - if music_home.today_mission&.coach_message.present?
             %p.singing-community-home__coach-message= music_home.today_mission.coach_message
+          .singing-community-home__mission-cta
+            = link_to music_home.home_cta.primary_label, music_home.home_cta.primary_path, class: "singing-home-cta__button singing-home-cta__button--primary"
+
+        %p.singing-home-story-copy 今日の一歩が、あなたの音楽の輪を広げます。
+
+        - if music_home.reputation.present?
+          - rep = music_home.reputation
+          .community-reputation
+            .community-reputation__header
+              %span.community-reputation__eyebrow 🌟 Community Reputation
+              %h3.singing-home-section__title あなたのコミュニティポイント
+              %p.singing-home-section__description 活動と応援を積み重ねることで、コミュニティでの存在感が育っていきます。
+            .community-reputation__level
+              %span.community-reputation__title= rep.reputation_title
+              %span.community-reputation__points= "#{rep.reputation_points} pt"
+            .reputation-progress
+              .reputation-progress__bar{ style: "width: #{rep.progress_percent}%" }
+            - if rep.next_level_points > 0
+              %p.community-reputation__next-level
+                = "次のレベルまで #{rep.next_level_points}pt"
+            .community-reputation__message= rep.reputation_message
+
+        - if music_home.growth_partnerships.present?
+          - gp = music_home.growth_partnerships
+          .growth-partnerships
+            .growth-partnerships__header
+              %span.growth-partnerships__eyebrow 🤝 Growth Partners
+              %h3.singing-home-section__title 一緒に成長できる仲間
+              %p.singing-home-section__description 競争ではなく、近いペースで続けている仲間を見つけましょう。
+            - if gp.partners.any?
+              .growth-partnerships__list
+                - gp.partners.each do |partner|
+                  .growth-partnership-card
+                    .growth-partnership-card__avatar
+                      %span= partner.growth_type&.split(" ")&.first || "🎤"
+                    .growth-partnership-card__meta
+                      %strong= partner.display_name
+                      - if partner.growth_type.present?
+                        %em= partner.growth_type
+                      - if partner.activity_label.present?
+                        %span= partner.activity_label
+                    .growth-partnership-card__reason= partner.partnership_reason
+              %p.growth-partnerships__footer 競争ではなく、一緒に続ける仲間です。
+            - else
+              .singing-home-empty-state
+                %p.singing-home-empty-state__icon 🤝
+                %h4.singing-home-empty-state__title まだ成長パートナーは見つかっていません
+                %p.singing-home-empty-state__text
+                  でも大丈夫。
+                  %br
+                  最初の診断や応援が、あなたに近い仲間との出会いにつながります。
+                = link_to "診断してみる", new_singing_diagnosis_path, class: "singing-home-empty-state__cta"
+
+        - if music_home.music_social_graph.present?
+          - msg = music_home.music_social_graph
+          .music-social-graph
+            .music-social-graph__header
+              %span.music-social-graph__eyebrow 🕸 Music Social Graph
+              %h3.singing-home-section__title 音楽でつながる仲間の輪
+              %p.singing-home-section__description 応援・成長タイプ・挑戦テーマ・イベントを通じた、あなたの音楽ネットワーク全体像です。
+            - if msg.connected_members_count.zero?
+              .singing-home-empty-state
+                %p.singing-home-empty-state__icon 🕸
+                %h4.singing-home-empty-state__title これから音楽でつながりが広がります
+                %p.singing-home-empty-state__text
+                  応援したり、挑戦を続けることで、
+                  %br
+                  あなたの音楽の輪が少しずつ育っていきます。
+                = link_to "今日のミッションを見る", singing_challenges_path, class: "singing-home-empty-state__cta"
+            - else
+              .music-social-graph__summary
+                あなたは
+                %strong.music-social-graph__count= "#{msg.connected_members_count}人"
+                の音楽仲間とつながっています
+              .music-social-graph__connections
+                .music-social-graph__connection
+                  %span.music-social-graph__connection-icon 🎵
+                  %span.music-social-graph__connection-label 応援
+                  %span.music-social-graph__connection-count= "#{msg.cheer_connections_count}人"
+                .music-social-graph__connection
+                  %span.music-social-graph__connection-icon 🌱
+                  %span.music-social-graph__connection-label 成長タイプ
+                  %span.music-social-graph__connection-count= "#{msg.growth_type_connections_count}人"
+                .music-social-graph__connection
+                  %span.music-social-graph__connection-icon 🎯
+                  %span.music-social-graph__connection-label 挑戦テーマ
+                  %span.music-social-graph__connection-count= "#{msg.mission_connections_count}人"
+                .music-social-graph__connection
+                  %span.music-social-graph__connection-icon 🎤
+                  %span.music-social-graph__connection-label イベント
+                  %span.music-social-graph__connection-count= "#{msg.event_connections_count}人"
+              %p.music-social-graph__message= msg.graph_message
+
+        %p.singing-home-story-copy 近い仲間とつながりながら、自分のペースで続けましょう。
+
+        .singing-community-home__circles
+          .singing-community-home__band-header
+            %span.singing-home-section__eyebrow Growth Circles
+            %h3.singing-home-section__title 近い仲間たちの小さな輪
+            %p.singing-home-section__description 同じ方向を向いて歌っている仲間たちがいます。あなたも、その輪の一員です。
+          - if music_home.growth_circles.present?
+            .singing-community-home__circles-list
+              - music_home.growth_circles.each do |circle|
+                .singing-community-home__circle-item
+                  %h4.singing-community-home__circle-title= circle.title
+                  %p.singing-community-home__circle-count
+                    %strong= "#{circle.member_count}人"
+                    が参加中
+                  %p.singing-community-home__circle-desc= circle.description
+          - else
+            .singing-home-empty-state
+              %p.singing-home-empty-state__icon 🌱
+              %h4.singing-home-empty-state__title あなたの輪は、ここから始まります
+              %p.singing-home-empty-state__text 診断を続けることで、近い仲間との小さな輪が見えてきます。
+              = link_to "診断してみる", new_singing_diagnosis_path, class: "singing-home-empty-state__cta"
+
+        - if music_home.ecosystem.present?
+          - eco = music_home.ecosystem
+          .music-community-ecosystem
+            .music-community-ecosystem__header
+              %span.music-community-ecosystem__eyebrow 🎵 Music Community
+              %h3.singing-home-section__title コミュニティ全体の動き
+              %p.singing-home-section__description あなたが歌うたびに、この輪は少しずつ広がっていきます。
+            - if eco.active_members_count.zero? && eco.weekly_cheers_count.zero? && eco.weekly_challenges_count.zero?
+              .singing-home-empty-state
+                %p.singing-home-empty-state__icon 🎵
+                %h4.singing-home-empty-state__title 音楽の輪はこれから育っていきます
+                %p.singing-home-empty-state__text あなたが歌い、応援することで、この場所はだんだん活気づいていきます。
+                = link_to "コミュニティを見る", "/public/communities/7", class: "singing-home-empty-state__cta"
+            - else
+              .ecosystem-stats
+                .ecosystem-stat
+                  %strong= "#{eco.active_members_count}人"
+                  %span が今週歌いました
+                .ecosystem-stat
+                  %strong= "#{eco.weekly_cheers_count}件"
+                  %span の応援
+                .ecosystem-stat
+                  %strong= "#{eco.weekly_challenges_count}件"
+                  %span の挑戦達成
+                .ecosystem-stat
+                  %strong= "#{eco.active_circles_count}つ"
+                  %span のCircleが活動中
+              .music-community-ecosystem__membership
+                あなたもこの輪の一員です
+              .music-community-ecosystem__message
+                = eco.ecosystem_message
 
         .singing-community-home__network
           .singing-community-home__band-header
-            %span.singing-community-home__section-label Community Network
+            %span.singing-home-section__eyebrow Community Network
             %h3 あなたと近い仲間
             %p= music_home.community_network&.message || "音楽を楽しむ仲間が増えています。これからつながりが広がっていきます。"
           - if music_home.community_network&.connections.present?
@@ -96,66 +247,14 @@
                     %span= connection.reason
                     - if connection.growth_type_label.present?
                       %em= connection.growth_type_label
+            %p.singing-community-home__network-footer あなたの一歩が、音楽の輪を育てます。
           - else
             .singing-community-home__network-empty
-              %strong 音楽を楽しむ仲間が増えています。
-              %span これからつながりが広がっていきます。
-
-        - if music_home.growth_circles.present?
-          .singing-community-home__circles
-            .singing-community-home__band-header
-              %span.singing-community-home__section-label Growth Circles
-              %h3 近い仲間たちの小さな輪
-              %p 同じ方向を向いて歌っている仲間たちがいます。あなたも、その輪の一員です。
-            .singing-community-home__circles-list
-              - music_home.growth_circles.each do |circle|
-                .singing-community-home__circle-item
-                  %h4.singing-community-home__circle-title= circle.title
-                  %p.singing-community-home__circle-count
-                    %strong= "#{circle.member_count}人"
-                    が参加中
-                  %p.singing-community-home__circle-desc= circle.description
-          - else
-            .singing-community-home__circles-empty
-              %p 音楽を楽しむ仲間が集まっています。あなたらしい輪が見つかります。
-
-        - if music_home.ecosystem.present?
-          - eco = music_home.ecosystem
-          .music-community-ecosystem
-            .music-community-ecosystem__header
-              %span.music-community-ecosystem__eyebrow 🎵 Music Community
-            .ecosystem-stats
-              .ecosystem-stat
-                %strong= "#{eco.active_members_count}人"
-                %span が今週歌いました
-              .ecosystem-stat
-                %strong= "#{eco.weekly_cheers_count}件"
-                %span の応援
-              .ecosystem-stat
-                %strong= "#{eco.weekly_challenges_count}件"
-                %span の挑戦達成
-              .ecosystem-stat
-                %strong= "#{eco.active_circles_count}つ"
-                %span のCircleが活動中
-            .music-community-ecosystem__membership
-              あなたもこの輪の一員です
-            .music-community-ecosystem__message
-              = eco.ecosystem_message
-
-        - if music_home.reputation.present?
-          - rep = music_home.reputation
-          .community-reputation
-            .community-reputation__header
-              %span.community-reputation__eyebrow 🌟 Community Reputation
-            .community-reputation__level
-              %span.community-reputation__title= rep.reputation_title
-              %span.community-reputation__points= "#{rep.reputation_points} pt"
-            .reputation-progress
-              .reputation-progress__bar{ style: "width: #{rep.progress_percent}%" }
-            - if rep.next_level_points > 0
-              %p.community-reputation__next-level
-                = "次のレベルまで #{rep.next_level_points}pt"
-            .community-reputation__message= rep.reputation_message
+              .singing-home-empty-state
+                %p.singing-home-empty-state__icon 🎵
+                %h4.singing-home-empty-state__title 音楽でつながる仲間が増えています
+                %p.singing-home-empty-state__text 応援や診断を続けることで、あなたの音楽の仲間が少しずつ広がっていきます。
+                = link_to "コミュニティを見る", "/public/communities/7", class: "singing-home-empty-state__cta"
 
         .singing-community-home__band
           .singing-community-home__band-header
@@ -202,11 +301,11 @@
                   %span.singing-community-home__meta= item.meta
           = link_to music_home.growth_summary.cta_label, music_home.growth_summary.cta_url, class: "singing-community-home__link"
 
-        .singing-community-home__diagnosis-cta
-          %p 記録したくなったら、最後に今の声を残してみよう。
-          .singing-community-home__diagnosis-actions
-            = link_to "みんなの成長を見る", singing_growth_feed_path, class: "singing-community-home__feed-link"
-            = link_to lp_cta_label, lp_primary_cta_path, lp_cta_options.merge(class: "lp-btn")
+        .singing-home-cta
+          %p.singing-home-cta__message= music_home.home_cta.message
+          .singing-home-cta__buttons
+            = link_to music_home.home_cta.primary_label, music_home.home_cta.primary_path, class: "singing-home-cta__button singing-home-cta__button--primary"
+            = link_to music_home.home_cta.secondary_label, music_home.home_cta.secondary_path, class: "singing-home-cta__button singing-home-cta__button--secondary"
 
   - if customer_signed_in? && @growth_dashboard
     = render "singing/shared/home_growth_dashboard", dashboard: @growth_dashboard

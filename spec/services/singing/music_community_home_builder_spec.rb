@@ -28,6 +28,30 @@ RSpec.describe Singing::MusicCommunityHomeBuilder do
       expect(home.growth_summary.items).to be_present
     end
 
+    it "growth_partnerships が GrowthPartnershipsResult を返す" do
+      home = described_class.call(customer)
+
+      expect(home.growth_partnerships).to be_a(Singing::GrowthPartnershipsBuilder::GrowthPartnershipsResult)
+    end
+
+    it "growth_partnerships.message が存在する" do
+      home = described_class.call(customer)
+
+      expect(home.growth_partnerships.message).to be_present
+    end
+
+    it "music_social_graph が MusicSocialGraph を返す" do
+      home = described_class.call(customer)
+
+      expect(home.music_social_graph).to be_a(Singing::MusicSocialGraphBuilder::MusicSocialGraph)
+    end
+
+    it "music_social_graph.graph_message が存在する" do
+      home = described_class.call(customer)
+
+      expect(home.music_social_graph.graph_message).to be_present
+    end
+
     it "診断0件では最初の一歩向けのhero_messageを返す" do
       home = described_class.call(customer)
 
@@ -44,6 +68,55 @@ RSpec.describe Singing::MusicCommunityHomeBuilder do
 
     it "nil安全" do
       expect { described_class.call(nil) }.not_to raise_error
+    end
+
+    describe "home_cta" do
+      it "HomeCta を返す" do
+        home = described_class.call(customer)
+
+        expect(home.home_cta).to be_a(described_class::HomeCta)
+      end
+
+      it "nil customerでは無料登録CTAを返す" do
+        home = described_class.call(nil)
+
+        expect(home.home_cta.primary_label).to eq("無料で始める")
+      end
+
+      it "診断0件では最初の診断CTAを返す" do
+        home = described_class.call(customer)
+
+        expect(home.home_cta.primary_label).to eq("最初の診断をする")
+      end
+
+      it "診断1〜2件ではミッションCTAを返す" do
+        create(:singing_diagnosis, :completed, customer: customer)
+        create(:singing_diagnosis, :completed, customer: customer)
+
+        home = described_class.call(customer)
+
+        expect(home.home_cta.primary_label).to eq("今日のミッションを見る")
+      end
+
+      it "診断3件以上では成長レポートCTAを返す" do
+        3.times { create(:singing_diagnosis, :completed, customer: customer) }
+
+        home = described_class.call(customer)
+
+        expect(home.home_cta.primary_label).to eq("成長レポートを見る")
+      end
+
+      it "全状態でsecondary_labelが存在する" do
+        home = described_class.call(customer)
+
+        expect(home.home_cta.secondary_label).to be_present
+      end
+
+      it "全状態でmessageが存在する" do
+        home = described_class.call(customer)
+
+        expect(home.home_cta.message).to be_present
+      end
     end
   end
 end

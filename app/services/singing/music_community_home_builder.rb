@@ -2,14 +2,26 @@ module Singing
   class MusicCommunityHomeBuilder
     MusicCommunityHome = Struct.new(
       :hero_message,
+      :home_cta,
       :today_mission,
       :community_network,
       :growth_circles,
       :ecosystem,
       :reputation,
+      :growth_partnerships,
+      :music_social_graph,
       :community_summary,
       :recommended_event,
       :growth_summary,
+      keyword_init: true
+    )
+
+    HomeCta = Struct.new(
+      :primary_label,
+      :primary_path,
+      :secondary_label,
+      :secondary_path,
+      :message,
       keyword_init: true
     )
 
@@ -44,11 +56,14 @@ module Singing
 
       MusicCommunityHome.new(
         hero_message: hero_message,
+        home_cta: home_cta,
         today_mission: experience.todays_mission,
         community_network: Singing::CommunityNetworkBuilder.call(@customer),
         growth_circles: Singing::GrowthCirclesBuilder.call(@customer),
         ecosystem: Singing::MusicCommunityEcosystemBuilder.call(customer: @customer),
         reputation: Singing::CommunityReputationBuilder.call(customer: @customer),
+        growth_partnerships: Singing::GrowthPartnershipsBuilder.call(customer: @customer),
+        music_social_graph: Singing::MusicSocialGraphBuilder.call(customer: @customer),
         community_summary: community_summary(experience),
         recommended_event: recommended_event(experience),
         growth_summary: growth_summary(experience)
@@ -56,6 +71,42 @@ module Singing
     end
 
     private
+
+    def home_cta
+      if @customer.nil?
+        HomeCta.new(
+          primary_label: "無料で始める",
+          primary_path: "/customers/sign_up",
+          secondary_label: "コミュニティを見る",
+          secondary_path: "/public/communities/7",
+          message: "あなたの歌は、ここから少しずつ育っていきます。今日の一歩を、音楽の輪につなげましょう。"
+        )
+      elsif diagnosis_count.zero?
+        HomeCta.new(
+          primary_label: "最初の診断をする",
+          primary_path: "/singing/diagnoses/new",
+          secondary_label: "コミュニティを見る",
+          secondary_path: "/public/communities/7",
+          message: "まずは一度、今の声を残してみよう。記録が、あなたの音楽の出発点になります。"
+        )
+      elsif diagnosis_count >= 3
+        HomeCta.new(
+          primary_label: "成長レポートを見る",
+          primary_path: "/singing/diagnoses",
+          secondary_label: "イベントを見る",
+          secondary_path: "/public/events",
+          message: "あなたの歌は、ここから少しずつ育っています。今日の一歩を、音楽の輪につなげましょう。"
+        )
+      else
+        HomeCta.new(
+          primary_label: "今日のミッションを見る",
+          primary_path: "/singing/challenges",
+          secondary_label: "診断する",
+          secondary_path: "/singing/diagnoses/new",
+          message: "あなたの歌は、ここから少しずつ育っていきます。今日の一歩を、音楽の輪につなげましょう。"
+        )
+      end
+    end
 
     def hero_message
       if diagnosis_count.zero?
