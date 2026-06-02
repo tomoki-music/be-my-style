@@ -5,6 +5,8 @@ module Singing
       :today_mission,
       :community_network,
       :growth_circles,
+      :ecosystem,
+      :reputation,
       :community_summary,
       :recommended_event,
       :growth_summary,
@@ -45,6 +47,8 @@ module Singing
         today_mission: experience.todays_mission,
         community_network: Singing::CommunityNetworkBuilder.call(@customer),
         growth_circles: Singing::GrowthCirclesBuilder.call(@customer),
+        ecosystem: Singing::MusicCommunityEcosystemBuilder.call(customer: @customer),
+        reputation: Singing::CommunityReputationBuilder.call(customer: @customer),
         community_summary: community_summary(experience),
         recommended_event: recommended_event(experience),
         growth_summary: growth_summary(experience)
