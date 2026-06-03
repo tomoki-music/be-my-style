@@ -5,17 +5,10 @@ class Singing::UsersController < Singing::BaseController
   before_action :ensure_correct_user, only: [:edit, :update]
 
   def index
-    @circle    = params[:circle].presence
-    @discovery = Singing::CircleMembersDiscoveryBuilder.call(@circle)
-    @users     = Customer
-      .joins(:singing_diagnoses)
-      .where(singing_diagnoses: { status: :completed })
-      .where(singing_diagnoses: { created_at: 30.days.ago..Time.current })
-      .distinct
-      .order("MAX(singing_diagnoses.created_at) DESC")
-      .group("customers.id")
-      .limit(24)
-    @growth_type_map = build_growth_type_map(@users)
+    @circle        = params[:circle].presence
+    @discovery     = Singing::CircleMembersDiscoveryBuilder.call(@circle)
+    users          = fetch_index_users
+    @profile_cards = Singing::ProfileCardBuilder.build_collection(users)
   end
 
   def show
@@ -93,14 +86,16 @@ class Singing::UsersController < Singing::BaseController
     )
   end
 
-  def build_growth_type_map(users)
-    users.each_with_object({}) do |user, hash|
-      begin
-        hash[user.id] = Singing::GrowthTypeAnalyzer.call(user)
-      rescue StandardError
-        hash[user.id] = nil
-      end
-    end
+  def fetch_index_users
+    Customer
+      .joins(:singing_diagnoses)
+      .where(singing_diagnoses: { status: :completed })
+      .where(singing_diagnoses: { created_at: 30.days.ago..Time.current })
+      .with_attached_profile_image
+      .distinct
+      .order("MAX(singing_diagnoses.created_at) DESC")
+      .group("customers.id")
+      .limit(24)
   end
 
   def safe_external_url(url)

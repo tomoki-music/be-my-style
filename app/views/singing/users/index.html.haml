@@ -4,18 +4,16 @@
     %h1.singing-users-index__title= @discovery.circle_name
     %p.singing-users-index__description= @discovery.circle_description
 
-  - if @users.present?
+  - if @profile_cards.present?
     .singing-users-index__grid
-      - @users.each do |user|
-        = link_to singing_user_path(user), class: "singing-users-index__card" do
+      - @profile_cards.each do |card|
+        = link_to singing_user_path(card.customer), class: "singing-users-index__card" do
           .singing-users-index__avatar
-            = customer_avatar_tag(user, class_name: "singing-users-index__avatar-img", fallback: "no_image")
+            = customer_avatar_tag(card.customer, class_name: "singing-users-index__avatar-img", fallback: "no_image")
           .singing-users-index__body
-            %strong.singing-users-index__name= user.name
-            - growth_type = @growth_type_map[user.id]
-            - if growth_type
-              %span.singing-users-index__growth-type= "#{growth_type.icon} #{growth_type.label}"
-            %p.singing-users-index__activity 最近歌を楽しんでいます
+            %strong.singing-users-index__name= card.display_name
+            %span.singing-users-index__growth-type= "#{card.growth_type_icon} #{card.growth_type_label}"
+            %p.singing-users-index__activity= card.latest_activity_label
   - else
     .singing-users-index__empty
       %p.singing-users-index__empty-title= @discovery.empty_title
