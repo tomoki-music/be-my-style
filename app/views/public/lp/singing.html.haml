@@ -103,17 +103,22 @@
                     %span.encouragement-inbox__name= "#{item.customer.name.presence || 'メンバー'}さん"
                     %span.encouragement-inbox__message= item.message
                   %time.encouragement-inbox__time{ datetime: item.occurred_at.iso8601 }= time_ago_in_words(item.occurred_at) + "前"
-        - elsif customer_signed_in?
+        - elsif customer_signed_in? && inbox&.items.blank?
           .encouragement-inbox.encouragement-inbox--empty
             %p.encouragement-inbox__empty-icon 💌
             %p.encouragement-inbox__empty-text
               まだ応援は届いていません。
               %br
               まずは診断や挑戦を続けてみましょう。
+              %br
+              あなたの一歩が、仲間とのつながりになります。
+            .encouragement-inbox__empty-actions
+              = link_to "今日の診断をする", new_singing_diagnosis_path, class: "encouragement-inbox__empty-button"
+              = link_to "Community Feedを見る", "#community-feed", class: "encouragement-inbox__empty-button encouragement-inbox__empty-button--secondary"
 
         - community_feed = @community_feed
         - if community_feed&.feed_items.present?
-          .community-feed
+          .community-feed#community-feed
             .community-feed__header
               %span.community-feed__eyebrow 🎵 Community Feed
               %h3.singing-home-section__title 仲間の挑戦が流れてくる
