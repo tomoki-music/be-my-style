@@ -91,6 +91,16 @@
               %p.community-memory-card__message= community_memory.message
             = link_to community_memory.cta_label, community_memory.cta_path, class: "community-memory-card__cta"
 
+        - community_recommendation = music_home.community_recommendation
+        - if customer_signed_in? && community_recommendation&.active?
+          .community-recommendation-card
+            %span.community-recommendation-card__icon= community_recommendation.icon
+            .community-recommendation-card__copy
+              %span.community-recommendation-card__eyebrow Community Recommendation
+              %h3.community-recommendation-card__title= community_recommendation.title
+              .community-recommendation-card__message= simple_format(community_recommendation.message)
+            = link_to community_recommendation.cta_label, community_recommendation.cta_path, class: "community-recommendation-card__cta"
+
         - return_motivation = music_home.return_motivation
         - if customer_signed_in? && return_motivation&.visible
           .return-motivation-card
