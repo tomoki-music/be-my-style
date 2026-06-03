@@ -3,6 +3,7 @@
 - content_for(:og_description) { @profile_ogp.description }
 - content_for(:og_url)         { @profile_ogp.url }
 - content_for(:og_image)       { image_url(@profile_ogp.image_asset_name) }
+- content_for(:twitter_card)   { "summary_large_image" }
 
 .singing-profile
   .singing-profile__hero
