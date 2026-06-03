@@ -168,4 +168,13 @@ RSpec.describe Singing::ReturnMotivationBuilder do
     end
 
   end
+
+  describe "activity source maps" do
+    it "message と CTA のキーを揃えている" do
+      expected_keys = %i[diagnosis reaction_sent reaction_received challenge_progress default]
+
+      expect(described_class::MESSAGE_MAP.keys).to eq(expected_keys)
+      expect(described_class::CTA_MAP.keys).to eq(expected_keys)
+    end
+  end
 end
