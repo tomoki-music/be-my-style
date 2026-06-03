@@ -101,6 +101,17 @@
               %p.community-memory-card__message= community_memory.message
             = link_to community_memory.cta_label, community_memory.cta_path, class: "community-memory-card__cta"
 
+        - personal_music_story = music_home.personal_music_story
+        - if customer_signed_in? && personal_music_story&.active?
+          .personal-music-story-card
+            .personal-music-story-card__header
+              %span.personal-music-story-card__eyebrow Personal Music Story
+              %h3.personal-music-story-card__title= personal_music_story.title
+              %p.personal-music-story-card__description 少しずつ積み重ねてきた音楽の足跡です。
+            %ul.personal-music-story-card__list
+              - personal_music_story.story_lines.each do |line|
+                %li.personal-music-story-card__item= line
+
         - community_recommendation = music_home.community_recommendation
         - if customer_signed_in? && community_recommendation&.active?
           .community-recommendation-card

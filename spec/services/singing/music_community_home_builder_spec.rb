@@ -12,6 +12,7 @@ RSpec.describe Singing::MusicCommunityHomeBuilder do
       expect(home.today_mission).to be_present
       expect(home.gentle_return_flow).to be_present
       expect(home.community_memory).to be_present
+      expect(home.personal_music_story).to be_present
       expect(home.community_recommendation).to be_present
       expect(home.return_motivation).to be_present
       expect(home.music_friends).to be_present
@@ -31,6 +32,7 @@ RSpec.describe Singing::MusicCommunityHomeBuilder do
       expect(home.today_mission).to be_a(Singing::MissionGenerator::Mission)
       expect(home.gentle_return_flow).to be_a(Singing::GentleReturnFlowBuilder::Result)
       expect(home.community_memory).to be_a(Singing::CommunityMemoryBuilder::Result)
+      expect(home.personal_music_story).to be_a(Singing::PersonalMusicStoryBuilder::Result)
       expect(home.community_recommendation).to be_a(Singing::CommunityRecommendationBuilder::Result)
       expect(home.return_motivation).to be_a(Singing::ReturnMotivationBuilder::ReturnMotivation)
       expect(home.music_friends).to be_a(Singing::MusicFriendsBuilder::Result)
@@ -82,6 +84,15 @@ RSpec.describe Singing::MusicCommunityHomeBuilder do
 
     it "nil安全" do
       expect { described_class.call(nil) }.not_to raise_error
+    end
+
+    it "personal_music_story を統合して返す" do
+      create(:singing_diagnosis, :completed, customer: customer)
+
+      home = described_class.call(customer)
+
+      expect(home.personal_music_story).to be_active
+      expect(home.personal_music_story.story_lines).to include("🎤 初めて歌唱診断を行いました")
     end
 
     it "gentle_return_flow を統合して返す" do
