@@ -97,7 +97,8 @@
               %p.singing-home-section__description 今日も仲間たちが歌い、挑戦し、続けています。
             .community-feed__list
               - community_feed.feed_items.each do |item|
-                .community-feed__item
+                - next if item.customer.nil?
+                = link_to singing_user_path(item.customer), class: "community-feed__item" do
                   %span.community-feed__icon= item.icon
                   .community-feed__body
                     %span.community-feed__name= "#{item.customer.name.presence || 'メンバー'}さん"

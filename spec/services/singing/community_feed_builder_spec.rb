@@ -252,6 +252,29 @@ RSpec.describe Singing::CommunityFeedBuilder do
         expect(item.icon).to be_a(String)
         expect(item.occurred_at).to be_present
       end
+
+      it "FeedItem の customer が Customer インスタンスである" do
+        item = result.feed_items.first
+        expect(item.customer).to be_a(Customer)
+      end
+    end
+
+    context "name が空白の customer でも item が作れる" do
+      let!(:customer) { create(:customer, domain_name: "singing", name: "Placeholder") }
+
+      before do
+        customer.update_column(:name, "")
+        make_diagnosis(customer: customer, created_at: 1.day.ago)
+      end
+
+      it "feed_items が生成される（エラーにならない）" do
+        expect { result }.not_to raise_error
+      end
+
+      it "blank name の customer の item が含まれる" do
+        item = result.feed_items.find { |i| i.customer == customer }
+        expect(item).to be_present
+      end
     end
   end
 end
