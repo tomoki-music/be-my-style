@@ -120,6 +120,25 @@
           = link_to growth_circle_singing_badges_path, class: "singing-profile__sub-link" do
             すべての称号を見る →
 
+      - if @community_identity.present?
+        %section.singing-profile__section.singing-profile__section--community-identity
+          .singing-profile__section-head
+            %p.singing-profile__section-kicker Community
+            %h2 🎵 Community Identity
+          .profile-community-identity
+            .profile-community-identity__reputation
+              %strong.profile-community-identity__reputation-title= @community_identity.reputation_title
+              %span.profile-community-identity__reputation-points= "#{@community_identity.reputation_points} pt"
+            - if @community_identity.growth_circle_name.present?
+              %p.profile-community-identity__circle-name= @community_identity.growth_circle_name
+            - if @community_identity.mission_label.present?
+              .profile-community-identity__mission
+                %span.profile-community-identity__mission-label 最近のテーマ
+                %span.profile-community-identity__mission-value= @community_identity.mission_label
+            - if @community_identity.activity_summary.present?
+              %p.profile-community-identity__summary= @community_identity.activity_summary
+            %p.profile-community-identity__message= @community_identity.identity_message
+
       %section.singing-profile__section
         .singing-profile__section-head
           %p.singing-profile__section-kicker Achievements
