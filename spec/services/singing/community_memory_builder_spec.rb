@@ -100,5 +100,18 @@ RSpec.describe Singing::CommunityMemoryBuilder do
 
       expect(result.activity_source).to eq(:diagnosis)
     end
+
+    it "ActivitySignalBuilderが最新順でも記憶カードは診断、応援送信、応援受信、チャレンジの順で採用する" do
+      create(:singing_ai_challenge_progress, customer: customer, updated_at: 1.hour.ago)
+      sender = create(:customer, domain_name: "singing")
+      create(:singing_profile_reaction, customer: sender, target_customer: customer, created_at: 2.hours.ago)
+      create(:singing_profile_reaction, customer: customer, created_at: 3.hours.ago)
+      diagnosis = create(:singing_diagnosis, :completed, customer: customer, created_at: 4.hours.ago)
+
+      result = described_class.call(customer)
+
+      expect(result.activity_source).to eq(:diagnosis)
+      expect(result.latest_activity_at).to be_within(1.second).of(diagnosis.created_at)
+    end
   end
 end

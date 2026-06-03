@@ -56,6 +56,16 @@ RSpec.describe Singing::GentleReturnFlowBuilder do
       expect(result.activity_source).to eq(:diagnosis)
     end
 
+    it "29日前の活動では medium_absence を表示する" do
+      diagnosis = create(:singing_diagnosis, :completed, customer: customer, created_at: 29.days.ago)
+
+      result = described_class.call(customer)
+
+      expect(result.active?).to eq(true)
+      expect(result.absence_level).to eq(:medium_absence)
+      expect(result.latest_activity_at).to be_within(1.second).of(diagnosis.created_at)
+    end
+
     it "30日前の活動では long_absence を表示する" do
       diagnosis = create(:singing_diagnosis, :completed, customer: customer, created_at: 30.days.ago)
 

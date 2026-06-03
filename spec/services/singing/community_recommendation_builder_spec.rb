@@ -82,6 +82,27 @@ RSpec.describe Singing::CommunityRecommendationBuilder do
       expect(result.cta_label).to eq("Challengeを見る")
     end
 
+    it "ActivitySignalBuilderが最新順のため採用可能な最新活動を推薦材料にする" do
+      create(:singing_diagnosis, :completed, customer: customer, created_at: 1.day.ago)
+      create(:singing_profile_reaction, customer: customer, created_at: 1.hour.ago)
+
+      result = described_class.call(customer)
+
+      expect(result.active?).to eq(true)
+      expect(result.icon).to eq("🔥")
+      expect(result.cta_label).to eq("歌唱診断をする")
+    end
+
+    it "完了済みchallengeしかなければfallback推薦を返す" do
+      create(:singing_ai_challenge_progress, customer: customer, completed: true, updated_at: 1.hour.ago)
+
+      result = described_class.call(customer)
+
+      expect(result.active?).to eq(true)
+      expect(result.icon).to eq("🎵")
+      expect(result.cta_label).to eq("歌唱診断をする")
+    end
+
     it "活動がなければfallback推薦を返す" do
       result = described_class.call(customer)
 

@@ -75,6 +75,7 @@ RSpec.describe Singing::ActivitySignalBuilder do
 
       result = described_class.call(customer)
 
+      expect(result.latest_signal).to eq(result.signals.first)
       expect(result.latest_signal.source).to eq(:reaction_sent)
       expect(result.latest_signal.occurred_at).to be_within(1.second).of(reaction.created_at)
     end
@@ -90,6 +91,30 @@ RSpec.describe Singing::ActivitySignalBuilder do
 
       expect(signals.map(&:source)).to eq(%i[reaction_sent reaction_received challenge_progress diagnosis])
       expect(signals.map(&:occurred_at)).to eq(signals.map(&:occurred_at).sort.reverse)
+    end
+
+    it "source は診断・応援送信・応援受信・チャレンジ進捗を表す" do
+      create(:singing_diagnosis, :completed, customer: customer, created_at: 4.days.ago)
+      create(:singing_profile_reaction, customer: customer, created_at: 3.days.ago)
+      sender = create(:customer, domain_name: "singing")
+      create(:singing_profile_reaction, customer: sender, target_customer: customer, created_at: 2.days.ago)
+      create(:singing_ai_challenge_progress, customer: customer, updated_at: 1.day.ago)
+
+      sources = described_class.call(customer).signals.map(&:source)
+
+      expect(sources).to contain_exactly(:diagnosis, :reaction_sent, :reaction_received, :challenge_progress)
+    end
+
+    it "reaction target_customer_id は送信時は応援した相手、受信時は応援してくれた相手を表す" do
+      cheered_customer = create(:customer, domain_name: "singing")
+      cheering_customer = create(:customer, domain_name: "singing")
+      create(:singing_profile_reaction, customer: customer, target_customer: cheered_customer, created_at: 2.hours.ago)
+      create(:singing_profile_reaction, customer: cheering_customer, target_customer: customer, created_at: 1.hour.ago)
+
+      signals = described_class.call(customer).signals
+
+      expect(signals.find { |signal| signal.source == :reaction_sent }.target_customer_id).to eq(cheered_customer.id)
+      expect(signals.find { |signal| signal.source == :reaction_received }.target_customer_id).to eq(cheering_customer.id)
     end
   end
 end
