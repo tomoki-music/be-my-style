@@ -1,4 +1,7 @@
 class Singing::HomesController < Singing::BaseController
+  skip_before_action :authenticate_customer!, only: [:top]
+  skip_before_action :ensure_singing_access!, only: [:top]
+
   def top
     @singing_lp_back_label = "成長記録を見る"
     @singing_lp_back_path = singing_diagnoses_path

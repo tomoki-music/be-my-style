@@ -59,6 +59,24 @@ RSpec.describe "Singing::Homes", type: :request do
     end
 
     context "未ログイン時" do
+      it "200 OK を返しログインページにリダイレクトしないこと" do
+        get singing_root_path
+
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "ヒーロー文言を表示すること" do
+        get singing_root_path
+
+        expect(response.body).to include("自分らしく成長しよう")
+      end
+
+      it "無料で始めるCTAを表示すること" do
+        get singing_root_path
+
+        expect(response.body).to include("無料で始める")
+      end
+
       it "Recap Movie CTA を表示しないこと" do
         get singing_root_path
 
