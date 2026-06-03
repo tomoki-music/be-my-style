@@ -57,6 +57,26 @@ RSpec.describe "Singing::ProfileReactions", type: :request do
       expect(SingingProfileReaction.count).to eq 0
     end
 
+    it "HTMLリクエストでは応援作成のnoticeを設定してリダイレクトすること" do
+      post singing_user_profile_reaction_path(target_customer, reaction_type: "cheer"),
+        headers: { "HTTP_REFERER" => singing_root_path }
+
+      expect(response).to redirect_to(singing_root_path)
+      expect(flash[:notice]).to eq "応援が届きました 👏"
+      expect(SingingProfileReaction.count).to eq 1
+    end
+
+    it "HTMLリクエストでは応援取り消しのnoticeを設定してリダイレクトすること" do
+      create(:singing_profile_reaction, customer: customer, target_customer: target_customer, reaction_type: "cheer")
+
+      post singing_user_profile_reaction_path(target_customer, reaction_type: "cheer"),
+        headers: { "HTTP_REFERER" => singing_root_path }
+
+      expect(response).to redirect_to(singing_root_path)
+      expect(flash[:notice]).to eq "応援を取り消しました"
+      expect(SingingProfileReaction.count).to eq 0
+    end
+
     it "別種別のリアクションは独立して追加できること" do
       post singing_user_profile_reaction_path(target_customer, reaction_type: "cheer"),
         headers: { "Accept" => "application/json" }

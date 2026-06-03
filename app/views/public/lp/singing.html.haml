@@ -1,5 +1,6 @@
 - content_for :title, "BeMyStyle Singing | 音楽コミュニティ"
 - content_for :suppress_singing_nav, "1"
+- content_for :suppress_layout_notifications, "1"
 
 - lp_cta_label = customer_signed_in? ? "診断してみる" : "無料登録して参加する"
 - lp_primary_cta_path = customer_signed_in? ? new_singing_diagnosis_path : new_customer_registration_path
@@ -11,6 +12,9 @@
 - music_home = @music_community_home
 
 .lp-container.lp-container--singing
+  - if notice.present? || alert.present?
+    .singing-toast{ class: alert.present? ? "singing-toast--alert" : nil }
+      = notice.presence || alert
 
   .lp-header
     .header-inner

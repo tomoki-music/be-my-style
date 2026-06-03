@@ -24,11 +24,18 @@ class Singing::ProfileReactionsController < Singing::BaseController
     count = @user.received_singing_profile_reactions.where(reaction_type: reaction_type).count
     respond_to do |format|
       format.json { render json: { reacted: reacted, count: count } }
-      format.html { redirect_back fallback_location: singing_user_path(@user) }
+      format.html do
+        redirect_back fallback_location: singing_root_path,
+          notice: profile_reaction_notice(reacted)
+      end
     end
   end
 
   private
+
+  def profile_reaction_notice(reacted)
+    reacted ? "応援が届きました 👏" : "応援を取り消しました"
+  end
 
   def set_user
     @user = Customer.find(params[:user_id])

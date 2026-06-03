@@ -7,6 +7,28 @@
     linear-gradient(180deg, #fffaf4 0%, #f5f7fb 42%, #ffffff 100%);
 }
 
+.singing-toast {
+  width: 92%;
+  max-width: 520px;
+  margin: 18px auto 0;
+  padding: 11px 16px;
+  border: 1px solid rgba(104, 95, 210, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(245, 242, 255, 0.96), rgba(238, 247, 255, 0.96));
+  box-shadow: 0 8px 18px rgba(73, 68, 170, 0.08);
+  color: rgba(61, 60, 132, 0.88);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.singing-toast--alert {
+  border-color: rgba(220, 80, 118, 0.18);
+  background: linear-gradient(135deg, rgba(255, 246, 249, 0.96), rgba(244, 247, 255, 0.96));
+  color: rgba(150, 54, 88, 0.9);
+}
+
 .lp-header {
   position: absolute;
   top: 0;
