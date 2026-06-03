@@ -31,6 +31,9 @@ docs/handover/singing_empty_state_guidelines.md
 Home card 追加・表示順変更:
   docs/handover/singing_home_card_guidelines.md
 
+MusicCommunityHomeBuilder の DTO 一覧や Home 表示順を確認する:
+  docs/handover/singing_home_card_guidelines.md
+
 Singing Home の CTA、カード全体リンク、プロフィール導線を触る:
   docs/handover/singing_home_card_guidelines.md
 
@@ -74,6 +77,7 @@ PR 前に以下を確認する。
 
 ```text
 該当 docs を読んだか
+MusicCommunityHomeBuilder の DTO 一覧と Home 表示順を確認したか
 表示順を変えた場合、home_card_guidelines を更新したか
 ActivitySignalBuilder の意味を変えていないか
 空状態が docs 方針とズレていないか
