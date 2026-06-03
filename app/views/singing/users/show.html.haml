@@ -138,6 +138,20 @@
             - if @community_identity.activity_summary.present?
               %p.profile-community-identity__summary= @community_identity.activity_summary
             %p.profile-community-identity__message= @community_identity.identity_message
+            - if @profile_connection.present?
+              .profile-connection-cta
+                - if @profile_connection.connection_count > 0
+                  .profile-connection-cta__graph
+                    %span.profile-connection-cta__graph-label 音楽のつながり
+                    %strong.profile-connection-cta__graph-count= "#{@profile_connection.connection_count}人"
+                %p.profile-connection-cta__message= @profile_connection.cta_message
+                .profile-connection-cta__buttons
+                  - if @profile_connection.show_circle_cta
+                    = link_to singing_users_path(circle: @profile_connection.circle_slug), class: "profile-connection-cta__btn profile-connection-cta__btn--circle" do
+                      同じCircleを見る
+                  - if @profile_connection.show_follow_cta && current_customer.present? && current_customer != @user
+                    = link_to singing_user_profile_reaction_path(@user, reaction_type: "cheer"), method: :post, class: "profile-connection-cta__btn profile-connection-cta__btn--follow", data: { reaction_url: singing_user_profile_reaction_path(@user, reaction_type: "cheer"), turbolinks: false } do
+                      🌱 一緒に成長する
 
       %section.singing-profile__section
         .singing-profile__section-head

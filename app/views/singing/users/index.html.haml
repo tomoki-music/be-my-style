@@ -1,0 +1,25 @@
+.singing-users-index
+  .singing-users-index__header
+    - if @circle.present?
+      %p.singing-users-index__kicker Community
+      %h1.singing-users-index__title 仲間を見つけよう
+      %p.singing-users-index__circle-label= "🎵 #{@circle.humanize} Circle の仲間たち"
+    - else
+      %p.singing-users-index__kicker Community
+      %h1.singing-users-index__title 音楽を楽しむ仲間
+
+  - if @users.present?
+    .singing-users-index__grid
+      - @users.each do |user|
+        = link_to singing_user_path(user), class: "singing-users-index__card" do
+          .singing-users-index__avatar
+            = customer_avatar_tag(user, class_name: "singing-users-index__avatar-img", fallback: "no_image")
+          .singing-users-index__body
+            %strong.singing-users-index__name= user.name
+            %p.singing-users-index__comment= truncate(user.singing_profile_comment.presence || "音楽を楽しんでいます", length: 40)
+  - else
+    .singing-users-index__empty
+      %p 最近活動しているメンバーが見つかりませんでした。
+
+  .singing-users-index__footer
+    = link_to "ランキングへ", singing_rankings_path, class: "singing-users-index__link"

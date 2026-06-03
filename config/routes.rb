@@ -281,7 +281,7 @@ Rails.application.routes.draw do
       end
     end
     get "recap_movies/share/:share_token", to: "public_recap_movies#show", as: :public_recap_movie_share
-    resources :users, only: [:show, :edit, :update] do
+    resources :users, only: [:index, :show, :edit, :update] do
       resource :profile_reaction, only: [:create]
     end
     get  "join", to: "joins#show",   as: :join

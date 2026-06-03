@@ -1,8 +1,20 @@
 class Singing::UsersController < Singing::BaseController
-  skip_before_action :authenticate_customer!, only: [:show]
-  skip_before_action :ensure_singing_access!, only: [:show]
-  before_action :set_user
+  skip_before_action :authenticate_customer!, only: [:index, :show]
+  skip_before_action :ensure_singing_access!, only: [:index, :show]
+  before_action :set_user, only: [:show, :edit, :update]
   before_action :ensure_correct_user, only: [:edit, :update]
+
+  def index
+    @circle = params[:circle].presence
+    @users = Customer
+      .joins(:singing_diagnoses)
+      .where(singing_diagnoses: { status: :completed })
+      .where(singing_diagnoses: { created_at: 30.days.ago..Time.current })
+      .distinct
+      .order("MAX(singing_diagnoses.created_at) DESC")
+      .group("customers.id")
+      .limit(24)
+  end
 
   def show
     @pinned_achievement_badges = @user.singing_achievement_badges.pinned.limit(SingingAchievementBadge::PIN_LIMIT)
@@ -33,6 +45,7 @@ class Singing::UsersController < Singing::BaseController
     @growth_type           = Singing::GrowthTypeAnalyzer.call(@user)
     @growth_circle_badges  = Singing::GrowthCircleBadgeAnalyzer.call(@user)
     @community_identity    = Singing::ProfileCommunityIdentityBuilder.call(@user)
+    @profile_connection    = Singing::ProfileConnectionBuilder.call(@user)
     @growth_circle_primary = @growth_circle_badges.first
     @profile_reaction_counts = @user.received_singing_profile_reactions.group(:reaction_type).count
     @current_customer_profile_reactions = if current_customer.present?

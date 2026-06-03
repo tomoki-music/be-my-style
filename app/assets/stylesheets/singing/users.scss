@@ -508,3 +508,186 @@ $rank-colors: (
     margin: 0;
   }
 }
+
+// ── Profile Connection CTA ───────────────────────────────────────────────────
+
+.profile-connection-cta {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(167, 139, 250, 0.15);
+
+  &__graph {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  &__graph-label {
+    font-size: 11px;
+    color: rgba(148, 163, 184, 0.7);
+    letter-spacing: 0.04em;
+  }
+
+  &__graph-count {
+    font-size: 20px;
+    font-weight: 700;
+    color: rgba(196, 181, 253, 0.95);
+  }
+
+  &__message {
+    font-size: 12px;
+    color: rgba(148, 163, 184, 0.75);
+    margin: 0 0 14px;
+    line-height: 1.5;
+  }
+
+  &__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s;
+
+    &:hover {
+      opacity: 0.85;
+      text-decoration: none;
+    }
+
+    &--circle {
+      background: rgba(139, 92, 246, 0.18);
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      color: rgba(196, 181, 253, 0.95);
+    }
+
+    &--follow {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: rgba(147, 197, 253, 0.95);
+    }
+  }
+}
+
+// ── Singing Users Index ──────────────────────────────────────────────────────
+
+.singing-users-index {
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 32px 16px;
+
+  &__header {
+    margin-bottom: 28px;
+  }
+
+  &__kicker {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(167, 139, 250, 0.8);
+    margin: 0 0 6px;
+  }
+
+  &__title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px;
+  }
+
+  &__circle-label {
+    font-size: 14px;
+    color: rgba(196, 181, 253, 0.85);
+    margin: 0;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  &__card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    border-radius: 12px;
+    padding: 14px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.15s, border-color 0.15s;
+
+    &:hover {
+      background: rgba(139, 92, 246, 0.08);
+      border-color: rgba(139, 92, 246, 0.35);
+      text-decoration: none;
+    }
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+  }
+
+  &__avatar-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  &__body {
+    min-width: 0;
+  }
+
+  &__name {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__comment {
+    font-size: 11px;
+    color: rgba(148, 163, 184, 0.75);
+    margin: 2px 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 40px 16px;
+    color: rgba(148, 163, 184, 0.65);
+  }
+
+  &__footer {
+    text-align: center;
+  }
+
+  &__link {
+    font-size: 13px;
+    color: rgba(167, 139, 250, 0.8);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
