@@ -75,6 +75,8 @@ Home カードを追加するときは、以下を基本方針にする。
 
 特に Phase27〜28 で追加した Home 系カードは、既存の診断、応援、成長タイプ、チャレンジ、Community Feed のデータから「音楽コミュニティの動き」を見せる方針で実装している。新しいカードも、まず既存 Builder や既存 DTO から組み立てられないかを確認する。
 
+`Singing::ActivitySignalBuilder` を使う Home card では、Activity Signal の最新順とカードごとの表示優先順位を混同しない。Activity Signal の DTO、`occurred_at desc`、`target_customer_id` の意味、目的別採用の判断は `docs/handover/singing_activity_signal_guidelines.md` を参照する。
+
 ## 4. 表示順の考え方
 
 Home の上部ほど、ユーザー自身の文脈に近いものを置く。
