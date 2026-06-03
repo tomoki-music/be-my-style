@@ -81,6 +81,16 @@
         %p.lp-section-lead
           診断だけで終わらず、今日の挑戦、仲間、イベント、成長へ自然につながるホームです。
 
+        - gentle_return_flow = music_home.gentle_return_flow
+        - if customer_signed_in? && gentle_return_flow&.active?
+          .gentle-return-flow-card
+            %span.gentle-return-flow-card__icon= gentle_return_flow.icon
+            .gentle-return-flow-card__copy
+              %span.gentle-return-flow-card__eyebrow Gentle Return
+              %h3.gentle-return-flow-card__title= gentle_return_flow.title
+              .gentle-return-flow-card__message= simple_format(gentle_return_flow.message)
+            = link_to gentle_return_flow.cta_label, gentle_return_flow.cta_path, class: "gentle-return-flow-card__cta"
+
         - community_memory = music_home.community_memory
         - if customer_signed_in? && community_memory&.active?
           .community-memory-card
@@ -144,7 +154,7 @@
                     %span= highlight.message
             = link_to "Community Feedを見る", singing_growth_feed_path, class: "friend-activity-highlights__cta"
 
-        .singing-community-home__mission
+        .singing-community-home__mission#todays-mission
           %span.singing-home-section__eyebrow Today's Mission
           %h3.singing-home-section__title= music_home.today_mission&.title || "今日はここだけ歌ってみよう"
           %p.singing-home-section__description= music_home.today_mission&.description || "好きな曲から、歌いたい部分を少しだけ選んで歌ってみよう。"

@@ -28,6 +28,7 @@ Home は単なるダッシュボードではなく、ユーザーが次のよう
 
 ```text
 Hero
+Gentle Return Flow
 Community Memory
 Community Recommendation
 Return Motivation
@@ -54,6 +55,8 @@ CTA
 - View: `app/views/public/lp/singing.html.haml`
 - Aggregator: `Singing::MusicCommunityHomeBuilder`
 - Controller: `Singing::HomesController#top`
+
+`Gentle Return Flow` は、7日以上または30日以上活動が空いたログインユーザーだけに表示する。新規ユーザーや7日未満の活動があるユーザーには表示せず、「おかえりなさい」「少し間が空いても大丈夫」「前の続きから」など、責めない復帰導線として扱う。
 
 ## 3. Home カード追加時の基本ルール
 

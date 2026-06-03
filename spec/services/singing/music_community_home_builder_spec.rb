@@ -10,6 +10,7 @@ RSpec.describe Singing::MusicCommunityHomeBuilder do
       expect(home).to be_a(described_class::MusicCommunityHome)
       expect(home.hero_message).to be_present
       expect(home.today_mission).to be_present
+      expect(home.gentle_return_flow).to be_present
       expect(home.community_memory).to be_present
       expect(home.community_recommendation).to be_present
       expect(home.return_motivation).to be_present
@@ -28,6 +29,7 @@ RSpec.describe Singing::MusicCommunityHomeBuilder do
       expect(home).to be_a(described_class::MusicCommunityHome)
       expect(home.hero_message).to be_present
       expect(home.today_mission).to be_a(Singing::MissionGenerator::Mission)
+      expect(home.gentle_return_flow).to be_a(Singing::GentleReturnFlowBuilder::Result)
       expect(home.community_memory).to be_a(Singing::CommunityMemoryBuilder::Result)
       expect(home.community_recommendation).to be_a(Singing::CommunityRecommendationBuilder::Result)
       expect(home.return_motivation).to be_a(Singing::ReturnMotivationBuilder::ReturnMotivation)
@@ -80,6 +82,16 @@ RSpec.describe Singing::MusicCommunityHomeBuilder do
 
     it "nil安全" do
       expect { described_class.call(nil) }.not_to raise_error
+    end
+
+    it "gentle_return_flow を統合して返す" do
+      create(:singing_diagnosis, :completed, customer: customer, created_at: 30.days.ago)
+
+      home = described_class.call(customer)
+
+      expect(home.gentle_return_flow).to be_a(Singing::GentleReturnFlowBuilder::Result)
+      expect(home.gentle_return_flow).to be_active
+      expect(home.gentle_return_flow.absence_level).to eq(:long_absence)
     end
 
     describe "home_cta" do
