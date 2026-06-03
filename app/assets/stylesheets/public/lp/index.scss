@@ -1016,6 +1016,126 @@
   }
 }
 
+// ─── Friend Activity Highlights ───────────────────────────────────────
+.friend-activity-highlights {
+  margin: 0 auto 18px;
+  padding: 22px 24px;
+  border: 1px solid rgba(44, 150, 140, 0.16);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 252, 246, 0.98), rgba(244, 250, 248, 0.95));
+  box-shadow: 0 12px 28px rgba(120, 104, 35, 0.06);
+
+  &__header {
+    margin-bottom: 14px;
+  }
+
+  &__eyebrow {
+    display: block;
+    margin-bottom: 5px;
+    color: rgba(35, 120, 112, 0.68);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    margin: 0;
+    color: #244b4a;
+    font-size: 1.12rem;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  &__description {
+    margin: 6px 0 0;
+    color: rgba(54, 82, 100, 0.72);
+    font-size: 0.86rem;
+    font-weight: 600;
+    line-height: 1.6;
+  }
+
+  &__list {
+    display: grid;
+    gap: 9px;
+  }
+
+  &__item {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+    padding: 11px 13px;
+    border: 1px solid rgba(44, 150, 140, 0.1);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.74);
+    color: inherit;
+    text-decoration: none;
+    transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+
+    &:hover {
+      color: inherit;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.96);
+      border-color: rgba(44, 150, 140, 0.22);
+      box-shadow: 0 8px 16px rgba(35, 120, 140, 0.08);
+      transform: translateY(-1px);
+    }
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(232, 246, 241, 0.9);
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  &__copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+
+    span {
+      color: rgba(54, 82, 100, 0.74);
+      font-size: 0.82rem;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    margin-top: 14px;
+    padding: 8px 14px;
+    border: 1px solid rgba(44, 150, 140, 0.17);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.82);
+    color: rgba(36, 91, 103, 0.82);
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1.25;
+    text-decoration: none;
+    transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+
+    &:hover {
+      color: rgba(36, 91, 103, 0.95);
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.98);
+      border-color: rgba(44, 150, 140, 0.3);
+      box-shadow: 0 5px 12px rgba(35, 120, 140, 0.08);
+    }
+  }
+}
+
 // ─── Suggested Musicians ──────────────────────────────────────────────
 .suggested-musicians {
   margin-bottom: 26px;
@@ -2861,6 +2981,7 @@
   .community-recommendation-card,
   .return-motivation-card,
   .music-friends-card,
+  .friend-activity-highlights,
   .singing-community-home__network,
   .singing-community-home__circles,
   .singing-community-home__card,
@@ -2908,7 +3029,8 @@
     width: 100%;
   }
 
-  .music-friends-card__cta {
+  .music-friends-card__cta,
+  .friend-activity-highlights__cta {
     width: 100%;
   }
 

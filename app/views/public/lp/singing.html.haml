@@ -129,6 +129,21 @@
                     %span= friend.message
             = link_to "もっと仲間を見る", singing_growth_feed_path, class: "music-friends-card__cta"
 
+        - friend_activity_highlights = music_home.friend_activity_highlights
+        - if customer_signed_in? && friend_activity_highlights&.active?
+          .friend-activity-highlights
+            .friend-activity-highlights__header
+              %span.friend-activity-highlights__eyebrow 🎵 Friend Activity
+              %h3.friend-activity-highlights__title 仲間の最近の音楽時間
+              %p.friend-activity-highlights__description 近しい仲間も、少しずつ音楽を楽しんでいます。
+            .friend-activity-highlights__list
+              - friend_activity_highlights.highlights.each do |highlight|
+                = link_to highlight.profile_path, class: "friend-activity-highlights__item" do
+                  .friend-activity-highlights__icon= highlight.icon
+                  .friend-activity-highlights__copy
+                    %span= highlight.message
+            = link_to "Community Feedを見る", singing_growth_feed_path, class: "friend-activity-highlights__cta"
+
         .singing-community-home__mission
           %span.singing-home-section__eyebrow Today's Mission
           %h3.singing-home-section__title= music_home.today_mission&.title || "今日はここだけ歌ってみよう"
