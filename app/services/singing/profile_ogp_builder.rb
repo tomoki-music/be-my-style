@@ -1,6 +1,6 @@
 module Singing
   class ProfileOgpBuilder
-    DEFAULT_IMAGE_ASSET = "acguitar-girl.jpg".freeze
+    DEFAULT_IMAGE_ASSET = "singing/ogp/music_journey_ogp.png".freeze
     SITE_SUFFIX         = "BeMyStyle Singing".freeze
 
     ProfileOgp = Struct.new(

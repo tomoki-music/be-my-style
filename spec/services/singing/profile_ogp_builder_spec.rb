@@ -65,7 +65,7 @@ RSpec.describe Singing::ProfileOgpBuilder do
     end
 
     it "image_asset_name が返る" do
-      expect(result.image_asset_name).to be_present
+      expect(result.image_asset_name).to eq("singing/ogp/music_journey_ogp.png")
     end
 
     it "url が nil になる" do
@@ -128,8 +128,15 @@ RSpec.describe Singing::ProfileOgpBuilder do
   end
 
   describe "#image_asset_name" do
-    it "文字列が返る" do
-      expect(call.image_asset_name).to be_a(String).and be_present
+    it "music_journey_ogp.png を返す" do
+      expect(call.image_asset_name).to eq("singing/ogp/music_journey_ogp.png")
+    end
+
+    context "nil user の場合" do
+      it "同じ画像パスを返す" do
+        result = described_class.call(nil, timeline_first_only, base_url: base_url)
+        expect(result.image_asset_name).to eq("singing/ogp/music_journey_ogp.png")
+      end
     end
   end
 
