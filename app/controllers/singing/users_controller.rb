@@ -5,8 +5,9 @@ class Singing::UsersController < Singing::BaseController
   before_action :ensure_correct_user, only: [:edit, :update]
 
   def index
-    @circle = params[:circle].presence
-    @users = Customer
+    @circle    = params[:circle].presence
+    @discovery = Singing::CircleMembersDiscoveryBuilder.call(@circle)
+    @users     = Customer
       .joins(:singing_diagnoses)
       .where(singing_diagnoses: { status: :completed })
       .where(singing_diagnoses: { created_at: 30.days.ago..Time.current })
@@ -14,6 +15,7 @@ class Singing::UsersController < Singing::BaseController
       .order("MAX(singing_diagnoses.created_at) DESC")
       .group("customers.id")
       .limit(24)
+    @growth_type_map = build_growth_type_map(@users)
   end
 
   def show
@@ -89,6 +91,16 @@ class Singing::UsersController < Singing::BaseController
       part_ids: [],
       genre_ids: []
     )
+  end
+
+  def build_growth_type_map(users)
+    users.each_with_object({}) do |user, hash|
+      begin
+        hash[user.id] = Singing::GrowthTypeAnalyzer.call(user)
+      rescue StandardError
+        hash[user.id] = nil
+      end
+    end
   end
 
   def safe_external_url(url)

@@ -1,12 +1,8 @@
 .singing-users-index
   .singing-users-index__header
-    - if @circle.present?
-      %p.singing-users-index__kicker Community
-      %h1.singing-users-index__title 仲間を見つけよう
-      %p.singing-users-index__circle-label= "🎵 #{@circle.humanize} Circle の仲間たち"
-    - else
-      %p.singing-users-index__kicker Community
-      %h1.singing-users-index__title 音楽を楽しむ仲間
+    %p.singing-users-index__kicker Community
+    %h1.singing-users-index__title= @discovery.circle_name
+    %p.singing-users-index__description= @discovery.circle_description
 
   - if @users.present?
     .singing-users-index__grid
@@ -16,10 +12,15 @@
             = customer_avatar_tag(user, class_name: "singing-users-index__avatar-img", fallback: "no_image")
           .singing-users-index__body
             %strong.singing-users-index__name= user.name
-            %p.singing-users-index__comment= truncate(user.singing_profile_comment.presence || "音楽を楽しんでいます", length: 40)
+            - growth_type = @growth_type_map[user.id]
+            - if growth_type
+              %span.singing-users-index__growth-type= "#{growth_type.icon} #{growth_type.label}"
+            %p.singing-users-index__activity 最近歌を楽しんでいます
   - else
     .singing-users-index__empty
-      %p 最近活動しているメンバーが見つかりませんでした。
+      %p.singing-users-index__empty-title= @discovery.empty_title
+      %p.singing-users-index__empty-message= @discovery.empty_message
+      = link_to "診断してみる", new_singing_diagnosis_path, class: "singing-users-index__empty-cta"
 
   .singing-users-index__footer
     = link_to "ランキングへ", singing_rankings_path, class: "singing-users-index__link"
