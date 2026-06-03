@@ -630,6 +630,100 @@
   }
 }
 
+// ─── Encouragement Inbox ──────────────────────────────────────────────
+.encouragement-inbox {
+  margin-bottom: 26px;
+  padding: 24px;
+  border: 1px solid rgba(100, 70, 210, 0.22);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(240, 237, 255, 0.97), rgba(233, 241, 255, 0.94));
+  box-shadow: 0 6px 20px rgba(90, 50, 190, 0.07);
+
+  &--empty {
+    text-align: center;
+    padding: 28px 24px;
+
+    .encouragement-inbox__empty-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .encouragement-inbox__empty-text {
+      font-size: 0.88rem;
+      color: rgba(80, 60, 160, 0.55);
+      line-height: 1.7;
+      margin: 0;
+    }
+  }
+
+  &__header {
+    margin-bottom: 16px;
+  }
+
+  &__eyebrow {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(90, 50, 190, 0.65);
+    margin-bottom: 4px;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 8px;
+    border: 1px solid rgba(100, 70, 210, 0.12);
+    padding: 10px 14px;
+  }
+
+  &__icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  &__body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 6px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #3d2a9e;
+    white-space: nowrap;
+  }
+
+  &__message {
+    font-size: 0.85rem;
+    color: #4a3a8a;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__time {
+    font-size: 0.75rem;
+    color: rgba(80, 60, 160, 0.5);
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-left: 8px;
+  }
+}
+
 // ─── Community Reputation ─────────────────────────────────────────────
 .community-reputation {
   margin-bottom: 26px;

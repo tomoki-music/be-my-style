@@ -15,6 +15,7 @@ class Singing::HomesController < Singing::BaseController
     )
     @growth_dashboard = Singing::HomeGrowthDashboardBuilder.call(current_customer) if customer_signed_in?
     @community_feed = Singing::CommunityFeedBuilder.call(current_customer: current_customer) rescue nil
+    @encouragement_inbox = Singing::EncouragementInboxBuilder.call(customer: customer_signed_in? ? current_customer : nil) rescue nil
 
     render template: "public/lp/singing"
   end

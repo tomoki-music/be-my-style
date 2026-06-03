@@ -88,6 +88,28 @@
 
         %p.singing-home-story-copy 今日の一歩が、あなたの音楽の輪を広げます。
 
+        - inbox = @encouragement_inbox
+        - if customer_signed_in? && inbox&.items.present?
+          .encouragement-inbox
+            .encouragement-inbox__header
+              %span.encouragement-inbox__eyebrow 💌 仲間からの応援
+              %h3.singing-home-section__title 応援が届いています
+            .encouragement-inbox__list
+              - inbox.items.each do |item|
+                .encouragement-inbox__item
+                  %span.encouragement-inbox__icon= item.icon
+                  .encouragement-inbox__body
+                    %span.encouragement-inbox__name= "#{item.customer.name.presence || 'メンバー'}さん"
+                    %span.encouragement-inbox__message= item.message
+                  %time.encouragement-inbox__time{ datetime: item.occurred_at.iso8601 }= time_ago_in_words(item.occurred_at) + "前"
+        - elsif customer_signed_in?
+          .encouragement-inbox.encouragement-inbox--empty
+            %p.encouragement-inbox__empty-icon 💌
+            %p.encouragement-inbox__empty-text
+              まだ応援は届いていません。
+              %br
+              まずは診断や挑戦を続けてみましょう。
+
         - community_feed = @community_feed
         - if community_feed&.feed_items.present?
           .community-feed
