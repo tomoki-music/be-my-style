@@ -81,6 +81,17 @@ RSpec.describe Singing::CommunityMemoryBuilder do
       expect(result.latest_activity_at).to be_within(1.second).of(progress.updated_at)
     end
 
+    it "完了済みchallengeが新しくても未完了challengeの記憶を返す" do
+      incomplete_progress = create(:singing_ai_challenge_progress, customer: customer, target_key: "pitch", completed: false, updated_at: 2.days.ago)
+      create(:singing_ai_challenge_progress, customer: customer, target_key: "rhythm", completed: true, updated_at: 1.day.ago)
+
+      result = described_class.call(customer)
+
+      expect(result.active?).to eq(true)
+      expect(result.activity_source).to eq(:challenge_progress)
+      expect(result.latest_activity_at).to be_within(1.second).of(incomplete_progress.updated_at)
+    end
+
     it "優先順位順に診断記憶を優先する" do
       create(:singing_profile_reaction, customer: customer, created_at: 1.hour.ago)
       create(:singing_diagnosis, :completed, customer: customer, created_at: 2.days.ago)

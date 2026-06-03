@@ -70,18 +70,7 @@ module Singing
     private
 
     def latest_activity_source
-      activity_times.max_by { |(_, occurred_at)| occurred_at }.first
-    rescue NoMethodError
-      nil
-    end
-
-    def activity_times
-      [
-        [:diagnosis, latest_completed_diagnosis_at],
-        [:reaction_sent, latest_profile_reaction_sent_at],
-        [:reaction_received, latest_profile_reaction_received_at],
-        [:challenge_progress, latest_challenge_progress_at]
-      ].select { |(_, occurred_at)| occurred_at.present? }
+      activity_signals.signals.find { |signal| recommendation_signal?(signal) }&.source
     end
 
     def build_result(source)
@@ -108,35 +97,14 @@ module Singing
       )
     end
 
-    def latest_completed_diagnosis_at
-      SingingDiagnosis.completed.where(customer: @customer).maximum(:created_at)
-    rescue NameError, NoMethodError, ActiveRecord::StatementInvalid
-      nil
+    def activity_signals
+      @activity_signals ||= Singing::ActivitySignalBuilder.call(@customer)
     end
 
-    def latest_profile_reaction_sent_at
-      SingingProfileReaction.where(customer: @customer).maximum(:created_at)
-    rescue NameError, NoMethodError, ActiveRecord::StatementInvalid
-      nil
-    end
+    def recommendation_signal?(signal)
+      return false if signal.source == :challenge_progress && signal.metadata.to_h[:completed] == true
 
-    def latest_profile_reaction_received_at
-      return nil if @customer.id.blank?
-
-      SingingProfileReaction.where(target_customer_id: @customer.id).maximum(:created_at)
-    rescue NameError, NoMethodError, ActiveRecord::StatementInvalid
-      nil
-    end
-
-    def latest_challenge_progress_at
-      return nil unless Object.const_defined?(:SingingAiChallengeProgress)
-
-      SingingAiChallengeProgress
-        .where(customer: @customer)
-        .where(completed: false)
-        .maximum(:updated_at)
-    rescue NameError, NoMethodError, ActiveRecord::StatementInvalid
-      nil
+      true
     end
 
     def cta_path_for(path_target)

@@ -95,42 +95,10 @@ module Singing
     end
 
     def latest_activity
-      @latest_activity ||= activity_candidates.select { |(_, occurred_at)| occurred_at.present? }.max_by(&:last)
-    end
-
-    def activity_candidates
-      [
-        [:diagnosis, latest_completed_diagnosis_at],
-        [:reaction_sent, latest_profile_reaction_sent_at],
-        [:reaction_received, latest_profile_reaction_received_at],
-        [:challenge_progress, latest_challenge_progress_at]
-      ]
-    end
-
-    def latest_completed_diagnosis_at
-      SingingDiagnosis.completed.where(customer: @customer).maximum(:created_at)
-    rescue NameError, NoMethodError, ActiveRecord::StatementInvalid
-      nil
-    end
-
-    def latest_profile_reaction_sent_at
-      SingingProfileReaction.where(customer: @customer).maximum(:created_at)
-    rescue NameError, NoMethodError, ActiveRecord::StatementInvalid
-      nil
-    end
-
-    def latest_profile_reaction_received_at
-      SingingProfileReaction.where(target_customer_id: @customer.id).maximum(:created_at)
-    rescue NameError, NoMethodError, ActiveRecord::StatementInvalid
-      nil
-    end
-
-    def latest_challenge_progress_at
-      return nil unless Object.const_defined?(:SingingAiChallengeProgress)
-
-      SingingAiChallengeProgress.where(customer: @customer).maximum(:updated_at)
-    rescue NameError, NoMethodError, ActiveRecord::StatementInvalid
-      nil
+      @latest_activity ||= begin
+        signal = Singing::ActivitySignalBuilder.call(@customer).latest_signal
+        signal.present? ? [signal.source, signal.occurred_at] : nil
+      end
     end
 
     def days_since(occurred_at)

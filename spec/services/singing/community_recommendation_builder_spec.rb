@@ -70,6 +70,18 @@ RSpec.describe Singing::CommunityRecommendationBuilder do
       expect(result.cta_path).to eq(Rails.application.routes.url_helpers.singing_challenges_path)
     end
 
+    it "完了済みchallengeが新しくても未完了challengeを推薦材料にする" do
+      create(:singing_diagnosis, :completed, customer: customer, created_at: 3.days.ago)
+      create(:singing_ai_challenge_progress, customer: customer, target_key: "pitch", completed: false, updated_at: 2.days.ago)
+      create(:singing_ai_challenge_progress, customer: customer, target_key: "rhythm", completed: true, updated_at: 1.day.ago)
+
+      result = described_class.call(customer)
+
+      expect(result.active?).to eq(true)
+      expect(result.icon).to eq("🏆")
+      expect(result.cta_label).to eq("Challengeを見る")
+    end
+
     it "活動がなければfallback推薦を返す" do
       result = described_class.call(customer)
 

@@ -75,12 +75,12 @@ module Singing
 
     def prioritized_memory
       [
-        [:diagnosis, latest_completed_diagnosis_at],
-        [:reaction_sent, latest_profile_reaction_sent_at],
-        [:reaction_received, latest_profile_reaction_received_at],
-        [:challenge_progress, latest_challenge_progress_at],
+        signal_memory(:diagnosis),
+        signal_memory(:reaction_sent),
+        signal_memory(:reaction_received),
+        signal_memory(:challenge_progress) { |signal| signal.metadata.to_h[:completed] != true },
         [:journey, journey_activity_at]
-      ].find { |(_, occurred_at)| occurred_at.present? }
+      ].compact.find { |(_, occurred_at)| occurred_at.present? }
     end
 
     def build_result(source, occurred_at)
@@ -111,33 +111,23 @@ module Singing
       )
     end
 
-    def latest_completed_diagnosis_at
-      SingingDiagnosis.completed.where(customer: @customer).maximum(:created_at)
-    rescue NameError, NoMethodError, ActiveRecord::StatementInvalid
-      nil
+    def signal_memory(source)
+      signal = activity_signal_for(source) do |candidate|
+        !block_given? || yield(candidate)
+      end
+      return nil if signal.nil?
+
+      [signal.source, signal.occurred_at]
     end
 
-    def latest_profile_reaction_sent_at
-      SingingProfileReaction.where(customer: @customer).maximum(:created_at)
-    rescue NameError, NoMethodError, ActiveRecord::StatementInvalid
-      nil
+    def activity_signal_for(source)
+      activity_signals.signals.find do |signal|
+        signal.source == source && (!block_given? || yield(signal))
+      end
     end
 
-    def latest_profile_reaction_received_at
-      SingingProfileReaction.where(target_customer_id: @customer.id).maximum(:created_at)
-    rescue NameError, NoMethodError, ActiveRecord::StatementInvalid
-      nil
-    end
-
-    def latest_challenge_progress_at
-      return nil unless Object.const_defined?(:SingingAiChallengeProgress)
-
-      SingingAiChallengeProgress
-        .where(customer: @customer)
-        .where(completed: false)
-        .maximum(:updated_at)
-    rescue NameError, NoMethodError, ActiveRecord::StatementInvalid
-      nil
+    def activity_signals
+      @activity_signals ||= Singing::ActivitySignalBuilder.call(@customer)
     end
 
     def journey_activity_at
