@@ -315,6 +315,82 @@
   font-weight: 700;
 }
 
+.return-motivation-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 0 auto 18px;
+  padding: 22px 24px;
+  border: 1px solid rgba(214, 126, 74, 0.24);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(255, 248, 239, 0.96), rgba(244, 240, 255, 0.92));
+  box-shadow: 0 14px 32px rgba(172, 98, 58, 0.09);
+
+  &__copy {
+    min-width: 0;
+  }
+
+  &__eyebrow {
+    display: block;
+    margin-bottom: 6px;
+    color: rgba(178, 86, 45, 0.72);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    margin: 0 0 8px;
+    color: #3f2b1f;
+    font-size: clamp(1.08rem, 2vw, 1.28rem);
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  &__message {
+    margin: 0;
+
+    p {
+      margin: 0;
+      color: rgba(70, 53, 42, 0.74);
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.65;
+    }
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 10px 16px;
+    border: 1px solid rgba(196, 105, 54, 0.24);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.82);
+    color: rgba(141, 70, 38, 0.9);
+    font-size: 0.86rem;
+    font-weight: 800;
+    line-height: 1.25;
+    text-decoration: none;
+    box-shadow: 0 8px 18px rgba(172, 98, 58, 0.1);
+    transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+
+    &:hover {
+      color: rgba(141, 70, 38, 0.96);
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.96);
+      border-color: rgba(196, 105, 54, 0.34);
+      box-shadow: 0 10px 22px rgba(172, 98, 58, 0.14);
+      transform: translateY(-1px);
+    }
+  }
+}
+
 .singing-community-home__network {
   margin-bottom: 26px;
   padding: 24px;
@@ -2493,6 +2569,7 @@
   }
 
   .singing-community-home__mission,
+  .return-motivation-card,
   .singing-community-home__network,
   .singing-community-home__circles,
   .singing-community-home__card,
@@ -2512,6 +2589,16 @@
   .singing-home-story-copy {
     padding: 10px 16px;
     font-size: 0.82rem;
+  }
+
+  .return-motivation-card {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .return-motivation-card__cta {
+    width: 100%;
   }
 
   .singing-community-home__cards,

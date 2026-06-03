@@ -81,6 +81,15 @@
         %p.lp-section-lead
           診断だけで終わらず、今日の挑戦、仲間、イベント、成長へ自然につながるホームです。
 
+        - return_motivation = music_home.return_motivation
+        - if customer_signed_in? && return_motivation&.visible
+          .return-motivation-card
+            .return-motivation-card__copy
+              %span.return-motivation-card__eyebrow Return Motivation
+              %h3.return-motivation-card__title= return_motivation.title
+              .return-motivation-card__message= simple_format(return_motivation.message)
+            = link_to return_motivation.cta_label, return_motivation.cta_path, class: "return-motivation-card__cta"
+
         .singing-community-home__mission
           %span.singing-home-section__eyebrow Today's Mission
           %h3.singing-home-section__title= music_home.today_mission&.title || "今日はここだけ歌ってみよう"
