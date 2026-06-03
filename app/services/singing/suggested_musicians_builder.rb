@@ -14,6 +14,7 @@ module Singing
       :customer,
       :reason,
       :profile_path,
+      :reacted,
       keyword_init: true
     )
 
@@ -28,12 +29,13 @@ module Singing
       keyword_init: true
     )
 
-    def self.call(customer, limit: DEFAULT_LIMIT)
-      new(customer, limit: limit).call
+    def self.call(customer, current_customer: nil, limit: DEFAULT_LIMIT)
+      new(customer, current_customer: current_customer, limit: limit).call
     end
 
-    def initialize(customer, limit: DEFAULT_LIMIT)
+    def initialize(customer, current_customer: nil, limit: DEFAULT_LIMIT)
       @customer = customer
+      @current_customer = current_customer
       @limit = normalized_limit(limit)
     end
 
@@ -46,12 +48,14 @@ module Singing
     def build_musicians
       return [] if @customer.nil?
 
-      candidates
+      cards = candidates
         .filter_map { |candidate| scored_musician_for(candidate) }
         .sort_by { |scored| [-scored.score, scored.card.customer.name.to_s, scored.card.customer.id] }
         .uniq { |scored| scored.card.customer.id }
         .first(@limit)
         .map(&:card)
+
+      decorate_with_reacted(cards)
     end
 
     def candidates
@@ -94,9 +98,26 @@ module Singing
         card: MusicianCard.new(
           customer: candidate,
           reason: reason_for(type),
-          profile_path: "/singing/users/#{candidate.id}"
+          profile_path: "/singing/users/#{candidate.id}",
+          reacted: false
         )
       )
+    end
+
+    def decorate_with_reacted(cards)
+      return cards.each { |card| card.reacted = false } if @current_customer.nil?
+
+      target_ids = cards.map { |card| card.customer&.id }.compact.uniq
+      return cards.each { |card| card.reacted = false } if target_ids.empty?
+
+      reacted_ids = SingingProfileReaction
+        .where(customer: @current_customer, reaction_type: "cheer", target_customer_id: target_ids)
+        .pluck(:target_customer_id)
+        .to_set
+
+      cards.each { |card| card.reacted = reacted_ids.include?(card.customer&.id) }
+    rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError, NoMethodError
+      cards.each { |card| card.reacted = false }
     end
 
     def same_growth_type?(candidate)

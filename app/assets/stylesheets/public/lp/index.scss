@@ -671,16 +671,11 @@
 }
 
 .suggested-musician-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
   padding: 14px;
   border: 1px solid rgba(44, 150, 140, 0.12);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.78);
   color: inherit;
-  text-decoration: none;
   box-shadow: 0 3px 10px rgba(35, 120, 140, 0.06);
   transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 
@@ -691,6 +686,20 @@
     border-color: rgba(44, 150, 140, 0.24);
     box-shadow: 0 8px 18px rgba(35, 120, 140, 0.1);
     transform: translateY(-1px);
+  }
+
+  &__main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      color: inherit;
+      text-decoration: none;
+    }
   }
 
   &__avatar {
@@ -728,6 +737,62 @@
       line-height: 1.35;
     }
   }
+}
+
+.suggested-musicians__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(44, 150, 140, 0.1);
+}
+
+.suggested-musicians__button,
+.suggested-musicians__cheered {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.suggested-musicians__form {
+  margin: 0;
+}
+
+.suggested-musicians__button {
+  border: 1px solid rgba(44, 150, 140, 0.18);
+  background: rgba(255, 255, 255, 0.8);
+  color: rgba(36, 91, 103, 0.78);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover {
+    color: rgba(36, 91, 103, 0.9);
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.96);
+    border-color: rgba(44, 150, 140, 0.28);
+    box-shadow: 0 4px 10px rgba(35, 120, 140, 0.08);
+  }
+
+  &--cheer {
+    color: rgba(35, 116, 94, 0.9);
+    background: rgba(238, 250, 244, 0.9);
+  }
+}
+
+.suggested-musicians__cheered {
+  border: 1px solid rgba(44, 150, 140, 0.14);
+  background: rgba(226, 244, 238, 0.7);
+  color: rgba(49, 109, 95, 0.68);
 }
 
 // ─── Encouragement Inbox ──────────────────────────────────────────────

@@ -55,6 +55,7 @@ RSpec.describe Singing::SuggestedMusiciansBuilder do
       expect(card.customer).to eq(candidate)
       expect(card.reason).to eq("同じGrowth Circleです")
       expect(card.profile_path).to eq("/singing/users/#{candidate.id}")
+      expect(card.reacted).to eq(false)
     end
 
     it "同じMissionの仲間を返す" do
@@ -138,6 +139,87 @@ RSpec.describe Singing::SuggestedMusiciansBuilder do
 
     it "nil安全" do
       expect { described_class.call(nil) }.not_to raise_error
+    end
+
+    it "current_customer nilでもreacted falseを返す" do
+      customer = create(:customer, domain_name: "singing")
+      candidate = create(:customer, domain_name: "singing")
+      completed_diagnosis(customer)
+      completed_diagnosis(candidate)
+
+      card = described_class.call(customer, current_customer: nil).musicians.first
+
+      expect(card.reacted).to eq(false)
+    end
+
+    it "current_customer が未応援の場合は reacted false を返す" do
+      customer = create(:customer, domain_name: "singing")
+      candidate = create(:customer, domain_name: "singing")
+      completed_diagnosis(customer)
+      completed_diagnosis(candidate)
+
+      card = described_class.call(customer, current_customer: customer).musicians.first
+
+      expect(card.customer).to eq(candidate)
+      expect(card.reacted).to eq(false)
+    end
+
+    it "応援済みなら reacted true を返す" do
+      customer = create(:customer, domain_name: "singing")
+      candidate = create(:customer, domain_name: "singing")
+      completed_diagnosis(customer)
+      completed_diagnosis(candidate)
+      create(:singing_profile_reaction, customer: customer, target_customer: candidate, reaction_type: "cheer")
+
+      card = described_class.call(customer, current_customer: customer).musicians.first
+
+      expect(card.customer).to eq(candidate)
+      expect(card.reacted).to eq(true)
+    end
+
+    it "cheer以外のリアクションは reacted false のまま" do
+      customer = create(:customer, domain_name: "singing")
+      candidate = create(:customer, domain_name: "singing")
+      completed_diagnosis(customer)
+      completed_diagnosis(candidate)
+      create(:singing_profile_reaction, customer: customer, target_customer: candidate, reaction_type: "amazing")
+
+      card = described_class.call(customer, current_customer: customer).musicians.first
+
+      expect(card.reacted).to eq(false)
+    end
+
+    it "reacted 判定は SingingProfileReaction への一括取得で行う" do
+      customer = create(:customer, domain_name: "singing")
+      completed_diagnosis(customer)
+
+      candidates = 3.times.map do
+        candidate = create(:customer, domain_name: "singing")
+        completed_diagnosis(candidate)
+        candidate
+      end
+      create(:singing_profile_reaction, customer: customer, target_customer: candidates.first, reaction_type: "cheer")
+
+      reaction_query_count = 0
+      callback = lambda do |_name, _started, _finished, _id, payload|
+        sql = payload[:sql].to_s
+        reaction_query_count += 1 if sql.include?("singing_profile_reactions")
+      end
+
+      ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+        described_class.call(customer, current_customer: customer)
+      end
+
+      expect(reaction_query_count).to eq(1)
+    end
+
+    it "自分自身は候補から除外する" do
+      customer = create(:customer, domain_name: "singing")
+      completed_diagnosis(customer)
+
+      result = described_class.call(customer, current_customer: customer)
+
+      expect(result.musicians.map(&:customer)).not_to include(customer)
     end
   end
 end

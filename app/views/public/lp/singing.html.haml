@@ -153,12 +153,24 @@
             .suggested-musicians__list
               - suggested.musicians.each do |musician|
                 - next if musician.customer.nil?
-                = link_to musician.profile_path, class: "suggested-musician-card" do
-                  .suggested-musician-card__avatar
-                    %span= musician.customer.name.to_s.first.presence || "🎤"
-                  .suggested-musician-card__body
-                    %strong= "#{musician.customer.name.presence || 'メンバー'}さん"
-                    %span= musician.reason
+                .suggested-musician-card
+                  = link_to musician.profile_path, class: "suggested-musician-card__main" do
+                    .suggested-musician-card__avatar
+                      %span= musician.customer.name.to_s.first.presence || "🎤"
+                    .suggested-musician-card__body
+                      %strong= "#{musician.customer.name.presence || 'メンバー'}さん"
+                      %span= musician.reason
+                  - if customer_signed_in? && current_customer != musician.customer
+                    .suggested-musicians__actions
+                      = link_to "プロフィールを見る", musician.profile_path, class: "suggested-musicians__button suggested-musicians__button--profile"
+                      - if musician.reacted
+                        %span.suggested-musicians__cheered 👏 応援済み
+                      - else
+                        = button_to "👏 応援する", singing_user_profile_reaction_path(musician.customer, reaction_type: "cheer"),
+                            method: :post,
+                            form_class: "suggested-musicians__form",
+                            class: "suggested-musicians__button suggested-musicians__button--cheer",
+                            data: { disable_with: "応援中..." }
             %p.suggested-musicians__footer 新しい仲間との出会いが、次の挑戦を少し軽くしてくれます。
 
         - if music_home.reputation.present?

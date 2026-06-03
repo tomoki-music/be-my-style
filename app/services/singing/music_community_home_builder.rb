@@ -60,7 +60,7 @@ module Singing
         home_cta: home_cta,
         today_mission: experience.todays_mission,
         community_network: Singing::CommunityNetworkBuilder.call(@customer),
-        suggested_musicians: Singing::SuggestedMusiciansBuilder.call(@customer),
+        suggested_musicians: Singing::SuggestedMusiciansBuilder.call(@customer, current_customer: @customer),
         growth_circles: Singing::GrowthCirclesBuilder.call(@customer),
         ecosystem: Singing::MusicCommunityEcosystemBuilder.call(customer: @customer),
         reputation: Singing::CommunityReputationBuilder.call(customer: @customer),
