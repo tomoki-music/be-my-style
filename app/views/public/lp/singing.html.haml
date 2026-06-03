@@ -81,6 +81,16 @@
         %p.lp-section-lead
           診断だけで終わらず、今日の挑戦、仲間、イベント、成長へ自然につながるホームです。
 
+        - community_memory = music_home.community_memory
+        - if customer_signed_in? && community_memory&.active?
+          .community-memory-card
+            %span.community-memory-card__icon= community_memory.icon
+            .community-memory-card__copy
+              %span.community-memory-card__eyebrow Community Memory
+              %h3.community-memory-card__title= community_memory.title
+              %p.community-memory-card__message= community_memory.message
+            = link_to community_memory.cta_label, community_memory.cta_path, class: "community-memory-card__cta"
+
         - return_motivation = music_home.return_motivation
         - if customer_signed_in? && return_motivation&.visible
           .return-motivation-card
