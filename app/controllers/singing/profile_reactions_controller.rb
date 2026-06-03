@@ -21,10 +21,11 @@ class Singing::ProfileReactionsController < Singing::BaseController
     reacted = reaction.new_record?
     reacted ? reaction.save! : reaction.destroy!
 
-    render json: {
-      reacted: reacted,
-      count: @user.received_singing_profile_reactions.where(reaction_type: reaction_type).count
-    }
+    count = @user.received_singing_profile_reactions.where(reaction_type: reaction_type).count
+    respond_to do |format|
+      format.json { render json: { reacted: reacted, count: count } }
+      format.html { redirect_back fallback_location: singing_user_path(@user) }
+    end
   end
 
   private

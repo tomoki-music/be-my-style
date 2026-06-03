@@ -98,12 +98,19 @@
             .community-feed__list
               - community_feed.feed_items.each do |item|
                 - next if item.customer.nil?
-                = link_to singing_user_path(item.customer), class: "community-feed__item" do
-                  %span.community-feed__icon= item.icon
-                  .community-feed__body
-                    %span.community-feed__name= "#{item.customer.name.presence || 'メンバー'}さん"
-                    %span.community-feed__message= item.message
-                    %time.community-feed__time{ datetime: item.occurred_at.iso8601 }= time_ago_in_words(item.occurred_at) + "前"
+                .community-feed__item
+                  = link_to singing_user_path(item.customer), class: "community-feed__item-main" do
+                    %span.community-feed__icon= item.icon
+                    .community-feed__body
+                      %span.community-feed__name= "#{item.customer.name.presence || 'メンバー'}さん"
+                      %span.community-feed__message= item.message
+                      %time.community-feed__time{ datetime: item.occurred_at.iso8601 }= time_ago_in_words(item.occurred_at) + "前"
+                  - if customer_signed_in? && current_customer != item.customer
+                    .community-feed__actions
+                      = button_to "👏 応援する", singing_user_profile_reaction_path(item.customer, reaction_type: "cheer"),
+                          method: :post,
+                          class: "community-feed__cheer-button",
+                          data: { disable_with: "応援中..." }
 
         - if music_home.reputation.present?
           - rep = music_home.reputation
