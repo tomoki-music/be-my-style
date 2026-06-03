@@ -88,6 +88,22 @@
 
         %p.singing-home-story-copy 今日の一歩が、あなたの音楽の輪を広げます。
 
+        - community_feed = @community_feed
+        - if community_feed&.feed_items.present?
+          .community-feed
+            .community-feed__header
+              %span.community-feed__eyebrow 🎵 Community Feed
+              %h3.singing-home-section__title 仲間の挑戦が流れてくる
+              %p.singing-home-section__description 今日も仲間たちが歌い、挑戦し、続けています。
+            .community-feed__list
+              - community_feed.feed_items.each do |item|
+                .community-feed__item
+                  %span.community-feed__icon= item.icon
+                  .community-feed__body
+                    %span.community-feed__name= "#{item.customer.name.presence || 'メンバー'}さん"
+                    %span.community-feed__message= item.message
+                    %time.community-feed__time{ datetime: item.occurred_at.iso8601 }= time_ago_in_words(item.occurred_at) + "前"
+
         - if music_home.reputation.present?
           - rep = music_home.reputation
           .community-reputation
