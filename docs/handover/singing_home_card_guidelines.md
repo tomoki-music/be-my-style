@@ -2,6 +2,8 @@
 
 このガイドは、Singing Home に体験カードを追加・調整するときの判断基準として使う。
 
+Singing 関連 docs の入口は `docs/handover/singing_index.md` を参照する。Home card、Activity Signal、空状態のどれを読むべきか迷った場合は、まず index で確認する。
+
 Singing Home は「歌唱診断サイト」のダッシュボードではなく、「歌を楽しみながら成長する音楽コミュニティ」へ戻ってくる場所として設計する。
 
 ## 1. Home UX 方針

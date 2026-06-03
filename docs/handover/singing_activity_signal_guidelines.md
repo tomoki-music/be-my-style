@@ -2,6 +2,8 @@
 
 このガイドは、`Singing::ActivitySignalBuilder` を Home card Builder から使うときの判断基準として使う。
 
+Singing 関連 docs の入口は `docs/handover/singing_index.md` を参照する。Activity Signal だけでなく、Home card の表示順や空状態も関係する場合は、index から該当 docs を確認する。
+
 Activity Signal は「ユーザーの活動を共通形式で読む」ための read-only な材料であり、Home card の表示優先順位そのものではない。
 
 ## 1. ActivitySignalBuilder の役割
