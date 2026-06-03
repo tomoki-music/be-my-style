@@ -55,6 +55,11 @@ class Singing::UsersController < Singing::BaseController
       @music_journey_timeline,
       base_url: request.base_url
     )
+    @profile_ogp              = Singing::ProfileOgpBuilder.call(
+      @user,
+      @music_journey_timeline,
+      base_url: request.base_url
+    )
     @growth_circle_primary = @growth_circle_badges.first
     @profile_reaction_counts = @user.received_singing_profile_reactions.group(:reaction_type).count
     @current_customer_profile_reactions = if current_customer.present?
