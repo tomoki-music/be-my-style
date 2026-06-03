@@ -23,38 +23,71 @@ RSpec.describe Singing::ReturnMotivationBuilder do
 
       expect(result.visible).to eq(true)
       expect(result.title).to eq("おかえりなさい 🎵")
-      expect(result.message).to include("また今日から音楽を楽しみましょう")
+      expect(result.message).to eq("ここから音楽の旅をはじめましょう。")
       expect(result.latest_activity_at).to be_nil
+      expect(result.activity_source).to be_nil
     end
 
-    it "3日空きではおかえりメッセージを返す" do
+    it "activity_source が diagnosis では診断に寄り添うメッセージを返す" do
       create(:singing_diagnosis, :completed, customer: customer, created_at: 3.days.ago)
 
       result = described_class.call(customer)
 
       expect(result.visible).to eq(true)
       expect(result.title).to eq("おかえりなさい 🎵")
-      expect(result.message).to include("少し間が空いても大丈夫")
+      expect(result.message).to eq("前回の診断から少し間が空きました。\nまた今日から、自分のペースで歌を楽しみましょう。")
+      expect(result.activity_source).to eq(:diagnosis)
     end
 
-    it "7日空きでは一歩だけのメッセージを返す" do
+    it "activity_source が reaction_sent では応援していた活動に寄り添うメッセージを返す" do
+      create(:singing_profile_reaction, customer: customer, created_at: 3.days.ago)
+
+      result = described_class.call(customer)
+
+      expect(result.visible).to eq(true)
+      expect(result.message).to eq("前に仲間を応援していましたね。\nまた音楽の輪に戻ってみませんか。")
+      expect(result.activity_source).to eq(:reaction_sent)
+    end
+
+    it "activity_source が reaction_received では届いた応援に寄り添うメッセージを返す" do
+      sender = create(:customer, domain_name: "singing")
+      create(:singing_profile_reaction, customer: sender, target_customer: customer, created_at: 3.days.ago)
+
+      result = described_class.call(customer)
+
+      expect(result.visible).to eq(true)
+      expect(result.message).to eq("仲間からの応援が届いています。\nまた少しずつ、歌との時間を楽しみましょう。")
+      expect(result.activity_source).to eq(:reaction_received)
+    end
+
+    it "activity_source が challenge_progress では挑戦に寄り添うメッセージを返す" do
+      create(:singing_ai_challenge_progress, customer: customer, updated_at: 3.days.ago)
+
+      result = described_class.call(customer)
+
+      expect(result.visible).to eq(true)
+      expect(result.message).to eq("前に挑戦していたテーマがあります。\n完璧じゃなくて大丈夫。まずは一歩だけ。")
+      expect(result.activity_source).to eq(:challenge_progress)
+    end
+
+    it "7日空きでは待っていますタイトルを返す" do
       create(:singing_diagnosis, :completed, customer: customer, created_at: 7.days.ago)
 
       result = described_class.call(customer)
 
       expect(result.visible).to eq(true)
       expect(result.title).to eq("あなたの音楽を待っています 🎤")
-      expect(result.message).to include("まずは一歩だけ")
+      expect(result.message).to include("自分のペースで歌を楽しみましょう")
     end
 
-    it "30日空きではいつでも帰ってきてくださいメッセージを返す" do
+    it "30日空きではまた歌いたくなったらタイトルを返す" do
       create(:singing_diagnosis, :completed, customer: customer, created_at: 30.days.ago)
 
       result = described_class.call(customer)
 
       expect(result.visible).to eq(true)
       expect(result.title).to eq("また歌いたくなったら、")
-      expect(result.message).to include("いつでも帰ってきてください")
+      expect(result.message).to include("自分のペースで歌を楽しみましょう")
     end
 
     it "最近活動ありでは表示しない" do
@@ -72,7 +105,7 @@ RSpec.describe Singing::ReturnMotivationBuilder do
 
       expect(result.visible).to eq(false)
       expect(result.latest_activity_at).to be_within(1.second).of(1.day.ago)
-      expect(result.activity_source).to eq(:profile_reaction_sent)
+      expect(result.activity_source).to eq(:reaction_sent)
     end
 
     it "診断は古いが応援送信が最近なら表示しない" do
@@ -83,7 +116,7 @@ RSpec.describe Singing::ReturnMotivationBuilder do
 
       expect(result.visible).to eq(false)
       expect(result.latest_activity_at).to be_within(1.second).of(2.days.ago)
-      expect(result.activity_source).to eq(:profile_reaction_sent)
+      expect(result.activity_source).to eq(:reaction_sent)
     end
 
     it "応援受信が最近なら表示しない" do
@@ -95,7 +128,7 @@ RSpec.describe Singing::ReturnMotivationBuilder do
 
       expect(result.visible).to eq(false)
       expect(result.latest_activity_at).to be_within(1.second).of(2.days.ago)
-      expect(result.activity_source).to eq(:profile_reaction_received)
+      expect(result.activity_source).to eq(:reaction_received)
     end
 
     it "チャレンジ進捗が最近なら表示しない" do
@@ -106,7 +139,7 @@ RSpec.describe Singing::ReturnMotivationBuilder do
 
       expect(result.visible).to eq(false)
       expect(result.latest_activity_at).to be_within(1.second).of(1.day.ago)
-      expect(result.activity_source).to eq(:ai_challenge_progress)
+      expect(result.activity_source).to eq(:challenge_progress)
     end
 
     it "すべて古いなら表示する" do
@@ -117,8 +150,9 @@ RSpec.describe Singing::ReturnMotivationBuilder do
 
       expect(result.visible).to eq(true)
       expect(result.title).to eq("あなたの音楽を待っています 🎤")
+      expect(result.message).to eq("前に仲間を応援していましたね。\nまた音楽の輪に戻ってみませんか。")
       expect(result.latest_activity_at).to be_within(1.second).of(7.days.ago)
-      expect(result.activity_source).to eq(:profile_reaction_sent)
+      expect(result.activity_source).to eq(:reaction_sent)
     end
 
     it "CTA path は新規診断画面を返す" do

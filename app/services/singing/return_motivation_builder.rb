@@ -55,15 +55,34 @@ module Singing
     end
 
     def card(title:, message:, activity:)
+      activity_source = activity&.first
+
       ReturnMotivation.new(
         visible: true,
         title: title,
-        message: message,
+        message: message_for(activity_source, message),
         cta_label: "今日の診断をする",
         cta_path: Rails.application.routes.url_helpers.new_singing_diagnosis_path,
         latest_activity_at: activity&.last,
-        activity_source: activity&.first
+        activity_source: activity_source
       )
+    end
+
+    def message_for(activity_source, fallback_message)
+      case activity_source
+      when :diagnosis
+        "前回の診断から少し間が空きました。\nまた今日から、自分のペースで歌を楽しみましょう。"
+      when :reaction_sent
+        "前に仲間を応援していましたね。\nまた音楽の輪に戻ってみませんか。"
+      when :reaction_received
+        "仲間からの応援が届いています。\nまた少しずつ、歌との時間を楽しみましょう。"
+      when :challenge_progress
+        "前に挑戦していたテーマがあります。\n完璧じゃなくて大丈夫。まずは一歩だけ。"
+      when nil
+        "ここから音楽の旅をはじめましょう。"
+      else
+        fallback_message
+      end
     end
 
     def hidden(latest_activity_at: nil, activity_source: nil)
@@ -92,10 +111,10 @@ module Singing
 
     def activity_candidates
       [
-        [:completed_diagnosis, latest_completed_diagnosis_at],
-        [:profile_reaction_sent, latest_profile_reaction_sent_at],
-        [:profile_reaction_received, latest_profile_reaction_received_at],
-        [:ai_challenge_progress, latest_ai_challenge_progress_at]
+        [:diagnosis, latest_completed_diagnosis_at],
+        [:reaction_sent, latest_profile_reaction_sent_at],
+        [:reaction_received, latest_profile_reaction_received_at],
+        [:challenge_progress, latest_ai_challenge_progress_at]
       ]
     end
 
