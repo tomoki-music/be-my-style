@@ -46,8 +46,9 @@ class Singing::UsersController < Singing::BaseController
     @journey_summary = Singing::JourneySummaryBuilder.call(@user)
     @growth_type           = Singing::GrowthTypeAnalyzer.call(@user)
     @growth_circle_badges  = Singing::GrowthCircleBadgeAnalyzer.call(@user)
-    @community_identity    = Singing::ProfileCommunityIdentityBuilder.call(@user)
-    @profile_connection    = Singing::ProfileConnectionBuilder.call(@user)
+    @community_identity       = Singing::ProfileCommunityIdentityBuilder.call(@user)
+    @profile_connection       = Singing::ProfileConnectionBuilder.call(@user)
+    @music_journey_timeline   = Singing::MusicJourneyTimelineBuilder.call(@user)
     @growth_circle_primary = @growth_circle_badges.first
     @profile_reaction_counts = @user.received_singing_profile_reactions.group(:reaction_type).count
     @current_customer_profile_reactions = if current_customer.present?

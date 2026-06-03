@@ -153,6 +153,24 @@
                     = link_to singing_user_profile_reaction_path(@user, reaction_type: "cheer"), method: :post, class: "profile-connection-cta__btn profile-connection-cta__btn--follow", data: { reaction_url: singing_user_profile_reaction_path(@user, reaction_type: "cheer"), turbolinks: false } do
                       🌱 一緒に成長する
 
+      - if @music_journey_timeline.timeline_items.present?
+        %section.singing-profile__section.singing-profile__section--journey-timeline
+          .singing-profile__section-head
+            %p.singing-profile__section-kicker Journey
+            %h2 🎵 Music Journey
+          .music-journey-timeline
+            - @music_journey_timeline.timeline_items.group_by { |item| item.occurred_at.strftime("%Y/%m") }.each do |month, items|
+              .music-journey-timeline__month
+                %p.music-journey-timeline__month-label= month
+                .music-journey-timeline__events
+                  - items.each do |item|
+                    .music-journey-timeline__item{ class: "music-journey-timeline__item--#{item.type}" }
+                      %span.music-journey-timeline__item-icon= item.icon
+                      .music-journey-timeline__item-body
+                        %strong.music-journey-timeline__item-title= item.title
+                        - if item.description.present?
+                          %p.music-journey-timeline__item-desc= item.description
+
       %section.singing-profile__section
         .singing-profile__section-head
           %p.singing-profile__section-kicker Achievements

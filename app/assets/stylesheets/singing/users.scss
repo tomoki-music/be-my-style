@@ -748,3 +748,83 @@ $rank-colors: (
     }
   }
 }
+
+// ── Music Journey Timeline ───────────────────────────────────────────────────
+
+.music-journey-timeline {
+  &__month {
+    margin-bottom: 24px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__month-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: rgba(148, 163, 184, 0.55);
+    text-transform: uppercase;
+    margin: 0 0 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  }
+
+  &__events {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 11px 14px;
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 10px;
+
+    &--personal_best {
+      border-color: rgba(251, 191, 36, 0.22);
+      background: rgba(251, 191, 36, 0.04);
+    }
+
+    &--streak_milestone {
+      border-color: rgba(239, 68, 68, 0.22);
+      background: rgba(239, 68, 68, 0.04);
+    }
+
+    &--first_diagnosis {
+      border-color: rgba(139, 92, 246, 0.22);
+      background: rgba(139, 92, 246, 0.04);
+    }
+  }
+
+  &__item-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    line-height: 1.3;
+  }
+
+  &__item-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__item-title {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 2px;
+  }
+
+  &__item-desc {
+    font-size: 12px;
+    color: rgba(148, 163, 184, 0.72);
+    margin: 0;
+    line-height: 1.4;
+  }
+}
