@@ -110,6 +110,25 @@
               .return-motivation-card__message= simple_format(return_motivation.message)
             = link_to return_motivation.cta_label, return_motivation.cta_path, class: "return-motivation-card__cta"
 
+        - music_friends = music_home.music_friends
+        - if customer_signed_in? && music_friends&.active?
+          .music-friends-card
+            .music-friends-card__header
+              %span.music-friends-card__eyebrow 🎸 Music Friends
+              %h3.music-friends-card__title 最近つながりのある仲間
+            .music-friends-card__list
+              - music_friends.friends.each do |friend|
+                = link_to friend.profile_path, class: "music-friends-card__item" do
+                  .music-friends-card__avatar
+                    - if friend.image_url.present?
+                      = image_tag friend.image_url, alt: friend.display_name
+                    - else
+                      %span= friend.display_name.to_s.first.presence || "♪"
+                  .music-friends-card__copy
+                    %strong= "#{friend.display_name}さん"
+                    %span= friend.message
+            = link_to "もっと仲間を見る", singing_growth_feed_path, class: "music-friends-card__cta"
+
         .singing-community-home__mission
           %span.singing-home-section__eyebrow Today's Mission
           %h3.singing-home-section__title= music_home.today_mission&.title || "今日はここだけ歌ってみよう"

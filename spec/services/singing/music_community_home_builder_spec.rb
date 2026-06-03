@@ -13,6 +13,7 @@ RSpec.describe Singing::MusicCommunityHomeBuilder do
       expect(home.community_memory).to be_present
       expect(home.community_recommendation).to be_present
       expect(home.return_motivation).to be_present
+      expect(home.music_friends).to be_present
       expect(home.community_network).to be_present
       expect(home.suggested_musicians).to be_present
       expect(home.community_summary).to be_present
@@ -29,6 +30,7 @@ RSpec.describe Singing::MusicCommunityHomeBuilder do
       expect(home.community_memory).to be_a(Singing::CommunityMemoryBuilder::Result)
       expect(home.community_recommendation).to be_a(Singing::CommunityRecommendationBuilder::Result)
       expect(home.return_motivation).to be_a(Singing::ReturnMotivationBuilder::ReturnMotivation)
+      expect(home.music_friends).to be_a(Singing::MusicFriendsBuilder::Result)
       expect(home.community_network).to be_a(Singing::CommunityNetworkBuilder::CommunityNetwork)
       expect(home.suggested_musicians).to be_a(Singing::SuggestedMusiciansBuilder::SuggestedMusicians)
       expect(home.community_summary.items).to be_present
