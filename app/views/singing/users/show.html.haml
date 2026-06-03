@@ -170,6 +170,19 @@
                         %strong.music-journey-timeline__item-title= item.title
                         - if item.description.present?
                           %p.music-journey-timeline__item-desc= item.description
+          - if @journey_share.visible
+            .journey-share-cta
+              .journey-share-cta__body
+                %p.journey-share-cta__title= @journey_share.share_title
+                %p.journey-share-cta__lead 続けてきたことは、ちゃんと物語になる。
+              .journey-share-cta__buttons
+                = link_to @journey_share.x_share_url, target: "_blank", rel: "noopener noreferrer", class: "journey-share-cta__btn journey-share-cta__btn--x" do
+                  %span.journey-share-cta__btn-icon 𝕏
+                  Xでシェア
+                %button.journey-share-cta__btn.journey-share-cta__btn--copy{ type: "button", data: { copy_url: @journey_share.copy_text } }
+                  %span.journey-share-cta__btn-icon 🔗
+                  プロフィールURLをコピー
+              %span.journey-share-cta__copy-feedback{ style: "display:none;" } コピーしました！
 
       %section.singing-profile__section
         .singing-profile__section-head
