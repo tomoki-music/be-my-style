@@ -143,6 +143,24 @@
                             class: "community-feed__cheer-button",
                             data: { disable_with: "応援中..." }
 
+        - suggested = music_home.suggested_musicians
+        - if suggested&.musicians.present?
+          .suggested-musicians
+            .suggested-musicians__header
+              %span.suggested-musicians__eyebrow 🎵 Suggested Musicians
+              %h3.singing-home-section__title あなたへのおすすめ
+              %p.singing-home-section__description 近い挑戦や音楽のつながりから、まだ知らない仲間に出会えます。
+            .suggested-musicians__list
+              - suggested.musicians.each do |musician|
+                - next if musician.customer.nil?
+                = link_to musician.profile_path, class: "suggested-musician-card" do
+                  .suggested-musician-card__avatar
+                    %span= musician.customer.name.to_s.first.presence || "🎤"
+                  .suggested-musician-card__body
+                    %strong= "#{musician.customer.name.presence || 'メンバー'}さん"
+                    %span= musician.reason
+            %p.suggested-musicians__footer 新しい仲間との出会いが、次の挑戦を少し軽くしてくれます。
+
         - if music_home.reputation.present?
           - rep = music_home.reputation
           .community-reputation

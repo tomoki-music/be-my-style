@@ -11,6 +11,7 @@ RSpec.describe Singing::MusicCommunityHomeBuilder do
       expect(home.hero_message).to be_present
       expect(home.today_mission).to be_present
       expect(home.community_network).to be_present
+      expect(home.suggested_musicians).to be_present
       expect(home.community_summary).to be_present
       expect(home.recommended_event).to be_present
       expect(home.growth_summary).to be_present
@@ -23,6 +24,7 @@ RSpec.describe Singing::MusicCommunityHomeBuilder do
       expect(home.hero_message).to be_present
       expect(home.today_mission).to be_a(Singing::MissionGenerator::Mission)
       expect(home.community_network).to be_a(Singing::CommunityNetworkBuilder::CommunityNetwork)
+      expect(home.suggested_musicians).to be_a(Singing::SuggestedMusiciansBuilder::SuggestedMusicians)
       expect(home.community_summary.items).to be_present
       expect(home.recommended_event.items).to be_present
       expect(home.growth_summary.items).to be_present
