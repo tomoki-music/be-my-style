@@ -24,6 +24,8 @@ RSpec.describe Singing::ReturnMotivationBuilder do
       expect(result.visible).to eq(true)
       expect(result.title).to eq("おかえりなさい 🎵")
       expect(result.message).to eq("ここから音楽の旅をはじめましょう。")
+      expect(result.cta_label).to eq("まずは診断してみる")
+      expect(result.cta_path).to eq(Rails.application.routes.url_helpers.new_singing_diagnosis_path)
       expect(result.latest_activity_at).to be_nil
       expect(result.activity_source).to be_nil
     end
@@ -36,6 +38,8 @@ RSpec.describe Singing::ReturnMotivationBuilder do
       expect(result.visible).to eq(true)
       expect(result.title).to eq("おかえりなさい 🎵")
       expect(result.message).to eq("前回の診断から少し間が空きました。\nまた今日から、自分のペースで歌を楽しみましょう。")
+      expect(result.cta_label).to eq("今日の診断をする")
+      expect(result.cta_path).to eq(Rails.application.routes.url_helpers.new_singing_diagnosis_path)
       expect(result.activity_source).to eq(:diagnosis)
     end
 
@@ -46,6 +50,8 @@ RSpec.describe Singing::ReturnMotivationBuilder do
 
       expect(result.visible).to eq(true)
       expect(result.message).to eq("前に仲間を応援していましたね。\nまた音楽の輪に戻ってみませんか。")
+      expect(result.cta_label).to eq("仲間の活動を見る")
+      expect(result.cta_path).to eq("#community-feed")
       expect(result.activity_source).to eq(:reaction_sent)
     end
 
@@ -57,6 +63,8 @@ RSpec.describe Singing::ReturnMotivationBuilder do
 
       expect(result.visible).to eq(true)
       expect(result.message).to eq("仲間からの応援が届いています。\nまた少しずつ、歌との時間を楽しみましょう。")
+      expect(result.cta_label).to eq("応援を見に行く")
+      expect(result.cta_path).to eq("#encouragement-inbox")
       expect(result.activity_source).to eq(:reaction_received)
     end
 
@@ -67,6 +75,8 @@ RSpec.describe Singing::ReturnMotivationBuilder do
 
       expect(result.visible).to eq(true)
       expect(result.message).to eq("前に挑戦していたテーマがあります。\n完璧じゃなくて大丈夫。まずは一歩だけ。")
+      expect(result.cta_label).to eq("チャレンジを見る")
+      expect(result.cta_path).to eq(Rails.application.routes.url_helpers.singing_challenges_path)
       expect(result.activity_source).to eq(:challenge_progress)
     end
 
@@ -96,6 +106,8 @@ RSpec.describe Singing::ReturnMotivationBuilder do
       result = described_class.call(customer)
 
       expect(result.visible).to eq(false)
+      expect(result.cta_label).to be_nil
+      expect(result.cta_path).to be_nil
     end
 
     it "診断なし・応援ありなら最近活動として表示しない" do
@@ -155,11 +167,5 @@ RSpec.describe Singing::ReturnMotivationBuilder do
       expect(result.activity_source).to eq(:reaction_sent)
     end
 
-    it "CTA path は新規診断画面を返す" do
-      result = described_class.call(customer)
-
-      expect(result.cta_label).to eq("今日の診断をする")
-      expect(result.cta_path).to eq(Rails.application.routes.url_helpers.new_singing_diagnosis_path)
-    end
   end
 end

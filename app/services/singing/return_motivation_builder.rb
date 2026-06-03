@@ -56,13 +56,14 @@ module Singing
 
     def card(title:, message:, activity:)
       activity_source = activity&.first
+      cta = cta_for(activity_source)
 
       ReturnMotivation.new(
         visible: true,
         title: title,
         message: message_for(activity_source, message),
-        cta_label: "今日の診断をする",
-        cta_path: Rails.application.routes.url_helpers.new_singing_diagnosis_path,
+        cta_label: cta[:label],
+        cta_path: cta[:path],
         latest_activity_at: activity&.last,
         activity_source: activity_source
       )
@@ -83,6 +84,25 @@ module Singing
       else
         fallback_message
       end
+    end
+
+    def cta_for(activity_source)
+      case activity_source
+      when :diagnosis
+        { label: "今日の診断をする", path: routes.new_singing_diagnosis_path }
+      when :reaction_sent
+        { label: "仲間の活動を見る", path: "#community-feed" }
+      when :reaction_received
+        { label: "応援を見に行く", path: "#encouragement-inbox" }
+      when :challenge_progress
+        { label: "チャレンジを見る", path: routes.singing_challenges_path }
+      else
+        { label: "まずは診断してみる", path: routes.new_singing_diagnosis_path }
+      end
+    end
+
+    def routes
+      Rails.application.routes.url_helpers
     end
 
     def hidden(latest_activity_at: nil, activity_source: nil)

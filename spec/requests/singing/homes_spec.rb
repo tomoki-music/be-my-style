@@ -105,6 +105,21 @@ RSpec.describe "Singing::Homes", type: :request do
         sign_in singing_customer
       end
 
+      it "Return Motivation Card の文脈CTAを表示すること" do
+        supporter = FactoryBot.create(:customer, domain_name: "singing", name: "Supporter")
+        FactoryBot.create(:singing_profile_reaction, customer: supporter, target_customer: singing_customer, reaction_type: "cheer", created_at: 3.days.ago)
+
+        get singing_root_path
+
+        doc = Nokogiri::HTML(response.body)
+        return_cta = doc.at_css(".return-motivation-card__cta")
+
+        expect(response).to have_http_status(:ok)
+        expect(return_cta.text).to include("応援を見に行く")
+        expect(return_cta["href"]).to eq("#encouragement-inbox")
+        expect(doc.at_css("#encouragement-inbox")).to be_present
+      end
+
       it "Homeの主要ブロック、応援状態、toast、プロフィール導線を表示すること" do
         supporter = FactoryBot.create(:customer, domain_name: "singing", name: "Supporter")
         reacted_member = FactoryBot.create(:customer, domain_name: "singing", name: "Reacted Member")
