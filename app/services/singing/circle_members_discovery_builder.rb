@@ -63,12 +63,13 @@ module Singing
       empty_message: "音楽を楽しみながら、仲間と出会いましょう。"
     }.freeze
 
-    def self.call(circle_slug)
-      new(circle_slug).call
+    def self.call(circle_slug, members_count: nil)
+      new(circle_slug, members_count: members_count).call
     end
 
-    def initialize(circle_slug)
-      @circle_slug = circle_slug.presence
+    def initialize(circle_slug, members_count: nil)
+      @circle_slug            = circle_slug.presence
+      @members_count_override = members_count
     end
 
     def call
@@ -77,7 +78,7 @@ module Singing
         circle_slug:        @circle_slug,
         circle_name:        config[:name],
         circle_description: config[:description],
-        members_count:      config[:members_count],
+        members_count:      @members_count_override || config[:members_count],
         empty_title:        config[:empty_title],
         empty_message:      config[:empty_message]
       )

@@ -6,9 +6,16 @@ class Singing::UsersController < Singing::BaseController
 
   def index
     @circle        = params[:circle].presence
-    @discovery     = Singing::CircleMembersDiscoveryBuilder.call(@circle)
     users          = fetch_index_users
     @profile_cards = Singing::ProfileCardBuilder.build_collection(users)
+
+    if @circle.present?
+      @profile_cards = @profile_cards.select do |card|
+        card.growth_type_key.to_s == @circle.to_s
+      end
+    end
+
+    @discovery = Singing::CircleMembersDiscoveryBuilder.call(@circle, members_count: @profile_cards.size)
   end
 
   def show

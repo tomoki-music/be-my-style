@@ -19,6 +19,7 @@ module Singing
       :avatar_attached,
       :growth_type_label,
       :growth_type_icon,
+      :growth_type_key,
       :latest_activity_label,
       keyword_init: true
     )
@@ -60,6 +61,7 @@ module Singing
         avatar_attached:       avatar_attached?,
         growth_type_label:     gt[:label],
         growth_type_icon:      gt[:icon],
+        growth_type_key:       gt[:type_key],
         latest_activity_label: activity_label(gt[:type_key])
       )
     end

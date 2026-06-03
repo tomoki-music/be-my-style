@@ -213,8 +213,68 @@ RSpec.describe Singing::ProfileCardBuilder do
       expect(card.growth_type_icon).to be_a(String)
     end
 
+    it "growth_type_key が Symbol である" do
+      expect(card.growth_type_key).to be_a(Symbol)
+    end
+
+    it "growth_type_key が有効な circle slug である" do
+      valid_keys = %i[emotional_singer rhythm_explorer consistency_hero voice_challenger dynamic_performer groove_builder]
+      expect(valid_keys).to include(card.growth_type_key)
+    end
+
     it "latest_activity_label が String である" do
       expect(card.latest_activity_label).to be_a(String)
+    end
+  end
+
+  describe "circle filter のための growth_type_key" do
+    context "診断がない場合" do
+      it "growth_type_key が :groove_builder を返す" do
+        card = described_class.call(customer)
+        expect(card.growth_type_key).to eq(:groove_builder)
+      end
+    end
+
+    context "consistency_hero 判定になる場合（連続7日以上）" do
+      before do
+        7.times do |i|
+          create(:singing_diagnosis, :completed, customer: customer,
+                 overall_score: 70, pitch_score: 68, rhythm_score: 70, expression_score: 69,
+                 created_at: i.days.ago)
+        end
+      end
+
+      it "growth_type_key が :consistency_hero を返す" do
+        card = described_class.call(customer)
+        expect(card.growth_type_key).to eq(:consistency_hero)
+      end
+    end
+
+    context "build_collection 後に circle slug と一致判定できる" do
+      let(:other) { create(:customer, domain_name: "singing", name: "別ユーザー") }
+
+      before do
+        7.times do |i|
+          create(:singing_diagnosis, :completed, customer: customer,
+                 overall_score: 70, pitch_score: 68, rhythm_score: 70, expression_score: 69,
+                 created_at: i.days.ago)
+        end
+        create(:singing_diagnosis, :completed, customer: other,
+               overall_score: 65, pitch_score: 60, rhythm_score: 70, expression_score: 60,
+               created_at: 1.day.ago)
+      end
+
+      it "circle slug で filter すると対象カードのみ残る" do
+        cards = described_class.build_collection([customer, other])
+        filtered = cards.select { |c| c.growth_type_key.to_s == "consistency_hero" }
+        expect(filtered.map(&:customer)).to include(customer)
+      end
+
+      it "filter 後の growth_type_key はすべて指定 slug と一致する" do
+        cards = described_class.build_collection([customer, other])
+        filtered = cards.select { |c| c.growth_type_key.to_s == "consistency_hero" }
+        expect(filtered).to all(satisfy { |c| c.growth_type_key == :consistency_hero })
+      end
     end
   end
 end

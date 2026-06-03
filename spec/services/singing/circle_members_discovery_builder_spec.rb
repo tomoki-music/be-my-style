@@ -172,6 +172,25 @@ RSpec.describe Singing::CircleMembersDiscoveryBuilder do
           expect(result.members_count).to be_a(Integer)
         end
       end
+
+      context "members_count override あり" do
+        let(:circle_slug) { "emotional_singer" }
+
+        it "渡した値が members_count として返る" do
+          r = described_class.call(circle_slug, members_count: 5)
+          expect(r.members_count).to eq(5)
+        end
+
+        it "0 を渡した場合も 0 が返る" do
+          r = described_class.call(circle_slug, members_count: 0)
+          expect(r.members_count).to eq(0)
+        end
+
+        it "override なしの場合は config のデフォルト値が返る" do
+          r = described_class.call(circle_slug)
+          expect(r.members_count).to be > 0
+        end
+      end
     end
   end
 end
