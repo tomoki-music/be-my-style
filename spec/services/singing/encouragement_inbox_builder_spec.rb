@@ -36,11 +36,22 @@ RSpec.describe Singing::EncouragementInboxBuilder do
       it "各itemにcustomer・reaction_type・message・icon・occurred_atが設定されている" do
         inbox = described_class.call(customer: customer)
         item = inbox.items.first
-        expect(item.customer).to be_present
+        expect(item.customer).to be_a(Customer)
         expect(item.reaction_type).to be_present
         expect(item.message).to be_present
         expect(item.icon).to be_present
         expect(item.occurred_at).to be_present
+      end
+
+      it "customer.nameがblankでもitemを作成できる" do
+        sender1.update_column(:name, "")
+
+        inbox = described_class.call(customer: customer)
+        item = inbox.items.find { |i| i.customer.id == sender1.id }
+
+        expect(item).to be_present
+        expect(item.customer).to be_a(Customer)
+        expect(item.customer.name).to be_blank
       end
 
       it "最新順（created_at DESC）にソートされている" do

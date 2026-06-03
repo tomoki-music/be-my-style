@@ -96,7 +96,8 @@
               %h3.singing-home-section__title 応援が届いています
             .encouragement-inbox__list
               - inbox.items.each do |item|
-                .encouragement-inbox__item
+                - next if item.customer.nil?
+                = link_to singing_user_path(item.customer), class: "encouragement-inbox__item" do
                   %span.encouragement-inbox__icon= item.icon
                   .encouragement-inbox__body
                     %span.encouragement-inbox__name= "#{item.customer.name.presence || 'メンバー'}さん"
