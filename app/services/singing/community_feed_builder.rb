@@ -10,6 +10,7 @@ module Singing
       :message,
       :icon,
       :occurred_at,
+      :reacted,
       keyword_init: true
     )
 
@@ -18,19 +19,40 @@ module Singing
       keyword_init: true
     )
 
-    def self.call
-      new.call
+    def self.call(current_customer: nil)
+      new(current_customer: current_customer).call
+    end
+
+    def initialize(current_customer: nil)
+      @current_customer = current_customer
     end
 
     def call
       items = personal_best_items + streak_milestone_items + challenge_achieved_items + diagnosis_completed_items
       sorted = items.compact.sort_by(&:occurred_at).reverse.first(FEED_LIMIT)
+      decorate_with_reacted(sorted)
       CommunityFeed.new(feed_items: sorted)
     rescue StandardError
       CommunityFeed.new(feed_items: [])
     end
 
     private
+
+    def decorate_with_reacted(items)
+      if @current_customer.nil?
+        items.each { |item| item.reacted = false }
+        return items
+      end
+
+      target_ids = items.map { |i| i.customer&.id }.compact.uniq
+      reacted_ids = SingingProfileReaction
+        .where(customer: @current_customer, reaction_type: "cheer", target_customer_id: target_ids)
+        .pluck(:target_customer_id)
+        .to_set
+
+      items.each { |item| item.reacted = reacted_ids.include?(item.customer&.id) }
+      items
+    end
 
     def lookback_since
       @lookback_since ||= LOOKBACK_DAYS.days.ago
@@ -95,7 +117,8 @@ module Singing
               customer:    customer,
               message:     "自己ベスト更新",
               icon:        "⭐",
-              occurred_at: created_at
+              occurred_at: created_at,
+              reacted:     false
             )
           end
         end
@@ -130,7 +153,8 @@ module Singing
                 customer:    customer,
                 message:     "#{STREAK_MILESTONE}日継続達成",
                 icon:        "🔥",
-                occurred_at: occurred_at
+                occurred_at: occurred_at,
+                reacted:     false
               )
             end
           else
@@ -159,7 +183,8 @@ module Singing
             customer:    progress.customer,
             message:     "Challenge達成",
             icon:        "🏆",
-            occurred_at: progress.completed_at
+            occurred_at: progress.completed_at,
+            reacted:     false
           )
         end
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError
@@ -182,7 +207,8 @@ module Singing
             customer:    d.customer,
             message:     "新しい診断に挑戦しました",
             icon:        "🎤",
-            occurred_at: d.created_at
+            occurred_at: d.created_at,
+            reacted:     false
           )
         end
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError

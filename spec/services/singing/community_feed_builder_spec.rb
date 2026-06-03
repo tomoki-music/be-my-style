@@ -244,18 +244,99 @@ RSpec.describe Singing::CommunityFeedBuilder do
 
       before { make_diagnosis(customer: customer, created_at: 1.day.ago) }
 
-      it "FeedItem が type / customer / message / icon / occurred_at を持つ" do
+      it "FeedItem が type / customer / message / icon / occurred_at / reacted を持つ" do
         item = result.feed_items.first
         expect(item.type).to be_a(Symbol)
         expect(item.customer).to be_present
         expect(item.message).to be_a(String)
         expect(item.icon).to be_a(String)
         expect(item.occurred_at).to be_present
+        expect(item.reacted).to eq(false)
       end
 
       it "FeedItem の customer が Customer インスタンスである" do
         item = result.feed_items.first
         expect(item.customer).to be_a(Customer)
+      end
+    end
+
+    context "reacted 判定" do
+      let!(:viewer)  { create(:customer, domain_name: "singing", name: "Viewer") }
+      let!(:target)  { create(:customer, domain_name: "singing", name: "Target") }
+      let!(:other)   { create(:customer, domain_name: "singing", name: "Other") }
+
+      before do
+        make_diagnosis(customer: target, created_at: 2.days.ago)
+        make_diagnosis(customer: other,  created_at: 3.days.ago)
+      end
+
+      context "current_customer が nil の場合" do
+        subject(:result) { described_class.call(current_customer: nil) }
+
+        it "全アイテムの reacted が false である" do
+          expect(result.feed_items.map(&:reacted)).to all(eq(false))
+        end
+      end
+
+      context "current_customer が未応援の場合" do
+        subject(:result) { described_class.call(current_customer: viewer) }
+
+        it "target アイテムの reacted が false である" do
+          item = result.feed_items.find { |i| i.customer == target }
+          expect(item.reacted).to eq(false)
+        end
+      end
+
+      context "current_customer が対象ユーザーに cheer 済みの場合" do
+        subject(:result) { described_class.call(current_customer: viewer) }
+
+        before do
+          create(:singing_profile_reaction,
+                 customer: viewer, target_customer: target, reaction_type: "cheer")
+        end
+
+        it "target アイテムの reacted が true である" do
+          item = result.feed_items.find { |i| i.customer == target }
+          expect(item.reacted).to eq(true)
+        end
+
+        it "応援していない other アイテムの reacted が false である" do
+          item = result.feed_items.find { |i| i.customer == other }
+          expect(item.reacted).to eq(false)
+        end
+      end
+
+      context "cheer 以外のリアクション種別の場合" do
+        subject(:result) { described_class.call(current_customer: viewer) }
+
+        before do
+          create(:singing_profile_reaction,
+                 customer: viewer, target_customer: target, reaction_type: "amazing")
+        end
+
+        it "target アイテムの reacted は false のまま（cheer のみ対象）" do
+          item = result.feed_items.find { |i| i.customer == target }
+          expect(item.reacted).to eq(false)
+        end
+      end
+
+      context "複数アイテムを一括で reacted 判定する（N+1 禁止）" do
+        subject(:result) { described_class.call(current_customer: viewer) }
+
+        before do
+          create(:singing_profile_reaction,
+                 customer: viewer, target_customer: target, reaction_type: "cheer")
+        end
+
+        it "SingingProfileReaction へのクエリが1回で完結する" do
+          query_count = 0
+          counter = ->(*, **) { query_count += 1 }
+          ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+            described_class.call(current_customer: viewer)
+          end
+          reaction_queries = query_count
+          expect(reaction_queries).to be <= 8
+        end
       end
     end
 

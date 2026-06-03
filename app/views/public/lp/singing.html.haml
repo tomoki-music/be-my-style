@@ -107,10 +107,13 @@
                       %time.community-feed__time{ datetime: item.occurred_at.iso8601 }= time_ago_in_words(item.occurred_at) + "前"
                   - if customer_signed_in? && current_customer != item.customer
                     .community-feed__actions
-                      = button_to "👏 応援する", singing_user_profile_reaction_path(item.customer, reaction_type: "cheer"),
-                          method: :post,
-                          class: "community-feed__cheer-button",
-                          data: { disable_with: "応援中..." }
+                      - if item.reacted
+                        %span.community-feed__cheered 👏 応援済み
+                      - else
+                        = button_to "👏 応援する", singing_user_profile_reaction_path(item.customer, reaction_type: "cheer"),
+                            method: :post,
+                            class: "community-feed__cheer-button",
+                            data: { disable_with: "応援中..." }
 
         - if music_home.reputation.present?
           - rep = music_home.reputation

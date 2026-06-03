@@ -579,6 +579,19 @@
     }
   }
 
+  &__cheered {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: rgba(80, 45, 180, 0.55);
+    background: rgba(220, 215, 255, 0.5);
+    border: 1px solid rgba(90, 60, 200, 0.15);
+    border-radius: 20px;
+  }
+
   &__icon {
     font-size: 1.2rem;
     line-height: 1.4;
