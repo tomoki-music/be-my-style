@@ -5438,6 +5438,26 @@ $ranking-accent: #7c4dff;
     color: #a78bfa;
     font-weight: 600;
   }
+
+  &--home {
+    background: rgba(124, 77, 255, 0.18);
+    border: 1px solid rgba(124, 77, 255, 0.35);
+    border-radius: 20px;
+    color: #c4b5fd;
+    font-weight: 700;
+    padding: 5px 14px;
+
+    &:hover {
+      background: rgba(124, 77, 255, 0.28);
+      color: #ddd6fe;
+    }
+
+    &--active {
+      background: rgba(124, 77, 255, 0.3);
+      border-color: rgba(124, 77, 255, 0.55);
+      color: #ddd6fe;
+    }
+  }
 }
 
 .singing-nav__badge {
@@ -5459,6 +5479,56 @@ $ranking-accent: #7c4dff;
   display: flex;
   gap: 12px;
   margin-left: auto;
+}
+
+.singing-nav__notif-btn {
+  align-items: center;
+  border-radius: 8px;
+  color: rgba(226, 232, 240, 0.7);
+  display: inline-flex;
+  font-size: 18px;
+  gap: 4px;
+  padding: 6px 8px;
+  position: relative;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    text-decoration: none;
+  }
+
+  &--active {
+    color: #a78bfa;
+  }
+
+  .singing-nav__badge {
+    font-size: 9px;
+    min-width: 16px;
+    padding: 3px 5px;
+    position: absolute;
+    right: 2px;
+    top: 2px;
+  }
+}
+
+.singing-nav__notif-icon {
+  display: flex;
+}
+
+.singing-nav__sub-link {
+  color: rgba(226, 232, 240, 0.5);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s;
+  white-space: nowrap;
+
+  &:hover {
+    color: rgba(226, 232, 240, 0.8);
+    text-decoration: none;
+  }
 }
 
 .singing-nav__cta-btn {
@@ -5653,7 +5723,25 @@ $ranking-accent: #7c4dff;
 .singing-nav__mobile-links {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0;
+}
+
+.singing-nav__mobile-section {
+  margin-bottom: 8px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.singing-nav__mobile-section-label {
+  color: rgba(226, 232, 240, 0.4);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+  padding: 8px 16px 4px;
+  text-transform: uppercase;
 }
 
 .singing-nav__mobile-link {
@@ -5683,6 +5771,17 @@ $ranking-accent: #7c4dff;
     &:hover {
       background: rgba(124, 77, 255, 0.2);
       color: #b89dff;
+    }
+  }
+
+  &--home {
+    background: rgba(124, 77, 255, 0.15);
+    color: #c4b5fd;
+    font-weight: 700;
+
+    &:hover {
+      background: rgba(124, 77, 255, 0.22);
+      color: #ddd6fe;
     }
   }
 
