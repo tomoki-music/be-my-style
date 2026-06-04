@@ -112,6 +112,22 @@
               - personal_music_story.story_lines.each do |line|
                 %li.personal-music-story-card__item= line
 
+        - music_milestones = music_home.music_milestones
+        - if customer_signed_in? && music_milestones&.active?
+          .music-milestones-card
+            .music-milestones-card__header
+              %span.music-milestones-card__eyebrow Music Milestones
+              %h3.music-milestones-card__title 最近の音楽マイルストーン
+              %p.music-milestones-card__description 小さな節目も大切な成長です。
+            .music-milestones-card__list
+              - music_milestones.milestones.each do |milestone|
+                .music-milestones-card__item
+                  %span.music-milestones-card__icon= milestone.icon
+                  .music-milestones-card__body
+                    %strong.music-milestones-card__title-text= milestone.title
+                    %span.music-milestones-card__message= milestone.message
+                  %time.music-milestones-card__time{ datetime: milestone.occurred_at.iso8601 }= time_ago_in_words(milestone.occurred_at) + "前"
+
         - community_recommendation = music_home.community_recommendation
         - if customer_signed_in? && community_recommendation&.active?
           .community-recommendation-card
