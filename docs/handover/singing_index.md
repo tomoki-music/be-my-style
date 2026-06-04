@@ -25,6 +25,12 @@ docs/handover/singing_activity_signal_guidelines.md
 docs/handover/singing_empty_state_guidelines.md
 ```
 
+グローバルナビ（メニュー構成・追加判断・スタイル方針）に触る場合は、以下を読む。
+
+```text
+docs/handover/singing_navigation_guidelines.md
+```
+
 ## 3. いつ読むべきか
 
 ```text
@@ -52,6 +58,9 @@ Activity Signal の target_customer_id、occurred_at、source の意味を使う
 初回ユーザー向け fallback や CTA コピーを触る:
   docs/handover/singing_empty_state_guidelines.md
 ```
+
+グローバルナビのメニュー追加・変更・スタイル調整をする:
+  docs/handover/singing_navigation_guidelines.md
 
 判断に迷う場合は、まず `singing_home_card_guidelines.md` を読み、Activity Signal や空状態に関わる部分だけ追加で該当 docs を確認する。
 
@@ -86,6 +95,8 @@ Home card の役割カテゴリと配置判断を確認したか
 ActivitySignalBuilder の意味を変えていないか
 空状態が docs 方針とズレていないか
 禁止表現を使っていないか
+グローバルナビを変えた場合、singing_navigation_guidelines を更新したか
+PC メインリンクが 5 項目以内か確認したか
 対象 spec を通したか
 git diff --check を通したか
 ```
