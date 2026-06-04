@@ -31,6 +31,12 @@ docs/handover/singing_empty_state_guidelines.md
 docs/handover/singing_navigation_guidelines.md
 ```
 
+作業開始前・コミット前・push 前のブランチ確認は以下を読む。
+
+```text
+docs/handover/branch_safety_checklist.md
+```
+
 ## 3. いつ読むべきか
 
 ```text
@@ -89,6 +95,8 @@ PR 前に以下を確認する。
 
 ```text
 該当 docs を読んだか
+現在ブランチが feature/* であることを確認したか（branch_safety_checklist 参照）
+main に誤コミットしていないか
 MusicCommunityHomeBuilder の DTO 一覧と Home 表示順を確認したか
 Home card の役割カテゴリと配置判断を確認したか
 表示順を変えた場合、home_card_guidelines を更新したか
