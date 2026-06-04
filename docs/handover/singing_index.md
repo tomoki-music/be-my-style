@@ -2,7 +2,7 @@
 
 この index は、Singing 領域の実装前に読むべき handover docs を整理する入口として使う。
 
-Phase24〜30 で Singing Home、Activity Signal、空状態の運用ルールが増えてきたため、今後の Agent が関連 docs を見落とさないように、「どの docs をいつ読むべきか」を明文化する。
+Phase24〜31 で Singing Home、Activity Signal、空状態の運用ルールが増えてきたため、今後の Agent が関連 docs を見落とさないように、「どの docs をいつ読むべきか」を明文化する。
 
 ## 1. この index の目的
 
