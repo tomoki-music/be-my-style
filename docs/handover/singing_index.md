@@ -2,7 +2,7 @@
 
 この index は、Singing 領域の実装前に読むべき handover docs を整理する入口として使う。
 
-Phase24〜29 で Singing Home、Activity Signal、空状態の運用ルールが増えてきたため、今後の Agent が関連 docs を見落とさないように、「どの docs をいつ読むべきか」を明文化する。
+Phase24〜30 で Singing Home、Activity Signal、空状態の運用ルールが増えてきたため、今後の Agent が関連 docs を見落とさないように、「どの docs をいつ読むべきか」を明文化する。
 
 ## 1. この index の目的
 
@@ -29,6 +29,9 @@ docs/handover/singing_empty_state_guidelines.md
 
 ```text
 Home card 追加・表示順変更:
+  docs/handover/singing_home_card_guidelines.md
+
+Home card の役割カテゴリや配置判断を確認する:
   docs/handover/singing_home_card_guidelines.md
 
 MusicCommunityHomeBuilder の DTO 一覧や Home 表示順を確認する:
@@ -78,6 +81,7 @@ PR 前に以下を確認する。
 ```text
 該当 docs を読んだか
 MusicCommunityHomeBuilder の DTO 一覧と Home 表示順を確認したか
+Home card の役割カテゴリと配置判断を確認したか
 表示順を変えた場合、home_card_guidelines を更新したか
 ActivitySignalBuilder の意味を変えていないか
 空状態が docs 方針とズレていないか
