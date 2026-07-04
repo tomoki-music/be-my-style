@@ -84,20 +84,16 @@ RSpec.describe "Public::Events", type: :request do
         CommunityCustomer.find_or_create_by!(customer: customer, community: premium_origin_community)
       end
 
-      it "Coreユーザーはnewでブロックされ、Premium案内が表示されること" do
+      it "管理コミュニティ権限があればCoreユーザーでもPremium由来コミュニティで作成ページを表示できること" do
         get new_public_event_path(community_id: premium_origin_community.id)
 
-        expect(response).to redirect_to(public_community_path(premium_origin_community))
-        follow_redirect!
-        expect(response.body).to include("Premiumプランが必要です")
+        expect(response.status).to eq 200
       end
 
-      it "Coreユーザーはcreateでブロックされ、イベントが作成されないこと" do
+      it "管理コミュニティ権限があればCoreユーザーでもPremium由来コミュニティでイベントを作成できること" do
         expect do
           post public_events_path, params: event_create_params(premium_origin_community)
-        end.not_to change(Event, :count)
-
-        expect(response).to redirect_to(public_community_path(premium_origin_community))
+        end.to change(Event, :count).by(1)
       end
 
       it "PremiumユーザーはPremium由来コミュニティで作成ページを表示できること" do
@@ -106,6 +102,30 @@ RSpec.describe "Public::Events", type: :request do
         get new_public_event_path(community_id: premium_origin_community.id)
 
         expect(response.status).to eq 200
+      end
+
+      context "管理コミュニティ権限のないユーザーの場合" do
+        let(:unmanaged_premium_community) { FactoryBot.create(:community, :premium_origin, owner_id: other_customer.id) }
+
+        before do
+          CommunityCustomer.find_or_create_by!(customer: customer, community: unmanaged_premium_community)
+        end
+
+        it "Coreユーザーはnewでブロックされ、Premium案内が表示されること" do
+          get new_public_event_path(community_id: unmanaged_premium_community.id)
+
+          expect(response).to redirect_to(public_community_path(unmanaged_premium_community))
+          follow_redirect!
+          expect(response.body).to include("Premiumプランが必要です")
+        end
+
+        it "Coreユーザーはcreateでブロックされ、イベントが作成されないこと" do
+          expect do
+            post public_events_path, params: event_create_params(unmanaged_premium_community)
+          end.not_to change(Event, :count)
+
+          expect(response).to redirect_to(public_community_path(unmanaged_premium_community))
+        end
       end
     end
     context "event編集ページ(edit)が正しく表示される" do
@@ -258,7 +278,7 @@ RSpec.describe "Public::Events", type: :request do
         songs_attributes: {
           "0" => {
             song_name: "Session Song",
-            performance_time: "5",
+            performance_time: "5:00",
             join_parts_attributes: {
               "0" => { join_part_name: "Vocal" }
             }

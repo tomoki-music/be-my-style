@@ -385,9 +385,8 @@ class Customer < ApplicationRecord
   
   def available_communities_for_event
     return Community.all if admin?
-    return Community.none unless can_create_events_by_plan?
 
-    manageable_communities.select { |community| event_creation_required_plan_met?(community) }
+    manageable_communities
   end
 
   def eligible_to_create_event_for?(community = nil)
@@ -398,8 +397,12 @@ class Customer < ApplicationRecord
     manageable_communities.exists?
   end
 
+  # 管理コミュニティ権限（admin付与のCommunityOwner）があるコミュニティは、
+  # Coreプラン以上の判定を問わずイベント作成を許可する。
   def can_create_event?(community = nil)
     return true if admin?
+    return true if community.present? && can_manage_community?(community)
+    return true if community.blank? && manageable_communities.exists?
     return false unless can_create_events_by_plan?
     return true if community.blank?
 
