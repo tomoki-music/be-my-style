@@ -308,24 +308,24 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(customer.can_create_event?(owned_community)).to eq true
       end
 
-      it 'CoreユーザーはPremium由来コミュニティのオーナーでもイベント作成できないこと' do
+      it '管理コミュニティ権限があればCoreユーザーでもPremium由来コミュニティのイベント作成できること' do
         owned_community.update!(required_plan_for_event_creation: "premium")
         customer.create_subscription!(status: "active", plan: "core")
 
-        expect(customer.can_create_event?(owned_community)).to eq false
+        expect(customer.can_create_event?(owned_community)).to eq true
       end
 
-      it 'Freeユーザーは通常コミュニティのオーナーでもイベント作成できないこと' do
-        expect(customer.can_create_event?(owned_community)).to eq false
+      it '管理コミュニティ権限があればFreeユーザーでも通常コミュニティのイベント作成できること' do
+        expect(customer.can_create_event?(owned_community)).to eq true
       end
 
-      it 'Lightユーザーは通常コミュニティのオーナーでもイベント作成できないこと' do
+      it '管理コミュニティ権限があればLightユーザーでも通常コミュニティのイベント作成できること' do
         customer.create_subscription!(status: "active", plan: "light")
 
-        expect(customer.can_create_event?(owned_community)).to eq false
+        expect(customer.can_create_event?(owned_community)).to eq true
       end
 
-      it 'オーナーでないCoreユーザーは通常コミュニティでもイベント作成できないこと' do
+      it '管理コミュニティ権限がなければCoreユーザーでも当該コミュニティのイベント作成できないこと' do
         customer.create_subscription!(status: "active", plan: "core")
         other_community = FactoryBot.create(:community, owner_id: other_customer.id)
         CommunityCustomer.find_or_create_by!(customer: customer, community: other_community)

@@ -333,7 +333,7 @@ class Public::EventsController < ApplicationController
 
     if community_param_present && community.blank?
       redirect_to public_events_path, alert: "イベントを作成するコミュニティを確認してください。"
-    elsif community&.premium_event_creation_required? && !current_customer.premium? && !current_customer.admin?
+    elsif community&.premium_event_creation_required? && !current_customer.premium? && !current_customer.admin? && !current_customer.can_manage_community?(community)
       redirect_to public_community_path(community), alert: premium_event_creation_required_message
     elsif !current_customer.can_create_event?(community)
       redirect_to public_events_path, alert: "イベントを作成する権限がありません。"
