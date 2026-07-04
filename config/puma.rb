@@ -25,14 +25,14 @@ else
   tmp_dir = "#{app_dir}/tmp"
   log_dir = "#{app_dir}/log"
 
-  bind "unix://#{tmp_dir}/sockets/puma.sock"
+  bind "unix:///run/puma/puma.sock"
   pidfile "#{tmp_dir}/pids/puma.pid"
   state_path "#{tmp_dir}/pids/puma.state"
 
   stdout_redirect "#{log_dir}/puma.stdout.log", "#{log_dir}/puma.stderr.log", true
 
   # pumactlを使う場合はこちら（任意）
-  activate_control_app "unix://#{tmp_dir}/sockets/pumactl.sock"
+  activate_control_app "unix:///run/puma/pumactl.sock"
 end
 
 # プロセスフォーク前後のDB接続管理
