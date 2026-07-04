@@ -242,6 +242,20 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         expect(customer.has_feature?(:music_direct_chat)).to eq true
       end
 
+      it 'freeはコミュニティチャットの閲覧・投稿ともに利用できること' do
+        expect(customer.has_feature?(:music_community_chat)).to eq true
+      end
+
+      it 'lightもコミュニティチャットの閲覧・投稿ともに利用できること' do
+        customer.create_subscription!(status: "active", plan: "light")
+
+        expect(customer.has_feature?(:music_community_chat)).to eq true
+      end
+
+      it '他の有料限定機能(イベント作成)はfreeでは利用できないこと' do
+        expect(customer.has_feature?(:music_event_create)).to eq false
+      end
+
       it 'lightは履歴比較まで利用対象になること' do
         customer.create_subscription!(status: "active", plan: "light")
 

@@ -73,15 +73,8 @@
             %tr
               %th{scope:"row"} チャットする
               %td
-                - if ChatRoomCustomer.where(customer_id: current_customer.id, community_id: @community.id).present? && feature_available?(:music_community_chat)
+                - if ChatRoomCustomer.where(customer_id: current_customer.id, community_id: @community.id).present?
                   = link_to 'コミュニティのチャットルームへ', community_create_public_chat_rooms_path(community_id: @community.id), method: :post, class: "btn btn-sm btn-info community-show-btn", data: { 'turbolinks': false }
-                - elsif ChatRoomCustomer.where(customer_id: current_customer.id, community_id: @community.id).present?
-                  = render "shared/feature_gate",
-                    feature_key: :music_community_chat,
-                    title: "コミュニティチャット",
-                    message: "参加メンバーとの会話はlightプラン以上で開放できます。",
-                    cta: "lightでチャットを開放",
-                    class_name: "feature-gate--table"
                 - else
                   コミュニティに参加するとチャットできます。
             - if current_customer.communities.include?(@community) || current_customer.can_manage_community?(@community)

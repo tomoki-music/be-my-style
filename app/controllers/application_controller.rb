@@ -8,10 +8,10 @@ class ApplicationController < ActionController::Base
       upgrade_path: -> { public_lp_path(anchor: "lp-section") }
     },
     music_community_chat: {
-      required_plan: "light",
+      required_plan: "free",
       title: "コミュニティチャット",
-      message: "lightプラン以上でコミュニティチャットに参加できます。メンバー同士の会話をもっと深めたい方におすすめです。",
-      cta: "lightでチャットを開放",
+      message: "コミュニティチャットはfreeプランから閲覧・投稿できます。",
+      cta: "チャットを始める",
       upgrade_path: -> { public_lp_path(anchor: "lp-section") }
     },
     music_activity_create: {
