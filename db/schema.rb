@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_06_02_000002) do
+ActiveRecord::Schema.define(version: 2026_07_07_000001) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -150,7 +150,7 @@ ActiveRecord::Schema.define(version: 2026_06_02_000002) do
   end
 
   create_table "comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.string "comment"
+    t.text "comment"
     t.bigint "customer_id", null: false
     t.bigint "activity_id", null: false
     t.datetime "created_at", precision: 6, null: false
@@ -831,7 +831,7 @@ ActiveRecord::Schema.define(version: 2026_06_02_000002) do
   end
 
   create_table "requests", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.string "request"
+    t.text "request"
     t.bigint "customer_id", null: false
     t.bigint "event_id", null: false
     t.datetime "created_at", precision: 6, null: false

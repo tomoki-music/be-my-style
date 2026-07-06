@@ -19,6 +19,24 @@ RSpec.describe Comment, type: :model do
         comment.comment = ''
         expect(comment).to be_invalid
       end
+
+      it '3000文字を超えるコメントは投稿できない' do
+        comment.comment = "あ" * 3001
+        expect(comment).to be_invalid
+      end
+    end
+
+    context '長文・スタンプコメントの場合' do
+      it '3000文字ちょうどのコメントは投稿できる' do
+        comment.comment = "あ" * 3000
+        expect(comment).to be_valid
+      end
+
+      it 'コメント本文が空でもスタンプがあれば投稿できる' do
+        comment.comment = ''
+        comment.stamp_type = 'fire'
+        expect(comment).to be_valid
+      end
     end
   end
 
