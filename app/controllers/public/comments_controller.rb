@@ -16,6 +16,7 @@ class Public::CommentsController < ApplicationController
       end
       flash.now[:notice] = 'コメントを投稿しました'
     else
+      flash[:alert] = @comment.errors.full_messages.join('、')
       redirect_back(fallback_location: root_path)
     end
   end

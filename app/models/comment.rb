@@ -4,6 +4,7 @@ class Comment < ApplicationRecord
   belongs_to :customer
   belongs_to :activity
 
+  validates :comment, length: { maximum: 3000 }, allow_blank: true
   validate :comment_or_stamp_present
 
   private
