@@ -107,7 +107,7 @@ class Public::EventsController < ApplicationController
 
     #CSVダウロード
     @songs = @event.songs
-    @current_customer_session_credit_available = current_customer.session_credit_available_for?(@event)
+    @current_customer_session_credit_available = current_customer.session_credit_available_for?
     @current_customer_session_credit_amount = current_customer.session_credit_amount_for(@event)
     @current_customer_remaining_fee = [@event.entrance_fee.to_i - @current_customer_session_credit_amount, 0].max
     respond_to do |format|
@@ -229,7 +229,7 @@ class Public::EventsController < ApplicationController
       @join_part_ids.each_with_index do |join_part_id, index|
         @join_parts << "【" + JoinPart.find(join_part_id).song.song_name + "】の曲に" + "【" + JoinPart.find(join_part_id).join_part_name + "】で参加！"
       end
-      @session_credit_available = current_customer.session_credit_available_for?(@event)
+      @session_credit_available = current_customer.session_credit_available_for?
       @session_credit_amount = current_customer.session_credit_amount_for(@event)
       @remaining_fee_after_credit = [@event.entrance_fee.to_i - @session_credit_amount, 0].max
     end
@@ -352,14 +352,18 @@ class Public::EventsController < ApplicationController
 
   def apply_session_credit_if_needed!(event, customer, created_join_records)
     return if created_join_records.blank?
-    return unless customer.session_credit_available_for?(event)
 
-    credit_record = created_join_records.first
-    credit_record.update!(
-      session_credit_applied: true,
-      session_credit_amount: customer.session_credit_amount_for(event),
-      plan_snapshot: customer.plan
-    )
+    ActiveRecord::Base.transaction do
+      customer.lock!
+      next unless customer.session_credit_available_for?
+
+      credit_record = created_join_records.first
+      credit_record.update!(
+        session_credit_applied: true,
+        session_credit_amount: customer.session_credit_amount_for(event),
+        plan_snapshot: customer.plan
+      )
+    end
   end
 
   def transfer_session_credit_if_needed!(event, customer, credited_record)

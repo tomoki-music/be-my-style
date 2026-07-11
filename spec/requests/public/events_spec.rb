@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe "Public::Events", type: :request do
+  include ActiveSupport::Testing::TimeHelpers
+
   let(:customer) { FactoryBot.create(:customer, :customer_with_parts) }
   let(:other_customer) { FactoryBot.create(:customer, :customer_with_parts) }
   let(:community) { FactoryBot.create(:community) }
@@ -190,6 +192,88 @@ RSpec.describe "Public::Events", type: :request do
         expect do
           delete public_event_delete_path(event, customer_id: customer, join_part_id: join_part.id)
         end.to change(JoinPartCustomer, :count).by(-1)
+      end
+    end
+
+    context "有料プラン月次特典(session_credit)の判定" do
+      let(:join_part_a) { FactoryBot.create(:join_part, song: event.songs.first) }
+      let(:another_event) do
+        FactoryBot.create(:event, :event_with_songs, customer: customer, community: community, entrance_fee: 2000)
+      end
+      let(:join_part_b) { FactoryBot.create(:join_part, song: another_event.songs.first) }
+
+      it "先月特典を利用していても今月はまだ未利用として表示され、1,500円が適用されること" do
+        travel_to(Time.zone.local(2026, 6, 15, 12, 0, 0)) do
+          post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
+        end
+
+        travel_to(Time.zone.local(2026, 7, 10, 12, 0, 0)) do
+          get public_event_path(another_event)
+        end
+
+        expect(response.body).to include("今月の特典対象")
+        expect(response.body).to include("-1,500円")
+      end
+
+      it "今月すでに特典を利用済みの場合、別イベントでは今月分は利用済みと表示されること" do
+        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
+          post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
+        end
+
+        travel_to(Time.zone.local(2026, 7, 20, 12, 0, 0)) do
+          get public_event_path(another_event)
+        end
+
+        expect(response.body).to include("今月特典は使用済み")
+      end
+
+      it "同月内に2つのイベントへ参加登録しても特典が二重に消化されないこと" do
+        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
+          post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
+          post public_event_join_path(another_event), params: { join_part_ids: { "0" => join_part_b.id.to_s } }
+        end
+
+        credited_count = JoinPartCustomer.where(customer_id: customer.id, session_credit_applied: true).count
+        expect(credited_count).to eq 1
+      end
+
+      it "特典適用済みの参加を取消し、同イベントの他パートへの参加が残っていない場合は特典が消滅すること(既存仕様)" do
+        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
+          post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
+        end
+        expect(JoinPartCustomer.where(customer_id: customer.id, session_credit_applied: true).count).to eq 1
+
+        travel_to(Time.zone.local(2026, 7, 5, 12, 0, 0)) do
+          delete public_event_delete_path(event, customer_id: customer.id, join_part_id: join_part_a.id)
+        end
+        expect(JoinPartCustomer.where(customer_id: customer.id, session_credit_applied: true).count).to eq 0
+
+        travel_to(Time.zone.local(2026, 7, 20, 12, 0, 0)) do
+          expect(customer.session_credit_available_for?).to eq true
+        end
+      end
+
+      it "特典適用済みの参加を取消しても同イベントの別パートに参加が残っている場合は特典が引き継がれること(既存仕様)" do
+        second_song = FactoryBot.create(:song, event: event)
+        join_part_c = FactoryBot.create(:join_part, song: second_song)
+
+        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
+          post public_event_join_path(event), params: {
+            join_part_ids: { "0" => join_part_a.id.to_s, "1" => join_part_c.id.to_s }
+          }
+        end
+        expect(JoinPartCustomer.where(customer_id: customer.id, session_credit_applied: true).count).to eq 1
+
+        travel_to(Time.zone.local(2026, 7, 5, 12, 0, 0)) do
+          delete public_event_delete_path(event, customer_id: customer.id, join_part_id: join_part_a.id)
+        end
+
+        remaining = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part_c.id)
+        expect(remaining.session_credit_applied?).to eq true
+
+        travel_to(Time.zone.local(2026, 7, 20, 12, 0, 0)) do
+          expect(customer.session_credit_available_for?).to eq false
+        end
       end
     end
   end

@@ -203,14 +203,14 @@ class Customer < ApplicationRecord
     MONTHLY_SESSION_CREDIT_AMOUNT
   end
 
-  def session_credit_available_for?(event)
+  def session_credit_available_for?(reference_time = Time.current)
     return false unless paid_plan?
 
-    monthly_credited_participation_scope(event).none?
+    monthly_credited_participation_scope(reference_time).none?
   end
 
-  def session_credit_amount_for(event)
-    return 0 unless session_credit_available_for?(event)
+  def session_credit_amount_for(event, reference_time = Time.current)
+    return 0 unless session_credit_available_for?(reference_time)
 
     [event.entrance_fee.to_i, session_credit_amount].min
   end
@@ -296,11 +296,10 @@ class Customer < ApplicationRecord
 
   private
 
-  def monthly_credited_participation_scope(event)
+  def monthly_credited_participation_scope(reference_time)
     join_part_customers
       .with_session_credit
-      .joins(join_part: { song: :event })
-      .where(events: { event_start_time: event.event_start_time.in_time_zone.all_month })
+      .where(created_at: reference_time.in_time_zone.all_month)
   end
 
   public
