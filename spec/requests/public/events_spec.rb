@@ -275,6 +275,78 @@ RSpec.describe "Public::Events", type: :request do
           expect(customer.session_credit_available_for?).to eq false
         end
       end
+
+      it "有料プランユーザーがイベント詳細を表示できること" do
+        get public_event_path(event)
+
+        expect(response.status).to eq 200
+      end
+
+      it "参加確認画面を表示できること" do
+        get public_event_join_confirm_path(event), params: { event: { join_part_ids: [join_part_a.id.to_s] } }
+
+        expect(response.status).to eq 200
+        expect(response.body).to include("参加確認画面")
+        expect(response.body).to include("今月の有料プラン特典")
+      end
+
+      it "イベント参加登録を完了できること" do
+        post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
+
+        expect(response).to redirect_to(public_event_path(event))
+        expect(JoinPartCustomer.exists?(customer_id: customer.id, join_part_id: join_part_a.id)).to eq true
+      end
+
+      it "今月未使用なら1回目の申込に1,500円特典が適用され、記録として保存されること" do
+        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
+          post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
+        end
+
+        credited = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part_a.id)
+        expect(credited.session_credit_applied?).to eq true
+        expect(credited.session_credit_amount).to eq 1500
+      end
+
+      it "今月使用済みなら2件目の申込には特典が適用されず0円で保存されること" do
+        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
+          post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
+          post public_event_join_path(another_event), params: { join_part_ids: { "0" => join_part_b.id.to_s } }
+        end
+
+        second = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part_b.id)
+        expect(second.session_credit_applied?).to eq false
+        expect(second.session_credit_amount).to eq 0
+      end
+
+      it "将来月(8月)に開催される別イベントでも、実際の申込月(6月/7月)を基準に判定されること" do
+        future_event_a = FactoryBot.create(
+          :event, :event_with_songs, customer: customer, community: community, entrance_fee: 2000,
+          event_start_time: Time.zone.local(2026, 8, 15, 19, 0, 0),
+          event_end_time: Time.zone.local(2026, 8, 15, 21, 0, 0),
+          event_entry_deadline: Time.zone.local(2026, 8, 10, 0, 0, 0)
+        )
+        future_join_part_a = FactoryBot.create(:join_part, song: future_event_a.songs.first)
+
+        future_event_b = FactoryBot.create(
+          :event, :event_with_songs, customer: customer, community: community, entrance_fee: 2000,
+          event_start_time: Time.zone.local(2026, 8, 20, 19, 0, 0),
+          event_end_time: Time.zone.local(2026, 8, 20, 21, 0, 0),
+          event_entry_deadline: Time.zone.local(2026, 8, 15, 0, 0, 0)
+        )
+        future_join_part_b = FactoryBot.create(:join_part, song: future_event_b.songs.first)
+
+        travel_to(Time.zone.local(2026, 6, 10, 12, 0, 0)) do
+          post public_event_join_path(future_event_a), params: { join_part_ids: { "0" => future_join_part_a.id.to_s } }
+        end
+
+        travel_to(Time.zone.local(2026, 7, 5, 12, 0, 0)) do
+          post public_event_join_path(future_event_b), params: { join_part_ids: { "0" => future_join_part_b.id.to_s } }
+        end
+
+        credited_in_july = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: future_join_part_b.id)
+        expect(credited_in_july.session_credit_applied?).to eq true
+        expect(credited_in_july.session_credit_amount).to eq 1500
+      end
     end
   end
 

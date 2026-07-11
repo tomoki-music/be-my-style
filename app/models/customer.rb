@@ -203,14 +203,14 @@ class Customer < ApplicationRecord
     MONTHLY_SESSION_CREDIT_AMOUNT
   end
 
-  def session_credit_available_for?(reference_time = Time.current)
+  def session_credit_available_for?(reference_time: Time.current)
     return false unless paid_plan?
 
     monthly_credited_participation_scope(reference_time).none?
   end
 
-  def session_credit_amount_for(event, reference_time = Time.current)
-    return 0 unless session_credit_available_for?(reference_time)
+  def session_credit_amount_for(event, reference_time: Time.current)
+    return 0 unless session_credit_available_for?(reference_time: reference_time)
 
     [event.entrance_fee.to_i, session_credit_amount].min
   end
