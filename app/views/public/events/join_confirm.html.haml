@@ -15,7 +15,23 @@
 
   - if current_customer.paid_plan?
     .join-credit-summary
-      - if @session_credit_available
+      - if @current_customer_event_credit_applied
+        %h4 今月の有料プラン特典
+        %p
+          このイベントには特典が適用済みです。今回の追加パート登録によって、特典が重複して適用されることはありません。
+        .join-credit-summary__breakdown
+          .join-credit-summary__row
+            %span イベント参加費
+            %strong= "#{@event.entrance_fee.to_s(:delimited)}円"
+          .join-credit-summary__row
+            %span 特典適用
+            %strong.join-credit-summary__discount= "-#{@session_credit_amount.to_s(:delimited)}円"
+          .join-credit-summary__row.join-credit-summary__row--total
+            %span 当日のお支払い
+            %strong= "#{@remaining_fee_after_credit.to_s(:delimited)}円"
+        - if @remaining_fee_after_credit.zero?
+          %p.join-credit-summary__free 現地集金は不要です。
+      - elsif @session_credit_available
         %h4 今月の有料プラン特典
         %p
           このイベントでは

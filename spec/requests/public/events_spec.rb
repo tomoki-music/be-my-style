@@ -202,6 +202,18 @@ RSpec.describe "Public::Events", type: :request do
       end
       let(:join_part_b) { FactoryBot.create(:join_part, song: another_event.songs.first) }
 
+      # 参加費(2,000円) > 特典額(1,500円) となる「残額あり」パターン専用のイベント。
+      # 既存の`event`はentrance_feeがデフォルト1,500円で特典額と一致してしまい、
+      # 残額0円のケースしか再現できないため、複数パート同時登録の回帰テスト用に別途用意する。
+      let(:partial_fee_event) do
+        FactoryBot.create(:event, :event_with_songs, customer: customer, community: community, entrance_fee: 2000)
+      end
+      let(:partial_fee_song2) { FactoryBot.create(:song, event: partial_fee_event) }
+      let(:partial_join_part_1) { FactoryBot.create(:join_part, song: partial_fee_event.songs.first) }
+      let(:partial_join_part_2) { FactoryBot.create(:join_part, song: partial_fee_song2) }
+      let(:partial_join_part_3) { FactoryBot.create(:join_part, song: partial_fee_song2) }
+      let(:partial_join_part_4) { FactoryBot.create(:join_part, song: partial_fee_song2) }
+
       it "先月特典を利用していても今月はまだ未利用として表示され、1,500円が適用されること" do
         travel_to(Time.zone.local(2026, 6, 15, 12, 0, 0)) do
           post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
@@ -346,6 +358,130 @@ RSpec.describe "Public::Events", type: :request do
         credited_in_july = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: future_join_part_b.id)
         expect(credited_in_july.session_credit_applied?).to eq true
         expect(credited_in_july.session_credit_amount).to eq 1500
+      end
+    end
+
+    context "特典適用済みイベントの料金表示(回帰テスト)" do
+      let(:join_part_a) { FactoryBot.create(:join_part, song: event.songs.first) }
+      let(:another_event) do
+        FactoryBot.create(:event, :event_with_songs, customer: customer, community: community, entrance_fee: 2000)
+      end
+      let(:join_part_b) { FactoryBot.create(:join_part, song: another_event.songs.first) }
+
+      let(:partial_fee_event) do
+        FactoryBot.create(:event, :event_with_songs, customer: customer, community: community, entrance_fee: 2000)
+      end
+      let(:partial_fee_song2) { FactoryBot.create(:song, event: partial_fee_event) }
+      let(:partial_join_part_1) { FactoryBot.create(:join_part, song: partial_fee_event.songs.first) }
+      let(:partial_join_part_2) { FactoryBot.create(:join_part, song: partial_fee_song2) }
+      let(:partial_join_part_3) { FactoryBot.create(:join_part, song: partial_fee_song2) }
+      let(:partial_join_part_4) { FactoryBot.create(:join_part, song: partial_fee_song2) }
+
+      it "ケース1: 参加費2,000円のイベントへ4パート同時参加し特典適用済みの場合、再表示で500円と正しく表示されること" do
+        travel_to(Time.zone.local(2026, 7, 11, 17, 55, 13)) do
+          post public_event_join_path(partial_fee_event), params: {
+            join_part_ids: {
+              "0" => partial_join_part_1.id.to_s,
+              "1" => partial_join_part_2.id.to_s,
+              "2" => partial_join_part_3.id.to_s,
+              "3" => partial_join_part_4.id.to_s
+            }
+          }
+        end
+        expect(JoinPartCustomer.where(customer_id: customer.id, session_credit_applied: true).count).to eq 1
+
+        get public_event_path(partial_fee_event)
+
+        expect(response.body).to include("-1,500円")
+        expect(response.body).to match(%r{当日のお支払い</span>\s*<strong>500円</strong>})
+        expect(response.body).not_to include("別のイベントで利用済みです")
+      end
+
+      it "ケース2: 特典適用済みレコードが取得順序上2件目以降でも、イベント単位で正しく1,500円/500円を表示すること" do
+        first_record = JoinPartCustomer.create!(
+          customer: customer, join_part: partial_join_part_1,
+          session_credit_applied: false, session_credit_amount: 0
+        )
+        second_record = JoinPartCustomer.create!(
+          customer: customer, join_part: partial_join_part_2,
+          session_credit_applied: true, session_credit_amount: 1500, plan_snapshot: "core"
+        )
+        expect(first_record.id).to be < second_record.id
+
+        get public_event_path(partial_fee_event)
+
+        expect(response.body).to include("-1,500円")
+        expect(response.body).to match(%r{当日のお支払い</span>\s*<strong>500円</strong>})
+        expect(response.body).not_to include("別のイベントで利用済みです")
+      end
+
+      it "ケース3: 別イベントで特典を使用済みの場合、そのイベント自身では「別イベントで利用済み」と表示されないこと" do
+        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
+          post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
+        end
+
+        travel_to(Time.zone.local(2026, 7, 20, 12, 0, 0)) do
+          get public_event_path(another_event)
+        end
+        expect(response.body).to include("別のイベントで利用済みです")
+
+        travel_to(Time.zone.local(2026, 7, 20, 12, 0, 0)) do
+          get public_event_path(event)
+        end
+        expect(response.body).not_to include("別のイベントで利用済みです")
+        expect(response.body).to match(%r{当日のお支払い</span>\s*<strong>0円</strong>})
+      end
+
+      it "ケース5: 残額500円がある場合、参加者一覧に「集金不要」と表示されないこと" do
+        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
+          post public_event_join_path(another_event), params: { join_part_ids: { "0" => join_part_b.id.to_s } }
+        end
+
+        get public_event_path(another_event)
+
+        expect(response.body).not_to include("集金不要")
+        expect(response.body).to include("当日集金")
+        expect(response.body).to include("500円")
+      end
+
+      it "ケース6: 残額0円の場合、参加者一覧に「集金不要」と表示されること" do
+        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
+          post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
+        end
+
+        get public_event_path(event)
+
+        expect(response.body).to include("集金不要")
+      end
+
+      it "ケース7: 同一イベントへの追加パート登録確認画面では「別イベントで利用済み」と表示されず、適用済みと分かる表示になること" do
+        extra_join_part = FactoryBot.create(:join_part, song: partial_fee_song2)
+
+        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
+          post public_event_join_path(partial_fee_event), params: { join_part_ids: { "0" => partial_join_part_1.id.to_s } }
+        end
+
+        travel_to(Time.zone.local(2026, 7, 5, 12, 0, 0)) do
+          get public_event_join_confirm_path(partial_fee_event), params: { event: { join_part_ids: [extra_join_part.id.to_s] } }
+        end
+
+        expect(response.body).to include("特典が適用済み")
+        expect(response.body).not_to include("別のイベントで利用済みです")
+        expect(response.body).to match(%r{当日のお支払い</span>\s*<strong>500円</strong>})
+      end
+
+      it "ケース8: CSV出力の集金不要判定がイベント詳細画面の残額判定と一致すること" do
+        csv_join_part = FactoryBot.create(:join_part, song: another_event.songs.first, join_part_name: "Vocal")
+
+        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
+          post public_event_join_path(another_event), params: { join_part_ids: { "0" => csv_join_part.id.to_s } }
+        end
+
+        get public_event_path(another_event, format: :csv)
+
+        expect(response.status).to eq 200
+        expect(response.body).to include("特典適用")
+        expect(response.body).not_to include("集金不要")
       end
     end
   end

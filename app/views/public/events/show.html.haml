@@ -106,7 +106,26 @@
                       = @event.entrance_fee.to_s(:delimited) + "円"
                     - if current_customer.paid_plan?
                       .session-credit-panel
-                        - if @current_customer_session_credit_available
+                        - if @current_customer_event_credit_applied
+                          %span.session-credit-panel__badge このイベントに適用済み
+                          %p
+                            このイベントには有料プラン特典として
+                            %strong= "#{@current_customer_session_credit_amount.to_s(:delimited)}円分"
+                            が適用済みです。
+                          .session-credit-panel__breakdown
+                            .session-credit-panel__row
+                              %span.session-credit-panel__label イベント参加費
+                              %strong= "#{@event.entrance_fee.to_s(:delimited)}円"
+                            .session-credit-panel__row
+                              %span.session-credit-panel__label 特典適用
+                              %strong.session-credit-panel__discount
+                                = "-#{@current_customer_session_credit_amount.to_s(:delimited)}円"
+                            .session-credit-panel__row.session-credit-panel__row--total
+                              %span.session-credit-panel__label 当日のお支払い
+                              %strong= "#{@current_customer_remaining_fee.to_s(:delimited)}円"
+                          - if @current_customer_remaining_fee.zero?
+                            %p.session-credit-panel__free 現地集金は不要です。
+                        - elsif @current_customer_session_credit_available
                           %span.session-credit-panel__badge 今月の特典対象
                           %p
                             有料プラン特典として、
@@ -135,7 +154,7 @@
                         - else
                           %span.session-credit-panel__badge.session-credit-panel__badge--muted 今月特典は使用済み
                           %p
-                            今月の1,500円分特典は別イベントで利用済みです。
+                            今月の1,500円分特典は、別のイベントで利用済みです。
                           .session-credit-panel__breakdown
                             .session-credit-panel__row.session-credit-panel__row--total
                               %span.session-credit-panel__label 今回の当日支払い
@@ -171,9 +190,14 @@
                               %i.fa-solid.fa-star
                               有料プラン
                           - if @event.session_credit_applied_for?(customer)
-                            %span.member-plan-badge.member-plan-badge--credit
-                              %i.fa-solid.fa-sparkles
-                              集金不要
+                            - if @event.participant_remaining_fee_for(customer).zero?
+                              %span.member-plan-badge.member-plan-badge--credit
+                                %i.fa-solid.fa-sparkles
+                                集金不要
+                            - else
+                              %span.member-plan-badge.member-plan-badge--credit-partial
+                                %i.fa-solid.fa-sparkles
+                                当日集金 #{@event.participant_remaining_fee_for(customer).to_s(:delimited)}円
                           %br
                           %hr
                 %tr
@@ -277,9 +301,14 @@
                                                     %i.fa-solid.fa-star
                                                     有料
                                                 - if @event.session_credit_applied_for?(customer)
-                                                  %span.member-plan-badge.member-plan-badge--credit
-                                                    %i.fa-solid.fa-sparkles
-                                                    集金不要
+                                                  - if @event.participant_remaining_fee_for(customer).zero?
+                                                    %span.member-plan-badge.member-plan-badge--credit
+                                                      %i.fa-solid.fa-sparkles
+                                                      集金不要
+                                                  - else
+                                                    %span.member-plan-badge.member-plan-badge--credit-partial
+                                                      %i.fa-solid.fa-sparkles
+                                                      当日集金 #{@event.participant_remaining_fee_for(customer).to_s(:delimited)}円
                                                 - if customer == current_customer && join_part.customers.include?(current_customer) && @event.event_start_time > Time.current + 7.days
                                                   = link_to "削除",
                                                     public_event_delete_path(@event, join_part_id: join_part.id, customer_id: customer.id),
