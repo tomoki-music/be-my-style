@@ -195,97 +195,159 @@ RSpec.describe "Public::Events", type: :request do
       end
     end
 
-    context "有料プラン月次特典(session_credit)の判定" do
+    context "有料プラン月次特典(session_credit)の判定 - 開催月基準" do
+      let(:event) do
+        FactoryBot.create(
+          :event, :event_with_songs, customer: customer, community: community,
+          event_start_time: Time.zone.local(2026, 7, 25, 19, 0, 0),
+          event_end_time: Time.zone.local(2026, 7, 25, 21, 0, 0),
+          event_entry_deadline: Time.zone.local(2026, 7, 20, 0, 0, 0)
+        )
+      end
       let(:join_part_a) { FactoryBot.create(:join_part, song: event.songs.first) }
+
       let(:another_event) do
-        FactoryBot.create(:event, :event_with_songs, customer: customer, community: community, entrance_fee: 2000)
+        FactoryBot.create(
+          :event, :event_with_songs, customer: customer, community: community, entrance_fee: 2000,
+          event_start_time: Time.zone.local(2026, 8, 22, 19, 0, 0),
+          event_end_time: Time.zone.local(2026, 8, 22, 21, 0, 0),
+          event_entry_deadline: Time.zone.local(2026, 8, 15, 0, 0, 0)
+        )
       end
       let(:join_part_b) { FactoryBot.create(:join_part, song: another_event.songs.first) }
 
-      # 参加費(2,000円) > 特典額(1,500円) となる「残額あり」パターン専用のイベント。
-      # 既存の`event`はentrance_feeがデフォルト1,500円で特典額と一致してしまい、
-      # 残額0円のケースしか再現できないため、複数パート同時登録の回帰テスト用に別途用意する。
-      let(:partial_fee_event) do
-        FactoryBot.create(:event, :event_with_songs, customer: customer, community: community, entrance_fee: 2000)
+      # `another_event`と同じ開催月(8月)だが別イベント。開催月内での二重適用防止の検証に使う。
+      let(:same_month_event) do
+        FactoryBot.create(
+          :event, :event_with_songs, customer: customer, community: community, entrance_fee: 2000,
+          event_start_time: Time.zone.local(2026, 8, 10, 19, 0, 0),
+          event_end_time: Time.zone.local(2026, 8, 10, 21, 0, 0),
+          event_entry_deadline: Time.zone.local(2026, 8, 5, 0, 0, 0)
+        )
       end
-      let(:partial_fee_song2) { FactoryBot.create(:song, event: partial_fee_event) }
-      let(:partial_join_part_1) { FactoryBot.create(:join_part, song: partial_fee_event.songs.first) }
-      let(:partial_join_part_2) { FactoryBot.create(:join_part, song: partial_fee_song2) }
-      let(:partial_join_part_3) { FactoryBot.create(:join_part, song: partial_fee_song2) }
-      let(:partial_join_part_4) { FactoryBot.create(:join_part, song: partial_fee_song2) }
+      let(:join_part_c) { FactoryBot.create(:join_part, song: same_month_event.songs.first) }
 
-      it "先月特典を利用していても今月はまだ未利用として表示され、1,500円が適用されること" do
-        travel_to(Time.zone.local(2026, 6, 15, 12, 0, 0)) do
-          post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
-        end
-
-        travel_to(Time.zone.local(2026, 7, 10, 12, 0, 0)) do
-          get public_event_path(another_event)
-        end
-
-        expect(response.body).to include("今月の特典対象")
-        expect(response.body).to include("-1,500円")
-      end
-
-      it "今月すでに特典を利用済みの場合、別イベントでは今月分は利用済みと表示されること" do
-        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
-          post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
-        end
-
-        travel_to(Time.zone.local(2026, 7, 20, 12, 0, 0)) do
-          get public_event_path(another_event)
-        end
-
-        expect(response.body).to include("今月特典は使用済み")
-      end
-
-      it "同月内に2つのイベントへ参加登録しても特典が二重に消化されないこと" do
-        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
+      it "ケース1: 同じ日に申込んでも開催月が異なれば(7月/8月)両方に1,500円特典が適用されること" do
+        travel_to(Time.zone.local(2026, 7, 11, 12, 0, 0)) do
           post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
           post public_event_join_path(another_event), params: { join_part_ids: { "0" => join_part_b.id.to_s } }
         end
 
-        credited_count = JoinPartCustomer.where(customer_id: customer.id, session_credit_applied: true).count
-        expect(credited_count).to eq 1
+        first = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part_a.id)
+        second = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part_b.id)
+
+        expect(first.session_credit_applied?).to eq true
+        expect(first.session_credit_amount).to eq 1500
+        expect(second.session_credit_applied?).to eq true
+        expect(second.session_credit_amount).to eq 1500
+      end
+
+      it "ケース2: 申込月が異なっても開催月が同じ(8月)なら1件目のみ特典が適用されること" do
+        travel_to(Time.zone.local(2026, 7, 11, 12, 0, 0)) do
+          post public_event_join_path(another_event), params: { join_part_ids: { "0" => join_part_b.id.to_s } }
+        end
+
+        travel_to(Time.zone.local(2026, 8, 5, 12, 0, 0)) do
+          post public_event_join_path(same_month_event), params: { join_part_ids: { "0" => join_part_c.id.to_s } }
+        end
+
+        first = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part_b.id)
+        second = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part_c.id)
+
+        expect(first.session_credit_applied?).to eq true
+        expect(first.session_credit_amount).to eq 1500
+        expect(second.session_credit_applied?).to eq false
+        expect(second.session_credit_amount).to eq 0
+      end
+
+      it "ケース3: 開催月が同じ別イベントで特典使用済みの場合、開催月が分かる使用済み表示がされること" do
+        travel_to(Time.zone.local(2026, 8, 5, 12, 0, 0)) do
+          post public_event_join_path(same_month_event), params: { join_part_ids: { "0" => join_part_c.id.to_s } }
+        end
+
+        travel_to(Time.zone.local(2026, 8, 20, 12, 0, 0)) do
+          get public_event_path(another_event)
+        end
+        expect(response.body).to include("8月分の特典は使用済み")
+        expect(response.body).to include("同じ開催月の別イベントで利用済みです")
+
+        travel_to(Time.zone.local(2026, 8, 20, 12, 0, 0)) do
+          get public_event_path(same_month_event)
+        end
+        expect(response.body).not_to include("同じ開催月の別イベントで利用済みです")
+        expect(response.body).to match(%r{当日のお支払い</span>\s*<strong>500円</strong>})
+      end
+
+      it "利用可能な場合、開催月が分かる特典対象表示がされること" do
+        get public_event_path(event)
+
+        expect(response.body).to include("7月分の特典対象")
+        expect(response.body).to include("-1,500円")
+      end
+
+      it "このイベントに特典適用済みの場合、開催月が分かる適用済み表示がされること" do
+        travel_to(Time.zone.local(2026, 7, 11, 12, 0, 0)) do
+          post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
+        end
+
+        get public_event_path(event)
+
+        expect(response.body).to include("このイベントに適用済み")
+        expect(response.body).to include("7月分の有料プラン特典")
+      end
+
+      it "ケース8: 開催月内のイベントをすべてキャンセルした後、同じ開催月の別イベントへ特典を再利用できること" do
+        travel_to(Time.zone.local(2026, 8, 5, 12, 0, 0)) do
+          post public_event_join_path(same_month_event), params: { join_part_ids: { "0" => join_part_c.id.to_s } }
+        end
+        expect(customer.session_credit_available_for?(event: another_event)).to eq false
+
+        travel_to(Time.zone.local(2026, 8, 12, 12, 0, 0)) do
+          delete public_event_delete_path(same_month_event, customer_id: customer.id, join_part_id: join_part_c.id)
+        end
+        expect(customer.session_credit_available_for?(event: another_event)).to eq true
+
+        travel_to(Time.zone.local(2026, 8, 20, 12, 0, 0)) do
+          post public_event_join_path(another_event), params: { join_part_ids: { "0" => join_part_b.id.to_s } }
+        end
+        credited = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part_b.id)
+        expect(credited.session_credit_applied?).to eq true
+        expect(credited.session_credit_amount).to eq 1500
       end
 
       it "特典適用済みの参加を取消し、同イベントの他パートへの参加が残っていない場合は特典が消滅すること(既存仕様)" do
-        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
+        travel_to(Time.zone.local(2026, 7, 11, 12, 0, 0)) do
           post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
         end
         expect(JoinPartCustomer.where(customer_id: customer.id, session_credit_applied: true).count).to eq 1
 
-        travel_to(Time.zone.local(2026, 7, 5, 12, 0, 0)) do
+        travel_to(Time.zone.local(2026, 7, 15, 12, 0, 0)) do
           delete public_event_delete_path(event, customer_id: customer.id, join_part_id: join_part_a.id)
         end
         expect(JoinPartCustomer.where(customer_id: customer.id, session_credit_applied: true).count).to eq 0
 
-        travel_to(Time.zone.local(2026, 7, 20, 12, 0, 0)) do
-          expect(customer.session_credit_available_for?).to eq true
-        end
+        expect(customer.session_credit_available_for?(event: event)).to eq true
       end
 
       it "特典適用済みの参加を取消しても同イベントの別パートに参加が残っている場合は特典が引き継がれること(既存仕様)" do
         second_song = FactoryBot.create(:song, event: event)
-        join_part_c = FactoryBot.create(:join_part, song: second_song)
+        join_part_d = FactoryBot.create(:join_part, song: second_song)
 
-        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
+        travel_to(Time.zone.local(2026, 7, 11, 12, 0, 0)) do
           post public_event_join_path(event), params: {
-            join_part_ids: { "0" => join_part_a.id.to_s, "1" => join_part_c.id.to_s }
+            join_part_ids: { "0" => join_part_a.id.to_s, "1" => join_part_d.id.to_s }
           }
         end
         expect(JoinPartCustomer.where(customer_id: customer.id, session_credit_applied: true).count).to eq 1
 
-        travel_to(Time.zone.local(2026, 7, 5, 12, 0, 0)) do
+        travel_to(Time.zone.local(2026, 7, 15, 12, 0, 0)) do
           delete public_event_delete_path(event, customer_id: customer.id, join_part_id: join_part_a.id)
         end
 
-        remaining = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part_c.id)
+        remaining = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part_d.id)
         expect(remaining.session_credit_applied?).to eq true
 
-        travel_to(Time.zone.local(2026, 7, 20, 12, 0, 0)) do
-          expect(customer.session_credit_available_for?).to eq false
-        end
+        expect(customer.session_credit_available_for?(event: event)).to eq false
       end
 
       it "有料プランユーザーがイベント詳細を表示できること" do
@@ -295,11 +357,13 @@ RSpec.describe "Public::Events", type: :request do
       end
 
       it "参加確認画面を表示できること" do
-        get public_event_join_confirm_path(event), params: { event: { join_part_ids: [join_part_a.id.to_s] } }
+        travel_to(Time.zone.local(2026, 7, 11, 12, 0, 0)) do
+          get public_event_join_confirm_path(event), params: { event: { join_part_ids: [join_part_a.id.to_s] } }
+        end
 
         expect(response.status).to eq 200
         expect(response.body).to include("参加確認画面")
-        expect(response.body).to include("今月の有料プラン特典")
+        expect(response.body).to include("7月分の有料プラン特典")
       end
 
       it "イベント参加登録を完了できること" do
@@ -309,55 +373,14 @@ RSpec.describe "Public::Events", type: :request do
         expect(JoinPartCustomer.exists?(customer_id: customer.id, join_part_id: join_part_a.id)).to eq true
       end
 
-      it "今月未使用なら1回目の申込に1,500円特典が適用され、記録として保存されること" do
-        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
+      it "開催月分が未使用なら1回目の申込に1,500円特典が適用され、記録として保存されること" do
+        travel_to(Time.zone.local(2026, 7, 11, 12, 0, 0)) do
           post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
         end
 
         credited = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part_a.id)
         expect(credited.session_credit_applied?).to eq true
         expect(credited.session_credit_amount).to eq 1500
-      end
-
-      it "今月使用済みなら2件目の申込には特典が適用されず0円で保存されること" do
-        travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
-          post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
-          post public_event_join_path(another_event), params: { join_part_ids: { "0" => join_part_b.id.to_s } }
-        end
-
-        second = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part_b.id)
-        expect(second.session_credit_applied?).to eq false
-        expect(second.session_credit_amount).to eq 0
-      end
-
-      it "将来月(8月)に開催される別イベントでも、実際の申込月(6月/7月)を基準に判定されること" do
-        future_event_a = FactoryBot.create(
-          :event, :event_with_songs, customer: customer, community: community, entrance_fee: 2000,
-          event_start_time: Time.zone.local(2026, 8, 15, 19, 0, 0),
-          event_end_time: Time.zone.local(2026, 8, 15, 21, 0, 0),
-          event_entry_deadline: Time.zone.local(2026, 8, 10, 0, 0, 0)
-        )
-        future_join_part_a = FactoryBot.create(:join_part, song: future_event_a.songs.first)
-
-        future_event_b = FactoryBot.create(
-          :event, :event_with_songs, customer: customer, community: community, entrance_fee: 2000,
-          event_start_time: Time.zone.local(2026, 8, 20, 19, 0, 0),
-          event_end_time: Time.zone.local(2026, 8, 20, 21, 0, 0),
-          event_entry_deadline: Time.zone.local(2026, 8, 15, 0, 0, 0)
-        )
-        future_join_part_b = FactoryBot.create(:join_part, song: future_event_b.songs.first)
-
-        travel_to(Time.zone.local(2026, 6, 10, 12, 0, 0)) do
-          post public_event_join_path(future_event_a), params: { join_part_ids: { "0" => future_join_part_a.id.to_s } }
-        end
-
-        travel_to(Time.zone.local(2026, 7, 5, 12, 0, 0)) do
-          post public_event_join_path(future_event_b), params: { join_part_ids: { "0" => future_join_part_b.id.to_s } }
-        end
-
-        credited_in_july = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: future_join_part_b.id)
-        expect(credited_in_july.session_credit_applied?).to eq true
-        expect(credited_in_july.session_credit_amount).to eq 1500
       end
     end
 
@@ -394,7 +417,7 @@ RSpec.describe "Public::Events", type: :request do
 
         expect(response.body).to include("-1,500円")
         expect(response.body).to match(%r{当日のお支払い</span>\s*<strong>500円</strong>})
-        expect(response.body).not_to include("別のイベントで利用済みです")
+        expect(response.body).not_to include("同じ開催月の別イベントで利用済みです")
       end
 
       it "ケース2: 特典適用済みレコードが取得順序上2件目以降でも、イベント単位で正しく1,500円/500円を表示すること" do
@@ -412,10 +435,10 @@ RSpec.describe "Public::Events", type: :request do
 
         expect(response.body).to include("-1,500円")
         expect(response.body).to match(%r{当日のお支払い</span>\s*<strong>500円</strong>})
-        expect(response.body).not_to include("別のイベントで利用済みです")
+        expect(response.body).not_to include("同じ開催月の別イベントで利用済みです")
       end
 
-      it "ケース3: 別イベントで特典を使用済みの場合、そのイベント自身では「別イベントで利用済み」と表示されないこと" do
+      it "ケース3: 別イベントで特典を使用済みの場合、そのイベント自身では「同じ開催月の別イベントで利用済み」と表示されないこと" do
         travel_to(Time.zone.local(2026, 7, 3, 12, 0, 0)) do
           post public_event_join_path(event), params: { join_part_ids: { "0" => join_part_a.id.to_s } }
         end
@@ -423,12 +446,13 @@ RSpec.describe "Public::Events", type: :request do
         travel_to(Time.zone.local(2026, 7, 20, 12, 0, 0)) do
           get public_event_path(another_event)
         end
-        expect(response.body).to include("別のイベントで利用済みです")
+        expect(response.body).to include("9月分の特典は使用済み")
+        expect(response.body).to include("同じ開催月の別イベントで利用済みです")
 
         travel_to(Time.zone.local(2026, 7, 20, 12, 0, 0)) do
           get public_event_path(event)
         end
-        expect(response.body).not_to include("別のイベントで利用済みです")
+        expect(response.body).not_to include("同じ開催月の別イベントで利用済みです")
         expect(response.body).to match(%r{当日のお支払い</span>\s*<strong>0円</strong>})
       end
 
@@ -466,7 +490,7 @@ RSpec.describe "Public::Events", type: :request do
         end
 
         expect(response.body).to include("特典が適用済み")
-        expect(response.body).not_to include("別のイベントで利用済みです")
+        expect(response.body).not_to include("同じ開催月の別イベントで利用済みです")
         expect(response.body).to match(%r{当日のお支払い</span>\s*<strong>500円</strong>})
       end
 
