@@ -114,7 +114,7 @@ class Public::EventsController < ApplicationController
       @current_customer_session_credit_amount = @event.session_credit_amount_for(current_customer)
       @current_customer_remaining_fee = @event.participant_remaining_fee_for(current_customer)
     else
-      @current_customer_session_credit_available = current_customer.session_credit_available_for?
+      @current_customer_session_credit_available = current_customer.session_credit_available_for?(event: @event)
       @current_customer_session_credit_amount = current_customer.session_credit_amount_for(@event)
       @current_customer_remaining_fee = [@event.entrance_fee.to_i - @current_customer_session_credit_amount, 0].max
     end
@@ -245,7 +245,7 @@ class Public::EventsController < ApplicationController
         @session_credit_amount = @event.session_credit_amount_for(customer)
         @remaining_fee_after_credit = @event.participant_remaining_fee_for(customer)
       else
-        @session_credit_available = current_customer.session_credit_available_for?
+        @session_credit_available = current_customer.session_credit_available_for?(event: @event)
         @session_credit_amount = current_customer.session_credit_amount_for(@event)
         @remaining_fee_after_credit = [@event.entrance_fee.to_i - @session_credit_amount, 0].max
       end
@@ -372,7 +372,7 @@ class Public::EventsController < ApplicationController
 
     ActiveRecord::Base.transaction do
       customer.lock!
-      next unless customer.session_credit_available_for?
+      next unless customer.session_credit_available_for?(event: event)
 
       credit_record = created_join_records.first
       credit_record.update!(
