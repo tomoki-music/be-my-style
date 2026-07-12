@@ -107,9 +107,17 @@ class Public::EventsController < ApplicationController
 
     #CSVダウロード
     @songs = @event.songs
-    @current_customer_session_credit_available = current_customer.session_credit_available_for?
-    @current_customer_session_credit_amount = current_customer.session_credit_amount_for(@event)
-    @current_customer_remaining_fee = [@event.entrance_fee.to_i - @current_customer_session_credit_amount, 0].max
+    @current_customer_event_credit_applied = @event.session_credit_applied_for?(current_customer)
+    if @current_customer_event_credit_applied
+      # このイベント自身にすでに特典が適用済みのため、月次の残枠有無に関わらずDB実績を優先する
+      @current_customer_session_credit_available = false
+      @current_customer_session_credit_amount = @event.session_credit_amount_for(current_customer)
+      @current_customer_remaining_fee = @event.participant_remaining_fee_for(current_customer)
+    else
+      @current_customer_session_credit_available = current_customer.session_credit_available_for?
+      @current_customer_session_credit_amount = current_customer.session_credit_amount_for(@event)
+      @current_customer_remaining_fee = [@event.entrance_fee.to_i - @current_customer_session_credit_amount, 0].max
+    end
     respond_to do |format|
       format.html
       format.csv do
@@ -229,9 +237,18 @@ class Public::EventsController < ApplicationController
       @join_part_ids.each_with_index do |join_part_id, index|
         @join_parts << "【" + JoinPart.find(join_part_id).song.song_name + "】の曲に" + "【" + JoinPart.find(join_part_id).join_part_name + "】で参加！"
       end
-      @session_credit_available = current_customer.session_credit_available_for?
-      @session_credit_amount = current_customer.session_credit_amount_for(@event)
-      @remaining_fee_after_credit = [@event.entrance_fee.to_i - @session_credit_amount, 0].max
+      @current_customer_event_credit_applied = @event.session_credit_applied_for?(customer)
+      if @current_customer_event_credit_applied
+        # 同一イベントへの追加パート登録。既にこのイベントへ特典適用済みなら
+        # 月次の残枠有無に関わらず「別イベントで利用済み」ではなくDB実績を表示する
+        @session_credit_available = false
+        @session_credit_amount = @event.session_credit_amount_for(customer)
+        @remaining_fee_after_credit = @event.participant_remaining_fee_for(customer)
+      else
+        @session_credit_available = current_customer.session_credit_available_for?
+        @session_credit_amount = current_customer.session_credit_amount_for(@event)
+        @remaining_fee_after_credit = [@event.entrance_fee.to_i - @session_credit_amount, 0].max
+      end
     end
   end
 
