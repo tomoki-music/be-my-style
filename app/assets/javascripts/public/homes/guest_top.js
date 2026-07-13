@@ -39,8 +39,11 @@ document.addEventListener('turbolinks:load', () => {
     });
   });
 
+  const prefersReducedMotion = window.matchMedia
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   const revealTargets = page.querySelectorAll('.glp-reveal');
-  if (revealTargets.length && 'IntersectionObserver' in window) {
+  if (revealTargets.length && 'IntersectionObserver' in window && !prefersReducedMotion) {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {

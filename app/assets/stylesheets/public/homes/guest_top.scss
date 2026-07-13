@@ -76,7 +76,19 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
       linear-gradient(135deg, #07111f 0%, #0b1830 55%, #101f3c 100%);
     padding-top: 170px;
   }
-  .glp-hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; gap: 70px; }
+  // 「音楽で世界とつながる」を想起させる、控えめな光のにじみ（装飾のみ・情報を持たない）
+  .glp-hero-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: .55;
+    pointer-events: none;
+    z-index: 0;
+
+    &--a { width: 380px; height: 380px; top: -100px; left: -80px; background: radial-gradient(circle, rgba(103, 232, 249, .38), transparent 70%); }
+    &--b { width: 420px; height: 420px; bottom: -160px; right: -110px; background: radial-gradient(circle, rgba(167, 139, 250, .32), transparent 70%); }
+  }
+  .glp-hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; gap: 70px; }
   .glp-eyebrow {
     display: inline-block; font-size: .78rem; font-weight: 800; letter-spacing: .18em;
     color: $glp-accent; margin-bottom: 20px;
@@ -117,10 +129,21 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
       &.glp-btn--light-outline { border-color: rgba(255, 255, 255, .25); }
     }
   }
+  .glp-hero-subnote {
+    margin: 10px 0 0; font-size: .82rem; color: rgba(255, 255, 255, .55);
+
+    &--light { color: rgba(255, 255, 255, .75); }
+  }
+
   .glp-hero-notes {
     display: flex; gap: 20px; flex-wrap: wrap; margin-top: 22px; color: rgba(255, 255, 255, .62); font-size: .9rem;
 
     span::before { content: "✓"; color: $glp-accent; margin-right: 6px; }
+  }
+
+  .glp-hero-region {
+    margin: 20px 0 0; padding-top: 18px; border-top: 1px solid rgba(255, 255, 255, .12);
+    font-size: .84rem; line-height: 1.7; color: rgba(255, 255, 255, .55); max-width: 520px;
   }
 
   .glp-hero-visual { position: relative; min-height: 520px; display: grid; place-items: center; }
@@ -131,15 +154,21 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
     backdrop-filter: blur(22px); box-shadow: 0 30px 100px rgba(0, 0, 0, .35);
   }
   .glp-card-kicker { font-size: .75rem; letter-spacing: .18em; color: rgba(255, 255, 255, .55); text-align: center; }
+  // 「点と点がつながる」= 人・地域・音楽がつながるイメージを抽象的に表現するグラフィック
   .glp-score-ring {
     width: 230px; height: 230px; border-radius: 50%; margin: 50px auto 40px;
-    display: grid; place-items: center; text-align: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
     border: 1px solid rgba(255, 255, 255, .22);
     box-shadow: inset 0 0 0 12px rgba(255, 255, 255, .03), 0 0 70px rgba(103, 232, 249, .18);
-
-    small { display: block; margin-top: -50px; letter-spacing: .12em; color: rgba(255, 255, 255, .6); }
   }
-  .glp-score-num { font-size: 4rem; font-weight: 900; line-height: 1; background: linear-gradient(135deg, $glp-accent, #fff, $glp-accent-2); -webkit-background-clip: text; color: transparent; }
+  .glp-connect-graphic {
+    width: 120px; height: 120px;
+
+    .glp-connect-line { stroke: rgba(255, 255, 255, .38); stroke-width: 1.4; }
+    .glp-connect-dot { fill: $glp-accent; opacity: .9; }
+    .glp-connect-dot--core { fill: $glp-accent-2; }
+  }
+  .glp-score-caption { display: block; letter-spacing: .12em; color: rgba(255, 255, 255, .6); font-size: .72rem; }
   .glp-mini-stat-row {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
 
@@ -156,7 +185,7 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
     box-shadow: 0 18px 50px rgba(0, 0, 0, .25);
 
     &--a { left: 0; top: 100px; }
-    &--b { right: 0; bottom: 80px; }
+    &--b { right: 12px; bottom: -18px; }
   }
 
   .glp-trust-strip { background: #fff; border-bottom: 1px solid #edf2f7; }
@@ -206,9 +235,23 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
     p { margin: 0; color: rgba(255, 255, 255, .66); }
   }
   .glp-feature-num { font-size: 1.3rem; font-weight: 800; color: $glp-accent; }
+  .glp-feature-note { margin: 10px 0 0 !important; font-size: .82rem; color: rgba(255, 255, 255, .5) !important; }
 
   .glp-journey { background: #fff; }
-  .glp-journey-track { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  // デスクトップのみ、5ステップが1本の流れでつながっている印象を薄く添える
+  .glp-journey-track {
+    position: relative;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
+
+    @media (min-width: 981px) {
+      &::before {
+        content: "";
+        position: absolute;
+        top: 21px; left: 8%; right: 8%; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(37, 99, 235, .3) 12%, rgba(37, 99, 235, .3) 88%, transparent);
+      }
+    }
+  }
   .glp-journey-step {
     position: relative; padding: 30px 20px; border-radius: 20px; background: #f8fafc; border: 1px solid #e8eef5; text-align: center;
 
@@ -254,6 +297,14 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
   }
 
   .glp-future { background: #fff; text-align: center; }
+
+  .glp-pricing-note {
+    background: #f1f5f9; text-align: center;
+
+    .glp-section-heading { margin-bottom: 30px; }
+    .glp-check-list { max-width: 640px; margin: 0 auto; text-align: left; }
+  }
+
   .glp-faq { background: #f8fafc; }
   .glp-accordion { display: grid; gap: 14px; }
   .glp-faq-item { background: #fff; border: 1px solid #e4eaf1; border-radius: 18px; overflow: hidden; }
@@ -292,7 +343,12 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
     &--visible { opacity: 1; transform: none; }
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .glp-reveal { opacity: 1; transform: none; transition: none; }
+  }
+
   @media (max-width: 980px) {
+    .glp-hero-orb { display: none; }
     .glp-hero-grid, .glp-split-grid, .glp-story-grid { grid-template-columns: 1fr; }
     .glp-hero { min-height: auto; }
     .glp-hero-visual { margin-top: 20px; }
@@ -333,7 +389,7 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
       font-size: .82rem;
 
       &--a { left: -4px; }
-      &--b { right: -4px; bottom: 40px; }
+      &--b { right: 4px; bottom: -14px; }
     }
     .glp-feature-item { grid-template-columns: 1fr; padding: 24px; gap: 8px; }
     .glp-journey-track { grid-template-columns: 1fr; }

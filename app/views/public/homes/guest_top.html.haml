@@ -1,6 +1,6 @@
-- content_for :title, "BeMyStyle｜AIで歌を知り、仲間とつながる音楽プラットフォーム"
-- content_for :og_title, "BeMyStyle｜あなたの音楽人生は、もっと楽しくなる。"
-- content_for :og_description, "AIで歌を知り、仲間とつながり、リアルな音楽体験へ。"
+- content_for :title, "BeMyStyle｜音楽で、世界とつながる。"
+- content_for :og_title, "BeMyStyle｜音楽で、世界とつながる。"
+- content_for :og_description, "歌う人も、演奏する人も、応援する人も。新しい仲間と、新しい音楽体験に出会えるミュージックコミュニティです。"
 - content_for :og_image, image_url("singing/ogp/music_journey_ogp.png")
 
 .glp-page
@@ -21,43 +21,64 @@
 
   %main
     %section.glp-hero.glp-section-pad
+      .glp-hero-orb.glp-hero-orb--a
+      .glp-hero-orb.glp-hero-orb--b
       .glp-container.glp-hero-grid
         .glp-hero-copy.glp-reveal
-          .glp-eyebrow AI VOCAL DIAGNOSIS × MUSIC COMMUNITY
+          .glp-eyebrow MUSIC COMMUNITY × WORLDWIDE CONNECTION
           %h1
-            あなたの音楽人生は、
+            音楽で、
             %br
-            %span もっと楽しくなる。
+            %span 世界とつながる。
           %p.glp-hero-lead
-            AIで歌を知り、仲間とつながり、リアルなステージへ。
+            歌う人も、演奏する人も、応援する人も。
             %br
-            BeMyStyleは、歌唱診断・成長記録・音楽コミュニティ・イベント参加をひとつにつなぐ、新しい音楽プラットフォームです。
+            新しい仲間と、新しい音楽体験に出会える場所。
           .glp-hero-actions
-            = link_to "無料でBeMyStyleを始める", new_customer_registration_path, class: "glp-btn glp-btn--primary", data: { turbolinks: false }
-            = link_to "AI歌唱診断を試す", new_singing_diagnosis_path, class: "glp-btn glp-btn--ghost"
+            = link_to "無料ではじめる", new_customer_registration_path, class: "glp-btn glp-btn--primary", data: { turbolinks: false }
+            = link_to "無料登録してAI歌唱診断を試す", new_singing_customer_registration_path, class: "glp-btn glp-btn--ghost", data: { turbolinks: false }
+          %p.glp-hero-subnote 登録は無料です
           .glp-hero-notes
             %span 登録無料
             %span 初心者歓迎
             %span スマホ対応
+          %p.glp-hero-region
+            オンラインは全国対応。オフラインイベントは埼玉県を中心に開催しています。
+            %br
+            ※一部、東京都内での開催もあります。
 
         .glp-hero-visual.glp-reveal
           .glp-main-card
-            .glp-card-kicker YOUR MUSIC JOURNEY
+            .glp-card-kicker MUSIC CONNECTS US
             .glp-score-ring
-              %span.glp-score-num AI
-              %small VOICE INSIGHT
+              %svg.glp-connect-graphic{ viewBox: "0 0 120 120", xmlns: "http://www.w3.org/2000/svg", "aria-hidden" => "true", focusable: "false" }
+                %line.glp-connect-line{ x1: "24", y1: "40", x2: "60", y2: "20" }
+                %line.glp-connect-line{ x1: "60", y1: "20", x2: "96", y2: "40" }
+                %line.glp-connect-line{ x1: "24", y1: "40", x2: "60", y2: "70" }
+                %line.glp-connect-line{ x1: "96", y1: "40", x2: "60", y2: "70" }
+                %line.glp-connect-line{ x1: "60", y1: "70", x2: "60", y2: "100" }
+                %line.glp-connect-line{ x1: "60", y1: "70", x2: "30", y2: "95" }
+                %line.glp-connect-line{ x1: "60", y1: "70", x2: "90", y2: "95" }
+                %circle.glp-connect-dot{ cx: "24", cy: "40", r: "5" }
+                %circle.glp-connect-dot{ cx: "96", cy: "40", r: "5" }
+                %circle.glp-connect-dot{ cx: "60", cy: "20", r: "5" }
+                %circle.glp-connect-dot.glp-connect-dot--core{ cx: "60", cy: "70", r: "7" }
+                %circle.glp-connect-dot{ cx: "30", cy: "95", r: "5" }
+                %circle.glp-connect-dot{ cx: "90", cy: "95", r: "5" }
+                %circle.glp-connect-dot{ cx: "60", cy: "100", r: "5" }
+              %small.glp-score-caption つながる音楽体験
             .glp-mini-stat-row
-              %div
-                %strong 診断
-                %span 自分を知る
-              %div
-                %strong 成長
-                %span 続けられる
               %div
                 %strong 仲間
                 %span つながれる
-          .glp-floating-card.glp-floating-card--a ♪ 声の特徴を分析
-          .glp-floating-card.glp-floating-card--b ♫ 仲間とセッション
+              %div
+                %strong 体験
+                %span 出会える
+              %div
+                %strong 診断
+                %span 自分を知る
+          .glp-floating-card.glp-floating-card--a ♫ 仲間とつながる
+          .glp-floating-card.glp-floating-card--b ♪ AI診断で自分を知る
 
     %section.glp-trust-strip
       .glp-container.glp-trust-grid
@@ -65,11 +86,11 @@
           %strong 10年
           %span 音楽コミュニティ運営
         %div
-          %strong AI
-          %span 歌唱診断と成長支援
+          %strong 全国
+          %span オンラインはどこからでも参加可能
         %div
-          %strong REAL
-          %span リアルイベントへ接続
+          %strong 埼玉中心
+          %span オフラインイベント開催中（一部東京都内）
 
     %section.glp-section-pad.glp-problem
       .glp-container.glp-narrow
@@ -130,6 +151,7 @@
             %div
               %h3 リアルイベントへ参加する
               %p 初心者向けセッション、ライブ、練習会など、自分のレベルや興味に合う企画へ進めます。
+              %p.glp-feature-note ※オフラインイベントは埼玉県を中心に開催しています(一部、東京都内での開催もあります)。オンライン機能は全国どこからでもご利用いただけます。
 
     %section.glp-section-pad.glp-journey
       .glp-container
@@ -208,6 +230,17 @@
             自分の人生で体験する。
           %p 一人ひとりに合う曲やキー、練習、仲間、イベントをAIが提案し、音楽を通じた新しい出会いと挑戦を広げていきます。
 
+    %section.glp-section-pad.glp-pricing-note
+      .glp-container.glp-narrow
+        .glp-section-heading.glp-reveal
+          %span.glp-eyebrow.glp-eyebrow--dark PRICING
+          %h2 基本利用は無料
+          %p アカウント登録やコミュニティへの参加は、無料から始められます。
+        %ul.glp-check-list.glp-reveal
+          %li オフラインイベントは、イベントごとに別途参加費が必要です
+          %li オンライン、オフラインともに、より便利に楽しめる有料オプションをご用意しています
+          %li 有料オプションへの加入は任意です
+
     %section.glp-section-pad.glp-faq{ id: "faq" }
       .glp-container.glp-narrow
         .glp-section-heading.glp-reveal
@@ -235,10 +268,12 @@
               %p もちろんです。見学やオンライン交流から始められます。最初から積極的に話したり、演奏したりする必要はありません。
           %article.glp-faq-item.glp-reveal
             %button.glp-faq-question{ type: "button", "aria-expanded" => "false" }
-              利用料金はいくらですか？
+              利用料金はかかりますか？
               %span +
             .glp-faq-answer
-              %p 無料で始められるプランをご用意しています。診断回数や利用できる機能に応じたプランもありますので、最新情報は料金ページをご確認ください。
+              %p
+                基本機能は無料でご利用いただけます。オフラインイベントへの参加には、イベントごとに別途参加費がかかります。
+                また、オンライン・オフラインともに有料オプションをご用意していますが、加入は任意です。
 
     %section.glp-final-cta
       .glp-container.glp-final-cta-inner.glp-reveal
@@ -252,8 +287,9 @@
           %br
           あなたらしい音楽人生を、今日から始めてみませんか？
         .glp-hero-actions.glp-hero-actions--centered
-          = link_to "無料でBeMyStyleを始める", new_customer_registration_path, class: "glp-btn glp-btn--primary glp-btn--light", data: { turbolinks: false }
-          = link_to "AI歌唱診断を試す", new_singing_diagnosis_path, class: "glp-btn glp-btn--ghost glp-btn--light-outline"
+          = link_to "無料ではじめる", new_customer_registration_path, class: "glp-btn glp-btn--primary glp-btn--light", data: { turbolinks: false }
+          = link_to "無料登録してAI歌唱診断を試す", new_singing_customer_registration_path, class: "glp-btn glp-btn--ghost glp-btn--light-outline", data: { turbolinks: false }
+        %p.glp-hero-subnote.glp-hero-subnote--light 登録は無料です
 
   %footer.glp-site-footer
     .glp-container.glp-footer-grid
