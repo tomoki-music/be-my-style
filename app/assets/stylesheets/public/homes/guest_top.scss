@@ -8,6 +8,7 @@ $glp-bg: #07111f;
 $glp-muted: #64748b;
 $glp-accent: #67e8f9;
 $glp-accent-2: #a78bfa;
+$glp-gold: #f4d58d;
 $glp-radius: 24px;
 $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
 
@@ -88,6 +89,13 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
     &--a { width: 380px; height: 380px; top: -100px; left: -80px; background: radial-gradient(circle, rgba(103, 232, 249, .38), transparent 70%); }
     &--b { width: 420px; height: 420px; bottom: -160px; right: -110px; background: radial-gradient(circle, rgba(167, 139, 250, .32), transparent 70%); }
   }
+  // 「音の波形/五線譜」を想起させる控えめなライン(装飾のみ)
+  .glp-hero-wave {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 0;
+    width: 100%; height: 56px; opacity: .3; pointer-events: none;
+
+    path { fill: none; stroke: $glp-accent; stroke-width: 1.5; }
+  }
   .glp-hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; gap: 70px; }
   .glp-eyebrow {
     display: inline-block; font-size: .78rem; font-weight: 800; letter-spacing: .18em;
@@ -105,7 +113,20 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
       span { background: linear-gradient(90deg, $glp-accent, #fff, $glp-accent-2); -webkit-background-clip: text; color: transparent; }
     }
   }
-  .glp-hero-lead { font-size: 1.1rem; color: rgba(255, 255, 255, .78); max-width: 760px; }
+  // ヒーロー中核メッセージ：メインコピーと競合しないよう階層を明確に分離する
+  .glp-hero-emotion { margin: 26px 0 4px; max-width: 620px; }
+  .glp-hero-emotion__roles {
+    margin: 0 0 14px; font-size: .95rem; letter-spacing: .02em; color: rgba(255, 255, 255, .6);
+  }
+  .glp-hero-emotion__core {
+    margin: 0 0 14px; font-size: 1.5rem; font-weight: 700; line-height: 1.5; color: rgba(255, 255, 255, .94);
+
+    .glp-gold-text { color: $glp-gold; }
+  }
+  .glp-hero-emotion__closing {
+    margin: 0; font-size: 1.05rem; line-height: 1.7; color: rgba(255, 255, 255, .75);
+  }
+
   .glp-hero-actions {
     display: flex; gap: 14px; flex-wrap: wrap; margin-top: 34px;
 
@@ -167,6 +188,7 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
     .glp-connect-line { stroke: rgba(255, 255, 255, .38); stroke-width: 1.4; }
     .glp-connect-dot { fill: $glp-accent; opacity: .9; }
     .glp-connect-dot--core { fill: $glp-accent-2; }
+    .glp-connect-dot--gold { fill: $glp-gold; }
   }
   .glp-score-caption { display: block; letter-spacing: .12em; color: rgba(255, 255, 255, .6); font-size: .72rem; }
   .glp-mini-stat-row {
@@ -251,6 +273,18 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
         background: linear-gradient(90deg, transparent, rgba(37, 99, 235, .3) 12%, rgba(37, 99, 235, .3) 88%, transparent);
       }
     }
+
+    // 1カラムに積み上がるモバイル幅のみ、縦方向の流れとして接続線を添える
+    // (768px前後のタブレット幅は2カラム表示のため、縦線は付けない)
+    @media (max-width: 640px) {
+      &::after {
+        content: "";
+        position: absolute;
+        top: 42px; bottom: 42px; left: 50%;
+        width: 1px;
+        background: linear-gradient(180deg, transparent, rgba(37, 99, 235, .25) 10%, rgba(37, 99, 235, .25) 90%, transparent);
+      }
+    }
   }
   .glp-journey-step {
     position: relative; padding: 30px 20px; border-radius: 20px; background: #f8fafc; border: 1px solid #e8eef5; text-align: center;
@@ -258,6 +292,12 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
     span { width: 42px; height: 42px; display: grid; place-items: center; margin: 0 auto 16px; border-radius: 50%; background: #0f172a; color: #fff; font-weight: 800; }
     h3 { margin: 0 0 8px; }
     p { margin: 0; color: $glp-muted; font-size: .88rem; }
+
+    // 旅の到達点(音楽が人生になる)にごく控えめなゴールドアクセント
+    &:last-child span {
+      background: linear-gradient(135deg, $glp-gold, #d9a94f); color: #3a2a00;
+      box-shadow: 0 0 0 4px rgba(244, 213, 141, .22);
+    }
   }
 
   .glp-beginners { background: #f1f5f9; }
@@ -324,9 +364,14 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
   .glp-final-cta {
     padding: 120px 0; background: linear-gradient(135deg, #0f172a, #172554); color: #fff; text-align: center;
 
-    h2 { font-size: 3.2rem; line-height: 1.22; margin: 0 0 20px; }
+    h2 {
+      font-size: 3.2rem; line-height: 1.22; margin: 0 0 20px;
+
+      span { background: linear-gradient(90deg, $glp-accent, #fff, $glp-accent-2); -webkit-background-clip: text; color: transparent; }
+    }
     p { color: rgba(255, 255, 255, .7); }
   }
+  .glp-final-cta__core { font-size: 1.3rem; font-weight: 700; line-height: 1.6; color: rgba(255, 255, 255, .92); margin: 0 0 18px; }
 
   .glp-site-footer { background: #050b14; color: #fff; padding: 60px 0 24px; }
   .glp-footer-grid {
@@ -378,8 +423,13 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
       h1 { font-size: 2.7rem; }
     }
     .glp-section-heading h2, .glp-split-grid h2, .glp-story-copy h2 { font-size: 2rem; }
-    .glp-final-cta h2 { font-size: 2.4rem; }
-    .glp-hero-lead br { display: none; }
+    .glp-final-cta h2 { font-size: 2.2rem; }
+    .glp-final-cta__core { font-size: 1.1rem; }
+    .glp-hero-emotion { margin: 20px 0 4px; }
+    .glp-hero-emotion__roles { font-size: .85rem; }
+    .glp-hero-emotion__core { font-size: 1.2rem; }
+    .glp-hero-emotion__closing { font-size: .92rem; }
+    .glp-hero-wave { height: 36px; }
     .glp-hero-actions { flex-direction: column; }
     .glp-btn { width: 100%; }
     .glp-hero-visual { min-height: 440px; }

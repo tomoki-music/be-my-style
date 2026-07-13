@@ -1,6 +1,6 @@
 - content_for :title, "BeMyStyle｜音楽で、世界とつながる。"
 - content_for :og_title, "BeMyStyle｜音楽で、世界とつながる。"
-- content_for :og_description, "歌う人も、演奏する人も、応援する人も。新しい仲間と、新しい音楽体験に出会えるミュージックコミュニティです。"
+- content_for :og_description, "一人では出会えなかった仲間と、音楽と、未来へ。あなたらしい音楽人生が始まる場所です。"
 - content_for :og_image, image_url("singing/ogp/music_journey_ogp.png")
 
 .glp-page
@@ -23,6 +23,8 @@
     %section.glp-hero.glp-section-pad
       .glp-hero-orb.glp-hero-orb--a
       .glp-hero-orb.glp-hero-orb--b
+      %svg.glp-hero-wave{ viewBox: "0 0 1200 60", xmlns: "http://www.w3.org/2000/svg", preserveAspectRatio: "none", "aria-hidden" => "true", focusable: "false" }
+        %path{ d: "M0 30 Q 100 6 200 30 T 400 30 T 600 30 T 800 30 T 1000 30 T 1200 30" }
       .glp-container.glp-hero-grid
         .glp-hero-copy.glp-reveal
           .glp-eyebrow MUSIC COMMUNITY × WORLDWIDE CONNECTION
@@ -30,22 +32,32 @@
             音楽で、
             %br
             %span 世界とつながる。
-          %p.glp-hero-lead
-            歌う人も、演奏する人も、応援する人も。
-            %br
-            新しい仲間と、新しい音楽体験に出会える場所。
+
+          .glp-hero-emotion
+            %p.glp-hero-emotion__roles 歌う人も、演奏する人も、応援する人も。
+            %p.glp-hero-emotion__core
+              一人では出会えなかった
+              %br
+              %span.glp-gold-text 仲間と、音楽と、未来へ。
+            %p.glp-hero-emotion__closing
+              あなたらしい音楽人生を、
+              %br
+              ここから。
+
           .glp-hero-actions
             = link_to "無料ではじめる", new_customer_registration_path, class: "glp-btn glp-btn--primary", data: { turbolinks: false }
             = link_to "無料登録してAI歌唱診断を試す", new_singing_customer_registration_path, class: "glp-btn glp-btn--ghost", data: { turbolinks: false }
           %p.glp-hero-subnote 登録は無料です
+
           .glp-hero-notes
-            %span 登録無料
-            %span 初心者歓迎
-            %span スマホ対応
+            %span AI歌唱診断
+            %span 音楽コミュニティ
+            %span オフラインイベント
+
           %p.glp-hero-region
-            オンラインは全国対応。オフラインイベントは埼玉県を中心に開催しています。
+            オンラインは全国どこからでも利用できます。オフラインイベントは埼玉県を中心に開催しています。
             %br
-            ※一部、東京都内での開催もあります。
+            ※一部イベントは東京都内で開催する場合があります。
 
         .glp-hero-visual.glp-reveal
           .glp-main-card
@@ -63,8 +75,8 @@
                 %circle.glp-connect-dot{ cx: "96", cy: "40", r: "5" }
                 %circle.glp-connect-dot{ cx: "60", cy: "20", r: "5" }
                 %circle.glp-connect-dot.glp-connect-dot--core{ cx: "60", cy: "70", r: "7" }
-                %circle.glp-connect-dot{ cx: "30", cy: "95", r: "5" }
-                %circle.glp-connect-dot{ cx: "90", cy: "95", r: "5" }
+                %circle.glp-connect-dot.glp-connect-dot--gold{ cx: "30", cy: "95", r: "5" }
+                %circle.glp-connect-dot.glp-connect-dot--gold{ cx: "90", cy: "95", r: "5" }
                 %circle.glp-connect-dot{ cx: "60", cy: "100", r: "5" }
               %small.glp-score-caption つながる音楽体験
             .glp-mini-stat-row
@@ -95,12 +107,12 @@
     %section.glp-section-pad.glp-problem
       .glp-container.glp-narrow
         .glp-section-heading.glp-reveal
-          %span.glp-eyebrow.glp-eyebrow--dark YOUR CHALLENGES
+          %span.glp-eyebrow.glp-eyebrow--dark YOUR FIRST STEP
           %h2
-            好きなのに、続けられない。
+            あなたの音楽が、
             %br
-            その理由を、仕組みで変える。
-          %p 音楽は好き。でも一人では、次の一歩が見えにくい。BeMyStyleは、そんな停滞を「診断・練習・交流・挑戦」の流れに変えます。
+            始まる場所。
+          %p 好きなのに続けられないのは、意志が弱いからではありません。次の一歩が見えていないだけ。BeMyStyleは、その一歩を仕組みで支えます。
         .glp-problem-grid
           %article.glp-problem-card.glp-reveal
             %span 01
@@ -118,12 +130,12 @@
     %section.glp-section-pad.glp-features{ id: "features" }
       .glp-container
         .glp-section-heading.glp-reveal
-          %span.glp-eyebrow WHAT YOU CAN DO
+          %span.glp-eyebrow START HERE
           %h2
-            診断する。成長する。
+            自分を知ることから、
             %br
-            仲間と出会う。
-          %p BeMyStyleは、音楽を「始める場所」から「続けられる場所」へ変えていきます。
+            音楽はもっと楽しくなる。
+          %p 歌声の特徴を知ることは、自分を知るためのひとつの手段。そこから始まる練習・記録・仲間との出会いが、音楽をもっと楽しくしていきます。
 
         .glp-feature-list
           %article.glp-feature-item.glp-reveal
@@ -156,39 +168,40 @@
     %section.glp-section-pad.glp-journey
       .glp-container
         .glp-section-heading.glp-reveal
-          %span.glp-eyebrow.glp-eyebrow--dark HOW IT WORKS
-          %h2 AI診断から、リアルな音楽体験へ。
+          %span.glp-eyebrow.glp-eyebrow--dark YOUR MUSIC JOURNEY
+          %h2 仲間と歩く、音楽の旅。
+          %p AIは、自分を知るための手段のひとつ。旅の主役は、いつもあなたと、出会う仲間です。
         .glp-journey-track
           .glp-journey-step.glp-reveal
             %span 1
-            %h3 診断する
-            %p 歌声と課題を知る
+            %h3 歌う・演奏する
+            %p 好きな音楽を、今の自分のまま楽しむことから。
           .glp-journey-step.glp-reveal
             %span 2
-            %h3 練習する
-            %p 必要なテーマに取り組む
+            %h3 自分を知る
+            %p AI歌唱診断などを通じて、自分の特徴や成長のきっかけを知る。
           .glp-journey-step.glp-reveal
             %span 3
-            %h3 記録する
-            %p 成長を振り返る
+            %h3 仲間と出会う
+            %p コミュニティで、同じ音楽を楽しむ人とつながる。
           .glp-journey-step.glp-reveal
             %span 4
-            %h3 つながる
-            %p 音楽仲間と出会う
+            %h3 一緒に音楽を楽しむ
+            %p オンライン交流やオフラインイベントへ参加する。
           .glp-journey-step.glp-reveal
             %span 5
-            %h3 参加する
-            %p イベントで音を合わせる
+            %h3 音楽が人生になる
+            %p 挑戦・成長・応援が、日常に広がっていく。
 
     %section.glp-section-pad.glp-beginners
       .glp-container.glp-split-grid
         .glp-reveal
-          %span.glp-eyebrow.glp-eyebrow--dark FOR BEGINNERS
+          %span.glp-eyebrow.glp-eyebrow--dark ONLINE TO REAL LIFE
           %h2
-            初心者も、ブランクがある人も。
+            オンラインから、
             %br
-            ここから始められる。
-          %p 上手になってから参加する必要はありません。音楽は、楽しみながら上達していくものです。
+            リアルな出会いへ。
+          %p 上手になってから参加する必要はありません。まずはオンラインで雰囲気を知り、自分のペースでリアルな出会いへ進んでいけます。
           %ul.glp-check-list
             %li 楽器や歌を始めたばかり
             %li セッション参加が初めて
@@ -225,10 +238,10 @@
         .glp-section-heading.glp-reveal
           %span.glp-eyebrow.glp-eyebrow--dark VISION
           %h2
-            音楽を聴くだけでなく、
+            音楽を、
             %br
-            自分の人生で体験する。
-          %p 一人ひとりに合う曲やキー、練習、仲間、イベントをAIが提案し、音楽を通じた新しい出会いと挑戦を広げていきます。
+            一生の楽しみに。
+          %p 曲やキー、練習、仲間、イベント。一人ひとりのペースに寄り添いながら、音楽を通じた新しい出会いと挑戦を広げていきます。
 
     %section.glp-section-pad.glp-pricing-note
       .glp-container.glp-narrow
@@ -279,13 +292,15 @@
       .glp-container.glp-final-cta-inner.glp-reveal
         %span.glp-eyebrow START YOUR MUSIC JOURNEY
         %h2
-          音楽を始めるのに、
+          音楽で、
           %br
-          遅すぎることはありません。
+          %span 世界とつながる。
+        %p.glp-final-cta__core
+          一人では出会えなかった
+          %br
+          仲間と、音楽と、未来へ。
         %p
-          診断する。成長する。仲間と出会う。一緒に演奏する。
-          %br
-          あなたらしい音楽人生を、今日から始めてみませんか？
+          あなたらしい音楽人生を、今日から始めてみませんか。
         .glp-hero-actions.glp-hero-actions--centered
           = link_to "無料ではじめる", new_customer_registration_path, class: "glp-btn glp-btn--primary glp-btn--light", data: { turbolinks: false }
           = link_to "無料登録してAI歌唱診断を試す", new_singing_customer_registration_path, class: "glp-btn glp-btn--ghost glp-btn--light-outline", data: { turbolinks: false }
@@ -297,7 +312,7 @@
         %a.glp-brand.glp-footer-brand{ href: "#top" }
           %span.glp-brand-mark B
           %span.glp-brand-text BeMyStyle
-        %p AIで歌を知り、仲間とつながる音楽プラットフォーム。
+        %p 音楽で、世界とつながる音楽コミュニティ。
       .glp-footer-links
         = link_to "新規登録", new_customer_registration_path, data: { turbolinks: false }
         = link_to "歌唱診断", singing_root_path
