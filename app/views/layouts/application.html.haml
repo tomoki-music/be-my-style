@@ -3,13 +3,22 @@
   %head
     %meta{:content => "text/haml; charset=UTF-8mb4", "http-equiv" => "Content-Type"}/
     %meta{:content => "width=device-width,initial-scale=1", :name => "viewport"}/
-    %meta{:content => "好きで繋がった仲間は一生もの。音楽人の為のコミュニティアプリです。", :name => "description"}/
-    %title BeMyStyle
+    - page_description = content_for?(:og_description) ? yield(:og_description) : "好きで繋がった仲間は一生もの。音楽人の為のコミュニティアプリです。"
+    %meta{:content => page_description, :name => "description"}/
+    %title= content_for?(:title) ? yield(:title) : "BeMyStyle"
+    %meta{ property: "og:type", content: "website" }/
+    %meta{ property: "og:title", content: content_for?(:og_title) ? yield(:og_title) : (content_for?(:title) ? yield(:title) : "BeMyStyle") }/
+    %meta{ property: "og:description", content: page_description }/
+    - if content_for?(:og_image)
+      %meta{ property: "og:image", content: yield(:og_image) }/
     = favicon_link_tag'favicon.ico'
     = csrf_meta_tags
     = csp_meta_tag
     = include_gon
     = stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload'
+    %link{rel: "preconnect", href: "https://fonts.googleapis.com"}/
+    %link{rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "anonymous"}/
+    %link{href: "https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap", rel: "stylesheet"}/
     %link{
       rel: "stylesheet",
       href: "https://use.fontawesome.com/releases/v5.15.4/css/all.css",

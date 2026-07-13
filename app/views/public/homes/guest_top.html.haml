@@ -1,0 +1,270 @@
+- content_for :title, "BeMyStyle｜AIで歌を知り、仲間とつながる音楽プラットフォーム"
+- content_for :og_title, "BeMyStyle｜あなたの音楽人生は、もっと楽しくなる。"
+- content_for :og_description, "AIで歌を知り、仲間とつながり、リアルな音楽体験へ。"
+- content_for :og_image, image_url("singing/ogp/music_journey_ogp.png")
+
+.glp-page
+  %header.glp-site-header{ id: "top" }
+    .glp-container.glp-nav-wrap
+      %a.glp-brand{ href: "#top", "aria-label" => "BeMyStyle ホーム" }
+        %span.glp-brand-mark B
+        %span.glp-brand-text BeMyStyle
+      %button.glp-menu-toggle{ type: "button", "aria-label" => "メニューを開く", "aria-expanded" => "false" }
+        %span
+        %span
+        %span
+      %nav.glp-main-nav
+        %a{ href: "#features" } できること
+        %a{ href: "#story" } 開発ストーリー
+        %a{ href: "#faq" } よくある質問
+        = link_to "無料で始める", new_customer_registration_path, class: "glp-nav-cta", data: { turbolinks: false }
+
+  %main
+    %section.glp-hero.glp-section-pad
+      .glp-container.glp-hero-grid
+        .glp-hero-copy.glp-reveal
+          .glp-eyebrow AI VOCAL DIAGNOSIS × MUSIC COMMUNITY
+          %h1
+            あなたの音楽人生は、
+            %br
+            %span もっと楽しくなる。
+          %p.glp-hero-lead
+            AIで歌を知り、仲間とつながり、リアルなステージへ。
+            %br
+            BeMyStyleは、歌唱診断・成長記録・音楽コミュニティ・イベント参加をひとつにつなぐ、新しい音楽プラットフォームです。
+          .glp-hero-actions
+            = link_to "無料でBeMyStyleを始める", new_customer_registration_path, class: "glp-btn glp-btn--primary", data: { turbolinks: false }
+            = link_to "AI歌唱診断を試す", new_singing_diagnosis_path, class: "glp-btn glp-btn--ghost"
+          .glp-hero-notes
+            %span 登録無料
+            %span 初心者歓迎
+            %span スマホ対応
+
+        .glp-hero-visual.glp-reveal
+          .glp-main-card
+            .glp-card-kicker YOUR MUSIC JOURNEY
+            .glp-score-ring
+              %span.glp-score-num AI
+              %small VOICE INSIGHT
+            .glp-mini-stat-row
+              %div
+                %strong 診断
+                %span 自分を知る
+              %div
+                %strong 成長
+                %span 続けられる
+              %div
+                %strong 仲間
+                %span つながれる
+          .glp-floating-card.glp-floating-card--a ♪ 声の特徴を分析
+          .glp-floating-card.glp-floating-card--b ♫ 仲間とセッション
+
+    %section.glp-trust-strip
+      .glp-container.glp-trust-grid
+        %div
+          %strong 10年
+          %span 音楽コミュニティ運営
+        %div
+          %strong AI
+          %span 歌唱診断と成長支援
+        %div
+          %strong REAL
+          %span リアルイベントへ接続
+
+    %section.glp-section-pad.glp-problem
+      .glp-container.glp-narrow
+        .glp-section-heading.glp-reveal
+          %span.glp-eyebrow.glp-eyebrow--dark YOUR CHALLENGES
+          %h2
+            好きなのに、続けられない。
+            %br
+            その理由を、仕組みで変える。
+          %p 音楽は好き。でも一人では、次の一歩が見えにくい。BeMyStyleは、そんな停滞を「診断・練習・交流・挑戦」の流れに変えます。
+        .glp-problem-grid
+          %article.glp-problem-card.glp-reveal
+            %span 01
+            %h3 練習方法が分からない
+            %p 今の自分に必要な改善点が見えず、感覚だけの練習になってしまう。
+          %article.glp-problem-card.glp-reveal
+            %span 02
+            %h3 仲間が見つからない
+            %p 音楽の趣味を共有できる人や、安心して参加できる場所がない。
+          %article.glp-problem-card.glp-reveal
+            %span 03
+            %h3 最初の一歩が怖い
+            %p 初心者やブランクがあることで、セッションやイベント参加をためらってしまう。
+
+    %section.glp-section-pad.glp-features{ id: "features" }
+      .glp-container
+        .glp-section-heading.glp-reveal
+          %span.glp-eyebrow WHAT YOU CAN DO
+          %h2
+            診断する。成長する。
+            %br
+            仲間と出会う。
+          %p BeMyStyleは、音楽を「始める場所」から「続けられる場所」へ変えていきます。
+
+        .glp-feature-list
+          %article.glp-feature-item.glp-reveal
+            .glp-feature-num 01
+            %div
+              %h3 AI歌唱診断で、自分の歌を知る
+              %p 歌声の特徴や改善ポイントを整理し、「なんとなく上手くいかない」を具体的な練習テーマへ変えます。
+          %article.glp-feature-item.glp-reveal
+            .glp-feature-num 02
+            %div
+              %h3 自分に合った練習へ進む
+              %p 診断結果をもとに、呼吸・リズム・音程など、小さなテーマに分けて無理なく取り組めます。
+          %article.glp-feature-item.glp-reveal
+            .glp-feature-num 03
+            %div
+              %h3 成長を記録し、変化を実感する
+              %p 過去の診断や活動を振り返り、昨日の自分との違いを自信へ変えていきます。
+          %article.glp-feature-item.glp-reveal
+            .glp-feature-num 04
+            %div
+              %h3 音楽仲間とつながる
+              %p プロフィールや活動報告を通じて、好きな音楽や目標を共有できる仲間と出会えます。
+          %article.glp-feature-item.glp-reveal
+            .glp-feature-num 05
+            %div
+              %h3 リアルイベントへ参加する
+              %p 初心者向けセッション、ライブ、練習会など、自分のレベルや興味に合う企画へ進めます。
+
+    %section.glp-section-pad.glp-journey
+      .glp-container
+        .glp-section-heading.glp-reveal
+          %span.glp-eyebrow.glp-eyebrow--dark HOW IT WORKS
+          %h2 AI診断から、リアルな音楽体験へ。
+        .glp-journey-track
+          .glp-journey-step.glp-reveal
+            %span 1
+            %h3 診断する
+            %p 歌声と課題を知る
+          .glp-journey-step.glp-reveal
+            %span 2
+            %h3 練習する
+            %p 必要なテーマに取り組む
+          .glp-journey-step.glp-reveal
+            %span 3
+            %h3 記録する
+            %p 成長を振り返る
+          .glp-journey-step.glp-reveal
+            %span 4
+            %h3 つながる
+            %p 音楽仲間と出会う
+          .glp-journey-step.glp-reveal
+            %span 5
+            %h3 参加する
+            %p イベントで音を合わせる
+
+    %section.glp-section-pad.glp-beginners
+      .glp-container.glp-split-grid
+        .glp-reveal
+          %span.glp-eyebrow.glp-eyebrow--dark FOR BEGINNERS
+          %h2
+            初心者も、ブランクがある人も。
+            %br
+            ここから始められる。
+          %p 上手になってから参加する必要はありません。音楽は、楽しみながら上達していくものです。
+          %ul.glp-check-list
+            %li 楽器や歌を始めたばかり
+            %li セッション参加が初めて
+            %li 何十年ぶりに音楽を再開したい
+            %li 人見知りで、まずは見学したい
+        .glp-quote-card.glp-reveal
+          %p
+            「今の実力」ではなく、
+            %br
+            %strong これから音楽を楽しみたい気持ち
+            を大切に。
+
+    %section.glp-section-pad.glp-story{ id: "story" }
+      .glp-container.glp-story-grid
+        .glp-story-copy.glp-reveal
+          %span.glp-eyebrow OUR STORY
+          %h2 10年間の音楽コミュニティ運営から、生まれました。
+          %p BeMyStyleの原点は、埼玉を中心に活動する音楽コミュニティ「MMM」です。
+          %p 初心者が参加しづらい。情報が届かない。仲間とつながりにくい。活動の思い出が残らない。リアルな運営の中で見えてきた課題を、テクノロジーで解決したい。
+          %p その思いから、BeMyStyleは生まれました。机上のアイデアではなく、実際の音楽活動と参加者の声から育っているプラットフォームです。
+        .glp-story-panel.glp-reveal
+          .glp-story-stat
+            %strong 10 YEARS
+            %span コミュニティ運営
+          .glp-story-stat
+            %strong ONLINE
+            %span 診断・交流・記録
+          .glp-story-stat
+            %strong OFFLINE
+            %span セッション・ライブ
+
+    %section.glp-section-pad.glp-future
+      .glp-container.glp-narrow
+        .glp-section-heading.glp-reveal
+          %span.glp-eyebrow.glp-eyebrow--dark VISION
+          %h2
+            音楽を聴くだけでなく、
+            %br
+            自分の人生で体験する。
+          %p 一人ひとりに合う曲やキー、練習、仲間、イベントをAIが提案し、音楽を通じた新しい出会いと挑戦を広げていきます。
+
+    %section.glp-section-pad.glp-faq{ id: "faq" }
+      .glp-container.glp-narrow
+        .glp-section-heading.glp-reveal
+          %span.glp-eyebrow.glp-eyebrow--dark FAQ
+          %h2 よくあるご質問
+
+        .glp-accordion
+          %article.glp-faq-item.glp-reveal
+            %button.glp-faq-question{ type: "button", "aria-expanded" => "false" }
+              音楽初心者でも利用できますか？
+              %span +
+            .glp-faq-answer
+              %p はい。初心者やブランクのある方にも安心して参加いただける場所を目指しています。まずはアプリを見たり、活動報告を読んだりするところから始められます。
+          %article.glp-faq-item.glp-reveal
+            %button.glp-faq-question{ type: "button", "aria-expanded" => "false" }
+              歌唱診断を受けるには何が必要ですか？
+              %span +
+            .glp-faq-answer
+              %p スマートフォンやパソコンなど、歌声を録音・アップロードできる環境をご用意ください。詳しい利用方法は診断画面で案内します。
+          %article.glp-faq-item.glp-reveal
+            %button.glp-faq-question{ type: "button", "aria-expanded" => "false" }
+              人見知りでも参加できますか？
+              %span +
+            .glp-faq-answer
+              %p もちろんです。見学やオンライン交流から始められます。最初から積極的に話したり、演奏したりする必要はありません。
+          %article.glp-faq-item.glp-reveal
+            %button.glp-faq-question{ type: "button", "aria-expanded" => "false" }
+              利用料金はいくらですか？
+              %span +
+            .glp-faq-answer
+              %p 無料で始められるプランをご用意しています。診断回数や利用できる機能に応じたプランもありますので、最新情報は料金ページをご確認ください。
+
+    %section.glp-final-cta
+      .glp-container.glp-final-cta-inner.glp-reveal
+        %span.glp-eyebrow START YOUR MUSIC JOURNEY
+        %h2
+          音楽を始めるのに、
+          %br
+          遅すぎることはありません。
+        %p
+          診断する。成長する。仲間と出会う。一緒に演奏する。
+          %br
+          あなたらしい音楽人生を、今日から始めてみませんか？
+        .glp-hero-actions.glp-hero-actions--centered
+          = link_to "無料でBeMyStyleを始める", new_customer_registration_path, class: "glp-btn glp-btn--primary glp-btn--light", data: { turbolinks: false }
+          = link_to "AI歌唱診断を試す", new_singing_diagnosis_path, class: "glp-btn glp-btn--ghost glp-btn--light-outline"
+
+  %footer.glp-site-footer
+    .glp-container.glp-footer-grid
+      %div
+        %a.glp-brand.glp-footer-brand{ href: "#top" }
+          %span.glp-brand-mark B
+          %span.glp-brand-text BeMyStyle
+        %p AIで歌を知り、仲間とつながる音楽プラットフォーム。
+      .glp-footer-links
+        = link_to "新規登録", new_customer_registration_path, data: { turbolinks: false }
+        = link_to "歌唱診断", singing_root_path
+        = link_to "コミュニティ", public_communities_path
+        = link_to "イベント", public_events_path
+    .glp-container.glp-copyright © BeMyStyle. All rights reserved.

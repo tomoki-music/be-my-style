@@ -114,6 +114,7 @@ class ApplicationController < ActionController::Base
 
   def ensure_music_domain_access_for_public_routes!
     return unless public_music_platform_route?
+    return if current_customer.nil? && request.path == "/"
     return if current_customer&.admin?
     return if current_customer&.music_user?
 
