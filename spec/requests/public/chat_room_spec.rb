@@ -30,6 +30,20 @@ RSpec.describe "chat_roomsコントローラーのテスト", type: :request do
         expect(response.body).to include("チャットルームへようこそ!")
       end
     end
+    context "後方互換性(要件11)のテスト" do
+      it "content_format が plain(Markdown対応以前)の既存メッセージは記号がそのままプレーン表示されること" do
+        create(:chat_message, customer: other_customer, chat_room: chat_room, content: "*これは強調ではない*")
+        get public_chat_room_path(chat_room, customer_id: other_customer.id)
+        expect(response.body).to include("*これは強調ではない*")
+        expect(response.body).not_to include("<em>これは強調ではない</em>")
+      end
+
+      it "content_format が markdown の新規メッセージはHTMLに変換されて表示されること" do
+        create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: "**これは強調**")
+        get public_chat_room_path(chat_room, customer_id: other_customer.id)
+        expect(response.body).to include("<strong>これは強調</strong>")
+      end
+    end
     context "コミュニティチャットルームが正しく作成(create)される" do
       it 'コミュニティチャットルームが１つ作成されること' do
         expect do
