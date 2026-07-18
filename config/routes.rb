@@ -129,6 +129,7 @@ Rails.application.routes.draw do
     end
     resources :chat_messages, only: [:create] do
       post "community_create" => "chat_messages#community_create", on: :collection
+      post "preview" => "chat_messages#preview", on: :collection
     end
 
     # コミュニティ機能

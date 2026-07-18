@@ -61,6 +61,11 @@ class Public::ChatMessagesController < ApplicationController
     end
   end
 
+  # Markdownプレビュー用。DBへの書き込みは一切行わない。
+  def preview
+    render json: { html: Chat::MarkdownRenderer.call(params[:content].to_s.first(5000)) }
+  end
+
   private
 
   def chat_message_params
