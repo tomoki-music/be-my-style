@@ -183,4 +183,16 @@ RSpec.describe Chat::MarkdownRenderer, type: :service do
       expect(render("")).to eq ""
     end
   end
+
+  describe "文字数上限(DoS対策)" do
+    it "MAX_LENGTHを超える入力は例外を発生させず、上限までで処理されること" do
+      huge_input = "a" * (Chat::MarkdownRenderer::MAX_LENGTH + 10_000)
+      expect { render(huge_input) }.not_to raise_error
+    end
+
+    it "MAX_LENGTHを超えた部分は切り詰められること" do
+      huge_input = ("a" * Chat::MarkdownRenderer::MAX_LENGTH) + "OVER_LIMIT_MARKER"
+      expect(render(huge_input)).not_to include("OVER_LIMIT_MARKER")
+    end
+  end
 end

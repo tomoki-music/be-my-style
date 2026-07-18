@@ -158,6 +158,10 @@ document.addEventListener('turbolinks:load', function () {
       })
         .then(function (response) { return response.json(); })
         .then(function (data) {
+          if (data.error || typeof data.html !== 'string') {
+            previewPane.innerHTML = '<p class="markdown-preview-placeholder">プレビューを取得できませんでした</p>';
+            return;
+          }
           // サーバー側(Chat::MarkdownRenderer)でSanitize済みのHTMLのみを信頼して挿入する
           previewPane.innerHTML = data.html;
         })

@@ -71,6 +71,48 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
         post preview_public_chat_messages_path, params: { content: "<script>alert(1)</script>" }, as: :json
         expect(JSON.parse(response.body)["html"]).not_to include("<script")
       end
+
+      it "空文字を渡しても500にならず、空のHTMLを返すこと" do
+        post preview_public_chat_messages_path, params: { content: "" }, as: :json
+        expect(response).to have_http_status(200)
+        expect(JSON.parse(response.body)["html"]).to eq ""
+      end
+
+      it "contentパラメータ自体が無くても500にならないこと" do
+        post preview_public_chat_messages_path, params: {}, as: :json
+        expect(response).to have_http_status(200)
+      end
+
+      it "極端に長い入力でも例外にならず、上限文字数までで処理されること" do
+        huge_input = "a" * 100_000
+        post preview_public_chat_messages_path, params: { content: huge_input }, as: :json
+        expect(response).to have_http_status(200)
+        html = JSON.parse(response.body)["html"]
+        expect(html.length).to be <= Chat::MarkdownRenderer::MAX_LENGTH + 50 # HTMLタグ分の余裕
+      end
+
+      it "レスポンスのContent-TypeがJSONであること" do
+        post preview_public_chat_messages_path, params: { content: "**bold**" }, as: :json
+        expect(response.content_type).to include("application/json")
+      end
+
+      it "GETではアクセスできないこと(ルーティングエラー)" do
+        expect do
+          get preview_public_chat_messages_path
+        end.to raise_error(ActionController::RoutingError)
+      end
+
+      it "レンダリング中に予期しない例外が発生してもスタックトレース等を漏らさず、汎用エラーメッセージを返すこと" do
+        allow(Chat::MarkdownRenderer).to receive(:call).and_raise(StandardError, "internal boom")
+
+        post preview_public_chat_messages_path, params: { content: "**bold**" }, as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        body = JSON.parse(response.body)
+        expect(body["error"]).to eq "プレビューを生成できませんでした"
+        expect(response.body).not_to include("internal boom")
+        expect(response.body).not_to include("markdown_renderer.rb")
+      end
     end
     context "非ログイン" do
       it "リクエストは302 Foundとなること" do

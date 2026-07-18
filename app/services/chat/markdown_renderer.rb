@@ -3,6 +3,12 @@ module Chat
     # レンダリングロジックを変更したらここを上げてキャッシュ(ChatMessagesHelper)を無効化する
     CACHE_VERSION = "v1".freeze
 
+    # ChatMessage#content には現状アプリ側の文字数上限が無い(DBはtext型)ため、
+    # 極端に長い入力によるRouge/Sanitizeの処理負荷を抑える目的でレンダリング時のみ
+    # 上限を設ける(保存内容そのものは変更しない。表示上末尾が切り詰められるだけ)。
+    # プレビューAPIも同じ上限をこの一箇所で共有する。
+    MAX_LENGTH = 20_000
+
     TASK_ITEM_REGEX = /\A(<p>)?\[([ xX])\]\s+/.freeze
     EMOJI_SHORTCODE_REGEX = /:([a-z0-9_+\-]+):/.freeze
     CODE_SEGMENT_REGEX = /(```.*?```|`[^`\n]*`)/m.freeze
@@ -39,7 +45,7 @@ module Chat
     end
 
     def initialize(text)
-      @text = text.to_s.gsub(/\r\n?/, "\n")
+      @text = text.to_s.first(MAX_LENGTH).gsub(/\r\n?/, "\n")
     end
 
     def render

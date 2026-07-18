@@ -62,8 +62,12 @@ class Public::ChatMessagesController < ApplicationController
   end
 
   # Markdownプレビュー用。DBへの書き込みは一切行わない。
+  # 文字数上限はChat::MarkdownRenderer::MAX_LENGTHで一元管理し、実際の投稿表示と揃える。
   def preview
-    render json: { html: Chat::MarkdownRenderer.call(params[:content].to_s.first(5000)) }
+    render json: { html: Chat::MarkdownRenderer.call(params[:content]) }
+  rescue StandardError => e
+    Rails.logger.error("[Chat::MarkdownRenderer preview] #{e.class}: #{e.message}")
+    render json: { error: "プレビューを生成できませんでした" }, status: :unprocessable_entity
   end
 
   private
