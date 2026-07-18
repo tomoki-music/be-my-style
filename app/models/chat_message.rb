@@ -7,6 +7,10 @@ class ChatMessage < ApplicationRecord
 
   has_many_attached :attachments
 
+  # plain: Markdown対応以前の投稿(互換性維持のため常にプレーンテキスト表示)
+  # markdown: Markdown対応後の投稿(Chat::MarkdownRendererでHTML変換して表示)
+  enum content_format: { plain: 0, markdown: 1 }
+
   validate :content_or_stamp_or_attachment_present
 
   private

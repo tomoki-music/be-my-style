@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_07_07_000001) do
+ActiveRecord::Schema.define(version: 2026_07_18_000001) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -128,6 +128,7 @@ ActiveRecord::Schema.define(version: 2026_07_07_000001) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.string "stamp_type"
+    t.integer "content_format", default: 0, null: false
     t.index ["chat_room_id"], name: "index_chat_messages_on_chat_room_id"
     t.index ["community_id"], name: "index_chat_messages_on_community_id"
     t.index ["customer_id"], name: "index_chat_messages_on_customer_id"

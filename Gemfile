@@ -85,5 +85,7 @@ gem 'listen', '~> 3.3'
 gem 'acts-as-taggable-on'
 gem 'redcarpet'
 gem 'sanitize'
+gem 'rouge', '~> 4.2'
+gem 'gemoji', '~> 4.1'
 gem 'stripe'
 gem "rqrcode", "~> 3.1"

@@ -11,7 +11,7 @@ class Public::ChatMessagesController < ApplicationController
   def create
     @chat_room = ChatRoom.find(params[:chat_message][:chat_room_id])
     @chat_room_customer = @chat_room.chat_room_customers.where.not(customer_id: current_customer.id)[0].customer
-    @chat_message = ChatMessage.new(chat_message_params.except(:attachments).merge(customer_id: current_customer.id, chat_room_id: @chat_room.id))
+    @chat_message = ChatMessage.new(chat_message_params.except(:attachments).merge(customer_id: current_customer.id, chat_room_id: @chat_room.id, content_format: :markdown))
 
     if params[:chat_message][:attachments].present?
       params[:chat_message][:attachments].each do |uploaded_file|
@@ -36,7 +36,7 @@ class Public::ChatMessagesController < ApplicationController
       chat_room_customer.customer
     end
     @community = ChatRoomCustomer.where(chat_room_id: @chat_room.id)[0].community
-    @chat_message = ChatMessage.new(chat_message_params.except(:attachments).merge(customer_id: current_customer.id, chat_room_id: @chat_room.id))
+    @chat_message = ChatMessage.new(chat_message_params.except(:attachments).merge(customer_id: current_customer.id, chat_room_id: @chat_room.id, content_format: :markdown))
     
     if params[:chat_message][:attachments].present?
       params[:chat_message][:attachments].each do |uploaded_file|
@@ -59,6 +59,15 @@ class Public::ChatMessagesController < ApplicationController
       flash[:alert] = "メッセージを入力してください！"
       redirect_back(fallback_location: root_path)
     end
+  end
+
+  # Markdownプレビュー用。DBへの書き込みは一切行わない。
+  # 文字数上限はChat::MarkdownRenderer::MAX_LENGTHで一元管理し、実際の投稿表示と揃える。
+  def preview
+    render json: { html: Chat::MarkdownRenderer.call(params[:content]) }
+  rescue StandardError => e
+    Rails.logger.error("[Chat::MarkdownRenderer preview] #{e.class}: #{e.message}")
+    render json: { error: "プレビューを生成できませんでした" }, status: :unprocessable_entity
   end
 
   private

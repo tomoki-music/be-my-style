@@ -1,3 +1,209 @@
 // Place all the styles related to the public/chat_messages controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: https://sass-lang.com/
+
+/* チャット画面(.chat-rooms-show-container)配下にスコープし、
+   プロフィール/コミュニティ詳細等、他画面の既存.markdown-bodyスタイルに影響しないようにする */
+.chat-rooms-show-container {
+  /* ===== Markdown表示(.markdown-body) ===== */
+  .markdown-body {
+    line-height: 1.7;
+    font-size: 14px;
+    word-break: break-word;
+
+    h1, h2, h3 {
+      margin-top: 0.8em;
+      margin-bottom: 0.4em;
+      font-weight: bold;
+    }
+
+    p {
+      margin-bottom: 0.6em;
+    }
+
+    ul, ol {
+      padding-left: 20px;
+      margin-bottom: 0.6em;
+    }
+
+    li.task-list-item {
+      list-style: none;
+      margin-left: -20px;
+
+      input[type="checkbox"] {
+        margin-right: 6px;
+      }
+    }
+
+    blockquote {
+      border-left: 4px solid #ccc;
+      padding-left: 10px;
+      color: #666;
+      margin: 0.6em 0;
+    }
+
+    hr {
+      margin: 1em 0;
+      border: none;
+      border-top: 1px solid #ddd;
+    }
+
+    code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    pre.highlight {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin-bottom: 0.6em;
+
+      code {
+        background: none;
+        padding: 0;
+        color: inherit;
+      }
+    }
+
+    table {
+      border-collapse: collapse;
+      margin-bottom: 0.6em;
+      width: 100%;
+
+      th, td {
+        border: 1px solid #ddd;
+        padding: 6px 10px;
+      }
+
+      th {
+        background: #f5f5f5;
+      }
+    }
+
+    img {
+      max-width: 100%;
+      border-radius: 4px;
+    }
+
+    a {
+      word-break: break-all;
+    }
+  }
+
+  .markdown-preview-placeholder {
+    color: #999;
+  }
+}
+
+/* ===== Markdownツールバー付き入力欄(.markdown-composer、チャット画面専用) ===== */
+.chat-rooms-show-container .markdown-composer {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+
+  .markdown-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 4px 6px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+
+    .md-btn {
+      border: none;
+      background: transparent;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+
+      &:hover {
+        background: #e9ecef;
+      }
+    }
+
+    .md-tabs {
+      margin-left: auto;
+      display: flex;
+      gap: 2px;
+    }
+
+    .md-tab {
+      border: 1px solid #ddd;
+      background: #fff;
+      padding: 3px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+
+      &.is-active {
+        background: #007bff;
+        color: #fff;
+        border-color: #007bff;
+      }
+    }
+  }
+
+  .markdown-panes {
+    display: flex;
+
+    .md-pane {
+      flex: 1;
+      min-width: 0;
+      display: none;
+
+      &.is-active {
+        display: block;
+      }
+    }
+  }
+
+  .markdown-textarea {
+    width: 100%;
+    min-height: 100px;
+    border: none;
+    resize: vertical;
+    padding: 8px;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  .markdown-preview-pane {
+    min-height: 100px;
+    padding: 8px;
+    border-left: 1px solid #eee;
+  }
+}
+
+/* デスクトップ: 編集/プレビューを左右分割表示。両ペインを常時表示にし、
+   タブは「プレビューにフォーカスを移す」だけの補助動線にする */
+@media (min-width: 601px) {
+  .markdown-composer {
+    .md-tabs {
+      display: none;
+    }
+
+    .markdown-panes .md-pane {
+      display: block;
+    }
+  }
+}
+
+/* モバイル: タブで編集/プレビューを切り替え */
+@media (max-width: 600px) {
+  .markdown-composer {
+    .markdown-panes {
+      display: block;
+    }
+  }
+}

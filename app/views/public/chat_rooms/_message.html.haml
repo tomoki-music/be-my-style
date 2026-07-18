@@ -1,0 +1,84 @@
+- if chat_message.customer.id != current_customer.id
+  .partner-message
+    %ul
+      %li
+      = link_to public_customer_path(chat_message.customer), class: "chat-room-customer-link" do
+        .img-element
+          = customer_avatar_tag(chat_message.customer)
+        .name-element
+          = chat_message.customer.name + 'さんのメッセージ'
+      %li
+      .partner-content
+        - if chat_message.stamped?
+          %span.stamp-badge= chat_message.stamp_label
+        - elsif chat_message.content.present?
+          - if chat_message.markdown?
+            .markdown-body= chat_markdown(chat_message)
+          - else
+            = simple_format(chat_message.content)
+      - if chat_message.attachments.attached?
+        - chat_message.attachments.each do |file|
+          %li
+            .partner-chat-image
+              - if file.image?
+                = image_tag file.variant(resize: '300x300'), class: 'message-image'
+              - elsif file.content_type == "application/pdf"
+                %div.pdf-preview
+                  %p PDFファイル:
+                  = link_to "🧾 PDFを見る", url_for(file), target: "_blank", rel: "noopener", class: "btn-view"
+                  = link_to "⬇️ ダウンロード", url_for(file), download: file.filename.to_s, class: "btn-download"
+                  %iframe{ src: url_for(file), width: "100%", height: "400px", class: "pdf-frame" }
+              - elsif file.content_type.start_with?("audio/")
+                %p 音声ファイル:
+                %audio{ controls: true }
+                  %source{ src: url_for(file), type: file.content_type }
+              - elsif file.content_type.start_with?("video/")
+                %p 動画ファイル:
+                %video{ controls: true, width: "100%", height: "auto", style: "max-width: 500px;" }
+                  %source{ src: url_for(file), type: file.content_type }
+      %li
+      = l chat_message.created_at, format: :short
+      に送信済み
+    %hr
+- else
+  .self-message
+    %ul
+      %li
+      = link_to public_customer_path(chat_message.customer), class: "chat-room-customer-link" do
+        .img-element
+          = customer_avatar_tag(chat_message.customer)
+        .name-element
+          = chat_message.customer.name + 'さんのメッセージ'
+      %li
+      .self-content
+        - if chat_message.stamped?
+          %span.stamp-badge= chat_message.stamp_label
+        - elsif chat_message.content.present?
+          - if chat_message.markdown?
+            .markdown-body= chat_markdown(chat_message)
+          - else
+            = simple_format(chat_message.content)
+      - if chat_message.attachments.attached?
+        - chat_message.attachments.each do |file|
+          %li
+            .self-chat-image
+              - if file.image?
+                = image_tag file.variant(resize: '300x300'), class: 'message-image'
+              - elsif file.content_type == "application/pdf"
+                %div.pdf-preview
+                  %p PDFファイル:
+                  = link_to "🧾 PDFを見る", url_for(file), target: "_blank", rel: "noopener", class: "btn-view"
+                  = link_to "⬇️ ダウンロード", url_for(file), download: file.filename.to_s, class: "btn-download"
+                  %iframe{ src: url_for(file), width: "100%", height: "400px", class: "pdf-frame" }
+              - elsif file.content_type.start_with?("audio/")
+                %p 音声ファイル:
+                %audio{ controls: true }
+                  %source{ src: url_for(file), type: file.content_type }
+              - elsif file.content_type.start_with?("video/")
+                %p 動画ファイル:
+                %video{ controls: true, width: "100%", height: "auto", style: "max-width: 500px;" }
+                  %source{ src: url_for(file), type: file.content_type }
+      %li
+      = l chat_message.created_at, format: :short
+      に送信済み
+    %hr
