@@ -66,6 +66,15 @@ RSpec.describe Chat::MentionSyncService, type: :service do
 
       expect { described_class.call(chat_message) }.not_to change { [ChatMention.count, Notification.count] }
     end
+
+    it "skip_notification_customer_idsで指定した相手にはChatMentionは作成するが通知は作成しないこと(返信通知との重複抑制)" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room,
+                                                        content: "[@相手](customer:#{other_customer.id}) こんにちは")
+
+      expect {
+        described_class.call(chat_message, skip_notification_customer_ids: [other_customer.id])
+      }.to change(ChatMention, :count).by(1).and change(Notification, :count).by(0)
+    end
   end
 
   describe "コミュニティチャットメッセージ" do

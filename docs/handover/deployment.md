@@ -32,6 +32,35 @@ RAILS_ENV=production bundle exec rails assets:precompile
 bundle exec rspec
 ```
 
+## ローカル開発でのスキーマ変更後の実機確認手順（必須）
+
+**背景:** マイグレーションを追加した機能で、長時間起動中のローカル Puma
+(`bin/rails server` / `puma -C config/puma.rb` 等) が古いスキーマキャッシュを
+保持したまま新カラムを認識できず、`ActiveModel::MissingAttributeError` が
+実機確認時に複数回発生した(2026-07-18 チャット返信機能, 2026-07-19 同機能の追加調査)。
+`rails runner` や `rails db:migrate` はその都度新しいプロセスを起動するため
+問題を再現せず、**起動し続けている Puma プロセスだけ**が古いスキーマを持ち続ける
+点が見落としやすい。
+
+マイグレーションを含む機能をローカルで実機確認する前は、必ず以下を行う。
+
+```bash
+# 1. マイグレーション適用
+bundle exec rails db:migrate
+
+# 2. Spring 停止 + Puma 再起動 (tmp_restart プラグイン経由)
+bin/spring stop
+touch tmp/restart.txt
+
+# 3. 新カラムをアプリ側(スキーマキャッシュ)が認識しているか確認
+bundle exec rails runner 'puts ChatMessage.column_names.include?("reply_to_chat_message_id")'
+```
+
+`touch tmp/restart.txt` は `config/puma.rb` に `plugin :tmp_restart` が
+設定されている前提(本アプリは設定済み)。Puma ワーカーの再起動は
+`ps aux | grep puma` でワーカー PID が touch 前後で変わっていることを
+確認すると確実。マスタープロセスの PID は再起動しても変わらない。
+
 ## 本番サーバーでの後処理
 
 ```bash

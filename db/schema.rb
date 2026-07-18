@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_07_18_000003) do
+ActiveRecord::Schema.define(version: 2026_07_18_000004) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -139,9 +139,11 @@ ActiveRecord::Schema.define(version: 2026_07_18_000003) do
     t.datetime "updated_at", precision: 6, null: false
     t.string "stamp_type"
     t.integer "content_format", default: 0, null: false
+    t.bigint "reply_to_chat_message_id"
     t.index ["chat_room_id"], name: "index_chat_messages_on_chat_room_id"
     t.index ["community_id"], name: "index_chat_messages_on_community_id"
     t.index ["customer_id"], name: "index_chat_messages_on_customer_id"
+    t.index ["reply_to_chat_message_id"], name: "index_chat_messages_on_reply_to_chat_message_id"
   end
 
   create_table "chat_room_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1215,6 +1217,7 @@ ActiveRecord::Schema.define(version: 2026_07_18_000003) do
   add_foreign_key "admin_notifications", "customers"
   add_foreign_key "chat_mentions", "chat_messages"
   add_foreign_key "chat_mentions", "customers", column: "mentioned_customer_id"
+  add_foreign_key "chat_messages", "chat_messages", column: "reply_to_chat_message_id"
   add_foreign_key "chat_messages", "chat_rooms"
   add_foreign_key "chat_messages", "communities"
   add_foreign_key "chat_messages", "customers"

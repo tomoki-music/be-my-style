@@ -129,6 +129,235 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
       end
     end
 
+    context "返信機能のテスト(DM)" do
+      before do
+        # Chat::ReplyTargetResolverは返信元だけでなく「返信する側(current_customer)」も
+        # 対象chat_roomの参加者であることを検証するため、customer自身もchat_room_customerとして登録する
+        # (トップレベルのlet!はother_customerしか登録していない)。
+        create(:chat_room_customer, chat_room: chat_room, customer: customer)
+        sign_in customer
+      end
+
+      it "reply_to_chat_message_idを指定せずに通常投稿できること" do
+        post public_chat_messages_path, params: {
+          chat_message: { content: "お元気ですか？", chat_room_id: chat_room.id, customer_id: other_customer.id }
+        }
+        expect(ChatMessage.last.reply_to_chat_message_id).to be_nil
+      end
+
+      it "同じchat_room内のメッセージへ返信するとreply_to_chat_message_idが保存されること" do
+        original = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+
+        post public_chat_messages_path, params: {
+          chat_message: {
+            content: "了解しました",
+            chat_room_id: chat_room.id,
+            customer_id: other_customer.id,
+            reply_to_chat_message_id: original.id
+          }
+        }
+        expect(ChatMessage.last.reply_to_chat_message_id).to eq original.id
+      end
+
+      it "メンション付きの返信でChatMentionと返信通知(reply_dm)の両方が作成されること" do
+        original = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+
+        expect do
+          post public_chat_messages_path, params: {
+            chat_message: {
+              content: "[@相手](customer:#{other_customer.id}) 了解しました",
+              chat_room_id: chat_room.id,
+              customer_id: other_customer.id,
+              reply_to_chat_message_id: original.id
+            }
+          }
+        end.to change(ChatMention, :count).by(1)
+
+        expect(Notification.where(action: "reply_dm", visited_id: other_customer.id).count).to eq 1
+        # 返信先と同じ相手へのメンションは、重複通知抑制によりmention_dm通知を作成しない
+        expect(Notification.where(action: "mention_dm", visited_id: other_customer.id).count).to eq 0
+      end
+
+      it "添付ファイル付きの返信でも添付とreply_to_chat_message_idの両方が保存されること" do
+        original = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+
+        post public_chat_messages_path, params: {
+          chat_message: {
+            content: "画像を送ります",
+            chat_room_id: chat_room.id,
+            customer_id: other_customer.id,
+            reply_to_chat_message_id: original.id,
+            attachments: [fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "image/png")]
+          }
+        }
+
+        last_message = ChatMessage.last
+        expect(last_message.reply_to_chat_message_id).to eq original.id
+        expect(last_message.attachments).to be_attached
+      end
+
+      it "別のchat_room(別DM)のメッセージIDを指定してもreply_to_chat_message_idを保存しないこと" do
+        other_chat_room = create(:chat_room)
+        create(:chat_room_customer, chat_room: other_chat_room, customer: other_customer)
+        foreign_message = create(:chat_message, customer: other_customer, chat_room: other_chat_room)
+
+        post public_chat_messages_path, params: {
+          chat_message: {
+            content: "不正な返信",
+            chat_room_id: chat_room.id,
+            customer_id: other_customer.id,
+            reply_to_chat_message_id: foreign_message.id
+          }
+        }
+        expect(ChatMessage.last.reply_to_chat_message_id).to be_nil
+      end
+
+      it "存在しないreply_to_chat_message_idを指定してもエラーにならず通常投稿として保存されること" do
+        expect do
+          post public_chat_messages_path, params: {
+            chat_message: {
+              content: "存在しないIDへの返信",
+              chat_room_id: chat_room.id,
+              customer_id: other_customer.id,
+              reply_to_chat_message_id: 999_999
+            }
+          }
+        end.to change(ChatMessage, :count).by(1)
+        expect(ChatMessage.last.reply_to_chat_message_id).to be_nil
+      end
+
+      it "自分自身の投稿への返信では通知を作成しないこと" do
+        original = create(:chat_message, customer: customer, chat_room: chat_room, content: "自分の投稿")
+
+        post public_chat_messages_path, params: {
+          chat_message: {
+            content: "自己レス",
+            chat_room_id: chat_room.id,
+            customer_id: other_customer.id,
+            reply_to_chat_message_id: original.id
+          }
+        }
+        expect(Notification.where(action: "reply_dm").count).to eq 0
+      end
+
+      it "通知作成中に例外が発生した場合、ChatMessageもChatMentionもロールバックされること" do
+        original = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+        allow(Chat::ReplyNotificationService).to receive(:call).and_raise(StandardError, "notification boom")
+
+        expect do
+          post public_chat_messages_path, params: {
+            chat_message: {
+              content: "[@相手](customer:#{other_customer.id}) 了解しました",
+              chat_room_id: chat_room.id,
+              customer_id: other_customer.id,
+              reply_to_chat_message_id: original.id
+            }
+          }
+        end.to raise_error(StandardError, "notification boom")
+
+        expect(ChatMessage.count).to eq 1 # originalのみ(新規投稿はロールバックされている)
+        expect(ChatMention.count).to eq 0
+      end
+    end
+
+    context "返信機能のテスト(コミュニティ)" do
+      let(:community) { create(:community) }
+      let(:community_chat_room) { create(:chat_room) }
+      let(:member) { create(:customer) }
+
+      before do
+        create(:chat_room_customer, chat_room: community_chat_room, customer: customer, community: community)
+        CommunityCustomer.find_or_create_by!(customer: customer, community: community)
+        CommunityCustomer.find_or_create_by!(customer: member, community: community)
+        sign_in customer
+      end
+
+      it "同じコミュニティ内のメッセージへ返信するとreply_to_chat_message_idが保存されること" do
+        original = create(:chat_message, customer: member, chat_room: community_chat_room, community: community,
+                                           content: "元の投稿")
+
+        post community_create_public_chat_messages_path, params: {
+          chat_message: {
+            content: "了解しました",
+            chat_room_id: community_chat_room.id,
+            reply_to_chat_message_id: original.id
+          }
+        }
+        expect(ChatMessage.last.reply_to_chat_message_id).to eq original.id
+      end
+
+      it "メンション付きの返信でChatMentionと返信通知(reply_community)の両方が作成され、重複するmention_community通知は作成されないこと" do
+        original = create(:chat_message, customer: member, chat_room: community_chat_room, community: community,
+                                           content: "元の投稿")
+
+        expect do
+          post community_create_public_chat_messages_path, params: {
+            chat_message: {
+              content: "[@メンバー](customer:#{member.id}) 了解しました",
+              chat_room_id: community_chat_room.id,
+              reply_to_chat_message_id: original.id
+            }
+          }
+        end.to change(ChatMention, :count).by(1)
+
+        expect(Notification.where(action: "reply_community", visited_id: member.id).count).to eq 1
+        expect(Notification.where(action: "mention_community", visited_id: member.id).count).to eq 0
+      end
+
+      it "添付ファイル付きの返信でも添付とreply_to_chat_message_idの両方が保存されること" do
+        original = create(:chat_message, customer: member, chat_room: community_chat_room, community: community,
+                                           content: "元の投稿")
+
+        post community_create_public_chat_messages_path, params: {
+          chat_message: {
+            content: "画像を送ります",
+            chat_room_id: community_chat_room.id,
+            reply_to_chat_message_id: original.id,
+            attachments: [fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "image/png")]
+          }
+        }
+
+        last_message = ChatMessage.last
+        expect(last_message.reply_to_chat_message_id).to eq original.id
+        expect(last_message.attachments).to be_attached
+      end
+
+      it "別のコミュニティのメッセージIDを指定してもreply_to_chat_message_idを保存しないこと" do
+        other_community = create(:community)
+        other_chat_room = create(:chat_room)
+        create(:chat_room_customer, chat_room: other_chat_room, customer: member, community: other_community)
+        foreign_message = create(:chat_message, customer: member, chat_room: other_chat_room, community: other_community)
+
+        post community_create_public_chat_messages_path, params: {
+          chat_message: {
+            content: "不正な返信",
+            chat_room_id: community_chat_room.id,
+            reply_to_chat_message_id: foreign_message.id
+          }
+        }
+        expect(ChatMessage.last.reply_to_chat_message_id).to be_nil
+      end
+
+      it "通知作成中に例外が発生した場合、ChatMessageもChatMentionもロールバックされること" do
+        original = create(:chat_message, customer: member, chat_room: community_chat_room, community: community,
+                                           content: "元の投稿")
+        allow(Chat::ReplyNotificationService).to receive(:call).and_raise(StandardError, "notification boom")
+
+        expect do
+          post community_create_public_chat_messages_path, params: {
+            chat_message: {
+              content: "[@メンバー](customer:#{member.id}) 了解しました",
+              chat_room_id: community_chat_room.id,
+              reply_to_chat_message_id: original.id
+            }
+          }
+        end.to raise_error(StandardError, "notification boom")
+
+        expect(ChatMessage.count).to eq 1
+        expect(ChatMention.count).to eq 0
+      end
+    end
+
     context "content_formatのテスト(要件11の後方互換性)" do
       before { sign_in customer }
 

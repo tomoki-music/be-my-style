@@ -1,0 +1,10 @@
+- reply_target = chat_message.reply_to_chat_message
+- if chat_message.reply_to_chat_message_id.present? && reply_target.blank?
+  .reply-source-card.reply-source-card--unavailable
+    返信元のメッセージは表示できません
+- elsif reply_target.present?
+  %div.reply-source-card{ role: "button", tabindex: "0",
+      data: { "reply-target-id" => "chat-message-#{reply_target.id}" },
+      "aria-label" => "#{reply_target.customer.name}さんの返信元メッセージへ移動" }
+    .reply-source-card-author= reply_target.customer.name
+    .reply-source-card-snippet= chat_reply_excerpt(reply_target)

@@ -1,5 +1,5 @@
 - if chat_message.customer.id != current_customer.id
-  .partner-message{ id: "chat-message-#{chat_message.id}" }
+  .partner-message{ id: "chat-message-#{chat_message.id}", data: { "chat-message-id" => chat_message.id } }
     %ul
       %li
       = link_to public_customer_path(chat_message.customer), class: "chat-room-customer-link" do
@@ -8,6 +8,7 @@
         .name-element
           = chat_message.customer.name + 'さんのメッセージ'
       %li
+      = render "public/chat_rooms/reply_source_card", chat_message: chat_message
       .partner-content
         - if chat_message.stamped?
           %span.stamp-badge= chat_message.stamp_label
@@ -37,11 +38,20 @@
                 %video{ controls: true, width: "100%", height: "auto", style: "max-width: 500px;" }
                   %source{ src: url_for(file), type: file.content_type }
       %li
-      = l chat_message.created_at, format: :short
-      に送信済み
+      .message-meta
+        %span.message-timestamp
+          = l chat_message.created_at, format: :short
+          に送信済み
+        %button.reply-button{ type: "button",
+            "aria-label" => "このメッセージに返信",
+            data: { "reply-message-id" => chat_message.id,
+                    "reply-author" => chat_message.customer.name,
+                    "reply-preview" => chat_reply_excerpt(chat_message) } }
+          %span.reply-button-icon ↩
+          %span.reply-button-label 返信
     %hr
 - else
-  .self-message{ id: "chat-message-#{chat_message.id}" }
+  .self-message{ id: "chat-message-#{chat_message.id}", data: { "chat-message-id" => chat_message.id } }
     %ul
       %li
       = link_to public_customer_path(chat_message.customer), class: "chat-room-customer-link" do
@@ -50,6 +60,7 @@
         .name-element
           = chat_message.customer.name + 'さんのメッセージ'
       %li
+      = render "public/chat_rooms/reply_source_card", chat_message: chat_message
       .self-content
         - if chat_message.stamped?
           %span.stamp-badge= chat_message.stamp_label
@@ -79,6 +90,15 @@
                 %video{ controls: true, width: "100%", height: "auto", style: "max-width: 500px;" }
                   %source{ src: url_for(file), type: file.content_type }
       %li
-      = l chat_message.created_at, format: :short
-      に送信済み
+      .message-meta
+        %span.message-timestamp
+          = l chat_message.created_at, format: :short
+          に送信済み
+        %button.reply-button{ type: "button",
+            "aria-label" => "このメッセージに返信",
+            data: { "reply-message-id" => chat_message.id,
+                    "reply-author" => chat_message.customer.name,
+                    "reply-preview" => chat_reply_excerpt(chat_message) } }
+          %span.reply-button-icon ↩
+          %span.reply-button-label 返信
     %hr

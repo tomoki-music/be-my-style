@@ -55,6 +55,18 @@
         - else
           メンション
         = "しました"
+      - when 'reply_dm' then
+        = "個別チャットであなたのメッセージに"
+        = link_to public_chat_rooms_path(customer_id: visitor.id, chat_message_id: notification.chat_message_id), method: :post, data: { 'turbolinks': false } do
+          返信
+        = "しました"
+      - when 'reply_community' then
+        = "コミュニティチャットであなたのメッセージに"
+        - if ChatRoomCustomer.where(customer_id: visited.id, community_id: community_id).present?
+          = link_to "返信", community_create_public_chat_rooms_path(community_id: community_id, chat_message_id: notification.chat_message_id), method: :post, data: { 'turbolinks': false }
+        - else
+          返信
+        = "しました"
       - when 'request' then
         = link_to community.name, public_community_path(community_id), data: { 'turbolinks': false }
         = "へ参加申請しました"

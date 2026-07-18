@@ -3,12 +3,16 @@ module Chat
   # 呼び出し側(コントローラー)がメッセージ保存と同じトランザクション内で呼び出すことで、
   # 「投稿失敗時にChatMentionだけ残る」事態を防ぐ。
   class MentionSyncService
-    def self.call(chat_message)
-      new(chat_message).sync
+    # skip_notification_customer_ids: 既に返信通知(Chat::ReplyNotificationService)を受け取った
+    # 相手のcustomer_id。ChatMention自体は本文表示のため通常通り作成するが、
+    # 同一メッセージ・同一相手への重複通知を避けるため通知作成だけ抑制する。
+    def self.call(chat_message, skip_notification_customer_ids: [])
+      new(chat_message, skip_notification_customer_ids).sync
     end
 
-    def initialize(chat_message)
+    def initialize(chat_message, skip_notification_customer_ids = [])
       @chat_message = chat_message
+      @skip_notification_customer_ids = skip_notification_customer_ids
     end
 
     def sync
@@ -41,6 +45,8 @@ module Chat
     end
 
     def notify(mentioned_customer)
+      return if @skip_notification_customer_ids.include?(mentioned_customer.id)
+
       if @chat_message.community_id.present?
         mentioned_customer.create_notification_mention_community(@chat_message.customer, @chat_message)
       else

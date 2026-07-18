@@ -31,6 +31,8 @@ class Public::ChatRoomsController < ApplicationController
     @chat_message = ChatMessage.new
     @chat_room = ChatRoom.find(params[:id])
     @chat_messages = ChatMessage.where(chat_room_id: @chat_room.id)
+      .includes(:customer, reply_to_chat_message: :customer)
+      .with_attached_attachments
     @chat_room_customer = @chat_room.chat_room_customers.where(customer_id: params[:customer_id])[0].customer
   end
 
@@ -58,6 +60,8 @@ class Public::ChatRoomsController < ApplicationController
     end
     @community = ChatRoomCustomer.where(chat_room_id: @chat_room.id)[0].community
     @chat_messages = ChatMessage.where(chat_room_id: @chat_room.id)
+      .includes(:customer, reply_to_chat_message: :customer)
+      .with_attached_attachments
   end
 
   # DM用メンション候補API。current_customerがこのchat_roomの参加者であることを

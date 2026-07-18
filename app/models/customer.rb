@@ -633,6 +633,29 @@ class Customer < ApplicationRecord
     notification.save if notification.valid?
   end
 
+  def create_notification_reply_dm(current_customer, chat_message)
+    return false if current_customer.blank? || current_customer.id == id
+
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'reply_dm',
+      chat_message_id: chat_message.id,
+    )
+    notification.save if notification.valid?
+  end
+
+  def create_notification_reply_community(current_customer, chat_message)
+    return false if current_customer.blank? || current_customer.id == id
+
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'reply_community',
+      community_id: chat_message.community_id,
+      chat_message_id: chat_message.id,
+    )
+    notification.save if notification.valid?
+  end
+
   def create_notification_request(current_customer, community_id)
     notification = current_customer.active_notifications.new(
       visited_id: id,

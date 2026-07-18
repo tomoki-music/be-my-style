@@ -298,3 +298,170 @@
     }
   }
 }
+
+/* ===== 返信機能 ===== */
+.chat-rooms-show-container {
+  /* タイムスタンプ + 返信ボタンの行。%liの中で確実に横並びさせるため
+     flexコンテナで明示的にラップする(旧実装はul直下に生テキスト/ボタンを
+     並べていたため、行として視認しにくかった) */
+  .message-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .message-timestamp {
+    font-size: 12px;
+    color: #999;
+  }
+
+  /* 各メッセージに付く「返信」ボタン。
+     常時視認できる枠線付きピル型にし、hover依存にしない(モバイルはhoverが
+     無いため、通常状態でも十分な視認性・タップ領域を確保する) */
+  .reply-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    border: 1px solid #c9d7e6;
+    background: #fff;
+    color: #0056b3;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 7px 12px;
+    min-height: 32px;
+    border-radius: 999px;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: #eaf2ff;
+      border-color: #0056b3;
+    }
+
+    &:active {
+      background: #d9e8ff;
+    }
+  }
+
+  .reply-button-icon {
+    font-size: 14px;
+  }
+
+  @media (max-width: 600px) {
+    .reply-button {
+      /* モバイルは指でのタップ操作になるため、タップ領域を44px相当に広げる */
+      min-height: 40px;
+      padding: 9px 14px;
+      font-size: 14px;
+    }
+  }
+
+  /* 投稿フォーム上部の返信プレビュー */
+  .reply-preview {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    background: #f5f7fa;
+    border-left: 3px solid #0056b3;
+    border-radius: 4px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    max-width: 100%;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  .reply-preview-body {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .reply-preview-label {
+    font-size: 11px;
+    color: #888;
+  }
+
+  .reply-preview-author {
+    display: block;
+    font-size: 12px;
+    font-weight: bold;
+    color: #0056b3;
+  }
+
+  .reply-preview-snippet {
+    font-size: 12px;
+    color: #555;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  .reply-preview-cancel {
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+    color: #888;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+
+    &:hover,
+    &:focus-visible {
+      color: #333;
+    }
+  }
+
+  /* メッセージ本文の上に表示する返信元カード */
+  .reply-source-card {
+    background: #f5f7fa;
+    border-left: 3px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    max-width: 100%;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: #eef1f5;
+      outline: none;
+    }
+
+    &.reply-source-card--unavailable {
+      color: #999;
+      font-style: italic;
+      cursor: default;
+      border-left-color: #ddd;
+
+      &:hover {
+        background: #f5f7fa;
+      }
+    }
+  }
+
+  .reply-source-card-author {
+    font-size: 12px;
+    font-weight: bold;
+    color: #0056b3;
+  }
+
+  .reply-source-card-snippet {
+    font-size: 12px;
+    color: #555;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}
