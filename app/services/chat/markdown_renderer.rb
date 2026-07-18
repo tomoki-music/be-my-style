@@ -1,7 +1,7 @@
 module Chat
   class MarkdownRenderer
     # レンダリングロジックを変更したらここを上げてキャッシュ(ChatMessagesHelper)を無効化する
-    CACHE_VERSION = "v1".freeze
+    CACHE_VERSION = "v2".freeze
 
     # ChatMessage#content には現状アプリ側の文字数上限が無い(DBはtext型)ため、
     # 極端に長い入力によるRouge/Sanitizeの処理負荷を抑える目的でレンダリング時のみ
@@ -12,6 +12,14 @@ module Chat
     TASK_ITEM_REGEX = /\A(<p>)?\[([ xX])\]\s+/.freeze
     EMOJI_SHORTCODE_REGEX = /:([a-z0-9_+\-]+):/.freeze
     CODE_SEGMENT_REGEX = /(```.*?```|`[^`\n]*`)/m.freeze
+    # `[@表示名](customer:123)` 記法のメンションを検出する。
+    # 注: Redcarpet::Render::HTMLはRuby側にlinkメソッドの実体を持たないため、
+    # コールバックをoverrideしてsuperで通常リンク処理へ委譲することができない
+    # (defすると全リンクがこのコールバック経由になり、既存のMarkdownリンク挙動を壊す)。
+    # そのため絵文字置換と同じ「生テキストの前処理」方式を採る: コード区間を除外して
+    # プレースホルダに置換 → Markdownレンダリング → プレースホルダを最終HTMLへ復元。
+    MENTION_REGEX = /\[@([^\]\n]*)\]\(customer:(\d+)\)/.freeze
+    MENTION_TOKEN_REGEX = /\x02MENTION(\d+)\x03/.freeze
 
     ELEMENTS = %w[
       p br strong em del s
@@ -29,7 +37,7 @@ module Chat
       "img"   => %w[src alt title],
       "pre"   => %w[class],
       "code"  => %w[class],
-      "span"  => %w[class],
+      "span"  => %w[class data-customer-id],
       "input" => %w[type checked disabled],
       "th"    => %w[align],
       "td"    => %w[align]
@@ -51,7 +59,10 @@ module Chat
     def render
       return "".html_safe if @text.blank?
 
-      html = markdown_engine.render(substitute_emoji(@text))
+      mentions = []
+      text_with_placeholders = substitute_mentions(@text, mentions)
+      html = markdown_engine.render(substitute_emoji(text_with_placeholders))
+      html = restore_mentions(html, mentions)
       Sanitize.fragment(
         html,
         elements: ELEMENTS,
@@ -61,6 +72,27 @@ module Chat
     end
 
     private
+
+    # `[@表示名](customer:123)` をMarkdownパース前に一意なプレースホルダへ置き換える。
+    # コードブロック/インラインコード内は対象外(絵文字置換と同じCODE_SEGMENT_REGEXで判定)。
+    # 表示名はここで確定的にHTMLエスケープするため、Redcarpetのインライン処理(強調記法等)や
+    # Sanitizeの結果に依存せずXSSを防げる。
+    def substitute_mentions(text, mentions)
+      text.split(CODE_SEGMENT_REGEX).each_with_index.map do |segment, index|
+        next segment if index.odd?
+
+        segment.gsub(MENTION_REGEX) do
+          name = Regexp.last_match(1)
+          customer_id = Regexp.last_match(2)
+          mentions << %(<span class="chat-mention" data-customer-id="#{customer_id}">@#{CGI.escapeHTML(name)}</span>)
+          "\x02MENTION#{mentions.size - 1}\x03"
+        end
+      end.join
+    end
+
+    def restore_mentions(html, mentions)
+      html.gsub(MENTION_TOKEN_REGEX) { mentions[Regexp.last_match(1).to_i] || Regexp.last_match(0) }
+    end
 
     # コードスパン/フェンスコードブロックの中身は絵文字変換の対象外にする。
     # Redcarpetのnormal_textコールバックはautolink有効時にコロンの周辺でテキストが

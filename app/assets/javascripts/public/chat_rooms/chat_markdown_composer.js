@@ -139,7 +139,11 @@ document.addEventListener('turbolinks:load', function () {
     });
 
     function renderPreview() {
-      var content = textarea.value;
+      // @メンションは入力欄では自然な@usernameのまま見せているため、プレビュー取得直前に
+      // 内部記法([@username](customer:ID))へ一時変換してからMarkdownプレビューAPIへ送る。
+      var content = (window.ChatMentions && window.ChatMentions.getContentForSubmission)
+        ? window.ChatMentions.getContentForSubmission(textarea)
+        : textarea.value;
       if (!content.trim()) {
         previewPane.innerHTML = '<p class="markdown-preview-placeholder">入力するとここにプレビューが表示されます</p>';
         return;

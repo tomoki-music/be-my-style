@@ -1,5 +1,5 @@
 - if chat_message.customer.id != current_customer.id
-  .partner-message
+  .partner-message{ id: "chat-message-#{chat_message.id}" }
     %ul
       %li
       = link_to public_customer_path(chat_message.customer), class: "chat-room-customer-link" do
@@ -41,7 +41,7 @@
       に送信済み
     %hr
 - else
-  .self-message
+  .self-message{ id: "chat-message-#{chat_message.id}" }
     %ul
       %li
       = link_to public_customer_path(chat_message.customer), class: "chat-room-customer-link" do

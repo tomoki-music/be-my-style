@@ -43,6 +43,18 @@
         - if ChatRoomCustomer.where(customer_id: visited.id, community_id: community_id).present?
           = link_to community.name, community_create_public_chat_rooms_path(community_id: community_id), method: :post, data: { 'turbolinks': false }
         = "へメッセージを送信しました"
+      - when 'mention_dm' then
+        = "個別チャットであなたを"
+        = link_to public_chat_rooms_path(customer_id: visitor.id, chat_message_id: notification.chat_message_id), method: :post, data: { 'turbolinks': false } do
+          メンション
+        = "しました"
+      - when 'mention_community' then
+        = "コミュニティチャットであなたを"
+        - if ChatRoomCustomer.where(customer_id: visited.id, community_id: community_id).present?
+          = link_to "メンション", community_create_public_chat_rooms_path(community_id: community_id, chat_message_id: notification.chat_message_id), method: :post, data: { 'turbolinks': false }
+        - else
+          メンション
+        = "しました"
       - when 'request' then
         = link_to community.name, public_community_path(community_id), data: { 'turbolinks': false }
         = "へ参加申請しました"

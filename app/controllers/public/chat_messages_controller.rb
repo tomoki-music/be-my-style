@@ -19,7 +19,7 @@ class Public::ChatMessagesController < ApplicationController
       end
     end
 
-    if @chat_message.save
+    if save_chat_message_with_mentions(@chat_message)
         flash[:notice] = "メッセージを送信しました🎵"
         @chat_room_customer.create_notification_chat(current_customer)
         CustomerMailer.with(ac_customer: current_customer, ps_customer: @chat_room_customer, chat_message: @chat_message).create_chat_mail.deliver_later
@@ -36,7 +36,10 @@ class Public::ChatMessagesController < ApplicationController
       chat_room_customer.customer
     end
     @community = ChatRoomCustomer.where(chat_room_id: @chat_room.id)[0].community
-    @chat_message = ChatMessage.new(chat_message_params.except(:attachments).merge(customer_id: current_customer.id, chat_room_id: @chat_room.id, content_format: :markdown))
+    # community_idは元々どこにも設定されておらず常にnilだった(既存のバグ)。
+    # @メンション機能がDM/コミュニティチャットを判定する唯一の手がかりとして使うため、
+    # ここで明示的に設定する(他にこのカラムを参照する既存コードはないため後方互換に影響しない)。
+    @chat_message = ChatMessage.new(chat_message_params.except(:attachments).merge(customer_id: current_customer.id, chat_room_id: @chat_room.id, community_id: @community&.id, content_format: :markdown))
     
     if params[:chat_message][:attachments].present?
       params[:chat_message][:attachments].each do |uploaded_file|
@@ -44,7 +47,7 @@ class Public::ChatMessagesController < ApplicationController
       end
     end
     
-    if @chat_message.save
+    if save_chat_message_with_mentions(@chat_message)
       @chat_room_customers.each do |chat_room_customer|
         if current_customer != chat_room_customer
           chat_room_customer.create_notification_group_chat(current_customer, @community.id)
@@ -71,6 +74,18 @@ class Public::ChatMessagesController < ApplicationController
   end
 
   private
+
+  # メッセージ保存とメンション(ChatMention・通知)作成を1トランザクションにまとめる。
+  # 保存に失敗した場合はもちろん、メンション作成中に例外が起きた場合もメッセージごと
+  # ロールバックされるため、ChatMentionだけが残ることはない。
+  def save_chat_message_with_mentions(chat_message)
+    ActiveRecord::Base.transaction do
+      raise ActiveRecord::Rollback unless chat_message.save
+
+      Chat::MentionSyncService.call(chat_message)
+      true
+    end || false
+  end
 
   def chat_message_params
     params.require(:chat_message).permit(:content, :stamp_type, attachments: [])

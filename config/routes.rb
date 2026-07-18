@@ -126,6 +126,8 @@ Rails.application.routes.draw do
     resources :chat_rooms, only: [:create, :show] do
       get "community_show/:id" => "chat_rooms#community_show", on: :collection, as: :community_show
       post "community_create" => "chat_rooms#community_create", on: :collection
+      get "mention_candidates" => "chat_rooms#mention_candidates", on: :member
+      get "community_mention_candidates" => "chat_rooms#community_mention_candidates", on: :collection
     end
     resources :chat_messages, only: [:create] do
       post "community_create" => "chat_messages#community_create", on: :collection

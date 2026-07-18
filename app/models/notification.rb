@@ -12,6 +12,7 @@ class Notification < ApplicationRecord
   belongs_to :community, optional: true
   belongs_to :post, optional: true
   belongs_to :project, optional: true
+  belongs_to :chat_message, optional: true
 
   belongs_to :visitor, class_name: 'Customer', foreign_key: 'visitor_id', optional: true
   belongs_to :visited, class_name: 'Customer', foreign_key: 'visited_id', optional: true

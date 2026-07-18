@@ -78,6 +78,8 @@ class Customer < ApplicationRecord
   has_many :chat_rooms, through: :chat_room_customers, dependent: :destroy
   has_many :communities, through: :chat_room_customers, dependent: :destroy
   has_many :chat_messages, dependent: :destroy
+  has_many :received_chat_mentions, class_name: "ChatMention", foreign_key: "mentioned_customer_id", dependent: :destroy
+  has_many :mentioning_chat_messages, through: :received_chat_mentions, source: :chat_message
   has_many :community_customers, dependent: :destroy
   has_many :communities, through: :community_customers, dependent: :destroy
   has_many :permits, dependent: :destroy
@@ -604,6 +606,29 @@ class Customer < ApplicationRecord
       visited_id: id,
       action: 'group_chat',
       community_id: community_id,
+    )
+    notification.save if notification.valid?
+  end
+
+  def create_notification_mention_dm(current_customer, chat_message)
+    return if current_customer.blank? || current_customer.id == id
+
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'mention_dm',
+      chat_message_id: chat_message.id,
+    )
+    notification.save if notification.valid?
+  end
+
+  def create_notification_mention_community(current_customer, chat_message)
+    return if current_customer.blank? || current_customer.id == id
+
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'mention_community',
+      community_id: chat_message.community_id,
+      chat_message_id: chat_message.id,
     )
     notification.save if notification.valid?
   end

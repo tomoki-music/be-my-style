@@ -93,10 +93,101 @@
     a {
       word-break: break-all;
     }
+
+    .chat-mention {
+      display: inline-block;
+      background: #e6f0ff;
+      color: #0056b3;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-weight: bold;
+
+      &.chat-mention--self {
+        background: #007bff;
+        color: #fff;
+      }
+    }
   }
 
   .markdown-preview-placeholder {
     color: #999;
+  }
+}
+
+/* 通知経由で遷移してきたメッセージの一時ハイライト */
+.chat-message-highlight {
+  animation: chat-message-highlight-fade 3s ease-out;
+}
+
+@keyframes chat-message-highlight-fade {
+  0% {
+    background-color: #fff3cd;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* @メンション候補ドロップダウン
+   親要素(.markdown-composer は overflow: hidden)による見切れを避けるため、
+   document.body直下へ配置する「ポータル」方式。position: fixed で
+   textarea/キャレット位置を基準に毎回JS側で座標計算する。 */
+.mention-autocomplete {
+  position: fixed;
+  z-index: 1080; /* モーダル・固定ヘッダー・チャット入力欄より前面 */
+  min-width: 220px;
+  max-width: 320px;
+  max-height: 240px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  .mention-autocomplete-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+
+    &.is-active,
+    &:hover {
+      background: #f0f4ff;
+    }
+  }
+
+  .mention-autocomplete-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .mention-autocomplete-names {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .mention-autocomplete-display-name {
+    font-size: 13px;
+    font-weight: bold;
+    word-break: break-all;
+  }
+
+  .mention-autocomplete-username {
+    font-size: 12px;
+    color: #888;
+    word-break: break-all;
+  }
+}
+
+@media (max-width: 600px) {
+  .mention-autocomplete {
+    min-width: 0;
+    max-width: 94vw;
   }
 }
 

@@ -1,6 +1,6 @@
 = render 'layouts/header_menu'
 
-.chat-rooms-show-container
+.chat-rooms-show-container{ data: { "mention-candidates-url" => community_mention_candidates_public_chat_rooms_path(community_id: @community.id), "current-customer-id" => current_customer.id } }
   %h6 コミュニティチャットルームへようこそ!
 
   .row

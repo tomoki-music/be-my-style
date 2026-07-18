@@ -42,6 +42,93 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
         end.to change(ChatMessage, :count).by(1)
       end
     end
+    context "メンション機能のテスト(DM)" do
+      before { sign_in customer }
+
+      it "チャットの参加者へのメンションでChatMentionと通知(mention_dm)が作成されること" do
+        expect do
+          post public_chat_messages_path, params: {
+            chat_message: {
+              content: "[@相手](customer:#{other_customer.id}) お元気ですか？",
+              chat_room_id: chat_room.id,
+              customer_id: other_customer.id
+            }
+          }
+        end.to change(ChatMention, :count).by(1)
+
+        mention = ChatMention.last
+        expect(mention.mentioned_customer).to eq other_customer
+        expect(Notification.where(action: "mention_dm", visited_id: other_customer.id).count).to eq 1
+      end
+
+      it "アクセス権のないユーザーへのメンションはChatMentionを作成しないこと" do
+        stranger = create(:customer)
+        expect do
+          post public_chat_messages_path, params: {
+            chat_message: {
+              content: "[@他人](customer:#{stranger.id}) お元気ですか？",
+              chat_room_id: chat_room.id,
+              customer_id: other_customer.id
+            }
+          }
+        end.not_to change(ChatMention, :count)
+      end
+
+      it "自分自身のIDを含む不正な記法ではChatMentionを作成しないこと" do
+        expect do
+          post public_chat_messages_path, params: {
+            chat_message: {
+              content: "[@自分](customer:#{customer.id}) お元気ですか？",
+              chat_room_id: chat_room.id,
+              customer_id: other_customer.id
+            }
+          }
+        end.not_to change(ChatMention, :count)
+      end
+    end
+
+    context "メンション機能のテスト(コミュニティ)" do
+      let(:community) { create(:community) }
+      let(:community_chat_room) { create(:chat_room) }
+      let(:member) { create(:customer) }
+
+      before do
+        create(:chat_room_customer, chat_room: community_chat_room, customer: customer, community: community)
+        CommunityCustomer.find_or_create_by!(customer: customer, community: community)
+        CommunityCustomer.find_or_create_by!(customer: member, community: community)
+        sign_in customer
+      end
+
+      it "コミュニティメンバーへのメンションでChatMentionと通知(mention_community)が作成されること" do
+        expect do
+          post community_create_public_chat_messages_path, params: {
+            chat_message: {
+              content: "[@メンバー](customer:#{member.id}) お願いします",
+              chat_room_id: community_chat_room.id
+            }
+          }
+        end.to change(ChatMention, :count).by(1)
+
+        expect(ChatMessage.last.community_id).to eq community.id
+        notification = Notification.find_by(action: "mention_community", visited_id: member.id)
+        expect(notification).to be_present
+        expect(notification.community_id).to eq community.id
+        expect(notification.chat_message_id).to eq ChatMessage.last.id
+      end
+
+      it "コミュニティメンバーでないユーザーへのメンションはChatMentionを作成しないこと" do
+        non_member = create(:customer)
+        expect do
+          post community_create_public_chat_messages_path, params: {
+            chat_message: {
+              content: "[@非メンバー](customer:#{non_member.id}) お願いします",
+              chat_room_id: community_chat_room.id
+            }
+          }
+        end.not_to change(ChatMention, :count)
+      end
+    end
+
     context "content_formatのテスト(要件11の後方互換性)" do
       before { sign_in customer }
 

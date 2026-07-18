@@ -5,6 +5,9 @@ class ChatMessage < ApplicationRecord
   belongs_to :customer
   belongs_to :community, optional: true
 
+  has_many :chat_mentions, dependent: :destroy
+  has_many :mentioned_customers, through: :chat_mentions
+
   has_many_attached :attachments
 
   # plain: Markdown対応以前の投稿(互換性維持のため常にプレーンテキスト表示)

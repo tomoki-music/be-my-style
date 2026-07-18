@@ -174,6 +174,54 @@ RSpec.describe Chat::MarkdownRenderer, type: :service do
     end
   end
 
+  describe "メンション" do
+    it "正規のメンション記法をchat-mentionのspanへ変換すること" do
+      html = render("[@Tomoki](customer:123) こんにちは")
+      expect(html).to include('<span class="chat-mention" data-customer-id="123">@Tomoki</span>')
+    end
+
+    it "表示名にHTML特殊文字が含まれても安全にエスケープされること" do
+      html = render("[@<script>alert(1)</script>](customer:5)")
+      expect(html).not_to include("<script>alert(1)</script>")
+      expect(html).to include('data-customer-id="5"')
+    end
+
+    it "複数のメンションをそれぞれ変換すること" do
+      html = render("[@Aさん](customer:1) と [@Bさん](customer:2)")
+      expect(html).to include('data-customer-id="1"')
+      expect(html).to include('data-customer-id="2"')
+    end
+
+    it "コードブロック内のメンション記法は変換しないこと" do
+      html = render("```\n[@Tomoki](customer:123)\n```")
+      expect(html).not_to include("chat-mention")
+      expect(html).to include("customer:123")
+    end
+
+    it "インラインコード内のメンション記法は変換しないこと" do
+      html = render("`[@Tomoki](customer:123)`")
+      expect(html).not_to include("chat-mention")
+      expect(html).to include("<code>")
+    end
+
+    it "IDが数字でない不正な記法は通常のMarkdownリンクとして扱われること(customer:スキームはprotocols許可外なのでhrefは除去される)" do
+      html = render("[@Tomoki](customer:abc)")
+      expect(html).not_to include("chat-mention")
+      expect(html).not_to include('href="customer:abc"')
+    end
+
+    it "通常のMarkdownリンクの挙動には影響しないこと" do
+      html = render("[BeMyStyle](https://be-my-style.com)")
+      expect(html).to include('<a href="https://be-my-style.com"')
+      expect(html).not_to include("chat-mention")
+    end
+
+    it "メールアドレスをメンションとして誤変換しないこと" do
+      html = render("test@example.com")
+      expect(html).not_to include("chat-mention")
+    end
+  end
+
   describe "空文字・nil" do
     it "nilを渡すと空文字を返すこと" do
       expect(render(nil)).to eq ""
