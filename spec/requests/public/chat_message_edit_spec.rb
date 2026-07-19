@@ -1,0 +1,350 @@
+require "rails_helper"
+
+RSpec.describe "メッセージ編集(PATCH update)のテスト", type: :request do
+  let(:customer) { create(:customer) }
+  let(:other_customer) { create(:customer) }
+  let(:chat_room) { create(:chat_room) }
+
+  before do
+    create(:chat_room_customer, chat_room: chat_room, customer: customer)
+    create(:chat_room_customer, chat_room: chat_room, customer: other_customer)
+  end
+
+  describe "正常系" do
+    before { sign_in customer }
+
+    it "投稿者本人が通常メッセージの本文を編集できること" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "編集前の本文")
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "編集後の本文" } }
+
+      expect(response).to have_http_status(:ok)
+      expect(chat_message.reload.content).to eq "編集後の本文"
+    end
+
+    it "投稿者本人がスレッド返信を編集できること" do
+      root = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+      reply = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "編集前の返信",
+                                     reply_to_chat_message: root)
+
+      patch public_chat_message_path(reply), params: { chat_message: { content: "編集後の返信" } }
+
+      expect(response).to have_http_status(:ok)
+      expect(reply.reload.content).to eq "編集後の返信"
+      expect(reply.reply_to_chat_message_id).to eq root.id
+    end
+
+    it "投稿者本人が引用返信を編集できること" do
+      quoted = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: "引用される投稿")
+      quote_reply = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "編集前の引用返信",
+                                           quoted_chat_message: quoted)
+
+      patch public_chat_message_path(quote_reply), params: { chat_message: { content: "編集後の引用返信" } }
+
+      expect(response).to have_http_status(:ok)
+      expect(quote_reply.reload.content).to eq "編集後の引用返信"
+      expect(quote_reply.quoted_chat_message_id).to eq quoted.id
+    end
+
+    it "DMメッセージを編集できること" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "編集前")
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "編集後" } }
+
+      expect(response).to have_http_status(:ok)
+      expect(chat_message.reload.content).to eq "編集後"
+    end
+
+    context "コミュニティチャットの場合" do
+      let(:community) { create(:community) }
+      let(:community_chat_room) { create(:chat_room) }
+
+      before do
+        create(:chat_room_customer, chat_room: community_chat_room, customer: customer, community: community)
+        CommunityCustomer.find_or_create_by!(customer: customer, community: community)
+      end
+
+      it "コミュニティメッセージを編集できること" do
+        chat_message = create(:chat_message, :markdown, customer: customer, chat_room: community_chat_room,
+                                                          community: community, content: "編集前")
+
+        patch public_chat_message_path(chat_message), params: { chat_message: { content: "編集後" } }
+
+        expect(response).to have_http_status(:ok)
+        expect(chat_message.reload.content).to eq "編集後"
+      end
+
+      it "community_id: nilのLegacyコミュニティメッセージを編集できること" do
+        legacy_message = create(:chat_message, :markdown, customer: customer, chat_room: community_chat_room,
+                                                            content: "過去の投稿(community_id無し)")
+        expect(legacy_message.community_id).to be_nil
+
+        patch public_chat_message_path(legacy_message), params: { chat_message: { content: "編集後のLegacy投稿" } }
+
+        expect(response).to have_http_status(:ok)
+        expect(legacy_message.reload.content).to eq "編集後のLegacy投稿"
+      end
+
+      it "現在そのコミュニティへの参加権限を失っている場合は編集できないこと(403相当)" do
+        chat_message = create(:chat_message, :markdown, customer: customer, chat_room: community_chat_room,
+                                                          community: community, content: "編集前")
+        CommunityCustomer.where(customer_id: customer.id, community_id: community.id).destroy_all
+
+        patch public_chat_message_path(chat_message), params: { chat_message: { content: "不正な編集" } }
+
+        expect(response).to have_http_status(:forbidden)
+        expect(chat_message.reload.content).to eq "編集前"
+      end
+    end
+
+    it "編集後にedited_atが設定されること" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "編集前")
+      expect(chat_message.edited_at).to be_nil
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "編集後" } }
+
+      expect(chat_message.reload.edited_at).to be_present
+    end
+
+    it "新規投稿時はedited_atがnilのままであること" do
+      chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "新規投稿")
+      expect(chat_message.edited_at).to be_nil
+    end
+
+    it "Markdown投稿を編集してもcontent_formatがmarkdownのまま維持されること" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "編集前")
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "編集後" } }
+
+      expect(chat_message.reload.content_format).to eq "markdown"
+    end
+
+    it "Legacy plain投稿を編集してもcontent_formatがplainのまま維持されること" do
+      chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "編集前")
+      expect(chat_message.content_format).to eq "plain"
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "編集後" } }
+
+      expect(chat_message.reload.content_format).to eq "plain"
+    end
+
+    it "添付画像が編集後も維持されること(blob idが変わらない)" do
+      chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "画像を送ります")
+      chat_message.attachments.attach(
+        io: File.open(Rails.root.join("spec/fixtures/11megabytes_sample.png")),
+        filename: "sample.png",
+        content_type: "image/png"
+      )
+      original_blob_ids = chat_message.attachments.map { |a| a.blob.id }
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "編集後の本文" } }
+
+      chat_message.reload
+      expect(chat_message.attachments.map { |a| a.blob.id }).to eq original_blob_ids
+    end
+
+    it "編集によってreply_to_chat_message_id / quoted_chat_message_id / chat_room / customer / communityが変わらないこと" do
+      community = create(:community)
+      community_chat_room = create(:chat_room)
+      create(:chat_room_customer, chat_room: community_chat_room, customer: customer, community: community)
+      CommunityCustomer.find_or_create_by!(customer: customer, community: community)
+
+      root = create(:chat_message, :markdown, customer: customer, chat_room: community_chat_room, community: community,
+                                    content: "スレッド元")
+      quoted = create(:chat_message, :markdown, customer: customer, chat_room: community_chat_room, community: community,
+                                      content: "引用される投稿")
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: community_chat_room,
+                                            community: community, content: "編集前",
+                                            reply_to_chat_message: root, quoted_chat_message: quoted)
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "編集後" } }
+
+      chat_message.reload
+      expect(chat_message.reply_to_chat_message_id).to eq root.id
+      expect(chat_message.quoted_chat_message_id).to eq quoted.id
+      expect(chat_message.chat_room_id).to eq community_chat_room.id
+      expect(chat_message.customer_id).to eq customer.id
+      expect(chat_message.community_id).to eq community.id
+    end
+
+    it "成功時に期待するJSON(chat_message_id, html)が返り、htmlが既存message partialで描画されること" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "編集前")
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "編集後の本文です" } }
+
+      json = JSON.parse(response.body)
+      expect(json["chat_message_id"]).to eq chat_message.id
+      expect(json["html"]).to include("編集後の本文です")
+      expect(json["html"]).to match(/data-chat-message-id=['"]#{chat_message.id}['"]/)
+    end
+
+    it "引用元メッセージを編集すると、次回描画時に引用カードが最新本文を表示すること(関連参照方式)" do
+      original = create(:chat_message, :markdown, customer: customer, chat_room: chat_room,
+                                        content: "編集前の元投稿")
+      create(:chat_message, customer: other_customer, chat_room: chat_room, content: "了解です", quoted_chat_message: original)
+
+      patch public_chat_message_path(original), params: { chat_message: { content: "編集後の元投稿" } }
+      expect(response).to have_http_status(:ok)
+
+      get public_chat_room_path(chat_room, customer_id: other_customer.id)
+      expect(response.body).to include("編集後の元投稿")
+      expect(response.body).not_to include("編集前の元投稿")
+    end
+  end
+
+  describe "権限・異常系" do
+    it "他人のメッセージを編集できないこと(404相当)" do
+      chat_message = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "他人の投稿")
+      sign_in customer
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "不正な編集" } }
+
+      expect(response).to have_http_status(:not_found)
+      expect(chat_message.reload.content).to eq "他人の投稿"
+    end
+
+    it "未ログインユーザーは編集できないこと(302でログイン画面へ)" do
+      chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "編集前")
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "不正な編集" } }
+
+      expect(response).to have_http_status(302)
+      expect(response).to redirect_to("/customers/sign_in")
+    end
+
+    it "存在しないメッセージを編集できないこと(404)" do
+      sign_in customer
+
+      patch public_chat_message_path(id: 999_999), params: { chat_message: { content: "不正な編集" } }
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "投稿者本人でも、現在DMチャットルームへの投稿権限を失っている場合は編集できないこと(403相当)" do
+      chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "編集前")
+      sign_in customer
+      ChatRoomCustomer.where(chat_room_id: chat_room.id, customer_id: customer.id, community_id: nil).destroy_all
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "不正な編集" } }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(chat_message.reload.content).to eq "編集前"
+    end
+
+    context "strong parametersのテスト" do
+      before { sign_in customer }
+
+      it "空本文かつstamp・attachmentが無い場合はvalidation errorになり、本文もedited_atも変わらないこと" do
+        chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "編集前")
+
+        patch public_chat_message_path(chat_message), params: { chat_message: { content: "" } }
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(chat_message.reload.content).to eq "編集前"
+        expect(chat_message.edited_at).to be_nil
+      end
+
+      it "不正なcustomer_idを送っても書き換えられないこと" do
+        chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "編集前")
+
+        patch public_chat_message_path(chat_message), params: {
+          chat_message: { content: "編集後", customer_id: other_customer.id }
+        }
+
+        expect(chat_message.reload.customer_id).to eq customer.id
+      end
+
+      it "不正なchat_room_idを送っても書き換えられないこと" do
+        other_room = create(:chat_room)
+        chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "編集前")
+
+        patch public_chat_message_path(chat_message), params: {
+          chat_message: { content: "編集後", chat_room_id: other_room.id }
+        }
+
+        expect(chat_message.reload.chat_room_id).to eq chat_room.id
+      end
+
+      it "不正なcommunity_idを送っても書き換えられないこと" do
+        community = create(:community)
+        chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "編集前")
+        expect(chat_message.community_id).to be_nil
+
+        patch public_chat_message_path(chat_message), params: {
+          chat_message: { content: "編集後", community_id: community.id }
+        }
+
+        expect(chat_message.reload.community_id).to be_nil
+      end
+
+      it "不正なreply_to_chat_message_idを送っても書き換えられないこと" do
+        root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+        chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "編集前")
+
+        patch public_chat_message_path(chat_message), params: {
+          chat_message: { content: "編集後", reply_to_chat_message_id: root.id }
+        }
+
+        expect(chat_message.reload.reply_to_chat_message_id).to be_nil
+      end
+
+      it "不正なquoted_chat_message_idを送っても書き換えられないこと" do
+        original = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+        chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "編集前")
+
+        patch public_chat_message_path(chat_message), params: {
+          chat_message: { content: "編集後", quoted_chat_message_id: original.id }
+        }
+
+        expect(chat_message.reload.quoted_chat_message_id).to be_nil
+      end
+
+      it "不正なcontent_formatを送っても書き換えられないこと" do
+        chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "編集前")
+        expect(chat_message.content_format).to eq "plain"
+
+        patch public_chat_message_path(chat_message), params: {
+          chat_message: { content: "編集後", content_format: "markdown" }
+        }
+
+        expect(chat_message.reload.content_format).to eq "plain"
+      end
+
+      it "不正なattachmentsパラメータを送っても添付が変わらないこと" do
+        chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "編集前")
+        chat_message.attachments.attach(
+          io: File.open(Rails.root.join("spec/fixtures/11megabytes_sample.png")),
+          filename: "sample.png",
+          content_type: "image/png"
+        )
+        original_blob_ids = chat_message.attachments.map { |a| a.blob.id }
+
+        patch public_chat_message_path(chat_message), params: {
+          chat_message: {
+            content: "編集後",
+            attachments: [fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "image/png")]
+          }
+        }
+
+        chat_message.reload
+        expect(chat_message.attachments.map { |a| a.blob.id }).to eq original_blob_ids
+      end
+    end
+  end
+
+  describe "Transaction回帰" do
+    before { sign_in customer }
+
+    it "MentionSyncServiceで例外が発生した場合、contentとedited_atがロールバックされること" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "編集前")
+      allow(Chat::MentionSyncService).to receive(:call).and_raise(StandardError, "mention sync boom")
+
+      expect do
+        patch public_chat_message_path(chat_message), params: { chat_message: { content: "編集後" } }
+      end.to raise_error(StandardError, "mention sync boom")
+
+      expect(chat_message.reload.content).to eq "編集前"
+      expect(chat_message.edited_at).to be_nil
+    end
+  end
+end

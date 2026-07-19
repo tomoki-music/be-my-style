@@ -189,7 +189,61 @@ class Public::ChatMessagesController < ApplicationController
     end
   end
 
+  # 本文の編集。投稿者本人であることに加え、現在もそのチャットルーム(DM/コミュニティ)への
+  # 投稿権限を保持していることを再確認する(投稿後にコミュニティを脱退した場合等を弾くため)。
+  # 他人のメッセージIDと存在しないメッセージIDは同一の404として扱い、存在を漏洩させない。
+  # content以外(customer_id/chat_room_id/community_id/reply_to_chat_message_id/
+  # quoted_chat_message_id/content_format/attachments等)は一切書き換え不可にする。
+  def update
+    @chat_message = ChatMessage.find_by(id: params[:id], customer_id: current_customer.id)
+    return render_thread_reply_error(:not_found) if @chat_message.blank?
+
+    community = community_for_chat_room(@chat_message.chat_room)
+    unless Chat::ChatRoomAuthorization.postable?(chat_room: @chat_message.chat_room, community: community, customer: current_customer)
+      return render_thread_reply_error(:forbidden)
+    end
+
+    if update_chat_message_with_mentions(@chat_message, chat_message_edit_params[:content])
+      html = render_to_string(
+        partial: "public/chat_rooms/message",
+        locals: { chat_message: @chat_message, display_context: normalized_display_context },
+        layout: false
+      )
+      render json: { chat_message_id: @chat_message.id, html: html }, status: :ok
+    else
+      render json: { errors: @chat_message.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
   private
+
+  # クライアントからの入力を無条件に信頼せず、"thread"のみを特別扱いする
+  # ホワイトリスト方式にする(それ以外の値は既存partialの安全なデフォルト:normalへ倒す)。
+  def normalized_display_context
+    params[:display_context] == "thread" ? :thread : :normal
+  end
+
+  # 編集は本文(content)のみ許可する。既存のchat_message_params(作成用)は
+  # reply_to_chat_message_id/quoted_chat_message_id/attachments等を含むため編集には使わない。
+  def chat_message_edit_params
+    params.require(:chat_message).permit(:content)
+  end
+
+  # 本文更新・edited_at更新・メンション同期(ChatMention作成/削除・新規分のみ通知)を
+  # 1トランザクションにまとめる。validationが失敗した場合(update:falseを返す)は
+  # ActiveRecord::Rollbackで静かに戻す。それ以外の予期しない例外(通知作成失敗等)は
+  # 握りつぶさずそのまま伝播させ、本文・edited_at・ChatMentionをまとめてロールバックする
+  # (save_chat_message_with_replies_and_mentionsと同じ設計方針)。
+  # 編集ではreply_to_chat_message_idを変更しないため、Chat::ReplyNotificationServiceは
+  # 呼ばない(スレッド返信通知の再送を防ぐ)。引用に対する通知は元々存在しないため対応不要。
+  def update_chat_message_with_mentions(chat_message, new_content)
+    ActiveRecord::Base.transaction do
+      raise ActiveRecord::Rollback unless chat_message.update(content: new_content, edited_at: Time.current)
+
+      Chat::MentionSyncService.call(chat_message)
+      true
+    end || false
+  end
 
   # DM参加者・コミュニティ参加権限に加え、そのチャット種別のプラン機能(feature)が
   # 有効であることも確認する(通常投稿と同じ権限水準をスレッド取得・投稿にも適用する)。
