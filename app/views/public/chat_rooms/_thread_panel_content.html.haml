@@ -1,0 +1,8 @@
+.thread-panel-root
+  = render "public/chat_rooms/message", chat_message: root_message, display_context: :thread
+.thread-panel-count{ data: { "thread-replies-count" => true } }
+  = "#{root_message.replies_count}件の返信"
+#thread-replies-list.thread-replies-list
+  - replies.each do |reply|
+    = render "public/chat_rooms/message", chat_message: reply, display_context: :thread
+= render "public/chat_rooms/thread_reply_form", root_message: root_message

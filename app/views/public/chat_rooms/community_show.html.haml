@@ -1,6 +1,9 @@
 = render 'layouts/header_menu'
 
-.chat-rooms-show-container{ data: { "mention-candidates-url" => community_mention_candidates_public_chat_rooms_path(community_id: @community.id), "current-customer-id" => current_customer.id } }
+.chat-rooms-show-container{ data: { "mention-candidates-url" => community_mention_candidates_public_chat_rooms_path(community_id: @community.id),
+    "current-customer-id" => current_customer.id,
+    "thread-url-template" => thread_public_chat_message_path(id: "__ID__"),
+    "thread-reply-url-template" => thread_reply_public_chat_message_path(id: "__ID__") } }
   %h6 コミュニティチャットルームへようこそ!
 
   .row
@@ -43,3 +46,5 @@
               = @community.customers.count.to_s + "人"
             %hr
             = link_to 'コミュニティ詳細へ', public_community_path(@community), class: "btn btn-info chat-partner-link", data: { 'turbolinks': false }
+
+  = render "public/chat_rooms/thread_panel_shell"

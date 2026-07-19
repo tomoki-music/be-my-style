@@ -90,6 +90,18 @@
       border-radius: 4px;
     }
 
+    /* スレッド内のMarkdown本文(![alt](url)記法で挿入された画像)も添付画像と同じ
+       サムネイルサイズに揃える。`&.markdown-body--thread img`(詳細度3+要素)で
+       上の`img`ルール(詳細度2+要素)より確実に優先させる */
+    &.markdown-body--thread img {
+      display: block;
+      width: 160px;
+      height: 120px;
+      max-width: 160px;
+      max-height: 120px;
+      object-fit: cover;
+    }
+
     a {
       word-break: break-all;
     }
@@ -111,6 +123,64 @@
 
   .markdown-preview-placeholder {
     color: #999;
+  }
+
+  /* ===== 添付画像(通常一覧) ===== */
+  .chat-image-link {
+    display: inline-block;
+    max-width: 100%;
+    cursor: zoom-in;
+  }
+
+  /* 複数添付をまとめるコンテナ。通常一覧はブロックのまま(縦積み)で、
+     スレッド内(`--thread`修飾)のみ横並びのサムネイル列にする */
+  .message-attachments {
+    &.message-attachments--thread {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-start;
+    }
+  }
+
+  /* スレッドパネル内の添付画像はサムネイル固定サイズで表示する(一覧性優先、
+     元画像は`.chat-image-link`クリックで新規タブから確認できる)。
+     通常一覧の`.message-image`単体には影響しない。
+     `chat_rooms.scss`側の`.partner-chat-image .message-image`(モバイル用, 詳細度2)が
+     require_tree のアルファベット順で本ファイルより後に読み込まれ同点詳細度で上書きし得るため、
+     `.message-image.message-image--thread`+コンテナクラスで詳細度3にして確実に勝たせる */
+  .chat-image-link--thread {
+    width: 160px;
+    max-width: 160px;
+  }
+
+  .message-image.message-image--thread {
+    display: block;
+    width: 160px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .chat-rooms-show-container {
+    .chat-image-link--thread {
+      width: 120px;
+      max-width: 120px;
+    }
+
+    .message-image.message-image--thread {
+      width: 120px;
+      height: 90px;
+    }
+
+    .markdown-body.markdown-body--thread img {
+      width: 120px;
+      height: 90px;
+      max-width: 120px;
+      max-height: 90px;
+    }
   }
 }
 
@@ -463,5 +533,167 @@
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+  }
+
+  /* 「N件の返信」ボタン。reply-buttonと同様、hover依存にせず常時視認できる形にする */
+  .thread-replies-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    border: 1px solid #a9c4e8;
+    background: #eaf2ff;
+    color: #0056b3;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 7px 12px;
+    min-height: 32px;
+    border-radius: 999px;
+    cursor: pointer;
+    margin-top: 4px;
+
+    &:hover,
+    &:focus-visible {
+      background: #d9e8ff;
+      border-color: #0056b3;
+    }
+  }
+
+  .thread-replies-button-icon {
+    font-size: 14px;
+  }
+
+  @media (max-width: 600px) {
+    .thread-replies-button {
+      min-height: 40px;
+      padding: 9px 14px;
+      font-size: 14px;
+    }
+  }
+}
+
+/* パネル表示中は背景のスクロールを止める(モバイルでの誤スクロール・二重スクロール防止) */
+body.thread-panel-open {
+  overflow: hidden;
+}
+
+/* ===== スレッドパネル(Slack風スレッド表示) ===== */
+.thread-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1090; /* @メンション候補ドロップダウンより前面 */
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.thread-panel-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.thread-panel-dialog {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 400px;
+  max-width: 100%;
+  background: #fff;
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.thread-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e5e5;
+  flex-shrink: 0;
+
+  h2 {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0;
+  }
+}
+
+.thread-panel-close {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  color: #666;
+  cursor: pointer;
+  padding: 4px 8px;
+
+  &:hover,
+  &:focus-visible {
+    color: #000;
+  }
+}
+
+.thread-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+
+.thread-panel-placeholder {
+  color: #999;
+  text-align: center;
+  margin-top: 24px;
+}
+
+.thread-panel-root {
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 8px;
+}
+
+.thread-panel-count {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.thread-replies-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.thread-reply-form-container {
+  margin-top: 12px;
+
+  .thread-reply-errors {
+    color: #d9534f;
+    font-size: 13px;
+    margin-bottom: 6px;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  .thread-reply-submit {
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .thread-panel-dialog {
+    width: 100%;
   }
 }

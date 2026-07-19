@@ -1,3 +1,5 @@
+- display_context = local_assigns[:display_context] || :normal
+- in_thread = display_context == :thread
 - if chat_message.customer.id != current_customer.id
   .partner-message{ id: "chat-message-#{chat_message.id}", data: { "chat-message-id" => chat_message.id } }
     %ul
@@ -8,47 +10,61 @@
         .name-element
           = chat_message.customer.name + 'さんのメッセージ'
       %li
-      = render "public/chat_rooms/reply_source_card", chat_message: chat_message
+      - unless in_thread
+        = render "public/chat_rooms/reply_source_card", chat_message: chat_message
       .partner-content
         - if chat_message.stamped?
           %span.stamp-badge= chat_message.stamp_label
         - elsif chat_message.content.present?
           - if chat_message.markdown?
-            .markdown-body= chat_markdown(chat_message)
+            - markdown_class = in_thread ? 'markdown-body markdown-body--thread' : 'markdown-body'
+            %div{ class: markdown_class }= chat_markdown(chat_message)
           - else
             = simple_format(chat_message.content)
       - if chat_message.attachments.attached?
-        - chat_message.attachments.each do |file|
-          %li
-            .partner-chat-image
-              - if file.image?
-                = image_tag file.variant(resize: '300x300'), class: 'message-image'
-              - elsif file.content_type == "application/pdf"
-                %div.pdf-preview
-                  %p PDFファイル:
-                  = link_to "🧾 PDFを見る", url_for(file), target: "_blank", rel: "noopener", class: "btn-view"
-                  = link_to "⬇️ ダウンロード", url_for(file), download: file.filename.to_s, class: "btn-download"
-                  %iframe{ src: url_for(file), width: "100%", height: "400px", class: "pdf-frame" }
-              - elsif file.content_type.start_with?("audio/")
-                %p 音声ファイル:
-                %audio{ controls: true }
-                  %source{ src: url_for(file), type: file.content_type }
-              - elsif file.content_type.start_with?("video/")
-                %p 動画ファイル:
-                %video{ controls: true, width: "100%", height: "auto", style: "max-width: 500px;" }
-                  %source{ src: url_for(file), type: file.content_type }
+        - attachments_class = in_thread ? 'message-attachments message-attachments--thread' : 'message-attachments'
+        %li
+          %div{ class: attachments_class }
+            - chat_message.attachments.each do |file|
+              .partner-chat-image
+                - if file.image?
+                  - image_class = in_thread ? 'message-image message-image--thread' : 'message-image'
+                  - link_class = in_thread ? 'chat-image-link chat-image-link--thread' : 'chat-image-link'
+                  = link_to url_for(file), target: '_blank', rel: 'noopener', aria: { label: '画像を拡大表示' }, class: link_class do
+                    = image_tag file.variant(resize: '300x300'), class: image_class
+                - elsif file.content_type == "application/pdf"
+                  %div.pdf-preview
+                    %p PDFファイル:
+                    = link_to "🧾 PDFを見る", url_for(file), target: "_blank", rel: "noopener", class: "btn-view"
+                    = link_to "⬇️ ダウンロード", url_for(file), download: file.filename.to_s, class: "btn-download"
+                    %iframe{ src: url_for(file), width: "100%", height: "400px", class: "pdf-frame" }
+                - elsif file.content_type.start_with?("audio/")
+                  %p 音声ファイル:
+                  %audio{ controls: true }
+                    %source{ src: url_for(file), type: file.content_type }
+                - elsif file.content_type.start_with?("video/")
+                  %p 動画ファイル:
+                  %video{ controls: true, width: "100%", height: "auto", style: "max-width: 500px;" }
+                    %source{ src: url_for(file), type: file.content_type }
       %li
       .message-meta
         %span.message-timestamp
           = l chat_message.created_at, format: :short
           に送信済み
-        %button.reply-button{ type: "button",
-            "aria-label" => "このメッセージに返信",
-            data: { "reply-message-id" => chat_message.id,
-                    "reply-author" => chat_message.customer.name,
-                    "reply-preview" => chat_reply_excerpt(chat_message) } }
-          %span.reply-button-icon ↩
-          %span.reply-button-label 返信
+        - unless in_thread
+          %button.reply-button{ type: "button",
+              "aria-label" => "このメッセージに返信",
+              data: { "reply-message-id" => chat_message.id,
+                      "reply-author" => chat_message.customer.name,
+                      "reply-preview" => chat_reply_excerpt(chat_message) } }
+            %span.reply-button-icon ↩
+            %span.reply-button-label 返信
+      - if !in_thread && chat_message.replies_count > 0
+        %button.thread-replies-button{ type: "button",
+            "aria-label" => "#{chat_message.replies_count}件の返信を表示",
+            data: { "thread-message-id" => chat_message.id } }
+          %span.thread-replies-button-icon ↩
+          = "#{chat_message.replies_count}件の返信"
     %hr
 - else
   .self-message{ id: "chat-message-#{chat_message.id}", data: { "chat-message-id" => chat_message.id } }
@@ -60,45 +76,59 @@
         .name-element
           = chat_message.customer.name + 'さんのメッセージ'
       %li
-      = render "public/chat_rooms/reply_source_card", chat_message: chat_message
+      - unless in_thread
+        = render "public/chat_rooms/reply_source_card", chat_message: chat_message
       .self-content
         - if chat_message.stamped?
           %span.stamp-badge= chat_message.stamp_label
         - elsif chat_message.content.present?
           - if chat_message.markdown?
-            .markdown-body= chat_markdown(chat_message)
+            - markdown_class = in_thread ? 'markdown-body markdown-body--thread' : 'markdown-body'
+            %div{ class: markdown_class }= chat_markdown(chat_message)
           - else
             = simple_format(chat_message.content)
       - if chat_message.attachments.attached?
-        - chat_message.attachments.each do |file|
-          %li
-            .self-chat-image
-              - if file.image?
-                = image_tag file.variant(resize: '300x300'), class: 'message-image'
-              - elsif file.content_type == "application/pdf"
-                %div.pdf-preview
-                  %p PDFファイル:
-                  = link_to "🧾 PDFを見る", url_for(file), target: "_blank", rel: "noopener", class: "btn-view"
-                  = link_to "⬇️ ダウンロード", url_for(file), download: file.filename.to_s, class: "btn-download"
-                  %iframe{ src: url_for(file), width: "100%", height: "400px", class: "pdf-frame" }
-              - elsif file.content_type.start_with?("audio/")
-                %p 音声ファイル:
-                %audio{ controls: true }
-                  %source{ src: url_for(file), type: file.content_type }
-              - elsif file.content_type.start_with?("video/")
-                %p 動画ファイル:
-                %video{ controls: true, width: "100%", height: "auto", style: "max-width: 500px;" }
-                  %source{ src: url_for(file), type: file.content_type }
+        - attachments_class = in_thread ? 'message-attachments message-attachments--thread' : 'message-attachments'
+        %li
+          %div{ class: attachments_class }
+            - chat_message.attachments.each do |file|
+              .self-chat-image
+                - if file.image?
+                  - image_class = in_thread ? 'message-image message-image--thread' : 'message-image'
+                  - link_class = in_thread ? 'chat-image-link chat-image-link--thread' : 'chat-image-link'
+                  = link_to url_for(file), target: '_blank', rel: 'noopener', aria: { label: '画像を拡大表示' }, class: link_class do
+                    = image_tag file.variant(resize: '300x300'), class: image_class
+                - elsif file.content_type == "application/pdf"
+                  %div.pdf-preview
+                    %p PDFファイル:
+                    = link_to "🧾 PDFを見る", url_for(file), target: "_blank", rel: "noopener", class: "btn-view"
+                    = link_to "⬇️ ダウンロード", url_for(file), download: file.filename.to_s, class: "btn-download"
+                    %iframe{ src: url_for(file), width: "100%", height: "400px", class: "pdf-frame" }
+                - elsif file.content_type.start_with?("audio/")
+                  %p 音声ファイル:
+                  %audio{ controls: true }
+                    %source{ src: url_for(file), type: file.content_type }
+                - elsif file.content_type.start_with?("video/")
+                  %p 動画ファイル:
+                  %video{ controls: true, width: "100%", height: "auto", style: "max-width: 500px;" }
+                    %source{ src: url_for(file), type: file.content_type }
       %li
       .message-meta
         %span.message-timestamp
           = l chat_message.created_at, format: :short
           に送信済み
-        %button.reply-button{ type: "button",
-            "aria-label" => "このメッセージに返信",
-            data: { "reply-message-id" => chat_message.id,
-                    "reply-author" => chat_message.customer.name,
-                    "reply-preview" => chat_reply_excerpt(chat_message) } }
-          %span.reply-button-icon ↩
-          %span.reply-button-label 返信
+        - unless in_thread
+          %button.reply-button{ type: "button",
+              "aria-label" => "このメッセージに返信",
+              data: { "reply-message-id" => chat_message.id,
+                      "reply-author" => chat_message.customer.name,
+                      "reply-preview" => chat_reply_excerpt(chat_message) } }
+            %span.reply-button-icon ↩
+            %span.reply-button-label 返信
+      - if !in_thread && chat_message.replies_count > 0
+        %button.thread-replies-button{ type: "button",
+            "aria-label" => "#{chat_message.replies_count}件の返信を表示",
+            data: { "thread-message-id" => chat_message.id } }
+          %span.thread-replies-button-icon ↩
+          = "#{chat_message.replies_count}件の返信"
     %hr

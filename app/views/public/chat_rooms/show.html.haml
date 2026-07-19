@@ -1,6 +1,9 @@
 = render 'layouts/header_menu'
 
-.chat-rooms-show-container{ data: { "mention-candidates-url" => mention_candidates_public_chat_room_path(@chat_room), "current-customer-id" => current_customer.id } }
+.chat-rooms-show-container{ data: { "mention-candidates-url" => mention_candidates_public_chat_room_path(@chat_room),
+    "current-customer-id" => current_customer.id,
+    "thread-url-template" => thread_public_chat_message_path(id: "__ID__"),
+    "thread-reply-url-template" => thread_reply_public_chat_message_path(id: "__ID__") } }
   %h4 チャットルームへようこそ!
 
   .row
@@ -44,3 +47,5 @@
             %p.card-text
               = @chat_room_customer.human_attribute_enum(:introduction)
             = link_to 'プロフィール画面へ', public_customer_path(@chat_room_customer.id), class: "btn btn-info chat-partner-link", data: { 'turbolinks': false }
+
+  = render "public/chat_rooms/thread_panel_shell"

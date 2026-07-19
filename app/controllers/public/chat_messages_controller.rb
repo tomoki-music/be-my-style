@@ -8,6 +8,8 @@ class Public::ChatMessagesController < ApplicationController
     require_feature!(:music_community_chat, redirect_to_path: public_communities_path)
   end
 
+  THREAD_REPLIES_LIMIT = 50
+
   def create
     @chat_room = ChatRoom.find(params[:chat_message][:chat_room_id])
     unless Chat::ChatRoomAuthorization.postable?(chat_room: @chat_room, community: nil, customer: current_customer)
@@ -96,7 +98,105 @@ class Public::ChatMessagesController < ApplicationController
     render json: { error: "プレビューを生成できませんでした" }, status: :unprocessable_entity
   end
 
+  # スレッド(元メッセージ+返信一覧)をHTML断片として返す。ページ全体を再読み込みせず、
+  # スレッドパネルへfetchで挿入する用途。params[:id]は返信メッセージのIDでもよく、
+  # その場合はスレッドの親(thread_root)まで遡って表示する。
+  def thread
+    target = ChatMessage.find_by(id: params[:id])
+    return head :not_found if target.blank?
+
+    root = target.thread_root
+    return head :forbidden unless thread_readable?(root)
+
+    replies = root.replies
+              .includes(:customer, :mentioned_customers, reply_to_chat_message: :customer)
+              .with_attached_attachments
+              .order(created_at: :asc)
+              .limit(THREAD_REPLIES_LIMIT)
+
+    render partial: "public/chat_rooms/thread_panel_content",
+           locals: { root_message: root, replies: replies },
+           layout: false
+  end
+
+  # スレッドへの返信を投稿する。親メッセージID(params[:id])はURLから取得し、
+  # クライアントから任意のreply_to_chat_message_idを受け付けない
+  # (通常投稿と違い、返信先を偽装できないようにする)。
+  # 成功時はJSONで新規メッセージのHTML断片と最新の返信件数を返し、スレッドパネル・
+  # 通常一覧側の「N件の返信」表示の両方をJS側で即時更新できるようにする。
+  def thread_reply
+    target = ChatMessage.find_by(id: params[:id])
+    return render_thread_reply_error(:not_found) if target.blank?
+
+    root = target.thread_root
+    return render_thread_reply_error(:forbidden) unless thread_postable?(root)
+
+    reply_to_chat_message = Chat::ReplyTargetResolver.call(
+      reply_to_chat_message_id: root.id,
+      chat_room: root.chat_room,
+      community: root.community,
+      current_customer: current_customer
+    )
+    return render_thread_reply_error(:forbidden) if reply_to_chat_message.blank?
+
+    @chat_message = ChatMessage.new(
+      thread_reply_params.except(:attachments).merge(
+        customer_id: current_customer.id,
+        chat_room_id: root.chat_room_id,
+        community_id: root.community_id,
+        content_format: :markdown,
+        reply_to_chat_message: reply_to_chat_message
+      )
+    )
+
+    if params[:chat_message] && params[:chat_message][:attachments].present?
+      params[:chat_message][:attachments].each do |uploaded_file|
+        @chat_message.attachments.attach(uploaded_file)
+      end
+    end
+
+    if save_chat_message_with_replies_and_mentions(@chat_message)
+      html = render_to_string(
+        partial: "public/chat_rooms/message",
+        locals: { chat_message: @chat_message, display_context: :thread },
+        layout: false
+      )
+      render json: { html: html, replies_count: root.reload.replies_count, root_message_id: root.id }, status: :ok
+    else
+      render json: { errors: @chat_message.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
   private
+
+  # DM参加者・コミュニティ参加権限に加え、そのチャット種別のプラン機能(feature)が
+  # 有効であることも確認する(通常投稿と同じ権限水準をスレッド取得・投稿にも適用する)。
+  def thread_readable?(root)
+    return false if root.blank?
+    return false unless thread_feature_enabled?(root)
+
+    Chat::ChatRoomAuthorization.readable?(chat_room: root.chat_room, community: root.community, customer: current_customer)
+  end
+
+  def thread_postable?(root)
+    return false if root.blank?
+    return false unless thread_feature_enabled?(root)
+
+    Chat::ChatRoomAuthorization.postable?(chat_room: root.chat_room, community: root.community, customer: current_customer)
+  end
+
+  def thread_feature_enabled?(root)
+    feature_key = root.community.present? ? :music_community_chat : :music_direct_chat
+    current_customer.has_feature?(feature_key)
+  end
+
+  def render_thread_reply_error(status)
+    render json: { errors: ["操作できませんでした"] }, status: status
+  end
+
+  def thread_reply_params
+    params.require(:chat_message).permit(:content, :stamp_type, attachments: [])
+  end
 
   # メッセージ保存と返信通知・メンション(ChatMention・通知)作成を1トランザクションにまとめる。
   # 保存に失敗した場合はもちろん、通知作成中に例外が起きた場合もメッセージごと

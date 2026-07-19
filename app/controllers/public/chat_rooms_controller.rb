@@ -24,7 +24,7 @@ class Public::ChatRoomsController < ApplicationController
       ChatRoomCustomer.create(customer_id: current_customer.id, chat_room_id: chat_room.id)
       ChatRoomCustomer.create(customer_id: params[:customer_id], chat_room_id: chat_room.id)
     end
-    redirect_to public_chat_room_path(chat_room, customer_id: params[:customer_id], anchor: message_anchor)
+    redirect_to public_chat_room_path(chat_room, customer_id: params[:customer_id], **jump_params)
   end
 
   def show
@@ -36,8 +36,10 @@ class Public::ChatRoomsController < ApplicationController
     end
 
     @chat_message = ChatMessage.new
-    @chat_messages = ChatMessage.where(chat_room_id: @chat_room.id)
-      .includes(:customer, reply_to_chat_message: :customer)
+    # スレッドの返信はここでは表示せず、親メッセージのみを表示する(返信はスレッドパネルで確認する)。
+    # 親メッセージは常にreply_to_chat_message_idがnilなので、reply_to_chat_messageのincludesは不要。
+    @chat_messages = ChatMessage.thread_roots.where(chat_room_id: @chat_room.id)
+      .includes(:customer)
       .with_attached_attachments
     # 相手の情報は、クライアントが指定できるparams[:customer_id]ではなく、current_customer
     # 基準で「このchat_roomのもう一方の参加者」を導出する(不正または欠落したcustomer_idで
@@ -58,7 +60,7 @@ class Public::ChatRoomsController < ApplicationController
       chat_room = ChatRoom.create
       ChatRoomCustomer.create(customer_id: current_customer.id, chat_room_id: chat_room.id, community_id: params[:community_id])
     end
-    redirect_to community_show_public_chat_rooms_path(chat_room, anchor: message_anchor)
+    redirect_to community_show_public_chat_rooms_path(chat_room, **jump_params)
   end
 
   def community_show
@@ -79,8 +81,9 @@ class Public::ChatRoomsController < ApplicationController
     @customers = ChatRoomCustomer.where(chat_room_id: @chat_room.id).map do |chat_room_customer|
       chat_room_customer.customer
     end
-    @chat_messages = ChatMessage.where(chat_room_id: @chat_room.id)
-      .includes(:customer, reply_to_chat_message: :customer)
+    # スレッドの返信はここでは表示せず、親メッセージのみを表示する(返信はスレッドパネルで確認する)。
+    @chat_messages = ChatMessage.thread_roots.where(chat_room_id: @chat_room.id)
+      .includes(:customer)
       .with_attached_attachments
   end
 
@@ -140,10 +143,21 @@ class Public::ChatRoomsController < ApplicationController
     end
   end
 
-  def message_anchor
-    return nil if params[:chat_message_id].blank?
+  # 通知経由の遷移先を決定する。対象メッセージが通常投稿(スレッド親)ならページ内アンカーへ、
+  # スレッド内の返信(reply_dm/reply_community、または返信自体へのmention)なら
+  # スレッドパネルを自動で開いて対象をハイライトするクエリパラメータへ変換する
+  # (返信は通常一覧に表示されないため、アンカーでは辿り着けない)。
+  def jump_params
+    return {} if params[:chat_message_id].blank?
 
-    "chat-message-#{params[:chat_message_id].to_i}"
+    target = ChatMessage.find_by(id: params[:chat_message_id])
+    return {} if target.blank?
+
+    if target.reply_to_chat_message_id.present?
+      { thread_message_id: target.thread_root.id, highlight_message_id: target.id }
+    else
+      { anchor: "chat-message-#{target.id}" }
+    end
   end
 
   # コミュニティ参加権限はCommunityCustomer(実際のコミュニティメンバーシップ)で判定する。

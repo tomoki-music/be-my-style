@@ -1,0 +1,8 @@
+#thread-panel.thread-panel{ hidden: true }
+  .thread-panel-backdrop
+  .thread-panel-dialog{ role: "dialog", "aria-modal" => "true", "aria-labelledby" => "thread-panel-title", tabindex: "-1" }
+    .thread-panel-header
+      %h2#thread-panel-title スレッド
+      %button.thread-panel-close{ type: "button", "aria-label" => "スレッドを閉じる" }
+        ×
+    #thread-panel-body.thread-panel-body
