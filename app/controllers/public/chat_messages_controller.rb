@@ -156,7 +156,7 @@ class Public::ChatMessagesController < ApplicationController
     quoted_chat_message = Chat::QuoteTargetResolver.call(
       quoted_chat_message_id: thread_reply_params[:quoted_chat_message_id],
       chat_room: root.chat_room,
-      community: root.community,
+      community: community,
       current_customer: current_customer
     )
 

@@ -346,6 +346,29 @@ RSpec.describe "スレッド機能(Phase3)のテスト", type: :request do
         end.not_to change(ChatMessage, :count)
         expect(response).to have_http_status(:forbidden)
       end
+
+      it "community_idがnilの過去メッセージをスレッド内で引用しても、quoted_chat_message_idが正しく保存されること" do
+        # thread_replyはcommunity_for_chat_room(root.chat_room)で解決した信頼できるcommunityを
+        # QuoteTargetResolverへ渡す必要がある。root.community(=nil、既存バグ由来)を渡すと、
+        # Chat::ChatRoomAuthorization.postable?がDM文脈(community_id: nilのChatRoomCustomer)を
+        # 探しにいってしまい、コミュニティのChatRoomCustomerとは一致せず引用が静かに失敗する。
+        # 外側のbeforeブロックが同一chat_roomへDM用(community: nil)のChatRoomCustomerも
+        # 作っておりこの差異を覆い隠してしまうため、専用のchat_room/customerで検証する。
+        isolated_chat_room = create(:chat_room)
+        isolated_customer = create(:customer)
+        create(:chat_room_customer, chat_room: isolated_chat_room, customer: isolated_customer, community: community)
+        CommunityCustomer.find_or_create_by!(customer: isolated_customer, community: community)
+        sign_in isolated_customer
+
+        legacy_root = create(:chat_message, customer: member, chat_room: isolated_chat_room, content: "過去の投稿(community_id無し)")
+
+        post thread_reply_public_chat_message_path(legacy_root),
+             params: { chat_message: { content: "その通りです", quoted_chat_message_id: legacy_root.id } }
+
+        expect(response).to have_http_status(200)
+        created = ChatMessage.last
+        expect(created.quoted_chat_message_id).to eq legacy_root.id
+      end
     end
 
     context "非ログイン" do
