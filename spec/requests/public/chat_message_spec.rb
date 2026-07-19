@@ -9,6 +9,10 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
   describe "ログイン済み" do
     context "createアクションのテスト" do
       before do
+        # Chat::ChatRoomAuthorizationにより、投稿者(current_customer)自身もこのchat_roomの
+        # 参加者であることが要求されるため、customer自身もchat_room_customerとして登録する
+        # (トップレベルのlet!はother_customerしか登録していない)。
+        create(:chat_room_customer, chat_room: chat_room, customer: customer)
         sign_in customer
         get public_chat_room_path(chat_room)
         @chat_room = chat_room
@@ -18,7 +22,7 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
           post public_chat_messages_path, params: {
           chat_message: {
             content: "お元気ですか？",
-            chat_room_id: 1,
+            chat_room_id: chat_room.id,
             customer_id: 1,
           }
           }
@@ -26,24 +30,63 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
       end
     end
     context "community_createアクションのテスト" do
+      let(:community) { create(:community) }
+      let(:community_chat_room) { create(:chat_room) }
+
       before do
+        # community_createはコミュニティ参加権限(CommunityCustomer)を要求するため、
+        # トップレベルのchat_room(DM用)とは別のコミュニティ専用chat_roomを用意し、
+        # customerをそのコミュニティのメンバーとして登録する。
+        create(:chat_room_customer, chat_room: community_chat_room, customer: customer, community: community)
+        CommunityCustomer.find_or_create_by!(customer: customer, community: community)
         sign_in customer
-        @chat_room = chat_room
       end
       it "コミュニティへメッセージ作成が成功する" do
         expect do
           post community_create_public_chat_messages_path, params: {
           chat_message: {
             content: "お元気ですか？",
-            chat_room_id: 1,
+            chat_room_id: community_chat_room.id,
             customer_id: 1,
           }
           }
         end.to change(ChatMessage, :count).by(1)
       end
     end
-    context "メンション機能のテスト(DM)" do
+    context "非参加者は投稿できないこと(セキュリティ)" do
       before { sign_in customer }
+
+      it "参加していないDMのchat_roomへは投稿できないこと" do
+        # トップレベルのlet!はother_customerしか登録しておらず、customerはこのchat_roomの
+        # 参加者ではない。
+        expect do
+          post public_chat_messages_path, params: {
+            chat_message: { content: "不正な投稿", chat_room_id: chat_room.id, customer_id: other_customer.id }
+          }
+        end.not_to change(ChatMessage, :count)
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "参加していないコミュニティのchat_roomへは投稿できないこと" do
+        community = create(:community)
+        community_chat_room = create(:chat_room)
+        member = create(:customer)
+        create(:chat_room_customer, chat_room: community_chat_room, customer: member, community: community)
+        CommunityCustomer.find_or_create_by!(customer: member, community: community)
+
+        expect do
+          post community_create_public_chat_messages_path, params: {
+            chat_message: { content: "不正な投稿", chat_room_id: community_chat_room.id }
+          }
+        end.not_to change(ChatMessage, :count)
+      end
+    end
+
+    context "メンション機能のテスト(DM)" do
+      before do
+        create(:chat_room_customer, chat_room: chat_room, customer: customer)
+        sign_in customer
+      end
 
       it "チャットの参加者へのメンションでChatMentionと通知(mention_dm)が作成されること" do
         expect do
@@ -359,7 +402,10 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
     end
 
     context "content_formatのテスト(要件11の後方互換性)" do
-      before { sign_in customer }
+      before do
+        create(:chat_room_customer, chat_room: chat_room, customer: customer)
+        sign_in customer
+      end
 
       it "createアクションで新規投稿すると content_format が markdown で保存されること" do
         post public_chat_messages_path, params: {

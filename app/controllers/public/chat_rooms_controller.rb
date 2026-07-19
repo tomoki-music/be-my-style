@@ -28,12 +28,21 @@ class Public::ChatRoomsController < ApplicationController
   end
 
   def show
+    @chat_room = ChatRoom.find_by(id: params[:id])
+    return render_chat_room_not_found if @chat_room.blank?
+
+    unless Chat::ChatRoomAuthorization.readable?(chat_room: @chat_room, community: nil, customer: current_customer)
+      return render_chat_room_not_found
+    end
+
     @chat_message = ChatMessage.new
-    @chat_room = ChatRoom.find(params[:id])
     @chat_messages = ChatMessage.where(chat_room_id: @chat_room.id)
       .includes(:customer, reply_to_chat_message: :customer)
       .with_attached_attachments
-    @chat_room_customer = @chat_room.chat_room_customers.where(customer_id: params[:customer_id])[0].customer
+    # 相手の情報は、クライアントが指定できるparams[:customer_id]ではなく、current_customer
+    # 基準で「このchat_roomのもう一方の参加者」を導出する(不正または欠落したcustomer_idで
+    # 壊れないようにするため。DMのchat_roomは常に2名の参加者を持つ設計)。
+    @chat_room_customer = @chat_room.chat_room_customers.where.not(customer_id: current_customer.id)[0].customer
   end
 
   def community_create
@@ -53,12 +62,23 @@ class Public::ChatRoomsController < ApplicationController
   end
 
   def community_show
+    @chat_room = ChatRoom.find_by(id: params[:id])
+    return render_chat_room_not_found if @chat_room.blank?
+
+    # このchat_roomが実際にコミュニティへ紐づいていることをChatRoomCustomer側の実データで
+    # 確認する。紐づきが無ければ(例: DM用chat_roomのIDをcommunity_showへ直接指定された場合)
+    # コミュニティとして閲覧させない。
+    @community = ChatRoomCustomer.where(chat_room_id: @chat_room.id).where.not(community_id: nil).first&.community
+    return render_chat_room_not_found if @community.blank?
+
+    unless Chat::ChatRoomAuthorization.readable?(chat_room: @chat_room, community: @community, customer: current_customer)
+      return render_chat_room_not_found
+    end
+
     @chat_message = ChatMessage.new
-    @chat_room = ChatRoom.find(params[:id])
     @customers = ChatRoomCustomer.where(chat_room_id: @chat_room.id).map do |chat_room_customer|
       chat_room_customer.customer
     end
-    @community = ChatRoomCustomer.where(chat_room_id: @chat_room.id)[0].community
     @chat_messages = ChatMessage.where(chat_room_id: @chat_room.id)
       .includes(:customer, reply_to_chat_message: :customer)
       .with_attached_attachments
@@ -126,10 +146,21 @@ class Public::ChatRoomsController < ApplicationController
     "chat-message-#{params[:chat_message_id].to_i}"
   end
 
+  # コミュニティ参加権限はCommunityCustomer(実際のコミュニティメンバーシップ)で判定する。
+  # 以前はChatRoomCustomerの存在で判定していたが、これは「初めてそのコミュニティの
+  # チャットルームへ入室する(=まだChatRoomCustomer行が無い)」場合にも常に弾いてしまう
+  # 論理矛盾のあるチェックだったため修正した。
   def check_community_member
-    unless ChatRoomCustomer.where(customer_id: current_customer.id, community_id: params[:community_id])[0].present?
+    unless CommunityCustomer.where(customer_id: current_customer.id, community_id: params[:community_id]).exists?
       flash[:alert] = "コミュニティに参加していない為、チャットルームへ参加できません。"
       redirect_back(fallback_location: root_path)
     end
+  end
+
+  # 存在しないchat_room・非参加者・未参加コミュニティの全てで同一のレスポンス(404)を返す。
+  # 「存在するが権限が無い」と「存在しない」を区別すると、他人のDM/コミュニティの
+  # chat_room IDが実在するかどうかを外部から推測できてしまうため、常に同じ応答にする。
+  def render_chat_room_not_found
+    head :not_found
   end
 end

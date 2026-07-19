@@ -10,6 +10,11 @@ class Public::ChatMessagesController < ApplicationController
 
   def create
     @chat_room = ChatRoom.find(params[:chat_message][:chat_room_id])
+    unless Chat::ChatRoomAuthorization.postable?(chat_room: @chat_room, community: nil, customer: current_customer)
+      flash[:alert] = "このチャットルームへ参加していません。"
+      return redirect_to root_path
+    end
+
     @chat_room_customer = @chat_room.chat_room_customers.where.not(customer_id: current_customer.id)[0].customer
     reply_to_chat_message = Chat::ReplyTargetResolver.call(
       reply_to_chat_message_id: chat_message_params[:reply_to_chat_message_id],
@@ -42,6 +47,12 @@ class Public::ChatMessagesController < ApplicationController
       chat_room_customer.customer
     end
     @community = ChatRoomCustomer.where(chat_room_id: @chat_room.id)[0].community
+
+    unless Chat::ChatRoomAuthorization.postable?(chat_room: @chat_room, community: @community, customer: current_customer)
+      flash[:alert] = "コミュニティに参加していない為、投稿できません。"
+      return redirect_back(fallback_location: root_path)
+    end
+
     # community_idは元々どこにも設定されておらず常にnilだった(既存のバグ)。
     # @メンション機能がDM/コミュニティチャットを判定する唯一の手がかりとして使うため、
     # ここで明示的に設定する(他にこのカラムを参照する既存コードはないため後方互換に影響しない)。
