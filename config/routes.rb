@@ -129,7 +129,7 @@ Rails.application.routes.draw do
       get "mention_candidates" => "chat_rooms#mention_candidates", on: :member
       get "community_mention_candidates" => "chat_rooms#community_mention_candidates", on: :collection
     end
-    resources :chat_messages, only: [:create] do
+    resources :chat_messages, only: [:create, :update] do
       post "community_create" => "chat_messages#community_create", on: :collection
       post "preview" => "chat_messages#preview", on: :collection
       get "thread" => "chat_messages#thread", on: :member
