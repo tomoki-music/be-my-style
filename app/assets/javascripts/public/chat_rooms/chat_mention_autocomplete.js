@@ -265,27 +265,14 @@
 
   document.addEventListener("turbolinks:before-cache", cleanupAllInstances);
 
-  document.addEventListener("turbolinks:load", function () {
-    cleanupAllInstances(); // 保険(before-cacheを経ずに再初期化される経路があっても二重化させない)
+  var SEARCH_DEBOUNCE_MS = 200;
 
-    if (!document.URL.match(/chat_rooms/)) return;
-
-    var SEARCH_DEBOUNCE_MS = 200;
-
-    document.querySelectorAll(".chat-rooms-show-container").forEach(function (container) {
-      var candidatesUrl = container.dataset.mentionCandidatesUrl;
-      if (!candidatesUrl) return;
-
-      // ログイン中ユーザーのID。候補一覧からの自分自身の除外に使う
-      // (サーバー側でも除外しているが、フロント描画直前にも二重に除外する)。
-      var currentCustomerId = container.dataset.currentCustomerId;
-
-      container.querySelectorAll(".markdown-textarea").forEach(function (textarea) {
-        initMentionAutocomplete(textarea, candidatesUrl, currentCustomerId);
-      });
-    });
-
-    function initMentionAutocomplete(textarea, candidatesUrl, currentCustomerId) {
+  // turbolinks:load時の一括初期化に加え、スレッドパネルのようにページ遷移を伴わず
+  // 動的に挿入されるtextarea向けにも公開する。戻り値のcleanup関数を
+  // disposeTextarea()へ渡すと、そのtextarea分だけ個別に後始末できる
+  // (cleanupAllInstances()はページ全体の全インスタンスを巻き込むため、
+  // スレッドパネルの開閉のたびに呼ぶと本文入力欄のインスタンスまで壊れてしまう)。
+  function initMentionAutocomplete(textarea, candidatesUrl, currentCustomerId) {
       var state = { mentions: [], lastValue: textarea.value };
       mentionStates.set(textarea, state);
 
@@ -322,7 +309,7 @@
 
       wireFormSubmit(textarea);
 
-      activeCleanups.push(function () {
+      var cleanup = function () {
         textarea.removeEventListener("input", onInput);
         textarea.removeEventListener("keydown", onKeydown);
         textarea.removeEventListener("keyup", onCaretMoveKey);
@@ -338,7 +325,8 @@
 
         if (dropdown.parentNode) dropdown.parentNode.removeChild(dropdown);
         mentionStates.delete(textarea);
-      });
+      };
+      activeCleanups.push(cleanup);
 
       function onInput() {
         var newValue = textarea.value;
@@ -552,16 +540,18 @@
         dropdown.style.left = pos.left + "px";
         dropdown.style.visibility = "";
       }
-    }
 
-    function wireFormSubmit(textarea) {
-      var form = textarea.closest("form");
-      if (!form) return;
+      return cleanup;
+  }
 
-      form.addEventListener("submit", function () {
-        textarea.value = root.ChatMentions.getContentForSubmission(textarea);
-      });
-    }
+  function wireFormSubmit(textarea) {
+    var form = textarea.closest("form");
+    if (!form) return;
+
+    form.addEventListener("submit", function () {
+      textarea.value = root.ChatMentions.getContentForSubmission(textarea);
+    });
+  }
 
     // textarea内のキャレット位置を、スタイルを複製したミラー要素で概算し、
     // ビューポート基準の矩形(position: fixedの基準に使える形)へ変換する。
@@ -619,7 +609,39 @@
       var left = marker.offsetLeft - textarea.scrollLeft;
       document.body.removeChild(mirror);
 
-      return { top: top, left: Math.max(0, left) };
-    }
+    return { top: top, left: Math.max(0, left) };
+  }
+
+  document.addEventListener("turbolinks:load", function () {
+    cleanupAllInstances(); // 保険(before-cacheを経ずに再初期化される経路があっても二重化させない)
+
+    if (!document.URL.match(/chat_rooms/)) return;
+
+    document.querySelectorAll(".chat-rooms-show-container").forEach(function (container) {
+      var candidatesUrl = container.dataset.mentionCandidatesUrl;
+      if (!candidatesUrl) return;
+
+      // ログイン中ユーザーのID。候補一覧からの自分自身の除外に使う
+      // (サーバー側でも除外しているが、フロント描画直前にも二重に除外する)。
+      var currentCustomerId = container.dataset.currentCustomerId;
+
+      container.querySelectorAll(".markdown-textarea").forEach(function (textarea) {
+        initMentionAutocomplete(textarea, candidatesUrl, currentCustomerId);
+      });
+    });
   });
+
+  // スレッドパネルなど、Turbolinksのページ遷移を伴わず動的に挿入されるtextarea用の公開API。
+  // 戻り値のcleanup関数をdisposeTextarea()へ渡すことで、そのtextarea単体だけを
+  // 後始末できる(cleanupAllInstances()は同一ページの全インスタンスを巻き込んでしまうため)。
+  root.ChatMentions.initTextarea = function (textarea, candidatesUrl, currentCustomerId) {
+    return initMentionAutocomplete(textarea, candidatesUrl, currentCustomerId);
+  };
+
+  root.ChatMentions.disposeTextarea = function (cleanup) {
+    if (typeof cleanup !== "function") return;
+    var idx = activeCleanups.indexOf(cleanup);
+    if (idx !== -1) activeCleanups.splice(idx, 1);
+    cleanup();
+  };
 })(typeof window !== "undefined" ? window : this);

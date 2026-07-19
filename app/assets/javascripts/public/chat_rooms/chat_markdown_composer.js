@@ -3,12 +3,25 @@
 // クライアント側でMarkdownをパースするライブラリ(markdown-it/marked等)は使わず、
 // 表示時と同じサーバーサイドレンダラー(Chat::MarkdownRenderer)をAjaxで呼び出すことで
 // 見た目のズレを防いでいる。
-document.addEventListener('turbolinks:load', function () {
-  if (!document.URL.match(/chat_rooms/)) return;
+//
+// window.ChatMarkdownComposer.init(composer)は、スレッドパネルのように
+// turbolinks:load後に動的挿入される.markdown-composer向けの公開API。
+// このファイルはbody直下へ何も追加しないため(ドロップダウン等の外部DOM生成なし)、
+// 挿入先ごとdisplay:noneやinnerHTML置き換えで破棄すればリスナーごと解放され、
+// chat_mention_autocomplete.jsのような明示的なdispose処理は不要。
+(function () {
+  'use strict';
 
   var PREVIEW_DEBOUNCE_MS = 350;
 
-  document.querySelectorAll('.markdown-composer').forEach(initComposer);
+  document.addEventListener('turbolinks:load', function () {
+    if (!document.URL.match(/chat_rooms/)) return;
+
+    document.querySelectorAll('.markdown-composer').forEach(initComposer);
+  });
+
+  window.ChatMarkdownComposer = window.ChatMarkdownComposer || {};
+  window.ChatMarkdownComposer.init = initComposer;
 
   function initComposer(composer) {
     var textarea = composer.querySelector('.markdown-textarea');
@@ -174,4 +187,4 @@ document.addEventListener('turbolinks:load', function () {
         });
     }
   }
-});
+})();
