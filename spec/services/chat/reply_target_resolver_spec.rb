@@ -131,6 +131,23 @@ RSpec.describe Chat::ReplyTargetResolver, type: :service do
       expect(resolved).to be_nil
     end
 
+    it "community_idがnilのまま保存された同一chat_room内の既存メッセージでも返信先として解決できること(過去の既存バグ由来の不整合データ対策)" do
+      # Public::ChatMessagesController#community_createのコメントが言及する「community_idが
+      # 元々どこにも設定されておらず常にnilだった(既存のバグ)」状態を再現する。
+      # community_idの一致ではなくchat_room_idの一致で文脈を判定することを保証する回帰テスト。
+      original = create(:chat_message, customer: member, chat_room: chat_room, content: "community_id無しの過去投稿")
+      expect(original.community_id).to be_nil
+
+      resolved = described_class.call(
+        reply_to_chat_message_id: original.id,
+        chat_room: chat_room,
+        community: community,
+        current_customer: customer
+      )
+
+      expect(resolved).to eq original
+    end
+
     it "コミュニティメンバーでないcurrent_customerからの返信は拒否すること" do
       non_member = create(:customer)
       original = create(:chat_message, customer: member, chat_room: chat_room, community: community)

@@ -118,7 +118,8 @@ class Public::ChatMessagesController < ApplicationController
     return head :not_found if target.blank?
 
     root = target.thread_root
-    return head :forbidden unless thread_readable?(root)
+    community = community_for_chat_room(root.chat_room)
+    return head :forbidden unless thread_readable?(root, community)
 
     replies = root.replies
               .includes(:customer, :mentioned_customers, reply_to_chat_message: :customer, quoted_chat_message: :customer)
@@ -141,12 +142,13 @@ class Public::ChatMessagesController < ApplicationController
     return render_thread_reply_error(:not_found) if target.blank?
 
     root = target.thread_root
-    return render_thread_reply_error(:forbidden) unless thread_postable?(root)
+    community = community_for_chat_room(root.chat_room)
+    return render_thread_reply_error(:forbidden) unless thread_postable?(root, community)
 
     reply_to_chat_message = Chat::ReplyTargetResolver.call(
       reply_to_chat_message_id: root.id,
       chat_room: root.chat_room,
-      community: root.community,
+      community: community,
       current_customer: current_customer
     )
     return render_thread_reply_error(:forbidden) if reply_to_chat_message.blank?
@@ -162,7 +164,7 @@ class Public::ChatMessagesController < ApplicationController
       thread_reply_params.except(:attachments, :quoted_chat_message_id).merge(
         customer_id: current_customer.id,
         chat_room_id: root.chat_room_id,
-        community_id: root.community_id,
+        community_id: community&.id,
         content_format: :markdown,
         reply_to_chat_message: reply_to_chat_message,
         quoted_chat_message: quoted_chat_message
@@ -191,23 +193,33 @@ class Public::ChatMessagesController < ApplicationController
 
   # DM参加者・コミュニティ参加権限に加え、そのチャット種別のプラン機能(feature)が
   # 有効であることも確認する(通常投稿と同じ権限水準をスレッド取得・投稿にも適用する)。
-  def thread_readable?(root)
+  def thread_readable?(root, community)
     return false if root.blank?
-    return false unless thread_feature_enabled?(root)
+    return false unless thread_feature_enabled?(community)
 
-    Chat::ChatRoomAuthorization.readable?(chat_room: root.chat_room, community: root.community, customer: current_customer)
+    Chat::ChatRoomAuthorization.readable?(chat_room: root.chat_room, community: community, customer: current_customer)
   end
 
-  def thread_postable?(root)
+  def thread_postable?(root, community)
     return false if root.blank?
-    return false unless thread_feature_enabled?(root)
+    return false unless thread_feature_enabled?(community)
 
-    Chat::ChatRoomAuthorization.postable?(chat_room: root.chat_room, community: root.community, customer: current_customer)
+    Chat::ChatRoomAuthorization.postable?(chat_room: root.chat_room, community: community, customer: current_customer)
   end
 
-  def thread_feature_enabled?(root)
-    feature_key = root.community.present? ? :music_community_chat : :music_direct_chat
+  def thread_feature_enabled?(community)
+    feature_key = community.present? ? :music_community_chat : :music_direct_chat
     current_customer.has_feature?(feature_key)
+  end
+
+  # root.community(ChatMessage#community_id)は「元々どこにも設定されておらず常にnilだった
+  # (既存のバグ)」経緯があり、過去に作成されたコミュニティメッセージではnilのまま残っている
+  # ことがある。このためroot.communityをそのまま信用すると、過去のコミュニティメッセージを
+  # スレッドrootとする操作でDM(music_direct_chat)扱いになり、権限判定を誤る。
+  # community_create/community_showと同様、ChatRoomCustomer(信頼できる方の関連)から
+  # 実際のコミュニティを導出する。
+  def community_for_chat_room(chat_room)
+    ChatRoomCustomer.where(chat_room_id: chat_room.id).where.not(community_id: nil).first&.community
   end
 
   def render_thread_reply_error(status)

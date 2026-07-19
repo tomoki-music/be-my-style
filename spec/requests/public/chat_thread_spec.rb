@@ -293,6 +293,61 @@ RSpec.describe "スレッド機能(Phase3)のテスト", type: :request do
       end
     end
 
+    context "過去のコミュニティメッセージ(community_id: nil)からのスレッド開始" do
+      # Public::ChatMessagesController#community_createのコメントが言及する「community_idが
+      # 元々どこにも設定されておらず常にnilだった(既存のバグ)」状態を再現する回帰テスト。
+      # community:を渡さずに作成することで、正しいコミュニティchat_roomに所属していても
+      # community_idがnilのまま残っている過去データを模す。
+      let(:community) { create(:community) }
+      let(:member) { create(:customer) }
+
+      before do
+        create(:chat_room_customer, chat_room: chat_room, customer: customer, community: community)
+        CommunityCustomer.find_or_create_by!(customer: customer, community: community)
+        CommunityCustomer.find_or_create_by!(customer: member, community: community)
+        sign_in customer
+      end
+
+      it "community_idがnilの過去メッセージからスレッドを開始でき、reply_to_chat_message_idが正しく保存されること" do
+        legacy_root = create(:chat_message, customer: member, chat_room: chat_room, content: "過去の投稿(community_id無し)")
+        expect(legacy_root.community_id).to be_nil
+
+        expect do
+          post thread_reply_public_chat_message_path(legacy_root), params: { chat_message: { content: "スレッド返信します" } }
+        end.to change(ChatMessage, :count).by(1)
+
+        expect(response).to have_http_status(200)
+        created = ChatMessage.last
+        expect(created.reply_to_chat_message_id).to eq legacy_root.id
+        expect(created.community_id).to eq community.id
+        expect(legacy_root.reload.replies_count).to eq 1
+      end
+
+      it "投稿後、GET threadでスレッドパネルへ表示できること" do
+        legacy_root = create(:chat_message, customer: member, chat_room: chat_room, content: "過去の投稿(community_id無し)")
+
+        post thread_reply_public_chat_message_path(legacy_root), params: { chat_message: { content: "スレッド返信します" } }
+
+        get thread_public_chat_message_path(legacy_root)
+        expect(response).to have_http_status(200)
+        expect(response.body).to include("スレッド返信します")
+      end
+
+      it "参加していない別コミュニティの過去メッセージ(community_id無し)へは投稿できないこと" do
+        other_community = create(:community)
+        other_chat_room = create(:chat_room)
+        other_member = create(:customer)
+        create(:chat_room_customer, chat_room: other_chat_room, customer: other_member, community: other_community)
+        CommunityCustomer.find_or_create_by!(customer: other_member, community: other_community)
+        foreign_legacy_root = create(:chat_message, customer: other_member, chat_room: other_chat_room, content: "別コミュニティの過去投稿")
+
+        expect do
+          post thread_reply_public_chat_message_path(foreign_legacy_root), params: { chat_message: { content: "不正な投稿" } }
+        end.not_to change(ChatMessage, :count)
+        expect(response).to have_http_status(:forbidden)
+      end
+    end
+
     context "非ログイン" do
       it "302でログイン画面へリダイレクトされること" do
         root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
