@@ -1,0 +1,15 @@
+- quoted = chat_message.quoted_chat_message
+- if chat_message.quoted_chat_message_id.present? && quoted.blank?
+  .quote-card.quote-card--unavailable
+    引用元のメッセージは表示できません
+- elsif quoted.present?
+  %div.quote-card{ role: "button", tabindex: "0",
+      data: { "quote-target-id" => "chat-message-#{quoted.id}" },
+      "aria-label" => "#{quoted.customer.name}さんの引用元メッセージへ移動" }
+    .quote-card-author= quoted.customer.name
+    .quote-card-snippet= chat_reply_excerpt(quoted)
+    - if chat_quote_has_image?(quoted)
+      - image_file = quoted.attachments.detect(&:image?)
+      - if image_file
+        .quote-card-image
+          = image_tag image_file.variant(resize: "64x64"), class: "quote-card-thumbnail", alt: ""

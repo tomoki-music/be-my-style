@@ -10,6 +10,13 @@
         .reply-preview-snippet
       %button.reply-preview-cancel{ type: "button", "aria-label" => "返信をキャンセル" } ×
     = f.hidden_field :reply_to_chat_message_id, value: nil, class: "reply-to-hidden-field"
+    .quote-preview{ hidden: true }
+      .quote-preview-body
+        %span.quote-preview-label
+        .quote-preview-snippet
+        .quote-preview-image-note{ hidden: true } 画像が添付されています
+      %button.quote-preview-cancel{ type: "button", "aria-label" => "引用をキャンセル" } ×
+    = f.hidden_field :quoted_chat_message_id, value: nil, class: "quote-to-hidden-field"
     .markdown-composer{ data: { "preview-url": preview_public_chat_messages_path } }
       .markdown-toolbar
         %button.md-btn{ type: "button", data: { md: "bold" }, title: "太字" }

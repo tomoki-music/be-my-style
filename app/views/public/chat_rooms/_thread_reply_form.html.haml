@@ -1,6 +1,13 @@
 .thread-reply-form-container
   %form.thread-reply-form{ action: thread_reply_public_chat_message_path(root_message), method: "post" }
     .thread-reply-errors{ hidden: true }
+    .quote-preview{ hidden: true }
+      .quote-preview-body
+        %span.quote-preview-label
+        .quote-preview-snippet
+        .quote-preview-image-note{ hidden: true } 画像が添付されています
+      %button.quote-preview-cancel{ type: "button", "aria-label" => "引用をキャンセル" } ×
+    %input{ type: "hidden", name: "chat_message[quoted_chat_message_id]", value: "", class: "quote-to-hidden-field" }
     .markdown-composer{ data: { "preview-url": preview_public_chat_messages_path } }
       .markdown-toolbar
         %button.md-btn{ type: "button", data: { md: "bold" }, title: "太字" }

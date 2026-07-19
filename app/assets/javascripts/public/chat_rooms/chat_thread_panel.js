@@ -229,7 +229,7 @@
     errorBox.hidden = false;
   }
 
-  function handleThreadReplySuccess(data) {
+  function handleThreadReplySuccess(data, form) {
     var list = document.getElementById("thread-replies-list");
     if (list && data.html) {
       list.insertAdjacentHTML("beforeend", data.html);
@@ -237,6 +237,12 @@
       if (newItem && newItem.scrollIntoView) newItem.scrollIntoView({ block: "end" });
     }
     updateReplyCountUI(data.root_message_id, data.replies_count);
+
+    // form.reset()はhidden fieldの値を初期状態へ戻すだけで、表示中の引用プレビュー
+    // (.quote-preview)自体は消えないため、投稿成功後は明示的にリセットする。
+    if (form && window.ChatQuoteReply && window.ChatQuoteReply.reset) {
+      window.ChatQuoteReply.reset(form);
+    }
   }
 
   function submitThreadReply(form) {
@@ -291,7 +297,7 @@
           return;
         }
         form.reset();
-        handleThreadReplySuccess(result.data);
+        handleThreadReplySuccess(result.data, form);
         finish();
       })
       .catch(function () {
@@ -353,6 +359,13 @@
   });
 
   document.addEventListener("turbolinks:before-cache", resetPanel);
+
+  // 引用カード(.quote-card)から、現在パネルに表示されていないスレッド内メッセージへ
+  // 移動するためのフォールバック用公開API(chat_message_reply_navigation.js内で使用)。
+  // messageIdがスレッドrootかreplyかを問わず、thread_reply同様サーバー側(thread_root)で
+  // 解決させ、パネルを開いた上でhighlightIdをハイライトする。
+  window.ChatThreadPanel = window.ChatThreadPanel || {};
+  window.ChatThreadPanel.open = openThread;
 
   document.addEventListener("turbolinks:load", function () {
     if (!document.URL.match(/chat_rooms/)) return;

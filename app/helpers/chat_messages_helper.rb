@@ -11,10 +11,29 @@ module ChatMessagesHelper
   # 返信元カード・返信ボタンのdata属性に載せる、安全なプレーンテキストの抜粋を返す。
   # Markdown記法を可能な範囲で除去し、改行はスペースへ変換、長すぎる場合は省略する。
   # 呼び出し側(Haml)で通常通りエスケープされる前提の「プレーンテキスト」を返すこと。
+  # 引用プレビュー・引用カードでも同じ抜粋処理を再利用する(引用元本文をそのまま
+  # Markdownレンダリングしないための、プレーンテキスト化の一元窓口)。
   def chat_reply_excerpt(chat_message)
     return attachment_or_stamp_label(chat_message) if chat_message.content.blank?
 
     plain_text_excerpt(chat_message.content).presence || attachment_or_stamp_label(chat_message)
+  end
+
+  # 引用対象(chat_message)に画像添付があるかどうか。引用プレビュー・引用カードの
+  # 文言分岐(「画像を引用」表示・サムネイル表示)に使う。
+  def chat_quote_has_image?(chat_message)
+    chat_message.attachments.attached? && chat_message.attachments.any?(&:image?)
+  end
+
+  # 引用ボタン・引用プレビューの見出しに使う「◯◯さんのメッセージを引用」/
+  # 「◯◯さんの画像を引用」の文言を返す。
+  def chat_quote_label(chat_message)
+    name = chat_message.customer.name
+    if chat_message.content.blank? && chat_quote_has_image?(chat_message)
+      "#{name}さんの画像を引用"
+    else
+      "#{name}さんのメッセージを引用"
+    end
   end
 
   private

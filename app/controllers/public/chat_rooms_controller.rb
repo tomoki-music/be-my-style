@@ -39,7 +39,7 @@ class Public::ChatRoomsController < ApplicationController
     # スレッドの返信はここでは表示せず、親メッセージのみを表示する(返信はスレッドパネルで確認する)。
     # 親メッセージは常にreply_to_chat_message_idがnilなので、reply_to_chat_messageのincludesは不要。
     @chat_messages = ChatMessage.thread_roots.where(chat_room_id: @chat_room.id)
-      .includes(:customer)
+      .includes(:customer, quoted_chat_message: :customer)
       .with_attached_attachments
     # 相手の情報は、クライアントが指定できるparams[:customer_id]ではなく、current_customer
     # 基準で「このchat_roomのもう一方の参加者」を導出する(不正または欠落したcustomer_idで
@@ -83,7 +83,7 @@ class Public::ChatRoomsController < ApplicationController
     end
     # スレッドの返信はここでは表示せず、親メッセージのみを表示する(返信はスレッドパネルで確認する)。
     @chat_messages = ChatMessage.thread_roots.where(chat_room_id: @chat_room.id)
-      .includes(:customer)
+      .includes(:customer, quoted_chat_message: :customer)
       .with_attached_attachments
   end
 

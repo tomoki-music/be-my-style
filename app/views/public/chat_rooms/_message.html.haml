@@ -12,6 +12,7 @@
       %li
       - unless in_thread
         = render "public/chat_rooms/reply_source_card", chat_message: chat_message
+      = render "public/chat_rooms/quote_card", chat_message: chat_message
       .partner-content
         - if chat_message.stamped?
           %span.stamp-badge= chat_message.stamp_label
@@ -59,6 +60,15 @@
                       "reply-preview" => chat_reply_excerpt(chat_message) } }
             %span.reply-button-icon ↩
             %span.reply-button-label 返信
+        %button.quote-button{ type: "button",
+            "aria-label" => "このメッセージを引用返信",
+            data: { "quote-message-id" => chat_message.id,
+                    "quote-author" => chat_message.customer.name,
+                    "quote-label" => chat_quote_label(chat_message),
+                    "quote-excerpt" => chat_reply_excerpt(chat_message),
+                    "quote-has-image" => chat_quote_has_image?(chat_message) } }
+          %span.quote-button-icon "
+          %span.quote-button-label 引用返信
       - if !in_thread && chat_message.replies_count > 0
         %button.thread-replies-button{ type: "button",
             "aria-label" => "#{chat_message.replies_count}件の返信を表示",
@@ -78,6 +88,7 @@
       %li
       - unless in_thread
         = render "public/chat_rooms/reply_source_card", chat_message: chat_message
+      = render "public/chat_rooms/quote_card", chat_message: chat_message
       .self-content
         - if chat_message.stamped?
           %span.stamp-badge= chat_message.stamp_label
@@ -125,6 +136,15 @@
                       "reply-preview" => chat_reply_excerpt(chat_message) } }
             %span.reply-button-icon ↩
             %span.reply-button-label 返信
+        %button.quote-button{ type: "button",
+            "aria-label" => "このメッセージを引用返信",
+            data: { "quote-message-id" => chat_message.id,
+                    "quote-author" => chat_message.customer.name,
+                    "quote-label" => chat_quote_label(chat_message),
+                    "quote-excerpt" => chat_reply_excerpt(chat_message),
+                    "quote-has-image" => chat_quote_has_image?(chat_message) } }
+          %span.quote-button-icon "
+          %span.quote-button-label 引用返信
       - if !in_thread && chat_message.replies_count > 0
         %button.thread-replies-button{ type: "button",
             "aria-label" => "#{chat_message.replies_count}件の返信を表示",

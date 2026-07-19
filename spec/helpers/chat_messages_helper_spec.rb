@@ -105,4 +105,47 @@ RSpec.describe ChatMessagesHelper, type: :helper do
       expect(helper.content_tag(:div, excerpt)).to include("&lt;script&gt;")
     end
   end
+
+  describe "#chat_quote_has_image?" do
+    it "画像添付があるとtrueを返すこと" do
+      message = build(:chat_message, customer: customer, chat_room: chat_room, content: nil)
+      message.attachments.attach(io: StringIO.new("dummy"), filename: "test.png", content_type: "image/png")
+      message.save!
+
+      expect(helper.chat_quote_has_image?(message)).to eq true
+    end
+
+    it "画像以外の添付(PDF)だとfalseを返すこと" do
+      message = build(:chat_message, customer: customer, chat_room: chat_room, content: nil)
+      message.attachments.attach(io: StringIO.new("dummy"), filename: "test.pdf", content_type: "application/pdf")
+      message.save!
+
+      expect(helper.chat_quote_has_image?(message)).to eq false
+    end
+
+    it "添付が無ければfalseを返すこと" do
+      message = create(:chat_message, customer: customer, chat_room: chat_room, content: "こんにちは")
+      expect(helper.chat_quote_has_image?(message)).to eq false
+    end
+  end
+
+  describe "#chat_quote_label" do
+    it "本文がある場合は「(投稿者名)さんのメッセージを引用」を返すこと" do
+      message = create(:chat_message, customer: customer, chat_room: chat_room, content: "こんにちは")
+      expect(helper.chat_quote_label(message)).to eq "#{customer.name}さんのメッセージを引用"
+    end
+
+    it "本文が無く画像のみの場合は「(投稿者名)さんの画像を引用」を返すこと" do
+      message = build(:chat_message, customer: customer, chat_room: chat_room, content: nil)
+      message.attachments.attach(io: StringIO.new("dummy"), filename: "test.png", content_type: "image/png")
+      message.save!
+
+      expect(helper.chat_quote_label(message)).to eq "#{customer.name}さんの画像を引用"
+    end
+
+    it "本文もスタンプもある場合は「メッセージを引用」を返すこと(スタンプは画像扱いしない)" do
+      message = build(:chat_message, customer: customer, chat_room: chat_room, content: nil, stamp_type: "fire")
+      expect(helper.chat_quote_label(message)).to eq "#{customer.name}さんのメッセージを引用"
+    end
+  end
 end
