@@ -316,6 +316,18 @@ RSpec.describe "スレッド機能(Phase3)のテスト", type: :request do
       expect(response.body).not_to include("markdown-body--thread")
     end
 
+    it "スレッドの返信(reply)添付画像にもスレッド専用クラスが付くこと" do
+      root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+      reply = create(:chat_message, customer: customer, chat_room: chat_room, content: "返信に画像を添付します",
+                                     reply_to_chat_message: root)
+      attach_sample_image(reply)
+
+      get thread_public_chat_message_path(root)
+
+      expect(response).to have_http_status(200)
+      expect(response.body).to include("message-image--thread")
+      expect(response.body).to include("message-attachments--thread")
+    end
   end
 
   describe "通常一覧には親メッセージのみ表示されること" do
