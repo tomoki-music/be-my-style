@@ -145,4 +145,43 @@ RSpec.describe Chat::ReplyTargetResolver, type: :service do
       expect(resolved).to be_nil
     end
   end
+
+  describe "スレッド親への正規化(Phase3)" do
+    let(:customer) { create(:customer) }
+    let(:other_customer) { create(:customer) }
+    let(:chat_room) { create(:chat_room) }
+
+    before do
+      create(:chat_room_customer, chat_room: chat_room, customer: customer)
+      create(:chat_room_customer, chat_room: chat_room, customer: other_customer)
+    end
+
+    it "返信先が既に返信メッセージだった場合、そのスレッドの親(thread_root)を返すこと" do
+      root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+      reply = create(:chat_message, customer: customer, chat_room: chat_room,
+                                     content: "返信です", reply_to_chat_message: root)
+
+      resolved = described_class.call(
+        reply_to_chat_message_id: reply.id,
+        chat_room: chat_room,
+        community: nil,
+        current_customer: other_customer
+      )
+
+      expect(resolved).to eq root
+    end
+
+    it "返信先が通常メッセージ(スレッド親)だった場合はそのまま返すこと" do
+      root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+
+      resolved = described_class.call(
+        reply_to_chat_message_id: root.id,
+        chat_room: chat_room,
+        community: nil,
+        current_customer: customer
+      )
+
+      expect(resolved).to eq root
+    end
+  end
 end

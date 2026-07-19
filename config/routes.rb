@@ -132,6 +132,8 @@ Rails.application.routes.draw do
     resources :chat_messages, only: [:create] do
       post "community_create" => "chat_messages#community_create", on: :collection
       post "preview" => "chat_messages#preview", on: :collection
+      get "thread" => "chat_messages#thread", on: :member
+      post "thread_reply" => "chat_messages#thread_reply", on: :member
     end
 
     # コミュニティ機能

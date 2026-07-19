@@ -1,6 +1,8 @@
 module Chat
-  # 保存済みChatMessageが返信の場合、返信元メッセージの投稿者へ通知(reply_dm / reply_community)を
-  # 作成する。自分自身の投稿への返信では通知しない(Customer#create_notification_reply_*内のガード)。
+  # 保存済みChatMessageが返信の場合、スレッド親メッセージ(reply_to_chat_message、
+  # Chat::ReplyTargetResolverで常にスレッドルートへ正規化済み)の投稿者へ通知
+  # (reply_dm / reply_community)を作成する。自分自身の投稿への返信では通知しない
+  # (Customer#create_notification_reply_*内のガード)。
   # 呼び出し側(コントローラー)がメッセージ保存と同じトランザクション内で呼び出す想定。
   class ReplyNotificationService
     def self.call(chat_message)
