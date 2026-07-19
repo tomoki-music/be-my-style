@@ -59,6 +59,77 @@ RSpec.describe 'ChatMessageモデルのテスト', type: :model do
       end
     end
 
+    context '引用返信機能(quoted_chat_message)において' do
+      it 'quoted_chat_messageはChatMessageへのbelongs_toかつoptionalである' do
+        reflection = ChatMessage.reflect_on_association(:quoted_chat_message)
+        expect(reflection.macro).to eq :belongs_to
+        expect(reflection.klass).to eq ChatMessage
+        expect(reflection.options[:optional]).to eq true
+      end
+
+      it 'quote_repliesはChatMessageへのhas_manyかつdependent: :nullifyである' do
+        reflection = ChatMessage.reflect_on_association(:quote_replies)
+        expect(reflection.macro).to eq :has_many
+        expect(reflection.klass).to eq ChatMessage
+        expect(reflection.options[:dependent]).to eq :nullify
+      end
+
+      it '引用元を指定せずに保存できる' do
+        message = create(:chat_message, customer: customer, chat_room: chat_room)
+        expect(message.quoted_chat_message).to be_nil
+      end
+
+      it '同じchat_room内の別メッセージを引用して保存できる' do
+        original = create(:chat_message, customer: customer, chat_room: chat_room, content: "元の投稿")
+        quote_reply = create(:chat_message, customer: other_customer, chat_room: chat_room,
+                                             content: "引用します", quoted_chat_message: original)
+
+        expect(quote_reply.quoted_chat_message).to eq original
+        expect(original.reload.quote_replies).to include(quote_reply)
+      end
+
+      it '自分自身の投稿も引用できる' do
+        original = create(:chat_message, customer: customer, chat_room: chat_room, content: "自分の投稿")
+        quote_reply = create(:chat_message, customer: customer, chat_room: chat_room,
+                                             content: "自分の投稿を引用", quoted_chat_message: original)
+
+        expect(quote_reply.quoted_chat_message).to eq original
+      end
+
+      it '引用元メッセージが削除されても、引用返信メッセージ自体は削除されずquoted_chat_message_idがnilになる' do
+        original = create(:chat_message, customer: customer, chat_room: chat_room, content: "元の投稿")
+        quote_reply = create(:chat_message, customer: other_customer, chat_room: chat_room,
+                                             content: "引用します", quoted_chat_message: original)
+
+        expect { original.destroy }.to change(ChatMessage, :count).by(-1)
+        expect(ChatMessage.exists?(quote_reply.id)).to eq true
+        expect(quote_reply.reload.quoted_chat_message_id).to be_nil
+      end
+
+      it 'スレッドへの返信(reply_to_chat_message)であっても、別のメッセージを引用できる(概念的に独立している)' do
+        thread_root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "スレッド元")
+        quoted = create(:chat_message, customer: customer, chat_room: chat_room, content: "引用される投稿")
+
+        thread_reply_with_quote = create(:chat_message, customer: customer, chat_room: chat_room,
+                                                          content: "スレッド返信かつ引用",
+                                                          reply_to_chat_message: thread_root,
+                                                          quoted_chat_message: quoted)
+
+        expect(thread_reply_with_quote.reply_to_chat_message).to eq thread_root
+        expect(thread_reply_with_quote.quoted_chat_message).to eq quoted
+        expect(thread_reply_with_quote.thread_root).to eq thread_root
+      end
+
+      it '引用してもreplies_count(スレッド返信カウンター)は増えない' do
+        original = create(:chat_message, customer: customer, chat_room: chat_room, content: "元の投稿")
+
+        expect do
+          create(:chat_message, customer: other_customer, chat_room: chat_room,
+                                 content: "引用します", quoted_chat_message: original)
+        end.not_to change { original.reload.replies_count }
+      end
+    end
+
     context "スレッドの親(thread_root)において" do
       it "返信元を持たないメッセージ自身のthread_rootは自分自身である" do
         original = create(:chat_message, customer: customer, chat_room: chat_room, content: "元の投稿")

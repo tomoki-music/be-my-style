@@ -401,6 +401,203 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
       end
     end
 
+    context "引用返信機能のテスト(DM)" do
+      before do
+        create(:chat_room_customer, chat_room: chat_room, customer: customer)
+        sign_in customer
+      end
+
+      it "quoted_chat_message_idを指定せずに通常投稿できること" do
+        post public_chat_messages_path, params: {
+          chat_message: { content: "お元気ですか？", chat_room_id: chat_room.id, customer_id: other_customer.id }
+        }
+        expect(ChatMessage.last.quoted_chat_message_id).to be_nil
+      end
+
+      it "同じchat_room内のメッセージを引用するとquoted_chat_message_idが保存されること" do
+        original = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "次回の曲を決めましょう")
+
+        post public_chat_messages_path, params: {
+          chat_message: {
+            content: "この曲がいいと思います",
+            chat_room_id: chat_room.id,
+            customer_id: other_customer.id,
+            quoted_chat_message_id: original.id
+          }
+        }
+        expect(ChatMessage.last.quoted_chat_message_id).to eq original.id
+      end
+
+      it "自分自身のメッセージも引用できること" do
+        original = create(:chat_message, customer: customer, chat_room: chat_room, content: "自分の投稿")
+
+        post public_chat_messages_path, params: {
+          chat_message: {
+            content: "補足します",
+            chat_room_id: chat_room.id,
+            customer_id: other_customer.id,
+            quoted_chat_message_id: original.id
+          }
+        }
+        expect(ChatMessage.last.quoted_chat_message_id).to eq original.id
+      end
+
+      it "添付ファイル付きの引用返信でも添付とquoted_chat_message_idの両方が保存されること" do
+        original = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+
+        post public_chat_messages_path, params: {
+          chat_message: {
+            content: "画像を送ります",
+            chat_room_id: chat_room.id,
+            customer_id: other_customer.id,
+            quoted_chat_message_id: original.id,
+            attachments: [fixture_file_upload(Rails.root.join("spec/fixtures/11megabytes_sample.png"), "image/png")]
+          }
+        }
+
+        last_message = ChatMessage.last
+        expect(last_message.quoted_chat_message_id).to eq original.id
+        expect(last_message.attachments).to be_attached
+      end
+
+      it "別のchat_room(別DM)のメッセージIDを指定してもquoted_chat_message_idを保存しないこと" do
+        other_chat_room = create(:chat_room)
+        create(:chat_room_customer, chat_room: other_chat_room, customer: other_customer)
+        foreign_message = create(:chat_message, customer: other_customer, chat_room: other_chat_room)
+
+        post public_chat_messages_path, params: {
+          chat_message: {
+            content: "不正な引用",
+            chat_room_id: chat_room.id,
+            customer_id: other_customer.id,
+            quoted_chat_message_id: foreign_message.id
+          }
+        }
+        expect(ChatMessage.last.quoted_chat_message_id).to be_nil
+      end
+
+      it "存在しないquoted_chat_message_idを指定してもエラーにならず通常投稿として保存されること" do
+        expect do
+          post public_chat_messages_path, params: {
+            chat_message: {
+              content: "存在しないIDへの引用",
+              chat_room_id: chat_room.id,
+              customer_id: other_customer.id,
+              quoted_chat_message_id: 999_999
+            }
+          }
+        end.to change(ChatMessage, :count).by(1)
+        expect(ChatMessage.last.quoted_chat_message_id).to be_nil
+      end
+
+      it "引用しただけでは、引用元投稿者へ新規通知(reply_dm)を作成しないこと" do
+        original = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+
+        post public_chat_messages_path, params: {
+          chat_message: {
+            content: "引用します",
+            chat_room_id: chat_room.id,
+            customer_id: other_customer.id,
+            quoted_chat_message_id: original.id
+          }
+        }
+        expect(Notification.where(action: "reply_dm", visited_id: other_customer.id).count).to eq 0
+      end
+
+      it "引用返信本文内で引用元投稿者を@メンションした場合、通常どおりメンション通知(mention_dm)が作成されること" do
+        original = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+
+        expect do
+          post public_chat_messages_path, params: {
+            chat_message: {
+              content: "[@相手](customer:#{other_customer.id}) 引用します",
+              chat_room_id: chat_room.id,
+              customer_id: other_customer.id,
+              quoted_chat_message_id: original.id
+            }
+          }
+        end.to change(ChatMention, :count).by(1)
+
+        expect(Notification.where(action: "mention_dm", visited_id: other_customer.id).count).to eq 1
+      end
+
+      it "スレッド返信(reply_to_chat_message_id)と引用(quoted_chat_message_id)を同時に指定でき、両方が独立して保存されること" do
+        thread_root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "スレッド元")
+        quoted = create(:chat_message, customer: customer, chat_room: chat_room, content: "引用される投稿")
+
+        post public_chat_messages_path, params: {
+          chat_message: {
+            content: "スレッド返信かつ引用",
+            chat_room_id: chat_room.id,
+            customer_id: other_customer.id,
+            reply_to_chat_message_id: thread_root.id,
+            quoted_chat_message_id: quoted.id
+          }
+        }
+
+        last_message = ChatMessage.last
+        expect(last_message.reply_to_chat_message_id).to eq thread_root.id
+        expect(last_message.quoted_chat_message_id).to eq quoted.id
+      end
+    end
+
+    context "引用返信機能のテスト(コミュニティ)" do
+      let(:community) { create(:community) }
+      let(:community_chat_room) { create(:chat_room) }
+      let(:member) { create(:customer) }
+
+      before do
+        create(:chat_room_customer, chat_room: community_chat_room, customer: customer, community: community)
+        CommunityCustomer.find_or_create_by!(customer: customer, community: community)
+        CommunityCustomer.find_or_create_by!(customer: member, community: community)
+        sign_in customer
+      end
+
+      it "同じコミュニティ内のメッセージを引用するとquoted_chat_message_idが保存されること" do
+        original = create(:chat_message, customer: member, chat_room: community_chat_room, community: community,
+                                           content: "元の投稿")
+
+        post community_create_public_chat_messages_path, params: {
+          chat_message: {
+            content: "了解しました",
+            chat_room_id: community_chat_room.id,
+            quoted_chat_message_id: original.id
+          }
+        }
+        expect(ChatMessage.last.quoted_chat_message_id).to eq original.id
+      end
+
+      it "別のコミュニティのメッセージIDを指定してもquoted_chat_message_idを保存しないこと" do
+        other_community = create(:community)
+        other_chat_room = create(:chat_room)
+        create(:chat_room_customer, chat_room: other_chat_room, customer: member, community: other_community)
+        foreign_message = create(:chat_message, customer: member, chat_room: other_chat_room, community: other_community)
+
+        post community_create_public_chat_messages_path, params: {
+          chat_message: {
+            content: "不正な引用",
+            chat_room_id: community_chat_room.id,
+            quoted_chat_message_id: foreign_message.id
+          }
+        }
+        expect(ChatMessage.last.quoted_chat_message_id).to be_nil
+      end
+
+      it "引用しただけでは、引用元投稿者へ新規通知(reply_community)を作成しないこと" do
+        original = create(:chat_message, customer: member, chat_room: community_chat_room, community: community,
+                                           content: "元の投稿")
+
+        post community_create_public_chat_messages_path, params: {
+          chat_message: {
+            content: "引用します",
+            chat_room_id: community_chat_room.id,
+            quoted_chat_message_id: original.id
+          }
+        }
+        expect(Notification.where(action: "reply_community", visited_id: member.id).count).to eq 0
+      end
+    end
+
     context "content_formatのテスト(要件11の後方互換性)" do
       before do
         create(:chat_room_customer, chat_room: chat_room, customer: customer)

@@ -5,10 +5,12 @@ class ChatMessage < ApplicationRecord
   belongs_to :customer
   belongs_to :community, optional: true
   belongs_to :reply_to_chat_message, class_name: "ChatMessage", optional: true, counter_cache: :replies_count
+  belongs_to :quoted_chat_message, class_name: "ChatMessage", optional: true
 
   has_many :chat_mentions, dependent: :destroy
   has_many :mentioned_customers, through: :chat_mentions
   has_many :replies, class_name: "ChatMessage", foreign_key: :reply_to_chat_message_id, dependent: :nullify
+  has_many :quote_replies, class_name: "ChatMessage", foreign_key: :quoted_chat_message_id, dependent: :nullify
 
   has_many_attached :attachments
 

@@ -24,7 +24,13 @@ class Public::ChatMessagesController < ApplicationController
       community: nil,
       current_customer: current_customer
     )
-    @chat_message = ChatMessage.new(chat_message_params.except(:attachments, :reply_to_chat_message_id).merge(customer_id: current_customer.id, chat_room_id: @chat_room.id, content_format: :markdown, reply_to_chat_message: reply_to_chat_message))
+    quoted_chat_message = Chat::QuoteTargetResolver.call(
+      quoted_chat_message_id: chat_message_params[:quoted_chat_message_id],
+      chat_room: @chat_room,
+      community: nil,
+      current_customer: current_customer
+    )
+    @chat_message = ChatMessage.new(chat_message_params.except(:attachments, :reply_to_chat_message_id, :quoted_chat_message_id).merge(customer_id: current_customer.id, chat_room_id: @chat_room.id, content_format: :markdown, reply_to_chat_message: reply_to_chat_message, quoted_chat_message: quoted_chat_message))
 
     if params[:chat_message][:attachments].present?
       params[:chat_message][:attachments].each do |uploaded_file|
@@ -64,7 +70,13 @@ class Public::ChatMessagesController < ApplicationController
       community: @community,
       current_customer: current_customer
     )
-    @chat_message = ChatMessage.new(chat_message_params.except(:attachments, :reply_to_chat_message_id).merge(customer_id: current_customer.id, chat_room_id: @chat_room.id, community_id: @community&.id, content_format: :markdown, reply_to_chat_message: reply_to_chat_message))
+    quoted_chat_message = Chat::QuoteTargetResolver.call(
+      quoted_chat_message_id: chat_message_params[:quoted_chat_message_id],
+      chat_room: @chat_room,
+      community: @community,
+      current_customer: current_customer
+    )
+    @chat_message = ChatMessage.new(chat_message_params.except(:attachments, :reply_to_chat_message_id, :quoted_chat_message_id).merge(customer_id: current_customer.id, chat_room_id: @chat_room.id, community_id: @community&.id, content_format: :markdown, reply_to_chat_message: reply_to_chat_message, quoted_chat_message: quoted_chat_message))
 
     if params[:chat_message][:attachments].present?
       params[:chat_message][:attachments].each do |uploaded_file|
@@ -109,7 +121,7 @@ class Public::ChatMessagesController < ApplicationController
     return head :forbidden unless thread_readable?(root)
 
     replies = root.replies
-              .includes(:customer, :mentioned_customers, reply_to_chat_message: :customer)
+              .includes(:customer, :mentioned_customers, reply_to_chat_message: :customer, quoted_chat_message: :customer)
               .with_attached_attachments
               .order(created_at: :asc)
               .limit(THREAD_REPLIES_LIMIT)
@@ -139,13 +151,21 @@ class Public::ChatMessagesController < ApplicationController
     )
     return render_thread_reply_error(:forbidden) if reply_to_chat_message.blank?
 
+    quoted_chat_message = Chat::QuoteTargetResolver.call(
+      quoted_chat_message_id: thread_reply_params[:quoted_chat_message_id],
+      chat_room: root.chat_room,
+      community: root.community,
+      current_customer: current_customer
+    )
+
     @chat_message = ChatMessage.new(
-      thread_reply_params.except(:attachments).merge(
+      thread_reply_params.except(:attachments, :quoted_chat_message_id).merge(
         customer_id: current_customer.id,
         chat_room_id: root.chat_room_id,
         community_id: root.community_id,
         content_format: :markdown,
-        reply_to_chat_message: reply_to_chat_message
+        reply_to_chat_message: reply_to_chat_message,
+        quoted_chat_message: quoted_chat_message
       )
     )
 
@@ -195,7 +215,7 @@ class Public::ChatMessagesController < ApplicationController
   end
 
   def thread_reply_params
-    params.require(:chat_message).permit(:content, :stamp_type, attachments: [])
+    params.require(:chat_message).permit(:content, :stamp_type, :quoted_chat_message_id, attachments: [])
   end
 
   # メッセージ保存と返信通知・メンション(ChatMention・通知)作成を1トランザクションにまとめる。
@@ -214,6 +234,6 @@ class Public::ChatMessagesController < ApplicationController
   end
 
   def chat_message_params
-    params.require(:chat_message).permit(:content, :stamp_type, :reply_to_chat_message_id, attachments: [])
+    params.require(:chat_message).permit(:content, :stamp_type, :reply_to_chat_message_id, :quoted_chat_message_id, attachments: [])
   end
 end

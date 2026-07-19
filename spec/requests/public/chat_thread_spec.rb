@@ -196,6 +196,68 @@ RSpec.describe "スレッド機能(Phase3)のテスト", type: :request do
       end
     end
 
+    context "引用返信(スレッド内)のテスト" do
+      before { sign_in customer }
+
+      it "スレッドrootを引用してスレッドへ返信すると、quoted_chat_message_idが保存されること" do
+        root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+
+        post thread_reply_public_chat_message_path(root), params: {
+          chat_message: { content: "その通りです", quoted_chat_message_id: root.id }
+        }
+
+        last_message = ChatMessage.last
+        expect(last_message.quoted_chat_message_id).to eq root.id
+        expect(last_message.reply_to_chat_message_id).to eq root.id
+      end
+
+      it "スレッドreplyを引用してスレッドへ返信すると、スレッド親正規化とは独立してreply自体がquoted_chat_message_idに保存されること" do
+        root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+        reply1 = create(:chat_message, customer: customer, chat_room: chat_room, content: "1件目の返信",
+                                        reply_to_chat_message: root)
+
+        post thread_reply_public_chat_message_path(root), params: {
+          chat_message: { content: "1件目に同意です", quoted_chat_message_id: reply1.id }
+        }
+
+        last_message = ChatMessage.last
+        expect(last_message.quoted_chat_message_id).to eq reply1.id
+        expect(last_message.reply_to_chat_message_id).to eq root.id
+      end
+
+      it "別のDMのメッセージを引用指定してもquoted_chat_message_idを保存しないこと" do
+        root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+        other_room = create(:chat_room)
+        create(:chat_room_customer, chat_room: other_room, customer: other_customer)
+        foreign_message = create(:chat_message, customer: other_customer, chat_room: other_room, content: "別DMの投稿")
+
+        post thread_reply_public_chat_message_path(root), params: {
+          chat_message: { content: "不正な引用", quoted_chat_message_id: foreign_message.id }
+        }
+
+        expect(ChatMessage.last.quoted_chat_message_id).to be_nil
+      end
+
+      it "quoted_chat_message_idを指定しなくてもスレッド返信できること" do
+        root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+
+        expect do
+          post thread_reply_public_chat_message_path(root), params: { chat_message: { content: "引用なしの返信" } }
+        end.to change(ChatMessage, :count).by(1)
+        expect(ChatMessage.last.quoted_chat_message_id).to be_nil
+      end
+
+      it "引用しただけでは新規通知が増えないこと(スレッド返信通知reply_dmのみ作成される)" do
+        root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+
+        post thread_reply_public_chat_message_path(root), params: {
+          chat_message: { content: "その通りです", quoted_chat_message_id: root.id }
+        }
+
+        expect(Notification.where(action: "reply_dm", visited_id: other_customer.id).count).to eq 1
+      end
+    end
+
     context "コミュニティの場合" do
       let(:community) { create(:community) }
       let(:member) { create(:customer) }
