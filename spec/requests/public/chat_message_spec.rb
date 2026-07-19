@@ -567,6 +567,23 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
         expect(ChatMessage.last.quoted_chat_message_id).to eq original.id
       end
 
+      it "community_idがnilのまま保存された既存メッセージ(過去の既存バグ由来)でも引用できること(回帰テスト)" do
+        # community:を渡さずに作成し、Public::ChatMessagesController#community_createの
+        # コメントが言及する「community_idが元々どこにも設定されておらず常にnilだった」
+        # 過去データの不整合を再現する。
+        old_message = create(:chat_message, customer: member, chat_room: community_chat_room, content: "過去の投稿")
+        expect(old_message.community_id).to be_nil
+
+        post community_create_public_chat_messages_path, params: {
+          chat_message: {
+            content: "この投稿を引用します",
+            chat_room_id: community_chat_room.id,
+            quoted_chat_message_id: old_message.id
+          }
+        }
+        expect(ChatMessage.last.quoted_chat_message_id).to eq old_message.id
+      end
+
       it "別のコミュニティのメッセージIDを指定してもquoted_chat_message_idを保存しないこと" do
         other_community = create(:community)
         other_chat_room = create(:chat_room)

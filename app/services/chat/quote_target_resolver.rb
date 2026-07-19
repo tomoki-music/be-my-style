@@ -7,6 +7,14 @@ module Chat
   # Chat::ReplyTargetResolverと異なり、引用元はスレッド親(thread_root)へ正規化しない。
   # 引用はスレッド親子関係とは独立した概念であり、スレッド内の返信メッセージ自体を
   # 名指しで引用できる必要があるため、解決した対象をそのまま返す。
+  #
+  # 同一chat_room内かどうかの判定はcandidate.chat_room_id == @chat_room.idのみで行い、
+  # ChatMessage#community_idの一致は見ない。community_idは「元々どこにも設定されておらず
+  # 常にnilだった(既存のバグ)」経緯があり(Public::ChatMessagesController参照)、
+  # 過去に作成されたコミュニティメッセージがcommunity_id: nilのまま残っている場合がある。
+  # chat_room自体がDM/コミュニティのどちらか一方の文脈でしか使われない設計のため、
+  # chat_room_idの一致だけで文脈の同一性を安全に判定でき、community_idの不整合な値に
+  # 引きずられて正当な引用が拒否される事故を防げる。
   class QuoteTargetResolver
     def self.call(quoted_chat_message_id:, chat_room:, community:, current_customer:)
       new(quoted_chat_message_id, chat_room, community, current_customer).resolve
@@ -26,7 +34,6 @@ module Chat
       candidate = ChatMessage.find_by(id: @quoted_chat_message_id)
       return nil if candidate.blank?
       return nil unless candidate.chat_room_id == @chat_room.id
-      return nil unless candidate.community_id == @community&.id
       return nil unless Chat::ChatRoomAuthorization.postable?(
         chat_room: @chat_room, community: @community, customer: @current_customer
       )
