@@ -164,29 +164,38 @@
         }
       }
     }
-    ul{
-      padding-left: 0;
-      .chat-room-customer-link{
-        text-decoration: none;
-        display: flex;
-        align-items: flex-end;
-        .img-element{
-          width: 50px;
-          height: 50px;
-          margin-right: 5px;
-          img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 10px;
-          }
-        }
-        .name-element{
-          font-size: 20px;
-        }
-      }
-      li{
-        list-style: none;
+  }
+  /* メッセージの ul/li リセットとアバター・投稿者名まわりのスタイルは、
+     通常チャット(.message-container配下)とスレッドパネル(.message-container
+     の外側にある#thread-panel配下)のどちらでも同じ_message.html.hamlパーシャルが
+     使われ共通で必要になるため、.message-container に限定せず
+     .chat-rooms-show-container 直下のスコープで定義する */
+  ul{
+    padding-left: 0;
+    li{
+      list-style: none;
+    }
+  }
+  .chat-room-customer-link{
+    text-decoration: none;
+    display: flex;
+    align-items: flex-end;
+    .name-element{
+      font-size: 20px;
+    }
+    .img-element{
+      width: 50px;
+      height: 50px;
+      margin-right: 5px;
+      img {
+        /* imgの直接の親(avatar-with-badge)がinlineのspanのため、
+           height:100%指定だと高さのみパーセンテージ解決に失敗し
+           元画像のアスペクト比で描画されてしまう。width/heightとも
+           px固定にして親要素の実装(inline/block)に依存しないようにする */
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 10px;
       }
     }
   }

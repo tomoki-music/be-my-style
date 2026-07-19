@@ -1,7 +1,10 @@
 require "rails_helper"
 
 # スレッドパネル内の添付画像が実ブラウザ上で意図した表示サイズ(PC:160x120px / モバイル:120x90px)に
-# なることを検証する。クラス付与自体は spec/requests/public/chat_thread_spec.rb で検証済みのため、
+# なることを検証する。あわせて、投稿者アバター(.img-element img)がスレッドパネル・通常チャットの
+# どちらでも50x50pxに収まること、および li のlist-style-typeがnoneになっている(ブラウザデフォルトの
+# 「・」マーカーが出ない)ことも確認する(いずれも.message-container配下に限定されたCSSスコープの再発防止)。
+# クラス付与自体は spec/requests/public/chat_thread_spec.rb で検証済みのため、
 # ここでは実レンダリング結果(getBoundingClientRect)のみを、代表ケースに絞って確認する
 # (ピクセル単位の検証は環境依存で不安定になりやすいため、ケース数を絞ってCIの安定性を優先する)。
 RSpec.describe "スレッドパネル添付画像の表示サイズ", type: :system do
@@ -82,8 +85,37 @@ RSpec.describe "スレッドパネル添付画像の表示サイズ", type: :sys
       avatar_images = thread_panel_image_rects.reject { |img| img["className"].include?("message-image--thread") }
       expect(avatar_images).not_to be_empty
       avatar_images.each do |img|
-        expect([img["width"], img["height"]]).not_to eq([160, 120])
+        expect(img["width"]).to eq(50)
+        expect(img["height"]).to eq(50)
       end
+
+      normal_avatar_rects = page.evaluate_script(<<~JS)
+        [].slice.call(document.querySelectorAll('.message-container .chat-room-customer-link .img-element img')).map(function (img) {
+          var r = img.getBoundingClientRect();
+          return { width: Math.round(r.width), height: Math.round(r.height) };
+        });
+      JS
+      expect(normal_avatar_rects).not_to be_empty
+      normal_avatar_rects.each do |img|
+        expect(img["width"]).to eq(50)
+        expect(img["height"]).to eq(50)
+      end
+
+      thread_list_style_types = page.evaluate_script(<<~JS)
+        [].slice.call(document.querySelectorAll('#thread-panel li')).map(function (li) {
+          return getComputedStyle(li).listStyleType;
+        });
+      JS
+      expect(thread_list_style_types).not_to be_empty
+      expect(thread_list_style_types.uniq).to eq(["none"])
+
+      normal_list_style_types = page.evaluate_script(<<~JS)
+        [].slice.call(document.querySelectorAll('.message-container li')).map(function (li) {
+          return getComputedStyle(li).listStyleType;
+        });
+      JS
+      expect(normal_list_style_types).not_to be_empty
+      expect(normal_list_style_types.uniq).to eq(["none"])
     end
 
     it "モバイル幅(600px以下)ではroot添付画像が120x90pxで表示されること" do

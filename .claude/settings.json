@@ -4,7 +4,29 @@
       "Bash(DISABLE_SPRING=1 bundle exec rails learning:seed_training_masters)",
       "Bash(DISABLE_SPRING=1 bundle exec rspec spec/services/singing/recap_movie_storage_metrics_service_spec.rb --format documentation)",
       "Bash(DISABLE_SPRING=1 bundle exec rspec spec/services/singing/recap_movie_health_dashboard_service_spec.rb spec/requests/admin/singing/recap_movies_spec.rb --format progress)",
-      "Bash(DISABLE_SPRING=1 bundle exec rspec spec/services/singing/ spec/requests/admin/singing/recap_movies_spec.rb --format progress)"
+      "Bash(DISABLE_SPRING=1 bundle exec rspec spec/services/singing/ spec/requests/admin/singing/recap_movies_spec.rb --format progress)",
+      "Bash(RAILS_ENV=test bundle exec rspec spec/system/public/chat_thread_image_repro_spec.rb)",
+      "Bash(git check-ignore *)",
+      "Bash(convert -size 300x300 xc:skyblue spec/fixtures/thread_sample_image.png)",
+      "Bash(RAILS_ENV=test bundle exec rspec spec/system/public/chat_thread_image_size_spec.rb)",
+      "Bash(RAILS_ENV=test bundle exec rspec spec/system/public/chat_thread_image_size_spec.rb --order random)",
+      "Bash(RAILS_ENV=test bundle exec rspec spec/requests/public/chat_thread_spec.rb spec/requests/public/chat_message_spec.rb spec/requests/public/chat_room_spec.rb spec/requests/public/community_chat_plan_spec.rb spec/models/chat_message_spec.rb spec/services/chat/reply_target_resolver_spec.rb spec/services/chat/chat_room_authorization_spec.rb)",
+      "Bash(RAILS_ENV=test bundle exec rspec spec/requests/public/chat_thread_spec.rb spec/system/public/chat_thread_image_size_spec.rb)",
+      "Bash(git switch *)",
+      "Bash(RAILS_ENV=test bundle exec rails runner ' *)",
+      "Bash(ruby -c app/controllers/public/chat_rooms_controller.rb)",
+      "Bash(ruby -c app/controllers/public/chat_messages_controller.rb)",
+      "Bash(echo \"check exit=$?\")",
+      "Bash(RAILS_ENV=test bundle exec rspec spec/models/chat_message_spec.rb spec/services/chat/reply_target_resolver_spec.rb)",
+      "Bash(RAILS_ENV=test bundle exec rspec spec/services/chat/reply_notification_service_spec.rb)",
+      "Bash(ruby -c spec/requests/public/chat_thread_spec.rb)",
+      "Bash(grep -c \"^  end$\" spec/requests/public/chat_thread_spec.rb)",
+      "Bash(RAILS_ENV=test bundle exec rspec spec/requests/public/chat_thread_spec.rb)",
+      "Bash(RAILS_ENV=test bundle exec rspec spec/requests/public/chat_message_spec.rb spec/requests/public/chat_room_spec.rb spec/requests/public/community_chat_plan_spec.rb)",
+      "Bash(RAILS_ENV=test bundle exec rspec spec/tasks/chat_threads_rake_spec.rb)",
+      "Bash(RAILS_ENV=test bundle exec rspec spec/models/event_spec.rb:16 spec/requests/public/favorites_spec.rb:14 spec/system/customer_spec.rb:222)",
+      "Bash(gem list *)",
+      "Bash(ruby -rsassc -e ' *)"
     ]
   }
 }
