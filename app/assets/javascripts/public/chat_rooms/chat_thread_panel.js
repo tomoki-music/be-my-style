@@ -139,10 +139,13 @@
     disposeMentionInstance();
     body.innerHTML = html;
 
-    var composer = body.querySelector(".markdown-composer");
+    // 各メッセージのインライン編集フォーム(.message-edit-form)も.markdown-composer/
+    // .markdown-textareaを持つため、スコープを絞らないとそちらを誤って拾ってしまう。
+    // ここで初期化したいのはスレッド返信フォーム(.thread-reply-form)側だけ。
+    var composer = body.querySelector(".thread-reply-form .markdown-composer");
     if (composer && window.ChatMarkdownComposer) window.ChatMarkdownComposer.init(composer);
 
-    var textarea = body.querySelector(".markdown-textarea");
+    var textarea = body.querySelector(".thread-reply-form .markdown-textarea");
     var c = container();
     if (textarea && c && window.ChatMentions) {
       var candidatesUrl = c.dataset.mentionCandidatesUrl;
