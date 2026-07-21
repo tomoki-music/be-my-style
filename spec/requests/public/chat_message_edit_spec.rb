@@ -192,6 +192,65 @@ RSpec.describe "メッセージ編集(PATCH update)のテスト", type: :request
     end
   end
 
+  # Mention Hydration(編集開始時に内部記法を@usernameへ戻して表示する機能)はView/Frontend側の
+  # 処理であり、保存されるcontentの形式(内部記法)自体は変わらない。ここではUpdate側の
+  # 回帰確認として、フロント側のbuildSubmissionContentが再構築する内部記法contentを
+  # そのままPATCHしてもMentionSyncServiceの既存挙動が壊れないことのみを確認する。
+  describe "メンション付きメッセージの編集(Mention Hydration対象)" do
+    before { sign_in customer }
+
+    it "内部記法を維持したまま保存するとメンションが維持されること" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room,
+                                            content: "[@相手](customer:#{other_customer.id}) こんにちは")
+      Chat::MentionSyncService.call(chat_message)
+      expect(chat_message.chat_mentions.count).to eq 1
+
+      patch public_chat_message_path(chat_message),
+            params: { chat_message: { content: "[@相手](customer:#{other_customer.id}) こんにちは、元気ですか" } }
+
+      expect(response).to have_http_status(:ok)
+      expect(chat_message.reload.content).to eq "[@相手](customer:#{other_customer.id}) こんにちは、元気ですか"
+      expect(chat_message.chat_mentions.count).to eq 1
+      expect(chat_message.chat_mentions.pluck(:mentioned_customer_id)).to eq [other_customer.id]
+    end
+
+    it "同一相手への内部記法が複数回含まれていてもChatMentionが重複しないこと" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "編集前")
+
+      patch public_chat_message_path(chat_message), params: {
+        chat_message: {
+          content: "[@相手](customer:#{other_customer.id}) さん [@相手](customer:#{other_customer.id}) さん"
+        }
+      }
+
+      expect(response).to have_http_status(:ok)
+      expect(chat_message.reload.chat_mentions.count).to eq 1
+    end
+
+    it "編集によりメンションを削除すると同期されること" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room,
+                                            content: "[@相手](customer:#{other_customer.id}) こんにちは")
+      Chat::MentionSyncService.call(chat_message)
+      expect(chat_message.chat_mentions.count).to eq 1
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "こんにちは" } }
+
+      expect(response).to have_http_status(:ok)
+      expect(chat_message.reload.chat_mentions.count).to eq 0
+    end
+
+    it "メンション付き編集でもedited_atが更新されること" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room,
+                                            content: "[@相手](customer:#{other_customer.id}) こんにちは")
+      expect(chat_message.edited_at).to be_nil
+
+      patch public_chat_message_path(chat_message),
+            params: { chat_message: { content: "[@相手](customer:#{other_customer.id}) こんにちは!" } }
+
+      expect(chat_message.reload.edited_at).to be_present
+    end
+  end
+
   describe "権限・異常系" do
     it "他人のメッセージを編集できないこと(404相当)" do
       chat_message = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "他人の投稿")
