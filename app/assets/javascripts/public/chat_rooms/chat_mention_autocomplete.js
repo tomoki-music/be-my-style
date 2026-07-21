@@ -215,6 +215,23 @@
     return { open: false, items: [], activeIndex: -1, triggerStart: -1, query: "" };
   }
 
+  // 編集フォームでのHydration(Chat::MentionHydratorの出力)等、外部から渡される
+  // 初期メンション配列を、初期化時のState(state.mentions)向けに正規化する。
+  // 呼び出し元の配列・要素オブジェクトをそのまま共有すると、後続の編集操作
+  // (shiftAndFilterMentions等)が呼び出し元のオブジェクトまで書き換えてしまうため、
+  // 常に新しい配列・オブジェクトへ浅いコピーする。未指定・不正な形式は空配列にする。
+  function normalizeInitialMentions(initialMentions) {
+    if (!Array.isArray(initialMentions)) return [];
+
+    return initialMentions
+      .filter(function (m) {
+        return m && typeof m.start === "number" && typeof m.end === "number";
+      })
+      .map(function (m) {
+        return { customerId: m.customerId, username: m.username, start: m.start, end: m.end };
+      });
+  }
+
   var pureFunctions = {
     computeDropdownPosition: computeDropdownPosition,
     computePrefixSuffix: computePrefixSuffix,
@@ -226,7 +243,8 @@
     detectMentionTrigger: detectMentionTrigger,
     isWithinFinalizedMentionRange: isWithinFinalizedMentionRange,
     buildSelectionInsertion: buildSelectionInsertion,
-    closedUiState: closedUiState
+    closedUiState: closedUiState,
+    normalizeInitialMentions: normalizeInitialMentions
   };
 
   // Node.js(テスト用)からrequireできるようにする。ブラウザではmoduleが無いため無害。
@@ -272,8 +290,8 @@
   // disposeTextarea()へ渡すと、そのtextarea分だけ個別に後始末できる
   // (cleanupAllInstances()はページ全体の全インスタンスを巻き込むため、
   // スレッドパネルの開閉のたびに呼ぶと本文入力欄のインスタンスまで壊れてしまう)。
-  function initMentionAutocomplete(textarea, candidatesUrl, currentCustomerId) {
-      var state = { mentions: [], lastValue: textarea.value };
+  function initMentionAutocomplete(textarea, candidatesUrl, currentCustomerId, initialMentions) {
+      var state = { mentions: normalizeInitialMentions(initialMentions), lastValue: textarea.value };
       mentionStates.set(textarea, state);
 
       var dropdown = document.createElement("div");
@@ -639,8 +657,8 @@
   // スレッドパネルなど、Turbolinksのページ遷移を伴わず動的に挿入されるtextarea用の公開API。
   // 戻り値のcleanup関数をdisposeTextarea()へ渡すことで、そのtextarea単体だけを
   // 後始末できる(cleanupAllInstances()は同一ページの全インスタンスを巻き込んでしまうため)。
-  root.ChatMentions.initTextarea = function (textarea, candidatesUrl, currentCustomerId) {
-    return initMentionAutocomplete(textarea, candidatesUrl, currentCustomerId);
+  root.ChatMentions.initTextarea = function (textarea, candidatesUrl, currentCustomerId, initialMentions) {
+    return initMentionAutocomplete(textarea, candidatesUrl, currentCustomerId, initialMentions);
   };
 
   root.ChatMentions.disposeTextarea = function (cleanup) {

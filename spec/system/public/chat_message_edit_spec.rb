@@ -122,6 +122,32 @@ RSpec.describe "メッセージ編集機能", type: :system do
       end
       expect(own_message.reload.content).to eq "編集前の本文"
     end
+
+    it "メンション付きメッセージの編集開始時は内部記法ではなく@usernameが表示され、変更せず保存してもメンションが維持されること" do
+      own_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room,
+                            content: "[@#{other_customer.name}](customer:#{other_customer.id}) こんにちは")
+      Chat::MentionSyncService.call(own_message)
+      expect(own_message.chat_mentions.count).to eq 1
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      js_click("#chat-message-#{own_message.id} .edit-button")
+      expect(page).to have_selector("#chat-message-#{own_message.id} .message-edit-form:not([hidden])", wait: 10)
+
+      textarea_value = find("#chat-message-#{own_message.id} .markdown-textarea", visible: false).value
+      expect(textarea_value).to eq "@#{other_customer.name} こんにちは"
+      expect(textarea_value).not_to include("customer:")
+
+      js_click("#chat-message-#{own_message.id} .edit-save-button")
+
+      expect(page).to have_selector("#chat-message-#{own_message.id} .edited-label", wait: 10)
+      within "#chat-message-#{own_message.id}" do
+        expect(page).to have_selector(".chat-mention", wait: 10)
+      end
+      expect(own_message.reload.content).to eq "[@#{other_customer.name}](customer:#{other_customer.id}) こんにちは"
+      expect(own_message.chat_mentions.reload.count).to eq 1
+    end
   end
 
   describe "スレッドパネル内での編集" do
