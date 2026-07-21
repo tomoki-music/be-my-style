@@ -30,6 +30,21 @@
     return closest(el, ".self-message");
   }
 
+  // Hydration済みMention State(Backend側Chat::MentionHydratorの出力)をtextareaの
+  // data属性から読み取る。壊れたJSONでも編集画面自体は壊さず、空配列へフォールバックする
+  // (本文やcustomer情報をconsoleへ出力しない)。
+  function readInitialMentions(textarea) {
+    var raw = textarea.dataset ? textarea.dataset.initialMentions : null;
+    if (!raw) return [];
+
+    try {
+      var parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
   function clearEditErrors(form) {
     var errorBox = form.querySelector(".edit-errors");
     if (errorBox) {
@@ -69,7 +84,8 @@
       var candidatesUrl = container.dataset.mentionCandidatesUrl;
       var currentCustomerId = container.dataset.currentCustomerId;
       if (candidatesUrl) {
-        form._mentionCleanup = window.ChatMentions.initTextarea(textarea, candidatesUrl, currentCustomerId);
+        var initialMentions = readInitialMentions(textarea);
+        form._mentionCleanup = window.ChatMentions.initTextarea(textarea, candidatesUrl, currentCustomerId, initialMentions);
       }
     }
 
