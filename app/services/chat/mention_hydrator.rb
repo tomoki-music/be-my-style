@@ -21,7 +21,7 @@ module Chat
     end
 
     def initialize(content)
-      @content = content.to_s
+      @content = content.to_s.first(MarkdownRenderer::MAX_LENGTH)
     end
 
     def hydrate

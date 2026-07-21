@@ -147,4 +147,48 @@ RSpec.describe Chat::MentionHydrator, type: :service do
     expect(result.content).to eq "@a @b さん"
     expect(result.mentions).to eq [{ customerId: 1, username: "a", start: 0, end: 2 }]
   end
+
+  describe "文字数上限(DoS対策)" do
+    it "MAX_LENGTH以内の本文は末尾まで通常どおりHydrationされること" do
+      mention = "[@tomoki](customer:123)"
+      content = ("a" * (Chat::MarkdownRenderer::MAX_LENGTH - mention.length)) + mention
+      result = call(content)
+
+      expect(result.content).to end_with("@tomoki")
+      expect(result.mentions).to eq [{ customerId: 123, username: "tomoki", start: result.content.length - 7, end: result.content.length }]
+    end
+
+    it "MAX_LENGTHを超える本文は先頭MAX_LENGTH文字のみ処理され例外を起こさないこと" do
+      huge_input = "a" * (Chat::MarkdownRenderer::MAX_LENGTH + 10_000)
+
+      expect { call(huge_input) }.not_to raise_error
+      expect(call(huge_input).content.length).to eq Chat::MarkdownRenderer::MAX_LENGTH
+    end
+
+    it "MAX_LENGTHより後ろの文字列がcontentへ含まれないこと" do
+      content = ("a" * Chat::MarkdownRenderer::MAX_LENGTH) + "OVER_LIMIT_MARKER"
+      result = call(content)
+
+      expect(result.content).not_to include("OVER_LIMIT_MARKER")
+    end
+
+    it "MAX_LENGTHより後ろにあるメンションはMention Stateへ含まれないこと" do
+      content = ("a" * Chat::MarkdownRenderer::MAX_LENGTH) + "[@over](customer:999)"
+      result = call(content)
+
+      expect(result.mentions).to eq []
+    end
+
+    it "MAX_LENGTH境界で内部記法が途中切れになっても例外を起こさず、不完全な記法はそのまま残ること" do
+      # 境界ちょうどで `[@tomoki](customer:123)` を分断し、閉じ丸括弧が上限の外に出るようにする
+      mention = "[@tomoki](customer:123)"
+      prefix_length = Chat::MarkdownRenderer::MAX_LENGTH - (mention.length - 3)
+      content = ("a" * prefix_length) + mention
+
+      result = nil
+      expect { result = call(content) }.not_to raise_error
+      expect(result.content.length).to eq Chat::MarkdownRenderer::MAX_LENGTH
+      expect(result.mentions).to eq []
+    end
+  end
 end
