@@ -42,8 +42,10 @@ RSpec.describe "過去のコミュニティメッセージ(community_id: nil)か
     # .thread-reply-submitはpill状の隣接flex要素があり、Capybaraのネイティブclickに対して
     # クリック座標がずれ不安定になることがあるため(chat_thread_image_size_spec.rb等と同様)、
     # JS側で値設定・クリックイベントを直接発火させる。
+    # 各メッセージのインライン編集フォーム(.message-edit-form)も.markdown-textareaを持つため、
+    # `.thread-reply-form`配下に絞り込んでスレッド返信用のtextareaを specific に取得する。
     page.execute_script(<<~JS)
-      var textarea = document.querySelector('#thread-panel-body textarea.markdown-textarea');
+      var textarea = document.querySelector('#thread-panel-body .thread-reply-form textarea.markdown-textarea');
       textarea.value = 'スレッド返信します';
       textarea.dispatchEvent(new Event('input'));
       document.querySelector('#thread-panel-body .thread-reply-submit').click();

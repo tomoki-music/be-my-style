@@ -625,7 +625,12 @@
       // (サーバー側でも除外しているが、フロント描画直前にも二重に除外する)。
       var currentCustomerId = container.dataset.currentCustomerId;
 
+      // 各メッセージのインライン編集フォーム(.message-edit-form)内のtextareaは、
+      // 編集ボタン押下時にchat_message_edit.js側が初めて初期化する
+      // (非表示のまま自動初期化すると、実際に編集を開いた際の明示的な初期化と
+      // 二重初期化になり、同一textareaにリスナー・ドロップダウンが二重に生成されてしまう)。
       container.querySelectorAll(".markdown-textarea").forEach(function (textarea) {
+        if (textarea.closest(".message-edit-form")) return;
         initMentionAutocomplete(textarea, candidatesUrl, currentCustomerId);
       });
     });

@@ -17,18 +17,31 @@
   document.addEventListener('turbolinks:load', function () {
     if (!document.URL.match(/chat_rooms/)) return;
 
-    document.querySelectorAll('.markdown-composer').forEach(initComposer);
+    // 各メッセージのインライン編集フォーム(.message-edit-form)内の.markdown-composerは
+    // 編集ボタン押下時にchat_message_edit.js側が初めて初期化する(非表示のまま自動初期化すると、
+    // 実際に編集を開いた際の明示的なinit呼び出しと二重初期化になってしまうため)。
+    document.querySelectorAll('.markdown-composer').forEach(function (composer) {
+      if (composer.closest('.message-edit-form')) return;
+      initComposer(composer);
+    });
   });
 
   window.ChatMarkdownComposer = window.ChatMarkdownComposer || {};
   window.ChatMarkdownComposer.init = initComposer;
 
+  // 同じcomposerに対してinit()が複数回呼ばれても(スレッドパネルの再取得・
+  // インライン編集フォームの再オープン等)、ツールバーのイベントリスナーが
+  // 重複登録されないようにする(二重登録されるとボタン1回押下でMarkdown記法が
+  // 二重に挿入されてしまう)。
   function initComposer(composer) {
+    if (composer.dataset.composerInitialized === 'true') return;
+
     var textarea = composer.querySelector('.markdown-textarea');
     var previewPane = composer.querySelector('.markdown-preview-pane');
     var previewUrl = composer.dataset.previewUrl;
     if (!textarea || !previewPane || !previewUrl) return;
 
+    composer.dataset.composerInitialized = 'true';
     initToolbar(composer, textarea);
     initTabs(composer, textarea, previewPane, previewUrl);
   }
