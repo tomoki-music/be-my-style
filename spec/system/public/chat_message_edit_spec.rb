@@ -55,6 +55,28 @@ RSpec.describe "メッセージ編集機能", type: :system do
       end
     end
 
+    it "添付のみ・スタンプのみのメッセージには編集ボタンが表示されないこと" do
+      image_only = build(:chat_message, customer: customer, chat_room: chat_room, content: nil)
+      image_only.attachments.attach(
+        io: File.open(Rails.root.join("spec/fixtures/thread_sample_image.png")),
+        filename: "test.png",
+        content_type: "image/png"
+      )
+      image_only.save!
+      stamp_only = create(:chat_message, customer: customer, chat_room: chat_room, content: nil, stamp_type: "fire")
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      expect(page).to have_selector("#chat-message-#{image_only.id}", wait: 10)
+      within "#chat-message-#{image_only.id}" do
+        expect(page).not_to have_selector(".edit-button")
+      end
+      within "#chat-message-#{stamp_only.id}" do
+        expect(page).not_to have_selector(".edit-button")
+      end
+    end
+
     it "編集ボタンを押すと本文がtextareaに置き換わり、既存の本文が入っていること" do
       own_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "編集前の本文")
 
@@ -182,6 +204,23 @@ RSpec.describe "メッセージ編集機能", type: :system do
         expect(page).to have_content("編集後の返信です", wait: 10)
       end
       expect(reply.reload.content).to eq "編集後の返信です"
+    end
+
+    it "スタンプのみの返信メッセージには、スレッドパネル内でも編集ボタンが表示されないこと" do
+      root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿です")
+      stamp_reply = create(:chat_message, customer: customer, chat_room: chat_room, content: nil, stamp_type: "fire",
+                                           reply_to_chat_message: root)
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+      open_thread_panel
+
+      within "#thread-panel-body" do
+        expect(page).to have_selector("[data-chat-message-id='#{stamp_reply.id}']", wait: 10)
+        within "[data-chat-message-id='#{stamp_reply.id}']" do
+          expect(page).not_to have_selector(".edit-button")
+        end
+      end
     end
   end
 end

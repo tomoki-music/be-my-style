@@ -190,6 +190,136 @@ RSpec.describe "メッセージ編集(PATCH update)のテスト", type: :request
       expect(response.body).to include("編集後の元投稿")
       expect(response.body).not_to include("編集前の元投稿")
     end
+
+    it "テキスト＋一般ファイル(PDF)は編集成功し、添付が維持されること(blob idが変わらない)" do
+      chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "資料を送ります")
+      chat_message.attachments.attach(io: StringIO.new("dummy"), filename: "test.pdf", content_type: "application/pdf")
+      original_blob_ids = chat_message.attachments.map { |a| a.blob.id }
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "資料を更新しました" } }
+
+      expect(response).to have_http_status(:ok)
+      chat_message.reload
+      expect(chat_message.content).to eq "資料を更新しました"
+      expect(chat_message.attachments.map { |a| a.blob.id }).to eq original_blob_ids
+    end
+
+    it "テキスト＋スタンプは編集成功し、stamp_typeが維持されること" do
+      chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "いいね",
+                                            stamp_type: "fire")
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "いいねです" } }
+
+      expect(response).to have_http_status(:ok)
+      chat_message.reload
+      expect(chat_message.content).to eq "いいねです"
+      expect(chat_message.stamp_type).to eq "fire"
+    end
+  end
+
+  describe "編集不可なメッセージ種別(添付のみ・スタンプのみ)への直接PATCH" do
+    before { sign_in customer }
+
+    it "画像のみのメッセージへPATCHすると403になり、本文が追加されないこと" do
+      chat_message = build(:chat_message, customer: customer, chat_room: chat_room, content: nil)
+      chat_message.attachments.attach(io: StringIO.new("dummy"), filename: "test.png", content_type: "image/png")
+      chat_message.save!
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "後から追加した本文" } }
+
+      expect(response).to have_http_status(:forbidden)
+      chat_message.reload
+      expect(chat_message.content).to be_nil
+      expect(chat_message.edited_at).to be_nil
+    end
+
+    it "一般ファイル(PDF)のみのメッセージへPATCHすると403になり、本文が追加されないこと" do
+      chat_message = build(:chat_message, customer: customer, chat_room: chat_room, content: nil)
+      chat_message.attachments.attach(io: StringIO.new("dummy"), filename: "test.pdf", content_type: "application/pdf")
+      chat_message.save!
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "後から追加した本文" } }
+
+      expect(response).to have_http_status(:forbidden)
+      chat_message.reload
+      expect(chat_message.content).to be_nil
+      expect(chat_message.edited_at).to be_nil
+    end
+
+    it "スタンプのみのメッセージへPATCHすると403になり、本文が追加されないこと" do
+      chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: nil, stamp_type: "fire")
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "後から追加した本文" } }
+
+      expect(response).to have_http_status(:forbidden)
+      chat_message.reload
+      expect(chat_message.content).to be_nil
+      expect(chat_message.stamp_type).to eq "fire"
+      expect(chat_message.edited_at).to be_nil
+    end
+
+    it "画像のみのメッセージへ空文字でPATCHしても403になること(no-op更新の余地を与えない)" do
+      chat_message = build(:chat_message, customer: customer, chat_room: chat_room, content: nil)
+      chat_message.attachments.attach(io: StringIO.new("dummy"), filename: "test.png", content_type: "image/png")
+      chat_message.save!
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "" } }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(chat_message.reload.edited_at).to be_nil
+    end
+
+    it "スタンプのみのメッセージへ空文字でPATCHしても403になること(no-op更新の余地を与えない)" do
+      chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: nil, stamp_type: "fire")
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "" } }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(chat_message.reload.edited_at).to be_nil
+    end
+  end
+
+  describe "編集ボタンの表示条件(通常一覧)" do
+    before { sign_in customer }
+
+    it "本文のあるメッセージには編集ボタンが表示されること" do
+      normal = create(:chat_message, customer: customer, chat_room: chat_room, content: "通常メッセージ")
+
+      get public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      doc = Nokogiri::HTML(response.body)
+      expect(doc.at_css("#chat-message-#{normal.id} .edit-button")).to be_present
+    end
+
+    it "画像のみのメッセージには編集ボタンが表示されないこと" do
+      image_only = build(:chat_message, customer: customer, chat_room: chat_room, content: nil)
+      image_only.attachments.attach(io: StringIO.new("dummy"), filename: "test.png", content_type: "image/png")
+      image_only.save!
+
+      get public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      doc = Nokogiri::HTML(response.body)
+      expect(doc.at_css("#chat-message-#{image_only.id} .edit-button")).to be_nil
+    end
+
+    it "スタンプのみのメッセージには編集ボタンが表示されないこと" do
+      stamp_only = create(:chat_message, customer: customer, chat_room: chat_room, content: nil, stamp_type: "fire")
+
+      get public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      doc = Nokogiri::HTML(response.body)
+      expect(doc.at_css("#chat-message-#{stamp_only.id} .edit-button")).to be_nil
+    end
+
+    it "テキスト＋添付のメッセージには編集ボタンが表示されること" do
+      with_attachment = create(:chat_message, customer: customer, chat_room: chat_room, content: "画像を送ります")
+      with_attachment.attachments.attach(io: StringIO.new("dummy"), filename: "test.png", content_type: "image/png")
+
+      get public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      doc = Nokogiri::HTML(response.body)
+      expect(doc.at_css("#chat-message-#{with_attachment.id} .edit-button")).to be_present
+    end
   end
 
   # Mention Hydration(編集開始時に内部記法を@usernameへ戻して表示する機能)はView/Frontend側の
@@ -297,6 +427,16 @@ RSpec.describe "メッセージ編集(PATCH update)のテスト", type: :request
         chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "編集前")
 
         patch public_chat_message_path(chat_message), params: { chat_message: { content: "" } }
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(chat_message.reload.content).to eq "編集前"
+        expect(chat_message.edited_at).to be_nil
+      end
+
+      it "空白文字のみへの更新はvalidation errorになり、本文もedited_atも変わらないこと" do
+        chat_message = create(:chat_message, customer: customer, chat_room: chat_room, content: "編集前")
+
+        patch public_chat_message_path(chat_message), params: { chat_message: { content: "   " } }
 
         expect(response).to have_http_status(:unprocessable_entity)
         expect(chat_message.reload.content).to eq "編集前"
