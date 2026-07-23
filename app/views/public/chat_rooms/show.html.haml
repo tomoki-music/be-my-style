@@ -3,8 +3,13 @@
 .chat-rooms-show-container{ data: { "mention-candidates-url" => mention_candidates_public_chat_room_path(@chat_room),
     "current-customer-id" => current_customer.id,
     "thread-url-template" => thread_public_chat_message_path(id: "__ID__"),
-    "thread-reply-url-template" => thread_reply_public_chat_message_path(id: "__ID__") } }
-  %h4 チャットルームへようこそ!
+    "thread-reply-url-template" => thread_reply_public_chat_message_path(id: "__ID__"),
+    "search-url" => search_public_chat_room_path(@chat_room) } }
+  .chat-rooms-header
+    %h4 チャットルームへようこそ!
+    %button.chat-search-trigger{ type: "button", "aria-label" => "メッセージを検索" }
+      %span.chat-search-trigger-icon 🔍
+      %span.chat-search-trigger-label 検索
 
   .row
     .col-md-3
@@ -49,3 +54,4 @@
             = link_to 'プロフィール画面へ', public_customer_path(@chat_room_customer.id), class: "btn btn-info chat-partner-link", data: { 'turbolinks': false }
 
   = render "public/chat_rooms/thread_panel_shell"
+  = render "public/chat_rooms/search_panel_shell"

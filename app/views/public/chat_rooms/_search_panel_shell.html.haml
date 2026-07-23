@@ -1,0 +1,17 @@
+#search-panel.search-panel{ hidden: true }
+  .search-panel-backdrop
+  .search-panel-dialog{ role: "dialog", "aria-modal" => "true", "aria-labelledby" => "search-panel-title", tabindex: "-1" }
+    .search-panel-header
+      %h2#search-panel-title メッセージ検索
+      %button.search-panel-close{ type: "button", "aria-label" => "検索を閉じる" }
+        ×
+    %form#search-panel-form.search-panel-form
+      %label.sr-only{ for: "search-panel-input" } 検索キーワード
+      %input#search-panel-input.search-panel-input{ type: "search", name: "q", placeholder: "キーワードを入力(2〜50文字)", "aria-label" => "検索キーワード" }
+      %button.search-panel-submit{ type: "submit" } 検索
+    #search-panel-body.search-panel-body
+      %p.search-panel-placeholder キーワードを入力して検索してください
+    .search-panel-pagination{ hidden: true }
+      %button.search-panel-prev{ type: "button", disabled: true } ← 前へ
+      %span#search-panel-page-info.search-panel-page-info
+      %button.search-panel-next{ type: "button", disabled: true } 次へ →
