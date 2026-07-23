@@ -122,7 +122,7 @@ class Public::ChatMessagesController < ApplicationController
     return head :forbidden unless thread_readable?(root, community)
 
     replies = root.replies
-              .includes(:customer, :mentioned_customers, reply_to_chat_message: :customer, quoted_chat_message: :customer)
+              .includes(:customer, :mentioned_customers, :chat_message_link_previews, reply_to_chat_message: :customer, quoted_chat_message: :customer)
               .with_attached_attachments
               .order(created_at: :asc)
               .limit(THREAD_REPLIES_LIMIT)
@@ -306,12 +306,16 @@ class Public::ChatMessagesController < ApplicationController
   # 編集ではreply_to_chat_message_idを変更しないため、Chat::ReplyNotificationServiceは
   # 呼ばない(スレッド返信通知の再送を防ぐ)。引用に対する通知は元々存在しないため対応不要。
   def update_chat_message_with_mentions(chat_message, new_content)
-    ActiveRecord::Base.transaction do
+    updated = ActiveRecord::Base.transaction do
       raise ActiveRecord::Rollback unless chat_message.update(content: new_content, edited_at: Time.current)
 
       Chat::MentionSyncService.call(chat_message)
       true
     end || false
+
+    # save_chat_message_with_replies_and_mentionsと同じ理由でコミット後に呼ぶ。
+    Chat::LinkPreviewSyncService.call(chat_message) if updated
+    updated
   end
 
   # DM参加者・コミュニティ参加権限に加え、そのチャット種別のプラン機能(feature)が
@@ -359,13 +363,19 @@ class Public::ChatMessagesController < ApplicationController
   # 返信通知を先に作成し、通知済み相手へのメンション通知はMentionSyncServiceで抑制する
   # (同一メッセージ・同一相手への「返信」「メンション」の重複通知を避けるため)。
   def save_chat_message_with_replies_and_mentions(chat_message)
-    ActiveRecord::Base.transaction do
+    saved = ActiveRecord::Base.transaction do
       raise ActiveRecord::Rollback unless chat_message.save
 
       reply_notified_ids = Chat::ReplyNotificationService.call(chat_message)
       Chat::MentionSyncService.call(chat_message, skip_notification_customer_ids: reply_notified_ids)
       true
     end || false
+
+    # トランザクションのコミット後に呼ぶ。:asyncアダプタはenqueue後ほぼ即時に
+    # 別スレッドでJobを実行し得るため、コミット前に呼ぶとJobが未コミットの
+    # レコードを参照しようとする競合状態になり得るため。
+    Chat::LinkPreviewSyncService.call(chat_message) if saved
+    saved
   end
 
   def chat_message_params

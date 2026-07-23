@@ -14,6 +14,8 @@ class ChatMessage < ApplicationRecord
   # dependent: :destroyが無いと、ChatRoom/Communityのdependent: :destroyでこのメッセージが
   # 削除される際、chat_message_pinsの外部キー制約(RESTRICT)に阻まれて例外になる。
   has_one :chat_message_pin, dependent: :destroy
+  # chat_message_pinと同様の理由でdependent: :destroyが必須。
+  has_many :chat_message_link_previews, -> { order(:position) }, dependent: :destroy
 
   has_many_attached :attachments
 
