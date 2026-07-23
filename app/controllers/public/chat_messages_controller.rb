@@ -128,7 +128,7 @@ class Public::ChatMessagesController < ApplicationController
               .limit(THREAD_REPLIES_LIMIT)
 
     render partial: "public/chat_rooms/thread_panel_content",
-           locals: { root_message: root, replies: replies },
+           locals: { root_message: root, replies: replies, community: community },
            layout: false
   end
 
@@ -180,7 +180,7 @@ class Public::ChatMessagesController < ApplicationController
     if save_chat_message_with_replies_and_mentions(@chat_message)
       html = render_to_string(
         partial: "public/chat_rooms/message",
-        locals: { chat_message: @chat_message, display_context: :thread },
+        locals: { chat_message: @chat_message, display_context: :thread, community: community },
         layout: false
       )
       render json: { html: html, replies_count: root.reload.replies_count, root_message_id: root.id }, status: :ok
@@ -210,7 +210,7 @@ class Public::ChatMessagesController < ApplicationController
     if update_chat_message_with_mentions(@chat_message, chat_message_edit_params[:content])
       html = render_to_string(
         partial: "public/chat_rooms/message",
-        locals: { chat_message: @chat_message, display_context: normalized_display_context },
+        locals: { chat_message: @chat_message, display_context: normalized_display_context, community: community },
         layout: false
       )
       render json: { chat_message_id: @chat_message.id, html: html }, status: :ok
@@ -219,7 +219,72 @@ class Public::ChatMessagesController < ApplicationController
     end
   end
 
+  # ピン留め。投稿権限がある参加者なら誰でも操作できる(既存のpostable?をそのまま流用し、
+  # ルーム内の「モデレーター」のような新しい権限概念は追加しない)。ピン留めはメッセージ単位で
+  # 1件の共有状態であるため、既にピン済みの場合は冪等に成功扱いとする(二重ピンをエラーにしない)。
+  def pin
+    @chat_message = ChatMessage.find_by(id: params[:id])
+    return render_thread_reply_error(:not_found) if @chat_message.blank?
+
+    community = community_for_chat_room(@chat_message.chat_room)
+    unless Chat::ChatRoomAuthorization.postable?(chat_room: @chat_message.chat_room, community: community, customer: current_customer)
+      return render_thread_reply_error(:not_found)
+    end
+
+    begin
+      @chat_message.chat_message_pin || @chat_message.create_chat_message_pin!(pinned_by_customer: current_customer)
+    rescue ActiveRecord::RecordNotUnique
+      # 同時に別プロセスがピン留めしていた場合。unique index違反を「既にピン済み」として扱う(冪等)。
+    end
+    @chat_message.reload
+
+    render json: { pinned: true, chat_message_id: @chat_message.id, html: render_pin_toggle_html(@chat_message, community) }
+  end
+
+  # ピン解除。ピンした本人・コミュニティ管理者(can_manage_community?)・サイト管理者(admin?)のみ許可する。
+  # DMには「管理者」という概念が無く参加者は元々postable?で信頼されているため、DMの場合は
+  # 参加者なら誰でも解除できる。未ピン状態での解除リクエストも冪等に成功扱いとする。
+  def unpin
+    @chat_message = ChatMessage.find_by(id: params[:id])
+    return render_thread_reply_error(:not_found) if @chat_message.blank?
+
+    community = community_for_chat_room(@chat_message.chat_room)
+    unless Chat::ChatRoomAuthorization.readable?(chat_room: @chat_message.chat_room, community: community, customer: current_customer)
+      return render_thread_reply_error(:not_found)
+    end
+
+    pin = @chat_message.chat_message_pin
+    if pin.present?
+      return render_thread_reply_error(:forbidden) unless unpin_allowed?(pin, @chat_message.chat_room, community)
+
+      pin.destroy!
+      @chat_message.reload
+    end
+
+    render json: { pinned: false, chat_message_id: @chat_message.id, html: render_pin_toggle_html(@chat_message, community) }
+  end
+
   private
+
+  # pin/unpin成功後、メッセージ本体(ピン済みバッジ・ボタン込み)のHTML断片を返し、
+  # 呼び出し元(main一覧/スレッドパネル)のDOMをJS側でそのまま置き換えられるようにする。
+  # updateアクションのnormalized_display_contextと同じホワイトリスト方式を使う。
+  def render_pin_toggle_html(chat_message, community)
+    render_to_string(
+      partial: "public/chat_rooms/message",
+      locals: { chat_message: chat_message, display_context: normalized_display_context, community: community },
+      layout: false
+    )
+  end
+
+  def unpin_allowed?(pin, chat_room, community)
+    return true if pin.pinned_by_customer_id == current_customer.id
+    return true if current_customer.admin?
+    return true if community.present? && current_customer.can_manage_community?(community)
+    return true if community.blank? && Chat::ChatRoomAuthorization.participant?(chat_room: chat_room, community: nil, customer: current_customer)
+
+    false
+  end
 
   # クライアントからの入力を無条件に信頼せず、"thread"のみを特別扱いする
   # ホワイトリスト方式にする(それ以外の値は既存partialの安全なデフォルト:normalへ倒す)。
