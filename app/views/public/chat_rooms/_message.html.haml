@@ -100,41 +100,42 @@
             %div{ class: markdown_class }= chat_markdown(chat_message)
           - else
             = simple_format(chat_message.content)
-      - hydrated_edit_content = Chat::MentionHydrator.call(chat_message.content)
-      .message-edit-form{ hidden: true }
-        %form{ action: public_chat_message_path(chat_message), method: "post" }
-          %input{ type: "hidden", name: "_method", value: "patch" }
-          .edit-errors{ hidden: true }
-          .markdown-composer{ data: { "preview-url" => preview_public_chat_messages_path } }
-            .markdown-toolbar
-              %button.md-btn{ type: "button", data: { md: "bold" }, title: "太字" }
-                %strong B
-              %button.md-btn{ type: "button", data: { md: "italic" }, title: "斜体" }
-                %em I
-              %button.md-btn{ type: "button", data: { md: "heading" }, title: "見出し" } H
-              %button.md-btn{ type: "button", data: { md: "strikethrough" }, title: "取り消し線" }
-                %s S
-              %button.md-btn{ type: "button", data: { md: "quote" }, title: "引用" } "
-              %button.md-btn{ type: "button", data: { md: "unordered-list" }, title: "箇条書き" } •
-              %button.md-btn{ type: "button", data: { md: "ordered-list" }, title: "番号付きリスト" } 1.
-              %button.md-btn{ type: "button", data: { md: "checklist" }, title: "チェックリスト" } ☑
-              %button.md-btn{ type: "button", data: { md: "code" }, title: "インラインコード" } </>
-              %button.md-btn{ type: "button", data: { md: "codeblock" }, title: "コードブロック" } { }
-              %button.md-btn{ type: "button", data: { md: "link" }, title: "リンク" } 🔗
-              %button.md-btn{ type: "button", data: { md: "image" }, title: "画像" } 🖼
-              %button.md-btn{ type: "button", data: { md: "hr" }, title: "区切り線" } ―
-              .md-tabs
-                %button.md-tab.is-active{ type: "button", data: { tab: "edit" } } 編集
-                %button.md-tab{ type: "button", data: { tab: "preview" } } プレビュー
-            .markdown-panes
-              .md-pane.edit-pane.is-active
-                %textarea.chat-form.markdown-textarea{ name: "chat_message[content]", data: { "initial-mentions" => hydrated_edit_content.mentions.to_json } }= hydrated_edit_content.content
-              .md-pane.preview-pane
-                .markdown-body.markdown-preview-pane
-                  %p.markdown-preview-placeholder 入力するとここにプレビューが表示されます
-          .message-edit-actions
-            %button.edit-cancel-button{ type: "button" } キャンセル
-            %button.edit-save-button{ type: "submit" } 保存
+      - if chat_message.content_editable?
+        - hydrated_edit_content = Chat::MentionHydrator.call(chat_message.content)
+        .message-edit-form{ hidden: true }
+          %form{ action: public_chat_message_path(chat_message), method: "post" }
+            %input{ type: "hidden", name: "_method", value: "patch" }
+            .edit-errors{ hidden: true }
+            .markdown-composer{ data: { "preview-url" => preview_public_chat_messages_path } }
+              .markdown-toolbar
+                %button.md-btn{ type: "button", data: { md: "bold" }, title: "太字" }
+                  %strong B
+                %button.md-btn{ type: "button", data: { md: "italic" }, title: "斜体" }
+                  %em I
+                %button.md-btn{ type: "button", data: { md: "heading" }, title: "見出し" } H
+                %button.md-btn{ type: "button", data: { md: "strikethrough" }, title: "取り消し線" }
+                  %s S
+                %button.md-btn{ type: "button", data: { md: "quote" }, title: "引用" } "
+                %button.md-btn{ type: "button", data: { md: "unordered-list" }, title: "箇条書き" } •
+                %button.md-btn{ type: "button", data: { md: "ordered-list" }, title: "番号付きリスト" } 1.
+                %button.md-btn{ type: "button", data: { md: "checklist" }, title: "チェックリスト" } ☑
+                %button.md-btn{ type: "button", data: { md: "code" }, title: "インラインコード" } </>
+                %button.md-btn{ type: "button", data: { md: "codeblock" }, title: "コードブロック" } { }
+                %button.md-btn{ type: "button", data: { md: "link" }, title: "リンク" } 🔗
+                %button.md-btn{ type: "button", data: { md: "image" }, title: "画像" } 🖼
+                %button.md-btn{ type: "button", data: { md: "hr" }, title: "区切り線" } ―
+                .md-tabs
+                  %button.md-tab.is-active{ type: "button", data: { tab: "edit" } } 編集
+                  %button.md-tab{ type: "button", data: { tab: "preview" } } プレビュー
+              .markdown-panes
+                .md-pane.edit-pane.is-active
+                  %textarea.chat-form.markdown-textarea{ name: "chat_message[content]", data: { "initial-mentions" => hydrated_edit_content.mentions.to_json } }= hydrated_edit_content.content
+                .md-pane.preview-pane
+                  .markdown-body.markdown-preview-pane
+                    %p.markdown-preview-placeholder 入力するとここにプレビューが表示されます
+            .message-edit-actions
+              %button.edit-cancel-button{ type: "button" } キャンセル
+              %button.edit-save-button{ type: "submit" } 保存
       - if chat_message.attachments.attached?
         - attachments_class = in_thread ? 'message-attachments message-attachments--thread' : 'message-attachments'
         %li
@@ -184,11 +185,12 @@
                     "quote-has-image" => chat_quote_has_image?(chat_message) } }
           %span.quote-button-icon "
           %span.quote-button-label 引用返信
-        %button.edit-button{ type: "button",
-            "aria-label" => "このメッセージを編集",
-            data: { "edit-message-id" => chat_message.id } }
-          %span.edit-button-icon ✎
-          %span.edit-button-label 編集
+        - if chat_message.content_editable?
+          %button.edit-button{ type: "button",
+              "aria-label" => "このメッセージを編集",
+              data: { "edit-message-id" => chat_message.id } }
+            %span.edit-button-icon ✎
+            %span.edit-button-label 編集
       - if !in_thread && chat_message.replies_count > 0
         %button.thread-replies-button{ type: "button",
             "aria-label" => "#{chat_message.replies_count}件の返信を表示",

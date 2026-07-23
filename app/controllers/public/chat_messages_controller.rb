@@ -194,6 +194,8 @@ class Public::ChatMessagesController < ApplicationController
   # 他人のメッセージIDと存在しないメッセージIDは同一の404として扱い、存在を漏洩させない。
   # content以外(customer_id/chat_room_id/community_id/reply_to_chat_message_id/
   # quoted_chat_message_id/content_format/attachments等)は一切書き換え不可にする。
+  # 添付のみ・スタンプのみのメッセージは編集不可(content_editable?)。Viewでボタン自体を
+  # 隠すだけでなく、直接PATCHされた場合にも本文を後付けできないようここでも防御する。
   def update
     @chat_message = ChatMessage.find_by(id: params[:id], customer_id: current_customer.id)
     return render_thread_reply_error(:not_found) if @chat_message.blank?
@@ -202,6 +204,8 @@ class Public::ChatMessagesController < ApplicationController
     unless Chat::ChatRoomAuthorization.postable?(chat_room: @chat_message.chat_room, community: community, customer: current_customer)
       return render_thread_reply_error(:forbidden)
     end
+
+    return render_thread_reply_error(:forbidden) unless @chat_message.content_editable?
 
     if update_chat_message_with_mentions(@chat_message, chat_message_edit_params[:content])
       html = render_to_string(

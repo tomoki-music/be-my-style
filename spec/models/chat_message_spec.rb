@@ -237,4 +237,39 @@ RSpec.describe 'ChatMessageモデルのテスト', type: :model do
       end
     end
   end
+
+  describe '#content_editable?' do
+    it '本文があればtrueを返す' do
+      message = build(:chat_message, customer: customer, chat_room: chat_room, content: '通常の本文')
+      expect(message.content_editable?).to eq true
+    end
+
+    it '本文がnilならfalseを返す(スタンプがあっても本文の有無だけで判定する)' do
+      message = build(:chat_message, customer: customer, chat_room: chat_room, content: nil, stamp_type: 'fire')
+      expect(message.content_editable?).to eq false
+    end
+
+    it '本文が空文字ならfalseを返す' do
+      message = build(:chat_message, customer: customer, chat_room: chat_room, content: '')
+      expect(message.content_editable?).to eq false
+    end
+
+    it '本文が空白文字のみならfalseを返す' do
+      message = build(:chat_message, customer: customer, chat_room: chat_room, content: "   \n")
+      expect(message.content_editable?).to eq false
+    end
+
+    it '添付があっても本文が無ければfalseを返す' do
+      message = build(:chat_message, customer: customer, chat_room: chat_room, content: nil)
+      message.attachments.attach(io: StringIO.new('dummy'), filename: 'test.png', content_type: 'image/png')
+      message.save!
+      expect(message.content_editable?).to eq false
+    end
+
+    it '本文と添付が両方あればtrueを返す' do
+      message = create(:chat_message, customer: customer, chat_room: chat_room, content: '画像を送ります')
+      message.attachments.attach(io: StringIO.new('dummy'), filename: 'test.png', content_type: 'image/png')
+      expect(message.content_editable?).to eq true
+    end
+  end
 end

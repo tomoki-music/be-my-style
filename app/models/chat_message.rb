@@ -27,6 +27,13 @@ class ChatMessage < ApplicationRecord
   # 循環の周期によっては自分自身を指す行を生成しかねないため、実際に閉路を検出する)。
   MAX_THREAD_DEPTH = 50
 
+  # 添付・スタンプの有無に関わらず、本文(content)が無いメッセージは編集不可とする。
+  # 添付のみ・スタンプのみのメッセージへ編集で本文を後付けできてしまう抜け道を防ぐため、
+  # content_or_stamp_or_attachment_present(レコードとしての有効性)とは別の判定として持つ。
+  def content_editable?
+    content.present?
+  end
+
   def thread_root
     root = self
     visited_ids = { root.id => true }
