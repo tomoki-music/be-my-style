@@ -29,8 +29,11 @@ module Chat
       sanitized = ActiveRecord::Base.sanitize_sql_like(@query.downcase)
       # sanitize_sql_likeはバックスラッシュでエスケープするが、MySQLと異なりSQLite(test環境)は
       # デフォルトのLIKEエスケープ文字を持たないため、ESCAPE句を明示してDBに依存せず動作させる。
+      # エスケープ文字はSQL文字列リテラルに直接埋め込まず(MySQLは文字列リテラル内でも
+      # バックスラッシュをエスケープ文字として解釈するため'\'と書くと閉じクォート扱いに
+      # なり構文エラーになる)、バインドパラメータとして渡しアダプタに解決させる。
       scope = @chat_room.chat_messages
-                .where("LOWER(content) LIKE ? ESCAPE '\\'", "%#{sanitized}%")
+                .where("LOWER(content) LIKE ? ESCAPE ?", "%#{sanitized}%", "\\")
                 .includes(:customer, reply_to_chat_message: :customer)
                 .with_attached_attachments
                 .order(created_at: :desc)
