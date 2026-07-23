@@ -123,4 +123,36 @@ RSpec.describe Chat::MessageSearch, type: :service do
       expect(result.status).to eq :ok
     end
   end
+
+  # 本番/開発(MySQL)でのみ発生し、test環境(SQLite)では再現しなかった500エラーの回帰テスト。
+  #
+  # MySQLは文字列リテラル内でもバックスラッシュをエスケープ文字として解釈するため、
+  # `ESCAPE '\'`のようにエスケープ文字をSQL文字列へ直接埋め込むと、閉じクォートとして
+  # 機能せず構文エラー(ActiveRecord::StatementInvalid)になる。SQLiteは文字列リテラル内で
+  # バックスラッシュを特別扱いしないため、同じ埋め込み方でもtest環境のspecは全て成功して
+  # しまい、この回帰を検出できなかった(実際に開発環境のMySQLへ直接実行して発覚した)。
+  #
+  # test環境がSQLiteである限り、生成されたSQL文字列の見た目だけではこのクラスの不具合を
+  # 再現できない(バインド版・埋め込み版のどちらでもSQLite上のto_sqlは同じ表記になる)ため、
+  # 実装がエスケープ文字をSQL文字列へ直接埋め込んでいないこと(バインドパラメータとして
+  # 渡していること)をソースコードレベルで確認する。
+  describe "MySQL/SQLite間のLIKE ESCAPE句の互換性(回帰テスト)" do
+    it "ESCAPE句のエスケープ文字をSQL文字列に直接埋め込んでいないこと" do
+      source = File.read(Rails.root.join("app/services/chat/message_search.rb"))
+      # 例: ESCAPE '\' のような直書きを禁止する(MySQLでは文字列リテラル内のバックスラッシュが
+      # エスケープとして解釈され、閉じクォートが機能せず構文エラーになるため)。
+      failure_message = "ESCAPE句のエスケープ文字はSQL文字列へ直接埋め込まず、" \
+                         "バインドパラメータ(ESCAPE ?)として渡してください"
+      expect(source).not_to match(/ESCAPE\s+'\\\\?'/), failure_message
+      expect(source).to match(/ESCAPE\s+\?/)
+    end
+
+    it "検索語に%やバックスラッシュを含む場合でもMySQL互換のESCAPE ?形式で例外にならないこと" do
+      create(:chat_message, chat_room: chat_room, customer: customer, content: "進捗は50%です")
+
+      expect do
+        described_class.call(chat_room: chat_room, query: "50%")
+      end.not_to raise_error
+    end
+  end
 end
