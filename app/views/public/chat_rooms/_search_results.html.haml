@@ -1,0 +1,17 @@
+- case result.status
+- when :blank
+  %p.search-panel-placeholder キーワードを入力して検索してください
+- when :too_short
+  %p.search-panel-message.search-panel-message--error
+    = "#{Chat::MessageSearch::MIN_QUERY_LENGTH}文字以上入力してください"
+- when :too_long
+  %p.search-panel-message.search-panel-message--error
+    = "#{Chat::MessageSearch::MAX_QUERY_LENGTH}文字以内で入力してください"
+- else
+  - if result.messages.empty?
+    %p.search-panel-message 一致するメッセージが見つかりませんでした
+  - else
+    %p.search-panel-count= "#{result.total_count}件見つかりました"
+    .search-results-list
+      - result.messages.each do |chat_message|
+        = render "public/chat_rooms/search_result", chat_message: chat_message

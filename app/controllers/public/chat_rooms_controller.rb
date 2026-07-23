@@ -106,6 +106,36 @@ class Public::ChatRoomsController < ApplicationController
     render json: { error: "候補を取得できませんでした" }, status: :unprocessable_entity
   end
 
+  # チャットルーム内メッセージ検索API。DM・コミュニティチャットの両方を単一ルート
+  # (GET /chat_rooms/:id/search)で扱い、対象chat_roomの実データからDM/コミュニティを
+  # 判定する(community_showと同じ導出方法)。存在しないchat_room・権限の無いchat_room・
+  # 対象chat種別のプラン機能が無効な場合は、show/community_showと同じく常に同一の404を
+  # 返し、ルームの存在や検索結果件数を外部から推測できないようにする。
+  def search
+    @chat_room = ChatRoom.find_by(id: params[:id])
+    return render_chat_room_not_found if @chat_room.blank?
+
+    community = community_for_search(@chat_room)
+    return render_chat_room_not_found unless search_feature_enabled?(community)
+    return render_chat_room_not_found unless Chat::ChatRoomAuthorization.readable?(chat_room: @chat_room, community: community, customer: current_customer)
+
+    result = Chat::MessageSearch.call(chat_room: @chat_room, query: params[:q], page: params[:page])
+
+    html = render_to_string(
+      partial: "public/chat_rooms/search_results",
+      locals: { result: result },
+      layout: false
+    )
+
+    render json: {
+      html: html,
+      page: result.page,
+      next_page: (result.page < result.total_pages ? result.page + 1 : nil),
+      prev_page: (result.page > 1 ? result.page - 1 : nil),
+      total_count: result.total_count
+    }
+  end
+
   # コミュニティチャット用メンション候補API。実際のコミュニティメンバーシップ
   # (CommunityCustomer)で権限確認する(ChatRoomCustomerは全メンバーを網羅しないため使わない)。
   def community_mention_candidates
@@ -158,6 +188,22 @@ class Public::ChatRoomsController < ApplicationController
     else
       { anchor: "chat-message-#{target.id}" }
     end
+  end
+
+  # root.community(ChatMessage#community_id)と同様の理由で、ChatRoomCustomer(信頼できる
+  # 方の関連)からこのchat_roomの実際のコミュニティを導出する(community_showと同じ手法)。
+  # DM用chat_roomの場合はnilを返す。
+  def community_for_search(chat_room)
+    ChatRoomCustomer.where(chat_room_id: chat_room.id).where.not(community_id: nil).first&.community
+  end
+
+  # searchは単一ルートでDM・コミュニティ両方を扱うため、show/community_showのように
+  # 事前のbefore_action(require_feature!)だけでは対象を絞れない。community_for_searchで
+  # 判明した種別に応じたfeatureが有効かをここで確認する(ChatMessagesController#thread_feature_enabled?
+  # と同じ判定パターン)。
+  def search_feature_enabled?(community)
+    feature_key = community.present? ? :music_community_chat : :music_direct_chat
+    current_customer.has_feature?(feature_key)
   end
 
   # コミュニティ参加権限はCommunityCustomer(実際のコミュニティメンバーシップ)で判定する。

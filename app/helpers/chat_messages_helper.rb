@@ -1,5 +1,6 @@
 module ChatMessagesHelper
   REPLY_EXCERPT_LENGTH = 60
+  SEARCH_EXCERPT_LENGTH = 120
 
   def chat_markdown(chat_message)
     Rails.cache.fetch(
@@ -16,7 +17,15 @@ module ChatMessagesHelper
   def chat_reply_excerpt(chat_message)
     return attachment_or_stamp_label(chat_message) if chat_message.content.blank?
 
-    plain_text_excerpt(chat_message.content).presence || attachment_or_stamp_label(chat_message)
+    plain_text_excerpt(chat_message.content, REPLY_EXCERPT_LENGTH).presence || attachment_or_stamp_label(chat_message)
+  end
+
+  # 検索結果カードの本文抜粋。プレーンテキスト化はchat_reply_excerptと同じロジックを再利用し、
+  # 長さのみ検索結果に適した長さ(SEARCH_EXCERPT_LENGTH)にする。
+  def chat_search_excerpt(chat_message)
+    return attachment_or_stamp_label(chat_message) if chat_message.content.blank?
+
+    plain_text_excerpt(chat_message.content, SEARCH_EXCERPT_LENGTH).presence || attachment_or_stamp_label(chat_message)
   end
 
   # 引用対象(chat_message)に画像添付があるかどうか。引用プレビュー・引用カードの
@@ -38,7 +47,7 @@ module ChatMessagesHelper
 
   private
 
-  def plain_text_excerpt(content)
+  def plain_text_excerpt(content, length)
     text = content.to_s.gsub(/```.*?```/m, " ")
     text = text.gsub(/`([^`]+)`/, '\1')
     text = text.gsub(/\[@([^\]]*)\]\(customer:\d+\)/, '@\1')
@@ -51,7 +60,7 @@ module ChatMessagesHelper
     text = text.gsub(/[*_~]{1,3}/, "")
     text = text.gsub(/\r\n|\r|\n/, " ")
     text = text.squish
-    text.truncate(REPLY_EXCERPT_LENGTH)
+    text.truncate(length)
   end
 
   def attachment_or_stamp_label(chat_message)

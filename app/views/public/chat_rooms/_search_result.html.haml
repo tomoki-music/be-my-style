@@ -1,0 +1,21 @@
+- is_reply = chat_message.reply_to_chat_message_id.present?
+- root_id = chat_message.reply_to_chat_message_id || chat_message.id
+%button.search-result-card{ type: "button",
+    data: { "search-message-id" => chat_message.id,
+            "search-root-id" => root_id,
+            "search-is-reply" => is_reply.to_s },
+    "aria-label" => "#{chat_message.customer.name}さんのメッセージへ移動" }
+  .search-result-header
+    = customer_avatar_tag(chat_message.customer, class_name: "search-result-avatar")
+    .search-result-meta
+      %span.search-result-author= chat_message.customer.name
+      %span.search-result-timestamp= l chat_message.created_at, format: :short
+      - if chat_message.edited_at.present?
+        %span.edited-label 編集済み
+  - if is_reply
+    .search-result-parent
+      %span.search-result-thread-badge スレッド内の返信
+      - if chat_message.reply_to_chat_message.present?
+        %span.search-result-parent-excerpt
+          = "#{chat_message.reply_to_chat_message.customer.name}: #{chat_reply_excerpt(chat_message.reply_to_chat_message)}"
+  .search-result-excerpt= chat_search_excerpt(chat_message)
