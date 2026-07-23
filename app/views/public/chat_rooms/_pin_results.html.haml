@@ -1,0 +1,6 @@
+- if messages.empty?
+  %p.pin-panel-placeholder ピン留めされたメッセージはまだありません
+- else
+  .pin-results-list
+    - messages.each do |chat_message|
+      = render "public/chat_rooms/pin_result", chat_message: chat_message, community: community
