@@ -11,6 +11,9 @@ class ChatMessage < ApplicationRecord
   has_many :mentioned_customers, through: :chat_mentions
   has_many :replies, class_name: "ChatMessage", foreign_key: :reply_to_chat_message_id, dependent: :nullify
   has_many :quote_replies, class_name: "ChatMessage", foreign_key: :quoted_chat_message_id, dependent: :nullify
+  # dependent: :destroyが無いと、ChatRoom/Communityのdependent: :destroyでこのメッセージが
+  # 削除される際、chat_message_pinsの外部キー制約(RESTRICT)に阻まれて例外になる。
+  has_one :chat_message_pin, dependent: :destroy
 
   has_many_attached :attachments
 
@@ -32,6 +35,10 @@ class ChatMessage < ApplicationRecord
   # content_or_stamp_or_attachment_present(レコードとしての有効性)とは別の判定として持つ。
   def content_editable?
     content.present?
+  end
+
+  def pinned?
+    chat_message_pin.present?
   end
 
   def thread_root
