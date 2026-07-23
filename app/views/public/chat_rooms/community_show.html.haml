@@ -4,7 +4,9 @@
     "current-customer-id" => current_customer.id,
     "thread-url-template" => thread_public_chat_message_path(id: "__ID__"),
     "thread-reply-url-template" => thread_reply_public_chat_message_path(id: "__ID__"),
-    "search-url" => search_public_chat_room_path(@chat_room) } }
+    "search-url" => search_public_chat_room_path(@chat_room),
+    "pins-url" => pins_public_chat_room_path(@chat_room),
+    "pin-url-template" => pin_public_chat_message_path(id: "__ID__") } }
   .chat-rooms-header
     %h6 コミュニティチャットルームへようこそ!
 
@@ -28,9 +30,12 @@
       %button.chat-search-trigger{ type: "button", "aria-label" => "メッセージを検索" }
         %span.chat-search-trigger-icon 🔍
         %span.chat-search-trigger-label メッセージを検索
+      %button.chat-pin-trigger{ type: "button", "aria-label" => "ピン留め一覧を開く" }
+        %span.chat-pin-trigger-icon 📌
+        %span.chat-pin-trigger-label ピン留め一覧
       .message-container#chat-area
         - @chat_messages.each do |chat_message|
-          = render 'message', chat_message: chat_message
+          = render 'message', chat_message: chat_message, community: @community
       = render 'form', chat_message: @chat_message, chat_room: @chat_room, form_url: community_create_public_chat_messages_path
 
     .col-md-3
@@ -54,3 +59,4 @@
 
   = render "public/chat_rooms/thread_panel_shell"
   = render "public/chat_rooms/search_panel_shell"
+  = render "public/chat_rooms/pin_panel_shell"

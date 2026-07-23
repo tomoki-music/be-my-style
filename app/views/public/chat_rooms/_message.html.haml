@@ -1,5 +1,6 @@
 - display_context = local_assigns[:display_context] || :normal
 - in_thread = display_context == :thread
+- community = local_assigns[:community]
 - if chat_message.customer.id != current_customer.id
   .partner-message{ id: "chat-message-#{chat_message.id}", data: { "chat-message-id" => chat_message.id } }
     %ul
@@ -54,6 +55,20 @@
           に送信済み
         - if chat_message.edited_at.present?
           %span.edited-label 編集済み
+        - if chat_message.pinned?
+          %span.pinned-label 📌 ピン留め済み
+          - if can_unpin_chat_message?(chat_message.chat_message_pin, community)
+            %button.pin-button.pin-button--unpin{ type: "button",
+                "aria-label" => "ピン留めを解除",
+                data: { "pin-message-id" => chat_message.id, "pin-action" => "unpin" } }
+              %span.pin-button-icon 📌
+              %span.pin-button-label ピン留めを解除
+        - else
+          %button.pin-button.pin-button--pin{ type: "button",
+              "aria-label" => "ピン留めする",
+              data: { "pin-message-id" => chat_message.id, "pin-action" => "pin" } }
+            %span.pin-button-icon 📌
+            %span.pin-button-label ピン留めする
         - unless in_thread
           %button.reply-button{ type: "button",
               "aria-label" => "このメッセージに返信",
@@ -168,6 +183,20 @@
           に送信済み
         - if chat_message.edited_at.present?
           %span.edited-label 編集済み
+        - if chat_message.pinned?
+          %span.pinned-label 📌 ピン留め済み
+          - if can_unpin_chat_message?(chat_message.chat_message_pin, community)
+            %button.pin-button.pin-button--unpin{ type: "button",
+                "aria-label" => "ピン留めを解除",
+                data: { "pin-message-id" => chat_message.id, "pin-action" => "unpin" } }
+              %span.pin-button-icon 📌
+              %span.pin-button-label ピン留めを解除
+        - else
+          %button.pin-button.pin-button--pin{ type: "button",
+              "aria-label" => "ピン留めする",
+              data: { "pin-message-id" => chat_message.id, "pin-action" => "pin" } }
+            %span.pin-button-icon 📌
+            %span.pin-button-label ピン留めする
         - unless in_thread
           %button.reply-button{ type: "button",
               "aria-label" => "このメッセージに返信",

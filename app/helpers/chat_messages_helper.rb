@@ -45,6 +45,19 @@ module ChatMessagesHelper
     end
   end
 
+  # ピン一覧・メッセージ本体の解除ボタン表示可否(表示上のヒント)。
+  # 実際の許可判定はPublic::ChatMessagesController#unpin_allowed?がサーバー側で
+  # 再検証するため、ここでの結果はUI表示のみに使い、認可の最終判断には使わない。
+  # DMの場合はroom閲覧が既に許可されている(=参加者である)前提でtrueを返す。
+  def can_unpin_chat_message?(chat_message_pin, community)
+    return false if chat_message_pin.blank?
+    return true if chat_message_pin.pinned_by_customer_id == current_customer.id
+    return true if current_customer.admin?
+    return true if community.present? && current_customer.can_manage_community?(community)
+
+    community.blank?
+  end
+
   private
 
   def plain_text_excerpt(content, length)

@@ -1,0 +1,9 @@
+#pin-panel.pin-panel{ hidden: true }
+  .pin-panel-backdrop
+  .pin-panel-dialog{ role: "dialog", "aria-modal" => "true", "aria-labelledby" => "pin-panel-title", tabindex: "-1" }
+    .pin-panel-header
+      %h2#pin-panel-title 📌 ピン留めされたメッセージ
+      %button.pin-panel-close{ type: "button", "aria-label" => "ピン留め一覧を閉じる" }
+        ×
+    #pin-panel-body.pin-panel-body
+      %p.pin-panel-placeholder ピン留めされたメッセージはまだありません

@@ -136,6 +136,34 @@ class Public::ChatRoomsController < ApplicationController
     }
   end
 
+  # ピン留め一覧API。searchと同じくDM・コミュニティ両方を単一ルートで扱い、chat_room自身の
+  # 実データからDM/コミュニティを判定する。上限を設けていないため件数に応じたページネーションは
+  # 行わず(1ルームあたり運用上多くても数十件程度を想定)、ピン留めされた日時の新しい順に
+  # 全件返す。chat_room_idを中間テーブルへ二重管理しない設計のため、chat_room.chat_messages
+  # (信頼できる方の関連)経由でJOINしてスコープする(Chat::MessageSearchと同じ考え方)。
+  def pins
+    @chat_room = ChatRoom.find_by(id: params[:id])
+    return render_chat_room_not_found if @chat_room.blank?
+
+    community = community_for_search(@chat_room)
+    return render_chat_room_not_found unless search_feature_enabled?(community)
+    return render_chat_room_not_found unless Chat::ChatRoomAuthorization.readable?(chat_room: @chat_room, community: community, customer: current_customer)
+
+    pinned_messages = @chat_room.chat_messages
+                        .joins(:chat_message_pin)
+                        .includes(:customer, chat_message_pin: :pinned_by_customer, reply_to_chat_message: :customer)
+                        .with_attached_attachments
+                        .order("chat_message_pins.created_at DESC")
+
+    html = render_to_string(
+      partial: "public/chat_rooms/pin_results",
+      locals: { messages: pinned_messages, community: community },
+      layout: false
+    )
+
+    render json: { html: html, total_count: pinned_messages.size }
+  end
+
   # コミュニティチャット用メンション候補API。実際のコミュニティメンバーシップ
   # (CommunityCustomer)で権限確認する(ChatRoomCustomerは全メンバーを網羅しないため使わない)。
   def community_mention_candidates

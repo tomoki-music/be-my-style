@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_07_19_143658) do
+ActiveRecord::Schema.define(version: 2026_07_20_000001) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -128,6 +128,15 @@ ActiveRecord::Schema.define(version: 2026_07_19_143658) do
     t.index ["chat_message_id", "mentioned_customer_id"], name: "index_chat_mentions_on_message_and_customer", unique: true
     t.index ["chat_message_id"], name: "index_chat_mentions_on_chat_message_id"
     t.index ["mentioned_customer_id"], name: "index_chat_mentions_on_mentioned_customer_id"
+  end
+
+  create_table "chat_message_pins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "chat_message_id", null: false
+    t.bigint "pinned_by_customer_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["chat_message_id"], name: "index_chat_message_pins_on_chat_message_id", unique: true
+    t.index ["pinned_by_customer_id"], name: "index_chat_message_pins_on_pinned_by_customer_id"
   end
 
   create_table "chat_messages", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1221,6 +1230,8 @@ ActiveRecord::Schema.define(version: 2026_07_19_143658) do
   add_foreign_key "admin_notifications", "customers"
   add_foreign_key "chat_mentions", "chat_messages"
   add_foreign_key "chat_mentions", "customers", column: "mentioned_customer_id"
+  add_foreign_key "chat_message_pins", "chat_messages"
+  add_foreign_key "chat_message_pins", "customers", column: "pinned_by_customer_id"
   add_foreign_key "chat_messages", "chat_messages", column: "quoted_chat_message_id"
   add_foreign_key "chat_messages", "chat_messages", column: "reply_to_chat_message_id"
   add_foreign_key "chat_messages", "chat_rooms"

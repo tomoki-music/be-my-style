@@ -1,0 +1,27 @@
+- is_reply = chat_message.reply_to_chat_message_id.present?
+- root_id = chat_message.reply_to_chat_message_id || chat_message.id
+- pin = chat_message.chat_message_pin
+.pin-result-card{ data: { "pin-message-id" => chat_message.id,
+    "pin-root-id" => root_id,
+    "pin-is-reply" => is_reply.to_s } }
+  %button.pin-result-jump{ type: "button", "aria-label" => "#{chat_message.customer.name}さんのメッセージへ移動" }
+    .pin-result-header
+      = customer_avatar_tag(chat_message.customer, class_name: "pin-result-avatar")
+      .pin-result-meta
+        %span.pin-result-author= chat_message.customer.name
+        %span.pin-result-timestamp= l chat_message.created_at, format: :short
+        - if chat_message.edited_at.present?
+          %span.edited-label 編集済み
+    - if pin.present?
+      .pin-result-pinned-by
+        = "#{pin.pinned_by_customer.name}さんが#{l pin.created_at, format: :short}にピン留め"
+    - if is_reply
+      .pin-result-parent
+        %span.pin-result-thread-badge スレッド内の返信
+        - if chat_message.reply_to_chat_message.present?
+          %span.pin-result-parent-excerpt
+            = "#{chat_message.reply_to_chat_message.customer.name}: #{chat_reply_excerpt(chat_message.reply_to_chat_message)}"
+    .pin-result-excerpt= chat_search_excerpt(chat_message)
+  - if can_unpin_chat_message?(pin, community)
+    %button.pin-result-unpin{ type: "button", data: { "unpin-message-id" => chat_message.id }, "aria-label" => "ピン留めを解除" }
+      解除
