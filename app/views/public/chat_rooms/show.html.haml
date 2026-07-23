@@ -7,9 +7,6 @@
     "search-url" => search_public_chat_room_path(@chat_room) } }
   .chat-rooms-header
     %h4 チャットルームへようこそ!
-    %button.chat-search-trigger{ type: "button", "aria-label" => "メッセージを検索" }
-      %span.chat-search-trigger-icon 🔍
-      %span.chat-search-trigger-label 検索
 
   .row
     .col-md-3
@@ -28,6 +25,9 @@
 
 
     .col-md-6
+      %button.chat-search-trigger{ type: "button", "aria-label" => "メッセージを検索" }
+        %span.chat-search-trigger-icon 🔍
+        %span.chat-search-trigger-label メッセージを検索
       .message-container#chat-area
         - @chat_messages.each do |chat_message|
           = render 'message', chat_message: chat_message

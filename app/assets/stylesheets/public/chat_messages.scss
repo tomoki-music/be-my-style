@@ -953,22 +953,31 @@ body.thread-panel-open {
   }
 }
 
+/* チャット本文領域(.col-md-6)の横幅いっぱいに表示する検索導線。
+   .chat-form-btn(投稿ボタン、btn btn-info の塗りつぶし)より目立たせないよう、
+   枠線のみのボタンにする */
 .chat-search-trigger {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin: 0 0 10px;
   border: 1px solid #ddd;
   background: #fff;
-  border-radius: 4px;
-  padding: 6px 12px;
+  border-radius: 8px;
+  padding: 8px 12px;
   font-size: 14px;
-  color: #333;
+  color: #555;
   cursor: pointer;
-  flex-shrink: 0;
 
-  &:hover,
-  &:focus-visible {
+  &:hover {
     background: #f5f5f5;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
   }
 }
 
