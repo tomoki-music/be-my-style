@@ -1,4 +1,13 @@
 class Event < ApplicationRecord
+  # 表示優先順位: 終了済み > 開催中 > 募集終了 > 開催予定。募集人数・満員概念は持たない
+  # (既存のindexアクションと同じevent_end_time/event_entry_deadline比較のみを使う)。
+  STATUS_LABELS = {
+    ended: "終了済み",
+    ongoing: "開催中",
+    entry_closed: "募集終了",
+    upcoming: "開催予定"
+  }.freeze
+
   has_one_attached :event_image
   has_many :songs, -> { order(position: :asc) }, dependent: :destroy, inverse_of: :event
   has_many :requests, dependent: :destroy
@@ -51,4 +60,15 @@ class Event < ApplicationRecord
     [entrance_fee.to_i - session_credit_amount_for(customer), 0].max
   end
 
+  def status_key(now: Time.current)
+    return :ended if event_end_time <= now
+    return :ongoing if event_start_time <= now
+    return :entry_closed if event_entry_deadline <= now
+
+    :upcoming
+  end
+
+  def status_label(now: Time.current)
+    STATUS_LABELS.fetch(status_key(now: now))
+  end
 end

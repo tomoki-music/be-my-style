@@ -49,4 +49,51 @@ RSpec.describe Event, type: :model do
       end
     end
   end
+
+  describe '#status_key / #status_label' do
+    let(:now) { Time.zone.parse('2026-01-10 12:00:00') }
+
+    def event_at(start_time:, end_time:, entry_deadline:)
+      FactoryBot.build(:event, event_start_time: start_time, event_end_time: end_time, event_entry_deadline: entry_deadline)
+    end
+
+    it '終了時刻を過ぎていれば終了済みになること' do
+      event = event_at(start_time: now - 3.hours, end_time: now - 1.hour, entry_deadline: now - 5.hours)
+      expect(event.status_key(now: now)).to eq :ended
+      expect(event.status_label(now: now)).to eq '終了済み'
+    end
+
+    it '終了時刻ちょうどは終了済みになること(境界値)' do
+      event = event_at(start_time: now - 3.hours, end_time: now, entry_deadline: now - 5.hours)
+      expect(event.status_key(now: now)).to eq :ended
+    end
+
+    it '開始後・終了前は開催中になること' do
+      event = event_at(start_time: now - 1.hour, end_time: now + 1.hour, entry_deadline: now - 5.hours)
+      expect(event.status_key(now: now)).to eq :ongoing
+      expect(event.status_label(now: now)).to eq '開催中'
+    end
+
+    it '開始時刻ちょうどは開催中になること(境界値)' do
+      event = event_at(start_time: now, end_time: now + 1.hour, entry_deadline: now - 5.hours)
+      expect(event.status_key(now: now)).to eq :ongoing
+    end
+
+    it '参加締切を過ぎ、開始前は募集終了になること' do
+      event = event_at(start_time: now + 1.hour, end_time: now + 2.hours, entry_deadline: now - 30.minutes)
+      expect(event.status_key(now: now)).to eq :entry_closed
+      expect(event.status_label(now: now)).to eq '募集終了'
+    end
+
+    it '参加締切ちょうどは募集終了になること(境界値)' do
+      event = event_at(start_time: now + 1.hour, end_time: now + 2.hours, entry_deadline: now)
+      expect(event.status_key(now: now)).to eq :entry_closed
+    end
+
+    it '参加締切前は開催予定になること' do
+      event = event_at(start_time: now + 2.hours, end_time: now + 3.hours, entry_deadline: now + 1.hour)
+      expect(event.status_key(now: now)).to eq :upcoming
+      expect(event.status_label(now: now)).to eq '開催予定'
+    end
+  end
 end
