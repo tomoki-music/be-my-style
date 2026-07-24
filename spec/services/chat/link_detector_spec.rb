@@ -86,4 +86,61 @@ RSpec.describe Chat::LinkDetector, type: :service do
     expect(detect("")).to eq []
     expect(detect(nil)).to eq []
   end
+
+  describe "イベントURLの検出" do
+    let(:community) { create(:community) }
+    let(:customer) { create(:customer) }
+    let(:event) { create(:event, :event_with_songs, customer: customer, community: community) }
+
+    it "許可された内部ホストの正しいイベントURLを検出すること" do
+      result = detect("見て https://www.example.com/public/events/#{event.id}")
+
+      expect(result.size).to eq 1
+      expect(result.first.provider).to eq :event
+      expect(result.first.external_id).to eq event.id.to_s
+    end
+
+    it "クエリ文字列・fragmentが付与されていても同じEvent IDに解決されること" do
+      plain = detect("https://www.example.com/public/events/#{event.id}")
+      with_query = detect("https://www.example.com/public/events/#{event.id}?utm_source=x&ref=y#section")
+
+      expect(with_query.first.external_id).to eq plain.first.external_id
+      expect(with_query.first.url).to eq plain.first.url
+    end
+
+    it "他ドメインの同一パスは拒否すること" do
+      result = detect("https://evil-example.com/public/events/#{event.id}")
+      expect(result).to eq []
+    end
+
+    it "管理画面URL(/admin/events/:id)は拒否すること" do
+      result = detect("https://www.example.com/admin/events/#{event.id}")
+      expect(result).to eq []
+    end
+
+    it "編集URL(/public/events/:id/edit)は拒否すること" do
+      result = detect("https://www.example.com/public/events/#{event.id}/edit")
+      expect(result).to eq []
+    end
+
+    it "数値以外のIDは拒否すること" do
+      result = detect("https://www.example.com/public/events/abc")
+      expect(result).to eq []
+    end
+
+    it "余分なパスが続くものは拒否すること" do
+      result = detect("https://www.example.com/public/events/#{event.id}/foo")
+      expect(result).to eq []
+    end
+
+    it "存在しないEventは検出しないこと" do
+      result = detect("https://www.example.com/public/events/#{event.id + 1_000_000}")
+      expect(result).to eq []
+    end
+
+    it "HTTPS以外のプロトコルは拒否すること" do
+      result = detect("http://www.example.com/public/events/#{event.id}")
+      expect(result).to eq []
+    end
+  end
 end
