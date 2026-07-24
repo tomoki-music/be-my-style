@@ -105,4 +105,70 @@ RSpec.describe Chat::LinkPreviewSyncService, type: :service do
 
     expect(chat_message.chat_message_link_previews.first.status).to eq "pending"
   end
+
+  describe "イベントURL" do
+    let(:community) { create(:community) }
+    let(:event_owner) { create(:customer) }
+    let(:event) { create(:event, :event_with_songs, customer: event_owner, community: community, event_name: "テストイベント") }
+    let(:other_event) { create(:event, :event_with_songs, customer: event_owner, community: community, event_name: "別のイベント") }
+    let(:event_url) { "https://www.example.com/public/events/#{event.id}" }
+
+    it "Jobをenqueueせず同期的にfetchedとなること" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "見て #{event_url}")
+      enqueued_before = ActiveJob::Base.queue_adapter.enqueued_jobs.size
+
+      expect {
+        sync(chat_message)
+      }.to change(ChatMessageLinkPreview, :count).by(1)
+      expect(ActiveJob::Base.queue_adapter.enqueued_jobs.size).to eq enqueued_before
+
+      preview = chat_message.chat_message_link_previews.first
+      expect(preview.provider).to eq "event"
+      expect(preview.external_id).to eq event.id.to_s
+      expect(preview.status).to eq "fetched"
+      expect(preview.title).to eq "テストイベント"
+      expect(preview.author_name).to eq community.name
+    end
+
+    it "存在しないEventのURLはプレビューを作成しないこと" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room,
+                                                        content: "https://www.example.com/public/events/#{event.id + 1_000_000}")
+
+      expect { sync(chat_message) }.not_to change(ChatMessageLinkPreview, :count)
+    end
+
+    it "URLを変えず本文だけ編集した場合、プレビューが維持されること" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "見て #{event_url}")
+      sync(chat_message)
+      preview_id = chat_message.chat_message_link_previews.first.id
+
+      chat_message.update!(content: "見てね #{event_url} 楽しみです")
+
+      expect { sync(chat_message) }.not_to change(ChatMessageLinkPreview, :count)
+      expect(chat_message.reload.chat_message_link_previews.first.id).to eq preview_id
+    end
+
+    it "編集で別のイベントURLへ変更した場合、新しいイベントで解決し直すこと" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: event_url)
+      sync(chat_message)
+
+      other_url = "https://www.example.com/public/events/#{other_event.id}"
+      chat_message.update!(content: other_url)
+      sync(chat_message)
+
+      preview = chat_message.reload.chat_message_link_previews.first
+      expect(preview.external_id).to eq other_event.id.to_s
+      expect(preview.title).to eq "別のイベント"
+    end
+
+    it "編集でイベントURLが削除された場合、プレビューも削除されること" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "見て #{event_url}")
+      sync(chat_message)
+      expect(chat_message.chat_message_link_previews.count).to eq 1
+
+      chat_message.update!(content: "見た")
+
+      expect { sync(chat_message) }.to change(ChatMessageLinkPreview, :count).by(-1)
+    end
+  end
 end

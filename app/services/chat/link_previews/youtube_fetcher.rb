@@ -23,6 +23,10 @@ module Chat
         new.call(url)
       end
 
+      def self.synchronous?
+        false
+      end
+
       def initialize(timeout: nil, http_class: Net::HTTP)
         @timeout = timeout || configured_timeout
         @http_class = http_class
