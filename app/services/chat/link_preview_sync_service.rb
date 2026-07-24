@@ -36,6 +36,13 @@ module Chat
         end
       end
 
+      # update/thread_replyアクションは、ここで同期した同一のchat_messageインスタンスを
+      # render_to_stringでそのまま描画に使う(コミット後の別リクエストを経由しない)。
+      # destroy_all/create!を経ても関連の読み込み状態は通常維持されるが、呼び出し側が
+      # どのタイミングでchat_message_link_previewsへ触れているかに依存させないよう、
+      # ここでDBの最新状態への読み直しを保証しておく(念のための防御)。
+      @chat_message.chat_message_link_previews.reset
+
       preview_ids_to_fetch.each { |id| Chat::LinkPreviewFetchJob.perform_later(id) }
     end
 
