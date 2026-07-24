@@ -136,6 +136,25 @@ RSpec.describe "スレッド機能(Phase3)のテスト", type: :request do
         expect(ChatMessage.last.reply_to_chat_message_id).to eq root.id
       end
 
+      it "イベントURLを含むスレッド返信では、レスポンスのhtml(render_to_string)に直後からイベントカードが含まれること" do
+        community = create(:community)
+        event = create(:event, :event_with_songs, customer: customer, community: community, event_name: "スレッド返信直後確認イベント")
+        root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+
+        post thread_reply_public_chat_message_path(root), params: {
+          chat_message: { content: "見て https://www.example.com/public/events/#{event.id}" }
+        }
+
+        expect(response).to have_http_status(200)
+        html = JSON.parse(response.body)["html"]
+        expect(html).to include("link-preview-card--event")
+        expect(html).to include("スレッド返信直後確認イベント")
+
+        preview = ChatMessage.last.chat_message_link_previews.first
+        expect(preview.provider).to eq "event"
+        expect(preview.status).to eq "fetched"
+      end
+
       it "本文が空の場合はunprocessable_entityとエラーを返すこと" do
         root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
 

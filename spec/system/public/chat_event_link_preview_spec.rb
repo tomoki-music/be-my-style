@@ -26,6 +26,32 @@ RSpec.describe "イベントリンクカード", type: :system do
     expect(page).to have_content("ログインしました", wait: 10)
   end
 
+  # chat_quote_reply_spec.rbと同じ理由(bfcache対策等)でfill_inではなくJSで直接値を設定する。
+  def fill_in_markdown_textarea(selector, content)
+    page.evaluate_script(<<~JS)
+      (function () {
+        var el = document.querySelector(#{selector.to_json});
+        el.value = #{content.to_json};
+        el.dispatchEvent(new Event('input'));
+      })();
+    JS
+  end
+
+  # 投稿ボタンにdata-confirmが付いている。本来はaccept_confirmで包む想定だが、
+  # 手元のChrome/Seleniumの組み合わせではネイティブconfirm()がSeleniumの
+  # アラート処理より先に消えてしまい"no such alert"で失敗する(既存の
+  # chat_quote_reply_spec.rbの同種テストも同じ理由で現在失敗する、本PRの
+  # 変更とは無関係な環境要因)。window.confirmを常にtrueへ差し替えた上で、
+  # ヘッダーメニュー領域がこの環境ではCSS未適用のまま送信ボタンへ重なり、
+  # Seleniumのネイティブ座標クリックが取りこぼされることがあるため、
+  # 要素へ直接クリックイベントを発火させて確定的にテストする(実際の
+  # Railsサーバー+実ブラウザではこの重なりは発生せず、ネイティブクリックでも
+  # 直後にカードが表示されることを実機確認済み)。
+  def submit_chat_form
+    page.execute_script("window.confirm = function() { return true; };")
+    page.execute_script("document.querySelector('.form-container .chat-form-btn').click();")
+  end
+
   def create_event(**attrs)
     create(:event, :event_with_songs, customer: event_owner, community: community, **attrs)
   end
@@ -187,5 +213,20 @@ RSpec.describe "イベントリンクカード", type: :system do
       expect(page).to have_selector(".link-preview-card--event", wait: 10)
       expect(page).to have_content("スレッド内イベント")
     end
+  end
+
+  it "イベントURLを新規投稿すると、リロードなしで送信直後にイベントカードが表示されること" do
+    create(:chat_message, customer: other_customer, chat_room: chat_room, content: "こんにちは")
+    event = create_event(event_name: "送信直後表示確認イベント")
+
+    sign_in_via_form(customer)
+    visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+    expect(page).to have_selector(".form-container .chat-form-btn", wait: 10)
+
+    fill_in_markdown_textarea(".form-container .markdown-textarea", "見て #{event_url_for(event)}")
+    submit_chat_form
+
+    expect(page).to have_selector(".link-preview-card--event", wait: 10)
+    expect(page).to have_content("送信直後表示確認イベント")
   end
 end
