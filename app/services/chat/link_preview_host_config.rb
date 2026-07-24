@@ -4,15 +4,15 @@ module Chat
   # Rails.application.config.x.chat_link_preview.internal_hostsへ格納する値を作る。
   #
   # 開発環境では、本番URL(be-my-style.com/www.be-my-style.com)をそのまま貼って
-  # 動作確認できるよう、localhostに加えて本番ホストも許可する。test環境は既存の
-  # System/Request specが使うwww.example.comのみを許可し、production/testのホストを
-  # 混入させない。
+  # 動作確認できるよう、localhost・127.0.0.1に加えて本番ホストも許可する。test環境は
+  # 既存のSystem/Request specが使うwww.example.comのみを許可し、production/testの
+  # ホストを混入させない。
   module LinkPreviewHostConfig
     DEFAULT_HOSTS_BY_ENV = {
       "production" => %w[be-my-style.com www.be-my-style.com],
       "test" => %w[www.example.com]
     }.freeze
-    DEVELOPMENT_DEFAULT_HOSTS = %w[be-my-style.com www.be-my-style.com localhost].freeze
+    DEVELOPMENT_DEFAULT_HOSTS = %w[be-my-style.com www.be-my-style.com localhost 127.0.0.1].freeze
 
     def self.resolve(env_value:, rails_env:)
       configured = normalize(env_value)

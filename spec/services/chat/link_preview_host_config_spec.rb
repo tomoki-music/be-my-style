@@ -37,9 +37,14 @@ RSpec.describe Chat::LinkPreviewHostConfig, type: :service do
       expect(described_class.default_hosts_for("test")).to eq %w[www.example.com]
     end
 
-    it "development(その他の環境)では本番ホスト+localhostを返すこと" do
+    it "development(その他の環境)では本番ホスト+localhost+127.0.0.1を返すこと" do
       hosts = described_class.default_hosts_for("development")
-      expect(hosts).to include("be-my-style.com", "www.be-my-style.com", "localhost")
+      expect(hosts).to include("be-my-style.com", "www.be-my-style.com", "localhost", "127.0.0.1")
+    end
+
+    it "productionには127.0.0.1・localhost・www.example.comを混入させないこと" do
+      hosts = described_class.default_hosts_for("production")
+      expect(hosts).not_to include("127.0.0.1", "localhost", "www.example.com")
     end
   end
 

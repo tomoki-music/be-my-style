@@ -208,5 +208,60 @@ RSpec.describe Chat::LinkDetector, type: :service do
       result = detect("https://evil.example/public/events/#{event.id}")
       expect(result).to eq []
     end
+
+    describe "開発環境でのlocalhost/127.0.0.1 http検出" do
+      before do
+        Rails.application.config.x.chat_link_preview.internal_hosts =
+          %w[be-my-style.com www.be-my-style.com localhost 127.0.0.1]
+      end
+
+      it "http://localhost:3000/public/events/:id を検出すること" do
+        result = detect("http://localhost:3000/public/events/#{event.id}")
+
+        expect(result.size).to eq 1
+        expect(result.first.provider).to eq :event
+        expect(result.first.external_id).to eq event.id.to_s
+      end
+
+      it "http://127.0.0.1:3000/public/events/:id を検出すること" do
+        result = detect("http://127.0.0.1:3000/public/events/#{event.id}")
+
+        expect(result.size).to eq 1
+        expect(result.first.provider).to eq :event
+        expect(result.first.external_id).to eq event.id.to_s
+      end
+
+      it "開発環境で本番ドメイン形式(https://be-my-style.com/...)も検出すること" do
+        result = detect("https://be-my-style.com/public/events/#{event.id}")
+
+        expect(result.first.provider).to eq :event
+        expect(result.first.external_id).to eq event.id.to_s
+      end
+
+      it "存在しないEvent IDのlocalhost URLは検出しないこと" do
+        result = detect("http://localhost:3000/public/events/#{event.id + 1_000_000}")
+        expect(result).to eq []
+      end
+
+      it "既存のYouTube URL検出に影響しないこと" do
+        result = detect("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+        expect(result.first.provider).to eq :youtube
+        expect(result.first.external_id).to eq "dQw4w9WgXcQ"
+      end
+    end
+
+    it "production相当の設定(localhost非許可)ではhttp://localhostのイベントURLを拒否すること" do
+      Rails.application.config.x.chat_link_preview.internal_hosts = %w[be-my-style.com www.be-my-style.com]
+
+      result = detect("http://localhost:3000/public/events/#{event.id}")
+      expect(result).to eq []
+    end
+
+    it "localhostがinternal_hostsに含まれていてもhttps・http以外のプロトコルは拒否すること" do
+      Rails.application.config.x.chat_link_preview.internal_hosts = %w[localhost]
+
+      result = detect("ftp://localhost:3000/public/events/#{event.id}")
+      expect(result).to eq []
+    end
   end
 end
