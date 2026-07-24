@@ -52,6 +52,38 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
           }
         end.to change(ChatMessage, :count).by(1)
       end
+
+      it "イベントURL投稿でイベントリンクカード用プレビューが作成されること" do
+        event = create(:event, :event_with_songs, customer: customer, community: community)
+        event_url = "https://www.example.com/public/events/#{event.id}"
+
+        post community_create_public_chat_messages_path, params: {
+          chat_message: { content: "見て #{event_url}", chat_room_id: community_chat_room.id, customer_id: 1 }
+        }
+
+        message = ChatMessage.order(:created_at).last
+        preview = message.chat_message_link_previews.first
+        expect(preview.provider).to eq "event"
+        expect(preview.external_id).to eq event.id.to_s
+        expect(preview.status).to eq "fetched"
+      end
+
+      it "internal_hosts設定がnilでも投稿全体が500にならないこと(実障害の再発防止)" do
+        original = Rails.application.config.x.chat_link_preview.internal_hosts
+        Rails.application.config.x.chat_link_preview.internal_hosts = nil
+        event = create(:event, :event_with_songs, customer: customer, community: community)
+        event_url = "https://www.example.com/public/events/#{event.id}"
+
+        expect do
+          post community_create_public_chat_messages_path, params: {
+            chat_message: { content: "見て #{event_url}", chat_room_id: community_chat_room.id, customer_id: 1 }
+          }
+        end.to change(ChatMessage, :count).by(1)
+
+        expect(response).not_to have_http_status(:internal_server_error)
+      ensure
+        Rails.application.config.x.chat_link_preview.internal_hosts = original
+      end
     end
     context "非参加者は投稿できないこと(セキュリティ)" do
       before { sign_in customer }
