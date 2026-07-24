@@ -1,8 +1,9 @@
+- event_previews_by_id = local_assigns[:event_previews_by_id] || {}
 .thread-panel-root
-  = render "public/chat_rooms/message", chat_message: root_message, display_context: :thread, community: local_assigns[:community]
+  = render "public/chat_rooms/message", chat_message: root_message, display_context: :thread, community: local_assigns[:community], event_previews_by_id: event_previews_by_id
 .thread-panel-count{ data: { "thread-replies-count" => true } }
   = "#{root_message.replies_count}件の返信"
 #thread-replies-list.thread-replies-list
   - replies.each do |reply|
-    = render "public/chat_rooms/message", chat_message: reply, display_context: :thread, community: local_assigns[:community]
+    = render "public/chat_rooms/message", chat_message: reply, display_context: :thread, community: local_assigns[:community], event_previews_by_id: event_previews_by_id
 = render "public/chat_rooms/thread_reply_form", root_message: root_message

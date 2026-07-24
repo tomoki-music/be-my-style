@@ -1,10 +1,14 @@
-%a.link-preview-card{ href: preview.url, target: "_blank", rel: "noopener noreferrer" }
-  - if preview.thumbnail_url.present?
-    .link-preview-card-thumbnail
-      = image_tag preview.thumbnail_url, alt: "", loading: "lazy"
-  .link-preview-card-body
-    - if preview.title.present?
-      .link-preview-card-title= preview.title
-    - if preview.author_name.present?
-      .link-preview-card-author= preview.author_name
-    .link-preview-card-provider YouTubeで見る ↗
+- if preview.event?
+  - event_previews_by_id = local_assigns[:event_previews_by_id] || {}
+  = render "public/chat_rooms/event_link_preview_card", preview: preview, event: event_previews_by_id[preview.external_id]
+- else
+  %a.link-preview-card{ href: preview.url, target: "_blank", rel: "noopener noreferrer" }
+    - if preview.thumbnail_url.present?
+      .link-preview-card-thumbnail
+        = image_tag preview.thumbnail_url, alt: "", loading: "lazy"
+    .link-preview-card-body
+      - if preview.title.present?
+        .link-preview-card-title= preview.title
+      - if preview.author_name.present?
+        .link-preview-card-author= preview.author_name
+      .link-preview-card-provider YouTubeで見る ↗

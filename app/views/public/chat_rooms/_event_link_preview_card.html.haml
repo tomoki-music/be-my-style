@@ -1,0 +1,32 @@
+- if event.present?
+  %a.link-preview-card.link-preview-card--event{ href: public_event_path(event), target: "_blank", rel: "noopener noreferrer" }
+    .link-preview-card-thumbnail
+      - if event.event_image.attached?
+        = image_tag event.event_image, alt: "", loading: "lazy"
+      - else
+        = image_tag "no_image", alt: ""
+    .link-preview-card-body
+      %span.link-preview-card-status-badge{ class: "link-preview-card-status-badge--#{event.status_key}" }
+        = event.status_label
+      .link-preview-card-title= event.event_name
+      .link-preview-card-author= event.community.name
+      .link-preview-card-meta
+        %span.link-preview-card-meta-item
+          = l event.event_start_time, format: :short
+        %span.link-preview-card-meta-item= event.place
+        %span.link-preview-card-meta-item
+          = "#{event.entrance_fee}円"
+      .link-preview-card-provider イベント詳細を見る ↗
+- else
+  .link-preview-card.link-preview-card--event.link-preview-card--event-deleted
+    .link-preview-card-thumbnail
+      - if preview.thumbnail_url.present?
+        = image_tag preview.thumbnail_url, alt: ""
+      - else
+        = image_tag "no_image", alt: ""
+    .link-preview-card-body
+      - if preview.title.present?
+        .link-preview-card-title= preview.title
+      - if preview.author_name.present?
+        .link-preview-card-author= preview.author_name
+      .link-preview-card-unavailable このイベントは削除されました

@@ -23,7 +23,7 @@
             %div{ class: markdown_class }= chat_markdown(chat_message)
           - else
             = simple_format(chat_message.content)
-        = render "public/chat_rooms/link_preview_cards", chat_message: chat_message
+        = render "public/chat_rooms/link_preview_cards", chat_message: chat_message, event_previews_by_id: local_assigns[:event_previews_by_id] || {}
       - if chat_message.attachments.attached?
         - attachments_class = in_thread ? 'message-attachments message-attachments--thread' : 'message-attachments'
         %li
@@ -116,7 +116,7 @@
             %div{ class: markdown_class }= chat_markdown(chat_message)
           - else
             = simple_format(chat_message.content)
-        = render "public/chat_rooms/link_preview_cards", chat_message: chat_message
+        = render "public/chat_rooms/link_preview_cards", chat_message: chat_message, event_previews_by_id: local_assigns[:event_previews_by_id] || {}
       - if chat_message.content_editable?
         - hydrated_edit_content = Chat::MentionHydrator.call(chat_message.content)
         .message-edit-form{ hidden: true }

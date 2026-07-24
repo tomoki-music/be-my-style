@@ -127,8 +127,10 @@ class Public::ChatMessagesController < ApplicationController
               .order(created_at: :asc)
               .limit(THREAD_REPLIES_LIMIT)
 
+    event_previews_by_id = Chat::EventLinkPreviewLoader.call([root, *replies])
+
     render partial: "public/chat_rooms/thread_panel_content",
-           locals: { root_message: root, replies: replies, community: community },
+           locals: { root_message: root, replies: replies, community: community, event_previews_by_id: event_previews_by_id },
            layout: false
   end
 
