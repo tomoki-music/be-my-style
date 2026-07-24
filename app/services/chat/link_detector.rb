@@ -62,8 +62,11 @@ module Chat
       internal_hosts.include?(host)
     end
 
+    # 設定不備(未設定・nil)でメッセージ投稿全体が500にならないよう、Array(...)で
+    # 必ず配列を返す(config側でも正規化済みのArrayをfreezeして格納しているが、
+    # ここでも二重に防御する)。
     def internal_hosts
-      Rails.application.config.x.chat_link_preview.internal_hosts
+      Array(Rails.application.config.x.chat_link_preview.internal_hosts)
     end
 
     def build_youtube_candidate(uri, host)
