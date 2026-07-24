@@ -136,9 +136,10 @@ RSpec.describe "スレッド機能(Phase3)のテスト", type: :request do
         expect(ChatMessage.last.reply_to_chat_message_id).to eq root.id
       end
 
-      it "イベントURLを含むスレッド返信では、レスポンスのhtml(render_to_string)に直後からイベントカードが含まれること" do
+      it "イベントURLを含むスレッド返信では、レスポンスのhtml(render_to_string)に直後から「削除済みフォールバックではない」イベントカードが含まれること" do
         community = create(:community)
-        event = create(:event, :event_with_songs, customer: customer, community: community, event_name: "スレッド返信直後確認イベント")
+        event = create(:event, :event_with_songs, customer: customer, community: community,
+                                                    event_name: "スレッド返信直後確認イベント", place: "スレッド確認会場", entrance_fee: 4321)
         root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
 
         post thread_reply_public_chat_message_path(root), params: {
@@ -149,6 +150,13 @@ RSpec.describe "スレッド機能(Phase3)のテスト", type: :request do
         html = JSON.parse(response.body)["html"]
         expect(html).to include("link-preview-card--event")
         expect(html).to include("スレッド返信直後確認イベント")
+        # Eventが存在するのにevent_previews_by_idが渡っていないと、ここが
+        # 「削除済み」フォールバックになってしまうため、生存中のEventの現在値
+        # (会場・参加費・詳細リンク)が描画されていることまで確認する。
+        expect(html).not_to include("このイベントは削除されました")
+        expect(html).to include("スレッド確認会場")
+        expect(html).to include("4321円")
+        expect(html).to include("イベント詳細を見る")
 
         preview = ChatMessage.last.chat_message_link_previews.first
         expect(preview.provider).to eq "event"

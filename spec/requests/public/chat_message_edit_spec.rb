@@ -22,9 +22,10 @@ RSpec.describe "メッセージ編集(PATCH update)のテスト", type: :request
       expect(chat_message.reload.content).to eq "編集後の本文"
     end
 
-    it "本文編集でイベントURLを追加すると、レスポンスのhtml(render_to_string)に直後からイベントカードが含まれること" do
+    it "本文編集でイベントURLを追加すると、レスポンスのhtml(render_to_string)に直後から「削除済みフォールバックではない」イベントカードが含まれること" do
       community = create(:community)
-      event = create(:event, :event_with_songs, customer: customer, community: community, event_name: "編集直後確認イベント")
+      event = create(:event, :event_with_songs, customer: customer, community: community,
+                                                  event_name: "編集直後確認イベント", place: "編集確認会場", entrance_fee: 1234)
       chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "編集前の本文")
 
       patch public_chat_message_path(chat_message), params: {
@@ -35,6 +36,14 @@ RSpec.describe "メッセージ編集(PATCH update)のテスト", type: :request
       html = JSON.parse(response.body)["html"]
       expect(html).to include("link-preview-card--event")
       expect(html).to include("編集直後確認イベント")
+      # Eventが存在するのにevent_previews_by_idが渡っていないと、ここが
+      # 「削除済み」フォールバック(現在値ではなくスナップショットのみ・詳細リンク無し)に
+      # なってしまうため、生存中のEventの現在値(会場・参加費・詳細リンク)が
+      # 描画されていることまで確認する。
+      expect(html).not_to include("このイベントは削除されました")
+      expect(html).to include("編集確認会場")
+      expect(html).to include("1234円")
+      expect(html).to include("イベント詳細を見る")
 
       preview = chat_message.reload.chat_message_link_previews.first
       expect(preview.provider).to eq "event"
