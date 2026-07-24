@@ -34,8 +34,9 @@
         %span.chat-pin-trigger-icon 📌
         %span.chat-pin-trigger-label ピン留め一覧
       .message-container#chat-area
+        - event_previews_by_id = Chat::EventLinkPreviewLoader.call(@chat_messages)
         - @chat_messages.each do |chat_message|
-          = render 'message', chat_message: chat_message
+          = render 'message', chat_message: chat_message, event_previews_by_id: event_previews_by_id
       = render 'form', chat_message: @chat_message, chat_room: @chat_room, form_url: public_chat_messages_path, customer_id: @chat_room_customer.id
 
     .col-md-3

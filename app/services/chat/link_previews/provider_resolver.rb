@@ -4,7 +4,8 @@ module Chat
     # 将来追加はFETCHERSにFetcherクラスを足すだけで済み、呼び出し側(Job)の変更は不要になる。
     class ProviderResolver
       FETCHERS = {
-        "youtube" => YoutubeFetcher
+        "youtube" => YoutubeFetcher,
+        "event" => EventFetcher
       }.freeze
 
       def self.fetcher_for(provider)

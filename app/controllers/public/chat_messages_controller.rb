@@ -127,8 +127,10 @@ class Public::ChatMessagesController < ApplicationController
               .order(created_at: :asc)
               .limit(THREAD_REPLIES_LIMIT)
 
+    event_previews_by_id = Chat::EventLinkPreviewLoader.call([root, *replies])
+
     render partial: "public/chat_rooms/thread_panel_content",
-           locals: { root_message: root, replies: replies, community: community },
+           locals: { root_message: root, replies: replies, community: community, event_previews_by_id: event_previews_by_id },
            layout: false
   end
 
@@ -180,7 +182,12 @@ class Public::ChatMessagesController < ApplicationController
     if save_chat_message_with_replies_and_mentions(@chat_message)
       html = render_to_string(
         partial: "public/chat_rooms/message",
-        locals: { chat_message: @chat_message, display_context: :thread, community: community },
+        locals: {
+          chat_message: @chat_message,
+          display_context: :thread,
+          community: community,
+          event_previews_by_id: Chat::EventLinkPreviewLoader.call([@chat_message])
+        },
         layout: false
       )
       render json: { html: html, replies_count: root.reload.replies_count, root_message_id: root.id }, status: :ok
@@ -210,7 +217,12 @@ class Public::ChatMessagesController < ApplicationController
     if update_chat_message_with_mentions(@chat_message, chat_message_edit_params[:content])
       html = render_to_string(
         partial: "public/chat_rooms/message",
-        locals: { chat_message: @chat_message, display_context: normalized_display_context, community: community },
+        locals: {
+          chat_message: @chat_message,
+          display_context: normalized_display_context,
+          community: community,
+          event_previews_by_id: Chat::EventLinkPreviewLoader.call([@chat_message])
+        },
         layout: false
       )
       render json: { chat_message_id: @chat_message.id, html: html }, status: :ok

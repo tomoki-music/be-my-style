@@ -937,6 +937,72 @@
     color: #cc3333;
     margin-top: 4px;
   }
+
+  /* イベントリンクカード(Phase4-D)。新規のカードデザインは作らず、既存の
+     .link-preview-cardを踏襲した上でボーダー色とprovider文言色のみ変える */
+  .link-preview-card--event {
+    border-left-color: #3366cc;
+
+    .link-preview-card-provider {
+      color: #3366cc;
+    }
+  }
+
+  .link-preview-card--event-deleted {
+    cursor: default;
+    opacity: 0.7;
+  }
+
+  .link-preview-card-status-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-bottom: 4px;
+
+    &--ended {
+      background: #eee;
+      color: #888;
+    }
+
+    &--ongoing {
+      background: #e6f4ea;
+      color: #1a7f37;
+    }
+
+    &--entry_closed {
+      background: #fdecea;
+      color: #cc3333;
+    }
+
+    &--upcoming {
+      background: #e8f0fe;
+      color: #3366cc;
+    }
+  }
+
+  .link-preview-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    font-size: 11px;
+    color: #666;
+    margin-top: 4px;
+  }
+
+  .link-preview-card-meta-item {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 140px;
+  }
+
+  .link-preview-card-unavailable {
+    font-size: 11px;
+    color: #999;
+    margin-top: 4px;
+  }
 }
 
 /* パネル表示中は背景のスクロールを止める(モバイルでの誤スクロール・二重スクロール防止) */

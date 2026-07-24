@@ -2,4 +2,4 @@
 - if fetched_previews.any?
   .link-preview-cards
     - fetched_previews.each do |preview|
-      = render "public/chat_rooms/link_preview_card", preview: preview
+      = render "public/chat_rooms/link_preview_card", preview: preview, event_previews_by_id: local_assigns[:event_previews_by_id] || {}

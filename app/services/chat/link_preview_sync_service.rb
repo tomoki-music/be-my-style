@@ -30,9 +30,18 @@ module Chat
         @chat_message.chat_message_link_previews.destroy_all
         detected.each_with_index do |candidate, index|
           preview = create_preview(candidate, index)
+          next if preview.blank?
+
           preview_ids_to_fetch << preview.id if preview.pending?
         end
       end
+
+      # update/thread_replyアクションは、ここで同期した同一のchat_messageインスタンスを
+      # render_to_stringでそのまま描画に使う(コミット後の別リクエストを経由しない)。
+      # destroy_all/create!を経ても関連の読み込み状態は通常維持されるが、呼び出し側が
+      # どのタイミングでchat_message_link_previewsへ触れているかに依存させないよう、
+      # ここでDBの最新状態への読み直しを保証しておく(念のための防御)。
+      @chat_message.chat_message_link_previews.reset
 
       preview_ids_to_fetch.each { |id| Chat::LinkPreviewFetchJob.perform_later(id) }
     end
@@ -45,7 +54,20 @@ module Chat
       detected_keys == existing_keys
     end
 
+    # provider(Fetcher)がsynchronous?であれば(現状はEventのみ)、Jobへenqueueせずここで
+    # 同期的に解決しstatus: fetched/failedを確定させる。それ以外(YouTube等)は従来通り
+    # pending作成 + Job非同期取得、または30日以内キャッシュの再利用のいずれかになる。
     def create_preview(candidate, position)
+      fetcher = Chat::LinkPreviews::ProviderResolver.fetcher_for(candidate.provider)
+
+      if fetcher.synchronous?
+        create_synchronous_preview(candidate, position, fetcher)
+      else
+        create_async_preview(candidate, position)
+      end
+    end
+
+    def create_async_preview(candidate, position)
       cached = reusable_cache(candidate)
 
       @chat_message.chat_message_link_previews.create!(
@@ -58,6 +80,33 @@ module Chat
         author_name: cached&.author_name,
         thumbnail_url: cached&.thumbnail_url,
         fetched_at: cached&.fetched_at
+      )
+    end
+
+    def create_synchronous_preview(candidate, position, fetcher)
+      result = fetcher.call(candidate.url)
+
+      @chat_message.chat_message_link_previews.create!(
+        provider: candidate.provider,
+        url: candidate.url,
+        external_id: candidate.external_id,
+        position: position,
+        status: :fetched,
+        title: result[:title],
+        author_name: result[:author_name],
+        thumbnail_url: result[:thumbnail_url],
+        fetched_at: Time.current
+      )
+    rescue StandardError => e
+      Rails.logger.error("[Chat::LinkPreviewSyncService] Synchronous fetch failed: provider=#{candidate.provider} external_id=#{candidate.external_id} error=#{e.class}: #{e.message}")
+
+      @chat_message.chat_message_link_previews.create!(
+        provider: candidate.provider,
+        url: candidate.url,
+        external_id: candidate.external_id,
+        position: position,
+        status: :failed,
+        failure_reason: "#{e.class}: #{e.message}".truncate(500)
       )
     end
 
