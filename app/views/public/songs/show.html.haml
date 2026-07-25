@@ -20,6 +20,10 @@
       %td= @song.song_name
 
     %tr
+      %th アーティスト名
+      %td= @song.artist_name.presence || "未設定"
+
+    %tr
       %th 演奏時間
       %td= @song.performance_time.presence || "未設定"
 

@@ -77,6 +77,23 @@ RSpec.describe "Public::Events", type: :request do
           event
         end.to change(Event, :count).by(1)
       end
+
+      it "曲のアーティスト名を登録できること" do
+        params = event_create_params(community)
+        params[:event][:songs_attributes]["0"][:artist_name] = "テストアーティスト"
+
+        post public_events_path, params: params
+
+        expect(Song.last.artist_name).to eq "テストアーティスト"
+      end
+
+      it "アーティスト名を入力しなくても曲を作成できること" do
+        expect do
+          post public_events_path, params: event_create_params(community)
+        end.to change(Song, :count).by(1)
+
+        expect(Song.last.artist_name).to be_nil
+      end
     end
     context "Premium由来コミュニティのイベント作成制限" do
       let(:premium_origin_community) { FactoryBot.create(:community, :premium_origin, owner_id: customer.id) }
@@ -169,6 +186,20 @@ RSpec.describe "Public::Events", type: :request do
           }
         }
         expect(response.status).to eq 302
+      end
+
+      it "既存の曲のアーティスト名を編集できること" do
+        target_song = event.songs.first
+
+        put public_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => { id: target_song.id, artist_name: "編集後アーティスト" }
+            }
+          }
+        }
+
+        expect(target_song.reload.artist_name).to eq "編集後アーティスト"
       end
     end
     context "eventページを正しく削除(destroy)できる" do
