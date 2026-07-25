@@ -13,6 +13,9 @@ module Chat
     # 余分なパス・数値以外のIDは除外)。クエリ文字列・fragmentはuri.pathに含まれないため、
     # 付与されていても解決結果(event_id)には影響しない。
     EVENT_PATH_PATTERN = %r{\A/public/events/(\d+)\z}.freeze
+    # イベントのセットリスト内の1曲を指すURL。EVENT_PATH_PATTERNと違い、ここでは存在確認を
+    # 行わない(Songレコードの存在確認・event_id整合性チェックはSongFetcherの責務とする)。
+    SONG_PATH_PATTERN = %r{\A/public/events/(\d+)/songs/(\d+)\z}.freeze
     # Markdownリンク `[text](https://...)` の `)` や `]` はURLの一部になり得ないため、
     # あらかじめマッチ対象から除外する(スペース無しで後続文字が続く場合の誤爆を防ぐ)。
     URL_PATTERN = %r{https?://[^\s)\]]+}.freeze
@@ -59,7 +62,7 @@ module Chat
       if YOUTUBE_ALLOWED_HOSTS.include?(host)
         build_youtube_candidate(uri, host)
       elsif internal_host?(host)
-        build_event_candidate(uri)
+        build_song_candidate(uri) || build_event_candidate(uri)
       end
     end
 
@@ -95,6 +98,18 @@ module Chat
       return nil unless Event.exists?(id: event_id)
 
       Detected.new(url: "https://#{internal_hosts.first}/public/events/#{event_id}", provider: :event, external_id: event_id)
+    end
+
+    # SongレコードのDB存在確認・event_idとの整合性確認はここでは行わない
+    # (SongFetcherの責務)。ここではURLの形からSong候補であることだけを判定する。
+    def build_song_candidate(uri)
+      match = uri.path.match(SONG_PATH_PATTERN)
+      return nil if match.nil?
+
+      event_id = match[1]
+      song_id = match[2]
+      url = "https://#{internal_hosts.first}/public/events/#{event_id}/songs/#{song_id}"
+      Detected.new(url: url, provider: :song, external_id: song_id)
     end
 
     def safe_parse(raw_url)
