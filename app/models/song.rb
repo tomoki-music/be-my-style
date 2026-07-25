@@ -25,6 +25,13 @@ class Song < ApplicationRecord
 
   before_validation :set_default_position, on: :create
 
+  # 参加者が0人のパートを「募集中」とみなす。Public::EventsController#showの
+  # 成立楽曲/募集中楽曲判定(join_parts.map { customers.length }.include?(0))と
+  # 同じ基準に統一する(曲カード側で独自の募集判定基準を新設しない)。
+  def recruiting_join_parts
+    join_parts.select { |join_part| join_part.customers.empty? }
+  end
+
   private
   
   def set_default_position
