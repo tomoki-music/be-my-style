@@ -92,7 +92,7 @@ RSpec.describe "曲リンクカード", type: :system do
     end
   end
 
-  it "参加者が0人のパートがある場合、募集中パート名が表示されること" do
+  it "参加者が0人のパートがある場合、募集中パート名がバッジで表示されること" do
     event = create_event
     song = create(:song, event: event, song_name: "募集中の曲")
     create(:join_part, song: song, join_part_name: "ギター")
@@ -105,12 +105,33 @@ RSpec.describe "曲リンクカード", type: :system do
     visit public_chat_room_path(chat_room, customer_id: other_customer.id)
 
     within "#chat-message-#{target.id}" do
-      expect(page).to have_content("募集中：ギター", wait: 10)
+      expect(page).to have_content("メンバー募集中", wait: 10)
+      expect(page).to have_selector(".link-preview-card-song-recruitment-badge", text: "ギター")
+      expect(page).not_to have_selector(".link-preview-card-song-recruitment-badge", text: "ベース")
       expect(page).not_to have_content("ベース")
     end
   end
 
-  it "全パートに参加者がいる場合、募集中欄が表示されないこと" do
+  it "募集中パートが複数ある場合、それぞれが個別バッジとして表示されること" do
+    event = create_event
+    song = create(:song, event: event, song_name: "複数募集中の曲")
+    create(:join_part, song: song, join_part_name: "ギター")
+    create(:join_part, song: song, join_part_name: "キーボード")
+    target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+    create_link_preview(target, song)
+
+    sign_in_via_form(customer)
+    visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+    within "#chat-message-#{target.id}" do
+      expect(page).to have_content("メンバー募集中", wait: 10)
+      badges = page.all(".link-preview-card-song-recruitment-badge")
+      expect(badges.map(&:text)).to contain_exactly("ギター", "キーボード")
+      expect(page).to have_link("曲の詳細を見る ↗", href: public_event_song_path(event, song))
+    end
+  end
+
+  it "全パートに参加者がいる場合、募集中パートがない案内を表示すること" do
     event = create_event
     song = create(:song, event: event, song_name: "成立済みの曲")
     part = create(:join_part, song: song, join_part_name: "ボーカル")
@@ -123,7 +144,26 @@ RSpec.describe "曲リンクカード", type: :system do
 
     within "#chat-message-#{target.id}" do
       expect(page).to have_selector(".link-preview-card--song", wait: 10)
-      expect(page).not_to have_selector(".link-preview-card-song-recruiting")
+      expect(page).to have_content("現在、募集中のパートはありません")
+      expect(page).not_to have_content("メンバー募集中")
+      expect(page).not_to have_selector(".link-preview-card-song-recruitment-badge")
+    end
+  end
+
+  it "長いパート名でもカードが崩れず、バッジ内で折り返されること" do
+    event = create_event
+    song = create(:song, event: event, song_name: "長いパート名の曲")
+    create(:join_part, song: song, join_part_name: "ギ" * 40)
+    target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+    create_link_preview(target, song)
+
+    sign_in_via_form(customer)
+    visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+    within "#chat-message-#{target.id}" do
+      expect(page).to have_selector(".link-preview-card-song-recruitment-badge", wait: 10)
+      card_width = page.evaluate_script("document.querySelector('.link-preview-card--song').getBoundingClientRect().width")
+      expect(card_width).to be <= 320
     end
   end
 

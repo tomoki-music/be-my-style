@@ -9,9 +9,17 @@
         %span.link-preview-card-meta-item
           = l song.event.event_start_time, format: :short
       - recruiting_parts = song.recruiting_join_parts
-      - if recruiting_parts.any?
-        .link-preview-card-song-recruiting
-          = "募集中：#{recruiting_parts.map(&:join_part_name).join('／')}"
+      .link-preview-card-song-recruitment
+        - if recruiting_parts.any?
+          .link-preview-card-song-recruitment-label
+            メンバー募集中
+          .link-preview-card-song-recruitment-badges
+            - recruiting_parts.each do |join_part|
+              %span.link-preview-card-song-recruitment-badge
+                = join_part.join_part_name
+        - else
+          .link-preview-card-song-recruitment-empty
+            現在、募集中のパートはありません
       .link-preview-card-provider 曲の詳細を見る ↗
 - else
   .link-preview-card.link-preview-card--song.link-preview-card--song-deleted
