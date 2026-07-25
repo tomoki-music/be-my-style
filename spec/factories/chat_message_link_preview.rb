@@ -14,5 +14,13 @@ FactoryBot.define do
       status { :fetched }
       fetched_at { Time.current }
     end
+
+    trait :song do
+      provider { :song }
+      url { "https://www.example.com/public/events/1/songs/1" }
+      external_id { "1" }
+      status { :fetched }
+      fetched_at { Time.current }
+    end
   end
 end

@@ -5,6 +5,20 @@ RSpec.describe ChatMessageLinkPreview, type: :model do
   let(:chat_room) { create(:chat_room) }
   let(:chat_message) { create(:chat_message, customer: customer, chat_room: chat_room) }
 
+  describe "provider enum" do
+    it "songが追加されていても既存の番号が変わっていないこと(既存レコードとの互換性)" do
+      expect(described_class.providers).to eq(
+        "youtube" => 0, "spotify" => 1, "apple_music" => 2, "soundcloud" => 3, "event" => 4, "song" => 5
+      )
+    end
+
+    it "provider: songのレコードを作成できること" do
+      preview = create(:chat_message_link_preview, :song, chat_message: chat_message)
+      expect(preview.song?).to be true
+      expect(preview.event?).to be false
+    end
+  end
+
   describe "アソシエーション" do
     it "chat_messageとN:1となっていること" do
       expect(described_class.reflect_on_association(:chat_message).macro).to eq :belongs_to
