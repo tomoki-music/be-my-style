@@ -11,6 +11,11 @@ RSpec.describe Chat::LinkPreviews::ProviderResolver do
     expect(described_class.fetcher_for("event")).to eq Chat::LinkPreviews::EventFetcher
   end
 
+  it "songに対応するFetcherを返すこと" do
+    expect(described_class.fetcher_for(:song)).to eq Chat::LinkPreviews::SongFetcher
+    expect(described_class.fetcher_for("song")).to eq Chat::LinkPreviews::SongFetcher
+  end
+
   it "未対応のproviderはArgumentErrorにすること" do
     expect { described_class.fetcher_for(:spotify) }.to raise_error(ArgumentError)
   end
