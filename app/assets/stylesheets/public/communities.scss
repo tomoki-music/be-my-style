@@ -51,6 +51,12 @@
         margin: 5px;
         border-radius: 10px;
       }
+      &--missing{
+        .owner-name{
+          color: #999;
+          font-size: 0.9em;
+        }
+      }
     }
     .community-show-link-area{
       text-align: center;
@@ -225,6 +231,12 @@
           height: 50px;
           margin: 5px;
           border-radius: 10px;
+        }
+        &--missing{
+          .owner-name{
+            color: #999;
+            font-size: 0.9em;
+          }
         }
       }
       .card-text{
