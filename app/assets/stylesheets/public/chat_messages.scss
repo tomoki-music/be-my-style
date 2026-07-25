@@ -1020,11 +1020,40 @@
     opacity: 0.7;
   }
 
-  .link-preview-card-song-recruiting {
+  .link-preview-card-song-recruitment {
+    margin-top: 4px;
+  }
+
+  .link-preview-card-song-recruitment-label {
     font-size: 11px;
     color: #1a7f37;
     font-weight: bold;
+  }
+
+  .link-preview-card-song-recruitment-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
     margin-top: 4px;
+    min-width: 0;
+  }
+
+  .link-preview-card-song-recruitment-badge {
+    display: inline-block;
+    max-width: 100%;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: #e6f4ea;
+    color: #1a7f37;
+    font-size: 10px;
+    font-weight: bold;
+    word-break: break-word;
+  }
+
+  .link-preview-card-song-recruitment-empty {
+    margin-top: 4px;
+    color: #888;
+    font-size: 11px;
   }
 }
 
