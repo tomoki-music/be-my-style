@@ -1,0 +1,23 @@
+- if song.present?
+  %a.link-preview-card.link-preview-card--song{ href: public_event_song_path(song.event, song), target: "_blank", rel: "noopener noreferrer" }
+    .link-preview-card-body
+      .link-preview-card-title 🎵 #{song.song_name}
+      - if song.artist_name.present?
+        .link-preview-card-author= song.artist_name
+      .link-preview-card-meta
+        %span.link-preview-card-meta-item= song.event.event_name
+        %span.link-preview-card-meta-item
+          = l song.event.event_start_time, format: :short
+      - recruiting_parts = song.recruiting_join_parts
+      - if recruiting_parts.any?
+        .link-preview-card-song-recruiting
+          = "募集中：#{recruiting_parts.map(&:join_part_name).join('／')}"
+      .link-preview-card-provider 曲の詳細を見る ↗
+- else
+  .link-preview-card.link-preview-card--song.link-preview-card--song-deleted
+    .link-preview-card-body
+      - if preview.title.present?
+        .link-preview-card-title= preview.title
+      - if preview.author_name.present?
+        .link-preview-card-author= preview.author_name
+      .link-preview-card-unavailable この曲は削除されました

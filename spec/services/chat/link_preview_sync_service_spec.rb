@@ -171,4 +171,85 @@ RSpec.describe Chat::LinkPreviewSyncService, type: :service do
       expect { sync(chat_message) }.to change(ChatMessageLinkPreview, :count).by(-1)
     end
   end
+
+  describe "曲URL" do
+    let(:community) { create(:community) }
+    let(:event_owner) { create(:customer) }
+    let(:event) { create(:event, :event_with_songs, customer: event_owner, community: community) }
+    let(:song) { create(:song, event: event, song_name: "テスト楽曲", artist_name: "テストアーティスト") }
+    let(:other_song) { create(:song, event: event, song_name: "別の楽曲", artist_name: nil) }
+    let(:song_url) { "https://www.example.com/public/events/#{event.id}/songs/#{song.id}" }
+
+    it "Jobをenqueueせず同期的にfetchedとなること" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "見て #{song_url}")
+      enqueued_before = ActiveJob::Base.queue_adapter.enqueued_jobs.size
+
+      expect {
+        sync(chat_message)
+      }.to change(ChatMessageLinkPreview, :count).by(1)
+      expect(ActiveJob::Base.queue_adapter.enqueued_jobs.size).to eq enqueued_before
+
+      preview = chat_message.chat_message_link_previews.first
+      expect(preview.provider).to eq "song"
+      expect(preview.external_id).to eq song.id.to_s
+      expect(preview.status).to eq "fetched"
+      expect(preview.title).to eq "テスト楽曲"
+      expect(preview.author_name).to eq "テストアーティスト"
+    end
+
+    it "存在しない曲のURLでもstatus: failedのプレビューを作成し、投稿自体は失敗させないこと" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room,
+                                                        content: "https://www.example.com/public/events/#{event.id}/songs/#{song.id + 1_000_000}")
+
+      expect { sync(chat_message) }.to change(ChatMessageLinkPreview, :count).by(1)
+
+      preview = chat_message.chat_message_link_previews.first
+      expect(preview.status).to eq "failed"
+    end
+
+    it "URLを変えず本文だけ編集した場合、プレビューが維持されること" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "見て #{song_url}")
+      sync(chat_message)
+      preview_id = chat_message.chat_message_link_previews.first.id
+
+      chat_message.update!(content: "見てね #{song_url} 良い曲です")
+
+      expect { sync(chat_message) }.not_to change(ChatMessageLinkPreview, :count)
+      expect(chat_message.reload.chat_message_link_previews.first.id).to eq preview_id
+    end
+
+    it "編集で別の曲URLへ差し替えた場合、新しい曲で解決し直すこと" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: song_url)
+      sync(chat_message)
+
+      other_url = "https://www.example.com/public/events/#{event.id}/songs/#{other_song.id}"
+      chat_message.update!(content: other_url)
+      sync(chat_message)
+
+      preview = chat_message.reload.chat_message_link_previews.first
+      expect(preview.external_id).to eq other_song.id.to_s
+      expect(preview.title).to eq "別の楽曲"
+    end
+
+    it "編集で曲URLが削除された場合、プレビューも削除されること" do
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "見て #{song_url}")
+      sync(chat_message)
+      expect(chat_message.chat_message_link_previews.count).to eq 1
+
+      chat_message.update!(content: "見た")
+
+      expect { sync(chat_message) }.to change(ChatMessageLinkPreview, :count).by(-1)
+    end
+
+    it "同じ曲URLを再投稿しても二重にプレビューが作られないこと" do
+      first_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: song_url)
+      sync(first_message)
+
+      second_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: song_url)
+      expect { sync(second_message) }.to change(ChatMessageLinkPreview, :count).by(1)
+
+      expect(first_message.chat_message_link_previews.count).to eq 1
+      expect(second_message.chat_message_link_previews.count).to eq 1
+    end
+  end
 end

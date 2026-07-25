@@ -68,6 +68,23 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
         expect(preview.status).to eq "fetched"
       end
 
+      it "曲URL投稿で曲リンクカード用プレビューが作成されること" do
+        event = create(:event, :event_with_songs, customer: customer, community: community)
+        song = create(:song, event: event, song_name: "テスト楽曲")
+        song_url = "https://www.example.com/public/events/#{event.id}/songs/#{song.id}"
+
+        post community_create_public_chat_messages_path, params: {
+          chat_message: { content: "見て #{song_url}", chat_room_id: community_chat_room.id, customer_id: 1 }
+        }
+
+        message = ChatMessage.order(:created_at).last
+        preview = message.chat_message_link_previews.first
+        expect(preview.provider).to eq "song"
+        expect(preview.external_id).to eq song.id.to_s
+        expect(preview.status).to eq "fetched"
+        expect(preview.title).to eq "テスト楽曲"
+      end
+
       it "internal_hosts設定がnilでも投稿全体が500にならないこと(実障害の再発防止)" do
         original = Rails.application.config.x.chat_link_preview.internal_hosts
         Rails.application.config.x.chat_link_preview.internal_hosts = nil

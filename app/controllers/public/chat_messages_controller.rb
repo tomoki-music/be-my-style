@@ -128,9 +128,10 @@ class Public::ChatMessagesController < ApplicationController
               .limit(THREAD_REPLIES_LIMIT)
 
     event_previews_by_id = Chat::EventLinkPreviewLoader.call([root, *replies])
+    song_previews_by_id = Chat::SongLinkPreviewLoader.call([root, *replies])
 
     render partial: "public/chat_rooms/thread_panel_content",
-           locals: { root_message: root, replies: replies, community: community, event_previews_by_id: event_previews_by_id },
+           locals: { root_message: root, replies: replies, community: community, event_previews_by_id: event_previews_by_id, song_previews_by_id: song_previews_by_id },
            layout: false
   end
 
@@ -186,7 +187,8 @@ class Public::ChatMessagesController < ApplicationController
           chat_message: @chat_message,
           display_context: :thread,
           community: community,
-          event_previews_by_id: Chat::EventLinkPreviewLoader.call([@chat_message])
+          event_previews_by_id: Chat::EventLinkPreviewLoader.call([@chat_message]),
+          song_previews_by_id: Chat::SongLinkPreviewLoader.call([@chat_message])
         },
         layout: false
       )
@@ -221,7 +223,8 @@ class Public::ChatMessagesController < ApplicationController
           chat_message: @chat_message,
           display_context: normalized_display_context,
           community: community,
-          event_previews_by_id: Chat::EventLinkPreviewLoader.call([@chat_message])
+          event_previews_by_id: Chat::EventLinkPreviewLoader.call([@chat_message]),
+          song_previews_by_id: Chat::SongLinkPreviewLoader.call([@chat_message])
         },
         layout: false
       )
