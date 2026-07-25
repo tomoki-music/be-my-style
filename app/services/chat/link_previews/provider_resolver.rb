@@ -5,7 +5,8 @@ module Chat
     class ProviderResolver
       FETCHERS = {
         "youtube" => YoutubeFetcher,
-        "event" => EventFetcher
+        "event" => EventFetcher,
+        "song" => SongFetcher
       }.freeze
 
       def self.fetcher_for(provider)

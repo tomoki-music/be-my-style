@@ -14,6 +14,7 @@ class Public::CommunitiesController < ApplicationController
       .where(domain_id: @current_domain.id)
       .left_joins(:genres, :community_customers)
       .distinct
+      .preload(:owner)
 
     if params[:keyword].present?
       keyword = "%#{params[:keyword].strip}%"

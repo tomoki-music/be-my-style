@@ -1,6 +1,9 @@
 - if preview.event?
   - event_previews_by_id = local_assigns[:event_previews_by_id] || {}
   = render "public/chat_rooms/event_link_preview_card", preview: preview, event: event_previews_by_id[preview.external_id]
+- elsif preview.song?
+  - song_previews_by_id = local_assigns[:song_previews_by_id] || {}
+  = render "public/chat_rooms/song_link_preview_card", preview: preview, song: song_previews_by_id[preview.external_id]
 - else
   %a.link-preview-card{ href: preview.url, target: "_blank", rel: "noopener noreferrer" }
     - if preview.thumbnail_url.present?

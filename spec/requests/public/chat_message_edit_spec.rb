@@ -50,6 +50,47 @@ RSpec.describe "メッセージ編集(PATCH update)のテスト", type: :request
       expect(preview.status).to eq "fetched"
     end
 
+    it "本文編集で曲URLを追加すると、レスポンスのhtml(render_to_string)に直後から「削除済みフォールバックではない」曲カードが含まれること" do
+      community = create(:community)
+      event = create(:event, :event_with_songs, customer: customer, community: community, event_name: "編集直後確認イベント")
+      song = create(:song, event: event, song_name: "編集直後確認曲", artist_name: "編集確認アーティスト")
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "編集前の本文")
+
+      patch public_chat_message_path(chat_message), params: {
+        chat_message: { content: "見て https://www.example.com/public/events/#{event.id}/songs/#{song.id}" }
+      }
+
+      expect(response).to have_http_status(:ok)
+      html = JSON.parse(response.body)["html"]
+      expect(html).to include("link-preview-card--song")
+      expect(html).to include("編集直後確認曲")
+      expect(html).to include("編集確認アーティスト")
+      expect(html).to include("編集直後確認イベント")
+      expect(html).not_to include("この曲は削除されました")
+      expect(html).to include("曲の詳細を見る")
+
+      preview = chat_message.reload.chat_message_link_previews.first
+      expect(preview.provider).to eq "song"
+      expect(preview.status).to eq "fetched"
+    end
+
+    it "曲URLを通常URLへ変更すると曲カードが残らないこと" do
+      community = create(:community)
+      event = create(:event, :event_with_songs, customer: customer, community: community)
+      song = create(:song, event: event)
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room,
+                                            content: "見て https://www.example.com/public/events/#{event.id}/songs/#{song.id}")
+      Chat::LinkPreviewSyncService.call(chat_message)
+      expect(chat_message.chat_message_link_previews.count).to eq 1
+
+      patch public_chat_message_path(chat_message), params: { chat_message: { content: "曲の話はもうやめます" } }
+
+      expect(response).to have_http_status(:ok)
+      html = JSON.parse(response.body)["html"]
+      expect(html).not_to include("link-preview-card--song")
+      expect(chat_message.reload.chat_message_link_previews.count).to eq 0
+    end
+
     it "投稿者本人がスレッド返信を編集できること" do
       root = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: "元の投稿")
       reply = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, content: "編集前の返信",

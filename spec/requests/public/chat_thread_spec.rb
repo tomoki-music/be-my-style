@@ -163,6 +163,27 @@ RSpec.describe "スレッド機能(Phase3)のテスト", type: :request do
         expect(preview.status).to eq "fetched"
       end
 
+      it "曲URLを含むスレッド返信では、レスポンスのhtml(render_to_string)に直後から「削除済みフォールバックではない」曲カードが含まれること" do
+        community = create(:community)
+        event = create(:event, :event_with_songs, customer: customer, community: community, event_name: "スレッド返信直後確認イベント")
+        song = create(:song, event: event, song_name: "スレッド返信直後確認曲")
+        root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
+
+        post thread_reply_public_chat_message_path(root), params: {
+          chat_message: { content: "見て https://www.example.com/public/events/#{event.id}/songs/#{song.id}" }
+        }
+
+        expect(response).to have_http_status(200)
+        html = JSON.parse(response.body)["html"]
+        expect(html).to include("link-preview-card--song")
+        expect(html).to include("スレッド返信直後確認曲")
+        expect(html).not_to include("この曲は削除されました")
+
+        preview = ChatMessage.last.chat_message_link_previews.first
+        expect(preview.provider).to eq "song"
+        expect(preview.status).to eq "fetched"
+      end
+
       it "本文が空の場合はunprocessable_entityとエラーを返すこと" do
         root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿")
 

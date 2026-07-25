@@ -35,4 +35,25 @@ RSpec.describe Song, type: :model do
       end
     end
   end
+
+  describe '#recruiting_join_parts' do
+    it '参加者が0人のパートのみを返すこと' do
+      empty_part = FactoryBot.create(:join_part, song: song, join_part_name: 'ギター')
+      filled_part = FactoryBot.create(:join_part, song: song, join_part_name: 'ベース')
+      FactoryBot.create(:join_part_customer, join_part: filled_part, customer: other_customer)
+
+      expect(song.recruiting_join_parts).to eq [empty_part]
+    end
+
+    it '全パートに参加者がいる場合は空配列を返すこと' do
+      part = FactoryBot.create(:join_part, song: song, join_part_name: 'ボーカル')
+      FactoryBot.create(:join_part_customer, join_part: part, customer: other_customer)
+
+      expect(song.recruiting_join_parts).to eq []
+    end
+
+    it 'パートが存在しない場合は空配列を返すこと' do
+      expect(song.recruiting_join_parts).to eq []
+    end
+  end
 end

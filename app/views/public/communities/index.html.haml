@@ -46,7 +46,7 @@
 
 .community-index-container
   - @communities.each do |community|
-    - @owner = Customer.find_by(id: community.owner_id)
+    - owner = community.owner
     .card.mb-5{id: "community-#{community.id}"}
       = link_to public_community_path(community), data: { 'turbolinks': false } do
         .img-container
@@ -63,11 +63,16 @@
           %hr
           [コミュニティオーナー]
           %br
-          .community-owner-img
-            = link_to public_customer_path(@owner), data: { 'turbolinks': false } do
-              = customer_avatar_tag(@owner)
+          - if owner.present?
+            .community-owner-img
+              = link_to public_customer_path(owner), data: { 'turbolinks': false } do
+                = customer_avatar_tag(owner)
+                .owner-name
+                  = owner.name
+          - else
+            .community-owner-img.community-owner-img--missing
               .owner-name
-                = @owner.name
+                オーナー情報なし
         %hr
         .community-show-link-area
           = link_to "コミュニティ詳細へ", public_community_path(community), class: "btn-info community-show-link", data: { 'turbolinks': false }

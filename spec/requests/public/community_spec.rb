@@ -21,6 +21,95 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
         expect(response.status).to eq 200
       end
     end
+
+    context "community一覧ページ(index)のowner表示" do
+      it "ownerが存在するCommunityの一覧で、オーナー名が表示されること" do
+        owned_community = create(:community, owner: customer, name: "オーナーありコミュニティ")
+
+        get public_communities_path
+
+        expect(response.status).to eq 200
+        expect(response.body).to include(customer.name)
+        expect(response.body).to include(owned_community.name)
+      end
+
+      it "ownerがnil(owner_idが存在しないCustomerを指す)のCommunityが含まれていても200を返すこと" do
+        orphaned = create(:community, name: "オーナー欠損コミュニティ")
+        orphaned.update_column(:owner_id, 999_999)
+
+        expect { get public_communities_path }.not_to raise_error
+        expect(response.status).to eq 200
+      end
+
+      it "ownerがnilの場合に「オーナー情報なし」が表示されること" do
+        orphaned = create(:community, name: "オーナー欠損コミュニティ2")
+        orphaned.update_column(:owner_id, 999_999)
+
+        get public_communities_path
+
+        expect(response.body).to include("オーナー情報なし")
+      end
+
+      it "ownerがnilの場合にそのCustomer詳細リンクを生成しないこと(壊れたリンクを出さない)" do
+        orphaned = create(:community, name: "オーナー欠損コミュニティ3")
+        orphaned.update_column(:owner_id, 999_999)
+
+        get public_communities_path
+
+        doc = Nokogiri::HTML(response.body)
+        card = doc.at_css("#community-#{orphaned.id}")
+        expect(card.at_css(".community-owner-img a")).to be_nil
+      end
+
+      it "ownerがnilのCommunityが混在していても、通常のCommunityと同じく一覧に表示されること(除外されない)" do
+        owned = create(:community, owner: customer, name: "件数確認オーナーありコミュニティ")
+        orphaned = create(:community, name: "件数確認オーナー欠損コミュニティ")
+        orphaned.update_column(:owner_id, 999_999)
+
+        get public_communities_path
+
+        expect(response.body).to include(owned.name)
+        expect(response.body).to include(orphaned.name)
+      end
+
+      it "owner取得によるN+1が発生しないこと(コミュニティ件数に比例してクエリが増えない)" do
+        4.times { |i| create(:community, owner: create(:customer, name: "owner#{i}")) }
+
+        query_count = 0
+        counter = ->(_name, _started, _finished, _unique_id, payload) {
+          query_count += 1 if payload[:sql].to_s.include?("FROM `customers`")
+        }
+        ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+          get public_communities_path
+        end
+
+        expect(query_count).to be <= 2
+      end
+    end
+
+    context "community一覧ページ(index)のジャンル・検索絞り込み" do
+      it "ジャンルで絞り込んでも200を返し、該当コミュニティのみ表示されること" do
+        genre = Genre.create!(name: "ロック")
+        matched = create(:community, name: "ロックコミュニティ", owner: customer)
+        CommunityGenre.create!(community: matched, genre: genre)
+        unmatched = create(:community, name: "無関係コミュニティ", owner: customer)
+
+        get public_communities_path, params: { genre_id: genre.id }
+
+        expect(response.status).to eq 200
+        expect(response.body).to include(matched.name)
+        expect(response.body).not_to include(unmatched.name)
+      end
+
+      it "キーワード検索でも200を返すこと" do
+        create(:community, name: "検索確認コミュニティ", owner: customer)
+
+        get public_communities_path, params: { keyword: "検索確認" }
+
+        expect(response.status).to eq 200
+        expect(response.body).to include("検索確認コミュニティ")
+      end
+    end
     context "community詳細ページ(show)が正しく表示される" do
       before do
         get public_community_path(community)

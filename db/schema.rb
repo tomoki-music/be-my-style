@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_07_23_000001) do
+ActiveRecord::Schema.define(version: 2026_07_25_000001) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -1194,6 +1194,7 @@ ActiveRecord::Schema.define(version: 2026_07_23_000001) do
     t.integer "position"
     t.string "performance_time"
     t.string "performance_start_time"
+    t.string "artist_name"
     t.index ["event_id"], name: "index_songs_on_event_id"
   end
 

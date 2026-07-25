@@ -144,6 +144,66 @@ RSpec.describe Chat::LinkDetector, type: :service do
     end
   end
 
+  describe "曲URLの検出" do
+    let(:community) { create(:community) }
+    let(:customer) { create(:customer) }
+    let(:event) { create(:event, :event_with_songs, customer: customer, community: community) }
+    let(:song) { create(:song, event: event) }
+
+    it "許可された内部ホストの正しい曲URLを検出すること" do
+      result = detect("見て https://www.example.com/public/events/#{event.id}/songs/#{song.id}")
+
+      expect(result.size).to eq 1
+      expect(result.first.provider).to eq :song
+      expect(result.first.external_id).to eq song.id.to_s
+    end
+
+    it "Event URLと誤判定しないこと(providerがeventにならないこと)" do
+      result = detect("https://www.example.com/public/events/#{event.id}/songs/#{song.id}")
+      expect(result.first.provider).not_to eq :event
+    end
+
+    it "Event単体のURLは従来通りeventとして検出されること(曲URL検出追加による回帰がないこと)" do
+      result = detect("https://www.example.com/public/events/#{event.id}")
+      expect(result.first.provider).to eq :event
+    end
+
+    it "存在しないSongでも(存在確認をLinkDetectorで行わないため)候補として検出すること" do
+      result = detect("https://www.example.com/public/events/#{event.id}/songs/#{song.id + 1_000_000}")
+
+      expect(result.size).to eq 1
+      expect(result.first.provider).to eq :song
+    end
+
+    it "他ドメインの同一パスは拒否すること" do
+      result = detect("https://evil-example.com/public/events/#{event.id}/songs/#{song.id}")
+      expect(result).to eq []
+    end
+
+    it "数値以外のsong_idは拒否すること" do
+      result = detect("https://www.example.com/public/events/#{event.id}/songs/abc")
+      expect(result).to eq []
+    end
+
+    it "余分なパスが続くものは拒否すること" do
+      result = detect("https://www.example.com/public/events/#{event.id}/songs/#{song.id}/edit")
+      expect(result).to eq []
+    end
+
+    it "クエリ文字列・fragmentが付与されていても同じSong IDに解決されること" do
+      plain = detect("https://www.example.com/public/events/#{event.id}/songs/#{song.id}")
+      with_query = detect("https://www.example.com/public/events/#{event.id}/songs/#{song.id}?utm_source=x#section")
+
+      expect(with_query.first.external_id).to eq plain.first.external_id
+      expect(with_query.first.url).to eq plain.first.url
+    end
+
+    it "HTTPS以外のプロトコルは拒否すること" do
+      result = detect("http://www.example.com/public/events/#{event.id}/songs/#{song.id}")
+      expect(result).to eq []
+    end
+  end
+
   # config.x.chat_link_preview.internal_hostsが未設定・nilの場合でも、投稿全体が
   # 500にならないことを保証する(本番URLをローカルで貼った際にNoMethodErrorになった
   # 実障害の再発防止)。
