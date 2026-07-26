@@ -933,9 +933,16 @@
   }
 
   .link-preview-card-provider {
+    display: inline-block;
     font-size: 11px;
     color: #cc3333;
     margin-top: 4px;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
   }
 
   /* イベントリンクカード(Phase4-D)。新規のカードデザインは作らず、既存の
@@ -1054,6 +1061,35 @@
     margin-top: 4px;
     color: #888;
     font-size: 11px;
+  }
+
+  /* コード譜情報(Phase5-C)。募集パート表示より上、イベントmetaの下に表示する */
+  .link-preview-card-chord-sheet {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin-top: 4px;
+    font-size: 11px;
+  }
+
+  .link-preview-card-chord-sheet-key,
+  .link-preview-card-chord-sheet-capo {
+    color: #555;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 140px;
+  }
+
+  .link-preview-card-chord-sheet-link {
+    color: #1a7f37;
+    text-decoration: underline;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: none;
+    }
   }
 }
 

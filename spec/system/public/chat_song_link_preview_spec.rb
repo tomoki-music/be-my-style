@@ -254,4 +254,240 @@ RSpec.describe "曲リンクカード", type: :system do
     expect(page).to have_selector(".link-preview-card--song", wait: 10)
     expect(page).to have_content("送信直後表示確認曲")
   end
+
+  describe "コード譜情報(Phase5-C)" do
+    it "Key・Capo・コード譜リンクが表示され、募集バッジより上に配置されること" do
+      event = create_event
+      song = create(:song, :with_chord_sheet, event: event, song_name: "コード譜付きの曲")
+      create(:join_part, song: song, join_part_name: "ギター")
+      target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+      create_link_preview(target, song)
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      within "#chat-message-#{target.id}" do
+        expect(page).to have_selector(".link-preview-card-chord-sheet", wait: 10)
+        expect(page).to have_content("Key：")
+        expect(page).to have_content("G")
+        expect(page).to have_content("Capo：")
+        expect(page).to have_link("コード譜を見る ↗", href: song.chord_sheet_url)
+        expect(page).not_to have_content("初心者向けの簡単コード版です")
+
+        chord_sheet_top = page.evaluate_script("document.querySelector('.link-preview-card-chord-sheet').getBoundingClientRect().top")
+        recruitment_top = page.evaluate_script("document.querySelector('.link-preview-card-song-recruitment').getBoundingClientRect().top")
+        expect(chord_sheet_top).to be < recruitment_top
+      end
+    end
+
+    it "Capo 0の場合「なし」と表示されること" do
+      event = create_event
+      song = create(:song, event: event, song_name: "カポなしの曲", capo: 0)
+      target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+      create_link_preview(target, song)
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      within "#chat-message-#{target.id}" do
+        expect(page).to have_selector(".link-preview-card-chord-sheet-capo", wait: 10)
+        expect(page.find(".link-preview-card-chord-sheet-capo").text).to include("なし")
+      end
+    end
+
+    it "Capoが未入力の場合、Capo表示がないこと" do
+      event = create_event
+      song = create(:song, event: event, song_name: "Capo未入力の曲", capo: nil, musical_key: "G")
+      target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+      create_link_preview(target, song)
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      within "#chat-message-#{target.id}" do
+        expect(page).to have_selector(".link-preview-card-chord-sheet", wait: 10)
+        expect(page).not_to have_selector(".link-preview-card-chord-sheet-capo")
+      end
+    end
+
+    it "Keyがない場合、Key表示がないこと" do
+      event = create_event
+      song = create(:song, event: event, song_name: "Keyなしの曲", musical_key: nil, capo: 2)
+      target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+      create_link_preview(target, song)
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      within "#chat-message-#{target.id}" do
+        expect(page).to have_selector(".link-preview-card-chord-sheet", wait: 10)
+        expect(page).not_to have_selector(".link-preview-card-chord-sheet-key")
+      end
+    end
+
+    it "コード譜URLがない場合、コード譜リンクが表示されないこと" do
+      event = create_event
+      song = create(:song, event: event, song_name: "URLなしの曲", musical_key: "G", chord_sheet_url: nil)
+      target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+      create_link_preview(target, song)
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      within "#chat-message-#{target.id}" do
+        expect(page).to have_selector(".link-preview-card-chord-sheet", wait: 10)
+        expect(page).not_to have_selector(".link-preview-card-chord-sheet-link")
+      end
+    end
+
+    it "コード譜情報が全て未入力の場合、コード譜ブロック自体が表示されないこと" do
+      event = create_event
+      song = create(:song, event: event, song_name: "コード譜情報なしの曲",
+                            musical_key: nil, capo: nil, chord_sheet_url: nil, chord_sheet_note: nil)
+      target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+      create_link_preview(target, song)
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      within "#chat-message-#{target.id}" do
+        expect(page).to have_selector(".link-preview-card--song", wait: 10)
+        expect(page).not_to have_selector(".link-preview-card-chord-sheet")
+      end
+    end
+
+    it "HTML上でリンクの入れ子が発生していないこと" do
+      event = create_event
+      song = create(:song, :with_chord_sheet, event: event, song_name: "リンク入れ子確認の曲")
+      target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+      create_link_preview(target, song)
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      within "#chat-message-#{target.id}" do
+        expect(page).to have_selector(".link-preview-card-chord-sheet-link", wait: 10)
+      end
+
+      nested_anchor_count = page.evaluate_script(
+        "document.querySelectorAll('#chat-message-#{target.id} .link-preview-card--song a a').length"
+      )
+      expect(nested_anchor_count).to eq 0
+    end
+
+    it "コード譜リンクとSong詳細リンクをそれぞれ正しく認識できること" do
+      event = create_event
+      song = create(:song, :with_chord_sheet, event: event, song_name: "2つのリンクを持つ曲")
+      target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+      create_link_preview(target, song)
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      within "#chat-message-#{target.id}" do
+        expect(page).to have_link("コード譜を見る ↗", href: song.chord_sheet_url, wait: 10)
+        expect(page).to have_link("曲の詳細を見る ↗", href: public_event_song_path(event, song))
+      end
+    end
+
+    it "外部リンクにtarget=\"_blank\"とrel=\"noopener noreferrer\"が付くこと" do
+      event = create_event
+      song = create(:song, :with_chord_sheet, event: event, song_name: "外部リンク属性確認の曲")
+      target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+      create_link_preview(target, song)
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      within "#chat-message-#{target.id}" do
+        expect(page).to have_selector(".link-preview-card-chord-sheet-link", wait: 10)
+        link = find(".link-preview-card-chord-sheet-link")
+        expect(link[:target]).to eq "_blank"
+        expect(link[:rel]).to eq "noopener noreferrer"
+      end
+    end
+
+    it "Event編集でSongのコード譜情報を変えると、既存カードへリロード後にライブ反映されること" do
+      event = create_event
+      song = create(:song, event: event, song_name: "ライブ反映確認の曲")
+      target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+      create_link_preview(target, song)
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+      within "#chat-message-#{target.id}" do
+        expect(page).to have_selector(".link-preview-card--song", wait: 10)
+        expect(page).not_to have_selector(".link-preview-card-chord-sheet")
+      end
+
+      song.update!(musical_key: "D", capo: 5, chord_sheet_url: "https://example.com/updated-chord-sheet")
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      within "#chat-message-#{target.id}" do
+        expect(page).to have_selector(".link-preview-card-chord-sheet", wait: 10)
+        expect(page).to have_content("D")
+        expect(page).to have_link("コード譜を見る ↗", href: "https://example.com/updated-chord-sheet")
+      end
+    end
+
+    it "コード譜URLを空にすると、既存カードからリンクが消えること" do
+      event = create_event
+      song = create(:song, :with_chord_sheet, event: event, song_name: "URL削除確認の曲")
+      target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+      create_link_preview(target, song)
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+      within "#chat-message-#{target.id}" do
+        expect(page).to have_link("コード譜を見る ↗", wait: 10)
+      end
+
+      song.update!(chord_sheet_url: nil)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      within "#chat-message-#{target.id}" do
+        expect(page).to have_selector(".link-preview-card--song", wait: 10)
+        expect(page).not_to have_link("コード譜を見る ↗")
+      end
+    end
+
+    it "スレッドパネル内でもコード譜情報が表示されること" do
+      root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元メッセージ")
+      event = create_event
+      song = create(:song, :with_chord_sheet, event: event, song_name: "スレッド内コード譜曲")
+      reply = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room,
+                                                content: song_url_for(song), reply_to_chat_message: root)
+      create_link_preview(reply, song)
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      expect(page).to have_selector(".thread-replies-button", wait: 10)
+      page.evaluate_script("document.querySelector('.thread-replies-button').click();")
+      expect(page).to have_selector("#thread-panel:not([hidden])", wait: 10)
+
+      within "#thread-panel-body" do
+        expect(page).to have_selector(".link-preview-card-chord-sheet", wait: 10)
+        expect(page).to have_link("コード譜を見る ↗", href: song.chord_sheet_url)
+      end
+    end
+
+    it "モバイル幅(375px)でもコード譜情報を含むカードが横スクロールを発生させないこと" do
+      event = create_event
+      song = create(:song, :with_chord_sheet, event: event, song_name: "モバイルコード譜確認曲")
+      target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+      create_link_preview(target, song)
+
+      page.driver.browser.manage.window.resize_to(375, 812)
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      within "#chat-message-#{target.id}" do
+        expect(page).to have_selector(".link-preview-card-chord-sheet", wait: 10)
+      end
+      body_scroll_width = page.evaluate_script("document.body.scrollWidth")
+      viewport_width = page.evaluate_script("window.innerWidth")
+      expect(body_scroll_width).to be <= viewport_width
+    end
+  end
 end

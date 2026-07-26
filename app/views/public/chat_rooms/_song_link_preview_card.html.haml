@@ -1,5 +1,5 @@
 - if song.present?
-  %a.link-preview-card.link-preview-card--song{ href: public_event_song_path(song.event, song), target: "_blank", rel: "noopener noreferrer" }
+  .link-preview-card.link-preview-card--song
     .link-preview-card-body
       .link-preview-card-title 🎵 #{song.song_name}
       - if song.artist_name.present?
@@ -8,6 +8,19 @@
         %span.link-preview-card-meta-item= song.event.event_name
         %span.link-preview-card-meta-item
           = l song.event.event_start_time, format: :short
+      - if song.musical_key.present? || song.capo.present? || song.chord_sheet_url.present?
+        .link-preview-card-chord-sheet
+          - if song.musical_key.present?
+            %span.link-preview-card-chord-sheet-key
+              Key：
+              = song.musical_key
+          - if song.capo.present?
+            %span.link-preview-card-chord-sheet-capo
+              Capo：
+              = song.capo_label
+          - if song.chord_sheet_url.present?
+            %a.link-preview-card-chord-sheet-link{ href: song.chord_sheet_url, target: "_blank", rel: "noopener noreferrer" }
+              コード譜を見る ↗
       - recruiting_parts = song.recruiting_join_parts
       .link-preview-card-song-recruitment
         - if recruiting_parts.any?
@@ -20,7 +33,8 @@
         - else
           .link-preview-card-song-recruitment-empty
             現在、募集中のパートはありません
-      .link-preview-card-provider 曲の詳細を見る ↗
+      %a.link-preview-card-provider{ href: public_event_song_path(song.event, song), target: "_blank", rel: "noopener noreferrer" }
+        曲の詳細を見る ↗
 - else
   .link-preview-card.link-preview-card--song.link-preview-card--song-deleted
     .link-preview-card-body
