@@ -1,4 +1,6 @@
 class Admin::EventsController < ApplicationController
+  skip_before_action :authenticate_customer!
+  skip_before_action :ensure_music_domain_access_for_public_routes!
   before_action :authenticate_admin!
   before_action :set_event, only: [:show, :edit, :update, :destroy]
 
