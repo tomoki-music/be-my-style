@@ -56,6 +56,31 @@
         - else
           %em 紹介文はまだ登録されていません。
 
+    - if @song.musical_key.present? || @song.capo.present? || @song.chord_sheet_url.present? || @song.chord_sheet_note.present?
+      %tr
+        %th コード譜情報
+        %td
+          - if @song.musical_key.present?
+            %div
+              Key：
+              = @song.musical_key
+
+          - if @song.capo.present?
+            %div
+              Capo：
+              = @song.capo_label
+
+          - if @song.chord_sheet_note.present?
+            .song-chord-sheet-note
+              = simple_format(@song.chord_sheet_note)
+
+          - if @song.chord_sheet_url.present?
+            = link_to "コード譜を見る",
+              @song.chord_sheet_url,
+              target: "_blank",
+              rel: "noopener",
+              data: { turbolinks: false }
+
     %tr
       %th 登録日
       %td= l @song.created_at, format: :short
