@@ -17,6 +17,14 @@
     .field
       = f.text_field :youtube_url, placeholder: "Youtubeの動画URL"
     .field
+      = f.text_field :chord_sheet_url, placeholder: "コード譜URL"
+    .field
+      = f.text_field :musical_key, placeholder: "Key（例：G、Am）", list: "musical-key-options"
+    .field
+      = f.number_field :capo, placeholder: "Capo（0〜12、未入力なら不明）", min: 0, max: 12, step: 1
+    .field
+      = f.text_area :chord_sheet_note, placeholder: "コード譜メモ（例：初心者向け簡単コード版）", rows: 2, class: "form-control"
+    .field
       = f.text_area :introduction, placeholder: "楽曲の紹介文（意気込みや想いなど）", rows: 3, class: "form-control"
     .field
       = link_to_remove_association '曲を削除', f, class: 'btn btn-danger js-song-remove-btn', data: { 'turbolinks': false, confirm: 'こちらの曲を削除します。よろしいですか？' }

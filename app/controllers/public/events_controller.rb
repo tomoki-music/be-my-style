@@ -329,7 +329,8 @@ class Public::EventsController < ApplicationController
       :url_comment,
       join_part_ids:[],
       part_ids:[],
-      songs_attributes: [:id, :event_id, :song_name, :artist_name, :performance_time, :performance_start_time, :youtube_url, :introduction, :position, :_destroy,
+      songs_attributes: [:id, :event_id, :song_name, :artist_name, :performance_time, :performance_start_time, :youtube_url,
+        :chord_sheet_url, :musical_key, :capo, :chord_sheet_note, :introduction, :position, :_destroy,
         join_parts_attributes:[:id, :join_part_name, :_destroy]
       ],
     )

@@ -94,6 +94,61 @@ RSpec.describe "Public::Events", type: :request do
 
         expect(Song.last.artist_name).to be_nil
       end
+
+      it "曲のコード譜情報(URL・Key・Capo・メモ)を登録できること" do
+        params = event_create_params(community)
+        params[:event][:songs_attributes]["0"][:chord_sheet_url] = "https://example.com/chord-sheet"
+        params[:event][:songs_attributes]["0"][:musical_key] = "G"
+        params[:event][:songs_attributes]["0"][:capo] = 2
+        params[:event][:songs_attributes]["0"][:chord_sheet_note] = "初心者向けの簡単コード版です"
+
+        post public_events_path, params: params
+
+        song = Song.last
+        expect(song.chord_sheet_url).to eq "https://example.com/chord-sheet"
+        expect(song.musical_key).to eq "G"
+        expect(song.capo).to eq 2
+        expect(song.chord_sheet_note).to eq "初心者向けの簡単コード版です"
+      end
+
+      it "コード譜情報を入力しなくても曲を作成できること" do
+        expect do
+          post public_events_path, params: event_create_params(community)
+        end.to change(Song, :count).by(1)
+
+        song = Song.last
+        expect(song.chord_sheet_url).to be_nil
+        expect(song.musical_key).to be_nil
+        expect(song.capo).to be_nil
+        expect(song.chord_sheet_note).to be_nil
+      end
+
+      it "Capo 0で曲を作成できること" do
+        params = event_create_params(community)
+        params[:event][:songs_attributes]["0"][:capo] = 0
+
+        post public_events_path, params: params
+
+        expect(Song.last.capo).to eq 0
+      end
+
+      it "Capo 12で曲を作成できること" do
+        params = event_create_params(community)
+        params[:event][:songs_attributes]["0"][:capo] = 12
+
+        post public_events_path, params: params
+
+        expect(Song.last.capo).to eq 12
+      end
+
+      it "Capo 13だとvalidationエラーになり曲が作成されないこと" do
+        params = event_create_params(community)
+        params[:event][:songs_attributes]["0"][:capo] = 13
+
+        expect do
+          post public_events_path, params: params
+        end.not_to change(Song, :count)
+      end
     end
     context "Premium由来コミュニティのイベント作成制限" do
       let(:premium_origin_community) { FactoryBot.create(:community, :premium_origin, owner_id: customer.id) }
@@ -200,6 +255,30 @@ RSpec.describe "Public::Events", type: :request do
         }
 
         expect(target_song.reload.artist_name).to eq "編集後アーティスト"
+      end
+
+      it "既存の曲のコード譜情報(URL・Key・Capo・メモ)を編集できること" do
+        target_song = event.songs.first
+
+        put public_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => {
+                id: target_song.id,
+                chord_sheet_url: "https://example.com/chord-sheet",
+                musical_key: "Am",
+                capo: 3,
+                chord_sheet_note: "原曲より半音下げ"
+              }
+            }
+          }
+        }
+
+        target_song.reload
+        expect(target_song.chord_sheet_url).to eq "https://example.com/chord-sheet"
+        expect(target_song.musical_key).to eq "Am"
+        expect(target_song.capo).to eq 3
+        expect(target_song.chord_sheet_note).to eq "原曲より半音下げ"
       end
     end
     context "eventページを正しく削除(destroy)できる" do

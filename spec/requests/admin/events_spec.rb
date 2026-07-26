@@ -45,6 +45,60 @@ RSpec.describe "Admin::Events", type: :request do
         end.to change(JoinPartCustomer, :count).by(-1)
       end
     end
+    context "event新規作成(create)が正しく処理され登録される" do
+      it "曲のコード譜情報(URL・Key・Capo・メモ)を登録できること" do
+        params = admin_event_create_params(community, customer)
+        params[:event][:songs_attributes]["0"][:chord_sheet_url] = "https://example.com/chord-sheet"
+        params[:event][:songs_attributes]["0"][:musical_key] = "G"
+        params[:event][:songs_attributes]["0"][:capo] = 2
+        params[:event][:songs_attributes]["0"][:chord_sheet_note] = "初心者向けの簡単コード版です"
+
+        post admin_events_path, params: params
+
+        created_song = Song.last
+        expect(created_song.chord_sheet_url).to eq "https://example.com/chord-sheet"
+        expect(created_song.musical_key).to eq "G"
+        expect(created_song.capo).to eq 2
+        expect(created_song.chord_sheet_note).to eq "初心者向けの簡単コード版です"
+      end
+
+      it "コード譜情報を入力しなくても曲を作成できること" do
+        expect do
+          post admin_events_path, params: admin_event_create_params(community, customer)
+        end.to change(Song, :count).by(1)
+
+        created_song = Song.last
+        expect(created_song.chord_sheet_url).to be_nil
+        expect(created_song.musical_key).to be_nil
+        expect(created_song.capo).to be_nil
+        expect(created_song.chord_sheet_note).to be_nil
+      end
+    end
+    context "event編集(update)が正しく処理され登録される" do
+      it "既存の曲のコード譜情報(URL・Key・Capo・メモ)を編集できること" do
+        target_song = event.songs.first
+
+        put admin_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => {
+                id: target_song.id,
+                chord_sheet_url: "https://example.com/chord-sheet",
+                musical_key: "Am",
+                capo: 3,
+                chord_sheet_note: "原曲より半音下げ"
+              }
+            }
+          }
+        }
+
+        target_song.reload
+        expect(target_song.chord_sheet_url).to eq "https://example.com/chord-sheet"
+        expect(target_song.musical_key).to eq "Am"
+        expect(target_song.capo).to eq 3
+        expect(target_song.chord_sheet_note).to eq "原曲より半音下げ"
+      end
+    end
   end
 
   describe '非ログイン' do
@@ -70,5 +124,31 @@ RSpec.describe "Admin::Events", type: :request do
         expect(response.status).to eq 302
       end
     end
+  end
+
+  def admin_event_create_params(community, customer)
+    {
+      event: {
+        customer_id: customer.id,
+        community_id: community.id,
+        event_name: "管理者作成イベント",
+        event_start_time: 7.days.from_now,
+        event_end_time: 7.days.from_now + 2.hours,
+        event_entry_deadline: 6.days.from_now,
+        entrance_fee: 1500,
+        place: "MMMstudio",
+        address: "埼玉県さいたま市",
+        introduction: "管理者が作成したイベントです",
+        songs_attributes: {
+          "0" => {
+            song_name: "Session Song",
+            performance_time: "5:00",
+            join_parts_attributes: {
+              "0" => { join_part_name: "Vocal" }
+            }
+          }
+        }
+      }
+    }
   end
 end

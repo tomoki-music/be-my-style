@@ -62,6 +62,9 @@
 
       %hr
       %h4 曲目
+      %datalist#musical-key-options
+        - Song::MUSICAL_KEY_CANDIDATES.each do |key|
+          %option{ value: key }
       #songs.song-container
         = f.fields_for :songs do |song|
           - index = f.object.songs.index(song.object)

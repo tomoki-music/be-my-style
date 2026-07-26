@@ -90,6 +90,9 @@
               %i.text-red
                 (必須)
             %td
+              %datalist#musical-key-options
+                - Song::MUSICAL_KEY_CANDIDATES.each do |key|
+                  %option{ value: key }
               #songs.song-container
                 = f.fields_for :songs, id: 'js-song-field' do |song|
                   - index = f.object.songs.index(song.object)
