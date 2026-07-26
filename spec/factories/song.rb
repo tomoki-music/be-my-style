@@ -9,5 +9,11 @@ FactoryBot.define do
         song.join_parts << build(:join_part)
       end
     end
+    trait :with_chord_sheet do
+      chord_sheet_url { "https://example.com/chord-sheet" }
+      musical_key { "G" }
+      capo { 2 }
+      chord_sheet_note { "初心者向けの簡単コード版です" }
+    end
   end
 end
