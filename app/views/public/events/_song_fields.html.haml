@@ -19,6 +19,8 @@
     .field
       = f.text_field :chord_sheet_url, placeholder: "コード譜URL"
     .field
+      = f.text_field :tab_sheet_url, placeholder: "TAB譜URL"
+    .field
       = f.text_field :musical_key, placeholder: "Key（例：G、Am）", list: "musical-key-options"
     .field
       = f.number_field :capo, placeholder: "Capo（0〜12、未入力なら不明）", min: 0, max: 12, step: 1

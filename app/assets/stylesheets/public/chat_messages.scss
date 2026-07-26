@@ -1082,7 +1082,14 @@
     max-width: 140px;
   }
 
-  .link-preview-card-chord-sheet-link {
+  /* TAB譜情報(Phase5-D)。コード譜情報より下、募集パート表示より上に表示する */
+  .link-preview-card-tab-sheet {
+    margin-top: 4px;
+    font-size: 11px;
+  }
+
+  .link-preview-card-chord-sheet-link,
+  .link-preview-card-tab-sheet-link {
     color: #1a7f37;
     text-decoration: underline;
 

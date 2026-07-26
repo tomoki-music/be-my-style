@@ -490,4 +490,153 @@ RSpec.describe "曲リンクカード", type: :system do
       expect(body_scroll_width).to be <= viewport_width
     end
   end
+
+  describe "TAB譜情報(Phase5-D)" do
+    context "TAB譜のみ" do
+      it "TAB譜リンクが表示され、正しいURLが設定されること" do
+        event = create_event
+        song = create(:song, :with_tab_sheet, event: event, song_name: "TAB譜付きの曲")
+        target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+        create_link_preview(target, song)
+
+        sign_in_via_form(customer)
+        visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+        within "#chat-message-#{target.id}" do
+          expect(page).to have_selector(".link-preview-card-tab-sheet", wait: 10)
+          expect(page).to have_link("TAB譜を見る ↗", href: song.tab_sheet_url)
+        end
+      end
+
+      it "HTML上でリンクの入れ子が発生していないこと" do
+        event = create_event
+        song = create(:song, :with_tab_sheet, event: event, song_name: "TAB譜リンク入れ子確認の曲")
+        target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+        create_link_preview(target, song)
+
+        sign_in_via_form(customer)
+        visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+        within "#chat-message-#{target.id}" do
+          expect(page).to have_selector(".link-preview-card-tab-sheet-link", wait: 10)
+        end
+
+        nested_anchor_count = page.evaluate_script(
+          "document.querySelectorAll('#chat-message-#{target.id} .link-preview-card--song a a').length"
+        )
+        expect(nested_anchor_count).to eq 0
+      end
+
+      it "TAB譜リンクとSong詳細リンクをそれぞれ正しく認識でき、カード全体のクリック導線を壊していないこと" do
+        event = create_event
+        song = create(:song, :with_tab_sheet, event: event, song_name: "TAB譜クリック導線確認の曲")
+        target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+        create_link_preview(target, song)
+
+        sign_in_via_form(customer)
+        visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+        within "#chat-message-#{target.id}" do
+          expect(page).to have_link("TAB譜を見る ↗", href: song.tab_sheet_url, wait: 10)
+          expect(page).to have_link("曲の詳細を見る ↗", href: public_event_song_path(event, song))
+        end
+      end
+
+      it "TAB譜URLがない場合、TAB譜ブロック自体が表示されないこと" do
+        event = create_event
+        song = create(:song, event: event, song_name: "TAB譜URLなしの曲", tab_sheet_url: nil)
+        target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+        create_link_preview(target, song)
+
+        sign_in_via_form(customer)
+        visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+        within "#chat-message-#{target.id}" do
+          expect(page).to have_selector(".link-preview-card--song", wait: 10)
+          expect(page).not_to have_selector(".link-preview-card-tab-sheet")
+        end
+      end
+    end
+
+    context "コード譜とTAB譜の両方" do
+      it "両方のリンクが表示され、コード譜がTAB譜より先、TAB譜が募集情報より先に配置されること" do
+        event = create_event
+        song = create(:song, :with_chord_sheet, :with_tab_sheet, event: event, song_name: "コード譜TAB譜両方の曲")
+        create(:join_part, song: song, join_part_name: "ギター")
+        target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+        create_link_preview(target, song)
+
+        sign_in_via_form(customer)
+        visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+        within "#chat-message-#{target.id}" do
+          expect(page).to have_link("コード譜を見る ↗", href: song.chord_sheet_url, wait: 10)
+          expect(page).to have_link("TAB譜を見る ↗", href: song.tab_sheet_url)
+
+          chord_sheet_top = page.evaluate_script("document.querySelector('.link-preview-card-chord-sheet').getBoundingClientRect().top")
+          tab_sheet_top = page.evaluate_script("document.querySelector('.link-preview-card-tab-sheet').getBoundingClientRect().top")
+          recruitment_top = page.evaluate_script("document.querySelector('.link-preview-card-song-recruitment').getBoundingClientRect().top")
+
+          expect(chord_sheet_top).to be < tab_sheet_top
+          expect(tab_sheet_top).to be < recruitment_top
+        end
+      end
+    end
+
+    context "スレッド内" do
+      it "スレッド内のSongカードでもTAB譜が表示されること" do
+        root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元メッセージ")
+        event = create_event
+        song = create(:song, :with_tab_sheet, event: event, song_name: "スレッド内TAB譜曲")
+        reply = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room,
+                                                  content: song_url_for(song), reply_to_chat_message: root)
+        create_link_preview(reply, song)
+
+        sign_in_via_form(customer)
+        visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+        expect(page).to have_selector(".thread-replies-button", wait: 10)
+        page.evaluate_script("document.querySelector('.thread-replies-button').click();")
+        expect(page).to have_selector("#thread-panel:not([hidden])", wait: 10)
+
+        within "#thread-panel-body" do
+          expect(page).to have_selector(".link-preview-card-tab-sheet", wait: 10)
+          expect(page).to have_link("TAB譜を見る ↗", href: song.tab_sheet_url)
+        end
+      end
+    end
+
+    context "モバイル幅(375px)" do
+      it "コード譜とTAB譜が両方存在しても横スクロールが発生せず、リンクがカード外へはみ出さず、要素同士が重ならないこと" do
+        event = create_event
+        song = create(:song, :with_chord_sheet, :with_tab_sheet, event: event, song_name: "モバイルコード譜TAB譜確認曲")
+        target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: song_url_for(song))
+        create_link_preview(target, song)
+
+        page.driver.browser.manage.window.resize_to(375, 812)
+        sign_in_via_form(customer)
+        visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+        within "#chat-message-#{target.id}" do
+          expect(page).to have_selector(".link-preview-card-tab-sheet", wait: 10)
+        end
+
+        body_scroll_width = page.evaluate_script("document.body.scrollWidth")
+        viewport_width = page.evaluate_script("window.innerWidth")
+        expect(body_scroll_width).to be <= viewport_width
+
+        card_right = page.evaluate_script("document.querySelector('.link-preview-card--song').getBoundingClientRect().right")
+        tab_link_right = page.evaluate_script("document.querySelector('.link-preview-card-tab-sheet-link').getBoundingClientRect().right")
+        expect(tab_link_right).to be <= card_right
+
+        chord_sheet_bottom = page.evaluate_script("document.querySelector('.link-preview-card-chord-sheet').getBoundingClientRect().bottom")
+        tab_sheet_top = page.evaluate_script("document.querySelector('.link-preview-card-tab-sheet').getBoundingClientRect().top")
+        recruitment_top = page.evaluate_script("document.querySelector('.link-preview-card-song-recruitment').getBoundingClientRect().top")
+        tab_sheet_bottom = page.evaluate_script("document.querySelector('.link-preview-card-tab-sheet').getBoundingClientRect().bottom")
+
+        expect(chord_sheet_bottom).to be <= tab_sheet_top
+        expect(tab_sheet_bottom).to be <= recruitment_top
+      end
+    end
+  end
 end

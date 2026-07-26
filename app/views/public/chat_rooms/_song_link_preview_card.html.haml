@@ -21,6 +21,10 @@
           - if song.chord_sheet_url.present?
             %a.link-preview-card-chord-sheet-link{ href: song.chord_sheet_url, target: "_blank", rel: "noopener noreferrer" }
               コード譜を見る ↗
+      - if song.tab_sheet_url.present?
+        .link-preview-card-tab-sheet
+          %a.link-preview-card-tab-sheet-link{ href: song.tab_sheet_url, target: "_blank", rel: "noopener noreferrer" }
+            TAB譜を見る ↗
       - recruiting_parts = song.recruiting_join_parts
       .link-preview-card-song-recruitment
         - if recruiting_parts.any?

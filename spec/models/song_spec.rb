@@ -46,6 +46,37 @@ RSpec.describe Song, type: :model do
       end
     end
 
+    context 'tab_sheet_url' do
+      it 'nilなら有効であること' do
+        song.tab_sheet_url = nil
+        expect(song.valid?).to eq true
+      end
+
+      it '空欄なら有効であること' do
+        song.tab_sheet_url = ''
+        expect(song.valid?).to eq true
+      end
+
+      it '2048文字以内なら有効であること' do
+        base = 'https://example.com/'
+        song.tab_sheet_url = base + ('a' * (2048 - base.length))
+        expect(song.tab_sheet_url.length).to eq 2048
+        expect(song.valid?).to eq true
+      end
+
+      it '2049文字なら無効であること' do
+        base = 'https://example.com/'
+        song.tab_sheet_url = base + ('a' * (2049 - base.length))
+        expect(song.tab_sheet_url.length).to eq 2049
+        expect(song.valid?).to eq false
+      end
+
+      it 'URL形式でない文字列でも、長さ以内なら有効であること' do
+        song.tab_sheet_url = 'これはURLではない文字列です'
+        expect(song.valid?).to eq true
+      end
+    end
+
     context 'musical_key' do
       it '空欄なら有効であること' do
         song.musical_key = ''

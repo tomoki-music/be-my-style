@@ -73,6 +73,23 @@ RSpec.describe "Admin::Events", type: :request do
         expect(created_song.capo).to be_nil
         expect(created_song.chord_sheet_note).to be_nil
       end
+
+      it "曲のTAB譜URLを登録できること" do
+        params = admin_event_create_params(community, customer)
+        params[:event][:songs_attributes]["0"][:tab_sheet_url] = "https://example.com/tab-sheet"
+
+        post admin_events_path, params: params
+
+        expect(Song.last.tab_sheet_url).to eq "https://example.com/tab-sheet"
+      end
+
+      it "TAB譜URLを入力しなくても曲を作成できること" do
+        expect do
+          post admin_events_path, params: admin_event_create_params(community, customer)
+        end.to change(Song, :count).by(1)
+
+        expect(Song.last.tab_sheet_url).to be_nil
+      end
     end
     context "event編集(update)が正しく処理され登録される" do
       it "既存の曲のコード譜情報(URL・Key・Capo・メモ)を編集できること" do
@@ -97,6 +114,23 @@ RSpec.describe "Admin::Events", type: :request do
         expect(target_song.musical_key).to eq "Am"
         expect(target_song.capo).to eq 3
         expect(target_song.chord_sheet_note).to eq "原曲より半音下げ"
+      end
+
+      it "既存の曲のTAB譜URLを編集できること" do
+        target_song = event.songs.first
+
+        put admin_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => {
+                id: target_song.id,
+                tab_sheet_url: "https://example.com/tab-sheet"
+              }
+            }
+          }
+        }
+
+        expect(target_song.reload.tab_sheet_url).to eq "https://example.com/tab-sheet"
       end
     end
   end

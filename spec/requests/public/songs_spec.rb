@@ -130,5 +130,53 @@ RSpec.describe "Public::Songs", type: :request do
         expect(response.status).to eq 200
       end
     end
+
+    context "TAB譜情報" do
+      it "TAB譜URLがあれば「TAB譜情報」が表示されること" do
+        song = FactoryBot.create(:song, :with_tab_sheet, event: event)
+
+        get public_event_song_path(event, song)
+
+        expect(response.status).to eq 200
+        expect(response.body).to include("TAB譜情報")
+      end
+
+      it "「TAB譜を見る」が表示されること" do
+        song = FactoryBot.create(:song, :with_tab_sheet, event: event)
+
+        get public_event_song_path(event, song)
+
+        expect(response.body).to include("TAB譜を見る")
+      end
+
+      it "正しいURLがリンク先に設定されること" do
+        song = FactoryBot.create(:song, event: event, tab_sheet_url: "https://example.com/tab-sheet")
+
+        get public_event_song_path(event, song)
+
+        expect(response.body).to include('href="https://example.com/tab-sheet"')
+        expect(response.body).to include('target="_blank"')
+      end
+
+      it "TAB譜URLが空欄の場合、「TAB譜情報」が表示されないこと" do
+        song = FactoryBot.create(:song, event: event, tab_sheet_url: nil)
+
+        get public_event_song_path(event, song)
+
+        expect(response.status).to eq 200
+        expect(response.body).not_to include("TAB譜情報")
+      end
+
+      it "コード譜とTAB譜が両方存在する場合、両方表示されること" do
+        song = FactoryBot.create(:song, :with_chord_sheet, :with_tab_sheet, event: event)
+
+        get public_event_song_path(event, song)
+
+        expect(response.body).to include("コード譜情報")
+        expect(response.body).to include("コード譜を見る")
+        expect(response.body).to include("TAB譜情報")
+        expect(response.body).to include("TAB譜を見る")
+      end
+    end
   end
 end

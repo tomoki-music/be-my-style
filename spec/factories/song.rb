@@ -15,5 +15,8 @@ FactoryBot.define do
       capo { 2 }
       chord_sheet_note { "初心者向けの簡単コード版です" }
     end
+    trait :with_tab_sheet do
+      tab_sheet_url { "https://example.com/tab-sheet" }
+    end
   end
 end

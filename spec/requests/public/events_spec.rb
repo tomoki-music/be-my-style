@@ -149,6 +149,23 @@ RSpec.describe "Public::Events", type: :request do
           post public_events_path, params: params
         end.not_to change(Song, :count)
       end
+
+      it "曲のTAB譜URLを登録できること" do
+        params = event_create_params(community)
+        params[:event][:songs_attributes]["0"][:tab_sheet_url] = "https://example.com/tab-sheet"
+
+        post public_events_path, params: params
+
+        expect(Song.last.tab_sheet_url).to eq "https://example.com/tab-sheet"
+      end
+
+      it "TAB譜URLを入力しなくても曲を作成できること" do
+        expect do
+          post public_events_path, params: event_create_params(community)
+        end.to change(Song, :count).by(1)
+
+        expect(Song.last.tab_sheet_url).to be_nil
+      end
     end
     context "Premium由来コミュニティのイベント作成制限" do
       let(:premium_origin_community) { FactoryBot.create(:community, :premium_origin, owner_id: customer.id) }
@@ -279,6 +296,42 @@ RSpec.describe "Public::Events", type: :request do
         expect(target_song.musical_key).to eq "Am"
         expect(target_song.capo).to eq 3
         expect(target_song.chord_sheet_note).to eq "原曲より半音下げ"
+      end
+
+      it "既存の曲のTAB譜URLを編集できること" do
+        target_song = event.songs.first
+
+        put public_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => {
+                id: target_song.id,
+                tab_sheet_url: "https://example.com/tab-sheet"
+              }
+            }
+          }
+        }
+
+        expect(target_song.reload.tab_sheet_url).to eq "https://example.com/tab-sheet"
+      end
+
+      it "TAB譜URLを空欄にする編集をしても失敗しないこと" do
+        target_song = event.songs.first
+        target_song.update!(tab_sheet_url: "https://example.com/tab-sheet")
+
+        put public_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => {
+                id: target_song.id,
+                tab_sheet_url: ""
+              }
+            }
+          }
+        }
+
+        expect(response).to redirect_to(public_event_path(event))
+        expect(target_song.reload.tab_sheet_url).to be_blank
       end
     end
     context "eventページを正しく削除(destroy)できる" do

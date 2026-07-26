@@ -43,6 +43,9 @@ class Song < ApplicationRecord
   validates :chord_sheet_note,
             length: { maximum: 300 },
             allow_blank: true
+  validates :tab_sheet_url,
+            length: { maximum: 2048 },
+            allow_blank: true
 
   before_validation :set_default_position, on: :create
 

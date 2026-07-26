@@ -81,6 +81,16 @@
               rel: "noopener",
               data: { turbolinks: false }
 
+    - if @song.tab_sheet_url.present?
+      %tr
+        %th TAB譜情報
+        %td
+          = link_to "TAB譜を見る",
+            @song.tab_sheet_url,
+            target: "_blank",
+            rel: "noopener noreferrer",
+            data: { turbolinks: false }
+
     %tr
       %th 登録日
       %td= l @song.created_at, format: :short
