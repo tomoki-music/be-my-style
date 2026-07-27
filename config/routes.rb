@@ -147,6 +147,7 @@ Rails.application.routes.draw do
       get "send/mail" => "communities#send_mail"
       resource :permits, only: [:create, :destroy]
       resource :community_customers, only: [:create, :destroy]
+      resources :song_templates, only: [:create, :destroy]
     end
     get "communities/:id/permits" => "communities#permits", as: :permits
   end

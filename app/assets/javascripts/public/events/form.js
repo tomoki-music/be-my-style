@@ -153,3 +153,54 @@ document.addEventListener('DOMContentLoaded', () => {
     html: true
   });
 });
+
+document.addEventListener('turbolinks:load', () => {
+  const select = document.querySelector('.js-song-template-select');
+  const addTemplateBtn = document.querySelector('.js-add-template-song-btn');
+  const addSongBtn = document.querySelector('.js-add-song-field-btn');
+  if (!select || !addTemplateBtn || !addSongBtn) return;
+
+  let pendingTemplate = null;
+
+  addTemplateBtn.addEventListener('click', () => {
+    if (select.value === '') {
+      alert('テンプレートを選択してください。');
+      return;
+    }
+
+    const templates = JSON.parse(select.dataset.templates || '[]');
+    pendingTemplate = templates[Number(select.value)];
+    if (!pendingTemplate) return;
+
+    addSongBtn.click();
+  });
+
+  $('body').on('cocoon:after-insert', function (e, insertedItem) {
+    if (!pendingTemplate) return;
+
+    const insertedNode = insertedItem[0];
+    if (!insertedNode.querySelector('.song-layout')) return;
+
+    const template = pendingTemplate;
+    pendingTemplate = null;
+
+    const applyValue = (fieldName, value) => {
+      const field = insertedNode.querySelector('[name*="[' + fieldName + ']"]');
+      if (field && value !== null && value !== undefined) {
+        field.value = value;
+      }
+    };
+
+    applyValue('song_name', template.song_name);
+    applyValue('artist_name', template.artist_name);
+    applyValue('youtube_url', template.youtube_url);
+    applyValue('chord_sheet_url', template.chord_sheet_url);
+    applyValue('tab_sheet_url', template.tab_sheet_url);
+    applyValue('musical_key', template.musical_key);
+    applyValue('capo', template.capo);
+    applyValue('chord_sheet_note', template.chord_sheet_note);
+    applyValue('introduction', template.introduction);
+
+    select.value = '';
+  });
+});

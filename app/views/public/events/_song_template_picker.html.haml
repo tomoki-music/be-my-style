@@ -1,0 +1,21 @@
+.song-template-picker
+  %strong テンプレートから追加
+  - if @song_templates.present?
+    %select#song-template-select.song-template-picker__select.js-song-template-select{ data: { templates: @song_templates.map(&:copyable_attributes).to_json } }
+      %option{ value: "" } 選択してください
+      - @song_templates.each_with_index do |template, index|
+        %option{ value: index }= template.artist_name.present? ? "#{template.song_name} / #{template.artist_name}" : template.song_name
+    %button#add-template-song-btn.btn.btn-outline-info.mt-2.js-add-template-song-btn{ type: "button" } テンプレートから曲を追加
+    - if current_customer
+      %ul.song-template-picker__list
+        - @song_templates.each do |template|
+          %li.song-template-picker__list-item
+            %span= template.artist_name.present? ? "#{template.song_name} / #{template.artist_name}" : template.song_name
+            - if template.customer_id == current_customer.id || current_customer.can_manage_community?(@template_community)
+              = link_to "削除", public_community_song_template_path(@template_community, template),
+                id: "delete-song-template-#{template.id}",
+                method: :delete,
+                data: { confirm: "このテンプレートを削除します。よろしいですか？", turbolinks: false },
+                class: "btn btn-sm btn-outline-danger"
+  - else
+    %p.song-template-picker__empty 保存済みの楽曲テンプレートはありません。

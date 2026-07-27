@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_07_26_064908) do
+ActiveRecord::Schema.define(version: 2026_07_26_070000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -1184,6 +1184,26 @@ ActiveRecord::Schema.define(version: 2026_07_26_064908) do
     t.index ["song_id"], name: "index_song_customers_on_song_id"
   end
 
+  create_table "song_templates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "community_id", null: false
+    t.bigint "customer_id"
+    t.bigint "source_song_id"
+    t.string "song_name", null: false
+    t.string "artist_name"
+    t.string "youtube_url"
+    t.text "introduction"
+    t.string "chord_sheet_url", limit: 2048
+    t.string "tab_sheet_url", limit: 2048
+    t.string "musical_key", limit: 100
+    t.integer "capo"
+    t.text "chord_sheet_note"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["community_id"], name: "index_song_templates_on_community_id"
+    t.index ["customer_id"], name: "index_song_templates_on_customer_id"
+    t.index ["source_song_id"], name: "index_song_templates_on_source_song_id"
+  end
+
   create_table "songs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "event_id", null: false
     t.string "song_name", null: false
@@ -1371,6 +1391,9 @@ ActiveRecord::Schema.define(version: 2026_07_26_064908) do
   add_foreign_key "singing_share_images", "customers"
   add_foreign_key "song_customers", "customers"
   add_foreign_key "song_customers", "songs"
+  add_foreign_key "song_templates", "communities"
+  add_foreign_key "song_templates", "customers"
+  add_foreign_key "song_templates", "songs", column: "source_song_id"
   add_foreign_key "songs", "events"
   add_foreign_key "subscriptions", "customers"
   add_foreign_key "taggings", "tags"
