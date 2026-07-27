@@ -8,6 +8,9 @@ class Song < ApplicationRecord
   has_many :song_customers, dependent: :destroy
   has_many :customers, through: :song_customers, dependent: :destroy
   has_many :join_parts, dependent: :destroy
+  # source_song_idは由来記録のみに使う(テンプレートとの同期はしない)。
+  # Song削除時にsong_templates.source_song_idをnullifyし、テンプレート自体は残す。
+  has_many :song_templates, foreign_key: :source_song_id, dependent: :nullify, inverse_of: :source_song
 
   accepts_nested_attributes_for :join_parts, allow_destroy: true, reject_if: :all_blank
 

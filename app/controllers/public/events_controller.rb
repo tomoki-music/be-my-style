@@ -4,6 +4,7 @@ class Public::EventsController < ApplicationController
   before_action :set_event, only: [:show, :edit, :update, :destroy, :copy]
   before_action :authorize_event_creation!, only: [:new, :create]
   before_action :authorize_event_edit!, only: [:edit, :update, :destroy, :copy]
+  before_action :set_song_templates, only: [:new, :create, :edit, :update]
 
   def index
     events = Event.left_joins(:community, songs: { join_parts: :join_part_customers }).distinct
@@ -338,6 +339,18 @@ class Public::EventsController < ApplicationController
 
   def set_event
     @event = Event.find(params[:id])
+  end
+
+  def set_song_templates
+    @template_community =
+      if @event&.persisted?
+        @event.community
+      else
+        community_id = params[:community_id] || params.dig(:event, :community_id)
+        Community.find_by(id: community_id, domain_id: @current_domain.id) if community_id.present?
+      end
+
+    @song_templates = @template_community ? @template_community.song_templates.order(:song_name) : SongTemplate.none
   end
 
   def authorize_event_creation!

@@ -76,6 +76,7 @@
         = link_to_add_association '曲を追加', f, :songs,
           class: 'btn btn-outline-success js-add-song-field-btn',
           data: { association: 'songs', association_insertion_method: 'append', association_insertion_node: '#songs' }
+      = render 'public/events/song_template_picker'
 
       .d-flex.justify-content-between
         = link_to "一覧へ戻る", admin_events_path, class: "btn btn-outline-secondary"

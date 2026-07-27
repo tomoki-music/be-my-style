@@ -3,6 +3,7 @@ class Admin::EventsController < ApplicationController
   skip_before_action :ensure_music_domain_access_for_public_routes!
   before_action :authenticate_admin!
   before_action :set_event, only: [:show, :edit, :update, :destroy]
+  before_action :set_song_templates, only: [:new, :create, :edit, :update]
 
   def index
     @events = Event.includes(:community, :customer).order(created_at: :desc)
@@ -84,7 +85,7 @@ class Admin::EventsController < ApplicationController
       song_ids:[],
       part_ids:[],
       songs_attributes: [
-        :id, :event_id, :song_name, :performance_time, :performance_start_time,
+        :id, :event_id, :song_name, :artist_name, :performance_time, :performance_start_time,
         :youtube_url, :chord_sheet_url, :tab_sheet_url, :musical_key, :capo, :chord_sheet_note,
         :introduction, :position, :_destroy,
         join_parts_attributes: [:id, :join_part_name, :_destroy]
@@ -94,6 +95,18 @@ class Admin::EventsController < ApplicationController
 
   def set_event
     @event = Event.find(params[:id])
+  end
+
+  def set_song_templates
+    @template_community =
+      if @event&.persisted?
+        @event.community
+      else
+        community_id = params.dig(:event, :community_id)
+        Community.find_by(id: community_id) if community_id.present?
+      end
+
+    @song_templates = @template_community ? @template_community.song_templates.order(:song_name) : SongTemplate.none
   end
 
   def build_default_song

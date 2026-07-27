@@ -16,6 +16,7 @@ class Community < ApplicationRecord
   has_many :chat_room_members, through: :chat_room_customers, source: :customer
   has_many :chat_messages, dependent: :destroy
   has_many :events, dependent: :destroy
+  has_many :song_templates, dependent: :destroy
   belongs_to :owner, class_name: "Customer", optional: true
 
 # NOTE: 将来的に多対多対応するために残しているが、

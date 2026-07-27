@@ -62,6 +62,15 @@ RSpec.describe "Admin::Events", type: :request do
         expect(created_song.chord_sheet_note).to eq "初心者向けの簡単コード版です"
       end
 
+      it "曲のアーティスト名を登録できること(既存不整合の修正確認)" do
+        params = admin_event_create_params(community, customer)
+        params[:event][:songs_attributes]["0"][:artist_name] = "テストアーティスト"
+
+        post admin_events_path, params: params
+
+        expect(Song.last.artist_name).to eq "テストアーティスト"
+      end
+
       it "コード譜情報を入力しなくても曲を作成できること" do
         expect do
           post admin_events_path, params: admin_event_create_params(community, customer)
@@ -114,6 +123,20 @@ RSpec.describe "Admin::Events", type: :request do
         expect(target_song.musical_key).to eq "Am"
         expect(target_song.capo).to eq 3
         expect(target_song.chord_sheet_note).to eq "原曲より半音下げ"
+      end
+
+      it "既存の曲のアーティスト名を編集できること(既存不整合の修正確認)" do
+        target_song = event.songs.first
+
+        put admin_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => { id: target_song.id, artist_name: "編集後アーティスト" }
+            }
+          }
+        }
+
+        expect(target_song.reload.artist_name).to eq "編集後アーティスト"
       end
 
       it "既存の曲のTAB譜URLを編集できること" do

@@ -104,6 +104,7 @@
                 = link_to_add_association '曲を追加', f, :songs,
                     class: 'btn btn-success js-add-song-field-btn',
                     data: { association: 'songs',association_insertion_method: 'append', association_insertion_node: '#songs'}
+              = render 'public/events/song_template_picker'
 
           %tr
             %th{scope:"row"} イベント補足
