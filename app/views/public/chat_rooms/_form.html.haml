@@ -3,13 +3,6 @@
     = f.hidden_field :chat_room_id, value: chat_room.id
     - if local_assigns[:customer_id].present?
       = f.hidden_field :customer_id, value: customer_id
-    .reply-preview{ hidden: true }
-      .reply-preview-body
-        .reply-preview-label 返信先:
-        %span.reply-preview-author
-        .reply-preview-snippet
-      %button.reply-preview-cancel{ type: "button", "aria-label" => "返信をキャンセル" } ×
-    = f.hidden_field :reply_to_chat_message_id, value: nil, class: "reply-to-hidden-field"
     .quote-preview{ hidden: true }
       .quote-preview-body
         %span.quote-preview-label

@@ -6,7 +6,7 @@
 // ハイライトの見た目を統一するため、CSSクラス(.chat-message-highlight)とタイミング(3秒)は
 // chat_message_scroll_highlight.jsと揃える。
 //
-// chat_reply_composer.js同様、動的にDOMを生成せずdocumentへイベント委譲するだけなので、
+// 動的にDOMを生成せずdocumentへイベント委譲するだけなので、
 // 初回スクリプト読み込み時に一度だけ登録すればよく、Turbolinksのクリーンアップは不要。
 // 対象メッセージがDOM上に存在しない場合(削除済み・別ページ由来等)は何もしない。
 //

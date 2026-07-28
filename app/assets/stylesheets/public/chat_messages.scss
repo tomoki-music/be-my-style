@@ -388,109 +388,6 @@
     color: #999;
   }
 
-  /* 各メッセージに付く「返信」ボタン。
-     常時視認できる枠線付きピル型にし、hover依存にしない(モバイルはhoverが
-     無いため、通常状態でも十分な視認性・タップ領域を確保する) */
-  .reply-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
-    border: 1px solid #c9d7e6;
-    background: #fff;
-    color: #0056b3;
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1;
-    padding: 7px 12px;
-    min-height: 32px;
-    border-radius: 999px;
-    cursor: pointer;
-
-    &:hover,
-    &:focus-visible {
-      background: #eaf2ff;
-      border-color: #0056b3;
-    }
-
-    &:active {
-      background: #d9e8ff;
-    }
-  }
-
-  .reply-button-icon {
-    font-size: 14px;
-  }
-
-  @media (max-width: 600px) {
-    .reply-button {
-      /* モバイルは指でのタップ操作になるため、タップ領域を44px相当に広げる */
-      min-height: 40px;
-      padding: 9px 14px;
-      font-size: 14px;
-    }
-  }
-
-  /* 投稿フォーム上部の返信プレビュー */
-  .reply-preview {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 8px;
-    background: #f5f7fa;
-    border-left: 3px solid #0056b3;
-    border-radius: 4px;
-    padding: 8px 10px;
-    margin-bottom: 8px;
-    max-width: 100%;
-
-    &[hidden] {
-      display: none;
-    }
-  }
-
-  .reply-preview-body {
-    min-width: 0;
-    flex: 1;
-  }
-
-  .reply-preview-label {
-    font-size: 11px;
-    color: #888;
-  }
-
-  .reply-preview-author {
-    display: block;
-    font-size: 12px;
-    font-weight: bold;
-    color: #0056b3;
-  }
-
-  .reply-preview-snippet {
-    font-size: 12px;
-    color: #555;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 100%;
-  }
-
-  .reply-preview-cancel {
-    flex-shrink: 0;
-    border: none;
-    background: transparent;
-    color: #888;
-    font-size: 18px;
-    line-height: 1;
-    cursor: pointer;
-    padding: 0 4px;
-
-    &:hover,
-    &:focus-visible {
-      color: #333;
-    }
-  }
-
   /* メッセージ本文の上に表示する返信元カード */
   .reply-source-card {
     background: #f5f7fa;
@@ -535,7 +432,7 @@
     -webkit-box-orient: vertical;
   }
 
-  /* 「N件の返信」ボタン。reply-buttonと同様、hover依存にせず常時視認できる形にする */
+  /* 「N件の返信」ボタン。quote-buttonと同様、hover依存にせず常時視認できる形にする */
   .thread-replies-button {
     display: inline-flex;
     align-items: center;
@@ -572,10 +469,10 @@
     }
   }
 
-  /* 各メッセージに付く「引用返信」ボタン。reply-buttonと同じ視認性(常時枠線・
-     hover非依存)を踏襲しつつ、引用返信ではないreply-buttonと見分けられるよう
-     配色だけ変える。通常一覧・スレッドパネルの両方で表示するため、
-     reply-buttonと違い`unless in_thread`では囲まない */
+  /* 各メッセージに付く「返信」ボタン(内部的には引用返信=quoted_chat_message_idを使う)。
+     常時視認できる枠線付きピル型にし、hover依存にしない。通常一覧にのみ表示し、
+     スレッドパネル内では`unless in_thread`で非表示にする(スレッド内はスレッド返信
+     フォームのみで投稿する設計のため) */
   .quote-button {
     display: inline-flex;
     align-items: center;
@@ -629,9 +526,9 @@
     color: #b8720a;
   }
 
-  /* ピン留め/解除ボタン。reply-button/quote-buttonと同じ視認性(常時枠線・
-     hover非依存)を踏襲しつつ、配色だけ変えて見分ける。通常一覧・スレッドパネルの
-     両方で表示するため、quote-buttonと同じくunless in_threadでは囲まない */
+  /* ピン留め/解除ボタン。quote-buttonと同じ視認性(常時枠線・
+     hover非依存)を踏襲しつつ、配色だけ変えて見分ける。quote-buttonと異なり
+     通常一覧・スレッドパネルの両方で表示するため、unless in_threadでは囲まない */
   .pin-button {
     display: inline-flex;
     align-items: center;
@@ -675,7 +572,7 @@
     }
   }
 
-  /* 自分のメッセージにのみ付く「編集」ボタン。reply-button/quote-buttonと
+  /* 自分のメッセージにのみ付く「編集」ボタン。quote-buttonと
      同じ視認性(常時枠線・hover非依存)を踏襲しつつ、配色だけ変えて見分ける */
   .edit-button {
     display: inline-flex;
@@ -743,8 +640,7 @@
     margin-top: 8px;
   }
 
-  /* 投稿フォーム上部の引用プレビュー。reply-previewと構造は同じだが、
-     左ボーダーの色を変えて引用返信であることを見分けられるようにする */
+  /* 投稿フォーム上部の返信(引用)プレビュー。左ボーダーの色で他のプレビューと見分ける */
   .quote-preview {
     display: flex;
     align-items: flex-start;
