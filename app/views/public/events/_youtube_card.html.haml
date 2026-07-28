@@ -1,0 +1,9 @@
+- if card.present?
+  %a.event-song-youtube-card{ href: card.video_url, target: "_blank", rel: "noopener noreferrer" }
+    .event-song-youtube-card-thumbnail
+      = image_tag card.thumbnail_url, alt: "#{card.title}のサムネイル", loading: "lazy"
+    .event-song-youtube-card-body
+      .event-song-youtube-card-title= card.title
+      - if card.author_name.present?
+        .event-song-youtube-card-author= card.author_name
+      .event-song-youtube-card-provider YouTubeで見る ↗

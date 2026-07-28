@@ -272,6 +272,7 @@
                                         %br
                                       %div{ style: "white-space: normal; word-break: break-word;" }
                                         = link_to song.song_name, public_event_song_path(@event, song), class: "song-detail-link", data: { turbolinks: false }
+                                      = render "public/events/youtube_card", card: youtube_card_for(song)
 
                                     %td
                                       .check-part-list

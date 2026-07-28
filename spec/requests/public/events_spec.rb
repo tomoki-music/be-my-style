@@ -63,6 +63,34 @@ RSpec.describe "Public::Events", type: :request do
         expect(response.status).to eq 200
       end
     end
+    context "楽曲のYouTubeカード表示" do
+      it "有効なYouTube URLの曲があってもリクエストは200となり、サムネイルカードが表示されること" do
+        event.songs.first.update!(youtube_url: "https://www.youtube.com/watch?v=abcdefghijk")
+
+        get public_event_path(event)
+
+        expect(response.status).to eq 200
+        expect(response.body).to include("img.youtube.com/vi/abcdefghijk/hqdefault.jpg")
+      end
+
+      it "未対応形式のYouTube URLでも500エラーにならないこと" do
+        event.songs.first.update!(youtube_url: "javascript:alert(1)")
+
+        get public_event_path(event)
+
+        expect(response.status).to eq 200
+        expect(response.body).not_to include("javascript:alert(1)")
+      end
+
+      it "YouTube URLが未設定の曲ではカードが表示されないこと(既存表示を維持)" do
+        event.songs.first.update!(youtube_url: nil)
+
+        get public_event_path(event)
+
+        expect(response.status).to eq 200
+        expect(response.body).not_to include("event-song-youtube-card")
+      end
+    end
     context "event新規作成ページ(new)が正しく表示される" do
       before do
         get new_public_event_path(community_id: community.id)
