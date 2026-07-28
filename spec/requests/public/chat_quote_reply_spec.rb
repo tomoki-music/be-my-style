@@ -83,6 +83,25 @@ RSpec.describe "引用返信の表示のテスト", type: :request do
       expect(response.body).to include("data-quote-label")
       expect(response.body).to include("さんのメッセージを引用")
     end
+
+    it "各メッセージに「返信」ボタンが1つだけ表示され、「引用返信」という文言や旧returnボタンが残っていないこと" do
+      create(:chat_message, customer: other_customer, chat_room: chat_room, content: "こんにちは")
+
+      get public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+      document = Nokogiri::HTML(response.body)
+      buttons = document.css(".quote-button")
+
+      # 通常タイムラインに存在する唯一のメッセージ(こんにちは)に対して、返信導線となる
+      # ボタンが1つだけ描画されること(旧reply-buttonとの二重表示が復活していないこと)。
+      expect(buttons.size).to eq(1)
+      expect(document.css(".quote-button .quote-button-label").map(&:text)).to eq(["返信"])
+      expect(document.css(".reply-button")).to be_empty
+
+      # data-quote-label等の内部属性には引用返信という語が残り得るため、画面上のボタン
+      # 文言(タグに囲まれた表示テキスト)としてのみ「引用返信」が存在しないことを確認する。
+      expect(response.body).not_to include(">引用返信<")
+    end
   end
 
   describe "スレッドパネル内の引用カード表示" do

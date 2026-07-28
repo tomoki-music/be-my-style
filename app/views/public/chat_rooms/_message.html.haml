@@ -71,22 +71,15 @@
             %span.pin-button-icon 📌
             %span.pin-button-label ピン留めする
         - unless in_thread
-          %button.reply-button{ type: "button",
+          %button.quote-button{ type: "button",
               "aria-label" => "このメッセージに返信",
-              data: { "reply-message-id" => chat_message.id,
-                      "reply-author" => chat_message.customer.name,
-                      "reply-preview" => chat_reply_excerpt(chat_message) } }
-            %span.reply-button-icon ↩
-            %span.reply-button-label 返信
-        %button.quote-button{ type: "button",
-            "aria-label" => "このメッセージを引用返信",
-            data: { "quote-message-id" => chat_message.id,
-                    "quote-author" => chat_message.customer.name,
-                    "quote-label" => chat_quote_label(chat_message),
-                    "quote-excerpt" => chat_reply_excerpt(chat_message),
-                    "quote-has-image" => chat_quote_has_image?(chat_message) } }
-          %span.quote-button-icon "
-          %span.quote-button-label 引用返信
+              data: { "quote-message-id" => chat_message.id,
+                      "quote-author" => chat_message.customer.name,
+                      "quote-label" => chat_quote_label(chat_message),
+                      "quote-excerpt" => chat_reply_excerpt(chat_message),
+                      "quote-has-image" => chat_quote_has_image?(chat_message) } }
+            %span.quote-button-icon "
+            %span.quote-button-label 返信
       - if !in_thread && chat_message.replies_count > 0
         %button.thread-replies-button{ type: "button",
             "aria-label" => "#{chat_message.replies_count}件の返信を表示",
@@ -200,22 +193,15 @@
             %span.pin-button-icon 📌
             %span.pin-button-label ピン留めする
         - unless in_thread
-          %button.reply-button{ type: "button",
+          %button.quote-button{ type: "button",
               "aria-label" => "このメッセージに返信",
-              data: { "reply-message-id" => chat_message.id,
-                      "reply-author" => chat_message.customer.name,
-                      "reply-preview" => chat_reply_excerpt(chat_message) } }
-            %span.reply-button-icon ↩
-            %span.reply-button-label 返信
-        %button.quote-button{ type: "button",
-            "aria-label" => "このメッセージを引用返信",
-            data: { "quote-message-id" => chat_message.id,
-                    "quote-author" => chat_message.customer.name,
-                    "quote-label" => chat_quote_label(chat_message),
-                    "quote-excerpt" => chat_reply_excerpt(chat_message),
-                    "quote-has-image" => chat_quote_has_image?(chat_message) } }
-          %span.quote-button-icon "
-          %span.quote-button-label 引用返信
+              data: { "quote-message-id" => chat_message.id,
+                      "quote-author" => chat_message.customer.name,
+                      "quote-label" => chat_quote_label(chat_message),
+                      "quote-excerpt" => chat_reply_excerpt(chat_message),
+                      "quote-has-image" => chat_quote_has_image?(chat_message) } }
+            %span.quote-button-icon "
+            %span.quote-button-label 返信
         - if chat_message.content_editable?
           %button.edit-button{ type: "button",
               "aria-label" => "このメッセージを編集",

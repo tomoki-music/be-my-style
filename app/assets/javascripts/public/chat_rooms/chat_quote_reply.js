@@ -1,13 +1,14 @@
 // 引用返信ボタン押下・引用プレビュー表示・キャンセル・hidden field更新を担当する。
+// 通常タイムラインの「返信」ボタンは表示上のラベルであり、内部的にはこの引用返信
+// (quoted_chat_message_id)として処理される。スレッド親子関係を持つ「スレッド返信」
+// (reply_to_chat_message_id、スレッドパネル内の入力フォームのみから投稿する)とは
+// 別の概念であり、通常Composer・スレッドComposerの両方に、それぞれ独立した引用状態
+// (.quote-preview/.quote-to-hidden-field)を持たせる。
 //
-// chat_reply_composer.js(スレッド親子関係の「返信」)とは別の概念であり、通常Composer・
-// スレッドComposerの両方に、それぞれ独立した引用状態(.quote-preview/.quote-to-hidden-field)
-// を持たせる。引用ボタンは通常一覧・スレッドパネルの両方のメッセージに表示されるため、
-// クリックされた引用ボタンがスレッドパネル内か通常一覧内かによって、更新対象のプレビュー/
-// hidden fieldを出し分ける(chat_reply_composer.jsは常に通常Composerのみが対象のため、
-// この出し分けは不要だった)。
+// クリックされた引用ボタンがスレッドパネル内か通常一覧内かによって、更新対象の
+// プレビュー/hidden fieldをquoteScopeElementで出し分ける。
 //
-// このファイルもchat_reply_composer.js同様、動的にDOM(ドロップダウン等)を生成せず
+// このファイルは動的にDOM(ドロップダウン等)を生成せず
 // documentへイベント委譲するだけなので、初回スクリプト読み込み時に一度だけ登録すればよい。
 // スレッドパネルを閉じる・再取得する際は、chat_thread_panel.jsがパネル本文のinnerHTMLごと
 // 差し替える(resetPanel/renderThreadBody)ため、スレッド側の引用状態は自動的にリセットされる。

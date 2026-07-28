@@ -1,8 +1,8 @@
 require "rails_helper"
 
-# 引用返信機能(通常チャット・スレッドの両方)を実ブラウザで検証する。
+# 引用返信機能(通常チャットのみ、表示上は「返信」ボタン)を実ブラウザで検証する。
+# スレッドパネル内の引用返信UIは非表示にしている(スレッド内はスレッド返信フォームのみで投稿する)。
 # 投稿ボタンにdata-confirmが付いているため、通常Composerでの投稿はaccept_confirmで包む。
-# スレッドComposer(thread-reply-form)にはdata-confirmが無いため、そのままsubmitできる。
 RSpec.describe "引用返信機能", type: :system do
   before { driven_by :selenium_chrome_headless }
 
@@ -77,57 +77,22 @@ RSpec.describe "引用返信機能", type: :system do
     end
   end
 
-  describe "スレッド内での引用返信" do
-    def open_thread_panel
+  describe "スレッドパネル内" do
+    it "スレッドパネル内には引用返信ボタンが表示されないこと" do
+      root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿です")
+      create(:chat_message, customer: customer, chat_room: chat_room, content: "1件目の返信",
+                            reply_to_chat_message: root)
+
+      sign_in_via_form(customer)
+      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
       expect(page).to have_selector(".thread-replies-button", wait: 10)
       page.evaluate_script("document.querySelector('.thread-replies-button').click();")
       expect(page).to have_selector("#thread-panel:not([hidden])", wait: 10)
-    end
-
-    it "スレッドrootを引用してスレッド返信すると、スレッド内に引用カードが表示されること" do
-      root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿です")
-      create(:chat_message, customer: customer, chat_room: chat_room, content: "1件目の返信",
-                            reply_to_chat_message: root)
-
-      sign_in_via_form(customer)
-      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
-      open_thread_panel
 
       within "#thread-panel-body" do
-        expect(page).to have_selector(".quote-button", wait: 10)
+        expect(page).not_to have_selector(".quote-button")
       end
-      page.evaluate_script("document.querySelector('#thread-panel-body .quote-button').click();")
-
-      within "#thread-panel-body" do
-        expect(page).to have_selector(".quote-preview:not([hidden])", wait: 10)
-        fill_in_markdown_textarea(".thread-reply-form .markdown-textarea", "その通りですね")
-        find(".thread-reply-submit").click
-      end
-
-      expect(page).to have_selector("#thread-replies-list .quote-card", wait: 10)
-      within "#thread-replies-list" do
-        expect(page).to have_content("元の投稿です")
-      end
-    end
-
-    it "スレッドを閉じて再度開くと、引用プレビューの状態が残っていないこと" do
-      root = create(:chat_message, customer: other_customer, chat_room: chat_room, content: "元の投稿です")
-      create(:chat_message, customer: customer, chat_room: chat_room, content: "1件目の返信",
-                            reply_to_chat_message: root)
-
-      sign_in_via_form(customer)
-      visit public_chat_room_path(chat_room, customer_id: other_customer.id)
-      open_thread_panel
-
-      expect(page).to have_selector("#thread-panel-body .quote-button", wait: 10)
-      page.evaluate_script("document.querySelector('#thread-panel-body .quote-button').click();")
-      expect(page).to have_selector("#thread-panel-body .quote-preview:not([hidden])", wait: 10)
-
-      page.evaluate_script("document.querySelector('.thread-panel-close').click();")
-      expect(page).to have_selector("#thread-panel[hidden]", visible: :all, wait: 10)
-
-      open_thread_panel
-      expect(page).to have_selector("#thread-panel-body .quote-preview[hidden]", visible: :all, wait: 10)
     end
   end
 
