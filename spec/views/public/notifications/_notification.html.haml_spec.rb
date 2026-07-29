@@ -64,10 +64,10 @@ RSpec.describe "public/notifications/_notification", type: :view do
     expect(rendered).to include("chat_message_id=#{chat_message.id}")
   end
 
-  it "イベントリクエストのメンション通知(mention_request)を表示し、対象イベントへのリンクが含まれること" do
+  it "イベントリクエストのメンション通知(mention_request)を表示し、投稿者名・イベント名・「メンションしました」の文言・対象イベントへのリンクが含まれること" do
     visitor = create(:customer, name: "メンションする人")
     visited = create(:customer)
-    event = create(:event, :event_with_songs)
+    event = create(:event, :event_with_songs, event_name: "秋の音楽祭")
     notification = visitor.active_notifications.create!(
       visited: visited,
       action: "mention_request",
@@ -79,9 +79,48 @@ RSpec.describe "public/notifications/_notification", type: :view do
     render partial: "public/notifications/notification", locals: { notification: notification }
 
     expect(rendered).to include("メンションする人さん")
+    expect(rendered).to include("秋の音楽祭")
     expect(rendered).to include("みんなのリクエスト")
     expect(rendered).to include("であなたをメンションしました")
     expect(rendered).to include(public_event_path(event))
+  end
+
+  it "mention_request通知は、通常のリクエスト投稿通知(request-msg)と表示が区別できること" do
+    visitor = create(:customer, name: "投稿する人")
+    visited = create(:customer)
+    event = create(:event, :event_with_songs)
+
+    request_msg_notification = visitor.active_notifications.create!(
+      visited: visited, action: "request-msg", event_id: event.id
+    )
+    allow(view).to receive(:customer_avatar_tag).and_return("avatar".html_safe)
+    render partial: "public/notifications/notification", locals: { notification: request_msg_notification }
+    expect(rendered).not_to include("メンションしました")
+
+    Notification.where(visited_id: visited.id).destroy_all
+    mention_notification = visitor.active_notifications.create!(
+      visited: visited, action: "mention_request", event_id: event.id
+    )
+    render partial: "public/notifications/notification", locals: { notification: mention_notification }
+    expect(rendered).to include("メンションしました")
+  end
+
+  it "イベント名に含まれるHTMLがエスケープされること(XSS対策)" do
+    visitor = create(:customer, name: "メンションする人")
+    visited = create(:customer)
+    event = create(:event, :event_with_songs, event_name: "<script>alert(1)</script>")
+    notification = visitor.active_notifications.create!(
+      visited: visited,
+      action: "mention_request",
+      event_id: event.id
+    )
+
+    allow(view).to receive(:customer_avatar_tag).and_return("avatar".html_safe)
+
+    render partial: "public/notifications/notification", locals: { notification: notification }
+
+    expect(rendered).not_to include("<script>alert(1)</script>")
+    expect(rendered).to include("&lt;script&gt;")
   end
 
   it "singingプロフィール応援リアクション通知を表示できること" do
