@@ -5,10 +5,12 @@ module Requests
   # `@ALL`はcustomer:0やcustomer:-1のような数値IDの偽装を避け、`[@ALL](customer:all)`という
   # 明確に区別できる予約トークンとして専用に検出する(customer_idは常に数値のため衝突しない)。
   #
-  # 対象は必ずEvent#participating_customers(現在の参加者)との積集合に絞り込むため、
-  # 本文を改ざんして未参加者のIDを送信しても通知対象には含まれない(サーバー側検証)。
+  # 対象は必ずイベント開催元コミュニティの有効メンバー(Event#community.customers、
+  # CommunityCustomer経由)との積集合に絞り込むため、本文を改ざんして他コミュニティの
+  # Customer IDを送信しても通知対象には含まれない(サーバー側検証)。イベントへの演奏参加
+  # (JoinPartCustomer)有無はここでは条件にしない(候補APIと同じ母集団定義に揃える)。
   # Chat::MentionCandidates.for_eventは候補表示用にMAX_RESULTS件へ切り詰めるため、
-  # 通知対象の解決では取りこぼしを避けるためあえて経由せず、参加者スコープを直接使う。
+  # 通知対象の解決では取りこぼしを避けるためあえて経由せず、コミュニティスコープを直接使う。
   class MentionResolver
     ALL_TOKEN_REGEX = /\[@ALL\]\(customer:all\)/.freeze
 
@@ -38,7 +40,7 @@ module Requests
     end
 
     def eligible_scope
-      @event.participating_customers.where(is_deleted: false).where.not(id: @poster.id)
+      @event.community.customers.where(is_deleted: false).where.not(id: @poster.id).distinct
     end
   end
 end

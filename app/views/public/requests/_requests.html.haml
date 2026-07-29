@@ -1,5 +1,5 @@
 - requests = event.requests.order(created_at: :desc)
-- valid_mention_customer_ids = event.participating_customers.pluck(:id)
+- valid_mention_customer_ids = event.community.customers.where(is_deleted: false).distinct.pluck(:id)
 
 - requests.each do |request|
   .request-content

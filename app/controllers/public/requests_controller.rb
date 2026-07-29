@@ -27,28 +27,33 @@ class Public::RequestsController < ApplicationController
 
   private
 
-  # イベント開催者+現在の参加者(投稿者本人を除く)へ通知する。
-  # 本文でメンションされた相手にはmention_request通知のみを送り、通常のrequest-msg通知は
-  # 重複作成しない(同一投稿・同一相手への二重通知防止)。@ALLと個別メンションが両方
-  # 含まれていてもRequests::MentionResolverが重複排除済みの配列を返すため、通知は1人1件になる。
+  # 通常通知(request-msg)の対象は従来通り「イベント開催者+イベント参加者」のまま維持する。
+  # メンション通知(mention_request)の対象は「イベント開催元コミュニティの有効メンバー」
+  # (Requests::MentionResolver、演奏参加の有無を問わない)であり、通常通知の対象と重なるとは
+  # 限らない(例: コミュニティメンバーだが未参加の人がメンションされた場合等)。
+  # そのため両者は独立に算出し、メンションされた相手には通常通知を送らないことでのみ
+  # 重複を防ぐ(投稿者本人はMentionResolver・通常対象のいずれからも除外済み)。
   def notify_request_recipients(event, request, poster)
-    mentioned_customer_ids = Requests::MentionResolver.call(
+    mentioned_customers = Requests::MentionResolver.call(
       request_text: request.request, event: event, poster: poster
-    ).map(&:id)
+    )
+    mentioned_customer_ids = mentioned_customers.map(&:id)
 
-    recipients = ([event.customer] + event.participating_customers.where(is_deleted: false).to_a)
+    normal_recipients = ([event.customer] + event.participating_customers.where(is_deleted: false).to_a)
       .uniq(&:id)
       .reject { |customer| customer.id == poster.id }
 
-    recipients.each do |recipient|
-      if mentioned_customer_ids.include?(recipient.id)
-        recipient.create_notification_mention_request(poster, event.id)
-      else
-        recipient.create_notification_request_msg(poster, event.id)
-        if recipient.confirm_mail
-          CustomerMailer.with(ac_customer: poster, ps_customer: recipient, event_id: event.id, request: request).request_msg_mail.deliver_later
-        end
+    normal_recipients.each do |recipient|
+      next if mentioned_customer_ids.include?(recipient.id)
+
+      recipient.create_notification_request_msg(poster, event.id)
+      if recipient.confirm_mail
+        CustomerMailer.with(ac_customer: poster, ps_customer: recipient, event_id: event.id, request: request).request_msg_mail.deliver_later
       end
+    end
+
+    mentioned_customers.each do |mentioned_customer|
+      mentioned_customer.create_notification_mention_request(poster, event.id)
     end
   end
 
