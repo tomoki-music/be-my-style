@@ -44,6 +44,48 @@ RSpec.describe "Public::Requests", type: :request do
         expect(response.status).to eq 302
       end
     end
+
+    context "みんなのリクエストのYouTubeカード表示" do
+      it "YouTube URLを含むリクエストを投稿すると、イベント画面にサムネイルカードが表示されること" do
+        post public_event_requests_path(event_id: event.id), params: {
+          request: {
+            request: "この曲でお願いします！ https://www.youtube.com/watch?v=abcdefghijk"
+          }
+        }, xhr: true
+
+        get public_event_path(event)
+
+        expect(response.status).to eq 200
+        expect(response.body).to include("img.youtube.com/vi/abcdefghijk/hqdefault.jpg")
+      end
+
+      it "URLを含まないリクエストではカードが表示されないこと(既存表示を維持)" do
+        post public_event_requests_path(event_id: event.id), params: {
+          request: {
+            request: "オリジナル曲を１曲お願いします！"
+          }
+        }, xhr: true
+
+        get public_event_path(event)
+
+        expect(response.status).to eq 200
+        expect(response.body).not_to include("event-song-youtube-card")
+      end
+
+      it "不正なURLを含むリクエストでも500エラーにならず、リンクとして描画されないこと" do
+        post public_event_requests_path(event_id: event.id), params: {
+          request: {
+            request: "javascript:alert(1)"
+          }
+        }, xhr: true
+
+        get public_event_path(event)
+
+        expect(response.status).to eq 200
+        expect(response.body).not_to include('href="javascript:alert(1)"')
+        expect(response.body).not_to include("event-song-youtube-card")
+      end
+    end
   end
 
   describe '非ログイン' do

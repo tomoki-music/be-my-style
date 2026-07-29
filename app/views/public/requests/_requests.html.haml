@@ -19,4 +19,5 @@
           %span.stamp-badge= request.stamp_label
         - else
           = request.request
+          = render "public/events/youtube_card", card: youtube_card_for_request(request)
         %br
