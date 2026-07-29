@@ -88,6 +88,74 @@ RSpec.describe Chat::MentionCandidates, type: :service do
     end
   end
 
+  describe ".for_event" do
+    let(:community) { create(:community) }
+    let(:event) { create(:event, :event_with_songs, community: community) }
+    let(:song) { event.songs.first }
+    let(:member) { create(:customer, name: "参加太郎") }
+
+    before do
+      CommunityCustomer.find_or_create_by!(customer: current_customer, community: community)
+      CommunityCustomer.find_or_create_by!(customer: member, community: community)
+    end
+
+    it "イベント開催元コミュニティのメンバーを候補として返すこと" do
+      result = described_class.for_event(event: event, current_customer: current_customer)
+      expect(result).to contain_exactly(member)
+    end
+
+    it "イベントへ演奏参加登録していなくても、コミュニティメンバーであれば候補になること" do
+      join_part = create(:join_part, song: song) # memberはこのパートへ一切joinしていない
+      expect(join_part.customers).not_to include(member)
+
+      result = described_class.for_event(event: event, current_customer: current_customer)
+      expect(result).to contain_exactly(member)
+    end
+
+    it "イベントへ演奏参加していても、開催元コミュニティのメンバーでなければ候補にならないこと" do
+      non_member_participant = create(:customer, name: "参加だけ花子")
+      join_part = create(:join_part, song: song)
+      create(:join_part_customer, join_part: join_part, customer: non_member_participant)
+
+      result = described_class.for_event(event: event, current_customer: current_customer)
+      expect(result).not_to include(non_member_participant)
+    end
+
+    it "自分自身は候補に含まれないこと" do
+      result = described_class.for_event(event: event, current_customer: current_customer)
+      expect(result).not_to include(current_customer)
+    end
+
+    it "他コミュニティのメンバーは候補に含まれないこと" do
+      other_community = create(:community)
+      other_member = create(:customer, name: "他コミュニティ太郎")
+      CommunityCustomer.find_or_create_by!(customer: other_member, community: other_community)
+
+      result = described_class.for_event(event: event, current_customer: current_customer)
+      expect(result).not_to include(other_member)
+    end
+
+    it "退会済み(is_deleted: true)のメンバーは候補に含まれないこと" do
+      member.update!(is_deleted: true)
+      result = described_class.for_event(event: event, current_customer: current_customer)
+      expect(result).not_to include(member)
+    end
+
+    it "イベントオーナーでも開催元コミュニティのメンバーでなければ候補に含まれないこと" do
+      expect(CommunityCustomer.where(customer_id: event.customer_id, community_id: community.id)).to be_empty
+      result = described_class.for_event(event: event, current_customer: current_customer)
+      expect(result).not_to include(event.customer)
+    end
+
+    it "queryで名前を部分一致検索できること" do
+      result = described_class.for_event(event: event, current_customer: current_customer, query: "参加")
+      expect(result).to contain_exactly(member)
+
+      result_no_match = described_class.for_event(event: event, current_customer: current_customer, query: "zzz")
+      expect(result_no_match).to be_empty
+    end
+  end
+
   describe "最大件数" do
     it "MAX_RESULTSを超える候補は切り詰められること" do
       chat_room = create(:chat_room)

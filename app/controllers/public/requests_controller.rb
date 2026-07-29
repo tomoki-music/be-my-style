@@ -8,28 +8,7 @@ class Public::RequestsController < ApplicationController
     @request.customer_id = current_customer.id
     @request.event_id = @event.id
     if @request.save
-      #イベント開催者への通知
-      if current_customer != @event.customer
-        @event.customer.create_notification_request_msg(current_customer, @event.id)
-        if @event.customer.confirm_mail
-          CustomerMailer.with(ac_customer: current_customer, ps_customer: @event.customer, event_id: @event.id, request: @request).request_msg_mail.deliver_later
-        end
-      end
-      #イベント参加者への通知
-      customer_ids = []
-      @event.songs.each do |song|
-        song.join_parts.each do |join_part|
-          customer_ids += join_part.customers.pluck(:id)
-        end
-      end
-      customer_ids.uniq.each do |customer_id|
-        if current_customer != Customer.find(customer_id) && @event.customer != Customer.find(customer_id)
-          Customer.find(customer_id).create_notification_request_msg(current_customer, @event.id)
-          if Customer.find(customer_id).confirm_mail
-            CustomerMailer.with(ac_customer: current_customer, ps_customer: Customer.find(customer_id), event_id: @event.id, request: @request).request_msg_mail.deliver_later
-          end
-        end
-      end
+      notify_request_recipients(@event, @request, current_customer)
       flash.now[:notice] = 'リクエストを投稿しました'
     else
       redirect_back(fallback_location: root_path)
@@ -47,6 +26,39 @@ class Public::RequestsController < ApplicationController
   end
 
   private
+
+  # 通常通知(request-msg)の対象は従来通り「イベント開催者+イベント参加者」のまま維持する。
+  # メンション通知(mention_request)の対象は「イベント開催元コミュニティの有効メンバー」
+  # (Requests::MentionResolver、演奏参加の有無を問わない)であり、通常通知の対象と重なるとは
+  # 限らない(例: コミュニティメンバーだが未参加の人がメンションされた場合等)。
+  # そのため両者は独立に算出し、メンションされた相手には通常通知を送らないことでのみ
+  # 重複を防ぐ(投稿者本人はMentionResolver・通常対象のいずれからも除外済み)。
+  def notify_request_recipients(event, request, poster)
+    mentioned_customers = Requests::MentionResolver.call(
+      request_text: request.request, event: event, poster: poster
+    )
+    mentioned_customer_ids = mentioned_customers.map(&:id)
+
+    normal_recipients = ([event.customer] + event.participating_customers.where(is_deleted: false).to_a)
+      .uniq(&:id)
+      .reject { |customer| customer.id == poster.id }
+
+    normal_recipients.each do |recipient|
+      next if mentioned_customer_ids.include?(recipient.id)
+
+      recipient.create_notification_request_msg(poster, event.id)
+      if recipient.confirm_mail
+        CustomerMailer.with(ac_customer: poster, ps_customer: recipient, event_id: event.id, request: request).request_msg_mail.deliver_later
+      end
+    end
+
+    mentioned_customers.each do |mentioned_customer|
+      mentioned_customer.create_notification_mention_request(poster, event.id)
+      if mentioned_customer.confirm_mail
+        CustomerMailer.with(ac_customer: poster, ps_customer: mentioned_customer, event_id: event.id, request: request).mention_request_mail.deliver_later
+      end
+    end
+  end
 
   def request_params
     params.require(:request).permit(:request, :stamp_type)

@@ -47,4 +47,23 @@ RSpec.describe Public::RequestsHelper, type: :helper do
       expect(helper.youtube_card_for_request(request)).to be_nil
     end
   end
+
+  describe "#mention_html_for_request" do
+    it "valid_customer_idsに含まれるメンションを.chat-mentionへ変換すること" do
+      request = build(:request, request: "[@太郎](customer:5)お願いします")
+
+      html = helper.mention_html_for_request(request, [5])
+
+      expect(html).to include('<span class="chat-mention" data-customer-id="5">@太郎</span>')
+    end
+
+    it "本文中の生HTMLはエスケープされ、YouTubeカードと共存すること" do
+      request = build(:request, request: "<b>注目</b> https://www.youtube.com/watch?v=abcdefghijk")
+
+      html = helper.mention_html_for_request(request, [])
+
+      expect(html).not_to include("<b>")
+      expect(helper.youtube_card_for_request(request)).not_to be_nil
+    end
+  end
 end

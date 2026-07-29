@@ -100,6 +100,11 @@
       - when 'request-msg' then
         = link_to 'あなたの参加したイベント', public_event_path(event_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
         = "にリクエストしました"
+      - when 'mention_request' then
+        - mentioned_event = Event.find_by(id: event_id)
+        - mention_request_link_label = mentioned_event ? "「#{mentioned_event.event_name}」のみんなのリクエスト" : "みんなのリクエスト"
+        = link_to mention_request_link_label, public_event_path(event_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
+        = "であなたをメンションしました"
       - when 'activity_for_follow' then
         = link_to '活動報告', public_activity_path(activity_id), data: { 'turbolinks': false }, style: "font-weight: bold;"
         = "を投稿しました(フォローメンバー)"
