@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe "Public::Requests メンション通知", type: :request do
+  include ActiveJob::TestHelper
+
   let(:community) { create(:community) }
   let(:owner) { create(:customer, name: "オーナー") }
   let(:event) { create(:event, :event_with_songs, customer: owner, community: community) }
@@ -160,5 +162,70 @@ RSpec.describe "Public::Requests メンション通知", type: :request do
     post_request("[@コミュニティ未参加者](customer:#{outsider.id})")
 
     expect(Notification.where(visited_id: outsider.id)).to be_empty
+  end
+
+  describe "メール通知" do
+    def mails_to(customer)
+      ActionMailer::Base.deliveries.select { |mail| mail.to == [customer.email] }
+    end
+
+    it "メンションされたユーザーにmention_request_mailが1通送信されること" do
+      member_participant = create(:customer, name: "参加太郎")
+      CommunityCustomer.find_or_create_by!(customer: member_participant, community: community)
+      create(:join_part_customer, join_part: create(:join_part, song: song), customer: member_participant)
+
+      perform_enqueued_jobs do
+        post_request("[@参加太郎](customer:#{member_participant.id})お願いします")
+      end
+
+      mails = mails_to(member_participant)
+      expect(mails.size).to eq(1)
+      expect(mails.first.subject).to eq("【BeMyStyle】イベントリクエストでメンションされました")
+    end
+
+    it "confirm_mailがfalseのユーザーにはメールが送信されないこと" do
+      member_only = create(:customer, name: "配信停止太郎", confirm_mail: false)
+      CommunityCustomer.find_or_create_by!(customer: member_only, community: community)
+
+      perform_enqueued_jobs do
+        post_request("[@配信停止太郎](customer:#{member_only.id})お願いします")
+      end
+
+      expect(mails_to(member_only)).to be_empty
+    end
+
+    it "@ALLと個別メンションが同時に書かれても、対象者へのメールは1通だけであること" do
+      member_participant = create(:customer, name: "参加太郎")
+      CommunityCustomer.find_or_create_by!(customer: member_participant, community: community)
+      create(:join_part_customer, join_part: create(:join_part, song: song), customer: member_participant)
+
+      perform_enqueued_jobs do
+        post_request("[@ALL](customer:all) [@参加太郎](customer:#{member_participant.id})")
+      end
+
+      expect(mails_to(member_participant).size).to eq(1)
+    end
+
+    it "メンションされていない通常通知対象者には従来通りrequest_msg_mailのみ送信されること(メンション通知メールと重複しない)" do
+      member_participant = create(:customer, name: "参加花子")
+      CommunityCustomer.find_or_create_by!(customer: member_participant, community: community)
+      create(:join_part_customer, join_part: create(:join_part, song: song), customer: member_participant)
+
+      perform_enqueued_jobs do
+        post_request("メンションなしの投稿です")
+      end
+
+      mails = mails_to(member_participant)
+      expect(mails.size).to eq(1)
+      expect(mails.first.subject).to eq("参加したイベントにリクエストがありました！")
+    end
+
+    it "投稿者本人にはメールが送信されないこと" do
+      perform_enqueued_jobs do
+        post_request("[@ALL](customer:all)")
+      end
+
+      expect(mails_to(poster)).to be_empty
+    end
   end
 end

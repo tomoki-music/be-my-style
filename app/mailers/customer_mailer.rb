@@ -20,6 +20,13 @@ class CustomerMailer < ApplicationMailer
     mail to: @ps_customer.email, subject: '参加したイベントにリクエストがありました！'
   end
 
+  def mention_request_mail
+    @event = Event.find(params[:event_id])
+    @event_url = "https://be-my-style.com/public/events/#{@event.id}"
+    @request = params[:request]
+    mail to: @ps_customer.email, subject: '【BeMyStyle】イベントリクエストでメンションされました'
+  end
+
   def create_event_mail
     @event = Event.find(params[:event_id])
     @event_url = "https://be-my-style.com/public/events/#{@event.id}"

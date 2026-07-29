@@ -54,6 +54,9 @@ class Public::RequestsController < ApplicationController
 
     mentioned_customers.each do |mentioned_customer|
       mentioned_customer.create_notification_mention_request(poster, event.id)
+      if mentioned_customer.confirm_mail
+        CustomerMailer.with(ac_customer: poster, ps_customer: mentioned_customer, event_id: event.id, request: request).mention_request_mail.deliver_later
+      end
     end
   end
 
