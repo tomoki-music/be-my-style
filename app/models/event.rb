@@ -41,6 +41,15 @@ class Event < ApplicationRecord
       .first
   end
 
+  # このイベントの参加者(JoinPartCustomer経由)を重複なく返す。
+  # イベントオーナー・管理者は自動的に含めない(参加者=実際にパートへjoinした人のみ)。
+  # Relationを返すため、呼び出し側で.where(is_deleted: false)等をさらに絞り込める。
+  def participating_customers
+    Customer.where(
+      id: JoinPartCustomer.joins(join_part: :song).where(songs: { event_id: id }).select(:customer_id)
+    ).distinct
+  end
+
   def session_credit_applied_for?(customer)
     participation_record_for(customer)&.session_credit_applied?
   end

@@ -634,6 +634,17 @@ class Customer < ApplicationRecord
     notification.save if notification.valid?
   end
 
+  def create_notification_mention_request(current_customer, event_id)
+    return if current_customer.blank? || current_customer.id == id
+
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'mention_request',
+      event_id: event_id,
+    )
+    notification.save if notification.valid?
+  end
+
   def create_notification_reply_dm(current_customer, chat_message)
     return false if current_customer.blank? || current_customer.id == id
 

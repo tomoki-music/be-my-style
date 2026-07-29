@@ -741,6 +741,75 @@
       }
     }
   }
+  // 既存チャットの.chat-mention/.mention-autocomplete(chat_messages.scss)は
+  // .chat-rooms-show-container配下にスコープされておりここには効かないため、
+  // 同じ見た目の値で.event-show-container配下に複製する(YouTubeカードCSSと同じ理由)。
+  .chat-mention {
+    display: inline-block;
+    background: #e6f0ff;
+    color: #0056b3;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-weight: bold;
+
+    &.chat-mention--all {
+      background: #fff3cd;
+      color: #856404;
+    }
+  }
+  .mention-autocomplete {
+    position: fixed;
+    z-index: 1080;
+    min-width: 220px;
+    max-width: 320px;
+    max-height: 240px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+    .mention-autocomplete-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+
+      &.is-active,
+      &:hover {
+        background: #f0f4ff;
+      }
+    }
+    .mention-autocomplete-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .mention-autocomplete-names {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .mention-autocomplete-display-name {
+      font-size: 13px;
+      font-weight: bold;
+      word-break: break-all;
+    }
+    .mention-autocomplete-username {
+      font-size: 12px;
+      color: #888;
+      word-break: break-all;
+    }
+  }
+  @media (max-width: 600px) {
+    .mention-autocomplete {
+      min-width: 0;
+      max-width: 94vw;
+    }
+  }
   .markdown-body {
     line-height: 1.8;
     font-size: 14px;

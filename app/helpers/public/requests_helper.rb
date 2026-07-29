@@ -15,4 +15,11 @@ module Public::RequestsHelper
       author_name: request.customer.name.presence
     )
   end
+
+  # リクエスト本文を安全な表示用HTMLへ変換する(メンションのみ対応、Markdown記法は展開しない)。
+  # valid_customer_idsは呼び出し元(_requests.html.haml)がイベントの現在の参加者IDとして
+  # 1回だけ計算したものを渡す想定(投稿ごとに問い合わせるとN+1になるため)。
+  def mention_html_for_request(request, valid_customer_ids)
+    Requests::MentionTextRenderer.call(request.request, valid_customer_ids: valid_customer_ids)
+  end
 end

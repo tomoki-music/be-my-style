@@ -308,6 +308,25 @@ class Public::EventsController < ApplicationController
     redirect_to public_event_path(event), alert: "参加を取消しました!"
   end
 
+  # イベントリクエスト欄の@メンション候補API。イベント自体の閲覧(showアクション)に
+  # コミュニティメンバー限定等の追加認可が無いのに合わせ、ここもauthenticate_customer!
+  # (全アクション共通のbefore_action)のみを要求する。候補の母集団自体は
+  # Chat::MentionCandidates.for_eventが「このイベントの現在の参加者」に厳密に絞るため、
+  # 他イベントの参加者情報が漏れることはない。
+  def mention_candidates
+    event = Event.find(params[:id])
+    query = params[:q]
+
+    candidates = Chat::MentionCandidates.for_event(event: event, current_customer: current_customer, query: query)
+    json = candidates.map { |customer| mention_candidate_json(customer) }
+    json.unshift(all_mention_candidate_json) if include_all_candidate?(query)
+
+    render json: json
+  rescue StandardError => e
+    Rails.logger.error("[EventsController#mention_candidates] #{e.class}: #{e.message}")
+    render json: { error: "候補を取得できませんでした" }, status: :unprocessable_entity
+  end
+
   private
 
   def event_params
@@ -339,6 +358,36 @@ class Public::EventsController < ApplicationController
 
   def set_event
     @event = Event.find(params[:id])
+  end
+
+  def mention_candidate_json(customer)
+    {
+      id: customer.id,
+      name: customer.name,
+      avatar_url: mention_candidate_avatar_url(customer),
+      type: "customer"
+    }
+  end
+
+  def mention_candidate_avatar_url(customer)
+    if customer.profile_image.attached?
+      rails_blob_path(customer.profile_image, only_path: true)
+    else
+      helpers.asset_path("no_image.jpg")
+    end
+  end
+
+  # "ALL"は候補一覧の先頭に固定表示する予約候補(実Customerではない)。
+  # customer:数値IDを偽装せず、保存時はcustomer:all(Requests::MentionResolver参照)という
+  # 明確に区別できる予約トークンとして扱う。
+  def include_all_candidate?(query)
+    return true if query.blank?
+
+    "ALL".downcase.include?(query.to_s.strip.downcase)
+  end
+
+  def all_mention_candidate_json
+    { id: "all", name: "ALL", avatar_url: helpers.asset_path("no_image.jpg"), type: "all" }
   end
 
   def set_song_templates

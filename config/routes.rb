@@ -110,6 +110,7 @@ Rails.application.routes.draw do
     resources :events do
       member do
         get "copy" => "events#copy"
+        get "mention_candidates" => "events#mention_candidates"
       end
       post "join" => "events#join"
       delete "delete" => "events#delete"

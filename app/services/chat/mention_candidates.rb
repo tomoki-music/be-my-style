@@ -18,6 +18,15 @@ module Chat
       new(community.customers, current_customer, query).search
     end
 
+    # イベントリクエスト欄: 現在のイベント参加者(Event#participating_customers、
+    # JoinPartCustomer経由)かつ退会済みでない(is_deleted: false)Customerのみ。
+    # オーナー・管理者もparticipating_customersに含まれていなければ候補にならない。
+    # 候補表示用にMAX_RESULTS件へ絞るため、通知対象の解決にはこのメソッドを経由せず
+    # Requests::MentionResolverが直接Event#participating_customersを使う。
+    def self.for_event(event:, current_customer:, query: nil)
+      new(event.participating_customers.where(is_deleted: false), current_customer, query).search
+    end
+
     def initialize(base_scope, current_customer, query)
       raise ArgumentError, "current_customer is required" if current_customer.blank? || current_customer.id.blank?
 

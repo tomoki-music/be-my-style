@@ -64,6 +64,26 @@ RSpec.describe "public/notifications/_notification", type: :view do
     expect(rendered).to include("chat_message_id=#{chat_message.id}")
   end
 
+  it "イベントリクエストのメンション通知(mention_request)を表示し、対象イベントへのリンクが含まれること" do
+    visitor = create(:customer, name: "メンションする人")
+    visited = create(:customer)
+    event = create(:event, :event_with_songs)
+    notification = visitor.active_notifications.create!(
+      visited: visited,
+      action: "mention_request",
+      event_id: event.id
+    )
+
+    allow(view).to receive(:customer_avatar_tag).and_return("avatar".html_safe)
+
+    render partial: "public/notifications/notification", locals: { notification: notification }
+
+    expect(rendered).to include("メンションする人さん")
+    expect(rendered).to include("みんなのリクエスト")
+    expect(rendered).to include("であなたをメンションしました")
+    expect(rendered).to include(public_event_path(event))
+  end
+
   it "singingプロフィール応援リアクション通知を表示できること" do
     visitor = create(:customer, domain_name: "singing", name: "応援する人")
     visited = create(:customer, domain_name: "singing")

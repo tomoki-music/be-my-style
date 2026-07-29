@@ -1,4 +1,5 @@
 - requests = event.requests.order(created_at: :desc)
+- valid_mention_customer_ids = event.participating_customers.pluck(:id)
 
 - requests.each do |request|
   .request-content
@@ -18,6 +19,6 @@
         - if request.stamped?
           %span.stamp-badge= request.stamp_label
         - else
-          = request.request
+          = mention_html_for_request(request, valid_mention_customer_ids)
           = render "public/events/youtube_card", card: youtube_card_for_request(request)
         %br

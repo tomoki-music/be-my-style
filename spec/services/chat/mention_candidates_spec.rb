@@ -88,6 +88,62 @@ RSpec.describe Chat::MentionCandidates, type: :service do
     end
   end
 
+  describe ".for_event" do
+    let(:event) { create(:event, :event_with_songs) }
+    let(:song) { event.songs.first }
+    let(:join_part) { create(:join_part, song: song) }
+    let(:other_join_part) { create(:join_part, song: song) }
+    let(:participant) { create(:customer, name: "参加太郎") }
+
+    before do
+      create(:join_part_customer, join_part: join_part, customer: current_customer)
+      create(:join_part_customer, join_part: other_join_part, customer: participant)
+    end
+
+    it "現在のイベント参加者を候補として返すこと" do
+      result = described_class.for_event(event: event, current_customer: current_customer)
+      expect(result).to contain_exactly(participant)
+    end
+
+    it "自分自身は候補に含まれないこと" do
+      result = described_class.for_event(event: event, current_customer: current_customer)
+      expect(result).not_to include(current_customer)
+    end
+
+    it "このイベントに参加していないCustomerは候補に含まれないこと" do
+      non_participant = create(:customer, name: "未参加花子")
+      result = described_class.for_event(event: event, current_customer: current_customer)
+      expect(result).not_to include(non_participant)
+    end
+
+    it "同一人物が複数パートに参加していても候補に1件だけ現れること" do
+      another_join_part = create(:join_part, song: song)
+      create(:join_part_customer, join_part: another_join_part, customer: participant)
+
+      result = described_class.for_event(event: event, current_customer: current_customer)
+      expect(result.to_a.count { |c| c.id == participant.id }).to eq 1
+    end
+
+    it "退会済み(is_deleted: true)の参加者は候補に含まれないこと" do
+      participant.update!(is_deleted: true)
+      result = described_class.for_event(event: event, current_customer: current_customer)
+      expect(result).not_to include(participant)
+    end
+
+    it "イベントオーナーでも参加登録していなければ候補に含まれないこと" do
+      result = described_class.for_event(event: event, current_customer: current_customer)
+      expect(result).not_to include(event.customer)
+    end
+
+    it "queryで名前を部分一致検索できること" do
+      result = described_class.for_event(event: event, current_customer: current_customer, query: "参加")
+      expect(result).to contain_exactly(participant)
+
+      result_no_match = described_class.for_event(event: event, current_customer: current_customer, query: "zzz")
+      expect(result_no_match).to be_empty
+    end
+  end
+
   describe "最大件数" do
     it "MAX_RESULTSを超える候補は切り詰められること" do
       chat_room = create(:chat_room)
