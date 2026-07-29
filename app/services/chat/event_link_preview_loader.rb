@@ -2,6 +2,8 @@ module Chat
   # チャットメッセージ集合が参照しているイベントリンクカード(provider: :event)分の
   # Eventを一括ロードする。カードごとにEvent.find_byを繰り返すとメッセージ件数分の
   # N+1が発生するため、描画対象のメッセージ一覧をまとめて渡して1回で解決する。
+  # カード内の演奏予定曲リスト・パート募集状況表示に必要なsongs/join_parts/customers
+  # もここでincludesし、View側でのN+1を防ぐ。
   class EventLinkPreviewLoader
     def self.call(chat_messages)
       new(chat_messages).call
@@ -12,7 +14,10 @@ module Chat
     end
 
     def call
-      Event.includes(:community).with_attached_event_image.where(id: event_ids).index_by { |event| event.id.to_s }
+      Event.includes(:community, songs: { join_parts: :customers })
+           .with_attached_event_image
+           .where(id: event_ids)
+           .index_by { |event| event.id.to_s }
     end
 
     private

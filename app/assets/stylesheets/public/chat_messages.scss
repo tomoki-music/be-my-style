@@ -907,6 +907,65 @@
     margin-top: 4px;
   }
 
+  /* イベントカード内の演奏予定曲リスト。曲カード(Phase5-A)の募集バッジと同じ
+     配色ルール(緑=充足/赤=募集中)を踏襲する */
+  .link-preview-card-event-songs {
+    margin-top: 6px;
+  }
+
+  .link-preview-card-event-songs-label {
+    font-size: 11px;
+    color: #3366cc;
+    font-weight: bold;
+  }
+
+  .link-preview-card-event-song {
+    margin-top: 4px;
+    min-width: 0;
+  }
+
+  .link-preview-card-event-song-name {
+    font-size: 11px;
+    color: #333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .link-preview-card-event-song-parts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+    min-width: 0;
+  }
+
+  .link-preview-card-event-song-part {
+    display: inline-block;
+    max-width: 100%;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    word-break: break-word;
+
+    &--filled {
+      background: #e6f4ea;
+      color: #1a7f37;
+    }
+
+    &--recruiting {
+      background: #fdecea;
+      color: #cc3333;
+    }
+  }
+
+  .link-preview-card-event-songs-more {
+    margin-top: 4px;
+    color: #888;
+    font-size: 11px;
+  }
+
   /* 曲リンクカード(Phase5-A)。既存の.link-preview-cardを踏襲した上で
      Eventカード(青)と見分けられるようボーダー色とprovider文言色のみ変える。
      MVPでは画像枠を持たないため.link-preview-card-thumbnailは使用しない */

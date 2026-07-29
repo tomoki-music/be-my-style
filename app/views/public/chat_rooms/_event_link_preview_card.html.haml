@@ -16,6 +16,24 @@
         %span.link-preview-card-meta-item= event.place
         %span.link-preview-card-meta-item
           = "#{event.entrance_fee}円"
+      - if event.songs.any?
+        - displayed_songs = event.songs.first(3)
+        .link-preview-card-event-songs
+          .link-preview-card-event-songs-label 演奏予定曲
+          - displayed_songs.each_with_index do |song, index|
+            .link-preview-card-event-song
+              .link-preview-card-event-song-name
+                = "#{index + 1}. #{song.song_name}"
+              - if song.join_parts.any?
+                .link-preview-card-event-song-parts
+                  - song.join_parts.each do |join_part|
+                    - filled = join_part.customers.any?
+                    %span.link-preview-card-event-song-part{ class: "link-preview-card-event-song-part--#{filled ? 'filled' : 'recruiting'}" }
+                      = "#{join_part.join_part_name} #{filled ? '✅' : '募集中'}"
+          - remaining_count = event.songs.size - displayed_songs.size
+          - if remaining_count.positive?
+            .link-preview-card-event-songs-more
+              = "あと#{remaining_count}曲あります"
       .link-preview-card-provider イベント詳細を見る ↗
 - else
   .link-preview-card.link-preview-card--event.link-preview-card--event-deleted
