@@ -91,6 +91,41 @@ RSpec.describe "イベントリンクカード", type: :system do
     end
   end
 
+  it "演奏予定曲と募集中パートがカードに表示されること" do
+    event = create_event(event_name: "セッション会2")
+    song = create(:song, event: event, song_name: "マリーゴールド")
+    filled_part = create(:join_part, song: song, join_part_name: "Vocal")
+    create(:join_part_customer, join_part: filled_part, customer: event_owner)
+    create(:join_part, song: song, join_part_name: "Guitar")
+    target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: event_url_for(event))
+    create_link_preview(target, event)
+
+    sign_in_via_form(customer)
+    visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+    within "#chat-message-#{target.id}" do
+      expect(page).to have_content("演奏予定曲", wait: 10)
+      expect(page).to have_content("マリーゴールド")
+      expect(page).to have_content("Vocal ✅")
+      expect(page).to have_content("Guitar 募集中")
+    end
+  end
+
+  it "曲が3曲を超える場合は3曲までに絞り「あと◯曲あります」と表示されること" do
+    event = create_event(event_name: "曲多めイベント")
+    4.times { |i| create(:song, event: event, song_name: "追加曲#{i + 1}") }
+    target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: event_url_for(event))
+    create_link_preview(target, event)
+
+    sign_in_via_form(customer)
+    visit public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+    within "#chat-message-#{target.id}" do
+      expect(page).to have_content("あと2曲あります", wait: 10)
+      expect(page).not_to have_content("追加曲4")
+    end
+  end
+
   it "終了済みイベントは「終了済み」バッジが表示されること" do
     event = create_event(event_start_time: 3.days.ago, event_end_time: 2.days.ago, event_entry_deadline: 4.days.ago)
     target = create(:chat_message, :markdown, customer: other_customer, chat_room: chat_room, content: event_url_for(event))
