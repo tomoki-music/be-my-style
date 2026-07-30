@@ -52,6 +52,11 @@ class Public::CommunitiesController < ApplicationController
 
   def show
     @owner = @community.owner
+    @can_manage_event_editors = current_customer.admin? || current_customer.can_manage_community?(@community)
+    @community_event_editor_id_by_customer_id = @community.community_event_editors.pluck(:customer_id, :id).to_h
+    @event_editor_customer_ids = @community_event_editor_id_by_customer_id.keys
+    @co_owner_customer_ids = @community.community_owners.pluck(:customer_id)
+    @event_editors = @community.event_editors
 
     @community_customers =
       if params[:part_id].present?

@@ -24,6 +24,7 @@ ja:
           general: 一般会員
           admin: 管理者
           community_owner: コミュニティオーナー（イベント作成可）
+          manager: マネージャー（イベント編集のみ可）
       customer/sex:
         gender_private: 非公開
         male: 男性

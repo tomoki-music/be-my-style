@@ -69,6 +69,7 @@ module ApplicationHelper
     return if customer.blank?
     return "管理者" if customer.respond_to?(:admin?) && customer.admin?
     return "オーナー" if customer.respond_to?(:community_owner?) && customer.community_owner?
+    return "マネージャ" if customer.respond_to?(:manager?) && customer.manager?
 
     nil
   end
@@ -90,6 +91,8 @@ module ApplicationHelper
         "avatar-role-badge avatar-role-badge--admin"
       when "オーナー"
         "avatar-role-badge avatar-role-badge--owner"
+      when "マネージャ"
+        "avatar-role-badge avatar-role-badge--manager"
       end
 
     content_tag(:span, class: ["avatar-with-badge", wrapper_class].compact.join(" ")) do

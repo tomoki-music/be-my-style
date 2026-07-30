@@ -98,6 +98,9 @@ class Customer < ApplicationRecord
   has_many :owned_communities, through: :community_owners, source: :community
   accepts_nested_attributes_for :community_owners, allow_destroy: true
 
+  has_many :community_event_editors, dependent: :destroy
+  has_many :edited_communities, through: :community_event_editors, source: :community
+
   has_one :member_profile, dependent: :destroy
   accepts_nested_attributes_for :member_profile
 
@@ -348,6 +351,11 @@ class Customer < ApplicationRecord
     owned_communities.exists?(id: community.id)
   end
 
+  def event_editor_of?(community)
+    return false if community.blank?
+    edited_communities.exists?(id: community.id)
+  end
+
   def manageable_communities
     owned_ids = owned_communities.select(:id)
     Community.where(owner_id: id).or(Community.where(id: owned_ids)).distinct
@@ -376,7 +384,7 @@ class Customer < ApplicationRecord
     tightly: 2,
   }, _prefix: true
 
-  enum is_owner: { general: 0, admin: 1, community_owner: 2 }
+  enum is_owner: { general: 0, admin: 1, community_owner: 2, manager: 3 }
 
   enum singing_coach_personality: {
     passionate: 0,
@@ -440,6 +448,15 @@ class Customer < ApplicationRecord
   end
 
   def can_edit_event?(event)
+    return true if admin?
+    return true if event.customer_id == id
+    return false unless event.community
+    return true if can_manage_community?(event.community)
+
+    event_editor_of?(event.community)
+  end
+
+  def can_destroy_event?(event)
     return true if admin?
     return true if event.customer_id == id
     return false unless event.community

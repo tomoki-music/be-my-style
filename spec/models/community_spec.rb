@@ -62,5 +62,13 @@ RSpec.describe 'Communityモデルのテスト', type: :model do
         expect(Community.reflect_on_association(:events).macro).to eq :has_many
       end
     end
+    context 'CommunityEventEditorモデルとの関係' do
+      it '中間テーブルcommunity_event_editorsと1:Nとなっている' do
+        expect(Community.reflect_on_association(:community_event_editors).macro).to eq :has_many
+      end
+      it 'event_editorsと1:Nとなっている' do
+        expect(Community.reflect_on_association(:event_editors).macro).to eq :has_many
+      end
+    end
   end
 end
