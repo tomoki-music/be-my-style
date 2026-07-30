@@ -375,6 +375,143 @@ RSpec.describe "Public::Events", type: :request do
         expect(response.status).to eq 302
       end
     end
+    context "イベント編集者による操作" do
+      let(:event_editor_customer) { FactoryBot.create(:customer, :customer_with_parts) }
+
+      before do
+        CommunityCustomer.find_or_create_by!(customer: event_editor_customer, community: community)
+        CommunityEventEditor.create!(customer: event_editor_customer, community: community)
+        sign_in event_editor_customer
+      end
+
+      it 'イベント編集ページを表示できること' do
+        get edit_public_event_path(event)
+        expect(response.status).to eq 200
+      end
+
+      it 'イベントを更新できること' do
+        put public_event_path(event), params: {
+          event: { event_name: "イベント編集者による更新" }
+        }
+        expect(event.reload.event_name).to eq "イベント編集者による更新"
+      end
+
+      it '楽曲を追加できること' do
+        expect do
+          put public_event_path(event), params: {
+            event: {
+              songs_attributes: {
+                "0" => { song_name: "新規追加曲", performance_time: "3:30" }
+              }
+            }
+          }
+        end.to change { event.reload.songs.count }.by(1)
+      end
+
+      it '既存の楽曲を編集できること' do
+        target_song = event.songs.first
+        put public_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => { id: target_song.id, artist_name: "イベント編集者による編集" }
+            }
+          }
+        }
+        expect(target_song.reload.artist_name).to eq "イベント編集者による編集"
+      end
+
+      it '楽曲を削除できること' do
+        # イベントはsongs presenceのvalidationがあるため、削除後も1曲残るようにしておく
+        target_song = event.songs.first
+        FactoryBot.create(:song, event: event)
+
+        expect do
+          put public_event_path(event), params: {
+            event: {
+              songs_attributes: {
+                "0" => { id: target_song.id, _destroy: "1" }
+              }
+            }
+          }
+        end.to change { event.reload.songs.count }.by(-1)
+      end
+
+      it 'イベントを新規作成できないこと' do
+        expect do
+          post public_events_path, params: event_create_params(community)
+        end.not_to change(Event, :count)
+      end
+
+      it 'イベント新規作成ページへのアクセスは302 Foundとなること' do
+        get new_public_event_path(community_id: community.id)
+        expect(response.status).to eq 302
+      end
+
+      it 'イベントをコピーできないこと' do
+        get copy_public_event_path(event)
+        expect(response.status).to eq 302
+      end
+
+      it 'イベントを削除できないこと' do
+        event
+        expect do
+          delete public_event_path(event)
+        end.not_to change(Event, :count)
+      end
+
+      it '削除リクエストは302 Foundとなること' do
+        delete public_event_path(event)
+        expect(response.status).to eq 302
+      end
+
+      it '別コミュニティのイベントは編集できないこと' do
+        other_community = FactoryBot.create(:community)
+        other_event = FactoryBot.create(:event, :event_with_songs, customer: other_customer, community: other_community)
+
+        get edit_public_event_path(other_event)
+        expect(response.status).to eq 302
+      end
+
+      it 'community_idを変更できないこと' do
+        other_community = FactoryBot.create(:community)
+
+        put public_event_path(event), params: {
+          event: { community_id: other_community.id, event_name: "改ざんテスト" }
+        }
+
+        expect(event.reload.event_name).to eq "改ざんテスト"
+        expect(event.reload.community_id).to eq community.id
+      end
+
+      it 'customer_idを変更できないこと' do
+        put public_event_path(event), params: {
+          event: { customer_id: event_editor_customer.id, event_name: "改ざんテスト" }
+        }
+
+        expect(event.reload.event_name).to eq "改ざんテスト"
+        expect(event.reload.customer_id).to eq customer.id
+      end
+    end
+
+    context "一般メンバーによるアクセス" do
+      let(:member_customer) { FactoryBot.create(:customer, :customer_with_parts) }
+
+      before do
+        CommunityCustomer.find_or_create_by!(customer: member_customer, community: community)
+        sign_in member_customer
+      end
+
+      it 'イベント編集URLへ直接アクセスできないこと' do
+        get edit_public_event_path(event)
+        expect(response.status).to eq 302
+      end
+
+      it 'イベント作成URLへ直接アクセスできないこと' do
+        get new_public_event_path(community_id: community.id)
+        expect(response.status).to eq 302
+      end
+    end
+
     context "event参加メンバーを正しく削除(delete)できる" do
       it '正しくメンバー削除できる' do
         event

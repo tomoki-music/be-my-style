@@ -8,6 +8,8 @@ class Community < ApplicationRecord
   has_many :customers, through: :community_customers, dependent: :destroy
   has_many :community_owners, dependent: :destroy
   has_many :owners, through: :community_owners, source: :customer
+  has_many :community_event_editors, dependent: :destroy
+  has_many :event_editors, through: :community_event_editors, source: :customer
   has_many :permits, dependent: :destroy
   has_many :community_genres, dependent: :destroy
   has_many :genres, through: :community_genres, dependent: :destroy

@@ -24,6 +24,16 @@
         cta_path: public_lp_path(anchor: "lp-section"),
         cta_note: "場づくりまで進めたい人向けのプランです"
 
+.directory-role-guide
+  = render "shared/plan_upsell_panel",
+    badge_label: "📋 役職について",
+    title: "コミュニティの役職と、それぞれにできること",
+    lead: "コミュニティやイベントの運営は、役職ごとに担当できる範囲が分かれています。",
+    toggle_closed_text: "役職ごとにできることを見る",
+    cards: [{ icon: "👑", name: "管理者", note: "サービス全体を管理する役職です。すべてのコミュニティやイベントを管理できます。" }, { icon: "🏠", name: "オーナー", note: "コミュニティの責任者です。イベントの作成・編集や、コミュニティの運営を行えます。" }, { icon: "📝", name: "イベント編集者", note: "イベント運営をサポートする役職です。新しいイベントは作成できませんが、既存イベントの楽曲や募集内容などを編集できます。" }, { icon: "🙋", name: "一般メンバー", note: "コミュニティへの参加、イベントへのエントリー、チャットなどを利用できます。" }],
+    cta_text: "コミュニティ一覧を見る →",
+    cta_path: public_communities_path
+
 .directory-search
   = form_with url: public_communities_path, method: :get, local: true, class: "directory-search__form" do
     = text_field_tag :keyword, params[:keyword], placeholder: "コミュニティ名・紹介・好きなアーティストで検索", class: "directory-search__input"

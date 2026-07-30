@@ -355,6 +355,120 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       end
     end
 
+    context 'イベント編集者権限' do
+      let(:community) { FactoryBot.create(:community, owner_id: other_customer.id) }
+      let(:event) { FactoryBot.create(:event, :event_with_songs, customer: other_customer, community: community) }
+
+      context 'イベント編集者に設定されている場合' do
+        before do
+          CommunityEventEditor.create!(customer: customer, community: community)
+        end
+
+        it 'event_editor_of?がtrueを返すこと' do
+          expect(customer.event_editor_of?(community)).to eq true
+        end
+
+        it 'イベントを編集できること' do
+          expect(customer.can_edit_event?(event)).to eq true
+        end
+
+        it 'イベントを削除できないこと' do
+          expect(customer.can_destroy_event?(event)).to eq false
+        end
+
+        it 'イベントを作成できないこと' do
+          expect(customer.can_create_event?(community)).to eq false
+        end
+
+        it '別コミュニティのイベントは編集できないこと' do
+          other_community = FactoryBot.create(:community, owner_id: other_customer.id)
+          other_event = FactoryBot.create(:event, :event_with_songs, customer: other_customer, community: other_community)
+
+          expect(customer.can_edit_event?(other_event)).to eq false
+        end
+      end
+
+      context 'イベント編集者に設定されていない場合' do
+        it 'event_editor_of?がfalseを返すこと' do
+          expect(customer.event_editor_of?(community)).to eq false
+        end
+
+        it '一般メンバーとしてはイベントを編集できないこと' do
+          CommunityCustomer.find_or_create_by!(customer: customer, community: community)
+
+          expect(customer.can_edit_event?(event)).to eq false
+        end
+      end
+
+      context 'コミュニティオーナーの場合' do
+        before do
+          CommunityOwner.find_or_create_by!(customer: customer, community: community)
+        end
+
+        it 'イベントを編集・削除できること(従来どおり)' do
+          expect(customer.can_edit_event?(event)).to eq true
+          expect(customer.can_destroy_event?(event)).to eq true
+        end
+      end
+
+      context '投稿者本人の場合' do
+        let(:own_event) { FactoryBot.create(:event, :event_with_songs, customer: customer, community: community) }
+
+        it 'イベントを編集・削除できること(従来どおり)' do
+          expect(customer.can_edit_event?(own_event)).to eq true
+          expect(customer.can_destroy_event?(own_event)).to eq true
+        end
+      end
+
+      context '管理者の場合' do
+        before { customer.update!(is_owner: :admin) }
+
+        it 'イベントを編集・削除できること(従来どおり)' do
+          expect(customer.can_edit_event?(event)).to eq true
+          expect(customer.can_destroy_event?(event)).to eq true
+        end
+      end
+    end
+
+    context 'is_owner: manager(表示ラベルのみ、実権限はCommunityEventEditorで判定)' do
+      let(:community) { FactoryBot.create(:community, owner_id: other_customer.id) }
+
+      it 'managerのenum値が3であること' do
+        expect(Customer.is_owners['manager']).to eq 3
+      end
+
+      it '既存のenum値(general/admin/community_owner)が変わっていないこと' do
+        expect(Customer.is_owners['general']).to eq 0
+        expect(Customer.is_owners['admin']).to eq 1
+        expect(Customer.is_owners['community_owner']).to eq 2
+      end
+
+      it 'managerに設定しただけでは、どのイベントも編集できないこと' do
+        customer.update!(is_owner: :manager)
+        other_event = FactoryBot.create(:event, :event_with_songs, customer: other_customer, community: community)
+
+        expect(customer.can_edit_event?(other_event)).to eq false
+      end
+
+      it 'CommunityEventEditorに登録済みの担当コミュニティなら編集できること' do
+        customer.update!(is_owner: :manager)
+        target_event = FactoryBot.create(:event, :event_with_songs, customer: other_customer, community: community)
+        CommunityEventEditor.create!(customer: customer, community: community)
+
+        expect(customer.can_edit_event?(target_event)).to eq true
+      end
+
+      it '担当外のコミュニティのイベントは編集できないこと' do
+        customer.update!(is_owner: :manager)
+        assigned_community = FactoryBot.create(:community, owner_id: other_customer.id)
+        other_community = FactoryBot.create(:community, owner_id: other_customer.id)
+        CommunityEventEditor.create!(customer: customer, community: assigned_community)
+        other_event = FactoryBot.create(:event, :event_with_songs, customer: other_customer, community: other_community)
+
+        expect(customer.can_edit_event?(other_event)).to eq false
+      end
+    end
+
     context 'フォロー、アンフォローのメソッドテスト' do
       it 'フォローする' do
         expect(customer.follow(other_customer.id)).to be_valid

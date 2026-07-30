@@ -3,7 +3,9 @@ class Public::EventsController < ApplicationController
   before_action :authenticate_customer!
   before_action :set_event, only: [:show, :edit, :update, :destroy, :copy]
   before_action :authorize_event_creation!, only: [:new, :create]
-  before_action :authorize_event_edit!, only: [:edit, :update, :destroy, :copy]
+  before_action :authorize_event_edit!, only: [:edit, :update]
+  before_action :authorize_event_destroy!, only: [:destroy]
+  before_action :authorize_event_copy!, only: [:copy]
   before_action :set_song_templates, only: [:new, :create, :edit, :update]
 
   def index
@@ -330,9 +332,7 @@ class Public::EventsController < ApplicationController
   private
 
   def event_params
-    params.require(:event).permit(
-      :customer_id,
-      :community_id,
+    attributes = [
       :event_name,
       :event_start_time,
       :event_end_time,
@@ -347,6 +347,11 @@ class Public::EventsController < ApplicationController
       :event_image,
       :url,
       :url_comment,
+    ]
+    attributes += [:customer_id, :community_id] if can_reassign_event_ownership?
+
+    params.require(:event).permit(
+      *attributes,
       join_part_ids:[],
       part_ids:[],
       songs_attributes: [:id, :event_id, :song_name, :artist_name, :performance_time, :performance_start_time, :youtube_url,
@@ -354,6 +359,14 @@ class Public::EventsController < ApplicationController
         join_parts_attributes:[:id, :join_part_name, :_destroy]
       ],
     )
+  end
+
+  # community_id/customer_idは「イベント編集者には変更させない」項目。
+  # createでは@event未設定の時点でこのメソッドが呼ばれ(その後createアクション内で
+  # customer_id/community_idを明示的に上書きするため無害)、update/copyでは@event.communityを
+  # 基準に、削除権限と同じ範囲(管理者/投稿者本人/コミュニティ管理者)のみ許可する。
+  def can_reassign_event_ownership?
+    @event.blank? || current_customer.can_destroy_event?(@event)
   end
 
   def set_event
@@ -427,6 +440,20 @@ class Public::EventsController < ApplicationController
   def authorize_event_edit!
     unless current_customer.can_edit_event?(@event)
       redirect_to public_events_path, alert: "このイベントを編集する権限がありません。"
+    end
+  end
+
+  def authorize_event_destroy!
+    unless current_customer.can_destroy_event?(@event)
+      redirect_to public_events_path, alert: "このイベントを削除する権限がありません。"
+    end
+  end
+
+  # copyは新規イベント作成を伴うため、削除権限と同じ範囲(管理者/投稿者本人/コミュニティ管理者)に限定し、
+  # 編集のみ許可されたイベント編集者には許可しない。
+  def authorize_event_copy!
+    unless current_customer.can_destroy_event?(@event)
+      redirect_to public_events_path, alert: "このイベントをコピーする権限がありません。"
     end
   end
 

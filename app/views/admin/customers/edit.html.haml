@@ -121,7 +121,14 @@
       %tr
         %th 管理コミュニティ
         %td
-          = f.collection_check_boxes :owned_community_ids, Community.all, :id, :name
+          %p.text-muted.mb-2
+            このユーザーが担当するコミュニティを選択してください。
+            %br
+            コミュニティオーナーはイベントの作成・編集・削除ができます。
+            %br
+            マネージャーは既存イベントや楽曲の編集のみ行えます。
+          - managed_community_ids = @customer.manager? ? @customer.edited_community_ids : @customer.owned_community_ids
+          = f.collection_check_boxes :owned_community_ids, Community.all, :id, :name, checked: managed_community_ids
 
   %hr
 

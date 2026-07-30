@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_07_26_070000) do
+ActiveRecord::Schema.define(version: 2026_07_29_120000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -240,6 +240,16 @@ ActiveRecord::Schema.define(version: 2026_07_26_070000) do
     t.datetime "updated_at", precision: 6, null: false
     t.index ["community_id"], name: "index_community_domains_on_community_id"
     t.index ["domain_id"], name: "index_community_domains_on_domain_id"
+  end
+
+  create_table "community_event_editors", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.bigint "community_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["community_id", "customer_id"], name: "index_community_event_editors_on_community_id_and_customer_id", unique: true
+    t.index ["community_id"], name: "index_community_event_editors_on_community_id"
+    t.index ["customer_id"], name: "index_community_event_editors_on_customer_id"
   end
 
   create_table "community_genres", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1293,6 +1303,8 @@ ActiveRecord::Schema.define(version: 2026_07_26_070000) do
   add_foreign_key "community_customers", "customers"
   add_foreign_key "community_domains", "communities"
   add_foreign_key "community_domains", "domains"
+  add_foreign_key "community_event_editors", "communities"
+  add_foreign_key "community_event_editors", "customers"
   add_foreign_key "community_genres", "communities"
   add_foreign_key "community_genres", "genres"
   add_foreign_key "community_owners", "communities"

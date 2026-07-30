@@ -1,3 +1,8 @@
+- community = local_assigns[:community]
+- can_manage_event_editors = local_assigns[:can_manage_event_editors]
+- event_editor_customer_ids = local_assigns[:event_editor_customer_ids] || []
+- co_owner_customer_ids = local_assigns[:co_owner_customer_ids] || []
+
 .customer-index-container
   - customers.each do |customer|
     .card.center
@@ -16,3 +21,7 @@
         %p.card-text
           = customer.human_attribute_enum(:introduction)
         = link_to 'プロフィール画面へ', public_customer_path(customer.id), class: "customer-index-link", data: { 'turbolinks': false }
+        - if community.present? && can_manage_event_editors && community.owner_id != customer.id && !customer.admin? && !event_editor_customer_ids.include?(customer.id) && !co_owner_customer_ids.include?(customer.id)
+          = form_tag public_community_community_event_editors_path(community), method: :post, data: { 'turbolinks': false } do
+            = hidden_field_tag :customer_id, customer.id
+            = submit_tag "イベント編集者に設定", class: "btn btn-sm btn-outline-secondary customer-index-link"
