@@ -50,6 +50,17 @@ class Event < ApplicationRecord
     ).distinct
   end
 
+  # @メンション機能(候補一覧・通知対象)の母集団。イベント参加者(participating_customers)
+  # のうち、現在も開催元コミュニティの有効メンバーであるCustomerのみを返す。
+  # 正規のjoinフロー(EventsController#join)では参加者は必ずコミュニティメンバーの部分集合に
+  # なるが、参加後の退会・レガシーデータ・直接DB操作による不整合を考慮し、ここで改めて
+  # community.customersとの積集合を取ってコミュニティ所属を保証する。
+  def mentionable_participants
+    participating_customers
+      .where(is_deleted: false)
+      .where(id: community.customers.select(:id))
+  end
+
   def session_credit_applied_for?(customer)
     participation_record_for(customer)&.session_credit_applied?
   end

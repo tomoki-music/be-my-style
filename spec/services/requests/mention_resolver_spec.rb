@@ -8,24 +8,22 @@ RSpec.describe Requests::MentionResolver, type: :service do
   let(:member_a) { create(:customer, name: "参加太郎") }
   let(:member_b) { create(:customer, name: "参加花子") }
 
+  def join!(customer, target_song: song)
+    join_part = create(:join_part, song: target_song)
+    create(:join_part_customer, join_part: join_part, customer: customer)
+  end
+
   before do
     CommunityCustomer.find_or_create_by!(customer: poster, community: community)
     CommunityCustomer.find_or_create_by!(customer: member_a, community: community)
     CommunityCustomer.find_or_create_by!(customer: member_b, community: community)
+    join!(member_a)
+    join!(member_b)
   end
 
   describe "個別メンション" do
-    it "本文中の[@name](customer:ID)からコミュニティメンバーを解決すること" do
+    it "本文中の[@name](customer:ID)からイベント参加者かつコミュニティメンバーを解決すること" do
       text = "[@参加太郎](customer:#{member_a.id})お願いします"
-      result = described_class.call(request_text: text, event: event, poster: poster)
-      expect(result).to contain_exactly(member_a)
-    end
-
-    it "イベントへ演奏参加登録していないコミュニティメンバーでも通知対象になること" do
-      join_part = create(:join_part, song: song)
-      expect(join_part.customers).not_to include(member_a) # member_aは一切joinしていない
-
-      text = "[@参加太郎](customer:#{member_a.id})"
       result = described_class.call(request_text: text, event: event, poster: poster)
       expect(result).to contain_exactly(member_a)
     end
@@ -38,17 +36,42 @@ RSpec.describe Requests::MentionResolver, type: :service do
     end
 
     it "投稿者本人を本文中でメンションしても通知対象に含まれないこと" do
+      join!(poster)
       text = "[@投稿者](customer:#{poster.id})"
+      result = described_class.call(request_text: text, event: event, poster: poster)
+      expect(result).to be_empty
+    end
+
+    it "コミュニティメンバーだがイベント未参加の場合、本文へ書いても通知対象に含まれないこと" do
+      member_only = create(:customer, name: "興味太郎")
+      CommunityCustomer.find_or_create_by!(customer: member_only, community: community)
+
+      text = "[@興味太郎](customer:#{member_only.id})"
       result = described_class.call(request_text: text, event: event, poster: poster)
       expect(result).to be_empty
     end
 
     it "イベントへ演奏参加していても、開催元コミュニティのメンバーでなければ通知対象に含まれないこと" do
       non_member_participant = create(:customer, name: "参加だけ花子")
-      join_part = create(:join_part, song: song)
-      create(:join_part_customer, join_part: join_part, customer: non_member_participant)
+      join!(non_member_participant)
 
       text = "[@参加だけ花子](customer:#{non_member_participant.id})"
+      result = described_class.call(request_text: text, event: event, poster: poster)
+      expect(result).to be_empty
+    end
+
+    it "参加後にコミュニティ所属を解除した場合、本文へ書いても通知対象に含まれないこと" do
+      CommunityCustomer.find_by!(customer: member_a, community: community).destroy!
+
+      text = "[@参加太郎](customer:#{member_a.id})"
+      result = described_class.call(request_text: text, event: event, poster: poster)
+      expect(result).to be_empty
+    end
+
+    it "参加後にJoinPartCustomerを削除した場合、本文へ書いても通知対象に含まれないこと" do
+      JoinPartCustomer.find_by!(customer: member_a).destroy!
+
+      text = "[@参加太郎](customer:#{member_a.id})"
       result = described_class.call(request_text: text, event: event, poster: poster)
       expect(result).to be_empty
     end
@@ -64,6 +87,7 @@ RSpec.describe Requests::MentionResolver, type: :service do
       other_community = create(:community)
       other_member = create(:customer, name: "他コミュニティ太郎")
       CommunityCustomer.find_or_create_by!(customer: other_member, community: other_community)
+      join!(other_member)
 
       text = "[@他コミュニティ太郎](customer:#{other_member.id})"
       result = described_class.call(request_text: text, event: event, poster: poster)
@@ -73,6 +97,15 @@ RSpec.describe Requests::MentionResolver, type: :service do
     it "退会済みメンバーは通知対象に含まれないこと" do
       member_a.update!(is_deleted: true)
       text = "[@参加太郎](customer:#{member_a.id})"
+      result = described_class.call(request_text: text, event: event, poster: poster)
+      expect(result).to be_empty
+    end
+
+    it "管理者・オーナー・マネージャーであっても、未参加または対象コミュニティ非所属なら通知対象に含まれないこと" do
+      admin = create(:customer, name: "管理者太郎", is_owner: :admin)
+      CommunityCustomer.find_or_create_by!(customer: admin, community: community) # 参加登録なし
+
+      text = "[@管理者太郎](customer:#{admin.id})"
       result = described_class.call(request_text: text, event: event, poster: poster)
       expect(result).to be_empty
     end
@@ -90,22 +123,23 @@ RSpec.describe Requests::MentionResolver, type: :service do
   end
 
   describe "@ALL" do
-    it "[@ALL](customer:all)を含む場合、投稿者を除く開催元コミュニティの有効メンバー全員を返すこと" do
+    it "[@ALL](customer:all)を含む場合、投稿者を除くイベント参加者かつコミュニティ有効メンバー全員を返すこと" do
       text = "[@ALL](customer:all) 見てください"
       result = described_class.call(request_text: text, event: event, poster: poster)
       expect(result).to contain_exactly(member_a, member_b)
     end
 
-    it "イベントへ演奏参加登録していないコミュニティメンバーも@ALLの対象になること" do
-      join_part = create(:join_part, song: song)
-      expect(join_part.customers).to be_empty # member_a/bともに一切joinしていない
+    it "コミュニティメンバーだがイベント未参加の人は@ALLの対象にならないこと" do
+      member_only = create(:customer, name: "興味太郎")
+      CommunityCustomer.find_or_create_by!(customer: member_only, community: community)
 
       text = "[@ALL](customer:all)"
       result = described_class.call(request_text: text, event: event, poster: poster)
-      expect(result).to contain_exactly(member_a, member_b)
+      expect(result).not_to include(member_only)
     end
 
     it "投稿者自身は@ALLの対象に含まれないこと" do
+      join!(poster)
       text = "[@ALL](customer:all)"
       result = described_class.call(request_text: text, event: event, poster: poster)
       expect(result).not_to include(poster)
@@ -118,17 +152,26 @@ RSpec.describe Requests::MentionResolver, type: :service do
       expect(result).to contain_exactly(member_b)
     end
 
+    it "参加後にコミュニティ所属を解除したメンバーは@ALLの対象に含まれないこと" do
+      CommunityCustomer.find_by!(customer: member_a, community: community).destroy!
+      text = "[@ALL](customer:all)"
+      result = described_class.call(request_text: text, event: event, poster: poster)
+      expect(result).to contain_exactly(member_b)
+    end
+
     it "他コミュニティのメンバーは@ALLの対象に含まれないこと" do
       other_community = create(:community)
       other_member = create(:customer, name: "他コミュニティ太郎")
       CommunityCustomer.find_or_create_by!(customer: other_member, community: other_community)
+      join!(other_member)
 
       text = "[@ALL](customer:all)"
       result = described_class.call(request_text: text, event: event, poster: poster)
       expect(result).not_to include(other_member)
     end
 
-    it "イベントオーナーでも開催元コミュニティのメンバーでなければ@ALLの対象に含まれないこと" do
+    it "イベントオーナーでも参加登録していなければ@ALLの対象に含まれないこと" do
+      CommunityCustomer.find_or_create_by!(customer: event.customer, community: community)
       text = "[@ALL](customer:all)"
       result = described_class.call(request_text: text, event: event, poster: poster)
       expect(result).not_to include(event.customer)

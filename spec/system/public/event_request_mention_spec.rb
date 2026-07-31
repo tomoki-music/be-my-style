@@ -105,19 +105,19 @@ RSpec.describe "イベントリクエストの@メンション", type: :system d
     expect(page).to have_selector(".mention-autocomplete-item", text: participant.name)
   end
 
-  it "イベント未参加でも開催元コミュニティのメンバーであれば候補ドロップダウンに表示されること" do
+  it "イベント未参加の開催元コミュニティメンバーは候補ドロップダウンに表示されないこと" do
     sign_in_via_form(poster)
     visit public_event_path(event)
 
     type_into_input_request("@")
+    expect(page).to have_selector(".mention-autocomplete-item", text: participant.name, wait: 10)
 
-    expect(page).to have_selector(".mention-autocomplete-item", text: member_not_participating.name, wait: 10)
+    expect(page).not_to have_selector(".mention-autocomplete-item", text: member_not_participating.name)
   end
 
-  it "開催元コミュニティに参加していないCustomerは候補ドロップダウンに表示されないこと" do
-    outsider = create(:customer, name: "他コミュニティ太郎")
-    other_community = create(:community)
-    CommunityCustomer.find_or_create_by!(customer: outsider, community: other_community)
+  it "イベント参加はしていても開催元コミュニティのメンバーでないCustomerは候補ドロップダウンに表示されないこと" do
+    outsider = create(:customer, name: "非会員参加者")
+    create(:join_part_customer, join_part: create(:join_part, song: song), customer: outsider)
 
     sign_in_via_form(poster)
     visit public_event_path(event)
@@ -128,30 +128,12 @@ RSpec.describe "イベントリクエストの@メンション", type: :system d
     expect(page).not_to have_selector(".mention-autocomplete-item", text: outsider.name)
   end
 
-  it "開催元コミュニティのメンバー(イベント未参加)を選択して投稿すると、メンション通知が作成されること" do
-    sign_in_via_form(poster)
-    visit public_event_path(event)
-
-    type_into_input_request("@")
-    expect(page).to have_selector(".mention-autocomplete-item", text: member_not_participating.name, wait: 10)
-
-    dispatch_mousedown_for(member_not_participating.name)
-    expect(page).to have_field("input_request", with: "@#{member_not_participating.name} ")
-
-    submit_request_form
-    expect(page).to have_selector(".chat-mention", text: "@#{member_not_participating.name}", wait: 10)
-
-    notification = Notification.find_by(visited_id: member_not_participating.id, action: "mention_request")
-    expect(notification).to be_present
-  end
-
-  # 上記シナリオのメンション対象者本人としてサインインし、通知一覧の表示・遷移を確認する
-  # (同一テスト内でのユーザー切り替えはログアウト操作がこの環境で不安定なため、
-  # 通知は直接作成してクリーンなセッションで検証する)。
+  # 通知一覧の表示・遷移自体の検証であり、通知は候補選択フローに依存させず直接作成する
+  # (同一テスト内でのユーザー切り替えはログアウト操作がこの環境で不安定なため)。
   it "通知一覧にmention_request通知が「メンションしました」と表示され、クリックでイベント詳細へ遷移すること" do
-    member_not_participating.create_notification_mention_request(poster, event.id)
+    participant.create_notification_mention_request(poster, event.id)
 
-    sign_in_via_form(member_not_participating)
+    sign_in_via_form(participant)
     visit public_notifications_path
 
     expect(page).to have_content("メンションしました", wait: 10)
@@ -179,7 +161,7 @@ RSpec.describe "イベントリクエストの@メンション", type: :system d
     expect(Notification.where(visited_id: participant.id, action: "request-msg")).to be_empty
   end
 
-  it "@ALLを選択して投稿すると、開催元コミュニティの有効メンバー(投稿者以外、イベント未参加者も含む)全員へメンション通知が作成されること" do
+  it "@ALLを選択して投稿すると、投稿者以外のイベント参加者かつ開催元コミュニティ有効メンバー全員へメンション通知が作成されること" do
     sign_in_via_form(poster)
     visit public_event_path(event)
 
@@ -194,7 +176,7 @@ RSpec.describe "イベントリクエストの@メンション", type: :system d
 
     expect(page).to have_selector(".chat-mention--all", wait: 10)
     expect(Notification.where(visited_id: participant.id, action: "mention_request")).to be_present
-    expect(Notification.where(visited_id: member_not_participating.id, action: "mention_request")).to be_present
+    expect(Notification.where(visited_id: member_not_participating.id, action: "mention_request")).to be_empty
     expect(Notification.where(visited_id: poster.id)).to be_empty
   end
 
@@ -244,21 +226,6 @@ RSpec.describe "イベントリクエストの@メンション", type: :system d
 
       dispatch_mousedown_for(participant.name)
       expect(page).to have_field("input_request", with: "@#{participant.name} ")
-    end
-
-    it "イベント未参加の開催元コミュニティメンバーも候補に表示され、mousedownで選択できること" do
-      sign_in_via_form(poster)
-      visit public_event_path(event)
-
-      type_into_input_request("@")
-      expect(page).to have_selector(".mention-autocomplete-item", text: member_not_participating.name, wait: 10)
-
-      dropdown_width = page.evaluate_script("document.querySelector('.mention-autocomplete').getBoundingClientRect().width")
-      client_width = page.evaluate_script("document.documentElement.clientWidth")
-      expect(dropdown_width).to be <= client_width + 1
-
-      dispatch_mousedown_for(member_not_participating.name)
-      expect(page).to have_field("input_request", with: "@#{member_not_participating.name} ")
     end
   end
 end
