@@ -9,6 +9,11 @@ RSpec.describe "Public::Requests メンション通知", type: :request do
   let(:song) { event.songs.first }
   let(:poster) { create(:customer, name: "投稿者") }
 
+  def join!(customer, target_song: song)
+    join_part = create(:join_part, song: target_song)
+    create(:join_part_customer, join_part: join_part, customer: customer)
+  end
+
   before do
     CommunityCustomer.find_or_create_by!(customer: poster, community: community)
     sign_in poster
@@ -26,7 +31,7 @@ RSpec.describe "Public::Requests メンション通知", type: :request do
     it "mention_requestのみ作成され、request-msgは作成されないこと" do
       member_participant = create(:customer, name: "参加太郎")
       CommunityCustomer.find_or_create_by!(customer: member_participant, community: community)
-      create(:join_part_customer, join_part: create(:join_part, song: song), customer: member_participant)
+      join!(member_participant)
 
       post_request("[@参加太郎](customer:#{member_participant.id})お願いします")
 
@@ -38,7 +43,7 @@ RSpec.describe "Public::Requests メンション通知", type: :request do
     it "従来通りrequest-msg通知が作成されること" do
       member_participant = create(:customer, name: "参加花子")
       CommunityCustomer.find_or_create_by!(customer: member_participant, community: community)
-      create(:join_part_customer, join_part: create(:join_part, song: song), customer: member_participant)
+      join!(member_participant)
 
       post_request("メンションなしの投稿です")
 
@@ -47,36 +52,52 @@ RSpec.describe "Public::Requests メンション通知", type: :request do
   end
 
   context "コミュニティメンバーだがイベント未参加の人がメンションされた場合" do
-    it "mention_requestのみ作成されること(通常通知は作成されない)" do
+    it "候補・通知いずれの対象にもならないこと(通常通知も作成されない)" do
       member_only = create(:customer, name: "興味太郎")
       CommunityCustomer.find_or_create_by!(customer: member_only, community: community)
 
       post_request("[@興味太郎](customer:#{member_only.id})お願いします")
-
-      expect(notification_actions_for(member_only)).to eq(["mention_request"])
-    end
-  end
-
-  context "コミュニティメンバーだがイベント未参加で、メンションもされていない場合" do
-    it "通知が作成されないこと" do
-      member_only = create(:customer, name: "傍観太郎")
-      CommunityCustomer.find_or_create_by!(customer: member_only, community: community)
-
-      post_request("メンションなしの投稿です")
 
       expect(notification_actions_for(member_only)).to be_empty
     end
   end
 
   context "イベント参加者だが開催元コミュニティのメンバーでない場合" do
-    it "メンションしても通知されないが、従来通りrequest-msgは作成されること(通常通知とメンション仕様の混同防止)" do
+    it "メンションしても通知されないこと(通常通知は従来通り作成される)" do
       participant_not_member = create(:customer, name: "非会員参加者")
-      create(:join_part_customer, join_part: create(:join_part, song: song), customer: participant_not_member)
+      join!(participant_not_member)
       expect(CommunityCustomer.where(customer: participant_not_member, community: community)).to be_empty
 
       post_request("[@非会員参加者](customer:#{participant_not_member.id})お願いします")
 
       expect(notification_actions_for(participant_not_member)).to eq(["request-msg"])
+    end
+  end
+
+  context "参加後にコミュニティ所属を解除した場合" do
+    it "メンションしても通知されないこと" do
+      member_participant = create(:customer, name: "退会参加太郎")
+      CommunityCustomer.find_or_create_by!(customer: member_participant, community: community)
+      join!(member_participant)
+      CommunityCustomer.find_by!(customer: member_participant, community: community).destroy!
+
+      post_request("[@退会参加太郎](customer:#{member_participant.id})お願いします")
+
+      expect(notification_actions_for(member_participant)).to eq(["request-msg"])
+    end
+  end
+
+  context "参加後にJoinPartCustomerを削除した場合" do
+    it "メンションしても通知されないこと" do
+      member_participant = create(:customer, name: "取消太郎")
+      CommunityCustomer.find_or_create_by!(customer: member_participant, community: community)
+      join_part = create(:join_part, song: song)
+      join_part_customer = create(:join_part_customer, join_part: join_part, customer: member_participant)
+      join_part_customer.destroy!
+
+      post_request("[@取消太郎](customer:#{member_participant.id})お願いします")
+
+      expect(notification_actions_for(member_participant)).to be_empty
     end
   end
 
@@ -89,12 +110,34 @@ RSpec.describe "Public::Requests メンション通知", type: :request do
       expect(notification_actions_for(owner)).to eq(["request-msg"])
     end
 
-    it "コミュニティメンバーであり、メンションされた場合はmention_requestのみ作成されること" do
+    it "コミュニティメンバーかつ参加登録済みで、メンションされた場合はmention_requestのみ作成されること" do
       CommunityCustomer.find_or_create_by!(customer: owner, community: community)
+      join!(owner)
 
       post_request("[@オーナー](customer:#{owner.id})お願いします")
 
       expect(notification_actions_for(owner)).to eq(["mention_request"])
+    end
+
+    it "コミュニティメンバーだが参加登録していない場合、メンションされてもmention_requestは作成されないこと" do
+      CommunityCustomer.find_or_create_by!(customer: owner, community: community)
+
+      post_request("[@オーナー](customer:#{owner.id})お願いします")
+
+      # ownerはevent.customerとして通常通知(request-msg)の対象には従来通り含まれるが、
+      # 参加登録していないためmentionable_participantsには含まれずmention_requestは作成されない。
+      expect(notification_actions_for(owner)).to eq(["request-msg"])
+    end
+  end
+
+  context "管理者・オーナー・マネージャー" do
+    it "未参加または対象コミュニティ非所属なら通知対象外であること" do
+      admin = create(:customer, name: "管理者太郎", is_owner: :admin)
+      CommunityCustomer.find_or_create_by!(customer: admin, community: community) # 参加登録なし
+
+      post_request("[@管理者太郎](customer:#{admin.id})お願いします")
+
+      expect(notification_actions_for(admin)).to be_empty
     end
   end
 
@@ -105,18 +148,23 @@ RSpec.describe "Public::Requests メンション通知", type: :request do
   end
 
   describe "@ALL" do
-    it "イベント未参加でもコミュニティの有効メンバー全員にmention_request通知が作成されること" do
+    it "イベント参加者かつコミュニティ有効メンバー全員にmention_request通知が作成されること" do
       member_participant = create(:customer, name: "参加太郎")
       CommunityCustomer.find_or_create_by!(customer: member_participant, community: community)
-      create(:join_part_customer, join_part: create(:join_part, song: song), customer: member_participant)
+      join!(member_participant)
 
+      post_request("[@ALL](customer:all)")
+
+      expect(notification_actions_for(member_participant)).to eq(["mention_request"])
+    end
+
+    it "コミュニティメンバーだがイベント未参加の人には通知されないこと" do
       member_only = create(:customer, name: "興味太郎")
       CommunityCustomer.find_or_create_by!(customer: member_only, community: community)
 
       post_request("[@ALL](customer:all)")
 
-      expect(notification_actions_for(member_participant)).to eq(["mention_request"])
-      expect(notification_actions_for(member_only)).to eq(["mention_request"])
+      expect(notification_actions_for(member_only)).to be_empty
     end
 
     it "他コミュニティのメンバーには通知されないこと" do
@@ -138,6 +186,7 @@ RSpec.describe "Public::Requests メンション通知", type: :request do
     it "退会済みメンバーには通知されないこと" do
       member_only = create(:customer, name: "退会太郎")
       CommunityCustomer.find_or_create_by!(customer: member_only, community: community)
+      join!(member_only)
       member_only.update!(is_deleted: true)
 
       post_request("[@ALL](customer:all)")
@@ -149,7 +198,7 @@ RSpec.describe "Public::Requests メンション通知", type: :request do
   it "@ALLと個別メンションが同時に書かれても、対象者への通知は1件だけであること" do
     member_participant = create(:customer, name: "参加太郎")
     CommunityCustomer.find_or_create_by!(customer: member_participant, community: community)
-    create(:join_part_customer, join_part: create(:join_part, song: song), customer: member_participant)
+    join!(member_participant)
 
     post_request("[@ALL](customer:all) [@参加太郎](customer:#{member_participant.id})")
 
@@ -172,7 +221,7 @@ RSpec.describe "Public::Requests メンション通知", type: :request do
     it "メンションされたユーザーにmention_request_mailが1通送信されること" do
       member_participant = create(:customer, name: "参加太郎")
       CommunityCustomer.find_or_create_by!(customer: member_participant, community: community)
-      create(:join_part_customer, join_part: create(:join_part, song: song), customer: member_participant)
+      join!(member_participant)
 
       perform_enqueued_jobs do
         post_request("[@参加太郎](customer:#{member_participant.id})お願いします")
@@ -186,6 +235,7 @@ RSpec.describe "Public::Requests メンション通知", type: :request do
     it "confirm_mailがfalseのユーザーにはメールが送信されないこと" do
       member_only = create(:customer, name: "配信停止太郎", confirm_mail: false)
       CommunityCustomer.find_or_create_by!(customer: member_only, community: community)
+      join!(member_only)
 
       perform_enqueued_jobs do
         post_request("[@配信停止太郎](customer:#{member_only.id})お願いします")
@@ -197,7 +247,7 @@ RSpec.describe "Public::Requests メンション通知", type: :request do
     it "@ALLと個別メンションが同時に書かれても、対象者へのメールは1通だけであること" do
       member_participant = create(:customer, name: "参加太郎")
       CommunityCustomer.find_or_create_by!(customer: member_participant, community: community)
-      create(:join_part_customer, join_part: create(:join_part, song: song), customer: member_participant)
+      join!(member_participant)
 
       perform_enqueued_jobs do
         post_request("[@ALL](customer:all) [@参加太郎](customer:#{member_participant.id})")
@@ -209,7 +259,7 @@ RSpec.describe "Public::Requests メンション通知", type: :request do
     it "メンションされていない通常通知対象者には従来通りrequest_msg_mailのみ送信されること(メンション通知メールと重複しない)" do
       member_participant = create(:customer, name: "参加花子")
       CommunityCustomer.find_or_create_by!(customer: member_participant, community: community)
-      create(:join_part_customer, join_part: create(:join_part, song: song), customer: member_participant)
+      join!(member_participant)
 
       perform_enqueued_jobs do
         post_request("メンションなしの投稿です")

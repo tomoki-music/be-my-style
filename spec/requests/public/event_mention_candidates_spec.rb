@@ -7,15 +7,21 @@ RSpec.describe "events#mention_candidates", type: :request do
   let(:song) { event.songs.first }
   let(:member) { create(:customer, name: "参加太郎") }
 
+  def join!(target_customer, target_song: song)
+    join_part = create(:join_part, song: target_song)
+    create(:join_part_customer, join_part: join_part, customer: target_customer)
+  end
+
   before do
     CommunityCustomer.find_or_create_by!(customer: customer, community: community)
     CommunityCustomer.find_or_create_by!(customer: member, community: community)
+    join!(member)
   end
 
   context "ログイン済みの場合" do
     before { sign_in customer }
 
-    it "200 OKでALL候補+開催元コミュニティのメンバー候補をJSONで返すこと" do
+    it "200 OKでALL候補+イベント参加者かつコミュニティメンバーの候補をJSONで返すこと" do
       get mention_candidates_public_event_path(event)
       expect(response).to have_http_status(200)
 
@@ -31,26 +37,33 @@ RSpec.describe "events#mention_candidates", type: :request do
       expect(body.map { |c| c["id"] }).not_to include(customer.id)
     end
 
-    it "イベントへ演奏参加登録していないコミュニティメンバーも候補に含まれること" do
-      join_part = create(:join_part, song: song)
-      expect(join_part.customers).not_to include(member) # memberは一切joinしていない
+    it "イベントへ演奏参加登録していないコミュニティメンバーは候補に含まれないこと" do
+      member_only = create(:customer, name: "興味太郎")
+      CommunityCustomer.find_or_create_by!(customer: member_only, community: community)
 
       get mention_candidates_public_event_path(event)
       body = JSON.parse(response.body)
-      expect(body.map { |c| c["id"] }).to include(member.id)
+      expect(body.map { |c| c["id"] }).not_to include(member_only.id)
     end
 
     it "イベントへ演奏参加していても、開催元コミュニティのメンバーでなければ候補に含まれないこと" do
       non_member_participant = create(:customer, name: "参加だけ花子")
-      join_part = create(:join_part, song: song)
-      create(:join_part_customer, join_part: join_part, customer: non_member_participant)
+      join!(non_member_participant)
 
       get mention_candidates_public_event_path(event)
       body = JSON.parse(response.body)
       expect(body.map { |c| c["id"] }).not_to include(non_member_participant.id)
     end
 
-    it "他コミュニティのメンバーを含まないこと(URLのevent_idを差し替えても他コミュニティ参加者は取得できない)" do
+    it "参加後にコミュニティ所属を解除した場合は候補に含まれないこと" do
+      CommunityCustomer.find_by!(customer: member, community: community).destroy!
+
+      get mention_candidates_public_event_path(event)
+      body = JSON.parse(response.body)
+      expect(body.map { |c| c["id"] }).not_to include(member.id)
+    end
+
+    it "他コミュニティのメンバーを含まないこと" do
       other_community = create(:community)
       other_member = create(:customer, name: "他コミュニティ太郎")
       CommunityCustomer.find_or_create_by!(customer: other_member, community: other_community)

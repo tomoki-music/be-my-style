@@ -18,15 +18,14 @@ module Chat
       new(community.customers, current_customer, query).search
     end
 
-    # イベントリクエスト欄: イベント開催元コミュニティの現在の有効メンバー
-    # (Community#customers、CommunityCustomer経由)かつ退会済みでない(is_deleted: false)
-    # Customerのみ。イベントへの演奏参加(JoinPartCustomer)有無は候補条件に使わない
-    # (まだ参加登録していない・興味を持っているだけのコミュニティメンバーにもメンションできるようにするため)。
-    # オーナー・管理者もCommunityCustomerとして参加していなければ候補にならない。
+    # イベントリクエスト欄: イベントへ現在参加登録しており、かつ開催元コミュニティの
+    # 有効メンバーでもあるCustomerのみ(Event#mentionable_participants)。
+    # 参加登録していないコミュニティメンバー・参加後にコミュニティを退会した人は候補にならない。
+    # オーナー・管理者も参加登録かつコミュニティ所属の両方を満たさなければ候補にならない。
     # 候補表示用にMAX_RESULTS件へ絞るため、通知対象の解決にはこのメソッドを経由せず
-    # Requests::MentionResolverが直接Event#community.customersを使う。
+    # Requests::MentionResolverが直接Event#mentionable_participantsを使う。
     def self.for_event(event:, current_customer:, query: nil)
-      new(event.community.customers.where(is_deleted: false), current_customer, query).search
+      new(event.mentionable_participants, current_customer, query).search
     end
 
     def initialize(base_scope, current_customer, query)
