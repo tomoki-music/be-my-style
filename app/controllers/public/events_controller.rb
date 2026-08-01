@@ -7,6 +7,7 @@ class Public::EventsController < ApplicationController
   before_action :authorize_event_destroy!, only: [:destroy]
   before_action :authorize_event_copy!, only: [:copy]
   before_action :set_song_templates, only: [:new, :create, :edit, :update]
+  before_action :set_requested_by_customer_candidates, only: [:new, :create, :edit, :update]
 
   def index
     events = Event.left_joins(:community, songs: { join_parts: :join_part_customers }).distinct
@@ -203,12 +204,13 @@ class Public::EventsController < ApplicationController
     @old_event.songs.each do |old_song|
       new_song = old_song.dup
       new_song.event = @event
-  
+      new_song.requested_by_customer_id = nil unless requested_by_customer_copyable?(old_song)
+
       # 各曲にデフォルトパートを作成
       ["Vocal", "Guitar", "Bass", "Drums", "Keyboard"].each do |part_name|
         new_song.join_parts.build(join_part_name: part_name)
       end
-  
+
       @event.songs << new_song
     end
   
@@ -216,7 +218,15 @@ class Public::EventsController < ApplicationController
     @latitude = @event.latitude
     @longitude = @event.longitude
     @address = @event.address
-  
+
+    # コピー先コミュニティが確定した後で、テンプレート・リクエスト者候補を
+    # そのコミュニティ基準に揃え直す。set_song_templates/set_requested_by_customer_candidates は
+    # before_action実行時点(コピー元の@eventしかない段階)のままだと、community_id引数付き
+    # コピー(別コミュニティ指定)先の候補に対応できないため、ここで明示的に再計算する。
+    @template_community = Community.find_by(id: @community_id, domain_id: @current_domain.id)
+    @song_templates = @template_community ? @template_community.song_templates.order(:song_name) : SongTemplate.none
+    set_requested_by_customer_candidates
+
     flash.now[:notice] = "イベントをコピーしました！必要に応じて編集してください♪"
     render :new
   end
@@ -356,6 +366,7 @@ class Public::EventsController < ApplicationController
       part_ids:[],
       songs_attributes: [:id, :event_id, :song_name, :artist_name, :performance_time, :performance_start_time, :youtube_url,
         :chord_sheet_url, :tab_sheet_url, :musical_key, :capo, :chord_sheet_note, :introduction, :position, :_destroy,
+        :requested_by_customer_id,
         join_parts_attributes:[:id, :join_part_name, :_destroy]
       ],
     )
@@ -370,7 +381,18 @@ class Public::EventsController < ApplicationController
   end
 
   def set_event
-    @event = Event.find(params[:id])
+    @event = Event.includes(songs: :requested_by_customer).find(params[:id])
+  end
+
+  # イベントコピー時、requested_by_customer_idを引き継いでよいかの判定。
+  # 「同一コミュニティ内のコピー」かつ「コピー時点でそのコミュニティの有効メンバーである」
+  # 場合だけ引き継ぐ。別コミュニティへのコピー、退会・論理削除済みの場合は
+  # 無効なリクエスト者を新規Songへ持ち込まないようnilにする。
+  def requested_by_customer_copyable?(old_song)
+    return false if old_song.requested_by_customer_id.blank?
+    return false if @old_event.community_id != @event.community_id
+
+    @event.community.customers.where(id: old_song.requested_by_customer_id, is_deleted: false).exists?
   end
 
   def mention_candidate_json(customer)
@@ -413,6 +435,20 @@ class Public::EventsController < ApplicationController
       end
 
     @song_templates = @template_community ? @template_community.song_templates.order(:song_name) : SongTemplate.none
+  end
+
+  # 「リクエストした人」候補。楽曲行ごとに同じコミュニティメンバー一覧を再取得しないよう、
+  # イベント単位で1回だけ用意し(_song_fieldsパーシャルへは@requested_by_customer_candidatesとして
+  # 共有)、set_song_templatesが確定させた@template_communityをそのまま利用する。
+  # コミュニティが未確定(新規作成画面でcommunity_idがまだ選ばれていない)場合はCustomer.noneとし、
+  # 「リクエストした人」欄はView側で選択不可にする。
+  def set_requested_by_customer_candidates
+    @requested_by_customer_candidates =
+      if @template_community
+        @template_community.customers.where(is_deleted: false).distinct.order(:name)
+      else
+        Customer.none
+      end
   end
 
   def authorize_event_creation!

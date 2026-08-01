@@ -29,6 +29,13 @@
     .field
       = f.text_area :introduction, placeholder: "楽曲の紹介文（意気込みや想いなど）", rows: 3, class: "form-control"
     .field
+      = f.label :requested_by_customer_id, "リクエストした人"
+      - if @template_community.present?
+        = f.collection_select :requested_by_customer_id, @requested_by_customer_candidates, :id, :name, { include_blank: "指定なし" }, class: "form-control"
+      - else
+        = f.select :requested_by_customer_id, [], {}, { class: "form-control", disabled: true }
+        %small.form-text.text-muted コミュニティ確定後に設定できます
+    .field
       = link_to_remove_association '曲を削除', f, class: 'btn btn-danger js-song-remove-btn', data: { 'turbolinks': false, confirm: 'こちらの曲を削除します。よろしいですか？' }
     #join_parts.join-part-layout
       = f.fields_for :join_parts, id: 'js-join-part-field' do |join_part|

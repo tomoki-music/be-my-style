@@ -362,6 +362,195 @@ RSpec.describe "Public::Events", type: :request do
         expect(target_song.reload.tab_sheet_url).to be_blank
       end
     end
+    context "楽曲へのリクエスト者(requested_by_customer)登録" do
+      let(:member) { FactoryBot.create(:customer, name: "参加太郎") }
+      let(:other_member) { FactoryBot.create(:customer, name: "参加次郎") }
+      let(:outsider) { FactoryBot.create(:customer, name: "部外者花子") }
+
+      before do
+        CommunityCustomer.find_or_create_by!(customer: member, community: community)
+        CommunityCustomer.find_or_create_by!(customer: other_member, community: community)
+      end
+
+      it "イベント作成時にリクエスト者を保存できること" do
+        params = event_create_params(community)
+        params[:event][:songs_attributes]["0"][:requested_by_customer_id] = member.id
+
+        post public_events_path, params: params
+
+        expect(Song.last.requested_by_customer_id).to eq member.id
+      end
+
+      it "イベント更新時にリクエスト者を変更できること" do
+        target_song = event.songs.first
+        target_song.update!(requested_by_customer_id: member.id)
+
+        put public_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => { id: target_song.id, requested_by_customer_id: other_member.id }
+            }
+          }
+        }
+
+        expect(target_song.reload.requested_by_customer_id).to eq other_member.id
+      end
+
+      it "イベント更新時にリクエスト者を解除できること" do
+        target_song = event.songs.first
+        target_song.update!(requested_by_customer_id: member.id)
+
+        put public_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => { id: target_song.id, requested_by_customer_id: "" }
+            }
+          }
+        }
+
+        expect(target_song.reload.requested_by_customer_id).to be_nil
+      end
+
+      it "コミュニティ外Customer IDを直接POSTしても保存されないこと" do
+        target_song = event.songs.first
+
+        put public_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => { id: target_song.id, requested_by_customer_id: outsider.id }
+            }
+          }
+        }
+
+        expect(target_song.reload.requested_by_customer_id).not_to eq outsider.id
+      end
+
+      it "論理削除済みCustomer IDを直接POSTしても保存されないこと" do
+        member.update!(is_deleted: true)
+        target_song = event.songs.first
+
+        put public_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => { id: target_song.id, requested_by_customer_id: member.id }
+            }
+          }
+        }
+
+        expect(target_song.reload.requested_by_customer_id).not_to eq member.id
+      end
+
+      it "存在しないCustomer IDを直接POSTしても500エラーにならないこと" do
+        target_song = event.songs.first
+
+        put public_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => { id: target_song.id, requested_by_customer_id: 999_999_999 }
+            }
+          }
+        }
+
+        expect(response.status).not_to eq 500
+        expect(target_song.reload.requested_by_customer_id).to be_nil
+      end
+
+      it "既存のSong属性(曲名等)と同時に保存できること" do
+        target_song = event.songs.first
+
+        put public_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => { id: target_song.id, song_name: "リクエスト付き曲", requested_by_customer_id: member.id }
+            }
+          }
+        }
+
+        target_song.reload
+        expect(target_song.song_name).to eq "リクエスト付き曲"
+        expect(target_song.requested_by_customer_id).to eq member.id
+      end
+
+      it "既存のイベント編集権限(投稿者本人)で保存できること" do
+        target_song = event.songs.first
+
+        put public_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => { id: target_song.id, requested_by_customer_id: member.id }
+            }
+          }
+        }
+
+        expect(response).to redirect_to(public_event_path(event))
+      end
+
+      it "投稿者本人でなければリクエスト者を変更できないこと" do
+        target_song = event.songs.first
+        sign_in other_customer
+
+        put public_event_path(event), params: {
+          event: {
+            songs_attributes: {
+              "0" => { id: target_song.id, requested_by_customer_id: member.id }
+            }
+          }
+        }
+
+        expect(response.status).to eq 302
+        expect(target_song.reload.requested_by_customer_id).to be_nil
+      end
+    end
+
+    context "イベントコピー時のrequested_by_customer_id引き継ぎ" do
+      let(:member) { FactoryBot.create(:customer, name: "参加太郎") }
+
+      before do
+        CommunityCustomer.find_or_create_by!(customer: member, community: community)
+      end
+
+      it "同一コミュニティかつ有効メンバーならコピーされること" do
+        event.songs.first.update!(requested_by_customer_id: member.id)
+
+        get copy_public_event_path(event)
+
+        expect(selected_requested_by_customer_value(response.body)).to eq member.id.to_s
+      end
+
+      it "別コミュニティへのコピーではrequested_by_customer_idが引き継がれないこと" do
+        event.songs.first.update!(requested_by_customer_id: member.id)
+        other_community = FactoryBot.create(:community)
+
+        get copy_public_event_path(event, community_id: other_community.id)
+
+        expect(selected_requested_by_customer_value(response.body)).to eq ""
+      end
+
+      it "同一コミュニティでも退会済みならコピーされないこと" do
+        event.songs.first.update!(requested_by_customer_id: member.id)
+        CommunityCustomer.find_by!(customer: member, community: community).destroy!
+
+        get copy_public_event_path(event)
+
+        expect(selected_requested_by_customer_value(response.body)).to eq ""
+      end
+
+      it "同一コミュニティでも論理削除済みならコピーされないこと" do
+        event.songs.first.update!(requested_by_customer_id: member.id)
+        member.update!(is_deleted: true)
+
+        get copy_public_event_path(event)
+
+        expect(selected_requested_by_customer_value(response.body)).to eq ""
+      end
+
+      it "未設定ならnilのままコピーされること" do
+        get copy_public_event_path(event)
+
+        expect(selected_requested_by_customer_value(response.body)).to eq ""
+      end
+    end
+
     context "eventページを正しく削除(destroy)できる" do
       it '正しく削除できる（投稿者本人である場合）' do
         event
@@ -905,6 +1094,11 @@ RSpec.describe "Public::Events", type: :request do
         expect(response.status).to eq 302
       end
     end
+  end
+
+  def selected_requested_by_customer_value(response_body)
+    doc = Nokogiri::HTML(response_body)
+    doc.at_css("select[name*='requested_by_customer_id'] option[selected]")&.[]("value").to_s
   end
 
   def event_create_params(community)

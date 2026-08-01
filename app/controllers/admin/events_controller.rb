@@ -4,6 +4,7 @@ class Admin::EventsController < ApplicationController
   before_action :authenticate_admin!
   before_action :set_event, only: [:show, :edit, :update, :destroy]
   before_action :set_song_templates, only: [:new, :create, :edit, :update]
+  before_action :set_requested_by_customer_candidates, only: [:new, :create, :edit, :update]
 
   def index
     @events = Event.includes(:community, :customer).order(created_at: :desc)
@@ -88,6 +89,7 @@ class Admin::EventsController < ApplicationController
         :id, :event_id, :song_name, :artist_name, :performance_time, :performance_start_time,
         :youtube_url, :chord_sheet_url, :tab_sheet_url, :musical_key, :capo, :chord_sheet_note,
         :introduction, :position, :_destroy,
+        :requested_by_customer_id,
         join_parts_attributes: [:id, :join_part_name, :_destroy]
       ],
     )
@@ -107,6 +109,18 @@ class Admin::EventsController < ApplicationController
       end
 
     @song_templates = @template_community ? @template_community.song_templates.order(:song_name) : SongTemplate.none
+  end
+
+  # public/events/_song_fieldsパーシャルを管理画面でも共有しているため、
+  # Public::EventsController#set_requested_by_customer_candidatesと同じ考え方で
+  # @requested_by_customer_candidatesを用意する(未用意だとcollection_select描画時にnilエラーになる)。
+  def set_requested_by_customer_candidates
+    @requested_by_customer_candidates =
+      if @template_community
+        @template_community.customers.where(is_deleted: false).distinct.order(:name)
+      else
+        Customer.none
+      end
   end
 
   def build_default_song

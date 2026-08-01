@@ -18,5 +18,8 @@ FactoryBot.define do
     trait :with_tab_sheet do
       tab_sheet_url { "https://example.com/tab-sheet" }
     end
+    trait :with_requester do
+      association :requested_by_customer, factory: :customer
+    end
   end
 end
