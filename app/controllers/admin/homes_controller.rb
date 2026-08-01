@@ -12,7 +12,7 @@ class Admin::HomesController < ApplicationController
     current_admin.admin_notifications.where(id: @admin_notifications.map(&:id), checked: false).update_all(checked: true)
 
     @customers = Customer
-      .includes(:member_profile, :subscription)
+      .includes(:member_profile, :subscription, community_owners: :community, community_event_editors: :community)
       .references(:member_profile)
 
     if params[:member_type].present?
@@ -38,6 +38,13 @@ class Admin::HomesController < ApplicationController
         member_profiles: { contact_preference: params[:contact_preference] }
       )
     end
+
+    @customers = @customers.to_a
+
+    # Community#owner_idは公開画面からのコミュニティ作成時にのみ設定され、
+    # CommunityOwnerへは同期されないため、オーナー件数の算出にはこちらも合算する必要がある。
+    @direct_owned_communities_by_customer_id =
+      Community.where(owner_id: @customers.map(&:id)).group_by(&:owner_id)
   end
 
 end
