@@ -187,6 +187,11 @@ RSpec.describe Song, type: :model do
         expect(Song.reflect_on_association(:join_parts).macro).to eq :has_many
       end
     end
+    context 'requested_by_customerモデルとの関係' do
+      it 'requested_by_customerとN:1となっている' do
+        expect(Song.reflect_on_association(:requested_by_customer).macro).to eq :belongs_to
+      end
+    end
   end
 
   describe '#recruiting_join_parts' do
@@ -207,6 +212,99 @@ RSpec.describe Song, type: :model do
 
     it 'パートが存在しない場合は空配列を返すこと' do
       expect(song.recruiting_join_parts).to eq []
+    end
+  end
+
+  describe '#requested_by_customer' do
+    let(:member) { FactoryBot.create(:customer, name: "参加太郎") }
+    let(:other_member) { FactoryBot.create(:customer, name: "参加次郎") }
+    let(:outsider) { FactoryBot.create(:customer, name: "部外者花子") }
+
+    before do
+      CommunityCustomer.find_or_create_by!(customer: member, community: community)
+      CommunityCustomer.find_or_create_by!(customer: other_member, community: community)
+    end
+
+    it '未設定で保存できること' do
+      new_song = FactoryBot.build(:song, event: event, requested_by_customer_id: nil)
+      expect(new_song).to be_valid
+    end
+
+    it '有効なコミュニティメンバーを新規設定できること' do
+      new_song = FactoryBot.build(:song, event: event, requested_by_customer_id: member.id)
+      expect(new_song).to be_valid
+    end
+
+    it 'コミュニティ外Customerを新規設定できないこと' do
+      new_song = FactoryBot.build(:song, event: event, requested_by_customer_id: outsider.id)
+      expect(new_song).to be_invalid
+      expect(new_song.errors[:requested_by_customer]).to be_present
+    end
+
+    it '論理削除済みCustomerを新規設定できないこと' do
+      member.update!(is_deleted: true)
+      new_song = FactoryBot.build(:song, event: event, requested_by_customer_id: member.id)
+      expect(new_song).to be_invalid
+    end
+
+    it '設定済みのリクエスト者をnilへ解除できること' do
+      song.update!(requested_by_customer_id: member.id)
+      expect(song.update(requested_by_customer_id: nil)).to eq true
+      expect(song.reload.requested_by_customer_id).to be_nil
+    end
+
+    it '同じCustomerを複数曲へ設定できること' do
+      song.update!(requested_by_customer_id: member.id)
+      other_song = FactoryBot.build(:song, event: event, requested_by_customer_id: member.id)
+      expect(other_song).to be_valid
+    end
+
+    it 'eventが未設定でも例外が発生しないこと' do
+      unattached_song = Song.new(song_name: "unattached", requested_by_customer_id: member.id)
+      expect { unattached_song.valid? }.not_to raise_error
+    end
+
+    it '登録後にリクエスト者が退会しても、他のSong属性を更新できること' do
+      song.update!(requested_by_customer_id: member.id)
+      CommunityCustomer.find_by!(customer: member, community: community).destroy!
+
+      expect(song.update(song_name: "更新後の曲名")).to eq true
+      expect(song.reload.song_name).to eq "更新後の曲名"
+      expect(song.reload.requested_by_customer_id).to eq member.id
+    end
+
+    it '登録後にリクエスト者が論理削除されても、他のSong属性を更新できること' do
+      song.update!(requested_by_customer_id: member.id)
+      member.update!(is_deleted: true)
+
+      expect(song.update(song_name: "更新後の曲名2")).to eq true
+      expect(song.reload.song_name).to eq "更新後の曲名2"
+      expect(song.reload.requested_by_customer_id).to eq member.id
+    end
+
+    it '退会済みCustomerから別の有効メンバーへ変更できること' do
+      song.update!(requested_by_customer_id: member.id)
+      CommunityCustomer.find_by!(customer: member, community: community).destroy!
+
+      expect(song.update(requested_by_customer_id: other_member.id)).to eq true
+      expect(song.reload.requested_by_customer_id).to eq other_member.id
+    end
+
+    it '退会済みCustomerを解除できること' do
+      song.update!(requested_by_customer_id: member.id)
+      CommunityCustomer.find_by!(customer: member, community: community).destroy!
+
+      expect(song.update(requested_by_customer_id: nil)).to eq true
+      expect(song.reload.requested_by_customer_id).to be_nil
+    end
+
+    it '解除後、退会済みのCustomerを再設定することはできないこと' do
+      song.update!(requested_by_customer_id: member.id)
+      CommunityCustomer.find_by!(customer: member, community: community).destroy!
+      song.update!(requested_by_customer_id: nil)
+
+      expect(song.update(requested_by_customer_id: member.id)).to eq false
+      expect(song.errors[:requested_by_customer]).to be_present
     end
   end
 

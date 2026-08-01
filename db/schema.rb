@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_07_29_120000) do
+ActiveRecord::Schema.define(version: 2026_08_01_032437) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -1230,7 +1230,9 @@ ActiveRecord::Schema.define(version: 2026_07_29_120000) do
     t.integer "capo"
     t.text "chord_sheet_note"
     t.string "tab_sheet_url", limit: 2048
+    t.bigint "requested_by_customer_id"
     t.index ["event_id"], name: "index_songs_on_event_id"
+    t.index ["requested_by_customer_id"], name: "index_songs_on_requested_by_customer_id"
   end
 
   create_table "subscriptions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1406,6 +1408,7 @@ ActiveRecord::Schema.define(version: 2026_07_29_120000) do
   add_foreign_key "song_templates", "communities"
   add_foreign_key "song_templates", "customers"
   add_foreign_key "song_templates", "songs", column: "source_song_id"
+  add_foreign_key "songs", "customers", column: "requested_by_customer_id"
   add_foreign_key "songs", "events"
   add_foreign_key "subscriptions", "customers"
   add_foreign_key "taggings", "tags"

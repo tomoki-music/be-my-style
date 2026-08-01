@@ -273,6 +273,15 @@
                                         %br
                                       %div{ style: "white-space: normal; word-break: break-word;" }
                                         = link_to song.song_name, public_event_song_path(@event, song), class: "song-detail-link", data: { turbolinks: false }
+                                      - if song.requested_by_customer.present?
+                                        %div.song-requester.text-muted{ style: "font-size: 0.85em;" }
+                                          %i.fa-solid.fa-user
+                                          リクエスト：
+                                          - if song.requested_by_customer.is_deleted?
+                                            = song.requested_by_customer.name
+                                          - else
+                                            = link_to song.requested_by_customer.name, public_customer_path(song.requested_by_customer), data: { turbolinks: false }
+                                          さん
                                       = render "public/events/youtube_card", card: youtube_card_for(song)
 
                                     %td

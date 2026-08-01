@@ -5,6 +5,7 @@ class Song < ApplicationRecord
   ].freeze
 
   belongs_to :event, inverse_of: :songs
+  belongs_to :requested_by_customer, class_name: "Customer", optional: true
   has_many :song_customers, dependent: :destroy
   has_many :customers, through: :song_customers, dependent: :destroy
   has_many :join_parts, dependent: :destroy
@@ -50,6 +51,11 @@ class Song < ApplicationRecord
             length: { maximum: 2048 },
             allow_blank: true
 
+  # requested_by_customer_idを新規設定・変更する時だけ所属チェックを行う。
+  # 登録後にリクエスト者が退会・論理削除されても、他のSong属性の更新まで
+  # 巻き込んで保存不能にしないため(退会後も履歴として表示し続ける方針)。
+  validate :requested_by_customer_must_be_eligible_member, if: :validate_requested_by_customer_eligibility?
+
   before_validation :set_default_position, on: :create
 
   # 参加者が0人のパートを「募集中」とみなす。Public::EventsController#showの
@@ -70,6 +76,17 @@ class Song < ApplicationRecord
 
   def set_default_position
     self.position ||= (event.songs.maximum(:position) || 0) + 1 if event.present?
+  end
+
+  def validate_requested_by_customer_eligibility?
+    requested_by_customer_id.present? && will_save_change_to_requested_by_customer_id?
+  end
+
+  def requested_by_customer_must_be_eligible_member
+    return if event.blank? || event.community.blank?
+
+    eligible = event.community.customers.where(id: requested_by_customer_id, is_deleted: false).exists?
+    errors.add(:requested_by_customer, "は対象コミュニティの有効なメンバーではありません") unless eligible
   end
 
 end
