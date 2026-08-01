@@ -1,4 +1,45 @@
 module Admin::CustomersHelper
+  ROLE_BADGE_COLORS = {
+    admin: "danger",
+    community_owner: "warning",
+    manager: "info",
+    general: "secondary"
+  }.freeze
+
+  # 一覧上の「管理者」はCustomer#is_ownerのenum(admin?)を指し、
+  # 管理画面へログインするAdminモデル(current_admin)とは別概念。
+  # オーナー/マネージャーはenumではなく実際の担当関連(CommunityOwner/owner_id、
+  # CommunityEventEditor)を正として判定する。
+  #
+  # 管理者はBeMyStyleにおける最上位ロールのため、CommunityOwner/CommunityEventEditorの
+  # 関連が残っていても一覧上は「管理者」のみを表示し、オーナー・マネージャーは併記しない。
+  #
+  # direct_owned_communities: Admin::HomesController#topで一括取得した
+  # Community#owner_id経由の担当コミュニティ配列(customer単位)。
+  def admin_customer_role_items(customer, direct_owned_communities = [])
+    return [{ key: :admin, count: nil }] if customer.admin?
+
+    items = []
+
+    owner_count = admin_customer_owner_community_ids(customer, direct_owned_communities).size
+    items << { key: :community_owner, count: owner_count } if owner_count.positive?
+
+    manager_count = customer.community_event_editors.map(&:community_id).uniq.size
+    items << { key: :manager, count: manager_count } if manager_count.positive?
+
+    items << { key: :general, count: nil } if items.empty?
+
+    items
+  end
+
+  def admin_customer_role_badges(customer, direct_owned_communities = [])
+    badges = admin_customer_role_items(customer, direct_owned_communities).map do |item|
+      content_tag(:span, role_badge(item[:key], item[:count]), class: "mr-1 mb-1")
+    end
+
+    content_tag(:div, safe_join(badges), class: "d-flex flex-wrap")
+  end
+
   # メンバーの志向
   def member_type_badge(type)
     return badge("未設定", "secondary") if type.blank?
@@ -98,6 +139,20 @@ module Admin::CustomersHelper
   end
 
   private
+
+  def admin_customer_owner_community_ids(customer, direct_owned_communities)
+    association_community_ids = customer.community_owners.map(&:community_id)
+    direct_owner_community_ids = direct_owned_communities.map(&:id)
+
+    (association_community_ids + direct_owner_community_ids).compact.uniq
+  end
+
+  def role_badge(key, count)
+    label = I18n.t("admin.customers.roles.#{key}")
+    label = "#{label}（#{count}）" if count.present?
+
+    badge(label, ROLE_BADGE_COLORS.fetch(key))
+  end
 
   def badge(label, color)
     content_tag(:span, label, class: "badge badge-#{color} me-1")

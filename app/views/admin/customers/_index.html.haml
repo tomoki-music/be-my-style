@@ -46,6 +46,7 @@
     %tr
       %th ID
       %th 名前
+      %th ロール
       %th 最終ログイン日
       %th ログイン回数
       %th 契約プラン
@@ -82,6 +83,9 @@
             %span.fw-semibold.text-decoration-line-through= customer.name
           - else
             = customer.name
+
+        %td
+          = admin_customer_role_badges(customer, @direct_owned_communities_by_customer_id[customer.id] || [])
 
         %td= customer.current_sign_in_at&.strftime('%Y/%m/%d') || '-'
         %td= "#{customer.sign_in_count}回"

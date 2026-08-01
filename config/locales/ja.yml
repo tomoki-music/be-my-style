@@ -264,6 +264,13 @@ ja:
         growth: 成長志向
         challenge_member: 挑戦者
         unclassified: 未設定
+  admin:
+    customers:
+      roles:
+        general: 一般会員
+        admin: 管理者
+        community_owner: オーナー
+        manager: マネージャー
   devise:
     failure:
       deleted_account: "このアカウントは退会済みです。"
