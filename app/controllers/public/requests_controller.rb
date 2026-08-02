@@ -28,10 +28,10 @@ class Public::RequestsController < ApplicationController
   private
 
   # 通常通知(request-msg)の対象は従来通り「イベント開催者+イベント参加者」のまま維持する。
-  # メンション通知(mention_request)の対象は「イベント参加者 かつ 開催元コミュニティの
-  # 有効メンバー」(Requests::MentionResolver、Event#mentionable_participants)であり、
-  # イベント開催者は自身が参加登録していなければ含まれないため、通常通知の対象と厳密には
-  # 一致しない(例: 参加登録していない開催者がメンションされることはない)。
+  # メンション通知(mention_request)の対象は「開催元コミュニティの有効メンバー」
+  # (Requests::MentionResolver、Event#mentionable_community_members)であり、
+  # イベントへの参加登録の有無を問わないため、通常通知の対象と厳密には一致しない
+  # (例: コミュニティメンバーだが参加登録していない人もメンション通知の対象になりうる)。
   # そのため両者は独立に算出し、メンションされた相手には通常通知を送らないことでのみ
   # 重複を防ぐ(投稿者本人はMentionResolver・通常対象のいずれからも除外済み)。
   def notify_request_recipients(event, request, poster)

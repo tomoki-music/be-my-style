@@ -21,7 +21,7 @@ RSpec.describe "events#mention_candidates", type: :request do
   context "ログイン済みの場合" do
     before { sign_in customer }
 
-    it "200 OKでALL候補+イベント参加者かつコミュニティメンバーの候補をJSONで返すこと" do
+    it "200 OKでALL候補+開催元コミュニティメンバーの候補をJSONで返すこと" do
       get mention_candidates_public_event_path(event)
       expect(response).to have_http_status(200)
 
@@ -37,13 +37,13 @@ RSpec.describe "events#mention_candidates", type: :request do
       expect(body.map { |c| c["id"] }).not_to include(customer.id)
     end
 
-    it "イベントへ演奏参加登録していないコミュニティメンバーは候補に含まれないこと" do
+    it "イベントへ演奏参加登録していないコミュニティメンバーも候補に含まれること" do
       member_only = create(:customer, name: "興味太郎")
       CommunityCustomer.find_or_create_by!(customer: member_only, community: community)
 
       get mention_candidates_public_event_path(event)
       body = JSON.parse(response.body)
-      expect(body.map { |c| c["id"] }).not_to include(member_only.id)
+      expect(body.map { |c| c["id"] }).to include(member_only.id)
     end
 
     it "イベントへ演奏参加していても、開催元コミュニティのメンバーでなければ候補に含まれないこと" do

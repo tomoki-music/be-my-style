@@ -91,7 +91,7 @@ RSpec.describe "イベントリクエストの@メンション", type: :system d
     JS
   end
 
-  it "input[type=text]の#input_requestは@入力で候補ドロップダウン(ALL+イベント参加者)を表示すること" do
+  it "input[type=text]の#input_requestは@入力で候補ドロップダウン(ALL+開催元コミュニティメンバー)を表示すること" do
     sign_in_via_form(poster)
     visit public_event_path(event)
 
@@ -105,14 +105,14 @@ RSpec.describe "イベントリクエストの@メンション", type: :system d
     expect(page).to have_selector(".mention-autocomplete-item", text: participant.name)
   end
 
-  it "イベント未参加の開催元コミュニティメンバーは候補ドロップダウンに表示されないこと" do
+  it "イベント未参加の開催元コミュニティメンバーも候補ドロップダウンに表示されること" do
     sign_in_via_form(poster)
     visit public_event_path(event)
 
     type_into_input_request("@")
     expect(page).to have_selector(".mention-autocomplete-item", text: participant.name, wait: 10)
 
-    expect(page).not_to have_selector(".mention-autocomplete-item", text: member_not_participating.name)
+    expect(page).to have_selector(".mention-autocomplete-item", text: member_not_participating.name)
   end
 
   it "イベント参加はしていても開催元コミュニティのメンバーでないCustomerは候補ドロップダウンに表示されないこと" do
@@ -161,7 +161,7 @@ RSpec.describe "イベントリクエストの@メンション", type: :system d
     expect(Notification.where(visited_id: participant.id, action: "request-msg")).to be_empty
   end
 
-  it "@ALLを選択して投稿すると、投稿者以外のイベント参加者かつ開催元コミュニティ有効メンバー全員へメンション通知が作成されること" do
+  it "@ALLを選択して投稿すると、投稿者以外の開催元コミュニティ有効メンバー全員へメンション通知が作成されること" do
     sign_in_via_form(poster)
     visit public_event_path(event)
 
@@ -176,7 +176,7 @@ RSpec.describe "イベントリクエストの@メンション", type: :system d
 
     expect(page).to have_selector(".chat-mention--all", wait: 10)
     expect(Notification.where(visited_id: participant.id, action: "mention_request")).to be_present
-    expect(Notification.where(visited_id: member_not_participating.id, action: "mention_request")).to be_empty
+    expect(Notification.where(visited_id: member_not_participating.id, action: "mention_request")).to be_present
     expect(Notification.where(visited_id: poster.id)).to be_empty
   end
 
