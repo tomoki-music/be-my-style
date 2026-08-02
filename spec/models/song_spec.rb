@@ -235,7 +235,25 @@ RSpec.describe Song, type: :model do
       expect(new_song).to be_valid
     end
 
+    it 'イベントに参加登録していないコミュニティメンバーでも新規設定できること' do
+      # memberはCommunityCustomerのみでjoin_part_customer(イベント参加)は一切作成していない。
+      # 候補条件が「コミュニティ所属メンバー ∩ イベント参加者」になっていないことを保証する。
+      expect(song.join_parts.flat_map(&:customers)).not_to include(member)
+
+      new_song = FactoryBot.build(:song, event: event, requested_by_customer_id: member.id)
+      expect(new_song).to be_valid
+    end
+
     it 'コミュニティ外Customerを新規設定できないこと' do
+      new_song = FactoryBot.build(:song, event: event, requested_by_customer_id: outsider.id)
+      expect(new_song).to be_invalid
+      expect(new_song.errors[:requested_by_customer]).to be_present
+    end
+
+    it 'イベント参加者であっても、開催コミュニティに所属していなければ新規設定できないこと' do
+      join_part = FactoryBot.create(:join_part, song: song, join_part_name: 'ギター')
+      FactoryBot.create(:join_part_customer, join_part: join_part, customer: outsider)
+
       new_song = FactoryBot.build(:song, event: event, requested_by_customer_id: outsider.id)
       expect(new_song).to be_invalid
       expect(new_song.errors[:requested_by_customer]).to be_present

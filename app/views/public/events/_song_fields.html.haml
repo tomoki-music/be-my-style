@@ -6,7 +6,7 @@
       %span.drag-handle ⇅
       %button.btn.btn-sm.btn-outline-info.ml-2#drag-help-btn{ type: "button", data: { toggle: "popover", html: true, content: "上下にドラッグすると曲の順番を並べ替えできます。", placement: "left" } }
         ?
-    .field
+    .field.song-requested-by-customer-field
       = f.label :requested_by_customer_id, "リクエストした人"
       - if @template_community.present?
         = f.collection_select :requested_by_customer_id, @requested_by_customer_candidates, :id, :name, { include_blank: "指定なし" }, class: "form-control"

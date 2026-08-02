@@ -1129,6 +1129,13 @@ input[type="text"] {
   height: 40px;
 }
 
+// 「リクエストした人」欄と直下の「楽曲名」欄が視覚的に繋がって見えないための余白。
+// 公開側・管理画面側どちらも同じ_song_fieldsパーシャルを使うため、
+// .event-container配下に限定せずトップレベルで定義する。
+.song-requested-by-customer-field {
+  margin-bottom: 12px;
+}
+
 @media (max-width: 600px) {
   .event-container{
     width: 90%;

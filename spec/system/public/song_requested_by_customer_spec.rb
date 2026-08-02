@@ -94,6 +94,39 @@ RSpec.describe "楽曲のリクエストした人", type: :system do
       expect(page).to have_content("イベントの編集が完了しました", wait: 10)
       expect(song.reload.requested_by_customer_id).to be_nil
     end
+
+    it "保存済みのリクエスト者が選択された状態で表示されること" do
+      song.update!(requested_by_customer_id: member.id)
+      sign_in_via_form(customer)
+      visit edit_public_event_path(event)
+
+      expect(requester_select.value).to eq member.id.to_s
+    end
+  end
+
+  describe "候補者の範囲(開催コミュニティ所属 vs イベント参加)" do
+    it "コミュニティ所属メンバーは、そのイベントに参加登録していなくても候補に表示されること" do
+      expect(song.join_parts.flat_map(&:customers)).not_to include(member)
+
+      sign_in_via_form(customer)
+      visit edit_public_event_path(event)
+
+      within requester_select do
+        expect(page).to have_content("参加太郎")
+      end
+    end
+
+    it "イベント参加者であっても、開催コミュニティに所属していなければ候補に表示されないこと" do
+      join_part = create(:join_part, song: song, join_part_name: "ギター")
+      create(:join_part_customer, join_part: join_part, customer: outsider)
+
+      sign_in_via_form(customer)
+      visit edit_public_event_path(event)
+
+      within requester_select do
+        expect(page).not_to have_content("部外者花子")
+      end
+    end
   end
 
   describe "動的に追加した楽曲行" do
