@@ -47,6 +47,21 @@ RSpec.describe "楽曲のリクエストした人", type: :system do
     end
   end
 
+  describe "楽曲フォーム内の項目順" do
+    it "リクエストした人が楽曲名より前に表示されること" do
+      sign_in_via_form(customer)
+      visit new_public_event_path(community_id: community.id)
+
+      fields = all(".song-layout")[0].all(".field")
+      requester_index = fields.index { |field| field.has_selector?("select[name*='requested_by_customer_id']", wait: false) }
+      song_name_index = fields.index { |field| field.has_selector?("input[name*='[song_name]']", wait: false) }
+
+      expect(requester_index).not_to be_nil
+      expect(song_name_index).not_to be_nil
+      expect(requester_index).to be < song_name_index
+    end
+  end
+
   describe "編集画面の候補一覧" do
     let!(:deleted_member) { create(:customer, name: "退会済み花子") }
 
