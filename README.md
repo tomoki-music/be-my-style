@@ -154,3 +154,11 @@ DISABLE_SPRING=1 bundle exec rspec
 
 `db:test:prepare` を環境指定なしで実行すると development 側のMySQL接続を見に行くことがあるため、
 ローカルでは上記の `RAILS_ENV=test` 付きコマンドを使ってください。
+
+## ツール
+
+Railsアプリ本体とは独立した、サーバーサイド処理なしの静的ツール群です。
+
+- [数秘データ自動照合ツール](tools/numerology-data-matcher/README.md)（`tools/numerology-data-matcher/`）:
+  数秘診断済みデータと申込者データを氏名で照合し、数秘4項目を一括反映するツール。処理はブラウザ内で完結し、
+  入力データを外部サーバーへ送信しません。

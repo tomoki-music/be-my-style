@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数秘データ自動照合ツール</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="app-header">
+  <h1>数秘データ自動照合ツール</h1>
+  <p class="app-lead">数秘診断済みデータと申込者データを氏名で照合し、鍵の数・魂の数・使命数・数秘表記を一括反映します。</p>
+  <div class="privacy-notice">
+    <strong>個人情報保護について：</strong>このツールの処理はブラウザ内で行われます。入力した氏名・メールアドレス・アンケート情報などが外部サーバーへ送信されることはありません。
+  </div>
+</header>
+
+<main>
+
+  <section class="step" id="step-a">
+    <h2><span class="step-no">1</span>数秘データあり（元データA）を入力</h2>
+    <div class="input-tabs" data-target="a">
+      <button type="button" class="tab-btn active" data-input-mode="paste" data-target="a">貼り付け</button>
+      <button type="button" class="tab-btn" data-input-mode="file" data-target="a">ファイルを選択</button>
+    </div>
+    <div class="input-pane" data-mode-pane="paste" data-target="a">
+      <textarea id="paste-a" rows="6" placeholder="氏名・鍵の数・魂の数・使命数・数秘表記を含む表を貼り付けてください"></textarea>
+    </div>
+    <div class="input-pane hidden" data-mode-pane="file" data-target="a">
+      <input type="file" id="file-a" accept=".csv,.tsv,.txt">
+    </div>
+    <button type="button" class="btn btn-primary" id="load-a-btn">Aを読み込む</button>
+    <div class="field-error" id="error-a" aria-live="polite"></div>
+    <div class="input-preview" id="preview-a"></div>
+  </section>
+
+  <section class="step" id="step-b">
+    <h2><span class="step-no">2</span>反映先データ（データB）を入力</h2>
+    <div class="input-tabs" data-target="b">
+      <button type="button" class="tab-btn active" data-input-mode="paste" data-target="b">貼り付け</button>
+      <button type="button" class="tab-btn" data-input-mode="file" data-target="b">ファイルを選択</button>
+    </div>
+    <div class="input-pane" data-mode-pane="paste" data-target="b">
+      <textarea id="paste-b" rows="6" placeholder="氏名列を含む申込者データなどを貼り付けてください"></textarea>
+    </div>
+    <div class="input-pane hidden" data-mode-pane="file" data-target="b">
+      <input type="file" id="file-b" accept=".csv,.tsv,.txt">
+    </div>
+    <button type="button" class="btn btn-primary" id="load-b-btn">Bを読み込む</button>
+    <div class="field-error" id="error-b" aria-live="polite"></div>
+    <div class="input-preview" id="preview-b"></div>
+  </section>
+
+  <section class="step hidden" id="step-columns">
+    <h2><span class="step-no">3</span>列を選択</h2>
+
+    <div class="column-group">
+      <h3>データA（数秘診断済み）</h3>
+      <label>照合に使う氏名列
+        <select id="col-a-name"></select>
+      </label>
+      <label>鍵の数列
+        <select id="col-a-key"></select>
+      </label>
+      <label>魂の数列
+        <select id="col-a-soul"></select>
+      </label>
+      <label>使命数列
+        <select id="col-a-mission"></select>
+      </label>
+      <label>数秘表記列
+        <select id="col-a-notation"></select>
+      </label>
+    </div>
+
+    <div class="column-group">
+      <h3>データB（反映先）</h3>
+      <label>照合に使う氏名列
+        <select id="col-b-name"></select>
+      </label>
+    </div>
+
+    <div class="conflict-panel hidden" id="conflict-panel">
+      <p>データBにはすでに「鍵の数」「魂の数」「使命数」「数秘表記」のいずれかの列が存在します。どちらの方法で反映しますか？</p>
+      <label><input type="radio" name="dup-column-choice" value="overwrite">既存の列を上書きする</label>
+      <label><input type="radio" name="dup-column-choice" value="rename">新しい列名（例：鍵の数(数秘)）で追加する</label>
+    </div>
+
+    <div class="field-error" id="error-columns" aria-live="polite"></div>
+  </section>
+
+  <section class="step hidden" id="step-run">
+    <h2><span class="step-no">4</span>照合を実行</h2>
+    <button type="button" class="btn btn-primary btn-large" id="run-match-btn">照合を実行する</button>
+  </section>
+
+  <section class="step hidden" id="step-summary">
+    <h2><span class="step-no">5</span>集計結果</h2>
+    <div class="summary-tiles" id="summary-tiles"></div>
+  </section>
+
+  <section class="step hidden" id="step-filter">
+    <h2><span class="step-no">6</span>フィルター</h2>
+    <div class="filter-bar">
+      <div class="filter-buttons" id="filter-buttons">
+        <button type="button" class="filter-btn active" data-filter="all">すべて</button>
+        <button type="button" class="filter-btn" data-filter="match">一致のみ</button>
+        <button type="button" class="filter-btn" data-filter="no_match">未一致のみ</button>
+        <button type="button" class="filter-btn" data-filter="duplicate">重複・要確認のみ</button>
+      </div>
+      <label class="search-label">氏名検索
+        <input type="text" id="search-input" placeholder="氏名で絞り込み">
+      </label>
+    </div>
+  </section>
+
+  <section class="step hidden" id="step-table">
+    <h2><span class="step-no">7</span>結果テーブル</h2>
+    <div class="table-scroll" id="table-scroll">
+      <table id="result-table">
+        <thead><tr id="result-thead-row"></tr></thead>
+        <tbody id="result-tbody"></tbody>
+      </table>
+    </div>
+    <p class="table-count" id="table-count"></p>
+  </section>
+
+  <section class="step hidden" id="step-export">
+    <h2><span class="step-no">8</span>コピー・ダウンロード</h2>
+    <div class="export-buttons">
+      <button type="button" class="btn" id="copy-btn">スプレッドシート用にコピー</button>
+      <button type="button" class="btn" id="download-csv-btn">全結果をCSVでダウンロード</button>
+      <button type="button" class="btn" id="download-tsv-btn">全結果をTSVでダウンロード</button>
+      <button type="button" class="btn" id="download-no-match-btn">未一致者のみCSVでダウンロード</button>
+      <button type="button" class="btn" id="download-duplicate-btn">重複・要確認者のみCSVでダウンロード</button>
+    </div>
+    <p class="export-status" id="export-status" aria-live="polite"></p>
+  </section>
+
+  <section class="step" id="step-reset">
+    <h2><span class="step-no">9</span>すべてクリア</h2>
+    <button type="button" class="btn btn-danger" id="reset-btn">すべてクリア</button>
+  </section>
+
+</main>
+
+<script src="js/csv.js"></script>
+<script src="js/matcher.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
