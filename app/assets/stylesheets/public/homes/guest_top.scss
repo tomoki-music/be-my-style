@@ -162,6 +162,15 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
 
     &--light { color: rgba(255, 255, 255, .75); }
   }
+  .glp-hero-login {
+    margin: 6px 0 0; font-size: .82rem; color: rgba(255, 255, 255, .55);
+  }
+  .glp-hero-login-link {
+    color: $glp-accent; font-weight: 700;
+    text-decoration: underline; text-underline-offset: 3px;
+
+    &:hover { color: #fff; }
+  }
 
   .glp-hero-notes {
     display: flex; gap: 20px; flex-wrap: wrap; margin-top: 22px; color: rgba(255, 255, 255, .62); font-size: .9rem;

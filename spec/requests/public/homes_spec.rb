@@ -40,6 +40,14 @@ RSpec.describe "Public::Homes", type: :request do
         expect(login_link["href"]).to eq(new_customer_session_path)
       end
 
+      it "ファーストビュー(Hero)にも既存会員向けログイン導線が表示され、ログイン画面(new_customer_session_path)へ遷移すること" do
+        doc = Nokogiri::HTML(response.body)
+        hero_login_link = doc.at_css(".glp-hero-login-link")
+        expect(hero_login_link).to be_present
+        expect(hero_login_link["href"]).to eq(new_customer_session_path)
+        expect(hero_login_link.text).to include("ログインはこちら")
+      end
+
       it "フッターのコミュニティリンクがコミュニティ一覧(public_communities_path)を指すこと" do
         expect(response.body).to include(%(href="#{public_communities_path}"))
       end
