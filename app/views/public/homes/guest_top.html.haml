@@ -17,6 +17,7 @@
         %a{ href: "#features" } できること
         %a{ href: "#story" } 開発ストーリー
         %a{ href: "#faq" } よくある質問
+        = link_to "ログイン", new_customer_session_path, class: "glp-nav-login", data: { turbolinks: false }
         = link_to "無料で始める", new_customer_registration_path, class: "glp-nav-cta", data: { turbolinks: false }
 
   %main
@@ -48,6 +49,9 @@
             = link_to "無料ではじめる", new_customer_registration_path, class: "glp-btn glp-btn--primary", data: { turbolinks: false }
             = link_to "無料登録してAI歌唱診断を試す", new_singing_customer_registration_path, class: "glp-btn glp-btn--ghost", data: { turbolinks: false }
           %p.glp-hero-subnote 登録は無料です
+          %p.glp-hero-login
+            すでに会員の方は
+            = link_to "ログインはこちら", new_customer_session_path, class: "glp-hero-login-link", data: { turbolinks: false }
 
           .glp-hero-notes
             %span AI歌唱診断
