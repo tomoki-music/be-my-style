@@ -56,6 +56,13 @@ $glp-shadow: 0 24px 80px rgba(15, 23, 42, .14);
 
     a:hover { color: #fff; }
   }
+  .glp-nav-login {
+    padding: 10px 17px; border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .3);
+    color: #fff !important; font-weight: 700;
+
+    &:hover { border-color: rgba(255, 255, 255, .5); }
+  }
   .glp-nav-cta {
     padding: 11px 18px; border-radius: 999px;
     background: #fff; color: #0f172a !important; font-weight: 700;

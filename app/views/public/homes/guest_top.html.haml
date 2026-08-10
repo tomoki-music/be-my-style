@@ -17,6 +17,7 @@
         %a{ href: "#features" } できること
         %a{ href: "#story" } 開発ストーリー
         %a{ href: "#faq" } よくある質問
+        = link_to "ログイン", new_customer_session_path, class: "glp-nav-login", data: { turbolinks: false }
         = link_to "無料で始める", new_customer_registration_path, class: "glp-nav-cta", data: { turbolinks: false }
 
   %main
