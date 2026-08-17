@@ -94,12 +94,19 @@ RSpec.describe "コミュニティのイベント編集者ロール", type: :sys
     expect(page).to have_content("役職について")
     expect(page).to have_content("管理者")
     expect(page).to have_content("オーナー")
-    expect(page).to have_content("イベント編集者")
+    expect(page).to have_content("マネージャー")
     expect(page).to have_content("一般メンバー")
   end
 
+  it "役職案内の「マネージャー」説明が、管理者からの割り当てであることを示していること" do
+    sign_in_via_form(member_customer)
+    visit public_communities_path
+
+    expect(page).to have_content("管理者から担当コミュニティを割り当てられる役職です")
+  end
+
   describe "マネージャーバッジの表示" do
-    it "is_owner: managerのメンバーには「マネージャ」バッジが表示されること" do
+    it "is_owner: managerのメンバーには「マネージャー」バッジが表示されること" do
       sign_in_via_form(owner)
       # 会員一覧は1ページ3件のため、事前に登録済みのowner/manager_customer/member_customerで
       # 1ページ目が埋まる。ここではmanager_customer自体が対象。
@@ -107,7 +114,7 @@ RSpec.describe "コミュニティのイベント編集者ロール", type: :sys
 
       within(find(".card.center", text: manager_customer.name)) do
         badge = find(".avatar-role-badge--manager")
-        expect(badge.text).to eq "マネージャ"
+        expect(badge.text).to eq "マネージャー"
       end
     end
 
