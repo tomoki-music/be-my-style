@@ -19,7 +19,7 @@ class Business::CommunitiesController < ApplicationController
 
     @projects = @community.projects
     @permit = @community.permits.find_by(customer: current_customer)
-    @permits = @community.permits if @community.owner == current_customer
+    @permits = @community.permits.joins(:customer).merge(Customer.active) if @community.owner == current_customer
   end
 
   def new
@@ -74,7 +74,7 @@ class Business::CommunitiesController < ApplicationController
   end
 
   def permits
-    @permits = @community.permits
+    @permits = @community.permits.joins(:customer).merge(Customer.active)
   end
   
   private

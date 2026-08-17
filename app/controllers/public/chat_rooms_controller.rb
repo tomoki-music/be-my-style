@@ -3,6 +3,7 @@ class Public::ChatRoomsController < ApplicationController
   include MatchingIndex
   before_action :matching_index, only: [:show]
   before_action :check_community_member, only: [:community_create]
+  before_action :reject_withdrawn_chat_partner, only: [:create]
   before_action only: [:create, :show, :mention_candidates] do
     require_feature!(:music_direct_chat, redirect_to_path: public_matchings_path)
   end
@@ -243,6 +244,15 @@ class Public::ChatRoomsController < ApplicationController
       flash[:alert] = "コミュニティに参加していない為、チャットルームへ参加できません。"
       redirect_back(fallback_location: root_path)
     end
+  end
+
+  # DM開始時、退会済み(または存在しない)Customer IDを直接指定された場合に
+  # ChatRoomCustomerを作成させない。
+  def reject_withdrawn_chat_partner
+    return if Customer.active.exists?(id: params[:customer_id])
+
+    flash[:alert] = "退会済みのユーザーです。チャットを開始できません。"
+    redirect_back(fallback_location: root_path)
   end
 
   # 存在しないchat_room・非参加者・未参加コミュニティの全てで同一のレスポンス(404)を返す。

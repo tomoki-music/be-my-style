@@ -328,6 +328,20 @@ RSpec.describe "Public::Events", type: :request do
         expect(response.status).to eq 302
       end
 
+      it "退会済みユーザーIDを直接customer_idへ指定しても投稿者が変更されないこと" do
+        withdrawn_customer = FactoryBot.create(:customer, is_deleted: true)
+
+        put public_event_path(event), params: {
+          event: {
+            customer_id: withdrawn_customer.id,
+            event_name: event.event_name
+          }
+        }
+
+        expect(event.reload.customer_id).not_to eq withdrawn_customer.id
+        expect(response.status).not_to eq 500
+      end
+
       it "既存の曲のアーティスト名を編集できること" do
         target_song = event.songs.first
 
@@ -837,6 +851,26 @@ RSpec.describe "Public::Events", type: :request do
         expect do
           delete public_event_delete_path(event, customer_id: customer, join_part_id: join_part.id)
         end.to change(JoinPartCustomer, :count).by(-1)
+      end
+    end
+
+    context "楽曲パートへの参加登録(join)は常にログイン中の本人のみが対象になること" do
+      let(:withdrawn_customer) { FactoryBot.create(:customer, is_deleted: true) }
+
+      it "customer_idを直接指定しても、本人以外(退会済みユーザー含む)はパートへ追加されないこと" do
+        CommunityCustomer.find_or_create_by!(customer: customer, community: community)
+        join_part = event.songs.first.join_parts.create!(join_part_name: "vocal")
+
+        expect do
+          post public_event_join_path(event), params: {
+            customer_id: withdrawn_customer.id,
+            join_part_ids: { "0" => join_part.id.to_s }
+          }
+        end.to change(JoinPartCustomer, :count).by(1)
+
+        created_record = JoinPartCustomer.last
+        expect(created_record.customer_id).to eq customer.id
+        expect(created_record.customer_id).not_to eq withdrawn_customer.id
       end
     end
 

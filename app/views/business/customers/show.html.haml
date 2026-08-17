@@ -21,10 +21,10 @@
 
         .profile-stats
           .stat
-            %span.number= @customer.followings.count
+            %span.number= @customer.followings.active.count
             %span.label フォロー
           .stat
-            %span.number= @customer.followers.count
+            %span.number= @customer.followers.active.count
             %span.label フォロワー
 
       .profile-action

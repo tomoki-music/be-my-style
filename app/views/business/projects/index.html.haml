@@ -57,8 +57,8 @@
               .owner
                 = customer_avatar_tag(project.customer, class_name: "mini-icon")
 
-                %span= project.customer&.name || "不明"
+                %span= customer_display_name(project.customer) || "不明"
 
               .project-stats
-                %span 👥 #{project.project_members.count rescue 0}
+                %span 👥 #{project.active_members.count rescue 0}
                 %span 🗓 #{l(project.created_at, format: :short)}

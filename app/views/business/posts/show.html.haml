@@ -8,14 +8,11 @@
 
       .post-user-info
 
-        = link_to business_customer_path(@post.customer) do
-          = customer_avatar_tag(@post.customer, class_name: "user-icon")
+        = customer_avatar_link(@post.customer, class_name: "user-icon", profile_path: business_customer_path(@post.customer))
 
         .user-meta
 
-          = link_to @post.customer.name,
-            business_customer_path(@post.customer),
-            class:"user-name"
+          = customer_profile_name_link(@post.customer, { class: "user-name" }, profile_path: business_customer_path(@post.customer))
 
           .post-time
             = time_ago_in_words(@post.created_at)

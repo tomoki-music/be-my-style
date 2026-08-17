@@ -10,9 +10,6 @@
         = permit.customer.name
 
       = link_to "承認",
-        business_community_community_customers_path(
-          community_id: @community.id,
-          customer_id: permit.customer.id
-        ),
+        business_community_community_customers_path(community_id: @community.id, customer_id: permit.customer.id),
         method: :post,
         class:"btn btn-success"

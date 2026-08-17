@@ -26,6 +26,24 @@ RSpec.describe Event, type: :model do
         expect(event.valid?).to eq false
       end
     end
+
+    context 'customer_id(投稿者)を退会済みユーザーへ変更しようとした場合' do
+      let(:withdrawn_customer) { FactoryBot.create(:customer, is_deleted: true) }
+
+      it '保存できないこと' do
+        event.customer_id = withdrawn_customer.id
+        expect(event.valid?).to eq false
+      end
+
+      it 'customer_idを変更しない他の更新は、投稿者が退会済みでも失敗しないこと' do
+        event.update!(customer_id: other_customer.id)
+        other_customer.update!(is_deleted: true)
+        event.reload
+
+        event.event_name = "更新後のイベント名"
+        expect(event.valid?).to eq true
+      end
+    end
   end
   describe 'アソシエーションのテスト' do
     context 'Songモデルとの関係' do

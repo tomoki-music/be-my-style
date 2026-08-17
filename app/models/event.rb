@@ -29,6 +29,20 @@ class Event < ApplicationRecord
     validates :songs
   end
 
+  # customer_id(イベント投稿者)を新規設定・変更する時だけ有効ユーザーかを検証する。
+  # Song#requested_by_customer_must_be_eligible_memberと同じ考え方で、
+  # 既存イベントの投稿者が退会・論理削除された後の無関係な更新まで
+  # 巻き込んで保存不能にしないため(退会後も履歴として表示し続ける方針)。
+  validate :customer_must_be_active, if: :will_save_change_to_customer_id?
+
+  private
+
+  def customer_must_be_active
+    errors.add(:customer, "は退会済みのため設定できません") if customer.present? && customer.is_deleted?
+  end
+
+  public
+
   def participation_records_for(customer)
     JoinPartCustomer
       .joins(join_part: :song)

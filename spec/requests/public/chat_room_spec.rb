@@ -19,6 +19,22 @@ RSpec.describe "chat_roomsコントローラーのテスト", type: :request do
         end.to change(ChatRoom, :count).by(1)
       end
     end
+
+    context "退会済みユーザーIDを直接指定してチャットルームを作成しようとした場合" do
+      let(:withdrawn_customer) { create(:customer, is_deleted: true) }
+
+      it "ChatRoom・ChatRoomCustomerが作成されないこと" do
+        expect do
+          post public_chat_rooms_path(customer_id: withdrawn_customer.id)
+        end.not_to change { [ChatRoom.count, ChatRoomCustomer.count] }
+      end
+
+      it "500エラーにならず安全にリダイレクトされること" do
+        post public_chat_rooms_path(customer_id: withdrawn_customer.id)
+
+        expect(response.status).to eq 302
+      end
+    end
     context "チャットルームが正しく表示(show)される" do
       before do
         # showはDM参加者のみ閲覧できるため、customer自身もこのchat_roomの参加者として登録する

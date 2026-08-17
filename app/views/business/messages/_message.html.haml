@@ -2,7 +2,7 @@
   = customer_avatar_tag(message.customer, class_name: "user-icon")
 
   .comment-body
-    = link_to message.customer.name, business_customer_path(message.customer), class:"comment-user"
+    = customer_profile_name_link(message.customer, { class: "comment-user" }, profile_path: business_customer_path(message.customer))
     - if message.stamped?
       %p.comment-text
         %span.stamp-badge= message.stamp_label

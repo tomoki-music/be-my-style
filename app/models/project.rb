@@ -14,4 +14,10 @@ class Project < ApplicationRecord
     active: 1,
     completed: 2
   }
+
+  # 一般・公開画面で退会ユーザーを除外したプロジェクトメンバーを扱う際に使う。
+  # ProjectMemberレコード自体は削除しないため、ここでの絞り込みは表示専用。
+  def active_members
+    members.active
+  end
 end

@@ -16,11 +16,12 @@ module ApplicationHelper
   end
 
   # 退会済みなら名前のみ(リンクなし)、それ以外は既存どおりプロフィールへのリンクを返す。
-  def customer_profile_name_link(customer, html_options = {})
+  # profile_path: businessドメイン等、public_customer_path以外のプロフィールURLを使う画面向け。
+  def customer_profile_name_link(customer, html_options = {}, profile_path: nil)
     if customer_withdrawn?(customer)
       content_tag(:span, WITHDRAWN_CUSTOMER_LABEL, html_options)
     else
-      link_to customer.name, public_customer_path(customer), html_options.merge(data: { 'turbolinks': false })
+      link_to customer.name, profile_path || public_customer_path(customer), html_options.merge(data: { 'turbolinks': false })
     end
   end
 
@@ -132,11 +133,12 @@ module ApplicationHelper
   # アバター画像を、退会済みならプロフィールへ遷移させない形で描画する。
   # 「アバターにプロフィールリンクを貼る」既存パターン(コミュニティ/イベント/コメント等)を
   # 共通化したもの。リンクテキストが名前のみの箇所はcustomer_profile_name_linkを使う。
-  def customer_avatar_link(customer, class_name: nil, wrapper_class: nil, fallback: "no_image")
+  # profile_path: businessドメイン等、public_customer_path以外のプロフィールURLを使う画面向け。
+  def customer_avatar_link(customer, class_name: nil, wrapper_class: nil, fallback: "no_image", profile_path: nil)
     avatar = customer_avatar_tag(customer, class_name: class_name, wrapper_class: wrapper_class, fallback: fallback)
     return avatar if customer_withdrawn?(customer)
 
-    link_to avatar, public_customer_path(customer), data: { 'turbolinks': false }
+    link_to avatar, profile_path || public_customer_path(customer), data: { 'turbolinks': false }
   end
 
   def subscription_checkout_path_for(plan)

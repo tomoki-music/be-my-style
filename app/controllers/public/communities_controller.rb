@@ -145,7 +145,7 @@ class Public::CommunitiesController < ApplicationController
   end
 
   def permits
-    @permits = @community.permits.page(params[:page])
+    @permits = @community.permits.joins(:customer).merge(Customer.active).page(params[:page])
   end
 
   private
