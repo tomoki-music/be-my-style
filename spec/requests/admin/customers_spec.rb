@@ -145,6 +145,54 @@ RSpec.describe "Admin::Customers", type: :request do
       expect(customer.reload.is_owner).to eq "manager"
       expect(response).to redirect_to(admin_homes_top_path)
     end
+
+    it "担当コミュニティを一部だけ解除すると、解除した分だけ削除され継続選択分は残ること" do
+      customer.update!(is_owner: :manager)
+      CommunityEventEditor.create!(customer: customer, community: community_a)
+      CommunityEventEditor.create!(customer: customer, community: community_b)
+
+      patch admin_customer_path(customer), params: {
+        customer: { is_owner: "manager", owned_community_ids: [community_b.id] }
+      }
+
+      expect(customer.reload.edited_communities).to contain_exactly(community_b)
+    end
+
+    it "廃止済みの公開画面機能などで作成された古いCommunityEventEditorレコードは、" \
+       "managerへの変更時に選択されていなければ削除されること" do
+      # customerはis_owner: generalのまま、廃止済みの自己申告制イベント編集者機能や
+      # 過去のデータ等でcommunity_aのレコードだけが残っている状態を再現する。
+      CommunityEventEditor.create!(customer: customer, community: community_a)
+
+      patch admin_customer_path(customer), params: {
+        customer: { is_owner: "manager", owned_community_ids: [community_b.id] }
+      }
+
+      expect(customer.reload.edited_communities).to contain_exactly(community_b)
+      expect(CommunityEventEditor.exists?(customer: customer, community: community_a)).to eq false
+    end
+
+    it "他ユーザーのCommunityEventEditorレコードには影響しないこと" do
+      other_customer = FactoryBot.create(:customer, is_owner: :manager)
+      CommunityEventEditor.create!(customer: other_customer, community: community_a)
+
+      patch admin_customer_path(customer), params: {
+        customer: { is_owner: "manager", owned_community_ids: [community_b.id] }
+      }
+
+      expect(other_customer.reload.edited_communities).to contain_exactly(community_a)
+    end
+
+    it "他コミュニティのCommunityEventEditorレコードには影響しないこと" do
+      other_customer = FactoryBot.create(:customer, is_owner: :manager)
+      CommunityEventEditor.create!(customer: other_customer, community: community_b)
+
+      patch admin_customer_path(customer), params: {
+        customer: { is_owner: "manager", owned_community_ids: [community_b.id] }
+      }
+
+      expect(CommunityEventEditor.where(community: community_b).map(&:customer)).to contain_exactly(customer, other_customer)
+    end
   end
 
   describe "役職切り替え" do

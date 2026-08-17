@@ -355,12 +355,47 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       end
     end
 
-    context 'イベント編集者権限' do
+    context 'イベント編集者権限(個別付与は廃止済み・マネージャー役職のみ有効)' do
       let(:community) { FactoryBot.create(:community, owner_id: other_customer.id) }
       let(:event) { FactoryBot.create(:event, :event_with_songs, customer: other_customer, community: community) }
 
-      context 'イベント編集者に設定されている場合' do
+      context 'CommunityEventEditorレコードのみを持つ一般メンバー(is_owner: general)の場合' do
         before do
+          CommunityEventEditor.create!(customer: customer, community: community)
+        end
+
+        it '個別付与の自己申告制イベント編集者は廃止済みのため、event_editor_of?はfalseを返すこと' do
+          expect(customer.event_editor_of?(community)).to eq false
+        end
+
+        it 'イベントを編集できないこと' do
+          expect(customer.can_edit_event?(event)).to eq false
+        end
+
+        it 'イベントを削除できないこと' do
+          expect(customer.can_destroy_event?(event)).to eq false
+        end
+
+        it 'イベントを作成できないこと' do
+          expect(customer.can_create_event?(community)).to eq false
+        end
+      end
+
+      context 'CommunityEventEditorレコードが存在しない場合' do
+        it 'event_editor_of?がfalseを返すこと' do
+          expect(customer.event_editor_of?(community)).to eq false
+        end
+
+        it '一般メンバーとしてはイベントを編集できないこと' do
+          CommunityCustomer.find_or_create_by!(customer: customer, community: community)
+
+          expect(customer.can_edit_event?(event)).to eq false
+        end
+      end
+
+      context 'マネージャー(is_owner: manager)かつCommunityEventEditorに登録されている場合' do
+        before do
+          customer.update!(is_owner: :manager)
           CommunityEventEditor.create!(customer: customer, community: community)
         end
 
@@ -388,14 +423,10 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
         end
       end
 
-      context 'イベント編集者に設定されていない場合' do
-        it 'event_editor_of?がfalseを返すこと' do
-          expect(customer.event_editor_of?(community)).to eq false
-        end
+      context 'マネージャー(is_owner: manager)だがCommunityEventEditorに未登録の場合' do
+        before { customer.update!(is_owner: :manager) }
 
-        it '一般メンバーとしてはイベントを編集できないこと' do
-          CommunityCustomer.find_or_create_by!(customer: customer, community: community)
-
+        it 'イベントを編集できないこと' do
           expect(customer.can_edit_event?(event)).to eq false
         end
       end

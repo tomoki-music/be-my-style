@@ -52,18 +52,6 @@ class Public::CommunitiesController < ApplicationController
 
   def show
     @owner = @community.owner
-    @can_manage_event_editors = current_customer.admin? || current_customer.can_manage_community?(@community)
-    @community_event_editor_id_by_customer_id = @community.community_event_editors.pluck(:customer_id, :id).to_h
-    @event_editor_customer_ids = @community_event_editor_id_by_customer_id.keys
-    @co_owner_customer_ids = @community.community_owners.pluck(:customer_id)
-    @event_editors = @community.event_editors
-
-    if @can_manage_event_editors
-      excluded_customer_ids = (@event_editor_customer_ids + @co_owner_customer_ids + [@community.owner_id]).compact.uniq
-      # is_owner は未設定(NULL)の会員が大半のため、where.not(is_owner: :admin) だと
-      # NULLレコードがSQLの三値論理で除外されてしまう。Rubyのadmin?判定で除外する。
-      @assignable_event_editors = @community.customers.where.not(id: excluded_customer_ids).reject(&:admin?)
-    end
 
     @community_customers =
       if params[:part_id].present?

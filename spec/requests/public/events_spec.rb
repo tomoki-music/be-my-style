@@ -564,8 +564,8 @@ RSpec.describe "Public::Events", type: :request do
         expect(response.status).to eq 302
       end
     end
-    context "イベント編集者による操作" do
-      let(:event_editor_customer) { FactoryBot.create(:customer, :customer_with_parts) }
+    context "マネージャー(is_owner: manager)によるイベント編集者としての操作" do
+      let(:event_editor_customer) { FactoryBot.create(:customer, :customer_with_parts, is_owner: :manager) }
 
       before do
         CommunityCustomer.find_or_create_by!(customer: event_editor_customer, community: community)
@@ -682,6 +682,35 @@ RSpec.describe "Public::Events", type: :request do
       end
     end
 
+    context "CommunityEventEditorレコードだけを持つ一般メンバー(is_owner: general)による操作" do
+      let(:legacy_event_editor_customer) { FactoryBot.create(:customer, :customer_with_parts) }
+
+      before do
+        CommunityCustomer.find_or_create_by!(customer: legacy_event_editor_customer, community: community)
+        CommunityEventEditor.create!(customer: legacy_event_editor_customer, community: community)
+        sign_in legacy_event_editor_customer
+      end
+
+      it 'イベント編集ページへ直接アクセスしても302 Foundとなること' do
+        get edit_public_event_path(event)
+        expect(response.status).to eq 302
+      end
+
+      it 'イベントを更新できないこと' do
+        put public_event_path(event), params: {
+          event: { event_name: "個別編集者権限廃止テスト" }
+        }
+        expect(event.reload.event_name).not_to eq "個別編集者権限廃止テスト"
+      end
+
+      it 'イベントを削除できないこと' do
+        event
+        expect do
+          delete public_event_path(event)
+        end.not_to change(Event, :count)
+      end
+    end
+
     context "一般メンバーによるアクセス" do
       let(:member_customer) { FactoryBot.create(:customer, :customer_with_parts) }
 
@@ -698,6 +727,65 @@ RSpec.describe "Public::Events", type: :request do
       it 'イベント作成URLへ直接アクセスできないこと' do
         get new_public_event_path(community_id: community.id)
         expect(response.status).to eq 302
+      end
+    end
+
+    context "共同オーナー(CommunityOwner)による操作" do
+      let(:co_owner_customer) { FactoryBot.create(:customer, :customer_with_parts) }
+
+      before do
+        CommunityOwner.find_or_create_by!(customer: co_owner_customer, community: community)
+        CommunityCustomer.find_or_create_by!(customer: co_owner_customer, community: community)
+        sign_in co_owner_customer
+      end
+
+      it 'イベント編集ページを表示できること' do
+        get edit_public_event_path(event)
+        expect(response.status).to eq 200
+      end
+
+      it 'イベントを更新できること' do
+        put public_event_path(event), params: {
+          event: { event_name: "共同オーナーによる更新" }
+        }
+        expect(event.reload.event_name).to eq "共同オーナーによる更新"
+      end
+
+      it 'イベントを削除できること' do
+        event
+        expect do
+          delete public_event_path(event)
+        end.to change(Event, :count).by(-1)
+      end
+    end
+
+    context "他コミュニティのオーナーによるアクセス" do
+      let(:other_community) { FactoryBot.create(:community) }
+      let(:other_community_owner) { FactoryBot.create(:customer, :customer_with_parts) }
+
+      before do
+        other_community.update!(owner_id: other_community_owner.id)
+        CommunityOwner.find_or_create_by!(customer: other_community_owner, community: other_community)
+        sign_in other_community_owner
+      end
+
+      it '対象外コミュニティのイベント編集ページへ直接アクセスできないこと' do
+        get edit_public_event_path(event)
+        expect(response.status).to eq 302
+      end
+
+      it '対象外コミュニティのイベントを更新できないこと' do
+        put public_event_path(event), params: {
+          event: { event_name: "他コミュニティオーナーによる改ざん" }
+        }
+        expect(event.reload.event_name).not_to eq "他コミュニティオーナーによる改ざん"
+      end
+
+      it '対象外コミュニティのイベントを削除できないこと' do
+        event
+        expect do
+          delete public_event_path(event)
+        end.not_to change(Event, :count)
       end
     end
 

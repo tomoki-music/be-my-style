@@ -118,6 +118,90 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
         expect(response.status).to eq 200
       end
     end
+
+    context "community詳細ページ(show)からイベント編集者管理UIが削除されていること" do
+      let(:owner) { create(:customer) }
+      let(:community) { create(:community, owner: owner) }
+      let(:member) { create(:customer) }
+
+      before do
+        CommunityOwner.find_or_create_by!(customer: owner, community: community)
+        CommunityCustomer.find_or_create_by!(customer: owner, community: community)
+        CommunityCustomer.find_or_create_by!(customer: member, community: community)
+        CommunityCustomer.find_or_create_by!(customer: customer, community: community)
+      end
+
+      it 'オーナーで閲覧しても「イベント編集者管理」が表示されないこと' do
+        sign_in owner
+        get public_community_path(community)
+
+        expect(response.body).not_to include("イベント編集者管理")
+        expect(response.body).not_to include("イベントを作成・編集できるメンバーを設定します。")
+      end
+
+      it '一般メンバーで閲覧しても「イベント編集者」が表示されないこと' do
+        get public_community_path(community)
+
+        expect(response.body).not_to include("イベント編集者")
+      end
+
+      it 'CommunityEventEditorレコードが残っていても一覧やフォームが表示されないこと' do
+        CommunityEventEditor.create!(customer: member, community: community)
+        sign_in owner
+
+        get public_community_path(community)
+
+        expect(response.body).not_to include("community-event-editors")
+        expect(response.body).not_to include("解除")
+      end
+
+      it '「プロフィール画面へ」リンクは引き続き表示されること' do
+        get public_community_path(community)
+
+        expect(response.body).to include("プロフィール画面へ")
+      end
+
+      it 'メンバー一覧のページネーションが正しく機能すること(200 OK)' do
+        get public_community_path(community, page: 1)
+
+        expect(response.status).to eq 200
+      end
+
+      it 'パート絞り込みが正しく機能すること(200 OK)' do
+        get public_community_path(community, part_id: create(:part).id)
+
+        expect(response.status).to eq 200
+      end
+    end
+
+    context "旧イベント編集者の追加・解除routesが削除されていること" do
+      let(:owner) { create(:customer) }
+      let(:community) { create(:community, owner: owner) }
+      let(:member) { create(:customer) }
+
+      before do
+        CommunityOwner.find_or_create_by!(customer: owner, community: community)
+        sign_in owner
+      end
+
+      it '旧追加(create)URLへ直接POSTしても404となり権限を付与できないこと' do
+        expect do
+          post "/communities/#{community.id}/community_event_editors", params: { customer_id: member.id }
+        end.to raise_error(ActionController::RoutingError)
+
+        expect(CommunityEventEditor.count).to eq 0
+      end
+
+      it '旧解除(destroy)URLへ直接DELETEしても404となり権限を解除する処理が実行されないこと' do
+        community_event_editor = CommunityEventEditor.create!(customer: member, community: community)
+
+        expect do
+          delete "/communities/#{community.id}/community_event_editors/#{community_event_editor.id}"
+        end.to raise_error(ActionController::RoutingError)
+
+        expect(CommunityEventEditor.exists?(community_event_editor.id)).to eq true
+      end
+    end
     context "community新規作成ページ(new)が正しく表示される" do
       before do
         get new_public_community_path
