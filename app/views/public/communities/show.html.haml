@@ -152,7 +152,13 @@
         = paginate @community_customers
       - if @event_editors.present? || @can_manage_event_editors
         .community-event-editors
-          %h4 イベント編集者
+          %h4
+            - if @can_manage_event_editors
+              イベント編集者管理
+            - else
+              イベント編集者
+          - if @can_manage_event_editors
+            %p.text-muted イベントを作成・編集できるメンバーを設定します。
           - if @event_editors.present?
             %ul.community-event-editors__list
               - @event_editors.each do |event_editor|
@@ -163,6 +169,13 @@
                     = link_to "解除", public_community_community_event_editor_path(@community, community_event_editor_id), method: :delete, data: { 'turbolinks': false, confirm: "#{event_editor.name}さんのイベント編集者権限を解除しますか？" }, class: "btn btn-sm btn-outline-danger"
           - else
             %p.text-muted まだイベント編集者は設定されていません。
+          - if @can_manage_event_editors
+            - if @assignable_event_editors.present?
+              = form_tag public_community_community_event_editors_path(@community), method: :post, class: "community-event-editors__add-form", data: { 'turbolinks': false } do
+                = select_tag :customer_id, options_from_collection_for_select(@assignable_event_editors, :id, :name), prompt: "メンバーを選択"
+                = submit_tag "イベント編集者に追加", class: "btn btn-sm btn-outline-secondary"
+            - else
+              %p.text-muted 追加できるメンバーがいません。
 
       .community-index-body
-        = render 'public/customers/index', customers: @community_customers, community: @community, can_manage_event_editors: @can_manage_event_editors, event_editor_customer_ids: @event_editor_customer_ids, co_owner_customer_ids: @co_owner_customer_ids
+        = render 'public/customers/index', customers: @community_customers
