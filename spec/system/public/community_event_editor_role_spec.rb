@@ -44,13 +44,40 @@ RSpec.describe "コミュニティのイベント編集者ロール", type: :sys
     sign_in_via_form(owner)
     visit public_community_path(community)
 
-    within(find(".card.center", text: member_customer.name)) do
-      click_button "イベント編集者に設定"
+    within(".community-event-editors") do
+      expect(page).to have_content("イベント編集者管理")
+      select member_customer.name, from: "customer_id"
+      click_button "イベント編集者に追加"
     end
 
     expect(page).to have_content("イベント編集者に設定しました")
     within ".community-event-editors" do
       expect(page).to have_content(member_customer.name)
+    end
+  end
+
+  it "メンバーカードに「イベント編集者に設定」ボタンが表示されず、プロフィール画面へのリンクは表示されること" do
+    sign_in_via_form(owner)
+    visit public_community_path(community)
+
+    within(find(".card.center", text: member_customer.name)) do
+      expect(page).to have_link("プロフィール画面へ")
+      expect(page).not_to have_button("イベント編集者に設定")
+      expect(page).not_to have_button("イベント編集者に追加")
+    end
+  end
+
+  it "一般メンバーには「イベント編集者管理」フォームが表示されず、解除ボタンも表示されないこと" do
+    CommunityEventEditor.create!(customer: event_editor_customer, community: community)
+
+    sign_in_via_form(member_customer)
+    visit public_community_path(community)
+
+    within(".community-event-editors") do
+      expect(page).to have_content("イベント編集者")
+      expect(page).not_to have_content("イベント編集者管理")
+      expect(page).not_to have_button("イベント編集者に追加")
+      expect(page).not_to have_link("解除")
     end
   end
 

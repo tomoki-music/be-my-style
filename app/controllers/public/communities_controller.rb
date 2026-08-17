@@ -58,6 +58,13 @@ class Public::CommunitiesController < ApplicationController
     @co_owner_customer_ids = @community.community_owners.pluck(:customer_id)
     @event_editors = @community.event_editors
 
+    if @can_manage_event_editors
+      excluded_customer_ids = (@event_editor_customer_ids + @co_owner_customer_ids + [@community.owner_id]).compact.uniq
+      # is_owner は未設定(NULL)の会員が大半のため、where.not(is_owner: :admin) だと
+      # NULLレコードがSQLの三値論理で除外されてしまう。Rubyのadmin?判定で除外する。
+      @assignable_event_editors = @community.customers.where.not(id: excluded_customer_ids).reject(&:admin?)
+    end
+
     @community_customers =
       if params[:part_id].present?
         Kaminari.paginate_array(
