@@ -49,4 +49,10 @@ class Community < ApplicationRecord
     required_plan_for_event_creation == "premium"
   end
 
+  # 一般・公開画面で退会ユーザーを除外したメンバーを扱う際に使う。
+  # CommunityCustomerレコード自体は削除しないため、ここでの絞り込みは表示専用。
+  def active_customers
+    customers.active
+  end
+
 end

@@ -58,11 +58,13 @@ class Song < ApplicationRecord
 
   before_validation :set_default_position, on: :create
 
-  # 参加者が0人のパートを「募集中」とみなす。Public::EventsController#showの
-  # 成立楽曲/募集中楽曲判定(join_parts.map { customers.length }.include?(0))と
+  # 現役参加者が0人のパートを「募集中」とみなす。Public::EventsController#showの
+  # 成立楽曲/募集中楽曲判定(join_parts.map { active_customers.length }.include?(0))と
   # 同じ基準に統一する(曲カード側で独自の募集判定基準を新設しない)。
+  # 退会ユーザーだけが登録されているパートも、一般・公開画面上は「現役参加者なし」として扱う。
+  # customers(preload済みならメモリ上)を見てactive_customersの新規クエリを避ける。
   def recruiting_join_parts
-    join_parts.select { |join_part| join_part.customers.empty? }
+    join_parts.select { |join_part| join_part.customers.all?(&:is_deleted) }
   end
 
   def capo_label
@@ -85,7 +87,7 @@ class Song < ApplicationRecord
   def requested_by_customer_must_be_eligible_member
     return if event.blank? || event.community.blank?
 
-    eligible = event.community.customers.where(id: requested_by_customer_id, is_deleted: false).exists?
+    eligible = event.community.active_customers.exists?(id: requested_by_customer_id)
     errors.add(:requested_by_customer, "は対象コミュニティの有効なメンバーではありません") unless eligible
   end
 

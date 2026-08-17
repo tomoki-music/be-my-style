@@ -3,12 +3,11 @@
 - comments.each do |comment|
   .comment-content
     .commenter-image
-      = link_to public_customer_path(comment.customer), data: { 'turbolinks': false } do
-        = customer_avatar_tag(comment.customer, class_name: "icon_mini")
+      = customer_avatar_link(comment.customer, class_name: "icon_mini")
     .comment-info
       .comment-upper
         .comment-name
-          = link_to comment.customer.name, public_customer_path(comment.customer), data: { 'turbolinks': false }
+          = customer_profile_name_link(comment.customer)
         .comment-time
           = time_ago_in_words(comment.created_at) + "前"
         .comment-delete

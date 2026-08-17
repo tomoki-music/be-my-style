@@ -44,6 +44,13 @@ RSpec.describe Chat::MentionCandidates, type: :service do
       expect(result).to contain_exactly(namesake)
       expect(result).not_to include(current_customer)
     end
+
+    it "退会済み(is_deleted: true)の相手は候補に含まれないこと" do
+      other_customer.update!(is_deleted: true)
+
+      result = described_class.for_chat_room(chat_room: chat_room, current_customer: current_customer)
+      expect(result).not_to include(other_customer)
+    end
   end
 
   describe ".for_community" do
@@ -85,6 +92,13 @@ RSpec.describe Chat::MentionCandidates, type: :service do
       result = described_class.for_community(community: community, current_customer: current_customer, query: "Tomoki")
       expect(result).to contain_exactly(namesake)
       expect(result).not_to include(current_customer)
+    end
+
+    it "退会済み(is_deleted: true)のメンバーは候補に含まれないこと" do
+      member.update!(is_deleted: true)
+
+      result = described_class.for_community(community: community, current_customer: current_customer)
+      expect(result).not_to include(member)
     end
   end
 

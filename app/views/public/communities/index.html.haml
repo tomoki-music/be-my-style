@@ -69,16 +69,15 @@
           = link_to community.name, public_community_path(community), data: { 'turbolinks': false }
         %h6.card-subtitle
           参加人数
-          = community.customers.count.to_s + "人"
+          = community.active_customers.count.to_s + "人"
           %hr
           [コミュニティオーナー]
           %br
           - if owner.present?
             .community-owner-img
-              = link_to public_customer_path(owner), data: { 'turbolinks': false } do
-                = customer_avatar_tag(owner)
-                .owner-name
-                  = owner.name
+              = customer_avatar_link(owner)
+              .owner-name
+                = customer_profile_name_link(owner)
           - else
             .community-owner-img.community-owner-img--missing
               .owner-name

@@ -368,6 +368,11 @@ class Customer < ApplicationRecord
   end
 
   # 退会機能
+  # 一般・公開画面で「現役ユーザーのみ」を対象にする際に使う共通scope。
+  # default_scopeにはしない(管理画面での退会ユーザー確認・購入者に紐づく
+  # 過去データ参照など、is_deletedを問わず全件扱いたい箇所が別途存在するため)。
+  scope :active, -> { where(is_deleted: false) }
+
   def active_for_authentication?
     return true if is_owner == 1
     super && !is_deleted

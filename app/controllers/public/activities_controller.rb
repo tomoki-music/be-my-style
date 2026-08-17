@@ -68,7 +68,7 @@ class Public::ActivitiesController < ApplicationController
 
         community_ids.each do |community_id|
           Community.where(id: community_id).each do |community|
-            member_ids += community.customers.pluck(:id)
+            member_ids += community.active_customers.pluck(:id)
           end
         end
 

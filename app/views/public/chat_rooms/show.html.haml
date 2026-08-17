@@ -44,21 +44,28 @@
       .partner-container
         %p 今、チャットしているお相手
         .card
-          = link_to public_customer_path(@chat_room_customer) do
+          - if customer_withdrawn?(@chat_room_customer)
             .img-container
               = customer_avatar_tag(@chat_room_customer)
-          .card-body.text-container
-            %h5.card-title
-              = @chat_room_customer.human_attribute_enum(:name)
-            %h6.card-subtitle
-              Part:
-              - @chat_room_customer.parts.each do |part|
-                %i.fa-solid.fa-music
-                = part.name
-            %hr
-            %p.card-text
-              = @chat_room_customer.human_attribute_enum(:introduction)
-            = link_to 'プロフィール画面へ', public_customer_path(@chat_room_customer.id), class: "btn btn-info chat-partner-link", data: { 'turbolinks': false }
+            .card-body.text-container
+              %h5.card-title
+                = customer_display_name(@chat_room_customer)
+          - else
+            = link_to public_customer_path(@chat_room_customer) do
+              .img-container
+                = customer_avatar_tag(@chat_room_customer)
+            .card-body.text-container
+              %h5.card-title
+                = @chat_room_customer.human_attribute_enum(:name)
+              %h6.card-subtitle
+                Part:
+                - @chat_room_customer.parts.each do |part|
+                  %i.fa-solid.fa-music
+                  = part.name
+              %hr
+              %p.card-text
+                = @chat_room_customer.human_attribute_enum(:introduction)
+              = link_to 'プロフィール画面へ', public_customer_path(@chat_room_customer.id), class: "btn btn-info chat-partner-link", data: { 'turbolinks': false }
 
   = render "public/chat_rooms/thread_panel_shell"
   = render "public/chat_rooms/search_panel_shell"

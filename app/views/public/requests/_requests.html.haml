@@ -1,15 +1,14 @@
 - requests = event.requests.order(created_at: :desc)
-- valid_mention_customer_ids = event.community.customers.where(is_deleted: false).distinct.pluck(:id)
+- valid_mention_customer_ids = event.community.active_customers.distinct.pluck(:id)
 
 - requests.each do |request|
   .request-content
     .request-image
-      = link_to public_customer_path(request.customer), data: { 'turbolinks': false } do
-        = customer_avatar_tag(request.customer, class_name: "icon_mini")
+      = customer_avatar_link(request.customer, class_name: "icon_mini")
     .request-info
       .request-upper
         .request-name
-          = link_to request.customer.name, public_customer_path(request.customer), data: { 'turbolinks': false }
+          = customer_profile_name_link(request.customer)
         .request-time
           = time_ago_in_words(request.created_at) + "前"
         .request-delete

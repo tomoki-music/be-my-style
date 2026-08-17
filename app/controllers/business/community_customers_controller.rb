@@ -5,6 +5,11 @@ class Business::CommunityCustomersController < ApplicationController
     customer = Customer.find(params[:customer_id])
     owner = Customer.find(community.owner_id)
 
+    if customer.is_deleted?
+      flash[:alert] = "退会済みのユーザーです。参加を許可できません。"
+      return redirect_to business_community_path(community)
+    end
+
     # すでに参加してたら何もしない
     unless community.customers.include?(customer)
       CommunityCustomer.create!(

@@ -55,7 +55,7 @@
               = @community.name
             %h6.card-subtitle
               参加人数:
-              = @community.customers.count.to_s + "人"
+              = @community.active_customers.count.to_s + "人"
             %hr
             = link_to 'コミュニティ詳細へ', public_community_path(@community), class: "btn btn-info chat-partner-link", data: { 'turbolinks': false }
 

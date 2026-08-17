@@ -584,4 +584,14 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       end
     end
   end
+
+  describe '.active スコープ' do
+    it '有効ユーザー(is_deleted: false)だけが含まれること' do
+      active_customer = FactoryBot.create(:customer, is_deleted: false)
+      withdrawn_customer = FactoryBot.create(:customer, is_deleted: true)
+
+      expect(Customer.active).to include(active_customer)
+      expect(Customer.active).not_to include(withdrawn_customer)
+    end
+  end
 end

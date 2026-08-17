@@ -27,6 +27,24 @@ RSpec.describe "community_customersコントローラーのテスト", type: :re
         end.to change(ChatRoomCustomer, :count).by(1)
       end
     end
+
+    context "申請者が退会済み(is_deleted: true)の場合" do
+      before do
+        other_customer.update!(is_deleted: true)
+      end
+
+      it "加入を許可せずCommunityCustomerが作成されないこと" do
+        expect do
+          post public_community_community_customers_path(community, permit_id: permit.id)
+        end.not_to change(CommunityCustomer, :count)
+      end
+
+      it "500エラーにならず安全にリダイレクトされること" do
+        post public_community_community_customers_path(community, permit_id: permit.id)
+
+        expect(response.status).to eq 302
+      end
+    end
   end
   describe '非ログイン' do
     context "コミュニティ加入申請(create)の許可に失敗する" do

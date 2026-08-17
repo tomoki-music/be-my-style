@@ -17,6 +17,25 @@ RSpec.describe "matchingsコントローラーのテスト", type: :request do
         expect(response.body).to include("チャットができるアーティスト一覧")
       end
     end
+
+    context "相互フォロー相手に退会済みユーザーが含まれる場合" do
+      let(:active_partner) { create(:customer, name: "相互フォロー太郎") }
+      let(:withdrawn_partner) { create(:customer, name: "相互フォロー花子", is_deleted: true) }
+
+      before do
+        customer.follow(active_partner.id)
+        active_partner.follow(customer.id)
+        customer.follow(withdrawn_partner.id)
+        withdrawn_partner.follow(customer.id)
+
+        get public_matchings_path
+      end
+
+      it '退会済みユーザーがマッチング一覧に表示されないこと' do
+        expect(response.body).to include("相互フォロー太郎")
+        expect(response.body).not_to include("相互フォロー花子")
+      end
+    end
   end
   describe '非ログイン' do
     context "マッチングしたアーティト一覧ページへ遷移されない" do

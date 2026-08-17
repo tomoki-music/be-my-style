@@ -34,10 +34,9 @@
               [コミュニティオーナー]
               %br
               .community-owner-img
-                = link_to public_customer_path(@owner), data: { 'turbolinks': false } do
-                  = customer_avatar_tag(@owner)
-                  .owner-name
-                    = @owner.name
+                = customer_avatar_link(@owner)
+                .owner-name
+                  = customer_profile_name_link(@owner)
             %hr
             %p.card-text
             - if @community.owner_id == current_customer.id
@@ -69,7 +68,7 @@
             %tr
               %th{scope:"row"} 参加人数
               %td
-                = @community.customers.count.to_s + "人"
+                = @community.active_customers.count.to_s + "人"
             %tr
               %th{scope:"row"} チャットする
               %td

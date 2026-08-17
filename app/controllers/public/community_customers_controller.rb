@@ -4,6 +4,12 @@ class Public::CommunityCustomersController < ApplicationController
   def create
     @community = Community.find(params[:community_id])
     @permit = Permit.find(params[:permit_id])
+
+    if @permit.customer.is_deleted?
+      flash[:alert] = "退会済みのユーザーです。参加を許可できません。"
+      return redirect_back(fallback_location: root_path)
+    end
+
     @community_customer = CommunityCustomer.create(customer_id: @permit.customer_id, community_id: params[:community_id])
     if @community_customer.valid?
       owner = Customer.find_by(id: @community.owner_id)

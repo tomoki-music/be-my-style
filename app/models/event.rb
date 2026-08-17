@@ -53,7 +53,7 @@ class Event < ApplicationRecord
   # @メンション機能(候補一覧・通知対象)の母集団。イベントへの参加登録の有無を問わず、
   # 開催元コミュニティの有効メンバーであるCustomerを返す(退会・論理削除済みは除外)。
   def mentionable_community_members
-    community.customers.where(is_deleted: false).distinct
+    community.active_customers.distinct
   end
 
   def session_credit_applied_for?(customer)

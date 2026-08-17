@@ -27,7 +27,9 @@
               - if song.join_parts.any?
                 .link-preview-card-event-song-parts
                   - song.join_parts.each do |join_part|
-                    - filled = join_part.customers.any?
+                    -# join_part.customersはEventLinkPreviewLoaderでpreload済みのため、
+                    -# active_customers(新規クエリ)は使わずメモリ上でis_deletedを判定してN+1を避ける。
+                    - filled = join_part.customers.any? { |customer| !customer.is_deleted }
                     %span.link-preview-card-event-song-part{ class: "link-preview-card-event-song-part--#{filled ? 'filled' : 'recruiting'}" }
                       = "#{join_part.join_part_name} #{filled ? '✅' : '募集中'}"
           - remaining_count = event.songs.size - displayed_songs.size

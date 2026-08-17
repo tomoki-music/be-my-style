@@ -32,10 +32,9 @@
                 [イベント作成者]
                 %br
                 .event-owner-img
-                  = link_to public_customer_path(@owner), data: { 'turbolinks': false } do
-                    = customer_avatar_tag(@owner)
-                    .owner-name
-                      = @owner.name
+                  = customer_avatar_link(@owner)
+                  .owner-name
+                    = customer_profile_name_link(@owner)
               %hr
                 .got-request-count
                   リクエスト数
@@ -259,7 +258,7 @@
                                     %th{ style: "min-width: 90px;" }= part
                               %tbody
                                 - @event.songs.each do |song|
-                                  - vacant = song.join_parts.any? { |jp| jp.customers.count == 0 }
+                                  - vacant = song.join_parts.any? { |jp| jp.active_customers.count == 0 }
                                   %tr{ class: (vacant ? 'vacant' : 'complete') }
                                     %td{ style: "max-width: 120px; overflow-wrap: break-word; word-break: break-word; white-space: normal;" }
                                       - if vacant
@@ -277,10 +276,7 @@
                                         %div.song-requester.text-muted{ style: "font-size: 0.85em;" }
                                           %i.fa-solid.fa-user
                                           リクエスト：
-                                          - if song.requested_by_customer.is_deleted?
-                                            = song.requested_by_customer.name
-                                          - else
-                                            = link_to song.requested_by_customer.name, public_customer_path(song.requested_by_customer), data: { turbolinks: false }
+                                          = customer_profile_name_link(song.requested_by_customer)
                                           さん
                                       = render "public/events/youtube_card", card: youtube_card_for(song)
 
@@ -300,8 +296,8 @@
                                       - join_part = song.join_parts.find { |jp| jp.join_part_name == part_name }
                                       %td
                                         - if join_part.present?
-                                          - if join_part.customers.any?
-                                            - join_part.customers.each do |customer|
+                                          - if join_part.active_customers.any?
+                                            - join_part.active_customers.each do |customer|
                                               .member-display(style="display:flex; flex-direction:column; align-items:flex-start; gap:4px; margin-bottom:4px;")
                                                 = link_to public_customer_path(customer), data: { turbolinks: false } do
                                                   = image_tag(customer.profile_image.presence || 'no_image',
@@ -321,7 +317,7 @@
                                                     %span.member-plan-badge.member-plan-badge--credit-partial
                                                       %i.fa-solid.fa-sparkles
                                                       当日集金 #{@event.participant_remaining_fee_for(customer).to_s(:delimited)}円
-                                                - if customer == current_customer && join_part.customers.include?(current_customer) && @event.event_start_time > Time.current + 7.days
+                                                - if customer == current_customer && join_part.active_customers.include?(current_customer) && @event.event_start_time > Time.current + 7.days
                                                   = link_to "削除",
                                                     public_event_delete_path(@event, join_part_id: join_part.id, customer_id: customer.id),
                                                     method: :delete,

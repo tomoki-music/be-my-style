@@ -1,4 +1,29 @@
 module ApplicationHelper
+  WITHDRAWN_CUSTOMER_LABEL = "退会済みユーザー".freeze
+
+  # 一般・公開画面で「退会済みユーザーを現役ユーザーとして表示しない」ために使う共通判定。
+  # is_deletedカラム自体は削除しないため、表示側のガードとしてのみ使う。
+  def customer_withdrawn?(customer)
+    customer.present? && customer.respond_to?(:is_deleted?) && customer.is_deleted?
+  end
+
+  # 退会済みなら固定ラベル、それ以外は通常の名前を返す。
+  # コメント・チャット・メンバー一覧など「名前だけ」表示したい箇所で使う。
+  def customer_display_name(customer)
+    return WITHDRAWN_CUSTOMER_LABEL if customer_withdrawn?(customer)
+
+    customer&.name
+  end
+
+  # 退会済みなら名前のみ(リンクなし)、それ以外は既存どおりプロフィールへのリンクを返す。
+  def customer_profile_name_link(customer, html_options = {})
+    if customer_withdrawn?(customer)
+      content_tag(:span, WITHDRAWN_CUSTOMER_LABEL, html_options)
+    else
+      link_to customer.name, public_customer_path(customer), html_options.merge(data: { 'turbolinks': false })
+    end
+  end
+
   def stamp_options
     Stampable::STAMP_OPTIONS
   end
@@ -67,6 +92,7 @@ module ApplicationHelper
 
   def customer_role_badge_label(customer)
     return if customer.blank?
+    return if customer_withdrawn?(customer)
     return "管理者" if customer.respond_to?(:admin?) && customer.admin?
     return "オーナー" if customer.respond_to?(:community_owner?) && customer.community_owner?
     return "マネージャー" if customer.respond_to?(:manager?) && customer.manager?
@@ -76,7 +102,9 @@ module ApplicationHelper
 
   def customer_avatar_tag(customer, class_name: nil, wrapper_class: nil, fallback: "no_image")
     image_source =
-      if customer&.profile_image.respond_to?(:attached?) && customer.profile_image.attached?
+      if customer_withdrawn?(customer)
+        fallback
+      elsif customer&.profile_image.respond_to?(:attached?) && customer.profile_image.attached?
         customer.profile_image
       elsif customer&.profile_image.present?
         customer.profile_image
@@ -99,6 +127,16 @@ module ApplicationHelper
       concat image_tag(image_source, class: class_name)
       concat(content_tag(:span, badge_label, class: badge_class)) if badge_label.present?
     end
+  end
+
+  # アバター画像を、退会済みならプロフィールへ遷移させない形で描画する。
+  # 「アバターにプロフィールリンクを貼る」既存パターン(コミュニティ/イベント/コメント等)を
+  # 共通化したもの。リンクテキストが名前のみの箇所はcustomer_profile_name_linkを使う。
+  def customer_avatar_link(customer, class_name: nil, wrapper_class: nil, fallback: "no_image")
+    avatar = customer_avatar_tag(customer, class_name: class_name, wrapper_class: wrapper_class, fallback: fallback)
+    return avatar if customer_withdrawn?(customer)
+
+    link_to avatar, public_customer_path(customer), data: { 'turbolinks': false }
   end
 
   def subscription_checkout_path_for(plan)

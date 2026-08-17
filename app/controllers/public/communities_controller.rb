@@ -56,12 +56,12 @@ class Public::CommunitiesController < ApplicationController
     @community_customers =
       if params[:part_id].present?
         Kaminari.paginate_array(
-          Part.find(params[:part_id]).customers.select do |customer|
+          Part.find(params[:part_id]).customers.active.select do |customer|
             customer.community_customers.where(community_id: @community.id).exists?
           end
         ).page(params[:page]).per(3)
       else
-        @community.customers.page(params[:page]).per(3)
+        @community.active_customers.page(params[:page]).per(3)
       end
   end
 
@@ -132,7 +132,7 @@ class Public::CommunitiesController < ApplicationController
   end
 
   def send_mail
-    community_customers = @community.customers
+    community_customers = @community.active_customers
     @mail_title = params[:mail_title]
     @mail_content = params[:mail_content]
 

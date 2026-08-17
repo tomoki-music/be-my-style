@@ -80,7 +80,7 @@ class Public::ChatRoomsController < ApplicationController
     @chat_message = ChatMessage.new
     @customers = ChatRoomCustomer.where(chat_room_id: @chat_room.id).map do |chat_room_customer|
       chat_room_customer.customer
-    end
+    end.select { |customer| !customer.is_deleted }
     # スレッドの返信はここでは表示せず、親メッセージのみを表示する(返信はスレッドパネルで確認する)。
     @chat_messages = ChatMessage.thread_roots.where(chat_room_id: @chat_room.id)
       .includes(:customer, :chat_message_link_previews, quoted_chat_message: :customer)

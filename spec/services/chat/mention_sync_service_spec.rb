@@ -54,6 +54,14 @@ RSpec.describe Chat::MentionSyncService, type: :service do
       expect { described_class.call(chat_message) }.not_to change { [ChatMention.count, Notification.count] }
     end
 
+    it "退会済み(is_deleted: true)の相手へのメンションはChatMentionも通知も作成しないこと" do
+      other_customer.update!(is_deleted: true)
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room,
+                                                        content: "[@相手](customer:#{other_customer.id}) こんにちは")
+
+      expect { described_class.call(chat_message) }.not_to change { [ChatMention.count, Notification.count] }
+    end
+
     it "自分自身へのメンションはChatMentionも通知も作成しないこと" do
       chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room,
                                                         content: "[@自分](customer:#{customer.id}) こんにちは")
@@ -117,6 +125,14 @@ RSpec.describe Chat::MentionSyncService, type: :service do
                                                         content: "[@A](customer:#{member.id}) [@B](customer:#{member2.id})")
 
       expect { described_class.call(chat_message) }.to change(ChatMention, :count).by(2)
+    end
+
+    it "退会済み(is_deleted: true)のメンバーへのメンションは無視すること" do
+      member.update!(is_deleted: true)
+      chat_message = create(:chat_message, :markdown, customer: customer, chat_room: chat_room, community: community,
+                                                        content: "[@メンバー](customer:#{member.id}) お願いします")
+
+      expect { described_class.call(chat_message) }.not_to change { [ChatMention.count, Notification.count] }
     end
   end
 

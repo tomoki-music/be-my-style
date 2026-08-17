@@ -59,11 +59,11 @@ class Public::EventsController < ApplicationController
     @community = Community.find(@event.community_id)
     @request = Request.new
 
-    #参加人数
+    #参加人数(退会ユーザーは一般・公開画面上は現役参加者として数えない)
     joined_member_ids = []
     @event.songs.each do |song|
       song.join_parts.each do |join_part|
-        joined_member_ids += join_part.customers.pluck(:id)
+        joined_member_ids += join_part.active_customers.pluck(:id)
       end
     end
     @joined_member_counts = joined_member_ids.uniq.length
@@ -74,10 +74,10 @@ class Public::EventsController < ApplicationController
       @join_members << Customer.find(member_id)
     end
 
-    #成立楽曲数
+    #成立楽曲数(退会ユーザーだけのパートは現役参加者0人=募集中として扱う)
     @complete_song_ids = []
     @event.songs.each do |song|
-      unless song.join_parts.map{|join_part| join_part.customers.length }.include?(0)
+      unless song.join_parts.map{|join_part| join_part.active_customers.length }.include?(0)
         @complete_song_ids << song.id
       end
     end
@@ -89,10 +89,10 @@ class Public::EventsController < ApplicationController
       @complete_songs << Song.find(song_id)
     end
 
-    #募集中楽曲数
+    #募集中楽曲数(退会ユーザーだけのパートは現役参加者0人=募集中として扱う)
     @recruiting_song_ids = []
     @event.songs.each do |song|
-      if song.join_parts.map{|join_part| join_part.customers.length }.include?(0)
+      if song.join_parts.map{|join_part| join_part.active_customers.length }.include?(0)
         @recruiting_song_ids << song.id
       end
     end
@@ -151,7 +151,7 @@ class Public::EventsController < ApplicationController
         member_ids = []
         community_ids.each do |community_id|
           Community.where(id: community_id).each do |community|
-            member_ids += community.customers.pluck(:id)
+            member_ids += community.active_customers.pluck(:id)
           end
         end
         member_ids.uniq.each do |member_id|
@@ -163,7 +163,7 @@ class Public::EventsController < ApplicationController
           end
         end
       elsif current_customer.followers.present?
-        current_customer.followers.each do |customer|
+        current_customer.followers.active.each do |customer|
           customer.create_notification_event_for_follow(current_customer, @event.id)
         end
       end
@@ -293,7 +293,7 @@ class Public::EventsController < ApplicationController
       customer_ids = []
       event.songs.each do |song|
         song.join_parts.each do |join_part|
-          customer_ids += join_part.customers.pluck(:id)
+          customer_ids += join_part.active_customers.pluck(:id)
         end
       end
       customer_ids.uniq.each do |customer_id|
@@ -392,7 +392,7 @@ class Public::EventsController < ApplicationController
     return false if old_song.requested_by_customer_id.blank?
     return false if @old_event.community_id != @event.community_id
 
-    @event.community.customers.where(id: old_song.requested_by_customer_id, is_deleted: false).exists?
+    @event.community.active_customers.exists?(id: old_song.requested_by_customer_id)
   end
 
   def mention_candidate_json(customer)
@@ -445,7 +445,7 @@ class Public::EventsController < ApplicationController
   def set_requested_by_customer_candidates
     @requested_by_customer_candidates =
       if @template_community
-        @template_community.customers.where(is_deleted: false).distinct.order(:name)
+        @template_community.active_customers.distinct.order(:name)
       else
         Customer.none
       end
