@@ -76,11 +76,11 @@
             %tr
               %th{scope:"row"} フォロー数
               %td
-                = @customer.followings.count
+                = @customer.followings.active.count
             %tr
               %th{scope:"row"} フォロワー数
               %td
-                = @customer.followers.count
+                = @customer.followers.active.count
             %tr
               %th{scope:"row"} 誕生日
               %td

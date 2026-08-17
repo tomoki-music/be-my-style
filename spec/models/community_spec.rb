@@ -71,4 +71,18 @@ RSpec.describe 'Communityモデルのテスト', type: :model do
       end
     end
   end
+
+  describe '#active_customers' do
+    it '退会済み(is_deleted: true)のメンバーを除外すること' do
+      active_member = FactoryBot.create(:customer, is_deleted: false)
+      withdrawn_member = FactoryBot.create(:customer, is_deleted: true)
+      CommunityCustomer.create!(community: community, customer: active_member)
+      CommunityCustomer.create!(community: community, customer: withdrawn_member)
+
+      expect(community.active_customers).to include(active_member)
+      expect(community.active_customers).not_to include(withdrawn_member)
+      # CommunityCustomerレコード自体は削除されない
+      expect(CommunityCustomer.exists?(community: community, customer: withdrawn_member)).to eq true
+    end
+  end
 end

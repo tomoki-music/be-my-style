@@ -17,7 +17,7 @@
         %h1.project-title= @project.title
 
         .project-meta
-          %span 👤 #{@project.customer.name}
+          %span 👤 #{customer_display_name(@project.customer)}
           %span 🏢 #{@project.community.name}
           %span 🗓 #{l(@project.created_at, format: :short)}
 
@@ -77,8 +77,7 @@
     %h3 メンバー
 
     .member-grid
-      - @project.project_members.each do |member|
-        - customer = member.customer
+      - @project.active_members.each do |customer|
         = link_to business_customer_path(customer) do
           .member-card
             = customer_avatar_tag(customer, class_name: "member-icon")
@@ -112,9 +111,9 @@
               .chat-content
 
                 .chat-header
-                  %span.chat-user= msg.customer.name
+                  %span.chat-user= customer_display_name(msg.customer)
 
-                  - if msg.customer == @project.customer
+                  - if msg.customer == @project.customer && !customer_withdrawn?(msg.customer)
                     %span.owner-tag オーナー
 
                   %span.chat-time= l(msg.created_at, format: :short)

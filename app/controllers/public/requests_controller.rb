@@ -40,7 +40,7 @@ class Public::RequestsController < ApplicationController
     )
     mentioned_customer_ids = mentioned_customers.map(&:id)
 
-    normal_recipients = ([event.customer] + event.participating_customers.where(is_deleted: false).to_a)
+    normal_recipients = ([event.customer] + event.participating_customers.active.to_a)
       .uniq(&:id)
       .reject { |customer| customer.id == poster.id }
 

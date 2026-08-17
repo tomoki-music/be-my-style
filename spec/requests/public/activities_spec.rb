@@ -45,6 +45,27 @@ RSpec.describe "Public::Activities", type: :request do
         expect(response.body).to include(%(href="#{singing_user_path(activity.customer)}"))
       end
     end
+
+    context "activity詳細ページ(show)の退会済みコメント投稿者表示" do
+      let!(:comment) { create(:comment, customer_id: other_customer.id, activity_id: activity.id, comment: "とても素敵な投稿ですね") }
+
+      before { other_customer.update!(is_deleted: true) }
+
+      it "コメント本文は残り、投稿者名が「退会済みユーザー」になること" do
+        get public_activity_path(activity)
+
+        expect(response.body).to include("とても素敵な投稿ですね")
+        expect(response.body).to include("退会済みユーザー")
+        expect(response.body).not_to include(other_customer.name)
+      end
+
+      it "退会済み投稿者のプロフィールリンクを含まないこと" do
+        get public_activity_path(activity)
+
+        expect(response.body).not_to include(%(href="#{public_customer_path(other_customer)}"))
+      end
+    end
+
     context "activity新規作成ページ(new)が正しく表示される" do
       before do
         get new_public_activity_path

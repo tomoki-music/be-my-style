@@ -6,16 +6,16 @@ module Chat
     MAX_RESULTS = 20
     MAX_QUERY_LENGTH = 50
 
-    # DM: 相手(自分以外の参加者)のみ。
+    # DM: 相手(自分以外の参加者)のみ。退会済みメンバーは候補に出さない。
     def self.for_chat_room(chat_room:, current_customer:, query: nil)
-      new(chat_room.customers, current_customer, query).search
+      new(chat_room.customers.active, current_customer, query).search
     end
 
     # コミュニティチャット: 実際のコミュニティメンバー(CommunityCustomer経由)のみ。
     # ChatRoomCustomerは「このチャットルームを開いたことがあるか」に過ぎず、
-    # 全メンバーを網羅しないため候補の母集団には使わない。
+    # 全メンバーを網羅しないため候補の母集団には使わない。退会済みメンバーは候補に出さない。
     def self.for_community(community:, current_customer:, query: nil)
-      new(community.customers, current_customer, query).search
+      new(community.active_customers, current_customer, query).search
     end
 
     # イベントリクエスト欄: 開催元コミュニティの有効メンバーであるCustomerのみ

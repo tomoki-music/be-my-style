@@ -39,7 +39,7 @@ module CsvModule
     join_part = song.join_parts.find { |part| part.join_part_name == part_name }
     return "" unless join_part
 
-    join_part.customers.map { |customer| decorate_customer_name(customer, event) }.join(" / ")
+    join_part.active_customers.map { |customer| decorate_customer_name(customer, event) }.join(" / ")
   end
 
   def decorate_customer_name(customer, event)

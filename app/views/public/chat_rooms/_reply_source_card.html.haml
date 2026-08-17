@@ -5,6 +5,6 @@
 - elsif reply_target.present?
   %div.reply-source-card{ role: "button", tabindex: "0",
       data: { "reply-target-id" => "chat-message-#{reply_target.id}" },
-      "aria-label" => "#{reply_target.customer.name}さんの返信元メッセージへ移動" }
-    .reply-source-card-author= reply_target.customer.name
+      "aria-label" => "#{customer_display_name(reply_target.customer)}さんの返信元メッセージへ移動" }
+    .reply-source-card-author= customer_display_name(reply_target.customer)
     .reply-source-card-snippet= chat_reply_excerpt(reply_target)

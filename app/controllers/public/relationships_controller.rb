@@ -2,6 +2,12 @@ class Public::RelationshipsController < ApplicationController
   def create
     follow_customer_id = params[:customer_id]
     @customer = Customer.find(params[:customer_id])
+
+    if @customer.is_deleted?
+      flash[:alert] = "退会済みのユーザーです。フォローできません。"
+      return redirect_to request.referer
+    end
+
     #フォロー機能
     current_customer.follow(follow_customer_id)
     if current_customer != @customer
@@ -18,10 +24,10 @@ class Public::RelationshipsController < ApplicationController
   end
   def followings
     customer = Customer.find(params[:customer_id])
-    @customers = customer.followings
+    @customers = customer.followings.active
   end
   def followers
     customer = Customer.find(params[:customer_id])
-    @customers = customer.followers
+    @customers = customer.followers.active
   end
 end

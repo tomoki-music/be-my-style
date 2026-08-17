@@ -32,4 +32,17 @@ RSpec.describe JoinPart, type: :model do
       end
     end
   end
+
+  describe '#active_customers' do
+    it '退会済み(is_deleted: true)の参加者を除外すること' do
+      withdrawn_customer = FactoryBot.create(:customer, is_deleted: true)
+      JoinPartCustomer.create!(join_part: join_part, customer: customer)
+      JoinPartCustomer.create!(join_part: join_part, customer: withdrawn_customer)
+
+      expect(join_part.active_customers).to include(customer)
+      expect(join_part.active_customers).not_to include(withdrawn_customer)
+      # JoinPartCustomerレコード自体は削除されない
+      expect(JoinPartCustomer.exists?(join_part: join_part, customer: withdrawn_customer)).to eq true
+    end
+  end
 end

@@ -25,10 +25,15 @@
 .col-md-6.mx-auto
   .form-inline
     %span
-      = link_to visitor_path, data: { 'turbolinks': false } do
+      - if customer_withdrawn?(visitor)
         = customer_avatar_tag(visitor, class_name: "icon_mini")
         %strong
-          = visitor.name + 'さん'
+          = customer_display_name(visitor) + 'さん'
+      - else
+        = link_to visitor_path, data: { 'turbolinks': false } do
+          = customer_avatar_tag(visitor, class_name: "icon_mini")
+          %strong
+            = visitor.name + 'さん'
       が
 
       - case notification.action

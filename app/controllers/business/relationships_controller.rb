@@ -4,6 +4,15 @@ class Business::RelationshipsController < ApplicationController
 
   def create
     customer = Customer.find(params[:customer_id])
+
+    if customer.is_deleted?
+      respond_to do |format|
+        format.html { redirect_back fallback_location: root_path, alert: "退会済みのユーザーです。フォローできません。" }
+        format.js { head :unprocessable_entity }
+      end
+      return
+    end
+
     current_customer.follow(customer.id)
     customer.business_notification_follow(current_customer)
 

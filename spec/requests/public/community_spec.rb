@@ -119,6 +119,37 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
       end
     end
 
+    context "community詳細ページ(show)の退会済みメンバー表示" do
+      let(:active_member) { create(:customer, name: "現役メンバー太郎") }
+      let(:withdrawn_member) { create(:customer, name: "退会済み花子", is_deleted: true) }
+
+      before do
+        CommunityCustomer.find_or_create_by!(customer: customer, community: community)
+        CommunityCustomer.find_or_create_by!(customer: active_member, community: community)
+        CommunityCustomer.find_or_create_by!(customer: withdrawn_member, community: community)
+      end
+
+      it '退会済みメンバーがメンバー一覧に表示されないこと' do
+        get public_community_path(community)
+
+        expect(response.body).to include("現役メンバー太郎")
+        expect(response.body).not_to include("退会済み花子")
+      end
+
+      it '参加人数から退会済みメンバーが除かれること' do
+        get public_community_path(community)
+
+        expect(response.body).to include("#{community.active_customers.count}人")
+        expect(community.customers.count).to eq(community.active_customers.count + 1)
+      end
+
+      it '退会済みメンバーのCommunityCustomerレコード自体は削除されないこと' do
+        get public_community_path(community)
+
+        expect(CommunityCustomer.exists?(community: community, customer: withdrawn_member)).to eq true
+      end
+    end
+
     context "community詳細ページ(show)からイベント編集者管理UIが削除されていること" do
       let(:owner) { create(:customer) }
       let(:community) { create(:community, owner: owner) }

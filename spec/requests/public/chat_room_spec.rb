@@ -19,6 +19,22 @@ RSpec.describe "chat_roomsコントローラーのテスト", type: :request do
         end.to change(ChatRoom, :count).by(1)
       end
     end
+
+    context "退会済みユーザーIDを直接指定してチャットルームを作成しようとした場合" do
+      let(:withdrawn_customer) { create(:customer, is_deleted: true) }
+
+      it "ChatRoom・ChatRoomCustomerが作成されないこと" do
+        expect do
+          post public_chat_rooms_path(customer_id: withdrawn_customer.id)
+        end.not_to change { [ChatRoom.count, ChatRoomCustomer.count] }
+      end
+
+      it "500エラーにならず安全にリダイレクトされること" do
+        post public_chat_rooms_path(customer_id: withdrawn_customer.id)
+
+        expect(response.status).to eq 302
+      end
+    end
     context "チャットルームが正しく表示(show)される" do
       before do
         # showはDM参加者のみ閲覧できるため、customer自身もこのchat_roomの参加者として登録する
@@ -35,6 +51,31 @@ RSpec.describe "chat_roomsコントローラーのテスト", type: :request do
         expect(response.body).to include("チャットルームへようこそ!")
       end
     end
+    context "DMチャットルーム(show)の退会済み相手・投稿者表示" do
+      before do
+        create(:chat_room_customer, chat_room: chat_room, customer: customer)
+      end
+
+      it "退会済みの相手の名前・プロフィールリンクを表示せず「退会済みユーザー」と表示すること" do
+        other_customer.update!(is_deleted: true)
+        get public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+        expect(response.body).to include("退会済みユーザー")
+        expect(response.body).not_to include(other_customer.name)
+        expect(response.body).not_to include(%(href="#{public_customer_path(other_customer)}"))
+      end
+
+      it "退会済みの投稿者のメッセージ本文は残り、投稿者名が匿名化されること" do
+        create(:chat_message, customer: other_customer, chat_room: chat_room, content: "よろしくお願いします")
+        other_customer.update!(is_deleted: true)
+
+        get public_chat_room_path(chat_room, customer_id: other_customer.id)
+
+        expect(response.body).to include("よろしくお願いします")
+        expect(response.body).to include("退会済みユーザー")
+      end
+    end
+
     context "後方互換性(要件11)のテスト" do
       before do
         create(:chat_room_customer, chat_room: chat_room, customer: customer)

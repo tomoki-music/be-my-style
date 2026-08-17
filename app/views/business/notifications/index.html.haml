@@ -11,35 +11,35 @@
         - case notification.action
         - when "like"
           %p
-            = notification.visitor.name
+            = customer_display_name(notification.visitor)
             があなたの投稿にいいねしました
         - when "message"
           %p
-            = notification.visitor.name
+            = customer_display_name(notification.visitor)
             があなたの投稿にコメントしました
         - when "follow"
           %p
-            = notification.visitor.name
+            = customer_display_name(notification.visitor)
             がフォローしました
         - when "request"
           %p
-            = notification.visitor.name
+            = customer_display_name(notification.visitor)
             があなたのコミュニティへ参加申請しました
         - when "accept"
           %p
-            = notification.visitor.name
+            = customer_display_name(notification.visitor)
             があなたのコミュニティ参加申請を受理しました
         - when "project_created"
           %p
-            = notification.visitor.name
+            = customer_display_name(notification.visitor)
             が所属コミュニティで新しいプロジェクトを作成しました
         - when "project_joined"
           %p
-            = notification.visitor.name
+            = customer_display_name(notification.visitor)
             がプロジェクトに参加しました
         - when "project_message"
           %p
-            = notification.visitor.name
+            = customer_display_name(notification.visitor)
             がプロジェクトにコメントしました
         - else
           %p 新しい通知があります

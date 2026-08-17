@@ -47,6 +47,43 @@ RSpec.describe "customersコントローラーのテスト", type: :request do
         expect(response).to redirect_to('http://www.example.com/public/communities')
       end
     end
+    context "退会済みユーザーのプロフィールへ直接アクセスした場合" do
+      let(:withdrawn_customer) { create(:customer, is_deleted: true) }
+
+      before do
+        CommunityCustomer.find_or_create_by!(customer: customer, community: community)
+        CommunityCustomer.find_or_create_by!(customer: withdrawn_customer, community: community)
+      end
+
+      it 'プロフィール内容を表示せず、コミュニティ一覧へリダイレクトされること' do
+        get public_customer_path(withdrawn_customer)
+
+        expect(response.status).to eq 302
+        expect(response).to redirect_to(public_communities_path)
+      end
+
+      it '退会ユーザーを特定できる情報を含まない汎用メッセージであること' do
+        get public_customer_path(withdrawn_customer)
+        follow_redirect!
+
+        expect(response.body).to include("このユーザーのプロフィールは表示できません。")
+        expect(response.body).not_to include(withdrawn_customer.name)
+      end
+    end
+
+    context "フォロー数・フォロワー数から退会済みユーザーが除かれること" do
+      let(:withdrawn_customer) { create(:customer, is_deleted: true) }
+
+      it '退会済みユーザーをフォローしていてもフォロー数に数えないこと' do
+        customer.follow(customer2.id)
+        customer.follow(withdrawn_customer.id)
+
+        get public_customer_path(customer)
+
+        expect(customer.followings.active.count).to eq 1
+      end
+    end
+
     context "customer編集ページが正しく表示される" do
       before do
         get edit_public_customer_path(customer)

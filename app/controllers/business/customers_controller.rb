@@ -1,6 +1,7 @@
 class Business::CustomersController < ApplicationController
   before_action :set_customer
   before_action :ensure_correct_customer, only: [:edit, :update]
+  before_action :reject_deleted_customer, only: [:show]
 
   def show
   end
@@ -28,6 +29,12 @@ class Business::CustomersController < ApplicationController
     unless @customer == current_customer
       redirect_to business_root_path, alert: "権限がありません"
     end
+  end
+
+  def reject_deleted_customer
+    return unless @customer.is_deleted
+
+    redirect_to business_root_path, alert: "このユーザーのプロフィールは表示できません。"
   end
 
   def customer_params

@@ -6,4 +6,10 @@ class JoinPart < ApplicationRecord
   with_options presence: true do
     validates :join_part_name
   end
+
+  # 一般・公開画面で「現役参加者」だけを扱う際に使う。
+  # JoinPartCustomerレコード自体は削除しないため、ここでの絞り込みは表示専用。
+  def active_customers
+    customers.active
+  end
 end

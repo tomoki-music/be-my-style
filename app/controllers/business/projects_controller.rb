@@ -106,7 +106,7 @@ class Business::ProjectsController < ApplicationController
   end
 
   def notify_project_created!(project)
-    recipients = project.community.customers.where.not(id: current_customer.id)
+    recipients = project.community.active_customers.where.not(id: current_customer.id)
     recipients.find_each do |customer|
       customer.business_notification_project_created(current_customer, project)
       next unless customer.confirm_mail
@@ -141,7 +141,7 @@ class Business::ProjectsController < ApplicationController
     recipients << project.customer
     recipients.concat(project.members.to_a) if include_members
 
-    recipients.compact.reject { |customer| customer.id == current_customer.id }.uniq
+    recipients.compact.reject { |customer| customer.id == current_customer.id || customer.is_deleted }.uniq
   end
 
   def authorize_project_creation!

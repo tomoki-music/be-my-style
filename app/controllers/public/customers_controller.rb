@@ -101,6 +101,6 @@ class Public::CustomersController < ApplicationController
   def reject_deleted_customer
     return unless @customer.is_deleted
 
-    redirect_to public_communities_path, alert: "このユーザーはすでに退会しています。"
+    redirect_to public_communities_path, alert: "このユーザーのプロフィールは表示できません。"
   end
 end

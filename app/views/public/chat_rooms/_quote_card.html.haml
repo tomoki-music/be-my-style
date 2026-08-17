@@ -5,8 +5,8 @@
 - elsif quoted.present?
   %div.quote-card{ role: "button", tabindex: "0",
       data: { "quote-target-id" => "chat-message-#{quoted.id}" },
-      "aria-label" => "#{quoted.customer.name}さんの引用元メッセージへ移動" }
-    .quote-card-author= quoted.customer.name
+      "aria-label" => "#{customer_display_name(quoted.customer)}さんの引用元メッセージへ移動" }
+    .quote-card-author= customer_display_name(quoted.customer)
     .quote-card-snippet= chat_reply_excerpt(quoted)
     - if chat_quote_has_image?(quoted)
       - image_file = quoted.attachments.detect(&:image?)

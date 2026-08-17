@@ -17,21 +17,30 @@
         %h1= @community.name
 
         .hero-meta
-          👥 #{@community.customers.count}人
+          👥 #{@community.active_customers.count}人
 
         / ===== オーナー =====
         .hero-owner
-          = link_to business_customer_path(@community.owner) do
+          - if customer_withdrawn?(@community.owner)
             .owner-info
-
               .owner-avatar
                 = customer_avatar_tag(@community.owner, class_name: "owner-img")
-
               .owner-meta
                 %span.owner-label オーナー
                 %span.owner-name
-                  = @community.owner.name
-                  %span.owner-badge 👑
+                  = customer_display_name(@community.owner)
+          - else
+            = link_to business_customer_path(@community.owner) do
+              .owner-info
+
+                .owner-avatar
+                  = customer_avatar_tag(@community.owner, class_name: "owner-img")
+
+                .owner-meta
+                  %span.owner-label オーナー
+                  %span.owner-name
+                    = @community.owner.name
+                    %span.owner-badge 👑
 
         / ===== アクション =====
         .hero-actions
@@ -130,9 +139,9 @@
 
                 .user-info
                   %span.user-name
-                    = post.customer.name
+                    = customer_display_name(post.customer)
 
-                    - if post.customer == @community.owner
+                    - if post.customer == @community.owner && !customer_withdrawn?(post.customer)
                       %span.owner-tag オーナー
 
                   %span.time= time_ago_in_words(post.created_at) + "前"
@@ -147,7 +156,7 @@
         %h3 メンバー
 
         .member-grid
-          - @community.customers.each do |customer|
+          - @community.active_customers.each do |customer|
             = link_to business_customer_path(customer) do
               .member-card
                 = customer_avatar_tag(customer, class_name: "member-icon")

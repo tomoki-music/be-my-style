@@ -42,6 +42,13 @@ RSpec.describe "chat_rooms#mention_candidates / community_mention_candidates", t
         expect(JSON.parse(response.body)).to eq []
       end
 
+      it "退会済み(is_deleted: true)の相手は候補に含まれないこと" do
+        other_customer.update!(is_deleted: true)
+
+        get mention_candidates_public_chat_room_path(chat_room)
+        expect(JSON.parse(response.body)).to eq []
+      end
+
       it "自分と同名の別ユーザーがいる場合、その別ユーザーは候補に残ること" do
         namesake = create(:customer, name: "Tomoki")
         create(:chat_room_customer, chat_room: chat_room, customer: namesake)
