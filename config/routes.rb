@@ -149,7 +149,6 @@ Rails.application.routes.draw do
       resource :permits, only: [:create, :destroy]
       resource :community_customers, only: [:create, :destroy]
       resources :song_templates, only: [:create, :destroy]
-      resources :community_event_editors, only: [:create, :destroy]
     end
     get "communities/:id/permits" => "communities#permits", as: :permits
   end
