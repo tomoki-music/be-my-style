@@ -57,6 +57,7 @@
               = link_to '参加を申請する', public_community_permits_path(@community), method: :post, class: "btn btn-sm btn-success community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティに参加申請をします。よろしいですか？' }
               参加してみよう!
     .col-md-9
+      = render "upcoming_events", community: @community, events: @upcoming_events, more: @more_upcoming_events
       %table.table.table-striped.community-show-table{:width=>"100%",:border=>"1"}
         %colgroup
           %col{width: "19%"}

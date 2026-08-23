@@ -1,4 +1,8 @@
 class Public::CommunitiesController < ApplicationController
+  # ファーストビューの「開催予定のイベント」表示件数。SQLのLIMITで表示数+1件取得し、
+  # 4件目の有無で「すべて見る」リンクの要否を追加クエリなしに判定する。
+  UPCOMING_EVENTS_DISPLAY_LIMIT = 3
+
   before_action :set_community, only: [:show, :edit, :update, :destroy, :leave, :new_mail, :send_mail, :permits]
   before_action :ensure_correct_customer, only: [:edit, :update, :destroy, :permits]
   before_action :check_mail, only: [:send_mail]
@@ -52,6 +56,15 @@ class Public::CommunitiesController < ApplicationController
 
   def show
     @owner = @community.owner
+
+    upcoming_events = @community.events
+      .upcoming_or_ongoing
+      .order(:event_start_time, :id)
+      .with_attached_event_image
+      .limit(UPCOMING_EVENTS_DISPLAY_LIMIT + 1)
+      .to_a
+    @upcoming_events = upcoming_events.first(UPCOMING_EVENTS_DISPLAY_LIMIT)
+    @more_upcoming_events = upcoming_events.size > UPCOMING_EVENTS_DISPLAY_LIMIT
 
     @community_customers =
       if params[:part_id].present?

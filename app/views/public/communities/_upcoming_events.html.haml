@@ -1,0 +1,25 @@
+.community-upcoming-events
+  .d-flex.align-items-center.justify-content-between.flex-wrap.mb-2
+    %h3.community-upcoming-events__title.mb-0
+      %i.fa-regular.fa-calendar
+      開催予定のイベント
+    - if more
+      = link_to "すべて見る", public_events_path(community_id: community.id, status: "upcoming"), data: { 'turbolinks': false }, class: "community-upcoming-events__more small"
+  - if events.present?
+    .community-upcoming-events__list
+      - events.each do |event|
+        = link_to public_event_path(event), data: { 'turbolinks': false }, class: "community-upcoming-events__item d-flex align-items-center border rounded p-2" do
+          .community-upcoming-events__thumb
+            - if event.event_image.attached?
+              = image_tag event.event_image, alt: ""
+            - else
+              = image_tag 'no_image', alt: ""
+          .community-upcoming-events__body
+            .community-upcoming-events__name.text-truncate.font-weight-bold
+              = event.event_name
+            .community-upcoming-events__time.small.text-muted
+              %i.fa-regular.fa-clock
+              = l event.event_start_time, format: :short
+  - else
+    .community-upcoming-events__empty.small.text-muted
+      現在、開催予定のイベントはありません

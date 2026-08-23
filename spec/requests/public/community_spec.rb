@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe "communitiesコントローラーのテスト", type: :request do
+  include ActiveSupport::Testing::TimeHelpers
+
   let!(:customer) { create(:customer) }
   let!(:other_customer) { create(:customer) }
   let(:community) { create(:community) }
@@ -202,6 +204,155 @@ RSpec.describe "communitiesコントローラーのテスト", type: :request do
         get public_community_path(community, part_id: create(:part).id)
 
         expect(response.status).to eq 200
+      end
+    end
+
+    context "community詳細ページ(show)の開催予定イベント表示" do
+      let(:now) { Time.zone.local(2026, 8, 23, 12, 0, 0) }
+      let(:other_community) { create(:community, name: "別コミュニティ") }
+
+      def event_at(target_community, name:, start_time:, end_time:)
+        create(
+          :event, :event_with_songs,
+          community: target_community,
+          event_name: name,
+          event_start_time: start_time,
+          event_end_time: end_time,
+          event_entry_deadline: start_time - 1.hour
+        )
+      end
+
+      it "対象コミュニティの開催予定イベントが表示されること" do
+        travel_to(now) do
+          upcoming = event_at(community, name: "開催予定イベント", start_time: now + 1.day, end_time: now + 1.day + 1.hour)
+
+          get public_community_path(community)
+
+          expect(response.body).to include(upcoming.event_name)
+        end
+      end
+
+      it "終了済みイベントが表示されないこと" do
+        travel_to(now) do
+          ended = event_at(community, name: "終了済みイベント", start_time: now - 3.hours, end_time: now - 1.hour)
+
+          get public_community_path(community)
+
+          expect(response.body).not_to include(ended.event_name)
+        end
+      end
+
+      it "開催中のイベントが表示されること" do
+        travel_to(now) do
+          ongoing = event_at(community, name: "開催中イベント", start_time: now - 1.hour, end_time: now + 1.hour)
+
+          get public_community_path(community)
+
+          expect(response.body).to include(ongoing.event_name)
+        end
+      end
+
+      it "別コミュニティのイベントが表示されないこと" do
+        travel_to(now) do
+          other_event = event_at(other_community, name: "別コミュニティのイベント", start_time: now + 1.day, end_time: now + 1.day + 1.hour)
+
+          get public_community_path(community)
+
+          expect(response.body).not_to include(other_event.event_name)
+        end
+      end
+
+      it "開催日時が近い順に表示されること" do
+        travel_to(now) do
+          later = event_at(community, name: "10月開催イベント", start_time: now + 60.days, end_time: now + 60.days + 1.hour)
+          soonest = event_at(community, name: "8月末開催イベント", start_time: now + 5.days, end_time: now + 5.days + 1.hour)
+          middle = event_at(community, name: "9月開催イベント", start_time: now + 20.days, end_time: now + 20.days + 1.hour)
+
+          get public_community_path(community)
+
+          body = response.body
+          expect(body.index(soonest.event_name)).to be < body.index(middle.event_name)
+          expect(body.index(middle.event_name)).to be < body.index(later.event_name)
+        end
+      end
+
+      it "開催予定イベントが0件でもエラーにならず「開催予定のイベントはありません」と表示されること" do
+        get public_community_path(community)
+
+        expect(response.status).to eq 200
+        expect(response.body).to include("現在、開催予定のイベントはありません")
+      end
+
+      it "表示件数の上限が守られ、4件以上ある場合は「すべて見る」リンクが表示されること" do
+        travel_to(now) do
+          4.times do |i|
+            event_at(community, name: "上限確認イベント#{i}", start_time: now + (i + 1).days, end_time: now + (i + 1).days + 1.hour)
+          end
+
+          get public_community_path(community)
+
+          doc = Nokogiri::HTML(response.body)
+          expect(doc.css(".community-upcoming-events__item").count).to eq 3
+          expect(response.body).to include("すべて見る")
+        end
+      end
+
+      it "「すべて見る」リンクが終了していないイベントだけに絞り込むURLになっていること" do
+        travel_to(now) do
+          4.times do |i|
+            event_at(community, name: "リンク確認イベント#{i}", start_time: now + (i + 1).days, end_time: now + (i + 1).days + 1.hour)
+          end
+
+          get public_community_path(community)
+
+          doc = Nokogiri::HTML(response.body)
+          more_link = doc.at_css(".community-upcoming-events__more")
+          expect(more_link["href"]).to eq public_events_path(community_id: community.id, status: "upcoming")
+        end
+      end
+
+      it "「すべて見る」の遷移先で対象コミュニティの終了済みイベントが表示されないこと" do
+        travel_to(now) do
+          upcoming = event_at(community, name: "すべて見る用開催予定イベント", start_time: now + 1.day, end_time: now + 1.day + 1.hour)
+          ended = event_at(community, name: "すべて見る用終了済みイベント", start_time: now - 3.hours, end_time: now - 1.hour)
+          4.times { |i| event_at(community, name: "すべて見る用ダミー#{i}", start_time: now + (i + 2).days, end_time: now + (i + 2).days + 1.hour) }
+
+          get public_events_path(community_id: community.id, status: "upcoming")
+
+          expect(response.status).to eq 200
+          expect(response.body).to include(upcoming.event_name)
+          expect(response.body).not_to include(ended.event_name)
+        end
+      end
+
+      it "開催予定イベントが3件以下の場合は「すべて見る」リンクが表示されないこと" do
+        travel_to(now) do
+          2.times do |i|
+            event_at(community, name: "少数確認イベント#{i}", start_time: now + (i + 1).days, end_time: now + (i + 1).days + 1.hour)
+          end
+
+          get public_community_path(community)
+
+          expect(response.body).not_to include("すべて見る")
+        end
+      end
+
+      it "開催予定イベント件数が増えてもeventsテーブルへのクエリ数が比例して増えないこと(N+1が発生しないこと)" do
+        travel_to(now) do
+          3.times do |i|
+            event_at(community, name: "N1確認イベント#{i}", start_time: now + (i + 1).days, end_time: now + (i + 1).days + 1.hour)
+          end
+
+          query_count = 0
+          counter = ->(_name, _started, _finished, _unique_id, payload) {
+            query_count += 1 if payload[:sql].to_s.match?(/FROM\s+["`]?events["`]?/i)
+          }
+          ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+            get public_community_path(community)
+          end
+
+          expect(query_count).to eq 1
+        end
       end
     end
 
