@@ -18,6 +18,7 @@
         - if request.stamped?
           %span.stamp-badge= request.stamp_label
         - else
-          = mention_html_for_request(request, valid_mention_customer_ids)
+          .markdown-body
+            = mention_html_for_request(request, valid_mention_customer_ids)
           = render "public/events/youtube_card", card: youtube_card_for_request(request)
         %br
