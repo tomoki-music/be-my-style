@@ -103,6 +103,311 @@ RSpec.describe "Public::Events", type: :request do
         expect(JoinPartCustomer.exists?(customer: withdrawn_member, join_part: join_part)).to eq true
       end
     end
+
+    context "event詳細ページ(show)のスマホ用「募集中パート」ショートカット" do
+      let(:event) do
+        FactoryBot.create(
+          :event, :event_with_songs, customer: customer, community: community,
+          event_start_time: 3.days.from_now,
+          event_end_time: 3.days.from_now + 2.hours
+        )
+      end
+      let(:song) { event.songs.first }
+      let!(:vocal_part) { FactoryBot.create(:join_part, song: song, join_part_name: "ボーカル") }
+      let!(:guitar_part) { FactoryBot.create(:join_part, song: song, join_part_name: "ギター") }
+
+      def join_confirm_link_for(target_event, part)
+        public_event_join_confirm_path(target_event, event: { join_part_ids: [part.id] })
+      end
+
+      it '募集中(参加者0人)のパートだけがショートカットリンクとして表示されること' do
+        FactoryBot.create(:join_part_customer, join_part: guitar_part, customer: other_customer)
+
+        get public_event_path(event)
+
+        expect(response.body).to include('recruiting-parts')
+        expect(response.body).to include(join_confirm_link_for(event, vocal_part))
+        expect(response.body).not_to include(join_confirm_link_for(event, guitar_part))
+      end
+
+      it '定員が埋まっている(参加者がいる)パートは表示されないこと' do
+        FactoryBot.create(:join_part_customer, join_part: guitar_part, customer: other_customer)
+
+        get public_event_path(event)
+
+        expect(response.body).not_to include(join_confirm_link_for(event, guitar_part))
+      end
+
+      it '募集中パートが0件の場合は募集欄自体が表示されないこと' do
+        FactoryBot.create(:join_part_customer, join_part: vocal_part, customer: other_customer)
+        FactoryBot.create(:join_part_customer, join_part: guitar_part, customer: other_customer)
+
+        get public_event_path(event)
+
+        expect(response.body).not_to include('recruiting-parts')
+      end
+
+      it '複数の募集中パートがどちらもショートカットリンクとして表示されること' do
+        get public_event_path(event)
+
+        expect(response.body).to include(join_confirm_link_for(event, vocal_part))
+        expect(response.body).to include(join_confirm_link_for(event, guitar_part))
+      end
+
+      it 'パートリンクに曲名・パート名入りのaria-labelが設定されること' do
+        get public_event_path(event)
+
+        expect(response.body).to include("#{song.song_name}のボーカルパートにエントリーする")
+        expect(response.body).to include("#{song.song_name}のギターパートにエントリーする")
+      end
+
+      it '退会済み参加者だけのパートは募集中として扱われ、リンクが表示されること' do
+        withdrawn = FactoryBot.create(:customer, is_deleted: true)
+        FactoryBot.create(:join_part_customer, join_part: vocal_part, customer: withdrawn)
+        FactoryBot.create(:join_part_customer, join_part: guitar_part, customer: other_customer)
+
+        get public_event_path(event)
+
+        expect(response.body).to include(join_confirm_link_for(event, vocal_part))
+      end
+
+      it '別の楽曲のパートリンクと混同されないこと(曲・パートの対応が正しいこと)' do
+        other_song = FactoryBot.create(:song, event: event)
+        keyboard_part = FactoryBot.create(:join_part, song: other_song, join_part_name: "キーボード")
+        FactoryBot.create(:join_part_customer, join_part: guitar_part, customer: other_customer)
+
+        get public_event_path(event)
+
+        expect(response.body).to include(join_confirm_link_for(event, vocal_part))
+        expect(response.body).to include(join_confirm_link_for(event, keyboard_part))
+        expect(response.body).not_to include(join_confirm_link_for(event, guitar_part))
+        expect(response.body).to include("#{other_song.song_name}のキーボードパートにエントリーする")
+      end
+
+      it 'ショートカットリンク先へ実際にGETすると、確認画面に対象楽曲・対象パートだけが選択された状態で表示されること' do
+        expect do
+          get join_confirm_link_for(event, vocal_part)
+        end.not_to change(JoinPartCustomer, :count)
+
+        expect(response.status).to eq 200
+        expect(response.body).to include('参加確認画面')
+        expect(response.body).to include("【#{song.song_name}】の曲に【ボーカル】で参加！")
+        expect(response.body).not_to include("【#{song.song_name}】の曲に【ギター】で参加！")
+        # 確認画面(GET)は表示のみで、実際の登録は既存のPOST joinで行われる
+        expect do
+          post public_event_join_path(event), params: { join_part_ids: { "0" => vocal_part.id.to_s } }
+        end.to change(JoinPartCustomer, :count).by(1)
+        expect(JoinPartCustomer.exists?(customer_id: customer.id, join_part_id: vocal_part.id)).to eq true
+      end
+
+      it '複数の募集中パートがあっても、押したリンクのパートだけが確認画面で選択されること' do
+        get join_confirm_link_for(event, guitar_part)
+
+        expect(response.body).to include("【#{song.song_name}】の曲に【ギター】で参加！")
+        expect(response.body).not_to include("【#{song.song_name}】の曲に【ボーカル】で参加！")
+      end
+
+      it '別の楽曲のパートリンクからは、その楽曲・パートの正しい組み合わせで確認画面が表示されること' do
+        other_song = FactoryBot.create(:song, event: event)
+        keyboard_part = FactoryBot.create(:join_part, song: other_song, join_part_name: "キーボード")
+
+        get join_confirm_link_for(event, keyboard_part)
+
+        expect(response.body).to include("【#{other_song.song_name}】の曲に【キーボード】で参加！")
+        expect(response.body).not_to include("【#{song.song_name}】の曲に【キーボード】で参加！")
+      end
+
+      it 'イベント終了後は募集中パートのショートカットリンクが表示されないこと(既存の参加チェック不可仕様と同じ挙動)' do
+        ended_event = FactoryBot.create(
+          :event, :event_with_songs, customer: customer, community: community,
+          event_start_time: 3.days.ago - 2.hours,
+          event_end_time: 3.days.ago
+        )
+        ended_part = FactoryBot.create(:join_part, song: ended_event.songs.first, join_part_name: "ドラム")
+
+        get public_event_path(ended_event)
+
+        expect(response.body).not_to include(join_confirm_link_for(ended_event, ended_part))
+        expect(response.body).not_to include('recruiting-parts')
+      end
+    end
+
+    context "join_confirm/joinの安全性(URL上のeventに属さないjoin_part_idを拒否する)" do
+      let(:event) do
+        FactoryBot.create(
+          :event, :event_with_songs, customer: customer, community: community,
+          event_start_time: 3.days.from_now,
+          event_end_time: 3.days.from_now + 2.hours
+        )
+      end
+      let(:song) { event.songs.first }
+      let!(:vocal_part) { FactoryBot.create(:join_part, song: song, join_part_name: "ボーカル") }
+      let!(:guitar_part) { FactoryBot.create(:join_part, song: song, join_part_name: "ギター") }
+
+      # 同じコミュニティ内にある別イベントのパート
+      let(:other_event_same_community) do
+        FactoryBot.create(:event, :event_with_songs, customer: customer, community: community)
+      end
+      let!(:part_of_other_event_same_community) do
+        FactoryBot.create(:join_part, song: other_event_same_community.songs.first, join_part_name: "同コミュニティ別イベントのパート")
+      end
+
+      # 別コミュニティのイベントのパート
+      let(:other_community) { FactoryBot.create(:community) }
+      let(:other_event_other_community) do
+        FactoryBot.create(:event, :event_with_songs, customer: other_customer, community: other_community)
+      end
+      let!(:part_of_other_event_other_community) do
+        FactoryBot.create(:join_part, song: other_event_other_community.songs.first, join_part_name: "別コミュニティ別イベントのパート")
+      end
+
+      describe "正常系" do
+        it "対象イベントに属するパートはjoin_confirmで確認画面を表示できること" do
+          get public_event_join_confirm_path(event, event: { join_part_ids: [vocal_part.id.to_s] })
+
+          expect(response.status).to eq 200
+          expect(response.body).to include("参加確認画面")
+        end
+
+        it "対象イベントに属するパートはjoinで登録できること" do
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => vocal_part.id.to_s } }
+          end.to change(JoinPartCustomer, :count).by(1)
+
+          expect(JoinPartCustomer.exists?(customer_id: customer.id, join_part_id: vocal_part.id)).to eq true
+        end
+
+        it "複数の正常なパートを同時に送信して登録できること" do
+          expect do
+            post public_event_join_path(event), params: {
+              join_part_ids: { "0" => vocal_part.id.to_s, "1" => guitar_part.id.to_s }
+            }
+          end.to change(JoinPartCustomer, :count).by(2)
+        end
+
+        it "スマホ用ショートカットの導線(join_confirm→join)が引き続き成功すること" do
+          get public_event_join_confirm_path(event, event: { join_part_ids: [vocal_part.id] })
+          expect(response.status).to eq 200
+
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => vocal_part.id.to_s } }
+          end.to change(JoinPartCustomer, :count).by(1)
+          expect(response).to redirect_to(public_event_path(event))
+        end
+      end
+
+      describe "不正系: join_confirm" do
+        it "別コミュニティの別イベントのパートIDでは確認画面を表示しないこと" do
+          get public_event_join_confirm_path(event, event: { join_part_ids: [part_of_other_event_other_community.id.to_s] })
+
+          expect(response).to redirect_to(public_event_path(event))
+        end
+
+        it "同じコミュニティ内にある別イベントのパートIDでも拒否すること" do
+          get public_event_join_confirm_path(event, event: { join_part_ids: [part_of_other_event_same_community.id.to_s] })
+
+          expect(response).to redirect_to(public_event_path(event))
+        end
+
+        it "存在しないパートIDを拒否すること" do
+          get public_event_join_confirm_path(event, event: { join_part_ids: ["999999999"] })
+
+          expect(response).to redirect_to(public_event_path(event))
+        end
+
+        it "正常IDと別イベントIDが混在する場合、確認画面を表示しないこと" do
+          get public_event_join_confirm_path(
+            event,
+            event: { join_part_ids: [vocal_part.id.to_s, part_of_other_event_other_community.id.to_s] }
+          )
+
+          expect(response).to redirect_to(public_event_path(event))
+        end
+
+        it "不正な文字列を安全に拒否すること(例外画面にならない)" do
+          expect do
+            get public_event_join_confirm_path(event, event: { join_part_ids: ["abc"] })
+          end.not_to raise_error
+          expect(response).to redirect_to(public_event_path(event))
+        end
+      end
+
+      describe "不正系: join" do
+        it "別コミュニティの別イベントのパートIDでは登録されないこと" do
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => part_of_other_event_other_community.id.to_s } }
+          end.not_to change(JoinPartCustomer, :count)
+
+          expect(response).to redirect_to(public_event_path(event))
+        end
+
+        it "同じコミュニティ内にある別イベントのパートIDでも登録されないこと" do
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => part_of_other_event_same_community.id.to_s } }
+          end.not_to change(JoinPartCustomer, :count)
+        end
+
+        it "存在しないパートIDでは登録されないこと" do
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => "999999999" } }
+          end.not_to change(JoinPartCustomer, :count)
+        end
+
+        it "正常IDと不正IDが混在する場合、1件も登録されないこと" do
+          expect do
+            post public_event_join_path(event), params: {
+              join_part_ids: { "0" => vocal_part.id.to_s, "1" => part_of_other_event_other_community.id.to_s }
+            }
+          end.not_to change(JoinPartCustomer, :count)
+        end
+
+        it "不正な文字列を送信しても例外画面にならず、登録されないこと" do
+          expect do
+            expect do
+              post public_event_join_path(event), params: { join_part_ids: { "0" => "abc" } }
+            end.not_to raise_error
+          end.not_to change(JoinPartCustomer, :count)
+        end
+
+        it "拒否時に既存のJoinPartCustomerが削除・変更されないこと" do
+          FactoryBot.create(:join_part_customer, join_part: vocal_part, customer: other_customer)
+
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => part_of_other_event_other_community.id.to_s } }
+          end.not_to change { JoinPartCustomer.pluck(:customer_id, :join_part_id).sort }
+        end
+      end
+
+      describe "認可の維持" do
+        it "コミュニティ非参加者は既存どおり参加コミュニティへ誘導され、登録されないこと" do
+          outsider = FactoryBot.create(:customer)
+          sign_out customer
+          sign_in outsider
+
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => vocal_part.id.to_s } }
+          end.not_to change(JoinPartCustomer, :count)
+          expect(response).to redirect_to(public_community_path(community))
+        end
+
+        it "未ログイン時はjoinへのPOSTも既存どおりログイン画面へ誘導されること" do
+          sign_out customer
+
+          post public_event_join_path(event), params: { join_part_ids: { "0" => vocal_part.id.to_s } }
+
+          expect(response.status).to eq 302
+        end
+
+        it "同一パートへの重複エントリーは既存仕様どおり防止されること" do
+          post public_event_join_path(event), params: { join_part_ids: { "0" => vocal_part.id.to_s } }
+
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => vocal_part.id.to_s } }
+          end.not_to change(JoinPartCustomer, :count)
+        end
+      end
+    end
+
     context "楽曲のYouTubeカード表示" do
       it "有効なYouTube URLの曲があってもリクエストは200となり、サムネイルカードが表示されること" do
         event.songs.first.update!(youtube_url: "https://www.youtube.com/watch?v=abcdefghijk")
@@ -1203,6 +1508,16 @@ RSpec.describe "Public::Events", type: :request do
         get public_event_path(event)
       end
       it 'リクエストは302 Foundとなること' do
+        expect(response.status).to eq 302
+      end
+    end
+    context "募集中パートのショートカットリンク先(join_confirm)へも遷移されない" do
+      let(:join_part) { FactoryBot.create(:join_part, song: song, join_part_name: "ボーカル") }
+
+      before do
+        get public_event_join_confirm_path(event, event: { join_part_ids: [join_part.id] })
+      end
+      it 'リクエストは302 Foundとなること(既存のログイン誘導と同じ挙動)' do
         expect(response.status).to eq 302
       end
     end

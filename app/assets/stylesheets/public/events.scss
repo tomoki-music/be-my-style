@@ -603,6 +603,50 @@
         font-size: 0.8rem;
       }
     }
+    // スマホでは表を右スクロールしないと募集中パートが分からないため、
+    // 「曲名/ステータス」セル内に募集中パートのショートカットを表示する。
+    // md以上(.responsive-boxがそのままでも一覧を確認しやすい)では既存の
+    // パート一覧列と二重表示になるため、d-md-noneでスマホ専用にしている。
+    .recruiting-parts {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      max-width: 100%;
+
+      &__label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #7a5c00;
+      }
+
+      &__part {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 32px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background-color: #fff8e1;
+        border: 1px solid #ffc107;
+        color: #7a5c00;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: normal;
+        word-break: break-word;
+
+        &:hover,
+        &:focus-visible {
+          background-color: #ffe9a8;
+          color: #7a5c00;
+          text-decoration: none;
+          outline: 2px solid #7a5c00;
+          outline-offset: 1px;
+        }
+      }
+    }
   }
   .event-index-title{
     width: 100%;

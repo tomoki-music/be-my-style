@@ -258,7 +258,8 @@
                                     %th{ style: "min-width: 90px;" }= part
                               %tbody
                                 - @event.songs.each do |song|
-                                  - vacant = song.join_parts.any? { |jp| jp.active_customers.count == 0 }
+                                  - recruiting_parts = song.recruiting_join_parts
+                                  - vacant = recruiting_parts.any?
                                   %tr{ class: (vacant ? 'vacant' : 'complete') }
                                     %td{ style: "max-width: 120px; overflow-wrap: break-word; word-break: break-word; white-space: normal;" }
                                       - if vacant
@@ -279,6 +280,15 @@
                                           = customer_profile_name_link(song.requested_by_customer)
                                           さん
                                       = render "public/events/youtube_card", card: youtube_card_for(song)
+                                      - if recruiting_parts.any? && @event.event_end_time > Time.now
+                                        .recruiting-parts.d-md-none
+                                          %span.recruiting-parts__label 募集中
+                                          - recruiting_parts.each do |part|
+                                            = link_to part.join_part_name,
+                                              public_event_join_confirm_path(@event, event: { join_part_ids: [part.id] }),
+                                              class: "recruiting-parts__part",
+                                              data: { turbolinks: false },
+                                              "aria-label": "#{song.song_name}の#{part.join_part_name}パートにエントリーする"
 
                                     %td
                                       .check-part-list
