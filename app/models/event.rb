@@ -20,6 +20,10 @@ class Event < ApplicationRecord
 
   accepts_nested_attributes_for :songs, allow_destroy: true, reject_if: :all_blank
 
+  # 「終了していない」イベント(開催中を含む)。#status_keyの:ended判定
+  # (event_end_time <= now)と揃え、event_end_time > nowを終了していない条件とする。
+  scope :upcoming_or_ongoing, ->(now = Time.current) { where("events.event_end_time > ?", now) }
+
   geocoded_by :address
   after_validation :geocode, if: :address_changed?
 

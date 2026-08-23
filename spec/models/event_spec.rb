@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe Event, type: :model do
+  include ActiveSupport::Testing::TimeHelpers
+
   let(:customer) { FactoryBot.create(:customer, :customer_with_parts) }
   let(:other_customer) { FactoryBot.create(:customer, :customer_with_parts) }
   let(:community) { FactoryBot.create(:community) }
@@ -112,6 +114,50 @@ RSpec.describe Event, type: :model do
       event = event_at(start_time: now + 2.hours, end_time: now + 3.hours, entry_deadline: now + 1.hour)
       expect(event.status_key(now: now)).to eq :upcoming
       expect(event.status_label(now: now)).to eq '開催予定'
+    end
+  end
+
+  describe '.upcoming_or_ongoing' do
+    let(:now) { Time.zone.parse('2026-01-10 12:00:00') }
+
+    def event_at(start_time:, end_time:)
+      FactoryBot.create(
+        :event, :event_with_songs,
+        event_start_time: start_time,
+        event_end_time: end_time,
+        event_entry_deadline: start_time - 1.hour
+      )
+    end
+
+    it '終了時刻を過ぎたイベントを含まないこと' do
+      ended = event_at(start_time: now - 3.hours, end_time: now - 1.hour)
+      expect(Event.upcoming_or_ongoing(now)).not_to include(ended)
+    end
+
+    it '終了時刻ちょうど(境界値)のイベントを含まないこと(#status_keyの:ended判定と揃える)' do
+      just_ended = event_at(start_time: now - 3.hours, end_time: now)
+      expect(Event.upcoming_or_ongoing(now)).not_to include(just_ended)
+    end
+
+    it '開催中のイベントを含むこと' do
+      ongoing = event_at(start_time: now - 1.hour, end_time: now + 1.hour)
+      expect(Event.upcoming_or_ongoing(now)).to include(ongoing)
+    end
+
+    it '開催予定(未来)のイベントを含むこと' do
+      upcoming = event_at(start_time: now + 1.day, end_time: now + 1.day + 1.hour)
+      expect(Event.upcoming_or_ongoing(now)).to include(upcoming)
+    end
+
+    it '引数を省略した場合はTime.currentが使われること' do
+      travel_to(now) do
+        ended = event_at(start_time: now - 3.hours, end_time: now - 1.hour)
+        upcoming = event_at(start_time: now + 1.hour, end_time: now + 2.hours)
+
+        result = Event.upcoming_or_ongoing
+        expect(result).to include(upcoming)
+        expect(result).not_to include(ended)
+      end
     end
   end
 end
