@@ -116,7 +116,9 @@ Rails.application.routes.draw do
       delete "delete" => "events#delete"
       get "join_confirm" => "events#join_confirm"
       resources :songs, only: [:create, :destroy, :show]
-      resources :requests, only: [:create, :destroy]
+      resources :requests, only: [:create, :destroy] do
+        post "preview" => "requests#preview", on: :collection
+      end
     end
 
     # 通知機能

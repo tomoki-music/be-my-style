@@ -25,6 +25,26 @@ class Public::RequestsController < ApplicationController
     end
   end
 
+  # Markdown入力補助ツールバーのプレビュー用。DBへの書き込みは一切行わない。
+  # 保存後の表示(_requests.html.haml#mention_html_for_request)と同じ
+  # Requests::MentionTextRenderer(MarkdownHelper#markdownと同じRedcarpet設定+
+  # Sanitize::Config::RELAXED)を使うことで、プレビューと保存後表示の見た目・安全性を一致させる。
+  # イベント自体の閲覧(EventsController#show)にコミュニティメンバー限定等の追加認可が無いのに合わせ、
+  # ここもauthenticate_customer!(全アクション共通のbefore_action)のみを要求する
+  # (EventsController#mention_candidatesと同じ方針)。文字数上限はMentionTextRenderer::MAX_LENGTHで
+  # 一元管理されるため、ここで別途サイズ制限は設けていない。
+  def preview
+    event = Event.find(params[:event_id])
+    valid_customer_ids = event.community.active_customers.distinct.pluck(:id)
+
+    render json: { html: Requests::MentionTextRenderer.call(params[:content], valid_customer_ids: valid_customer_ids) }
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "イベントが見つかりません" }, status: :not_found
+  rescue StandardError => e
+    Rails.logger.error("[Requests::MentionTextRenderer preview] #{e.class}: #{e.message}")
+    render json: { error: "プレビューを生成できませんでした" }, status: :unprocessable_entity
+  end
+
   private
 
   # 通常通知(request-msg)の対象は従来通り「イベント開催者+イベント参加者」のまま維持する。
