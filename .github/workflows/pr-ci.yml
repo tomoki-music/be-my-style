@@ -1,0 +1,272 @@
+name: Pull Request CI
+
+# Pull Request段階での基本検証と自動テスト。
+# 既存の .github/workflows/rails.yml (main pushで起動するEC2本番デプロイ)とは完全に独立しており、
+# 本番デプロイ処理には一切関与しない。
+#
+# pull_request_target は使用しない。Fork由来のPRのコードをSecrets付きで実行してしまう
+# リスクがあるため、常に「PRのコードそのもの」をSecretsなしで検証する pull_request を使う。
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+# 必要最小限の権限。PRへのコメント投稿・書き込みは行わない。
+permissions:
+  contents: read
+
+# 同一PRへの追加pushがあった場合、実行中の古いCIをキャンセルし最新コミットだけを検証する。
+concurrency:
+  group: pr-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  RAILS_ENV: test
+  # 本番のSECRET_KEY_BASE(Rails.application.credentials経由)は使用しない。
+  # CI専用のダミー値。値そのものに意味はなく、Rails起動に必要なだけ。
+  SECRET_KEY_BASE: ci-dummy-secret-key-base-0123456789abcdef0123456789abcdef
+  # このリポジトリのRAILS_ENV=testはconfig/database.ymlでsqlite3を使用するため
+  # (development/productionのみmysql2)、MySQL関連の接続用ENVは不要。
+  # ただしGemfileの `gem 'mysql2'` はグループ指定なしのため、bundle install時に
+  # 常にネイティブ拡張のコンパイルが発生する(=libmysqlclient-devが必要)。
+
+jobs:
+  # 将来Branch protectionで必須指定するチェック名は "Required checks" 固定にする。
+  required-checks:
+    name: Required checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # mysql2 gemはグループ指定なしでGemfileに含まれるため、
+      # RAILS_ENV=testでも bundle install 時にネイティブ拡張のビルドが発生する。
+      # (アプリ自体はtest環境でMySQLへ接続しない。config/database.yml参照)
+      - name: Install libmysqlclient (for mysql2 gem native extension)
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y libmysqlclient-dev
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      # webpack 4 / @rails/webpacker 5.4.3 を使用しており、Node 17以降はOpenSSL3の
+      # デフォルト変更により `error:0308010C:digital envelope routines::unsupported` で
+      # 失敗する。開発機・本番でNode 16系を使用しているため、CIも合わせる。
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "16"
+          cache: yarn
+
+      - name: Install JS dependencies (frozen lockfile)
+        run: bin/yarn install --frozen-lockfile
+
+      # このリポジトリの test 環境は sqlite3 (config/database.yml)。
+      # マイグレーション実行ではなく、db/schema.rb からのロードで十分かつ高速。
+      - name: Prepare test database (sqlite3, from db/schema.rb)
+        id: db_prepare
+        run: bundle exec rails db:schema:load
+
+      - name: Zeitwerk autoload check
+        id: zeitwerk
+        run: bundle exec rails zeitwerk:check
+
+      # 本番デプロイでもassets:precompileを実行しているため、PR段階でも
+      # SCSS/JSの構文・依存関係エラーをここで検出する。
+      # (webpackerがassets:precompileにwebpacker:yarn_install/webpacker:compileを
+      #  enhanceしているため、このステップでJS/CSS双方がコンパイルされる)
+      - name: Precompile assets
+        id: precompile
+        run: bundle exec rails assets:precompile
+
+      # 全RSpecには既存失敗が40件以上あるため、必須チェックでは
+      # 「外部サービスへ実通信せず、System spec/ブラウザ環境に依存せず、
+      #  ローカルで複数回安定して成功する」specのみを明示的に選定して実行する。
+      # 対象を増減する場合は、下記リストとPR本文/READMEの説明を合わせて更新する。
+      #
+      # 選定理由:
+      #   spec/requests/public/events_spec.rb            - イベント機能(主要Request)
+      #   spec/models/song_spec.rb                        - 主要Model
+      #   spec/services/requests/mention_text_renderer_spec.rb - イベントリクエストの@メンション描画
+      #   spec/services/requests/mention_resolver_spec.rb - イベントリクエストの@メンション解決
+      #   spec/mailers/customer_mailer_spec.rb            - 主要Mailer
+      #   spec/services/chat/markdown_renderer_spec.rb    - Markdown関連
+      #   spec/services/chat/link_preview_host_config_spec.rb - 内部ホストへのSSRF防止(セキュリティ関連)
+      #   spec/requests/public/sessions_spec.rb           - 認証(ログイン)
+      #   spec/requests/public/registrations_spec.rb      - 認証(会員登録)
+      #   spec/requests/public/community_customer_spec.rb - コミュニティ参加
+      #   spec/models/community_customer_spec.rb          - コミュニティ参加(Model)
+      #   spec/models/community_owner_spec.rb             - コミュニティ(Model)
+      #   spec/requests/admin/events_spec.rb              - イベント(管理画面側)
+      #   spec/models/join_part_customer_spec.rb          - イベント参加(パート参加)
+      #   spec/requests/public/event_mention_candidates_spec.rb - イベントの@メンション候補API
+      - name: Run stable RSpec subset
+        id: stable_rspec
+        run: |
+          bundle exec rspec \
+            spec/requests/public/events_spec.rb \
+            spec/models/song_spec.rb \
+            spec/services/requests/mention_text_renderer_spec.rb \
+            spec/services/requests/mention_resolver_spec.rb \
+            spec/mailers/customer_mailer_spec.rb \
+            spec/services/chat/markdown_renderer_spec.rb \
+            spec/services/chat/link_preview_host_config_spec.rb \
+            spec/requests/public/sessions_spec.rb \
+            spec/requests/public/registrations_spec.rb \
+            spec/requests/public/community_customer_spec.rb \
+            spec/models/community_customer_spec.rb \
+            spec/models/community_owner_spec.rb \
+            spec/requests/admin/events_spec.rb \
+            spec/models/join_part_customer_spec.rb \
+            spec/requests/public/event_mention_candidates_spec.rb \
+            --format documentation
+
+      - name: Write summary
+        if: always()
+        run: |
+          {
+            echo "## Required checks"
+            echo ""
+            echo "| ステップ | 結果 |"
+            echo "|---|---|"
+            echo "| テストDB準備 (db:schema:load, sqlite3) | ${{ steps.db_prepare.outcome }} |"
+            echo "| Zeitwerk確認 | ${{ steps.zeitwerk.outcome }} |"
+            echo "| アセットプリコンパイル | ${{ steps.precompile.outcome }} |"
+            echo "| 安定RSpec (15ファイル) | ${{ steps.stable_rspec.outcome }} |"
+            echo ""
+            echo "実行したspec一覧:"
+            echo ""
+            echo '```text'
+            echo "spec/requests/public/events_spec.rb"
+            echo "spec/models/song_spec.rb"
+            echo "spec/services/requests/mention_text_renderer_spec.rb"
+            echo "spec/services/requests/mention_resolver_spec.rb"
+            echo "spec/mailers/customer_mailer_spec.rb"
+            echo "spec/services/chat/markdown_renderer_spec.rb"
+            echo "spec/services/chat/link_preview_host_config_spec.rb"
+            echo "spec/requests/public/sessions_spec.rb"
+            echo "spec/requests/public/registrations_spec.rb"
+            echo "spec/requests/public/community_customer_spec.rb"
+            echo "spec/models/community_customer_spec.rb"
+            echo "spec/models/community_owner_spec.rb"
+            echo "spec/requests/admin/events_spec.rb"
+            echo "spec/models/join_part_customer_spec.rb"
+            echo "spec/requests/public/event_mention_candidates_spec.rb"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # 将来既存失敗が0件になったら continue-on-error を外すだけで必須化できるよう、
+  # required-checks とは完全に独立したジョブとして全RSpecを実行する。
+  # 現時点で40件以上の既存失敗があるため、このジョブ(ジョブ単位)にのみ
+  # continue-on-error を設定し、Workflow全体を失敗させない。
+  # 失敗の事実自体は隠さず、このジョブの結果・Summary・ログ・artifactで可視化する。
+  full-suite-observation:
+    name: Full RSpec suite (informational)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install libmysqlclient (for mysql2 gem native extension)
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y libmysqlclient-dev
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "16"
+          cache: yarn
+
+      - name: Install JS dependencies (frozen lockfile)
+        run: bin/yarn install --frozen-lockfile
+
+      - name: Prepare test database (sqlite3, from db/schema.rb)
+        run: bundle exec rails db:schema:load
+
+      # System spec (type: :system, js: true) は selenium_chrome_headless を使う。
+      # ubuntu-latest ランナーにはGoogle Chromeが標準搭載されており、Gemfileの
+      # webdrivers gemが起動時に対応するchromedriverを自動取得するため、
+      # 専用のChromeセットアップActionは追加していない
+      # (過度に複雑な独自Action作成を避けるため、まずは素の構成で実行する)。
+      - name: Show Chrome version (for troubleshooting)
+        run: google-chrome --version || echo "google-chrome not found on this runner"
+
+      # 既存失敗を隠さず、全件を実際に実行する。
+      # rspec自体の終了コードでこのステップを失敗させず、後続のSummary/artifact生成を
+      # 必ず実行できるようにするため、終了コードを一旦ファイルへ保持する。
+      - name: Run full RSpec suite
+        id: full_rspec
+        run: |
+          set +e
+          bundle exec rspec --format documentation --format json --out tmp/full_rspec_results.json
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+          set -e
+
+      - name: Summarize full RSpec results
+        if: always()
+        run: |
+          EXIT_CODE="${{ steps.full_rspec.outputs.exit_code }}"
+          if [ -f tmp/full_rspec_results.json ]; then
+            COUNTS=$(bundle exec ruby -rjson -e '
+              data = JSON.parse(File.read("tmp/full_rspec_results.json"))
+              s = data["summary"]
+              puts "#{s["example_count"]} #{s["failure_count"]} #{s["pending_count"]}"
+            ')
+            EXAMPLES=$(echo "$COUNTS" | awk "{print \$1}")
+            FAILURES=$(echo "$COUNTS" | awk "{print \$2}")
+            PENDING=$(echo "$COUNTS" | awk "{print \$3}")
+          else
+            EXAMPLES="不明(結果ファイル未生成)"
+            FAILURES="不明"
+            PENDING="不明"
+          fi
+
+          {
+            echo "## Full RSpec suite (informational)"
+            echo ""
+            echo "現時点では既存失敗が40件以上あるため、このジョブは **参考チェック** です。"
+            echo "Workflow全体の成否には影響しません(\`continue-on-error: true\`)。"
+            echo "将来、既存失敗が0件になったらこのジョブから \`continue-on-error\` を外して必須化する想定です。"
+            echo ""
+            echo "| 項目 | 値 |"
+            echo "|---|---|"
+            echo "| rspec終了コード | ${EXIT_CODE} |"
+            echo "| examples | ${EXAMPLES} |"
+            echo "| failures | ${FAILURES} |"
+            echo "| pending | ${PENDING} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload full RSpec output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-rspec-output
+          path: tmp/full_rspec_results.json
+          retention-days: 7
+          if-no-files-found: warn
+
+      # 参考ジョブの「失敗した事実」自体は隠さない。
+      # continue-on-error: true (ジョブ単位)により、ここでexit 1してもWorkflow全体は失敗にならない。
+      - name: Fail this job if the full suite had failures (informational only)
+        if: always()
+        run: |
+          EXIT_CODE="${{ steps.full_rspec.outputs.exit_code }}"
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "全RSpecに失敗があります(exit_code=${EXIT_CODE})。現時点では既存失敗として許容していますが、詳細はSummary/artifactを確認してください。"
+            exit 1
+          fi
