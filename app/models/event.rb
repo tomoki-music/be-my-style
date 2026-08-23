@@ -10,6 +10,10 @@ class Event < ApplicationRecord
 
   has_one_attached :event_image
   has_many :songs, -> { order(position: :asc) }, dependent: :destroy, inverse_of: :event
+  # Event -> Song -> JoinPart。join/join_confirmで送信されたjoin_part_idが
+  # このイベント配下のものかをスコープ付きクエリで検証するために使う
+  # (Public::EventsController#valid_join_part_ids_for)。
+  has_many :join_parts, through: :songs
   has_many :requests, dependent: :destroy
   belongs_to :customer
   belongs_to :community

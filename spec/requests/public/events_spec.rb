@@ -232,6 +232,182 @@ RSpec.describe "Public::Events", type: :request do
       end
     end
 
+    context "join_confirm/joinの安全性(URL上のeventに属さないjoin_part_idを拒否する)" do
+      let(:event) do
+        FactoryBot.create(
+          :event, :event_with_songs, customer: customer, community: community,
+          event_start_time: 3.days.from_now,
+          event_end_time: 3.days.from_now + 2.hours
+        )
+      end
+      let(:song) { event.songs.first }
+      let!(:vocal_part) { FactoryBot.create(:join_part, song: song, join_part_name: "ボーカル") }
+      let!(:guitar_part) { FactoryBot.create(:join_part, song: song, join_part_name: "ギター") }
+
+      # 同じコミュニティ内にある別イベントのパート
+      let(:other_event_same_community) do
+        FactoryBot.create(:event, :event_with_songs, customer: customer, community: community)
+      end
+      let!(:part_of_other_event_same_community) do
+        FactoryBot.create(:join_part, song: other_event_same_community.songs.first, join_part_name: "同コミュニティ別イベントのパート")
+      end
+
+      # 別コミュニティのイベントのパート
+      let(:other_community) { FactoryBot.create(:community) }
+      let(:other_event_other_community) do
+        FactoryBot.create(:event, :event_with_songs, customer: other_customer, community: other_community)
+      end
+      let!(:part_of_other_event_other_community) do
+        FactoryBot.create(:join_part, song: other_event_other_community.songs.first, join_part_name: "別コミュニティ別イベントのパート")
+      end
+
+      describe "正常系" do
+        it "対象イベントに属するパートはjoin_confirmで確認画面を表示できること" do
+          get public_event_join_confirm_path(event, event: { join_part_ids: [vocal_part.id.to_s] })
+
+          expect(response.status).to eq 200
+          expect(response.body).to include("参加確認画面")
+        end
+
+        it "対象イベントに属するパートはjoinで登録できること" do
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => vocal_part.id.to_s } }
+          end.to change(JoinPartCustomer, :count).by(1)
+
+          expect(JoinPartCustomer.exists?(customer_id: customer.id, join_part_id: vocal_part.id)).to eq true
+        end
+
+        it "複数の正常なパートを同時に送信して登録できること" do
+          expect do
+            post public_event_join_path(event), params: {
+              join_part_ids: { "0" => vocal_part.id.to_s, "1" => guitar_part.id.to_s }
+            }
+          end.to change(JoinPartCustomer, :count).by(2)
+        end
+
+        it "スマホ用ショートカットの導線(join_confirm→join)が引き続き成功すること" do
+          get public_event_join_confirm_path(event, event: { join_part_ids: [vocal_part.id] })
+          expect(response.status).to eq 200
+
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => vocal_part.id.to_s } }
+          end.to change(JoinPartCustomer, :count).by(1)
+          expect(response).to redirect_to(public_event_path(event))
+        end
+      end
+
+      describe "不正系: join_confirm" do
+        it "別コミュニティの別イベントのパートIDでは確認画面を表示しないこと" do
+          get public_event_join_confirm_path(event, event: { join_part_ids: [part_of_other_event_other_community.id.to_s] })
+
+          expect(response).to redirect_to(public_event_path(event))
+        end
+
+        it "同じコミュニティ内にある別イベントのパートIDでも拒否すること" do
+          get public_event_join_confirm_path(event, event: { join_part_ids: [part_of_other_event_same_community.id.to_s] })
+
+          expect(response).to redirect_to(public_event_path(event))
+        end
+
+        it "存在しないパートIDを拒否すること" do
+          get public_event_join_confirm_path(event, event: { join_part_ids: ["999999999"] })
+
+          expect(response).to redirect_to(public_event_path(event))
+        end
+
+        it "正常IDと別イベントIDが混在する場合、確認画面を表示しないこと" do
+          get public_event_join_confirm_path(
+            event,
+            event: { join_part_ids: [vocal_part.id.to_s, part_of_other_event_other_community.id.to_s] }
+          )
+
+          expect(response).to redirect_to(public_event_path(event))
+        end
+
+        it "不正な文字列を安全に拒否すること(例外画面にならない)" do
+          expect do
+            get public_event_join_confirm_path(event, event: { join_part_ids: ["abc"] })
+          end.not_to raise_error
+          expect(response).to redirect_to(public_event_path(event))
+        end
+      end
+
+      describe "不正系: join" do
+        it "別コミュニティの別イベントのパートIDでは登録されないこと" do
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => part_of_other_event_other_community.id.to_s } }
+          end.not_to change(JoinPartCustomer, :count)
+
+          expect(response).to redirect_to(public_event_path(event))
+        end
+
+        it "同じコミュニティ内にある別イベントのパートIDでも登録されないこと" do
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => part_of_other_event_same_community.id.to_s } }
+          end.not_to change(JoinPartCustomer, :count)
+        end
+
+        it "存在しないパートIDでは登録されないこと" do
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => "999999999" } }
+          end.not_to change(JoinPartCustomer, :count)
+        end
+
+        it "正常IDと不正IDが混在する場合、1件も登録されないこと" do
+          expect do
+            post public_event_join_path(event), params: {
+              join_part_ids: { "0" => vocal_part.id.to_s, "1" => part_of_other_event_other_community.id.to_s }
+            }
+          end.not_to change(JoinPartCustomer, :count)
+        end
+
+        it "不正な文字列を送信しても例外画面にならず、登録されないこと" do
+          expect do
+            expect do
+              post public_event_join_path(event), params: { join_part_ids: { "0" => "abc" } }
+            end.not_to raise_error
+          end.not_to change(JoinPartCustomer, :count)
+        end
+
+        it "拒否時に既存のJoinPartCustomerが削除・変更されないこと" do
+          FactoryBot.create(:join_part_customer, join_part: vocal_part, customer: other_customer)
+
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => part_of_other_event_other_community.id.to_s } }
+          end.not_to change { JoinPartCustomer.pluck(:customer_id, :join_part_id).sort }
+        end
+      end
+
+      describe "認可の維持" do
+        it "コミュニティ非参加者は既存どおり参加コミュニティへ誘導され、登録されないこと" do
+          outsider = FactoryBot.create(:customer)
+          sign_out customer
+          sign_in outsider
+
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => vocal_part.id.to_s } }
+          end.not_to change(JoinPartCustomer, :count)
+          expect(response).to redirect_to(public_community_path(community))
+        end
+
+        it "未ログイン時はjoinへのPOSTも既存どおりログイン画面へ誘導されること" do
+          sign_out customer
+
+          post public_event_join_path(event), params: { join_part_ids: { "0" => vocal_part.id.to_s } }
+
+          expect(response.status).to eq 302
+        end
+
+        it "同一パートへの重複エントリーは既存仕様どおり防止されること" do
+          post public_event_join_path(event), params: { join_part_ids: { "0" => vocal_part.id.to_s } }
+
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => vocal_part.id.to_s } }
+          end.not_to change(JoinPartCustomer, :count)
+        end
+      end
+    end
+
     context "楽曲のYouTubeカード表示" do
       it "有効なYouTube URLの曲があってもリクエストは200となり、サムネイルカードが表示されること" do
         event.songs.first.update!(youtube_url: "https://www.youtube.com/watch?v=abcdefghijk")

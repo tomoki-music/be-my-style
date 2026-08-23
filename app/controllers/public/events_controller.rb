@@ -241,10 +241,11 @@ class Public::EventsController < ApplicationController
 
   def join_confirm
     @event = Event.find(params[:event_id])
-    if params[:event][:join_part_ids] == [""] 
-      redirect_to public_event_path(event), alert: "参加したパートにチェックを入れて下さい。"
+    join_part_ids = valid_join_part_ids_for(@event, params.dig(:event, :join_part_ids))
+    if join_part_ids.nil?
+      redirect_to public_event_path(@event), alert: "参加したパートにチェックを入れて下さい。"
     else
-      @join_part_ids = params[:event][:join_part_ids].reject {|i| i == "" }
+      @join_part_ids = join_part_ids.map(&:to_s)
       customer = current_customer
       @join_parts = []
       @join_part_ids.each_with_index do |join_part_id, index|
@@ -270,8 +271,11 @@ class Public::EventsController < ApplicationController
     community = Community.find(event.community_id)
     customer_ids = community.customers.pluck(:id)
     if customer_ids.include?(current_customer.id)
-      join_part_ids = params[:join_part_ids]&.values
-      join_part_ids_array = join_part_ids.map{ |i| i.to_i }
+      join_part_ids_array = valid_join_part_ids_for(event, params[:join_part_ids]&.values)
+      if join_part_ids_array.nil?
+        redirect_to public_event_path(event), alert: "参加したパートにチェックを入れて下さい。"
+        return
+      end
       customer = current_customer
       created_join_records = []
       join_part_ids_array.each do |join_part_id|
@@ -385,6 +389,32 @@ class Public::EventsController < ApplicationController
     # Song#recruiting_join_parts(customers(preload済みならメモリ上)を見る設計)が
     # 楽曲数・パート数に応じた追加クエリを発生させないようにする。
     @event = Event.includes(songs: [:requested_by_customer, { join_parts: :customers }]).find(params[:id])
+  end
+
+  # 送信されたjoin_part_idsが、URL上のeventに属するJoinPartの集合と完全に一致するかを検証する。
+  # 1件でも対象イベント外・存在しない・不正な値であれば安全側に倒してnilを返し、
+  # 呼び出し元(join_confirm/join)で「1件も処理しない」判断をできるようにする
+  # (一部のIDだけを登録すると、確認画面でユーザーが見た内容と実登録内容がずれるため)。
+  # join_confirmでの検証結果をjoin側で信用せず、両アクションから毎回このメソッドを呼び
+  # 独立して再検証する(確認後にPOSTパラメータが改ざんされるケースに対応するため)。
+  def valid_join_part_ids_for(event, raw_ids)
+    normalized_ids = normalize_join_part_ids(raw_ids)
+    return nil if normalized_ids.empty?
+
+    scoped_ids = event.join_parts.where(id: normalized_ids).pluck(:id)
+    return nil unless scoped_ids.sort == normalized_ids.sort
+
+    normalized_ids
+  end
+
+  # "12"のような正の整数文字列だけを許可する。空白・空配列・重複・非数値(不正な文字列)が
+  # 1件でも混じっていれば空配列を返し、呼び出し元で不正リクエストとして扱わせる。
+  def normalize_join_part_ids(raw_ids)
+    ids = Array(raw_ids).map { |id| id.to_s.strip }.reject(&:blank?)
+    return [] if ids.empty?
+    return [] unless ids.all? { |id| id.match?(/\A\d+\z/) }
+
+    ids.map(&:to_i).uniq
   end
 
   # イベントコピー時、requested_by_customer_idを引き継いでよいかの判定。
