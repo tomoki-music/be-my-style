@@ -86,6 +86,24 @@ RSpec.describe "Public::Requests", type: :request do
         expect(response.body).not_to include("event-song-youtube-card")
       end
     end
+
+    context "複数行・Markdown記法のリクエスト" do
+      it "改行を保持したまま保存され、Markdown記法もHTMLへ展開されて表示されること" do
+        post public_event_requests_path(event_id: event.id), params: {
+          request: {
+            request: "1曲目：オリジナル曲\n2曲目：**カバー曲**をお願いします"
+          }
+        }, xhr: true
+
+        created = Request.order(:created_at).last
+        expect(created.request).to eq("1曲目：オリジナル曲\n2曲目：**カバー曲**をお願いします")
+
+        get public_event_path(event)
+
+        expect(response.body).to include("1曲目：オリジナル曲<br>")
+        expect(response.body).to include("<strong>カバー曲</strong>")
+      end
+    end
   end
 
   describe '非ログイン' do

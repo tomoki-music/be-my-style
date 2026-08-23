@@ -15,7 +15,16 @@
         %dt.col-sm-3 投稿者
         %dd.col-sm-9= @request.customer&.name
         %dt.col-sm-3 内容
-        %dd.col-sm-9= @request.stamped? ? @request.stamp_label : simple_format(@request.request)
+        %dd.col-sm-9
+          - if @request.stamped?
+            = @request.stamp_label
+          - else
+            -# 公開画面(_requests.html.haml)と同じRequests::MentionTextRendererを再利用する。
+            -# 汎用のmarkdown()ヘルパーだと、メンション記法`[@表示名](customer:ID)`が
+            -# 通常のMarkdownリンク`[text](url)`として解釈され、`customer:`スキームがSanitizeで
+            -# 許可プロトコル外のため href が除去された壊れたリンク風表示になってしまう。
+            - valid_customer_ids = @request.event.community.active_customers.distinct.pluck(:id)
+            = Requests::MentionTextRenderer.call(@request.request, valid_customer_ids: valid_customer_ids)
         %dt.col-sm-3 投稿日
         %dd.col-sm-9= l @request.created_at, format: :short
 

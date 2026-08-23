@@ -1,6 +1,6 @@
 require "rails_helper"
 
-# イベントリクエスト欄(#input_request、input[type="text"])へ既存チャットの
+# イベントリクエスト欄(#input_request、複数行入力可能なtextarea)へ既存チャットの
 # @メンションAutocomplete(chat_mention_autocomplete.js)をそのまま接続した結果を
 # 実ブラウザで検証する。
 #
@@ -91,13 +91,12 @@ RSpec.describe "イベントリクエストの@メンション", type: :system d
     JS
   end
 
-  it "input[type=text]の#input_requestは@入力で候補ドロップダウン(ALL+開催元コミュニティメンバー)を表示すること" do
+  it "textareaの#input_requestは@入力で候補ドロップダウン(ALL+開催元コミュニティメンバー)を表示すること" do
     sign_in_via_form(poster)
     visit public_event_path(event)
 
     input = find("#input_request", visible: :all)
-    expect(input.tag_name).to eq("input")
-    expect(input[:type]).to eq("text")
+    expect(input.tag_name).to eq("textarea")
 
     type_into_input_request("@")
 
