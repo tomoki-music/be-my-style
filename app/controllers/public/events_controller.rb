@@ -381,7 +381,10 @@ class Public::EventsController < ApplicationController
   end
 
   def set_event
-    @event = Event.includes(songs: :requested_by_customer).find(params[:id])
+    # join_parts: :customersをpreloadしておくことで、showビューで使う
+    # Song#recruiting_join_parts(customers(preload済みならメモリ上)を見る設計)が
+    # 楽曲数・パート数に応じた追加クエリを発生させないようにする。
+    @event = Event.includes(songs: [:requested_by_customer, { join_parts: :customers }]).find(params[:id])
   end
 
   # イベントコピー時、requested_by_customer_idを引き継いでよいかの判定。
