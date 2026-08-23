@@ -87,6 +87,59 @@ RSpec.describe "Public::Requests", type: :request do
       end
     end
 
+    context "Markdown入力補助ツールバー" do
+      it "みんなのリクエスト欄にツールバーが表示されること" do
+        get public_event_path(event)
+
+        expect(response.body).to match(/data-markdown-toolbar-root=['"]request['"]/)
+        expect(response.body).to include("見出し")
+        expect(response.body).to include("箇条書き")
+        expect(response.body).to include("番号リスト")
+        expect(response.body).to include("引用")
+        expect(response.body).to include("リンク")
+        expect(response.body).to include("プレビュー")
+        expect(response.body).to include("文字を選択して、上のボタンから装飾できます")
+      end
+
+      it "対象のtextarea(#input_request)にdata-markdown-toolbar-textarea属性が付与されること" do
+        get public_event_path(event)
+
+        expect(response.body).to match(/<textarea[^>]*id="input_request"[^>]*data-markdown-toolbar-textarea="true"/)
+      end
+    end
+
+    context "Markdownプレビュー(preview)" do
+      it "Markdown記法を保存済み表示と同じHTMLへ変換して返すこと" do
+        post preview_public_event_requests_path(event_id: event.id), params: { content: "**太字**の確認" }, xhr: true
+
+        json = JSON.parse(response.body)
+        expect(response.status).to eq 200
+        expect(json["html"]).to include("<strong>太字</strong>")
+      end
+
+      it "危険なHTML(scriptタグ)は無害化されること" do
+        post preview_public_event_requests_path(event_id: event.id), params: { content: "<script>alert(1)</script>本文" }, xhr: true
+
+        json = JSON.parse(response.body)
+        expect(json["html"]).not_to include("<script>")
+      end
+
+      it "javascript:スキームのリンクは無害化されること" do
+        post preview_public_event_requests_path(event_id: event.id), params: { content: "[危険](javascript:alert(1))" }, xhr: true
+
+        json = JSON.parse(response.body)
+        expect(json["html"]).not_to include('href="javascript:alert(1)"')
+      end
+
+      it "保存済みリクエストの表示(Requests::MentionTextRenderer)と同じ変換結果になること" do
+        content = "1曲目：オリジナル曲\n2曲目：**カバー曲**をお願いします"
+        post preview_public_event_requests_path(event_id: event.id), params: { content: content }, xhr: true
+
+        json = JSON.parse(response.body)
+        expect(json["html"]).to eq(Requests::MentionTextRenderer.call(content, valid_customer_ids: []).to_s)
+      end
+    end
+
     context "複数行・Markdown記法のリクエスト" do
       it "改行を保持したまま保存され、Markdown記法もHTMLへ展開されて表示されること" do
         post public_event_requests_path(event_id: event.id), params: {
@@ -107,6 +160,14 @@ RSpec.describe "Public::Requests", type: :request do
   end
 
   describe '非ログイン' do
+    it "プレビューAPIは未ログインだとログイン画面へリダイレクトされること" do
+      # 注: このファイルのトップレベルlet(:request)がRequestモデルのFactoryインスタンスを
+      # 指すため、`request`という名前を暗黙に参照するredirect_toマッチャは使わず、
+      # ステータス・Locationヘッダを直接検証する(このファイルの他の未ログイン系検証と同じ方式)。
+      post preview_public_event_requests_path(event_id: event.id), params: { content: "**太字**" }
 
+      expect(response.status).to eq 302
+      expect(response.location).to include("/customers/sign_in")
+    end
   end
 end

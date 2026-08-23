@@ -750,6 +750,108 @@
       display: block;
       margin-left: auto;
     }
+    // みんなのリクエスト欄専用のMarkdown入力補助ツールバー(初心者向け日本語ラベル)。
+    // チャット画面の.markdown-composer(chat_messages.scss)とは見た目・挙動が異なる
+    // (常時分割表示ではなく「プレビュー」ボタン1つでの編集⇔プレビュー切り替え)ため、
+    // クラス名を分けて独立にスタイリングする。
+    .request-markdown-toolbar{
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      background: #fff;
+
+      &__hint{
+        margin: 0;
+        padding: 6px 8px;
+        font-size: 12px;
+        color: #6c757d;
+        background: #f8f9fa;
+        border-bottom: 1px solid #eee;
+      }
+
+      &__buttons{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 6px 8px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+      }
+
+      &__btn{
+        min-height: 40px;
+        padding: 6px 12px;
+        border: 1px solid #d8dee9;
+        border-radius: 6px;
+        background: #fff;
+        color: #33475b;
+        font-size: 13px;
+        cursor: pointer;
+        white-space: nowrap;
+
+        &:hover{
+          background: #eef2f7;
+        }
+        &:focus-visible{
+          outline: 2px solid #2347c9;
+          outline-offset: 1px;
+        }
+      }
+
+      &__btn--preview{
+        margin-left: auto;
+        font-weight: 700;
+        color: #2347c9;
+        border-color: #2347c9;
+
+        &[aria-pressed="true"]{
+          background: #2347c9;
+          color: #fff;
+        }
+      }
+
+      &__pane--preview{
+        min-height: 100px;
+        padding: 8px;
+      }
+
+      &__textarea{
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        border: none;
+        border-radius: 0;
+
+        &:focus{
+          outline: none;
+          box-shadow: none;
+        }
+      }
+
+      &__preview-body{
+        min-height: 100px;
+      }
+    }
+    @media (max-width: 400px){
+      .request-markdown-toolbar{
+        &__buttons{
+          gap: 4px;
+          padding: 6px;
+        }
+        &__btn{
+          flex: 1 1 30%;
+          padding: 6px 4px;
+          font-size: 12px;
+        }
+        &__btn--preview{
+          margin-left: 0;
+          flex-basis: 100%;
+        }
+      }
+    }
     .request-part{
       margin-top: 70px;
       width: 100%;
