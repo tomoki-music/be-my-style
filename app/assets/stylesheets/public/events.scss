@@ -1185,6 +1185,25 @@ input[type="text"] {
     width: 90%;
     .event-table{
       width: 90%;
+      // table-layout: autoのままだと、file_fieldや`style="width:260px"`指定の
+      // datetime_field/number_fieldなど「中身が縮まない」セルの実測幅(min-content)を
+      // 基準にtable全体の幅が決まり、90%指定を無視して画面幅を超えてしまう
+      // (実機・ヘッドレスChromeどちらでも確認済み)。table-layout: fixedにして
+      // colgroupのcol width(19%/81%)を列幅の基準として固定し、はみ出す側の
+      // 入力欄をセル幅に合わせて縮めることで、テーブル自体が画面幅を超えないようにする。
+      table-layout: fixed;
+      input,
+      select,
+      textarea {
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      // イベント画像選択時にJS(events/form.js)が挿入する.new-imgプレビュー。
+      // 固定300px指定のままだと上記table-layout: fixedのセル幅を超えてはみ出すため、
+      // モバイルではセル幅に収まるよう上限を付ける(PC側の300px指定はそのまま維持)。
+      .new-img {
+        max-width: 100%;
+      }
       .song-container{
         width: 90%;
       }

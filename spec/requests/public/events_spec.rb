@@ -443,6 +443,9 @@ RSpec.describe "Public::Events", type: :request do
       it 'リクエストは200 OKとなること' do
         expect(response.status).to eq 200
       end
+      it 'モバイル横スクロール対策(table-layout: fixed)対象のevent-tableが描画されること' do
+        expect(response.body).to include("event-table")
+      end
     end
     context "event新規作成(create)が正しく処理され登録される" do
       it "eventの作成が成功する" do
@@ -601,6 +604,10 @@ RSpec.describe "Public::Events", type: :request do
         sign_in other_customer
         get edit_public_event_path(event)
         expect(response.status).to eq 302
+      end
+      it 'モバイル横スクロール対策(table-layout: fixed)対象のevent-tableが描画されること' do
+        get edit_public_event_path(event)
+        expect(response.body).to include("event-table")
       end
     end
     context "event編集(update)が正しく処理され登録される" do
