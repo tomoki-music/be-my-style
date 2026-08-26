@@ -16,6 +16,16 @@ RSpec.describe SongMaster, type: :model do
       song_master = FactoryBot.build(:song_master, normalize: false, normalized_song_name: '')
       expect(song_master).to be_invalid
     end
+
+    it 'song_nameがDBカラム上限(255文字)を超える場合は無効であること(自由入力からの防御)' do
+      song_master = FactoryBot.build(:song_master, song_name: 'あ' * 256)
+      expect(song_master).to be_invalid
+    end
+
+    it 'artist_nameがDBカラム上限(255文字)を超える場合は無効であること(自由入力からの防御)' do
+      song_master = FactoryBot.build(:song_master, artist_name: 'あ' * 256)
+      expect(song_master).to be_invalid
+    end
   end
 
   describe 'UNIQUE制約' do

@@ -10,6 +10,28 @@ module SongMasters
   # 別の曲)まで区別する精度は持たない。曲名だけでなくアーティスト名も一致条件に含めることで
   # 誤判定のリスクを下げているが、完全な同一性保証ではない前提で利用すること。
   class Resolver
+    # 引用符・アポストロフィの表記ゆれを吸収するためのマッピング。
+    # 全角引用符(＇＂)や全角ダブルクォートはNFKC正規化で半角に変換されるためここには含めないが、
+    # 以下の「カーブクォート(スマートクォート)」系はNFKC(canonical decomposition非対象の
+    # compatibility文字ではない)では変換されないため、明示的にASCII表記へ寄せる。
+    # 例: "Rock'n'Roll" と "Rock’n’Roll"(U+2019) を同一キーとして扱う。
+    QUOTE_NORMALIZATION_MAP = {
+      "‘" => "'",  # ‘ LEFT SINGLE QUOTATION MARK
+      "’" => "'",  # ’ RIGHT SINGLE QUOTATION MARK
+      "‚" => "'",  # ‚ SINGLE LOW-9 QUOTATION MARK
+      "‛" => "'",  # ‛ SINGLE HIGH-REVERSED-9 QUOTATION MARK
+      "′" => "'",  # ′ PRIME
+      "ʼ" => "'",  # ʼ MODIFIER LETTER APOSTROPHE
+      "`" => "'",  # ` GRAVE ACCENT
+      "´" => "'",  # ´ ACUTE ACCENT
+      "“" => "\"", # “ LEFT DOUBLE QUOTATION MARK
+      "”" => "\"", # ” RIGHT DOUBLE QUOTATION MARK
+      "„" => "\"", # „ DOUBLE LOW-9 QUOTATION MARK
+      "‟" => "\"", # ‟ DOUBLE HIGH-REVERSED-9 QUOTATION MARK
+      "″" => "\"", # ″ DOUBLE PRIME
+    }.freeze
+    QUOTE_NORMALIZATION_PATTERN = Regexp.union(QUOTE_NORMALIZATION_MAP.keys).freeze
+
     def self.call(song_name:, artist_name:)
       new(song_name, artist_name).call
     end
@@ -30,10 +52,15 @@ module SongMasters
       find_or_create(normalized_song_name, normalized_artist_name)
     end
 
-    # NFKC正規化 + 小文字化 + 空白除去。
+    # NFKC正規化(全角/半角ゆれ・全角スペースを吸収) + 引用符/アポストロフィのASCII統一 +
+    # 小文字化 + 空白除去(前後・連続・途中を問わずすべて除去)。
+    #
+    # 「丸の内/丸ノ内」「略称/正式名称」「feat.表記の有無」「同名異曲」「邦題/原題」
+    # 「読み仮名による一致」のような意味的な表記ゆれは、誤統合のリスクがあるため
+    # 意図的に対象外(自動では同一視しない)。
     # 例: "Ａmazing Grace" と "amazing grace" を同一キーとして扱う。
     def self.normalize(value)
-      value.to_s.unicode_normalize(:nfkc).downcase.gsub(/[[:space:]]+/, "")
+      value.to_s.unicode_normalize(:nfkc).gsub(QUOTE_NORMALIZATION_PATTERN, QUOTE_NORMALIZATION_MAP).downcase.gsub(/[[:space:]]+/, "")
     end
 
     private

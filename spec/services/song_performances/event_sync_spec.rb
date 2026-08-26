@@ -119,4 +119,51 @@ RSpec.describe SongPerformances::EventSync, type: :model do
       expect(result.skipped).to eq 0
     end
   end
+
+  describe 'song_master_id未設定の既存Songの扱い(移行前データ)' do
+    it '既存Songのsong_master_idがnilでも安全に実績が作成されること' do
+      join_part = entry_for(ended_event, customer)
+      join_part.song.update_column(:song_master_id, nil)
+
+      expect {
+        SongPerformances::EventSync.call(ended_event)
+      }.to change(SongPerformance, :count).by(1)
+
+      expect(SongPerformance.last.song_master_id).to be_present
+    end
+
+    it '実績確定時に、解決したsong_master_idをSong側にも書き戻すこと(以降の経験者検索を可能にするため)' do
+      join_part = entry_for(ended_event, customer)
+      song = join_part.song
+      song.update_column(:song_master_id, nil)
+
+      SongPerformances::EventSync.call(ended_event)
+
+      expect(song.reload.song_master_id).to eq SongPerformance.last.song_master_id
+    end
+  end
+
+  describe 'JoinPart::NAME_OPTIONSに含まれないpart_name(自由入力時代のレガシーデータ)の扱い' do
+    it '検証エラーで作成できなかった場合、"登録済み(skipped)"ではなく別カウント(invalid)として扱われること' do
+      entry_for(ended_event, customer, part_name: "ボーカル")
+
+      result = SongPerformances::EventSync.call(ended_event)
+
+      expect(SongPerformance.count).to eq 0
+      expect(result.created).to eq 0
+      expect(result.skipped).to eq 0
+      expect(result.invalid).to eq 1
+    end
+
+    it '有効なpart_nameのエントリーと無効なエントリーが混在していても、有効な分は作成されること' do
+      entry_for(ended_event, customer, part_name: "Vocal")
+      entry_for(ended_event, other_customer, part_name: "ベース")
+
+      result = SongPerformances::EventSync.call(ended_event)
+
+      expect(SongPerformance.count).to eq 1
+      expect(result.created).to eq 1
+      expect(result.invalid).to eq 1
+    end
+  end
 end

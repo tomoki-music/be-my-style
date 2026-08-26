@@ -1,20 +1,32 @@
 .song-part-form
-  - if @eligible_songs_for_song_part.present?
-    = form_with model: CustomerSongPart.new, url: public_customer_song_parts_path, method: :post, local: true, class: "song-part-form__form" do |f|
+  = form_with model: CustomerSongPart.new, url: public_customer_song_parts_path, method: :post, local: true, class: "song-part-form__form" do |f|
+    - if @eligible_songs_for_song_part.present?
       .song-part-form__row
-        = f.label :song_id, "曲", class: "sr-only"
+        = f.label :song_id, "既存の曲から選ぶ", class: "song-part-form__label"
         = f.select :song_id,
           @eligible_songs_for_song_part.map { |song| [song.artist_name.present? ? "#{song.song_name} / #{song.artist_name}" : song.song_name, song.id] },
-          { prompt: "曲を選択してください" },
+          { include_blank: "選択しない(下に自由入力する)" },
           { class: "form-control song-part-form__select" }
-        = f.label :part_name, "パート", class: "sr-only"
-        = f.select :part_name,
-          JoinPart::NAME_OPTIONS.map { |name| [name, name] },
-          { prompt: "パートを選択してください" },
-          { class: "form-control song-part-form__select" }
-        = f.submit "追加", class: "btn btn-info song-part-form__submit"
-  - else
-    %p.text-muted 所属コミュニティのイベントに登録された曲がまだありません。
+    - else
+      %p.text-muted 所属コミュニティのイベントに登録された曲はまだありませんが、下記から自由入力で登録できます。
+
+    %p.song-part-form__hint 上で曲を選ばない場合は、下記に曲名・アーティスト名を自由入力してください(イベントに存在しない曲も登録できます)。
+
+    .song-part-form__row
+      = f.label :song_name, "曲名(自由入力)", class: "song-part-form__label"
+      = f.text_field :song_name, maxlength: Public::CustomerSongPartsController::MAX_TEXT_LENGTH, class: "form-control song-part-form__input"
+    .song-part-form__row
+      = f.label :artist_name, "アーティスト名(自由入力・任意)", class: "song-part-form__label"
+      = f.text_field :artist_name, maxlength: Public::CustomerSongPartsController::MAX_TEXT_LENGTH, class: "form-control song-part-form__input"
+
+    .song-part-form__row
+      = f.label :part_name, "パート", class: "song-part-form__label"
+      = f.select :part_name,
+        JoinPart::NAME_OPTIONS.map { |name| [name, name] },
+        { prompt: "パートを選択してください" },
+        { class: "form-control song-part-form__select" }
+
+    = f.submit "追加", class: "btn btn-info song-part-form__submit"
 
   - if @customer_song_parts.present?
     %ul.song-part-form__list

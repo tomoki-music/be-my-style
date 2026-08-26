@@ -35,8 +35,8 @@ RSpec.describe CustomerSongPart, type: :model do
       expect(customer_song_part).to be_invalid
     end
 
-    it '新規作成時にsongが未設定なら無効であること' do
-      expect(build_customer_song_part(song: nil)).to be_invalid
+    it '新規作成時にsongが未設定でも、song_masterがあれば有効であること(自由入力登録)' do
+      expect(build_customer_song_part(song: nil)).to be_valid
     end
 
     it '不正なpart_name(候補外の値)は無効であること' do

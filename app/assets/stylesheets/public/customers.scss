@@ -283,10 +283,26 @@ input[type="text"] {
     width: 100%;
   }
 
-  &__select {
+  &__select,
+  &__input {
     flex: 1 1 200px;
     min-width: 0;
     max-width: 100%;
+  }
+
+  &__label {
+    flex: 1 1 100%;
+    max-width: 100%;
+    font-weight: bold;
+    margin-bottom: 2px;
+  }
+
+  &__hint {
+    flex: 1 1 100%;
+    max-width: 100%;
+    color: #666;
+    font-size: 0.85rem;
+    margin: 0 0 4px;
   }
 
   &__submit {
@@ -410,7 +426,8 @@ input[type="text"] {
       flex-direction: column;
     }
 
-    &__select {
+    &__select,
+    &__input {
       width: 100%;
       flex-basis: auto;
     }

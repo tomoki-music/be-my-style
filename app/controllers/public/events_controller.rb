@@ -344,8 +344,13 @@ class Public::EventsController < ApplicationController
     end
 
     result = SongPerformances::EventSync.call(@event)
-    redirect_to public_event_path(@event),
-      notice: "演奏実績を確定しました(対象#{result.target}件 / 新規登録#{result.created}件 / 登録済み#{result.skipped}件)。"
+    message = "演奏実績を確定しました(対象#{result.target}件 / 新規登録#{result.created}件 / 登録済み#{result.skipped}件)。"
+    if result.invalid.to_i > 0
+      # 自由入力時代のパート名(JoinPart::NAME_OPTIONS外)等で登録できなかった分。
+      # 「登録済み」と誤認させないよう、確定完了メッセージ自体に必ず表示する。
+      message += "登録できなかったパートが#{result.invalid}件あります(パート名が現在の選択肢と一致しないため)。管理者にご確認ください。"
+    end
+    redirect_to public_event_path(@event), notice: message
   end
 
   # イベントリクエスト欄の@メンション候補API。イベント自体の閲覧(showアクション)に

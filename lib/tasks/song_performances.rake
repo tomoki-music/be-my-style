@@ -27,6 +27,7 @@ namespace :song_performances do
     total_target = 0
     total_created = 0
     total_skipped = 0
+    total_invalid = 0
     errors = 0
 
     Event.where("event_end_time <= ?", Time.current).find_each do |event|
@@ -34,6 +35,7 @@ namespace :song_performances do
       total_target += result.target
       total_created += result.created
       total_skipped += result.skipped
+      total_invalid += result.invalid.to_i
     rescue StandardError => e
       errors += 1
       log.call("Event##{event.id} の反映に失敗しました: #{e.class}: #{e.message}")
@@ -42,6 +44,10 @@ namespace :song_performances do
     log.call("対象件数(終了済みイベントのエントリー): #{total_target}件")
     log.call(dry_run ? "登録予定件数: #{total_created}件" : "新規登録件数: #{total_created}件")
     log.call("スキップ件数(登録済み等): #{total_skipped}件")
+    if total_invalid > 0
+      log.call("登録できなかった件数(パート名がJoinPart::NAME_OPTIONSと一致しない等): #{total_invalid}件")
+      log.call("↑ 詳細はRails.logger(warnレベル)の[SongPerformances::EventSync]ログを確認してください")
+    end
     log.call("エラー件数: #{errors}件") if errors > 0
     log.call("完了しました")
   end
