@@ -53,9 +53,9 @@ class Public::CustomerSongPartsController < ApplicationController
     save_customer_song_part(song: nil) { SongMasters::Resolver.call(song_name: song_name, artist_name: artist_name) }
   end
 
-  # 既存Songの song_master_id が未解決(移行前データ等)の場合にResolverで解決し、
-  # 以降このSongを参照する画面(経験者検索等)のためSong側にも書き戻しておく
-  # (SongPerformances::EventSync#resolve_song_masterと同じ考え方)。
+  # 既存Songの song_master_id が未解決(移行前データ等、rake song_masters:backfill_songs
+  # 未実行分)の場合にResolverで解決し、以降このSongを参照する画面(経験者検索等)のため
+  # Song側にも書き戻しておく。
   def resolve_song_master_for(song)
     return song.song_master if song.song_master_id.present?
 

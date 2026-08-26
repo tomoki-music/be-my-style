@@ -13,13 +13,10 @@
         %details.song-performance-list__details
           %summary 演奏履歴を見る
           %ul.song-performance-list__events
-            - summary.performances.each do |performance|
+            - summary.entries.each do |entry|
               %li
-                - if performance.performed_on.present?
-                  = l(performance.performed_on, format: :short)
-                - if performance.event.present?
-                  = link_to performance.event.event_name, public_event_path(performance.event), data: { turbolinks: false }
-                - else
-                  = performance.song&.song_name
+                - if entry.performed_on.present?
+                  = l(entry.performed_on, format: :short)
+                = link_to entry.event.event_name, public_event_path(entry.event), data: { turbolinks: false }
 - else
   %p.text-muted 演奏実績はまだありません。

@@ -14,8 +14,9 @@ class Public::CustomersController < ApplicationController
       follow.followed.id
     end
 
-    #演奏実績(イベント実績)・演奏可能曲(自己申告)。互いを明確に区別して表示する。
-    @song_performance_summaries = SongPerformances::ProfileSummaryQuery.call(@customer)
+    #演奏実績(終了済みイベントのJoinPartCustomerを正データとする動的集計)・演奏可能曲(自己申告)。
+    #互いを明確に区別して表示する。
+    @song_performance_summaries = PerformanceHistory::ProfileQuery.call(@customer)
     @customer_song_parts = @customer.customer_song_parts.includes(:song_master, :song).order(created_at: :desc)
   end
 

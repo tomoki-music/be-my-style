@@ -43,18 +43,62 @@ namespace :song_masters do
       log.call("--- 候補グループ (#{masters.size}件) ---")
       masters.each do |master|
         song_count = master.songs.count
-        performance_count = master.song_performances.count
         customer_song_part_count = master.customer_song_parts.count
         log.call(
           "  SongMaster##{master.id} song_name=#{master.song_name.inspect} " \
           "artist_name=#{master.artist_name.inspect} " \
-          "songs=#{song_count}件 song_performances=#{performance_count}件 " \
-          "customer_song_parts=#{customer_song_part_count}件"
+          "songs=#{song_count}件 customer_song_parts=#{customer_song_part_count}件"
         )
       end
     end
 
     log.call("")
     log.call("完了しました(データは変更していません)。")
+  end
+
+  # 既存Song(song_master_id未設定)を一括でSongMasterへ紐付けるタスク。
+  #
+  # 新規・更新Songは Song#assign_song_master(before_validationコールバック)が自動で解決するため、
+  # このタスクの対象は「PR導入前から存在する既存Song」のみ。
+  #
+  # 画面表示のたびに無制限なDB更新を行わない設計にしたため(PerformanceHistoryの各Query Objectは
+  # 読み取り専用)、既存データの紐付けはこの冪等なRakeタスクに閉じる。
+  # 既にsong_master_idが設定済みのSongはスキップするため、何度実行しても安全。
+  #
+  # 使い方:
+  #   bundle exec rails song_masters:backfill_songs
+  #   DRY_RUN=true bundle exec rails song_masters:backfill_songs   # 更新せず件数のみ確認
+  desc "song_master_id未設定の既存SongをSongMasterへ一括紐付けする"
+  task backfill_songs: :environment do
+    dry_run = ENV["DRY_RUN"] == "true"
+
+    log = lambda do |message|
+      puts message
+      Rails.logger.info("[song_masters:backfill_songs] #{message}")
+    end
+
+    log.call(dry_run ? "DRY RUNモードで実行します(実際の更新は行いません)" : "バックフィルを開始します")
+
+    target = 0
+    resolved = 0
+    unresolved = 0
+
+    Song.where(song_master_id: nil).find_each do |song|
+      target += 1
+
+      song_master = SongMasters::Resolver.call(song_name: song.song_name, artist_name: song.artist_name)
+      if song_master.blank?
+        unresolved += 1
+        next
+      end
+
+      song.update_column(:song_master_id, song_master.id) unless dry_run
+      resolved += 1
+    end
+
+    log.call("対象件数(song_master_id未設定のSong): #{target}件")
+    log.call(dry_run ? "紐付け予定件数: #{resolved}件" : "紐付け件数: #{resolved}件")
+    log.call("解決できなかった件数(曲名が空等): #{unresolved}件") if unresolved > 0
+    log.call("完了しました")
   end
 end

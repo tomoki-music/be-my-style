@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_08_26_010300) do
+ActiveRecord::Schema.define(version: 2026_08_27_000100) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -396,6 +396,7 @@ ActiveRecord::Schema.define(version: 2026_08_26_010300) do
     t.datetime "request_deadline"
     t.index ["community_id"], name: "index_events_on_community_id"
     t.index ["customer_id"], name: "index_events_on_customer_id"
+    t.index ["event_end_time"], name: "index_events_on_event_end_time"
   end
 
   create_table "favorites", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1218,25 +1219,6 @@ ActiveRecord::Schema.define(version: 2026_08_26_010300) do
     t.index ["normalized_song_name", "normalized_artist_name"], name: "index_song_masters_on_normalized_name_and_artist", unique: true
   end
 
-  create_table "song_performances", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "customer_id", null: false
-    t.bigint "song_master_id", null: false
-    t.bigint "song_id"
-    t.bigint "event_id"
-    t.bigint "join_part_id"
-    t.string "part_name", null: false
-    t.date "performed_on"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["customer_id", "song_master_id", "part_name", "event_id"], name: "index_song_performances_on_customer_song_part_event", unique: true
-    t.index ["customer_id"], name: "index_song_performances_on_customer_id"
-    t.index ["event_id"], name: "index_song_performances_on_event_id"
-    t.index ["join_part_id"], name: "index_song_performances_on_join_part_id"
-    t.index ["song_id"], name: "index_song_performances_on_song_id"
-    t.index ["song_master_id", "part_name"], name: "index_song_performances_on_song_master_and_part"
-    t.index ["song_master_id"], name: "index_song_performances_on_song_master_id"
-  end
-
   create_table "song_templates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "community_id", null: false
     t.bigint "customer_id"
@@ -1453,11 +1435,6 @@ ActiveRecord::Schema.define(version: 2026_08_26_010300) do
   add_foreign_key "singing_share_images", "customers"
   add_foreign_key "song_customers", "customers"
   add_foreign_key "song_customers", "songs"
-  add_foreign_key "song_performances", "customers"
-  add_foreign_key "song_performances", "events"
-  add_foreign_key "song_performances", "join_parts"
-  add_foreign_key "song_performances", "song_masters"
-  add_foreign_key "song_performances", "songs"
   add_foreign_key "song_templates", "communities"
   add_foreign_key "song_templates", "customers"
   add_foreign_key "song_templates", "songs", column: "source_song_id"

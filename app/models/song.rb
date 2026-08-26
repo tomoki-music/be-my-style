@@ -13,9 +13,10 @@ class Song < ApplicationRecord
   # source_song_idは由来記録のみに使う(テンプレートとの同期はしない)。
   # Song削除時にsong_templates.source_song_idをnullifyし、テンプレート自体は残す。
   has_many :song_templates, foreign_key: :source_song_id, dependent: :nullify, inverse_of: :source_song
-  # 演奏実績・自己申告演奏可能曲は、Song削除後も履歴として残すためnullify
+  # 自己申告の演奏可能曲は、Song削除後も履歴として残すためnullify
   # (song_templates.source_song_idと同じ考え方)。
-  has_many :song_performances, dependent: :nullify
+  # イベント演奏実績はJoinPartCustomerを正データとする動的集計のため、専用テーブルは持たない
+  # (PerformanceHistory::ExperiencedCustomersQuery/ProfileQuery参照)。
   has_many :customer_song_parts, dependent: :nullify
 
   accepts_nested_attributes_for :join_parts, allow_destroy: true, reject_if: :all_blank

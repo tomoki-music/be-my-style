@@ -60,8 +60,6 @@ class Admin::EventsController < ApplicationController
     join_part = JoinPart.find(params[:join_part_id])
     customer = Customer.find(params[:customer_id])
     join_part.customers.delete(customer)
-    # 公開画面と同様、確定済みの演奏実績があれば併せて取り消す。
-    SongPerformance.where(customer_id: customer.id, join_part_id: join_part.id, event_id: event.id).destroy_all
     redirect_to admin_event_path(event), alert: "選択したユーザーを削除しました!"
   end
 

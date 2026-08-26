@@ -15,8 +15,6 @@ class Event < ApplicationRecord
   # (Public::EventsController#valid_join_part_ids_for)。
   has_many :join_parts, through: :songs
   has_many :requests, dependent: :destroy
-  # 演奏実績は、Event削除後も履歴として残すためnullify(song_templates.source_song_idと同じ考え方)。
-  has_many :song_performances, dependent: :nullify
   belongs_to :customer
   belongs_to :community
 
