@@ -647,6 +647,28 @@
         }
       }
     }
+    // 楽曲パート募集欄の「演奏経験のある人」。長いユーザー名・複数人表示でも
+    // セル幅・画面幅を超えないよう、recruiting-partsと同様にflex-wrapで折り返す。
+    .experienced-customers {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+      max-width: 100%;
+      font-size: 0.75rem;
+
+      &__label {
+        font-weight: 700;
+        color: #2b6cb0;
+      }
+
+      &__name {
+        max-width: 100%;
+        overflow-wrap: break-word;
+        word-break: break-word;
+      }
+    }
   }
   .event-index-title{
     width: 100%;

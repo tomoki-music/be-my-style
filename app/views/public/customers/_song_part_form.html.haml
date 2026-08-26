@@ -1,0 +1,34 @@
+.song-part-form
+  - if @eligible_songs_for_song_part.present?
+    = form_with model: CustomerSongPart.new, url: public_customer_song_parts_path, method: :post, local: true, class: "song-part-form__form" do |f|
+      .song-part-form__row
+        = f.label :song_id, "曲", class: "sr-only"
+        = f.select :song_id,
+          @eligible_songs_for_song_part.map { |song| [song.artist_name.present? ? "#{song.song_name} / #{song.artist_name}" : song.song_name, song.id] },
+          { prompt: "曲を選択してください" },
+          { class: "form-control song-part-form__select" }
+        = f.label :part_name, "パート", class: "sr-only"
+        = f.select :part_name,
+          JoinPart::NAME_OPTIONS.map { |name| [name, name] },
+          { prompt: "パートを選択してください" },
+          { class: "form-control song-part-form__select" }
+        = f.submit "追加", class: "btn btn-info song-part-form__submit"
+  - else
+    %p.text-muted 所属コミュニティのイベントに登録された曲がまだありません。
+
+  - if @customer_song_parts.present?
+    %ul.song-part-form__list
+      - @customer_song_parts.each do |customer_song_part|
+        %li.song-part-form__item
+          %span.song-part-form__song
+            = customer_song_part.song_master&.song_name
+            - if customer_song_part.song_master&.artist_name.present?
+              %span.song-part-form__artist
+                / #{customer_song_part.song_master.artist_name}
+          %span.song-part-form__part= customer_song_part.part_name
+          = link_to "削除", public_customer_song_part_path(customer_song_part),
+            method: :delete,
+            data: { confirm: "この演奏可能曲を削除します。よろしいですか？", turbolinks: false },
+            class: "btn btn-sm btn-outline-danger song-part-form__delete"
+  - else
+    %p.text-muted 登録済みの演奏可能曲はありません。

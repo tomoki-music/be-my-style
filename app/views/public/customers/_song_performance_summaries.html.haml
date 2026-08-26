@@ -1,0 +1,25 @@
+- if summaries.present?
+  %ul.song-performance-list
+    - summaries.each do |summary|
+      %li.song-performance-list__item
+        %div.song-performance-list__header
+          %span.song-performance-list__song
+            = summary.song_master&.song_name
+            - if summary.song_master&.artist_name.present?
+              %span.song-performance-list__artist
+                / #{summary.song_master.artist_name}
+          %span.song-performance-list__part= summary.part_name
+          %span.song-performance-list__count= "#{summary.count}回"
+        %details.song-performance-list__details
+          %summary 演奏履歴を見る
+          %ul.song-performance-list__events
+            - summary.performances.each do |performance|
+              %li
+                - if performance.performed_on.present?
+                  = l(performance.performed_on, format: :short)
+                - if performance.event.present?
+                  = link_to performance.event.event_name, public_event_path(performance.event), data: { turbolinks: false }
+                - else
+                  = performance.song&.song_name
+- else
+  %p.text-muted 演奏実績はまだありません。

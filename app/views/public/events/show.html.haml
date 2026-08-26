@@ -248,7 +248,7 @@
                         %div.responsive-wrapper{ style: "position: relative;" }
                           %div.scroll-indicator{id: "scroll-indicator"} →
                           %div.responsive-box
-                            - part_names = ["Vocal", "Guitar", "Bass", "Drums", "Keyboard", "Other"] 
+                            - part_names = JoinPart::NAME_OPTIONS
                             %table.table.table-bordered.event-songs-table{ style: "min-width: 930px; table-layout: fixed;" }
                               %thead
                                 %tr
@@ -289,6 +289,8 @@
                                               class: "recruiting-parts__part",
                                               data: { turbolinks: false },
                                               "aria-label": "#{song.song_name}の#{part.join_part_name}パートにエントリーする"
+                                          - recruiting_parts.each do |part|
+                                            = render "public/events/experienced_customers", customers: @experienced_customers_by_song_part[[song.song_master_id, part.join_part_name]]
 
                                     %td
                                       .check-part-list
@@ -335,6 +337,7 @@
                                                     class: "btn btn-danger w-100"
                                           - else
                                             %span.text-danger 募集中
+                                          = render "public/events/experienced_customers", customers: @experienced_customers_by_song_part[[song.song_master_id, part_name]]
                                         - else
                                           ー
                 %tr
@@ -352,6 +355,17 @@
                         CSVには有料プラン参加者と、今月特典適用済みユーザーがわかる表記を含めています。
                       %p.mb-0.text-muted
                         参加費が1,500円を超えるイベントでも、現地集金が必要な参加者を見分けやすくしています。
+
+                - if @can_sync_performances
+                  %tr
+                    %th{scope:"row"} 演奏実績の確定
+                    %td
+                      = link_to "演奏実績を確定する", sync_performances_public_event_path(@event),
+                        method: :post,
+                        data: { confirm: "終了済みイベントのエントリー内容を、メンバーの演奏実績として確定します。よろしいですか？", turbolinks: false },
+                        class: "btn btn-sm btn-info event-show-btn"
+                      %p.mt-2.mb-0.text-muted
+                        確定すると、各メンバーのプロフィールの演奏実績や、他イベントの楽曲パート募集欄の「演奏経験のある人」に反映されます。何度実行しても重複登録はされません。
         #event-request.event-request{ data: { "mention-candidates-url" => mention_candidates_public_event_path(@event), "current-customer-id" => current_customer.id } }
           - if @event.request_deadline.present?
             .event-request-deadline

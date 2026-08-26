@@ -1,7 +1,7 @@
 class Public::EventsController < ApplicationController
   include CsvModule
   before_action :authenticate_customer!
-  before_action :set_event, only: [:show, :edit, :update, :destroy, :copy]
+  before_action :set_event, only: [:show, :edit, :update, :destroy, :copy, :sync_performances]
   before_action :authorize_event_creation!, only: [:new, :create]
   before_action :authorize_event_edit!, only: [:edit, :update]
   before_action :authorize_event_destroy!, only: [:destroy]
@@ -104,6 +104,10 @@ class Public::EventsController < ApplicationController
       @recruiting_songs << Song.find(song_id)
     end
 
+    #楽曲パート募集欄の「演奏経験のある人」(曲数xパート数分のN+1を避けるため、イベント単位で1回だけ取得)
+    @experienced_customers_by_song_part = SongPerformances::ExperiencedCustomersByEventQuery.call(@event)
+    @can_sync_performances = @event.ended? && current_customer.can_edit_event?(@event)
+
     #googleMap
     @latitude = @event.latitude
     @longitude = @event.longitude
@@ -134,7 +138,7 @@ class Public::EventsController < ApplicationController
     @event = Event.new
     @song = @event.songs.build
   
-    %w[Vocal Guitar Bass Drums Keyboard].each do |part_name|
+    JoinPart::NAME_OPTIONS.each do |part_name|
       @song.join_parts.build(join_part_name: part_name)
     end
   
@@ -207,7 +211,7 @@ class Public::EventsController < ApplicationController
       new_song.requested_by_customer_id = nil unless requested_by_customer_copyable?(old_song)
 
       # 各曲にデフォルトパートを作成
-      ["Vocal", "Guitar", "Bass", "Drums", "Keyboard"].each do |part_name|
+      JoinPart::NAME_OPTIONS.each do |part_name|
         new_song.join_parts.build(join_part_name: part_name)
       end
 
@@ -321,7 +325,27 @@ class Public::EventsController < ApplicationController
     credited_record = join_record if join_record&.session_credit_applied?
     join_part.customers.delete(customer)
     transfer_session_credit_if_needed!(event, customer, credited_record)
+    # エントリー取消時、既に演奏実績として確定済みの分があれば併せて取り消す
+    # (「エントリーを取り消した場合は演奏実績に登録しない」を確定後の取消にも適用する)。
+    SongPerformance.where(customer_id: customer.id, join_part_id: join_part.id, event_id: event.id).destroy_all
     redirect_to public_event_path(event), alert: "参加を取消しました!"
+  end
+
+  # イベント終了後、主催者/管理者が明示的に演奏実績を確定する。
+  # 「画面を閲覧しただけで偶然登録される」ことを避けるため、この明示的なアクションと
+  # rake song_performances:backfill(過去データ用)からのみSongPerformanceを作成する。
+  def sync_performances
+    unless @event.ended?
+      return redirect_to public_event_path(@event), alert: "イベント終了後に実績を確定できます。"
+    end
+
+    unless current_customer.can_edit_event?(@event)
+      return redirect_to public_event_path(@event), alert: "演奏実績を確定する権限がありません。"
+    end
+
+    result = SongPerformances::EventSync.call(@event)
+    redirect_to public_event_path(@event),
+      notice: "演奏実績を確定しました(対象#{result.target}件 / 新規登録#{result.created}件 / 登録済み#{result.skipped}件)。"
   end
 
   # イベントリクエスト欄の@メンション候補API。イベント自体の閲覧(showアクション)に
