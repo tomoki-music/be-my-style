@@ -108,6 +108,24 @@ RSpec.describe PerformanceHistory::ExperiencedCustomersQuery do
     expect(call).to eq({})
   end
 
+  describe '.key_for(Controller/Viewと共有する検索キーの組み立て)' do
+    it 'song_master_idと生のパート名から、#call内部と同じ正規化済みキーを返すこと' do
+      expect(described_class.key_for(current_song.song_master_id, "Vo")).to eq([current_song.song_master_id, "Vocal"])
+    end
+
+    it '既に現行の選択肢そのものであれば、そのままキーとして返すこと' do
+      expect(described_class.key_for(current_song.song_master_id, "Vocal")).to eq([current_song.song_master_id, "Vocal"])
+    end
+
+    it 'song_master_idがnilの場合、安全にnilを返すこと' do
+      expect(described_class.key_for(nil, "Vocal")).to be_nil
+    end
+
+    it '安全に正規化できないパート名の場合、nilを返すこと' do
+      expect(described_class.key_for(current_song.song_master_id, "Chorus")).to be_nil
+    end
+  end
+
   it '曲数xパート数分のN+1を発生させないこと(クエリ件数が曲・パート数に比例しないこと)' do
     # current_eventと同じsong_master(同一曲名・アーティスト名)に紐づく過去エントリーを、
     # 曲3件xパート3件(=9エントリー)分用意しても、SQLクエリ件数が一定であることを確認する。

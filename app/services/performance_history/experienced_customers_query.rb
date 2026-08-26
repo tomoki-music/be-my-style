@@ -19,7 +19,24 @@ module PerformanceHistory
       @now = now
     end
 
-    # 戻り値: { [song_master_id, part_name] => [Customer, ...] } のHash
+    # song_master_id・パート名(表記ゆれを含み得る生の値)から、経験者Hashの検索キーを
+    # 組み立てる。#call内部のグルーピングキーと、Controller/View側の参照キーを完全に
+    # 一致させるためにキー生成ロジックをここへ一元化する(参照キー不一致によって
+    # 「経験者は実在するのに画面に表示されない」事故を防ぐ)。
+    #
+    # song_master_idが無い(nil)場合や、パート名が安全に正規化できない場合はnilを返す。
+    # 呼び出し側はnilをそのままHashへ渡せば(Hash#[]がnilデフォルトを返すため)
+    # 「経験者なし」として安全に扱われる。
+    def self.key_for(song_master_id, raw_part_name)
+      return nil if song_master_id.blank?
+
+      part_name = PartNameNormalizer.normalize(raw_part_name)
+      return nil if part_name.blank?
+
+      [song_master_id, part_name]
+    end
+
+    # 戻り値: { [song_master_id, part_name(正規化済み)] => [Customer, ...] } のHash
     def call
       song_master_ids = @event.songs.map(&:song_master_id).compact.uniq
       return Hash.new([].freeze) if song_master_ids.empty?
@@ -37,10 +54,10 @@ module PerformanceHistory
 
       grouped = Hash.new { |hash, key| hash[key] = Set.new }
       rows.each do |song_master_id, raw_part_name, customer_id|
-        part_name = PartNameNormalizer.normalize(raw_part_name)
-        next if part_name.blank?
+        key = self.class.key_for(song_master_id, raw_part_name)
+        next if key.nil?
 
-        grouped[[song_master_id, part_name]] << customer_id
+        grouped[key] << customer_id
       end
       return Hash.new([].freeze) if grouped.empty?
 

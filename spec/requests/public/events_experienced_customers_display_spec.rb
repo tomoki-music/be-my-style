@@ -137,6 +137,31 @@ RSpec.describe "Public::Events#show 楽曲パート募集欄の経験者表示",
     end
   end
 
+  it '過去イベントと現在イベントが同じ旧パート表記(NAME_OPTIONS外の生の値)を使っていても経験者として表示されること' do
+    # 2025年1月のセレクトボックス化以前に作られたイベントは、join_part_nameが自由入力の
+    # ままDBに残り得る(JoinPartにinclusion validationは無い)。過去イベントと現在イベントの
+    # 双方が同じ旧表記(例: 事業運営の実運用で見られる「ボーカル」)を使っている場合でも、
+    # Controller/ViewがQueryと同じ正規化済みキーで参照しなければ経験者として一致しない。
+    #
+    # past_song/current_songには(before付近の共通セットアップにより)既に現行表記"Vocal"の
+    # パートが1件ずつ存在するため、同じ曲に旧表記のパートを足すだけでは
+    # 「たまたま別の"Vocal"列経由で一致して見える」誤検知が起こり得る。それを避けるため、
+    # このテストだけは専用のSong(旧表記のパートしか持たない)を用意して検証する。
+    legacy_past_song = FactoryBot.create(:song, event: past_event, song_name: "旧曲", artist_name: "旧アーティスト")
+    legacy_current_song = FactoryBot.create(:song, event: current_event, song_name: "旧曲", artist_name: "旧アーティスト")
+    expect(legacy_current_song.song_master_id).to eq(legacy_past_song.song_master_id)
+
+    legacy_past_part = FactoryBot.create(:join_part, song: legacy_past_song, join_part_name: "ボーカル")
+    legacy_current_part = FactoryBot.create(:join_part, song: legacy_current_song, join_part_name: "ボーカル")
+    FactoryBot.create(:join_part_customer, join_part: legacy_past_part, customer: experienced_customer)
+    legacy_current_part # 募集中スロットとして存在させる
+
+    get public_event_path(current_event)
+
+    expect(response.body).to include("演奏経験のある人")
+    expect(response.body).to include("経験太郎")
+  end
+
   it '「演奏実績を確定」ボタンが表示されないこと(動的表示のため確定操作が不要、主催者が閲覧しても表示されない)' do
     owner_past_event = FactoryBot.create(
       :event, :event_with_songs, community: community, customer: viewer,

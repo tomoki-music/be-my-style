@@ -290,7 +290,7 @@
                                               data: { turbolinks: false },
                                               "aria-label": "#{song.song_name}の#{part.join_part_name}パートにエントリーする"
                                           - recruiting_parts.each do |part|
-                                            = render "public/events/experienced_customers", customers: @experienced_customers_by_song_part[[song.song_master_id, part.join_part_name]]
+                                            = render "public/events/experienced_customers", customers: experienced_customers_for(song, part.join_part_name)
 
                                     %td
                                       .check-part-list
@@ -337,7 +337,7 @@
                                                     class: "btn btn-danger w-100"
                                           - else
                                             %span.text-danger 募集中
-                                          = render "public/events/experienced_customers", customers: @experienced_customers_by_song_part[[song.song_master_id, part_name]]
+                                          = render "public/events/experienced_customers", customers: experienced_customers_for(song, part_name)
                                         - else
                                           ー
                 %tr
