@@ -96,4 +96,14 @@ namespace :song_masters do
     log.call(mode)
     SongMasters::BackfillSongs.call(dry_run: dry_run, delete_orphans: delete_orphans, logger: log)
   end
+
+  # 曲名の表記パターンと、Resolver改善によるSongMaster集約の変化を集計してレポートするだけの
+  # read-onlyタスク。DBは一切変更しない。出力は Song ID・song_name・artist_name のみ。
+  #
+  # 使い方:
+  #   bundle exec rails song_masters:analyze_titles
+  desc "曲名の表記パターンとResolver改善前後のSongMaster集約変化を集計する(read-only)"
+  task analyze_titles: :environment do
+    SongMasters::TitleAnalysis.call(logger: ->(message) { puts message })
+  end
 end

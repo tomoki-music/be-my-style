@@ -176,25 +176,11 @@ module SongMasters
       end
     end
 
-    # 「曲名（アーティスト名）」の括弧内をアーティスト名として切り出してよいかの裏付け判定。
-    # 既存SongMasterに加え、まだSongMaster化されていないSongのアーティスト欄も裏付けに含めることで、
-    # Songの処理順に依存せず「曲名」+「アーティスト欄」入力済みSongの存在を根拠に切り出せる。
-    # 単純な禁止語リストではなく、実データとの照合を優先した安全側の判定にするための仕組み。
+    # 曲名からのアーティスト名/注記の分解可否を判定するための裏付け集合。
+    # 別カラム入力Song + 既存SongMaster のペアだけを供給源にする(詳細は ArtistCorroboration)。
+    # 全Songを一度だけ走査するため、backfill時のSong処理順に結果が依存しない。
     def build_artist_corroboration
-      keys = SongMaster.where.not(normalized_artist_name: "")
-        .pluck(:normalized_song_name, :normalized_artist_name)
-        .to_set
-
-      Song.where.not(artist_name: [nil, ""]).pluck(:song_name, :artist_name).each do |song_name, artist_name|
-        nsn = SongMasters::Resolver.normalize(song_name)
-        nan = SongMasters::Resolver.normalize(artist_name)
-        keys << [nsn, nan] if nsn.present? && nan.present?
-      end
-
-      lambda do |normalized_song_name:, normalized_artist_name:|
-        normalized_artist_name.present? &&
-          keys.include?([normalized_song_name, normalized_artist_name])
-      end
+      SongMasters::ArtistCorroboration.build
     end
 
     # トランザクション内で呼ばれる。Resolver.callで正しいSongMasterを取得(必要なら作成)し、
