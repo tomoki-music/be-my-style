@@ -56,13 +56,16 @@ RSpec.describe PerformanceHistory::ProfileQuery do
   end
 
   it '「曲名（アーティスト名）」形式と「曲名」+アーティスト欄形式の演奏を、同一曲の実績としてまとめること' do
-    embedded_event = FactoryBot.create(:event, :event_with_songs, community: community)
-    embedded_song = FactoryBot.create(:song, event: embedded_event, song_name: "マリーゴールド（あいみょん）", artist_name: nil)
-    embedded_part = FactoryBot.create(:join_part, song: embedded_song, join_part_name: "Vocal")
-
+    # 括弧内をアーティスト名として切り出すには「曲名」+「アーティスト欄」入力済みという
+    # 裏付けデータが必要になったため、split形式(裏付け)を先に用意してからembedded形式を登録する。
     split_event = FactoryBot.create(:event, :event_with_songs, community: community)
     split_song = FactoryBot.create(:song, event: split_event, song_name: "マリーゴールド", artist_name: "あいみょん")
     split_part = FactoryBot.create(:join_part, song: split_song, join_part_name: "Vocal")
+
+    embedded_event = FactoryBot.create(:event, :event_with_songs, community: community)
+    embedded_song = FactoryBot.create(:song, event: embedded_event, song_name: "マリーゴールド（あいみょん）", artist_name: nil)
+    embedded_part = FactoryBot.create(:join_part, song: embedded_song, join_part_name: "Vocal")
+    expect(embedded_song.song_master_id).to eq(split_song.song_master_id)
 
     FactoryBot.create(:join_part_customer, join_part: embedded_part, customer: customer)
     FactoryBot.create(:join_part_customer, join_part: split_part, customer: customer)

@@ -89,9 +89,14 @@ module SongMasters
       # song_id => 再リンク後に参照する既存SongMaster id。新規作成予定マスターへ寄せる場合はnil。
       # スキップ・現状維持のSongはキー自体を持たない。
       @planned_master_id = {}
+      @artist_corroboration = build_artist_corroboration
 
       Song.includes(:song_master).find_each do |song|
-        identity = SongMasters::Resolver.identity_for(song_name: song.song_name, artist_name: song.artist_name)
+        identity = SongMasters::Resolver.identity_for(
+          song_name: song.song_name,
+          artist_name: song.artist_name,
+          artist_corroboration: @artist_corroboration
+        )
         if identity.nil?
           @skipped << SkippedSong.new(song_id: song.id, song_name: song.song_name, artist_name: song.artist_name)
           next
@@ -167,11 +172,36 @@ module SongMasters
       end
     end
 
+    # 「曲名（アーティスト名）」の括弧内をアーティスト名として切り出してよいかの裏付け判定。
+    # 既存SongMasterに加え、まだSongMaster化されていないSongのアーティスト欄も裏付けに含めることで、
+    # Songの処理順に依存せず「曲名」+「アーティスト欄」入力済みSongの存在を根拠に切り出せる。
+    # 単純な禁止語リストではなく、実データとの照合を優先した安全側の判定にするための仕組み。
+    def build_artist_corroboration
+      keys = SongMaster.where.not(normalized_artist_name: "")
+        .pluck(:normalized_song_name, :normalized_artist_name)
+        .to_set
+
+      Song.where.not(artist_name: [nil, ""]).pluck(:song_name, :artist_name).each do |song_name, artist_name|
+        nsn = SongMasters::Resolver.normalize(song_name)
+        nan = SongMasters::Resolver.normalize(artist_name)
+        keys << [nsn, nan] if nsn.present? && nan.present?
+      end
+
+      lambda do |normalized_song_name:, normalized_artist_name:|
+        normalized_artist_name.present? &&
+          keys.include?([normalized_song_name, normalized_artist_name])
+      end
+    end
+
     # トランザクション内で呼ばれる。Resolver.callで正しいSongMasterを取得(必要なら作成)し、
     # song_master_idが変わるSongだけをupdate_columnで更新する(assign_song_masterコールバックは意図的に回避)。
     def relink_songs!
       Song.includes(:song_master).find_each do |song|
-        master = SongMasters::Resolver.call(song_name: song.song_name, artist_name: song.artist_name)
+        master = SongMasters::Resolver.call(
+          song_name: song.song_name,
+          artist_name: song.artist_name,
+          artist_corroboration: @artist_corroboration
+        )
         next if master.nil?
         next if master.id == song.song_master_id
 

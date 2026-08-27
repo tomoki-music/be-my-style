@@ -97,6 +97,8 @@ RSpec.describe "song_masters:backfill_songs rakeタスク" do
     end
 
     it "再リンク成功後、参照が無くなったSongMasterを削除すること" do
+      # 括弧内切り出しの裏付けとして「曲名」+「アーティスト欄」入力済みの既存SongMasterを用意する。
+      SongMasters::Resolver.call(song_name: "削除対象", artist_name: "P")
       wrong = FactoryBot.create(
         :song_master,
         song_name: "削除対象（P）",
@@ -142,6 +144,29 @@ RSpec.describe "song_masters:backfill_songs rakeタスク" do
       run_task
 
       expect(paren_in_title.reload.song_master_id).not_to eq(plain.reload.song_master_id)
+    end
+
+    it "括弧内が告知文言のSongは分解せず、括弧込み曲名として別SongMasterへ寄せること(裏付け無し)" do
+      announcement = create_unlinked_song(song_name: "ヒカリノアトリエ（コラボイベント前祝曲!!）", artist_name: nil)
+      # 「ヒカリノアトリエ」+「コラボイベント前祝曲!!」という裏付けはどこにも無い
+      plain = create_unlinked_song(song_name: "ヒカリノアトリエ", artist_name: "Mr.Children")
+
+      run_task
+
+      expect(announcement.reload.song_master.artist_name).to be_blank
+      expect(announcement.song_master.normalized_song_name)
+        .to eq(SongMasters::Resolver.normalize("ヒカリノアトリエ（コラボイベント前祝曲!!）"))
+      expect(announcement.song_master_id).not_to eq(plain.reload.song_master_id)
+    end
+
+    it "曲名+アーティスト欄という裏付けがある場合だけ括弧内をアーティスト名として切り出すこと" do
+      split = create_unlinked_song(song_name: "花に亡霊", artist_name: "ヨルシカ")
+      embedded = create_unlinked_song(song_name: "花に亡霊（ヨルシカ）", artist_name: nil)
+
+      run_task
+
+      expect(embedded.reload.song_master_id).to eq(split.reload.song_master_id)
+      expect(embedded.song_master.artist_name).to eq("ヨルシカ")
     end
   end
 

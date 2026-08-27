@@ -167,8 +167,10 @@ RSpec.describe "Public::Events#show 楽曲パート募集欄の経験者表示",
     # 現在イベントは song_name="マリーゴールド" / artist_name="あいみょん" のように登録形式がずれる。
     # 同じ曲なので、経験者(見出し・氏名・公開プロフィールリンク)が表示されなければならない。
     it '過去=「曲名（アーティスト名）」・現在=「曲名」+アーティスト欄 でも同一曲として経験者に表示されること(PC/スマホ両方)' do
-      embedded_past_song = FactoryBot.create(:song, event: past_event, song_name: "マリーゴールド（あいみょん）", artist_name: nil)
+      # 括弧内をアーティスト名として切り出すには「曲名」+「アーティスト欄」入力済みという裏付けが必要。
+      # 現在イベント側のsplit形式が裏付けになるため、そちらを先に登録する。
       split_current_song = FactoryBot.create(:song, event: current_event, song_name: "マリーゴールド", artist_name: "あいみょん")
+      embedded_past_song = FactoryBot.create(:song, event: past_event, song_name: "マリーゴールド（あいみょん）", artist_name: nil)
       expect(split_current_song.song_master_id).to eq(embedded_past_song.song_master_id)
 
       past_guitar_part = FactoryBot.create(:join_part, song: embedded_past_song, join_part_name: "Guitar")
