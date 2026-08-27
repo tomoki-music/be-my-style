@@ -1417,3 +1417,143 @@ input[type="text"] {
     }
   }
 }
+
+// 演奏経験者へのエントリー依頼パネル。幅の広い楽曲表の外に置き、PC・スマホ共通で
+// 横スクロールを発生させない(min-width を固定せず flex-wrap で折り返す)。
+.entry-invitation-panel {
+  margin: 20px 0 0;
+  padding: 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 10px;
+  background: #f8f9fa;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+
+  // 幅の狭い端末で長いラベル・ボタン文言が原因の横スクロールを防ぐ。
+  .btn {
+    white-space: normal;
+    max-width: 100%;
+  }
+
+  &__title {
+    margin: 0 0 6px;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  &__desc {
+    margin: 0 0 12px;
+    color: #6c757d;
+    font-size: 0.85rem;
+    word-break: break-word;
+  }
+}
+
+.entry-invitation {
+  & + & {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed #d0d7de;
+  }
+
+  &__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0 0 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    word-break: break-word;
+  }
+
+  &__part {
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #0d6efd;
+    color: #fff;
+    font-size: 0.8rem;
+  }
+
+  &__list {
+    margin: 0 0 10px;
+    padding-left: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    padding: 4px 0;
+    font-size: 0.9rem;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  &__name {
+    margin: 0;
+    cursor: pointer;
+    word-break: break-word;
+  }
+
+  &__profile {
+    font-size: 0.8rem;
+  }
+
+  &__status {
+    font-size: 0.8rem;
+    color: #198754;
+
+    &--failed {
+      color: #dc3545;
+    }
+  }
+}
+
+.entry-invitation-confirm {
+  width: 92%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #d0d7de;
+  border-radius: 10px;
+
+  &__summary {
+    margin: 0 0 16px;
+
+    dt {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: #6c757d;
+    }
+
+    dd {
+      margin: 0;
+      font-size: 1rem;
+      word-break: break-word;
+    }
+  }
+
+  &__recipients {
+    margin: 0 0 16px;
+    padding-left: 1.2em;
+
+    li {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 3px 0;
+      word-break: break-word;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+}

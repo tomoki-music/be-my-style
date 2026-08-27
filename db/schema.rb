@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_08_27_000100) do
+ActiveRecord::Schema.define(version: 2026_08_27_080100) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -374,6 +374,25 @@ ActiveRecord::Schema.define(version: 2026_08_27_000100) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["name"], name: "index_domains_on_name", unique: true
+  end
+
+  create_table "entry_invitations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.bigint "song_id", null: false
+    t.bigint "join_part_id", null: false
+    t.bigint "customer_id", null: false
+    t.bigint "requested_by_customer_id", null: false
+    t.datetime "sent_at"
+    t.integer "status", default: 0, null: false
+    t.string "failure_reason"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_entry_invitations_on_customer_id"
+    t.index ["event_id", "song_id", "join_part_id", "customer_id"], name: "index_entry_invitations_on_event_song_part_customer", unique: true
+    t.index ["event_id"], name: "index_entry_invitations_on_event_id"
+    t.index ["join_part_id"], name: "index_entry_invitations_on_join_part_id"
+    t.index ["requested_by_customer_id"], name: "index_entry_invitations_on_requested_by_customer_id"
+    t.index ["song_id"], name: "index_entry_invitations_on_song_id"
   end
 
   create_table "events", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1349,6 +1368,11 @@ ActiveRecord::Schema.define(version: 2026_08_27_000100) do
   add_foreign_key "customer_song_parts", "customers"
   add_foreign_key "customer_song_parts", "song_masters"
   add_foreign_key "customer_song_parts", "songs"
+  add_foreign_key "entry_invitations", "customers"
+  add_foreign_key "entry_invitations", "customers", column: "requested_by_customer_id"
+  add_foreign_key "entry_invitations", "events"
+  add_foreign_key "entry_invitations", "join_parts"
+  add_foreign_key "entry_invitations", "songs"
   add_foreign_key "events", "communities"
   add_foreign_key "events", "customers"
   add_foreign_key "favorites", "activities"

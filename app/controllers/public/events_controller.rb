@@ -108,6 +108,15 @@ class Public::EventsController < ApplicationController
     #終了済みイベントのJoinPartCustomerを正データとする動的判定のため、確定操作は不要
     @experienced_customers_by_song_part = PerformanceHistory::ExperiencedCustomersQuery.call(@event)
 
+    #エントリー依頼パネル用の送信履歴(曲数×パート数×経験者数分のN+1を避けるため、イベント単位で1回だけ取得)
+    #送信権限(can_destroy_event?)を持つユーザーのみパネルを描画するため、その場合だけ取得する
+    @entry_invitations_by_key =
+      if current_customer.can_destroy_event?(@event)
+        EntryInvitation.where(event_id: @event.id).index_by { |i| [i.song_id, i.join_part_id, i.customer_id] }
+      else
+        {}
+      end
+
     #googleMap
     @latitude = @event.latitude
     @longitude = @event.longitude

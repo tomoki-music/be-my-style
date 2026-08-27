@@ -355,6 +355,8 @@
                         CSVには有料プラン参加者と、今月特典適用済みユーザーがわかる表記を含めています。
                       %p.mb-0.text-muted
                         参加費が1,500円を超えるイベントでも、現地集金が必要な参加者を見分けやすくしています。
+        - if current_customer.can_destroy_event?(@event) && !@event.ended?
+          = render "public/events/entry_invitation_panel", event: @event
         #event-request.event-request{ data: { "mention-candidates-url" => mention_candidates_public_event_path(@event), "current-customer-id" => current_customer.id } }
           - if @event.request_deadline.present?
             .event-request-deadline
