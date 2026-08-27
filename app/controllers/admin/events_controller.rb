@@ -125,7 +125,7 @@ class Admin::EventsController < ApplicationController
 
   def build_default_song
     @song = @event.songs.build
-    %w[Vocal Guitar Bass Drums Keyboard].each do |part_name|
+    JoinPart::NAME_OPTIONS.each do |part_name|
       @song.join_parts.build(join_part_name: part_name)
     end
   end

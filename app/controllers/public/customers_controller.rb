@@ -13,9 +13,17 @@ class Public::CustomersController < ApplicationController
     @mathing_customers = Relationship.where(followed_id: got_follow_customers_ids, follower_id: current_customer.id).where.not(followed_id: current_customer.id).map do |follow|
       follow.followed.id
     end
+
+    #演奏実績(終了済みイベントのJoinPartCustomerを正データとする動的集計)・演奏可能曲(自己申告)。
+    #互いを明確に区別して表示する。
+    @song_performance_summaries = PerformanceHistory::ProfileQuery.call(@customer)
+    @customer_song_parts = @customer.customer_song_parts.includes(:song_master, :song).order(created_at: :desc)
   end
 
   def edit
+    #自己申告の演奏可能曲登録フォーム用
+    @customer_song_parts = @customer.customer_song_parts.includes(:song_master, :song).order(created_at: :desc)
+    @eligible_songs_for_song_part = current_customer.eligible_songs_for_song_part.order(:song_name, :artist_name)
   end
 
   def update

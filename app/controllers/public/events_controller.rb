@@ -104,6 +104,10 @@ class Public::EventsController < ApplicationController
       @recruiting_songs << Song.find(song_id)
     end
 
+    #楽曲パート募集欄の「演奏経験のある人」(曲数xパート数分のN+1を避けるため、イベント単位で1回だけ取得)
+    #終了済みイベントのJoinPartCustomerを正データとする動的判定のため、確定操作は不要
+    @experienced_customers_by_song_part = PerformanceHistory::ExperiencedCustomersQuery.call(@event)
+
     #googleMap
     @latitude = @event.latitude
     @longitude = @event.longitude
@@ -134,7 +138,7 @@ class Public::EventsController < ApplicationController
     @event = Event.new
     @song = @event.songs.build
   
-    %w[Vocal Guitar Bass Drums Keyboard].each do |part_name|
+    JoinPart::NAME_OPTIONS.each do |part_name|
       @song.join_parts.build(join_part_name: part_name)
     end
   
@@ -207,7 +211,7 @@ class Public::EventsController < ApplicationController
       new_song.requested_by_customer_id = nil unless requested_by_customer_copyable?(old_song)
 
       # 各曲にデフォルトパートを作成
-      ["Vocal", "Guitar", "Bass", "Drums", "Keyboard"].each do |part_name|
+      JoinPart::NAME_OPTIONS.each do |part_name|
         new_song.join_parts.build(join_part_name: part_name)
       end
 
@@ -321,6 +325,8 @@ class Public::EventsController < ApplicationController
     credited_record = join_record if join_record&.session_credit_applied?
     join_part.customers.delete(customer)
     transfer_session_credit_if_needed!(event, customer, credited_record)
+    # エントリー取消(JoinPartCustomer削除)により、演奏実績・経験者検索の対象からも
+    # 自動的に外れる(PerformanceHistoryの各Query Objectが現存するJoinPartCustomerのみを見るため)。
     redirect_to public_event_path(event), alert: "参加を取消しました!"
   end
 

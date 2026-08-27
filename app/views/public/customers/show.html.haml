@@ -95,6 +95,24 @@
                 - @customer.parts.each do |part|
                   %i.fa-solid.fa-music
                   = part.name
+            - if @song_performance_summaries.present?
+              %tr
+                %th{scope:"row"} 演奏実績
+                %td
+                  = render "song_performance_summaries", summaries: @song_performance_summaries
+            - if @customer_song_parts.present?
+              %tr
+                %th{scope:"row"} 演奏可能曲
+                %td
+                  %ul.song-performance-list
+                    - @customer_song_parts.each do |customer_song_part|
+                      %li.song-performance-list__item
+                        %span.song-performance-list__song
+                          = customer_song_part.song_master&.song_name
+                          - if customer_song_part.song_master&.artist_name.present?
+                            %span.song-performance-list__artist
+                              / #{customer_song_part.song_master.artist_name}
+                        %span.song-performance-list__part= customer_song_part.part_name
             %tr
               %th{scope:"row"} 活動場所
               %td

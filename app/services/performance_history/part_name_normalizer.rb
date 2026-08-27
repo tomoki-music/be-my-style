@@ -1,0 +1,42 @@
+module PerformanceHistory
+  # 2025年1月のセレクトボックス化以前、JoinPart.join_part_nameは自由入力だった
+  # (JoinPartモデル自体にinclusion validationは無いため、レガシーな自由入力値は
+  # 今もDBに残り得る)。演奏実績の動的集計・経験者検索では、別イベントの現行パート
+  # (常にJoinPart::NAME_OPTIONSのいずれか)と旧パート名を突合する必要があるため、
+  # ここで安全な範囲のみ正規化する。
+  #
+  # DB上の値は一切書き換えず、検索時の突合(このモジュールの戻り値同士の一致判定)にのみ使う。
+  #
+  # 意味を一意に決められない値(Cho/Chorus/コーラス/Percussion/Acoustic Guitar等)は、
+  # 誤って現行パートへ寄せると経験者検索の精度を損なう(存在しない経験を「あり」と
+  # 誤表示してしまう)ため、あえてマッピングしない。マッピングできない値はnilを返し、
+  # 呼び出し側で「一致させない」扱いにする。
+  module PartNameNormalizer
+    # ユーザーが安全と判断した表記ゆれのみを対象とする。キーは小文字化して比較するため
+    # 大文字小文字の違い(Vo/VO/vo等)は自動的に吸収される。
+    SAFE_ALIASES = {
+      "vo" => "Vocal",
+      "ボーカル" => "Vocal",
+      "ヴォーカル" => "Vocal",
+      "gt" => "Guitar",
+      "ギター" => "Guitar",
+      "ba" => "Bass",
+      "ベース" => "Bass",
+      "dr" => "Drums",
+      "ドラム" => "Drums",
+      "ドラムス" => "Drums",
+      "key" => "Keyboard",
+      "キーボード" => "Keyboard"
+    }.freeze
+
+    # 戻り値: JoinPart::NAME_OPTIONSのいずれか、またはnil(安全に変換できない値)。
+    def self.normalize(raw_name)
+      name = raw_name.to_s.strip
+      return nil if name.blank?
+      # 既に現行の選択肢そのものであれば、それを正とする(最も多いケースの高速パス)。
+      return name if JoinPart::NAME_OPTIONS.include?(name)
+
+      SAFE_ALIASES[name.downcase]
+    end
+  end
+end

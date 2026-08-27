@@ -93,6 +93,7 @@ class Customer < ApplicationRecord
   has_many :join_part_customers, dependent: :destroy
   has_many :join_parts, through: :join_part_customers, dependent: :destroy
   has_many :requests, dependent: :destroy
+  has_many :customer_song_parts, dependent: :destroy
 
   has_many :community_owners, dependent: :destroy
   has_many :owned_communities, through: :community_owners, source: :community
@@ -365,6 +366,13 @@ class Customer < ApplicationRecord
   def manageable_communities
     owned_ids = owned_communities.select(:id)
     Community.where(owner_id: id).or(Community.where(id: owned_ids)).distinct
+  end
+
+  # 自己申告の演奏可能曲(CustomerSongPart)登録画面で選択できるSongの範囲。
+  # 「曲が所属するイベント・コミュニティとの関係」をサーバー側で検証するため、
+  # 自分が所属するコミュニティのイベントに紐づくSongのみに絞る。
+  def eligible_songs_for_song_part
+    Song.where(event_id: Event.where(community_id: communities.select(:id)).select(:id))
   end
 
   # 退会機能

@@ -121,6 +121,10 @@ Rails.application.routes.draw do
       end
     end
 
+    # 自己申告の演奏可能曲(customer_song_parts)。常にcurrent_customer自身の登録のみを
+    # 扱うため、URLにcustomer_idを含めずcurrent_customer基準で完結させる。
+    resources :customer_song_parts, only: [:create, :destroy]
+
     # 通知機能
     resources :notifications, only: :index
 

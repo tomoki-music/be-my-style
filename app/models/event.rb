@@ -108,4 +108,8 @@ class Event < ApplicationRecord
   def status_label(now: Time.current)
     STATUS_LABELS.fetch(status_key(now: now))
   end
+
+  def ended?(now: Time.current)
+    status_key(now: now) == :ended
+  end
 end

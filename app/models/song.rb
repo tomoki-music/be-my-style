@@ -6,12 +6,18 @@ class Song < ApplicationRecord
 
   belongs_to :event, inverse_of: :songs
   belongs_to :requested_by_customer, class_name: "Customer", optional: true
+  belongs_to :song_master, optional: true
   has_many :song_customers, dependent: :destroy
   has_many :customers, through: :song_customers, dependent: :destroy
   has_many :join_parts, dependent: :destroy
   # source_song_idは由来記録のみに使う(テンプレートとの同期はしない)。
   # Song削除時にsong_templates.source_song_idをnullifyし、テンプレート自体は残す。
   has_many :song_templates, foreign_key: :source_song_id, dependent: :nullify, inverse_of: :source_song
+  # 自己申告の演奏可能曲は、Song削除後も履歴として残すためnullify
+  # (song_templates.source_song_idと同じ考え方)。
+  # イベント演奏実績はJoinPartCustomerを正データとする動的集計のため、専用テーブルは持たない
+  # (PerformanceHistory::ExperiencedCustomersQuery/ProfileQuery参照)。
+  has_many :customer_song_parts, dependent: :nullify
 
   accepts_nested_attributes_for :join_parts, allow_destroy: true, reject_if: :all_blank
 
@@ -57,6 +63,10 @@ class Song < ApplicationRecord
   validate :requested_by_customer_must_be_eligible_member, if: :validate_requested_by_customer_eligibility?
 
   before_validation :set_default_position, on: :create
+  # song_name/artist_nameが変わるたびにSongMasterを再解決する。イベントをまたいだ
+  # 「同じ曲」判定(演奏実績の集計・経験者検索)に使うための補助的な識別子であり、
+  # 解決に失敗してもSong自体の保存は妨げない(あくまで付随情報のため)。
+  before_validation :assign_song_master, if: :should_assign_song_master?
 
   # 現役参加者が0人のパートを「募集中」とみなす。Public::EventsController#showの
   # 成立楽曲/募集中楽曲判定(join_parts.map { active_customers.length }.include?(0))と
@@ -75,6 +85,17 @@ class Song < ApplicationRecord
   end
 
   private
+
+  def should_assign_song_master?
+    song_name.present? && (song_master_id.blank? || song_name_changed? || artist_name_changed?)
+  end
+
+  def assign_song_master
+    master = SongMasters::Resolver.call(song_name: song_name, artist_name: artist_name)
+    self.song_master_id = master.id if master.present?
+  rescue StandardError => e
+    Rails.logger.error("[Song#assign_song_master] #{e.class}: #{e.message}")
+  end
 
   def set_default_position
     self.position ||= (event.songs.maximum(:position) || 0) + 1 if event.present?

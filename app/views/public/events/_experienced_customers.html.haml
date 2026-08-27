@@ -1,0 +1,5 @@
+- if customers.present?
+  .experienced-customers
+    %span.experienced-customers__label 演奏経験のある人:
+    - customers.each do |customer|
+      = customer_profile_name_link(customer, { class: "experienced-customers__name" })
