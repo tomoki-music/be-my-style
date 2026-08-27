@@ -37,8 +37,29 @@ module SongMasters
     # 括弧の中身・括弧より前の曲名がいずれも非空のときだけ分解する(誤った切り出しを避ける)。
     EMBEDDED_ARTIST_PATTERN = /\A(?<title>.+?)[[:space:]]*[(（](?<artist>[^()（）]+)[)）][[:space:]]*\z/
 
+    # 正規化済みキー(SongMasterの一意キー)と、SongMaster新規作成時に使う表示名をまとめた値オブジェクト。
+    Identity = Struct.new(:normalized_song_name, :normalized_artist_name, :song_name, :artist_name, keyword_init: true)
+
     def self.call(song_name:, artist_name:)
       new(song_name, artist_name).call
+    end
+
+    # DBを一切変更せず、既存のSongMasterだけを解決する(該当が無ければnil)。
+    # backfill等のdry-run用途で、find_or_createによる意図しないSongMaster作成を避けるために使う。
+    def self.resolve_existing(song_name:, artist_name:)
+      identity = identity_for(song_name: song_name, artist_name: artist_name)
+      return nil if identity.nil?
+
+      SongMaster.find_by(
+        normalized_song_name: identity.normalized_song_name,
+        normalized_artist_name: identity.normalized_artist_name
+      )
+    end
+
+    # 曲名・アーティスト名から正規化キーと表示名を組み立てて返す(read-only、DBアクセス無し)。
+    # 曲名が空等で正規化キーが作れない場合はnil。
+    def self.identity_for(song_name:, artist_name:)
+      new(song_name, artist_name).identity
     end
 
     def initialize(song_name, artist_name)
@@ -47,6 +68,18 @@ module SongMasters
     end
 
     def call
+      identity = self.identity
+      return nil if identity.nil?
+
+      find_or_create(
+        identity.normalized_song_name,
+        identity.normalized_artist_name,
+        identity.song_name,
+        identity.artist_name
+      )
+    end
+
+    def identity
       return nil if @song_name.blank?
 
       song_name, artist_name = self.class.split_embedded_artist(@song_name, @artist_name)
@@ -54,9 +87,12 @@ module SongMasters
       normalized_song_name = self.class.normalize(song_name)
       return nil if normalized_song_name.blank?
 
-      normalized_artist_name = self.class.normalize(artist_name)
-
-      find_or_create(normalized_song_name, normalized_artist_name, song_name, artist_name)
+      Identity.new(
+        normalized_song_name: normalized_song_name,
+        normalized_artist_name: self.class.normalize(artist_name),
+        song_name: song_name.to_s.strip,
+        artist_name: artist_name.to_s.strip.presence
+      )
     end
 
     # アーティスト名欄が空で、曲名が「曲名（アーティスト名）」形式のとき、括弧内をアーティスト名として
