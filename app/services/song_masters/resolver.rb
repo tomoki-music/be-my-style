@@ -9,6 +9,12 @@ module SongMasters
   # 正規化は「表記ゆれの吸収」を優先しており、同名異曲(同タイトル・同アーティスト表記の
   # 別の曲)まで区別する精度は持たない。曲名だけでなくアーティスト名も一致条件に含めることで
   # 誤判定のリスクを下げているが、完全な同一性保証ではない前提で利用すること。
+  #
+  # 曲名の中にアーティスト名や注記が混ざった表記(「アーティスト - 曲名」「曲名（アーティスト）」
+  # 「【Key+4】曲名」等)の分解は、文字列だけを見て推測しない。「曲名」と「アーティスト名」が
+  # 別カラムで入力されたSongや既存SongMasterという"裏付け"がある向き・候補のときだけ分解する
+  # (裏付けの供給は artist_corroboration: 経由。既定は既存SongMasterの完全一致)。
+  # 裏付けが無い/両方向に成立する曖昧なケースでは分解せず、元の文字列をそのまま1曲として扱う。
   class Resolver
     # 引用符・アポストロフィの表記ゆれを吸収するためのマッピング。
     # 全角引用符(＇＂)や全角ダブルクォートはNFKC正規化で半角に変換されるためここには含めないが、
@@ -38,8 +44,24 @@ module SongMasters
     #
     # ただしこのパターンに一致しても、括弧内を無条件にアーティスト名として切り出すことはしない。
     # 括弧内が告知・募集・キー/バージョン等の付随情報である場合や、「曲名」+「そのアーティスト名」の
-    # 組み合わせを裏付ける既存データが無い場合は分解しない(embedded_artist_split参照)。
+    # 組み合わせを裏付ける既存データが無い場合は分解しない(decompose参照)。
     EMBEDDED_ARTIST_PATTERN = /\A(?<title>.+?)[[:space:]]*[(（](?<artist>[^()（）]+)[)）][[:space:]]*\z/
+
+    # 「アーティスト「曲名」」「アーティスト『曲名』」形式。鉤括弧の中身を曲名候補、手前をアーティスト
+    # 候補として扱う(向きの採用可否はあくまで裏付け照合で決める)。
+    BRACKET_TITLE_PATTERN = /\A(?<before>.+?)[[:space:]]*[「『](?<inside>[^「『」』]+)[」』][[:space:]]*\z/
+
+    # 「アーティスト - 曲名」「曲名 / アーティスト」等の区切り。どちらが曲名/アーティストかは
+    # 文字列だけでは決めず(separator_splitsは構造分解のみ)、両向きを候補にして裏付け照合で決める。
+    # - 素のハイフン("-")は曲名の一部(Anti-Hero, Spider-Man等)であることが多いため前後スペース必須。
+    # - ダッシュ(–, —)・スラッシュ(/, ／)は区切り用途が支配的なため前後スペースは任意。
+    SEPARATOR_PATTERN = %r{[[:space:]]+-[[:space:]]+|[[:space:]]*[–—][[:space:]]*|[[:space:]]*[/／][[:space:]]*}
+
+    # 曲名先頭の注記(【Key+4】【時間に余裕があれば】【募集中】(原曲キー)等)。1つ以上連続していても剥がす。
+    # ここで剥がすのは identity 計算時の"候補"を作るためだけで、Songやマスターの表示名は変更しない。
+    # 剥がした候補を採用するかどうかは、その候補が裏付け照合に通るかどうかで決める
+    # (正式タイトルの一部である先頭括弧を無条件に落とさないための設計)。
+    LEADING_ANNOTATION_PATTERN = /\A(?:[[:space:]]*[【〔［\[(（][^】〕］\])）【〔［\[(（]*[】〕］\])）])+/
 
     # 括弧内文字列が「アーティスト名ではなく告知・補足情報」に見えるかどうかの安全網。
     # ここに列挙した語・記号・日付らしい表記のいずれかを含む場合はアーティスト名として扱わない。
@@ -64,7 +86,7 @@ module SongMasters
     ).freeze
 
     # 「曲名(正規化済)」+「アーティスト名(正規化済)」の組み合わせに、既存SongMasterという
-    # 裏付けがあるかどうかを返すデフォルト実装。括弧内アーティストの切り出し可否判定に使う。
+    # 裏付けがあるかどうかを返すデフォルト実装。曲名からのアーティスト/注記分解の可否判定に使う。
     # backfill等、DBに未反映のSong情報も裏付けに含めたい呼び出し元は、同じシグネチャの
     # 別オブジェクト(lambda等)を artist_corroboration: で差し込む。
     DEFAULT_ARTIST_CORROBORATION = lambda do |normalized_song_name:, normalized_artist_name:|
@@ -97,7 +119,7 @@ module SongMasters
 
     # 曲名・アーティスト名から正規化キーと表示名を組み立てて返す。
     # 曲名が空等で正規化キーが作れない場合はnil。
-    # 括弧内アーティストの切り出し可否判定のために、既存データとの照合(既定ではSongMasterの検索)を
+    # 曲名からのアーティスト/注記の分解可否判定のために、既存データとの照合(既定ではSongMasterの検索)を
     # 行うため、完全なread-onlyだが参照系のDBアクセスが発生しうる。
     def self.identity_for(song_name:, artist_name:, artist_corroboration: DEFAULT_ARTIST_CORROBORATION)
       new(song_name, artist_name, artist_corroboration: artist_corroboration).identity
@@ -124,7 +146,7 @@ module SongMasters
     def identity
       return nil if @song_name.blank?
 
-      song_name, artist_name = embedded_artist_split
+      song_name, artist_name = decompose
 
       normalized_song_name = self.class.normalize(song_name)
       return nil if normalized_song_name.blank?
@@ -156,6 +178,28 @@ module SongMasters
       ANNOUNCEMENT_PATTERN.match?(text.to_s.unicode_normalize(:nfkc).downcase)
     end
 
+    # 曲名先頭の注記(【...】(...)等)を1つ以上剥がした文字列を返す。先頭に注記が無ければそのまま。
+    # 例: "【Key+4】あいみょん - マリーゴールド" -> "あいみょん - マリーゴールド"
+    def self.strip_leading_annotations(text)
+      text.to_s.strip.sub(LEADING_ANNOTATION_PATTERN, "").strip
+    end
+
+    # 区切り文字(ハイフン/ダッシュ/スラッシュ)で構造分解した [左, 右] の組を返す(向きの判定はしない)。
+    # 複数の区切りがある場合は「最初の区切りで割る」「最後の区切りで割る」の両方を候補にする。
+    # 区切りが無ければ空配列。
+    def self.separator_splits(text)
+      source = text.to_s
+      offsets = []
+      source.to_enum(:scan, SEPARATOR_PATTERN).each { offsets << Regexp.last_match.offset(0) }
+      return [] if offsets.empty?
+
+      [offsets.first, offsets.last].uniq.filter_map do |start_index, end_index|
+        left = source[0...start_index].to_s.strip
+        right = source[end_index..].to_s.strip
+        [left, right] if left.present? && right.present?
+      end.uniq
+    end
+
     # NFKC正規化(全角/半角ゆれ・全角スペースを吸収) + 引用符/アポストロフィのASCII統一 +
     # 小文字化 + 空白除去(前後・連続・途中を問わずすべて除去)。
     #
@@ -169,33 +213,81 @@ module SongMasters
 
     private
 
-    # アーティスト名欄が空で、曲名が「曲名（アーティスト名）」形式のとき、
-    # 次の条件をすべて満たす場合だけ括弧内をアーティスト名として切り出して [曲名, アーティスト名] を返す。
-    #   1. アーティスト名欄が未入力(入力済みなら括弧は分解せず既存の値を尊重する)
-    #   2. 括弧内が告知・募集・キー・バージョン等の付随情報でない(announcement_like?)
-    #   3. 「曲名」+「そのアーティスト名」の組み合わせを裏付ける既存データがある
-    #      (既定では同じ正規化キーのSongMasterが存在すること。backfillは未反映のSong情報も含めて判定)
-    # いずれかを満たさない曖昧なケースでは分解せず、括弧込みの曲名をそのまま1曲として扱う(安全側)。
-    def embedded_artist_split
-      return [@song_name, @artist_name] if @artist_name.to_s.strip.present?
+    # 曲名(と入力済みならアーティスト名欄)から、identity計算に使う [曲名, アーティスト名] を返す。
+    #
+    # 方針: 曲名の文字列だけを見てアーティスト名や注記を「推測で」切り出さない。
+    #   - アーティスト名欄が入力済みなら、その値を尊重し文字列分解で上書きしない。
+    #     (先頭注記だけは、剥がした候補が裏付け照合に通る場合に限り除外する)
+    #   - アーティスト名欄が空なら、構造的に成立しうる [曲名, アーティスト] の解釈をすべて列挙し、
+    #     「裏付け照合(artist_corroboration)に通る」ものだけに絞る。
+    #     通る解釈がちょうど1つ(正規化キーが一意)のときだけ、それを採用する。
+    #     0個・複数(両向き成立等)なら分解せず、元の文字列をそのまま曲名として扱う。
+    def decompose
+      raw = @song_name.to_s.strip
 
-      parsed = self.class.parse_embedded_artist(@song_name)
-      return [@song_name, @artist_name] if parsed.nil?
+      if @artist_name.to_s.strip.present?
+        stripped = self.class.strip_leading_annotations(raw)
+        if stripped.present? && stripped != raw &&
+           corroborated?(self.class.normalize(stripped), self.class.normalize(@artist_name))
+          return [stripped, @artist_name]
+        end
 
-      title, embedded_artist = parsed
-      return [@song_name, @artist_name] if self.class.announcement_like?(embedded_artist)
+        return [raw, @artist_name]
+      end
 
-      normalized_title = self.class.normalize(title)
-      normalized_artist = self.class.normalize(embedded_artist)
-      return [@song_name, @artist_name] if normalized_title.blank? || normalized_artist.blank?
+      interpretations = candidate_interpretations(raw)
+        .reject { |title, artist| title.blank? || artist.blank? }
+        .uniq { |title, artist| [self.class.normalize(title), self.class.normalize(artist)] }
 
-      corroborated = @artist_corroboration.call(
-        normalized_song_name: normalized_title,
-        normalized_artist_name: normalized_artist
+      corroborated = interpretations.select do |title, artist|
+        corroborated?(self.class.normalize(title), self.class.normalize(artist))
+      end
+      distinct_keys = corroborated.map { |title, artist| [self.class.normalize(title), self.class.normalize(artist)] }.uniq
+      return [raw, @artist_name] unless distinct_keys.size == 1
+
+      corroborated.first
+    end
+
+    # 構造的に成立しうる [曲名候補, アーティスト候補] をすべて列挙する(判定はしない)。
+    # 元の文字列と、先頭注記を剥がした文字列の両方を起点に、末尾括弧・鉤括弧・区切りを解釈する。
+    def candidate_interpretations(raw)
+      bases = [raw]
+      stripped = self.class.strip_leading_annotations(raw)
+      bases << stripped if stripped.present? && stripped != raw
+
+      bases.flat_map { |base| interpretations_for_base(base) }
+    end
+
+    def interpretations_for_base(base)
+      results = []
+
+      if (parsed = self.class.parse_embedded_artist(base))
+        title, embedded_artist = parsed
+        results << [title, embedded_artist] unless self.class.announcement_like?(embedded_artist)
+      end
+
+      if (match = base.match(BRACKET_TITLE_PATTERN))
+        before = match[:before].strip
+        inside = match[:inside].strip
+        results << [inside, before]
+        results << [before, inside]
+      end
+
+      self.class.separator_splits(base).each do |left, right|
+        results << [left, right]
+        results << [right, left]
+      end
+
+      results
+    end
+
+    def corroborated?(normalized_song_name, normalized_artist_name)
+      return false if normalized_song_name.blank? || normalized_artist_name.blank?
+
+      @artist_corroboration.call(
+        normalized_song_name: normalized_song_name,
+        normalized_artist_name: normalized_artist_name
       )
-      return [@song_name, @artist_name] unless corroborated
-
-      [title, embedded_artist]
     end
 
     def find_or_create(normalized_song_name, normalized_artist_name, display_song_name, display_artist_name, attempt: 0)

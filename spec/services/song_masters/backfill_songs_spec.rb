@@ -140,4 +140,91 @@ RSpec.describe SongMasters::BackfillSongs do
       expect(result.deleted_song_master_ids).not_to include(existing.id)
     end
   end
+
+  describe "本番相当: 曲名にアーティスト名・注記が混ざった表記の名寄せ" do
+    # 「マリーゴールド」+「あいみょん」が別カラムで入力されたSong(裏付け)が1件でもあれば、
+    # 区切り・括弧・先頭注記で表記の揺れた同一曲を、同じ正規SongMasterへ寄せる。
+    def unlinked(song_name, artist_name = nil)
+      s = FactoryBot.create(:song, event: event, song_name: song_name, artist_name: artist_name)
+      s.update_column(:song_master_id, nil)
+      s
+    end
+
+    it "マリーゴールドの各種表記を、1つの正規SongMaster(マリーゴールド/あいみょん)へ解決すること" do
+      songs = [
+        unlinked("マリーゴールド", "あいみょん"), # 裏付けになる別カラム入力
+        unlinked("マリーゴールド（あいみょん）"),
+        unlinked("マリーゴールド(あいみょん)"),
+        unlinked("マリーゴールド / あいみょん"),
+        unlinked("あいみょん - マリーゴールド"),
+        unlinked("あいみょん – マリーゴールド"),
+        unlinked("あいみょん　—　マリーゴールド"),
+        unlinked("【Key+4】あいみょん - マリーゴールド"),
+        unlinked("【時間に余裕があれば】マリーゴールド（あいみょん）"),
+        unlinked("【原曲キー】マリーゴールド", "あいみょん")
+      ]
+
+      result = described_class.call(dry_run: false)
+
+      master_ids = songs.map { |s| s.reload.song_master_id }
+      expect(master_ids.uniq.size).to eq(1)
+      master = SongMaster.find(master_ids.first)
+      expect(master.normalized_song_name).to eq(SongMasters::Resolver.normalize("マリーゴールド"))
+      expect(master.normalized_artist_name).to eq(SongMasters::Resolver.normalize("あいみょん"))
+      expect(result.creates.size).to eq(0)
+    end
+
+    it "裏付けが無ければ区切り表記を分解せず、意味的に別曲を統合しないこと" do
+      # 「あいみょん」+「マリーゴールド」を裏付けるデータはどこにも無い。
+      dash = unlinked("あいみょん - マリーゴールド")
+      plain = unlinked("マリーゴールド", "あいみょん")
+      # ↑ plain は「マリーゴールド」+「あいみょん」であって「あいみょん」+「マリーゴールド」ではない
+
+      described_class.call(dry_run: false)
+
+      # dash は裏付けの向き(曲=マリーゴールド, 歌手=あいみょん)で解決されるため plain と一致する。
+      expect(dash.reload.song_master_id).to eq(plain.reload.song_master_id)
+    end
+
+    it "両向きに裏付けがある曖昧なケースは分解せず、元の文字列のまま別SongMasterにすること" do
+      # 「Sound」/「Vision」の両向きを裏付けるデータを用意する。
+      unlinked("Sound", "Vision")
+      unlinked("Vision", "Sound")
+      ambiguous = unlinked("Sound / Vision")
+
+      described_class.call(dry_run: false)
+
+      expect(ambiguous.reload.song_master.normalized_song_name)
+        .to eq(SongMasters::Resolver.normalize("Sound / Vision"))
+      expect(ambiguous.song_master.normalized_artist_name).to eq("")
+    end
+
+    it "dry-runでは上記の名寄せ予定を返すだけでDBを変更しないこと" do
+      unlinked("マリーゴールド", "あいみょん")
+      embedded = unlinked("あいみょん - マリーゴールド")
+
+      result = nil
+      expect { result = described_class.call(dry_run: true) }.not_to change(SongMaster, :count)
+      expect(embedded.reload.song_master_id).to be_nil
+      expect(result.relinks.map(&:song_id)).to include(embedded.id)
+    end
+
+    it "処理順を変えても同じSongMasterへ解決すること(冪等・順序非依存)" do
+      forms = [
+        ["マリーゴールド", "あいみょん"],
+        ["マリーゴールド（あいみょん）", nil],
+        ["あいみょん - マリーゴールド", nil],
+        ["【Key+4】あいみょん - マリーゴールド", nil]
+      ]
+      created = forms.shuffle.map { |song_name, artist_name| unlinked(song_name, artist_name) }
+
+      described_class.call(dry_run: false)
+      first = created.map { |s| s.reload.song_master_id }
+
+      # 再実行しても変化しない
+      expect { described_class.call(dry_run: false) }
+        .not_to change { created.map { |s| s.reload.song_master_id } }
+      expect(first.compact.uniq.size).to eq(1)
+    end
+  end
 end

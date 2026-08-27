@@ -11,15 +11,26 @@ module PerformanceHistory
   # 誤って現行パートへ寄せると経験者検索の精度を損なう(存在しない経験を「あり」と
   # 誤表示してしまう)ため、あえてマッピングしない。マッピングできない値はnilを返し、
   # 呼び出し側で「一致させない」扱いにする。
+  #
+  # レガシーな自由入力に "Guitar(Lead)" / "Guitar(Lythm)"(Rhythmの綴り誤り)のような
+  # 「Lead/Rhythmの区別付きギター」表記が残っている。現行パートに Lead/Rhythm の区別は無く
+  # (JoinPart::NAME_OPTIONSは Guitar のみ)、演奏実績・経験者検索は「Guitar系の演奏経験があるか」を
+  # 見る用途のため、検索時の突合ではこれらを Guitar として扱う。DB上の値("Lythm"の綴りを含む)は
+  # 書き換えない。
   module PartNameNormalizer
-    # ユーザーが安全と判断した表記ゆれのみを対象とする。キーは小文字化して比較するため
-    # 大文字小文字の違い(Vo/VO/vo等)は自動的に吸収される。
+    # ユーザーが安全と判断した表記ゆれのみを対象とする。キーは小文字化 + 空白除去して比較するため
+    # 大文字小文字の違い(Vo/VO/vo等)・空白ゆれ("Guitar (Lead)"等)は自動的に吸収される。
     SAFE_ALIASES = {
       "vo" => "Vocal",
       "ボーカル" => "Vocal",
       "ヴォーカル" => "Vocal",
       "gt" => "Guitar",
       "ギター" => "Guitar",
+      "guitar(lead)" => "Guitar",
+      "guitar(rhythm)" => "Guitar",
+      "guitar(lythm)" => "Guitar", # "Rhythm" の綴り誤り。既存DB値をそのまま突合するため許容する。
+      "leadguitar" => "Guitar",
+      "rhythmguitar" => "Guitar",
       "ba" => "Bass",
       "ベース" => "Bass",
       "dr" => "Drums",
@@ -36,7 +47,8 @@ module PerformanceHistory
       # 既に現行の選択肢そのものであれば、それを正とする(最も多いケースの高速パス)。
       return name if JoinPart::NAME_OPTIONS.include?(name)
 
-      SAFE_ALIASES[name.downcase]
+      key = name.downcase
+      SAFE_ALIASES[key] || SAFE_ALIASES[key.gsub(/[[:space:]]+/, "")]
     end
   end
 end

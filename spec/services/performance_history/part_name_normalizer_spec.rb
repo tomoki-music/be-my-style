@@ -30,6 +30,18 @@ RSpec.describe PerformanceHistory::PartNameNormalizer do
       expect(described_class.normalize("キーボード")).to eq "Keyboard"
     end
 
+    it 'Lead/Rhythmの区別付きギター表記(Guitar(Lead)/Guitar(Lythm))を検索用にGuitarへ寄せること' do
+      expect(described_class.normalize("Guitar(Lead)")).to eq "Guitar"
+      expect(described_class.normalize("Guitar(Lythm)")).to eq "Guitar"
+      expect(described_class.normalize("Guitar(Rhythm)")).to eq "Guitar"
+    end
+
+    it 'ギター区別表記の空白ゆれ・大文字小文字ゆれも吸収すること' do
+      expect(described_class.normalize("guitar (lead)")).to eq "Guitar"
+      expect(described_class.normalize(" Guitar(Lythm) ")).to eq "Guitar"
+      expect(described_class.normalize("Lead Guitar")).to eq "Guitar"
+    end
+
     it '意味を一意に決められない値は勝手に一致させず、nilを返すこと' do
       %w[Cho Chorus コーラス Percussion].each do |ambiguous|
         expect(described_class.normalize(ambiguous)).to be_nil
