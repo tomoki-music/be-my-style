@@ -17,6 +17,23 @@ module Public::EventsHelper
     @experienced_customers_by_song_part[key]
   end
 
+  # 表示中の曲・パート・経験者に対する直近のエントリー依頼メール送信レコードを返す(無ければ nil)。
+  # コントローラで1クエリ取得済みの @entry_invitations_by_key(キー: [song_id, join_part_id, customer_id])
+  # のみを参照し、曲数×パート数×経験者数分の追加クエリを発生させない。
+  def entry_invitation_for(song, join_part, customer)
+    (@entry_invitations_by_key || {})[[song.id, join_part.id, customer.id]]
+  end
+
+  # エントリー依頼パネル(_entry_invitation_panel)に表示する、経験者ごとの送信状態バッジ文言。
+  # 戻り値: 文言(String) / nil(未送信)
+  def entry_invitation_status_label(invitation)
+    return nil if invitation.nil?
+    return "送信失敗" if invitation.failed?
+    return nil if invitation.sent_at.blank?
+
+    "依頼済み（#{l(invitation.sent_at, format: :short)}）"
+  end
+
   def youtube_card_for(song)
     return nil if song.youtube_url.blank?
 

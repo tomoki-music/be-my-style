@@ -115,6 +115,8 @@ Rails.application.routes.draw do
       post "join" => "events#join"
       delete "delete" => "events#delete"
       get "join_confirm" => "events#join_confirm"
+      # 演奏経験者へのエントリー依頼メール送信(new=確認画面, create=送信)。
+      resources :entry_invitations, only: [:new, :create]
       resources :songs, only: [:create, :destroy, :show]
       resources :requests, only: [:create, :destroy] do
         post "preview" => "requests#preview", on: :collection

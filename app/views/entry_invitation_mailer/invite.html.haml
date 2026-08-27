@@ -1,0 +1,36 @@
+%p #{@recipient.name}さん
+%p
+  イベント「#{@event.event_name}」の楽曲パートについて、
+  %br
+  主催者からエントリーのお願いが届きました。
+%table
+  %tr
+    %td 楽曲：
+    %td= @song.song_name
+  - if @song.artist_name.present?
+    %tr
+      %td アーティスト：
+      %td= @song.artist_name
+  %tr
+    %td 募集パート：
+    %td= @join_part.join_part_name
+  %tr
+    %td 開催日：
+    %td= l @open_on.to_date, format: :long
+%p
+  これまでの演奏経験を活かして、
+  %br
+  よろしければこのパートにエントリーしませんか？
+%p
+  イベント詳細・エントリーはこちら：
+  %br
+  = link_to @event_url, @event_url
+%p
+  ※このメールは、過去のイベントで同じ楽曲・パートにエントリーした実績をもとに送信されています。
+%hr
+%p
+  Thank you for using BeMyStyle🎵
+%p
+  メール通知の停止は「マイページ」より設定変更いただけます。
+  %br
+  = link_to @mypage, @mypage
