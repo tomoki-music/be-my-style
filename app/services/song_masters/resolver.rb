@@ -32,6 +32,11 @@ module SongMasters
     }.freeze
     QUOTE_NORMALIZATION_PATTERN = Regexp.union(QUOTE_NORMALIZATION_MAP.keys).freeze
 
+    # 「曲名（アーティスト名）」形式(末尾の丸括弧にアーティスト名を書き、アーティスト名欄は空)を
+    # 「曲名」+アーティスト名欄 と同じキーへ寄せるためのパターン。半角/全角括弧の両対応。
+    # 括弧の中身・括弧より前の曲名がいずれも非空のときだけ分解する(誤った切り出しを避ける)。
+    EMBEDDED_ARTIST_PATTERN = /\A(?<title>.+?)[[:space:]]*[(（](?<artist>[^()（）]+)[)）][[:space:]]*\z/
+
     def self.call(song_name:, artist_name:)
       new(song_name, artist_name).call
     end
@@ -44,12 +49,31 @@ module SongMasters
     def call
       return nil if @song_name.blank?
 
-      normalized_song_name = self.class.normalize(@song_name)
+      song_name, artist_name = self.class.split_embedded_artist(@song_name, @artist_name)
+
+      normalized_song_name = self.class.normalize(song_name)
       return nil if normalized_song_name.blank?
 
-      normalized_artist_name = self.class.normalize(@artist_name)
+      normalized_artist_name = self.class.normalize(artist_name)
 
-      find_or_create(normalized_song_name, normalized_artist_name)
+      find_or_create(normalized_song_name, normalized_artist_name, song_name, artist_name)
+    end
+
+    # アーティスト名欄が空で、曲名が「曲名（アーティスト名）」形式のとき、括弧内をアーティスト名として
+    # 切り出した [曲名, アーティスト名] を返す。それ以外(アーティスト名欄が入力済み・括弧が無い・
+    # 切り出すと曲名や括弧内が空になる)は [元の曲名, 元のアーティスト名] をそのまま返す。
+    # 例: ("マリーゴールド（あいみょん）", nil) -> ["マリーゴールド", "あいみょん"]
+    def self.split_embedded_artist(song_name, artist_name)
+      return [song_name, artist_name] if artist_name.to_s.strip.present?
+
+      match = song_name.to_s.strip.match(EMBEDDED_ARTIST_PATTERN)
+      return [song_name, artist_name] if match.nil?
+
+      title = match[:title].strip
+      embedded_artist = match[:artist].strip
+      return [song_name, artist_name] if title.blank? || embedded_artist.blank?
+
+      [title, embedded_artist]
     end
 
     # NFKC正規化(全角/半角ゆれ・全角スペースを吸収) + 引用符/アポストロフィのASCII統一 +
@@ -65,19 +89,19 @@ module SongMasters
 
     private
 
-    def find_or_create(normalized_song_name, normalized_artist_name, attempt: 0)
+    def find_or_create(normalized_song_name, normalized_artist_name, display_song_name, display_artist_name, attempt: 0)
       SongMaster.find_or_create_by!(
         normalized_song_name: normalized_song_name,
         normalized_artist_name: normalized_artist_name
       ) do |master|
-        master.song_name = @song_name.to_s.strip
-        master.artist_name = @artist_name.to_s.strip.presence
+        master.song_name = display_song_name.to_s.strip
+        master.artist_name = display_artist_name.to_s.strip.presence
       end
     rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
       # find_or_create_by!の内部find/create間で競合した場合の再試行。
       raise if attempt >= 2
 
-      find_or_create(normalized_song_name, normalized_artist_name, attempt: attempt + 1)
+      find_or_create(normalized_song_name, normalized_artist_name, display_song_name, display_artist_name, attempt: attempt + 1)
     end
   end
 end

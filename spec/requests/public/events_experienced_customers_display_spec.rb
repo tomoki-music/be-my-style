@@ -162,6 +162,52 @@ RSpec.describe "Public::Events#show 楽曲パート募集欄の経験者表示",
     expect(response.body).to include("経験太郎")
   end
 
+  describe '曲名にアーティスト名を含む表記(「曲名（アーティスト名）」)と、曲名+アーティスト欄の表記が混在する場合' do
+    # 実運用データで頻出: 過去イベントは song_name="マリーゴールド（あいみょん）" / artist_name 空、
+    # 現在イベントは song_name="マリーゴールド" / artist_name="あいみょん" のように登録形式がずれる。
+    # 同じ曲なので、経験者(見出し・氏名・公開プロフィールリンク)が表示されなければならない。
+    it '過去=「曲名（アーティスト名）」・現在=「曲名」+アーティスト欄 でも同一曲として経験者に表示されること(PC/スマホ両方)' do
+      embedded_past_song = FactoryBot.create(:song, event: past_event, song_name: "マリーゴールド（あいみょん）", artist_name: nil)
+      split_current_song = FactoryBot.create(:song, event: current_event, song_name: "マリーゴールド", artist_name: "あいみょん")
+      expect(split_current_song.song_master_id).to eq(embedded_past_song.song_master_id)
+
+      past_guitar_part = FactoryBot.create(:join_part, song: embedded_past_song, join_part_name: "Guitar")
+      FactoryBot.create(:join_part, song: split_current_song, join_part_name: "Guitar") # 現在イベント側の募集中スロット
+      FactoryBot.create(:join_part_customer, join_part: past_guitar_part, customer: experienced_customer)
+
+      get public_event_path(current_event)
+
+      expect(response.body).to include("演奏経験のある人")
+      expect(response.body).to include("経験太郎")
+
+      doc = Nokogiri::HTML(response.body)
+      # 公開プロフィールへのリンクとして描画されること
+      profile_links = doc.css(".experienced-customers__name[href='#{public_customer_path(experienced_customer)}']")
+      expect(profile_links).to be_present
+      # スマホ用募集ショートカット(.recruiting-parts 内)に描画されること
+      mobile_names = doc.css(".recruiting-parts .experienced-customers__name")
+      expect(mobile_names.text).to include("経験太郎")
+      # PC用パート列(.recruiting-parts の外側)にも描画されること
+      pc_names = doc.css(".experienced-customers__name").reject { |node| node.ancestors(".recruiting-parts").any? }
+      expect(pc_names.map(&:text).join).to include("経験太郎")
+    end
+
+    it '過去=「曲名」+アーティスト欄・現在=「曲名（アーティスト名）」の逆パターンでも経験者に表示されること' do
+      split_past_song = FactoryBot.create(:song, event: past_event, song_name: "マリーゴールド", artist_name: "あいみょん")
+      embedded_current_song = FactoryBot.create(:song, event: current_event, song_name: "マリーゴールド（あいみょん）", artist_name: nil)
+      expect(embedded_current_song.song_master_id).to eq(split_past_song.song_master_id)
+
+      past_vocal = FactoryBot.create(:join_part, song: split_past_song, join_part_name: "Vocal")
+      FactoryBot.create(:join_part, song: embedded_current_song, join_part_name: "Vocal")
+      FactoryBot.create(:join_part_customer, join_part: past_vocal, customer: experienced_customer)
+
+      get public_event_path(current_event)
+
+      expect(response.body).to include("演奏経験のある人")
+      expect(response.body).to include("経験太郎")
+    end
+  end
+
   it '「演奏実績を確定」ボタンが表示されないこと(動的表示のため確定操作が不要、主催者が閲覧しても表示されない)' do
     owner_past_event = FactoryBot.create(
       :event, :event_with_songs, community: community, customer: viewer,

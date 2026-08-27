@@ -82,6 +82,42 @@ RSpec.describe SongMasters::Resolver, type: :model do
       }.not_to change(SongMaster, :count)
     end
 
+    describe '曲名に「（アーティスト名）」を含み、アーティスト名欄が空のケースの名寄せ' do
+      it '「曲名（アーティスト名）」(アーティスト欄空) と 「曲名」+アーティスト欄 を同一SongMasterへ名寄せすること' do
+        embedded = described_class.call(song_name: "マリーゴールド（あいみょん）", artist_name: nil)
+        split = described_class.call(song_name: "マリーゴールド", artist_name: "あいみょん")
+
+        expect(embedded.id).to eq(split.id)
+      end
+
+      it '半角括弧「曲名(アーティスト名)」でも同様に名寄せすること' do
+        embedded = described_class.call(song_name: "マリーゴールド(あいみょん)", artist_name: "")
+        split = described_class.call(song_name: "マリーゴールド", artist_name: "あいみょん")
+
+        expect(embedded.id).to eq(split.id)
+      end
+
+      it '括弧前後の空白ゆれがあっても名寄せすること' do
+        embedded = described_class.call(song_name: "マリーゴールド （あいみょん）", artist_name: nil)
+        split = described_class.call(song_name: "マリーゴールド", artist_name: "あいみょん")
+
+        expect(embedded.id).to eq(split.id)
+      end
+
+      it 'アーティスト名欄が入力済みなら曲名の括弧は分解しないこと(feat.等の既存挙動を維持)' do
+        with_paren = described_class.call(song_name: "曲名（東京）", artist_name: "アーティスト")
+        plain = described_class.call(song_name: "曲名", artist_name: "アーティスト")
+
+        expect(with_paren.id).not_to eq(plain.id)
+      end
+
+      it '括弧の前に曲名が無い場合は分解せず、そのまま扱うこと' do
+        master = described_class.call(song_name: "（あいみょん）", artist_name: nil)
+
+        expect(master.normalized_artist_name).to eq("")
+      end
+    end
+
     describe '意味的な表記ゆれは自動で同一視しないこと(誤統合防止)' do
       it '丸の内と丸ノ内は別のSongMasterになること' do
         first = described_class.call(song_name: "丸の内サディスティック", artist_name: "アーティスト")

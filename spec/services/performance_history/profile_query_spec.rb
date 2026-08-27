@@ -55,6 +55,24 @@ RSpec.describe PerformanceHistory::ProfileQuery do
     expect(summaries.first.count).to eq 2
   end
 
+  it '「曲名（アーティスト名）」形式と「曲名」+アーティスト欄形式の演奏を、同一曲の実績としてまとめること' do
+    embedded_event = FactoryBot.create(:event, :event_with_songs, community: community)
+    embedded_song = FactoryBot.create(:song, event: embedded_event, song_name: "マリーゴールド（あいみょん）", artist_name: nil)
+    embedded_part = FactoryBot.create(:join_part, song: embedded_song, join_part_name: "Vocal")
+
+    split_event = FactoryBot.create(:event, :event_with_songs, community: community)
+    split_song = FactoryBot.create(:song, event: split_event, song_name: "マリーゴールド", artist_name: "あいみょん")
+    split_part = FactoryBot.create(:join_part, song: split_song, join_part_name: "Vocal")
+
+    FactoryBot.create(:join_part_customer, join_part: embedded_part, customer: customer)
+    FactoryBot.create(:join_part_customer, join_part: split_part, customer: customer)
+
+    summaries = call
+
+    expect(summaries.size).to eq 1
+    expect(summaries.first.count).to eq 2
+  end
+
   it '新しい順に並ぶこと' do
     older_event = FactoryBot.create(:event, :event_with_songs, community: community, event_start_time: 10.years.ago, event_end_time: 10.years.ago + 1.hour, event_entry_deadline: 10.years.ago - 1.day)
     older_song = FactoryBot.create(:song, event: older_event, song_name: "古い曲")
