@@ -68,18 +68,32 @@ namespace :song_masters do
   # 孤立SongMaster削除の安全策はそちらを参照)。
   #
   # 使い方:
-  #   bundle exec rails song_masters:backfill_songs
-  #   DRY_RUN=true bundle exec rails song_masters:backfill_songs   # DBを一切変更せず予定のみ表示
-  desc "既存SongをSongMasterへ(再)紐付けし、孤立したSongMasterを整理する"
+  #   bundle exec rails song_masters:backfill_songs                     # 再リンクのみ(SongMasterは削除しない)
+  #   DRY_RUN=true bundle exec rails song_masters:backfill_songs        # DBを一切変更せず予定のみ表示
+  #   DELETE_ORPHANS=true bundle exec rails song_masters:backfill_songs # 再リンク + 孤立SongMaster削除
+  #
+  # 再リンクと孤立SongMaster削除は分離している。デフォルトは再リンクのみで、
+  # 孤立SongMasterの物理削除は DELETE_ORPHANS=true を明示したときだけ実施する
+  # (再リンク後にデータ・実ブラウザ確認をしてから削除を判断する運用のため)。
+  desc "既存SongをSongMasterへ(再)紐付けする(DELETE_ORPHANS=trueで孤立SongMasterも削除)"
   task backfill_songs: :environment do
     dry_run = ENV["DRY_RUN"] == "true"
+    delete_orphans = ENV["DELETE_ORPHANS"] == "true"
 
     log = lambda do |message|
       puts message
       Rails.logger.info("[song_masters:backfill_songs] #{message}")
     end
 
-    log.call(dry_run ? "DRY RUNモードで実行します(DBは一切変更しません)" : "バックフィルを開始します")
-    SongMasters::BackfillSongs.call(dry_run: dry_run, logger: log)
+    mode =
+      if dry_run
+        "DRY RUNモードで実行します(DBは一切変更しません)"
+      elsif delete_orphans
+        "バックフィルを開始します(再リンク + 孤立SongMaster削除)"
+      else
+        "バックフィルを開始します(再リンクのみ。孤立SongMasterは削除しません)"
+      end
+    log.call(mode)
+    SongMasters::BackfillSongs.call(dry_run: dry_run, delete_orphans: delete_orphans, logger: log)
   end
 end

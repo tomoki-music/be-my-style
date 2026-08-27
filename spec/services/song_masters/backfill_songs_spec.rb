@@ -77,7 +77,28 @@ RSpec.describe SongMasters::BackfillSongs do
   end
 
   describe "dry_run: false" do
-    it "トランザクション内で再リンクし、その後に孤立SongMasterを削除すること" do
+    it "デフォルト(delete_orphans未指定)では再リンクのみ行い、孤立SongMasterを削除しないこと" do
+      canonical = SongMasters::Resolver.call(song_name: "分離確認曲", artist_name: "P")
+      wrong = FactoryBot.create(
+        :song_master,
+        song_name: "分離確認曲（P）",
+        normalize: false,
+        normalized_song_name: SongMasters::Resolver.normalize("分離確認曲（P）"),
+        normalized_artist_name: ""
+      )
+      song = FactoryBot.create(:song, event: event, song_name: "分離確認曲（P）", artist_name: nil)
+      song.update_column(:song_master_id, wrong.id)
+
+      result = described_class.call(dry_run: false)
+
+      expect(song.reload.song_master_id).to eq(canonical.id)
+      expect(SongMaster.exists?(wrong.id)).to be(true)
+      expect(result.deleted_song_master_ids).to be_empty
+      # 削除候補としては見えているが、削除は保留されている
+      expect(result.orphans.map(&:song_master_id)).to include(wrong.id)
+    end
+
+    it "delete_orphans: true のとき、トランザクション内で再リンクし、その後に孤立SongMasterを削除すること" do
       canonical = SongMasters::Resolver.call(song_name: "本実行曲", artist_name: "P")
       wrong = FactoryBot.create(
         :song_master,
@@ -89,7 +110,7 @@ RSpec.describe SongMasters::BackfillSongs do
       song = FactoryBot.create(:song, event: event, song_name: "本実行曲（P）", artist_name: nil)
       song.update_column(:song_master_id, wrong.id)
 
-      result = described_class.call(dry_run: false)
+      result = described_class.call(dry_run: false, delete_orphans: true)
 
       expect(song.reload.song_master_id).to eq(canonical.id)
       expect(song.reload.song_master.artist_name).to eq("P")

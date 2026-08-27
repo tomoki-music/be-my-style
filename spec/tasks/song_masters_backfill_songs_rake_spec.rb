@@ -19,6 +19,13 @@ RSpec.describe "song_masters:backfill_songs rakeタスク" do
     ENV.delete("DRY_RUN")
   end
 
+  def run_task_with_orphan_deletion
+    ENV["DELETE_ORPHANS"] = "true"
+    run_task
+  ensure
+    ENV.delete("DELETE_ORPHANS")
+  end
+
   # Eventはsongs presenceバリデーションがあるため、:event_with_songsトレイトで1曲を持たせる。
   let(:event) { FactoryBot.create(:event, :event_with_songs) }
 
@@ -96,7 +103,25 @@ RSpec.describe "song_masters:backfill_songs rakeタスク" do
       expect { run_task }.not_to change { song.reload.song_master_id }
     end
 
-    it "再リンク成功後、参照が無くなったSongMasterを削除すること" do
+    it "デフォルト実行では孤立SongMasterを削除しないこと(再リンクのみ)" do
+      SongMasters::Resolver.call(song_name: "据え置き対象", artist_name: "P")
+      wrong = FactoryBot.create(
+        :song_master,
+        song_name: "据え置き対象（P）",
+        normalize: false,
+        normalized_song_name: SongMasters::Resolver.normalize("据え置き対象（P）"),
+        normalized_artist_name: ""
+      )
+      song = FactoryBot.create(:song, event: event, song_name: "据え置き対象（P）", artist_name: nil)
+      song.update_column(:song_master_id, wrong.id)
+
+      run_task
+
+      expect(song.reload.song_master.artist_name).to eq("P")
+      expect(SongMaster.exists?(wrong.id)).to be(true)
+    end
+
+    it "DELETE_ORPHANS=true のとき、再リンク成功後、参照が無くなったSongMasterを削除すること" do
       # 括弧内切り出しの裏付けとして「曲名」+「アーティスト欄」入力済みの既存SongMasterを用意する。
       SongMasters::Resolver.call(song_name: "削除対象", artist_name: "P")
       wrong = FactoryBot.create(
@@ -109,17 +134,17 @@ RSpec.describe "song_masters:backfill_songs rakeタスク" do
       song = FactoryBot.create(:song, event: event, song_name: "削除対象（P）", artist_name: nil)
       song.update_column(:song_master_id, wrong.id)
 
-      run_task
+      run_task_with_orphan_deletion
 
       expect(SongMaster.exists?(wrong.id)).to be(false)
       expect(song.reload.song_master).to be_present
     end
 
-    it "customer_song_partsから参照されているSongMasterは削除しないこと" do
+    it "DELETE_ORPHANS=true でも customer_song_partsから参照されているSongMasterは削除しないこと" do
       referenced = FactoryBot.create(:song_master, song_name: "参照ありマスター", artist_name: "P")
       FactoryBot.create(:customer_song_part, song: nil, song_master: referenced, part_name: "Vocal")
 
-      run_task
+      run_task_with_orphan_deletion
 
       expect(SongMaster.exists?(referenced.id)).to be(true)
     end

@@ -8,8 +8,11 @@ module SongMasters
   # 安全設計:
   # - dry_run: true の場合、DBを一切変更しない(SongMasterのfind_or_createも行わず、
   #   既存SongMasterの検索のみ)。実行予定の内容だけを組み立てて返す。
-  # - 通常実行は単一トランザクション内で「再リンク → 孤立SongMaster削除」の順に行う。
+  # - 通常実行は単一トランザクション内で「再リンク(→ delete_orphans時のみ 孤立SongMaster削除)」を行う。
   #   途中で例外が発生すれば全体がロールバックされ、中途半端な状態を残さない。
+  # - 孤立SongMasterの削除は再リンクと分離しており、delete_orphans: true を明示したときだけ実施する。
+  #   デフォルト(delete_orphans: false)は再リンクのみを行い、SongMasterは1件も削除しない。
+  #   これは「再リンク後にデータ・実ブラウザ確認をしてから削除を判断する」運用のための分離。
   # - 孤立SongMasterの削除は再リンク完了後にのみ実施し、かつ削除直前に
   #   「参照Songが0件」「customer_song_partsから参照されていない」ことを再確認する。
   # - SongMasterの解決自体はResolverに委譲するため、意味的に異なる曲を統合することはない。
@@ -39,12 +42,13 @@ module SongMasters
       end
     end
 
-    def self.call(dry_run:, logger: ->(_message) {})
-      new(dry_run: dry_run, logger: logger).call
+    def self.call(dry_run:, delete_orphans: false, logger: ->(_message) {})
+      new(dry_run: dry_run, delete_orphans: delete_orphans, logger: logger).call
     end
 
-    def initialize(dry_run:, logger:)
+    def initialize(dry_run:, delete_orphans: false, logger:)
       @dry_run = dry_run
+      @delete_orphans = delete_orphans
       @logger = logger
     end
 
@@ -59,7 +63,7 @@ module SongMasters
       unless @dry_run
         ActiveRecord::Base.transaction do
           relink_songs!
-          deleted_song_master_ids = delete_orphan_song_masters!
+          deleted_song_master_ids = delete_orphan_song_masters! if @delete_orphans
         end
       end
 
@@ -244,7 +248,13 @@ module SongMasters
             "対象Song##{plan.song_ids.join(',')}")
       end
 
-      log("孤立して削除候補となるSongMaster: #{@orphans.size}件")
+      orphan_action =
+        if @delete_orphans
+          "(delete_orphans: true のため削除します)"
+        else
+          "(delete_orphans 未指定のため削除しません。再リンクのみ実施)"
+        end
+      log("孤立して削除候補となるSongMaster: #{@orphans.size}件 #{orphan_action}")
       @orphans.each do |plan|
         log("  SongMaster##{plan.song_master_id} song_name=#{plan.song_name.inspect} " \
             "artist_name=#{plan.artist_name.inspect} 現在の参照Song数=#{plan.current_referencing_song_count}件" \
@@ -263,7 +273,11 @@ module SongMasters
       else
         log("== 実行結果 ==")
         log("再リンクしたSong: #{result.relink_count}件(予定ベース)")
-        log("削除したSongMaster: #{result.deleted_song_master_ids.size}件 #{result.deleted_song_master_ids.inspect}")
+        if @delete_orphans
+          log("削除したSongMaster: #{result.deleted_song_master_ids.size}件 #{result.deleted_song_master_ids.inspect}")
+        else
+          log("孤立SongMasterの削除: 実施していません(delete_orphans 未指定)。削除候補 #{result.orphans.size}件は据え置き")
+        end
       end
       log("Song件数: #{result.songs_before} -> #{result.songs_after}")
       log("SongMaster件数: #{result.song_masters_before} -> #{result.song_masters_after}")
