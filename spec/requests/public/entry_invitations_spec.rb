@@ -246,6 +246,35 @@ RSpec.describe "Public::EntryInvitations", type: :request do
       expect(response).to redirect_to(public_event_path(current_event))
     end
 
+    # UI では disabled チェックボックスとして描画され targets[] を持たない候補。
+    # devtools 等で token を手組みして POST しても、サーバー側(TargetResolver / Sender)が
+    # 再検証して送信しないことを保証する。
+    it "改ざん: 募集終了パート(UI では disabled)の token を手動 POST しても送信しない" do
+      FactoryBot.create(:join_part_customer, join_part: current_vocal, customer: FactoryBot.create(:customer))
+
+      expect {
+        perform_enqueued_jobs do
+          post create_path, params: create_params([target(current_song_a, current_vocal, experienced_customer)])
+        end
+      }.not_to change(EntryInvitation, :count)
+
+      expect(ActionMailer::Base.deliveries).to be_empty
+      expect(response).to redirect_to(public_event_path(current_event))
+    end
+
+    it "改ざん: 24時間以内に依頼済み(UI では disabled)の token を単独で手動 POST してもメールは飛ばない" do
+      FactoryBot.create(:entry_invitation,
+        event: current_event, song: current_song_a, join_part: current_vocal,
+        customer: experienced_customer, requested_by_customer: owner, sent_at: 1.hour.ago)
+
+      perform_enqueued_jobs do
+        post create_path, params: create_params([target(current_song_a, current_vocal, experienced_customer)])
+      end
+
+      expect(ActionMailer::Base.deliveries).to be_empty
+      expect(EntryInvitation.where(song: current_song_a, join_part: current_vocal, customer: experienced_customer).count).to eq 1
+    end
+
     it "24時間以内に送信済みの対象はスキップし、部分成功の flash を出す" do
       FactoryBot.create(:entry_invitation,
         event: current_event, song: current_song_a, join_part: current_vocal,

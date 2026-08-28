@@ -78,7 +78,7 @@ module Public::EventsHelper
     end
 
     if @event&.ended?
-      return EntryInvitationCandidateState.new(key: :event_ended, checkbox_enabled: false, badge: nil)
+      return EntryInvitationCandidateState.new(key: :event_ended, checkbox_enabled: false, badge: "開催終了")
     end
 
     unless song.recruiting_join_parts.any? { |part| part.id == join_part.id }
