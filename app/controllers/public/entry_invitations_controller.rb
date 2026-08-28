@@ -2,26 +2,34 @@ class Public::EntryInvitationsController < ApplicationController
   before_action :authenticate_customer!
   before_action :set_event
   before_action :authorize_sender!
-  before_action :set_song_and_join_part
 
-  # 確認画面。選択された customer_id 群は信用せず、サーバー側で
-  # 「このイベント・この曲・このパートの演奏経験者」に絞り直したうえで表示する。
+  # 確認画面。パネルから GET で渡される targets[] は信用せず、TargetResolver で
+  # 「このイベント・募集中の曲/パート・その演奏経験者」だけに絞り直して表示する。
+  # hidden field へ持ち越すのも検証済みトークンのみ。
   def new
-    @recipients = eligible_recipients(requested_customer_ids_from_query)
+    parsed_count = EntryInvitations::TargetParser.parse(params[:targets]).size
 
-    if @recipients.empty?
-      redirect_to public_event_path(@event), alert: "送信対象者が選択されていません。"
+    if parsed_count > EntryInvitations::TargetParser::MAX_TARGETS
+      redirect_to public_event_path(@event),
+        alert: "一度に選択できるのは#{EntryInvitations::TargetParser::MAX_TARGETS}人までです。数を減らして選び直してください。"
+      return
     end
+
+    @groups = EntryInvitations::TargetResolver.call(event: @event, raw_targets: params[:targets])
+    @recipient_count = @groups.sum { |group| group.customers.size }
+
+    return unless @groups.empty?
+
+    redirect_to public_event_path(@event), alert: "送信対象者が選択されていません。"
   end
 
-  # 実送信(非同期)。送信対象・権限は EntryInvitations::Sender が再計算する。
+  # 実送信(非同期)。確認画面の hidden field も信用せず、BatchSender / Sender が
+  # 曲・パート・経験者・権限・再送間隔をサーバー側で再計算する。
   def create
-    result = EntryInvitations::Sender.call(
+    result = EntryInvitations::BatchSender.call(
       event: @event,
-      song: @song,
-      join_part: @join_part,
       sender: current_customer,
-      requested_customer_ids: create_params[:customer_ids]
+      raw_targets: params[:targets]
     )
 
     unless result.success?
@@ -44,48 +52,17 @@ class Public::EntryInvitationsController < ApplicationController
     redirect_to public_event_path(@event), alert: "この操作を行う権限がありません。"
   end
 
-  def set_song_and_join_part
-    song_id = params[:song_id].presence || create_params[:song_id]
-    join_part_id = params[:join_part_id].presence || create_params[:join_part_id]
-
-    @song = @event.songs.find_by(id: song_id)
-    @join_part = @song&.join_parts&.find_by(id: join_part_id)
-
-    return if @song && @join_part
-
-    redirect_to public_event_path(@event), alert: "曲またはパートの指定が正しくありません。"
-  end
-
-  def create_params
-    params.fetch(:entry_invitation, {}).permit(:song_id, :join_part_id, customer_ids: [])
-  end
-
-  # "12" のような正の整数文字列のみ許可する(Public::EventsController#normalize_join_part_ids と同じ考え方)。
-  def requested_customer_ids_from_query
-    Array(params[:customer_ids]).map { |id| id.to_s.strip }.select { |id| id.match?(/\A\d+\z/) }.map(&:to_i).uniq
-  end
-
-  # 確認画面表示用。Sender と同じ経験者集合で交差を取る(表示と実送信のズレ防止)。
-  def eligible_recipients(customer_ids)
-    key = PerformanceHistory::ExperiencedCustomersQuery.key_for(@song.song_master_id, @join_part.join_part_name)
-    return [] if key.nil?
-
-    experienced = PerformanceHistory::ExperiencedCustomersQuery.call(@event).fetch(key, [])
-    experienced_by_id = experienced.index_by(&:id)
-    customer_ids.filter_map { |id| experienced_by_id[id] }
-  end
-
+  # 過度に技術的でない日本語で「送信できた数 / 送信済みでスキップ / 対象外でスキップ」をまとめる。
   def flash_for(result)
-    payload = {}
-    payload[:notice] = "#{result.queued_count}人へエントリー依頼を送信しました。" if result.queued_count.positive?
+    segments = []
+    segments << "#{result.queued_count}件のエントリー依頼を送信しました。" if result.queued_count.positive?
+    segments << "#{result.recently_sent_count}件は送信済みのためスキップしました。" if result.recently_sent_count.positive?
+    segments << "#{result.skipped_count}件は対象外のためスキップしました。" if result.skipped_count.positive?
 
-    if result.skipped.any?
-      counts = result.skipped.group_by { |s| s[:reason] }.transform_values(&:size)
-      details = counts.map { |reason, count| "#{EntryInvitations::Sender::SKIP_REASON_LABELS.fetch(reason, reason)}: #{count}人" }
-      payload[:alert] = "送信しなかった人がいます（#{details.join(' / ')}）。"
+    if result.queued?
+      { notice: segments.join(" ") }
+    else
+      { alert: segments.presence&.join(" ") || "送信できる対象者がいませんでした。" }
     end
-
-    payload[:alert] ||= "送信対象者がいませんでした。" if result.queued_count.zero?
-    payload
   end
 end

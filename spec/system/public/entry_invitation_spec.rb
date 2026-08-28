@@ -1,13 +1,13 @@
 require "rails_helper"
 
-# 演奏経験者へのエントリー依頼パネル(.entry-invitation-panel)の
-# モバイル横スクロール回帰防止 + 選択→確認画面フロー。
+# 演奏経験者へのエントリー依頼パネル(.entry-invitation-panel)。
+# パネル全体が 1 つの GET フォームで、曲・パートをまたいで候補を選び、1 回の操作で
+# 確認画面へ進む。モバイル横スクロール回帰防止も兼ねる。
 #
 # 注記: event_request_markdown_toolbar_spec.rb と同じ理由(このheadless Chrome環境では
 # Seleniumの実クリック/checkがDOMへ反映されない既知の環境制約)により、
-# チェック操作・ボタン押下は page.execute_script で直接行う。
-# レイアウト検証は spec/system/public/customer_song_part_mobile_overflow_spec.rb と同じ
-# CDP Emulation.setDeviceMetricsOverride 方式。
+# チェック操作・送信は page.execute_script で直接行う。
+# レイアウト検証は CDP Emulation.setDeviceMetricsOverride 方式。
 RSpec.describe "エントリー依頼パネル（PC/スマホ）", type: :system do
   before { driven_by :selenium_chrome_headless }
 
@@ -56,14 +56,16 @@ RSpec.describe "エントリー依頼パネル（PC/スマホ）", type: :system
     )
   end
 
+  def checkbox_id(song, part, customer)
+    "entry_invitation_target_#{song.id}_#{part.id}_#{customer.id}"
+  end
+
   def check_via_js(id)
     page.execute_script("document.getElementById(#{id.to_json}).checked = true")
   end
 
-  def click_submit_for(part_id)
-    page.execute_script(
-      "document.querySelector(\".entry-invitation[data-part-id='#{part_id}'] .js-entry-invitation-submit\").click()"
-    )
+  def submit_panel
+    page.execute_script("document.querySelector('.entry-invitation-panel__form .js-entry-invitation-submit').click()")
   end
 
   def expect_panel_within_viewport
@@ -94,26 +96,35 @@ RSpec.describe "エントリー依頼パネル（PC/スマホ）", type: :system
     end
   end
 
-  it "別の曲・パートの選択状態が混在せず、選んだ人だけが確認画面に出る" do
+  it "ページ内の送信ボタンは 1 つだけ" do
+    sign_in_via_form(owner)
+    visit public_event_path(current_event)
+    expect(page).to have_selector(".js-entry-invitation-submit", count: 1)
+  end
+
+  it "複数の曲・パートから選んだ人だけが 1 回の操作で確認画面に出る" do
     sign_in_via_form(owner)
     visit public_event_path(current_event)
     expect(page).to have_selector(".entry-invitation-panel")
 
-    check_via_js("entry_invitation_customer_#{current_song.id}_#{current_vocal.id}_#{experienced_a.id}")
-    click_submit_for(current_vocal.id)
+    check_via_js(checkbox_id(current_song, current_vocal, experienced_a))
+    check_via_js(checkbox_id(current_song, current_guitar, experienced_b))
+    submit_panel
 
     expect(page).to have_content("エントリー依頼の送信確認")
     expect(page).to have_content("経験Ａ")
-    expect(page).not_to have_content("経験Ｂ")
-    expect(page).to have_content("1人")
+    expect(page).to have_content("経験Ｂ")
+    expect(page).to have_content("Vocal")
+    expect(page).to have_content("Guitar")
+    expect(page).to have_content("2人")
   end
 
-  it "未選択で送信ボタンを押すと警告が出て遷移しない" do
+  it "未選択で送信すると警告が出て遷移しない" do
     sign_in_via_form(owner)
     visit public_event_path(current_event)
     expect(page).to have_selector(".entry-invitation-panel")
 
-    message = accept_alert { click_submit_for(current_vocal.id) }
+    message = accept_alert { submit_panel }
 
     expect(message).to include "選択"
     expect(page).to have_selector(".entry-invitation-panel")

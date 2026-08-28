@@ -1,27 +1,31 @@
 // 演奏経験者へのエントリー依頼パネル。
-// 各「曲×募集中パート」ブロック(.entry-invitation)ごとに、チェックした経験者だけを集めて
-// 確認画面へ遷移する。別の曲・別パートの選択状態は同じ .entry-invitation 内に閉じているため混在しない。
-//
+// パネル全体が 1 つの GET フォーム(.entry-invitation-panel__form)で、曲・パートを
+// またいで選択したチェックボックス(targets[])をブラウザ標準の GET 送信で確認画面へ渡す。
+// URL の手組みはしない。JS は以下の補助のみ:
+//   - 未選択のまま送信しようとしたら止めて案内する
+//   - 二重送信(ダブルクリック)を防ぐ
 // turbolinks の再描画に強いよう document へのイベント委譲で実装する。
-document.addEventListener('click', function (event) {
-  var button = event.target.closest ? event.target.closest('.js-entry-invitation-submit') : null;
-  if (!button) return;
+// サーバー側(TargetResolver / BatchSender / Sender)が未選択・不正値・改ざんを必ず再検証する。
+document.addEventListener('submit', function (event) {
+  var form = event.target;
+  if (!form || !form.classList || !form.classList.contains('entry-invitation-panel__form')) return;
 
-  var block = button.closest('.entry-invitation');
-  if (!block) return;
+  var button = form.querySelector('.js-entry-invitation-submit');
+  var checked = form.querySelectorAll('.js-entry-invitation-checkbox:checked');
 
-  var basePath = block.getAttribute('data-base-path');
-  var checked = block.querySelectorAll('.js-entry-invitation-checkbox:checked');
-
-  if (!basePath || checked.length === 0) {
-    window.alert('エントリーをお願いする人を選択してください。');
+  if (checked.length === 0) {
+    event.preventDefault();
+    window.alert('エントリーをお願いする人を1人以上選択してください。');
     return;
   }
 
-  var params = Array.prototype.map.call(checked, function (input) {
-    return 'customer_ids[]=' + encodeURIComponent(input.value);
-  });
-
-  var separator = basePath.indexOf('?') === -1 ? '?' : '&';
-  window.location.href = basePath + separator + params.join('&');
+  if (button) {
+    if (button.getAttribute('data-submitting') === '1') {
+      event.preventDefault();
+      return;
+    }
+    button.setAttribute('data-submitting', '1');
+    button.setAttribute('aria-disabled', 'true');
+    button.textContent = '確認画面へ移動中...';
+  }
 });

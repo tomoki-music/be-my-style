@@ -1418,15 +1418,27 @@ input[type="text"] {
   }
 }
 
-// 演奏経験者へのエントリー依頼パネル。幅の広い楽曲表の外に置き、PC・スマホ共通で
-// 横スクロールを発生させない(min-width を固定せず flex-wrap で折り返す)。
+// 演奏経験者へのエントリー依頼パネル。楽曲行の直下(横スクロールする .table-responsive
+// 内の table 行)へ置くため、セルを左端に sticky 固定し、パネル幅をビューポート幅に
+// クランプする。これで楽曲表を横スクロールしてもパネルは常に画面内へ収まり、
+// パネル起因の横スクロールを新たに発生させない。
+.entry-invitation-row > td {
+  position: sticky;
+  left: 0;
+  max-width: 0;
+  padding: 8px 0;
+}
+
 .entry-invitation-panel {
-  margin: 20px 0 0;
+  margin: 4px 0;
   padding: 12px;
   border: 1px solid #d0d7de;
   border-radius: 10px;
   background: #f8f9fa;
-  max-width: 100%;
+  width: 100%;
+  // 楽曲表の実幅(スクロール領域)ではなくビューポート幅を基準に収める。
+  max-width: calc(100vw - 24px);
+  box-sizing: border-box;
   overflow-wrap: anywhere;
 
   // 幅の狭い端末で長いラベル・ボタン文言が原因の横スクロールを防ぐ。
@@ -1446,6 +1458,10 @@ input[type="text"] {
     color: #6c757d;
     font-size: 0.85rem;
     word-break: break-word;
+  }
+
+  &__actions {
+    margin-top: 12px;
   }
 }
 
@@ -1486,20 +1502,43 @@ input[type="text"] {
     flex-wrap: wrap;
     align-items: center;
     gap: 6px 10px;
-    padding: 4px 0;
+    padding: 6px 0;
     font-size: 0.9rem;
     min-width: 0;
     max-width: 100%;
   }
 
+  // アバター + 名前をまとめてチェックボックスのラベルにする(クリックで選択)。
+  // プロフィールリンクはラベルの外に独立して置く。
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 2px 0;
+    cursor: pointer;
+    min-width: 0;
+
+    .avatar-with-badge {
+      flex: 0 0 auto;
+    }
+
+    .icon_mini {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  }
+
   &__name {
     margin: 0;
-    cursor: pointer;
     word-break: break-word;
   }
 
   &__profile {
     font-size: 0.8rem;
+    white-space: nowrap;
   }
 
   &__status {
@@ -1536,17 +1575,58 @@ input[type="text"] {
     }
   }
 
-  &__recipients {
+  &__lead {
     margin: 0 0 16px;
-    padding-left: 1.2em;
+    color: #6c757d;
+    font-size: 0.9rem;
+    word-break: break-word;
+  }
+
+  &__group {
+    margin: 0 0 16px;
+    padding: 12px;
+    border: 1px solid #e0e4e8;
+    border-radius: 8px;
+  }
+
+  &__group-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0 0 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    word-break: break-word;
+  }
+
+  &__part {
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #0d6efd;
+    color: #fff;
+    font-size: 0.8rem;
+  }
+
+  &__recipients {
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
 
     li {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 8px;
-      padding: 3px 0;
+      padding: 4px 0;
       word-break: break-word;
+    }
+
+    .icon_mini {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
     }
   }
 
