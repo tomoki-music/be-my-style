@@ -103,7 +103,8 @@
               %tr
                 %th{scope:"row"} 演奏実績
                 %td
-                  = render "song_performance_summaries", summaries: @song_performance_summaries
+                  .performance-history-scroll{ tabindex: "0", role: "region", "aria-label": "演奏実績一覧" }
+                    = render "song_performance_summaries", summaries: @song_performance_summaries
             - if @customer_song_parts.present?
               %tr
                 %th{scope:"row"} 演奏可能曲

@@ -420,6 +420,33 @@ input[type="text"] {
   }
 }
 
+/* 演奏実績が多いプロフィールでもページ全体が極端に縦長にならないよう、
+   演奏実績欄だけを max-height 付きの縦スクロール領域にする。
+   演奏可能曲(.song-performance-list 単体)には適用しない。 */
+.performance-history-scroll {
+  max-height: 480px;
+  overflow-y: auto;
+  /* overflow-y を指定すると overflow-x の初期値 visible は auto 相当に計算され、
+     行内要素の折り返し前に一時的な横スクロールバーが出ることがあるため明示的に抑止する。 */
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 4px 10px;
+
+  &:focus-visible {
+    outline: 2px solid #2b6cb0;
+    outline-offset: 2px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .performance-history-scroll {
+    max-height: 360px;
+  }
+}
+
 @media (max-width: 600px) {
   .song-part-form {
     &__form {
