@@ -86,6 +86,58 @@ RSpec.describe Public::EventsHelper, type: :helper do
     end
   end
 
+  describe "#experienced_customers_for" do
+    let(:master) { create(:song_master) }
+    let(:event) { create(:event, :event_with_songs) }
+    let(:song) { create(:song, event: event).tap { |s| s.update_column(:song_master_id, master.id) } }
+    let(:experienced) { create(:customer, name: "経験者") }
+    let(:other_customer) { create(:customer, name: "別パート経験者") }
+
+    it "対象キーが存在する場合はCustomer配列をそのまま返す" do
+      assign(:experienced_customers_by_song_part, { [master.id, "Vocal"] => [experienced] })
+
+      expect(helper.experienced_customers_for(song, "Vocal")).to eq([experienced])
+    end
+
+    it "経験者ハッシュが空なら空配列を返す" do
+      assign(:experienced_customers_by_song_part, {})
+
+      result = helper.experienced_customers_for(song, "Vocal")
+      expect(result).to eq([])
+      expect(result).to be_a(Array)
+    end
+
+    # 本番障害(PR #163)の再現: 別の曲・パートには経験者がいるため
+    # ExperiencedCustomersQuery#call はデフォルト値の無い素のHashを返し、
+    # 経験者のいない対象パートのキーでは nil が返っていた。
+    it "別キーは存在するが対象キーが無い場合は空配列を返す(nilを返さない)" do
+      assign(:experienced_customers_by_song_part, { [master.id, "Guitar"] => [other_customer] })
+
+      result = helper.experienced_customers_for(song, "Vocal")
+      expect(result).to eq([])
+      expect(result).to be_a(Array)
+    end
+
+    it "@experienced_customers_by_song_part が未設定(nil)でも空配列を返す" do
+      result = helper.experienced_customers_for(song, "Vocal")
+      expect(result).to eq([])
+      expect(result).to be_a(Array)
+    end
+
+    it "song_master_id が無い曲は空配列を返す" do
+      no_master_song = build(:song, song_master_id: nil)
+      assign(:experienced_customers_by_song_part, { [master.id, "Vocal"] => [experienced] })
+
+      expect(helper.experienced_customers_for(no_master_song, "Vocal")).to eq([])
+    end
+
+    it "正規化できないパート名は空配列を返す" do
+      assign(:experienced_customers_by_song_part, { [master.id, "Vocal"] => [experienced] })
+
+      expect(helper.experienced_customers_for(song, "Cho")).to eq([])
+    end
+  end
+
   describe "#experienced_customers_for_display" do
     let(:master) { create(:song_master) }
     let(:event) { create(:event, :event_with_songs) }
@@ -105,6 +157,20 @@ RSpec.describe Public::EventsHelper, type: :helper do
     it "exclude が空なら基礎集合をそのまま返す" do
       result = helper.experienced_customers_for_display(song, "Vocal")
       expect(result).to contain_exactly(experienced_a, experienced_b)
+    end
+
+    # 本番障害(PR #163)の再現条件そのもの:
+    # 経験者ハッシュには別の曲・パートのキーだけが存在し、対象キーは存在しない。
+    # かつ exclude_customer_ids(現参加者)が1件以上ある。
+    it "対象キーが無く exclude_customer_ids が非空でも例外にならず空配列を返す" do
+      assign(:experienced_customers_by_song_part, { [master.id, "Guitar"] => [experienced_a] })
+
+      result = nil
+      expect {
+        result = helper.experienced_customers_for_display(song, "Vocal", exclude_customer_ids: [experienced_b.id])
+      }.not_to raise_error
+      expect(result).to eq([])
+      expect(result).to be_a(Array)
     end
   end
 

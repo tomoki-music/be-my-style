@@ -348,6 +348,40 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
     expect(response.body).not_to include "entry-invitation-form"
   end
 
+  # 回帰(PR #163): イベント内のどこかに経験者がいると
+  # ExperiencedCustomersQuery#call がデフォルト値の無い素のHashを返すため、
+  # 経験者のいない別パート(現参加者あり)のセルで nil.reject が発生し
+  # イベント詳細全体が 500 になっていた。
+  context "経験者のいるパートと、経験者ゼロ・参加者ありの別パートが同じイベントに混在する場合" do
+    let(:current_member) { FactoryBot.create(:customer, name: "現参加者") }
+    let(:other_current_song) { FactoryBot.create(:song, event: current_event, song_name: "経験者ゼロ曲", artist_name: "別アーティスト") }
+    let!(:other_current_part) { FactoryBot.create(:join_part, song: other_current_song, join_part_name: "Guitar") }
+
+    before do
+      # 経験者ゼロ曲の Guitar パートには現参加者だけがいて、過去の演奏経験者はいない。
+      FactoryBot.create(:join_part_customer, join_part: other_current_part, customer: current_member)
+    end
+
+    it "権限者がイベント詳細を開いても例外にならず 200(経験者セルは正常・経験者ゼロセルは空)" do
+      sign_in owner
+      show_event
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include "経験太郎"     # 経験者のいる Vocal セルは正常表示
+      expect(response.body).to include "現参加者"     # 経験者ゼロ Guitar セルの参加者は正常表示
+      expect(doc.css("#entry-invitation-form").size).to eq 1
+    end
+
+    it "一般ログインユーザーがイベント詳細を開いても例外にならず 200" do
+      sign_in general_member
+      show_event
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include "経験太郎"
+      expect(response.body).to include "現参加者"
+    end
+  end
+
   it "終了済みイベントでは送信フォーム・checkbox・送信ボタンを表示しない(経験者名は維持)" do
     sign_in owner
     travel_to(5.days.from_now) do
