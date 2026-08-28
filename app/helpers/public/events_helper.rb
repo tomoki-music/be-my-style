@@ -10,11 +10,16 @@ module Public::EventsHelper
   # (パート名の表記ゆれを正規化せずに)キーを組み立てて参照キーがずれる事故を防ぐ
   # (例: 過去イベント側が旧表記"ボーカル"で登録されており、現在イベント側も同じ
   # "ボーカル"のままの場合、正規化しないと一致しない)。
+  #
+  # 戻り値は常にArray。ExperiencedCustomersQuery#callは経験者が1人でもいると
+  # デフォルト値の無い素のHashを返すため、経験者のいない曲・パートのキーでは
+  # nilが返り得る。呼び出し側(experienced_customers_for_display等)がArray前提で
+  # 扱えるよう、ここで空配列に正規化する。
   def experienced_customers_for(song, raw_part_name)
     key = PerformanceHistory::ExperiencedCustomersQuery.key_for(song.song_master_id, raw_part_name)
     return [] if key.nil?
 
-    @experienced_customers_by_song_part[key]
+    (@experienced_customers_by_song_part || {})[key] || []
   end
 
   # 表示中の曲・パート・経験者に対する直近のエントリー依頼メール送信レコードを返す(無ければ nil)。
