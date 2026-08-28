@@ -42,7 +42,7 @@ RSpec.describe "Public::EntryInvitations", type: :request do
     [owner, general_member, experienced_customer, experienced_guitarist].each do |c|
       CommunityCustomer.find_or_create_by!(customer: c, community: community)
     end
-    # 現在イベント側の募集中スロット
+    # 現在イベント側のパート
     current_vocal
     current_guitar
     current_vocal_b
@@ -138,12 +138,13 @@ RSpec.describe "Public::EntryInvitations", type: :request do
       expect(response).to redirect_to(public_event_path(current_event))
     end
 
-    it "募集が終了したパートは拒否する" do
+    it "募集が終了したパート(別の参加者あり)でも経験者は確認画面に表示する" do
       FactoryBot.create(:join_part_customer, join_part: current_vocal, customer: FactoryBot.create(:customer))
 
       get new_path([target(current_song_a, current_vocal, experienced_customer)])
 
-      expect(response).to redirect_to(public_event_path(current_event))
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include "経験太郎"
     end
 
     it "対象者未選択ならイベント詳細へ戻す" do
@@ -246,20 +247,32 @@ RSpec.describe "Public::EntryInvitations", type: :request do
       expect(response).to redirect_to(public_event_path(current_event))
     end
 
-    # UI では disabled チェックボックスとして描画され targets[] を持たない候補。
-    # devtools 等で token を手組みして POST しても、サーバー側(TargetResolver / Sender)が
-    # 再検証して送信しないことを保証する。
-    it "改ざん: 募集終了パート(UI では disabled)の token を手動 POST しても送信しない" do
+    # パートが「募集終了」(別の参加者あり)でも、過去に同じ曲・同じパートを演奏した
+    # 経験者へは依頼を送信できる。受信者は通常のエントリー導線からそのパートへ参加できるため、
+    # 依頼可否と実エントリー可否が食い違わない。
+    it "募集終了パート(別の参加者あり)でも経験者へは送信できる" do
       FactoryBot.create(:join_part_customer, join_part: current_vocal, customer: FactoryBot.create(:customer))
 
       expect {
         perform_enqueued_jobs do
           post create_path, params: create_params([target(current_song_a, current_vocal, experienced_customer)])
         end
-      }.not_to change(EntryInvitation, :count)
+      }.to change(EntryInvitation, :count).by(1)
 
-      expect(ActionMailer::Base.deliveries).to be_empty
+      expect(ActionMailer::Base.deliveries.map { |m| m.to.first }).to eq [experienced_customer.email]
       expect(response).to redirect_to(public_event_path(current_event))
+    end
+
+    # 「依頼は届くが実際にはエントリーできない」矛盾が起きないことの回帰確認。
+    # 募集終了パートへ依頼を送った受信者が、通常の join 導線からそのパートへ参加できる。
+    it "募集終了パートへ依頼された経験者は通常のエントリー導線でそのパートへ参加できる" do
+      FactoryBot.create(:join_part_customer, join_part: current_vocal, customer: FactoryBot.create(:customer))
+      post create_path, params: create_params([target(current_song_a, current_vocal, experienced_customer)])
+
+      sign_in experienced_customer
+      expect {
+        post public_event_join_path(current_event), params: { join_part_ids: { "0" => current_vocal.id.to_s } }
+      }.to change { JoinPartCustomer.where(join_part_id: current_vocal.id, customer_id: experienced_customer.id).count }.by(1)
     end
 
     it "改ざん: 24時間以内に依頼済み(UI では disabled)の token を単独で手動 POST してもメールは飛ばない" do

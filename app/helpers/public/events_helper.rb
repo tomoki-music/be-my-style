@@ -63,13 +63,16 @@ module Public::EventsHelper
   # 参照するのは @entry_invitations_by_key(コントローラで1クエリ取得済み)と、
   # preload済みのjoin_part.customers / song.join_parts のみ。候補ごとの追加SQLは発生させない。
   #
+  # パートの募集状態(recruiting_join_parts)は候補可否に使わない。過去に同じ曲・同じパートを
+  # 演奏した経験者であれば、対象パートが現在「募集終了」でも依頼できる(通常のエントリー導線に
+  # 募集中判定が無く、募集終了パートへも参加できるため、依頼可否と実エントリー可否を揃える)。
+  #
   # 優先順位:
   #   1. already_entered(データ不整合時の防御。通常は現在参加者を集合から除外済み)
   #   2. event_ended
-  #   3. part_closed
-  #   4. recently_invited
-  #   5. invited_resendable
-  #   6. invitable
+  #   3. recently_invited
+  #   4. invited_resendable
+  #   5. invitable
   EntryInvitationCandidateState = Struct.new(:key, :checkbox_enabled, :badge, keyword_init: true)
 
   def entry_invitation_candidate_state(song, join_part, customer, current_member_ids: [])
@@ -79,10 +82,6 @@ module Public::EventsHelper
 
     if @event&.ended?
       return EntryInvitationCandidateState.new(key: :event_ended, checkbox_enabled: false, badge: "開催終了")
-    end
-
-    unless song.recruiting_join_parts.any? { |part| part.id == join_part.id }
-      return EntryInvitationCandidateState.new(key: :part_closed, checkbox_enabled: false, badge: "募集終了")
     end
 
     invitation = entry_invitation_for(song, join_part, customer)

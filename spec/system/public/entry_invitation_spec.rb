@@ -165,13 +165,12 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
   end
 
   it "選択できる候補が0人なら送信ボタンは disabled で補足文を表示する" do
-    # 経験者(experienced_a / experienced_b)がいる Vocal / Guitar の両パートに
-    # 現役参加者を入れて募集終了にし、選択できる候補を0人にする。
-    [current_vocal, current_guitar].each do |part|
-      joiner = create(:customer)
-      CommunityCustomer.find_or_create_by!(customer: joiner, community: community)
-      create(:join_part_customer, join_part: part, customer: joiner)
-    end
+    # 経験者(experienced_a / experienced_b)がいる Vocal / Guitar の両パートへ
+    # 24時間以内に依頼済みにして、選択できる候補を0人にする。
+    create(:entry_invitation, event: current_event, song: current_song, join_part: current_vocal,
+                              customer: experienced_a, requested_by_customer: owner, sent_at: 1.hour.ago)
+    create(:entry_invitation, event: current_event, song: current_song, join_part: current_guitar,
+                              customer: experienced_b, requested_by_customer: owner, sent_at: 1.hour.ago)
 
     sign_in_via_form(owner)
     visit public_event_path(current_event)
@@ -231,7 +230,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
   end
 
   # レイアウト崩れ回帰: 候補カード(役職バッジ・緑丸・disabled チェックボックス・
-  # 「募集終了」ラベル・長い名前)と曲名セルの YouTube カードが、パート列(160px)/
+  # 状態ラベル・長い名前)と曲名セルの YouTube カードが、パート列(160px)/
   # 曲名列の内側に収まり、要素同士が重ならないことを bounding rect で確認する。
   describe "レイアウト崩れ回帰" do
     let(:long_name) { "演奏経験がとても豊富な山田太郎さんです" }
@@ -241,10 +240,9 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
       CommunityCustomer.find_or_create_by!(customer: experienced_admin, community: community)
       # 過去イベントの Vocal 経験者にする
       create(:join_part_customer, join_part: past_vocal, customer: experienced_admin)
-      # 現在イベントの Vocal を現役参加者で「募集終了」にする → disabled + 「募集終了」
-      closer = create(:customer, name: "現役参加者")
-      CommunityCustomer.find_or_create_by!(customer: closer, community: community)
-      create(:join_part_customer, join_part: current_vocal, customer: closer)
+      # 24時間以内に依頼済みにして disabled チェックボックス + 「依頼済み」ラベルを描画する
+      create(:entry_invitation, event: current_event, song: current_song, join_part: current_vocal,
+                                customer: experienced_admin, requested_by_customer: owner, sent_at: 1.hour.ago)
       # 最近アクティブ → 緑丸
       experienced_admin.update!(last_active_at: Time.current)
       # 曲名セルに YouTube カードを出す
@@ -319,7 +317,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
       expect(data["checkbox"]["w"]).to be > 0
       expect(data["checkbox"]["h"]).to be > 0
       expect(data["disabled"]).to be(true)
-      expect(page).to have_content("募集終了")
+      expect(page).to have_content("依頼済み")
     end
 
     it "disabled チェックボックスはクリックしても選択されない" do

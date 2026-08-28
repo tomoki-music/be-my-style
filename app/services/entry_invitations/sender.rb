@@ -3,7 +3,7 @@ module EntryInvitations
   #
   # Controller から渡された customer_id 群は一切信用せず、ここで
   #   - 送信者の権限(can_destroy_event?)
-  #   - イベント/曲/パートが送信可能な状態か(未終了・募集中・所属整合)
+  #   - イベント/曲/パートが送信可能な状態か(未終了・所属整合。パートの募集状態は問わない)
   #   - 各 customer_id が「別の終了済みイベントに同一SongMaster・同一正規化パートの実績を持つ経験者」か
   #     (= PerformanceHistory::ExperiencedCustomersQuery の結果に含まれるか)
   #   - 受信者ごとの追加条件(退会でない・未エントリー・メール通知ON・メールあり・24h以内未送信)
@@ -87,13 +87,8 @@ module EntryInvitations
       return "曲またはパートの指定が正しくありません。" unless @song && @join_part
       return "曲またはパートの指定が正しくありません。" unless @song.event_id == @event.id && @join_part.song_id == @song.id
       return "終了したイベントには送信できません。" if @event.ended?(now: @now)
-      return "このパートは現在募集していません。" unless recruiting_part?
 
       nil
-    end
-
-    def recruiting_part?
-      @song.recruiting_join_parts.any? { |part| part.id == @join_part.id }
     end
 
     # このイベント・この曲・このパートの「演奏経験のある人」。

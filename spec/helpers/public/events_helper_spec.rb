@@ -219,14 +219,56 @@ RSpec.describe Public::EventsHelper, type: :helper do
       expect(state.badge).to eq("再依頼可")
     end
 
-    it "part_closed: 現役参加者がいるパートは checkbox無し・バッジ「募集終了」" do
+    it "募集終了(現役参加者あり)のパートでも経験者は invitable: checkbox有効・バッジ無し" do
       create(:join_part_customer, join_part: join_part, customer: create(:customer))
       song.reload
 
       state = helper.entry_invitation_candidate_state(song, join_part, candidate)
-      expect(state.key).to eq(:part_closed)
+      expect(state.key).to eq(:invitable)
+      expect(state.checkbox_enabled).to be true
+      expect(state.badge).to be_nil
+    end
+
+    it "募集終了パートでも 24時間以内の依頼済みは checkbox無効・バッジ「依頼済み」" do
+      create(:join_part_customer, join_part: join_part, customer: create(:customer))
+      song.reload
+      assign(:entry_invitations_by_key,
+             { [song.id, join_part.id, candidate.id] => EntryInvitation.new(sent_at: 1.hour.ago) })
+
+      state = helper.entry_invitation_candidate_state(song, join_part, candidate)
+      expect(state.key).to eq(:recently_invited)
       expect(state.checkbox_enabled).to be false
-      expect(state.badge).to eq("募集終了")
+      expect(state.badge).to eq("依頼済み")
+    end
+
+    it "募集終了パートでも 24時間経過後は checkbox有効・バッジ「再依頼可」" do
+      create(:join_part_customer, join_part: join_part, customer: create(:customer))
+      song.reload
+      assign(:entry_invitations_by_key,
+             { [song.id, join_part.id, candidate.id] => EntryInvitation.new(sent_at: 2.days.ago) })
+
+      state = helper.entry_invitation_candidate_state(song, join_part, candidate)
+      expect(state.key).to eq(:invited_resendable)
+      expect(state.checkbox_enabled).to be true
+      expect(state.badge).to eq("再依頼可")
+    end
+
+    it "募集終了パートでもエントリー済み(現在参加者)は checkbox無効・バッジ「エントリー済み」" do
+      create(:join_part_customer, join_part: join_part, customer: create(:customer))
+      song.reload
+
+      state = helper.entry_invitation_candidate_state(song, join_part, candidate, current_member_ids: [candidate.id])
+      expect(state.key).to eq(:already_entered)
+      expect(state.checkbox_enabled).to be false
+      expect(state.badge).to eq("エントリー済み")
+    end
+
+    it "募集状態を理由に badge「募集終了」を返さない" do
+      create(:join_part_customer, join_part: join_part, customer: create(:customer))
+      song.reload
+
+      state = helper.entry_invitation_candidate_state(song, join_part, candidate)
+      expect(state.badge).not_to eq("募集終了")
     end
 
     it "event_ended: 終了イベントは checkbox無効・バッジ「開催終了」" do
@@ -282,11 +324,11 @@ RSpec.describe Public::EventsHelper, type: :helper do
       expect(helper.entry_invitation_has_selectable_candidate?).to be true
     end
 
-    it "経験者はいるが全員が募集終了(現役参加者あり)なら false" do
+    it "募集終了(現役参加者あり)でも経験者が依頼可能なら true" do
       create(:join_part_customer, join_part: join_part, customer: create(:customer))
       song.reload
 
-      expect(helper.entry_invitation_has_selectable_candidate?).to be false
+      expect(helper.entry_invitation_has_selectable_candidate?).to be true
     end
 
     it "経験者はいるが全員が24時間以内に依頼済みなら false" do
