@@ -61,8 +61,11 @@ module PerformanceHistory
       end
       return Hash.new([].freeze) if grouped.empty?
 
+      # 主催者向けエントリー依頼パネルで customer_avatar_tag(プロフィール画像)を
+      # 候補人数分描画するため、Active Storage の添付を人数に依らず 2 クエリで先読みする。
+      # 一般向け楽曲テーブルは画像を出さないが、同じ取得結果を使い回すため常に先読みする。
       customer_ids = grouped.values.flat_map(&:to_a).uniq
-      customers_by_id = Customer.where(id: customer_ids).index_by(&:id)
+      customers_by_id = Customer.where(id: customer_ids).with_attached_profile_image.index_by(&:id)
 
       grouped.transform_values { |ids| ids.filter_map { |id| customers_by_id[id] } }
     end

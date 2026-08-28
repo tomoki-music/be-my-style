@@ -142,14 +142,48 @@ RSpec.describe PerformanceHistory::ExperiencedCustomersQuery do
       end
     end
 
-    query_count = 0
-    counter = ->(_name, _started, _finished, _unique_id, payload) {
-      query_count += 1 if payload[:sql].to_s.match?(/\ASELECT/i)
-    }
-    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
-      described_class.call(current_event)
+    count_selects = lambda do
+      count = 0
+      counter = ->(_name, _started, _finished, _unique_id, payload) {
+        count += 1 if payload[:sql].to_s.match?(/\ASELECT/i)
+      }
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { described_class.call(current_event) }
+      count
     end
 
-    expect(query_count).to be <= 3
+    baseline = count_selects.call
+    # 曲・パート数を増やしても一定(SQL2回 + プロフィール画像の Active Storage 先読み分)
+    expect(baseline).to be <= 5
+
+    # 候補人数を増やしても Active Storage のクエリが人数に比例しないこと
+    other_past_event = FactoryBot.create(
+      :event, :event_with_songs, community: community,
+      event_start_time: 20.days.ago, event_end_time: 19.days.ago, event_entry_deadline: 21.days.ago
+    )
+    extra_song = FactoryBot.create(:song, event: other_past_event, song_name: "共通曲", artist_name: "共通アーティスト")
+    extra_part = FactoryBot.create(:join_part, song: extra_song, join_part_name: "Vocal")
+    3.times { FactoryBot.create(:join_part_customer, join_part: extra_part, customer: FactoryBot.create(:customer)) }
+
+    expect(count_selects.call).to eq baseline
+  end
+
+  it 'プロフィール画像を人数に依らず先読みする(Active Storage の N+1 を防ぐ)' do
+    current_song
+    3.times do |i|
+      past = FactoryBot.create(
+        :event, :event_with_songs, community: community,
+        event_start_time: (30 + i).days.ago, event_end_time: (29 + i).days.ago, event_entry_deadline: (31 + i).days.ago
+      )
+      song = FactoryBot.create(:song, event: past, song_name: "共通曲", artist_name: "共通アーティスト")
+      part = FactoryBot.create(:join_part, song: song, join_part_name: "Vocal")
+      FactoryBot.create(:join_part_customer, join_part: part, customer: FactoryBot.create(:customer))
+    end
+
+    customers = described_class.call(current_event).values.flatten
+
+    expect(customers).to be_present
+    customers.each do |customer|
+      expect(customer.association(:profile_image_attachment)).to be_loaded
+    end
   end
 end

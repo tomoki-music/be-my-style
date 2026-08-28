@@ -1,37 +1,34 @@
 = render 'layouts/header_menu'
 
 .entry-invitation-confirm
-  %h2
-    エントリー依頼の送信確認
+  %h2 エントリー依頼の送信確認
   %hr
 
+  %p.entry-invitation-confirm__lead
+    以下の内容でエントリー依頼メールを送信します。メールと通知は曲・パートごとに届きます。
   %dl.entry-invitation-confirm__summary
     %dt イベント名
     %dd= @event.event_name
-    %dt 曲名
-    %dd= @song.song_name
-    - if @song.artist_name.present?
-      %dt アーティスト
-      %dd= @song.artist_name
-    %dt 募集パート
-    %dd= @join_part.join_part_name
     %dt 開催日
     %dd= l @event.event_start_time.to_date, format: :long
     %dt 送信人数
-    %dd #{@recipients.size}人
+    %dd #{@recipient_count}人
 
-  %h3 送信対象者
-  %ul.entry-invitation-confirm__recipients
-    - @recipients.each do |customer|
-      %li
-        = customer.name
-        = link_to "プロフィール", public_customer_path(customer), data: { turbolinks: false }
+  - @groups.each do |group|
+    .entry-invitation-confirm__group
+      %h3.entry-invitation-confirm__group-title
+        = group.song.song_name
+        %span.entry-invitation-confirm__part= group.join_part.join_part_name
+      %ul.entry-invitation-confirm__recipients
+        - group.customers.each do |customer|
+          %li
+            = customer_avatar_tag(customer, class_name: "icon_mini")
+            %span.entry-invitation-confirm__name= customer.name
 
   = form_with url: public_event_entry_invitations_path(@event), method: :post, local: true do |f|
-    = hidden_field_tag "entry_invitation[song_id]", @song.id
-    = hidden_field_tag "entry_invitation[join_part_id]", @join_part.id
-    - @recipients.each do |customer|
-      = hidden_field_tag "entry_invitation[customer_ids][]", customer.id
+    - @groups.each do |group|
+      - group.target_tokens.each do |token|
+        = hidden_field_tag "targets[]", token
     .entry-invitation-confirm__actions
       = f.submit "この内容で送信する", class: "btn btn-lg btn-primary", data: { "disable-with": "送信中...", turbolinks: false }
       = link_to "戻る", public_event_path(@event), data: { turbolinks: false }, class: "btn btn-lg btn-secondary"
