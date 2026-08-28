@@ -1,0 +1,11 @@
+-# 主催者向け: 楽曲表の各パート欄に表示する「演奏経験者へのエントリー依頼候補」一覧。
+-# customers は experienced_customers_for_display で現在参加者を差し引き済み。
+-# 各候補のチェックボックスは楽曲表(既存の #join_btn フォーム内)に置かれるが、
+-# form= 属性で外側の #entry-invitation-form へ紐付く(フォームの入れ子を作らない)。
+-# 候補が多い場合だけセル内で縦スクロールさせ、折りたたみによる選択漏れは起こさない。
+- if customers.present?
+  .entry-invitation-candidates-wrap
+    %span.entry-invitation-candidates__label 演奏したことのある人:
+    %ul.entry-invitation-candidates{ tabindex: "0", role: "group", "aria-label": "#{song.song_name} #{join_part.join_part_name} の演奏経験者候補" }
+      - customers.each do |customer|
+        = render "public/events/entry_invitation_candidate", song: song, join_part: join_part, customer: customer, current_member_ids: current_member_ids

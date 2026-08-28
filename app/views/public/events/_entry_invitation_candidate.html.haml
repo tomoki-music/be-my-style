@@ -1,0 +1,18 @@
+-# エントリー依頼候補1人分。state(helper)は表示状態だけを決める。
+-# 送信可否の最終判断はサーバー側(TargetResolver / BatchSender / Sender)。
+- state = entry_invitation_candidate_state(song, join_part, customer, current_member_ids: current_member_ids)
+- checkbox_id = "entry_invitation_target_#{song.id}_#{join_part.id}_#{customer.id}"
+- target_token = "#{song.id}:#{join_part.id}:#{customer.id}"
+%li.entry-invitation-candidate
+  - if state.checkbox_enabled
+    = check_box_tag "targets[]", target_token, false, id: checkbox_id, class: "js-entry-invitation-checkbox", form: "entry-invitation-form"
+    = label_tag checkbox_id, class: "entry-invitation-candidate__label" do
+      = customer_avatar_tag(customer, class_name: "icon_mini")
+      %span.entry-invitation-candidate__name= customer.name
+  - else
+    %span.entry-invitation-candidate__label
+      = customer_avatar_tag(customer, class_name: "icon_mini")
+      %span.entry-invitation-candidate__name= customer.name
+  = link_to "プロフィール", public_customer_path(customer), class: "entry-invitation-candidate__profile", data: { turbolinks: false }
+  - if state.badge
+    %span.entry-invitation-candidate__status{ class: ("entry-invitation-candidate__status--closed" unless state.checkbox_enabled) }= state.badge

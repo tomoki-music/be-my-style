@@ -1418,18 +1418,20 @@ input[type="text"] {
   }
 }
 
-// 演奏経験者へのエントリー依頼パネル。楽曲行の直下(横スクロールする .table-responsive
-// 内の table 行)へ置くため、セルを左端に sticky 固定し、パネル幅をビューポート幅に
-// クランプする。これで楽曲表を横スクロールしてもパネルは常に画面内へ収まり、
-// パネル起因の横スクロールを新たに発生させない。
+// 演奏経験者へのエントリー依頼フォーム(#entry-invitation-form)。
+// フォーム本体(見出し・説明・送信ボタン)だけを楽曲表の外の行へ置き、対象者の
+// チェックボックスは楽曲表の各パート欄に置いて form= 属性で紐付ける。
+// セルを左端に sticky 固定し、フォーム幅をビューポート幅にクランプすることで、
+// 楽曲表を横スクロールしても送信ボタンは常に画面内へ収まり、
+// このフォーム起因の横スクロールを新たに発生させない。
 .entry-invitation-row > td {
   position: sticky;
   left: 0;
   max-width: 0;
-  padding: 8px 0;
+  padding: 12px 0;
 }
 
-.entry-invitation-panel {
+.entry-invitation-form {
   margin: 4px 0;
   padding: 12px;
   border: 1px solid #d0d7de;
@@ -1460,52 +1462,74 @@ input[type="text"] {
     word-break: break-word;
   }
 
-  &__actions {
-    margin-top: 12px;
-  }
-}
-
-.entry-invitation {
-  & + & {
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px dashed #d0d7de;
-  }
-
-  &__heading {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 8px;
-    margin: 0 0 8px;
-    font-size: 0.95rem;
-    font-weight: 700;
+  // 楽曲表(横スクロール領域)内のチェックボックスをスマホ主催者に案内する。
+  // d-md-none でPCでは非表示。横スクロールを新たに生まないよう幅はフォームに従わせる。
+  &__mobile-hint {
+    margin: 0 0 12px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: #e7f5ff;
+    color: #1c7ed6;
+    font-size: 0.8rem;
     word-break: break-word;
   }
 
-  &__part {
-    padding: 1px 8px;
-    border-radius: 999px;
-    background: #0d6efd;
-    color: #fff;
-    font-size: 0.8rem;
+  // 経験者はいるが全員が「参加中 / 募集終了 / 24時間以内に依頼済み」で、いま選べる候補が
+  // 0人のときだけ出す補足。送信ボタンは disabled 表示になる。
+  &__empty {
+    margin: 0 0 12px;
+    color: #d9480f;
+    font-size: 0.85rem;
+    font-weight: 700;
+    word-break: break-word;
+  }
+}
+
+// 楽曲表のパート欄に表示する主催者向け候補一覧。
+.entry-invitation-candidates-wrap {
+  margin-top: 6px;
+  max-width: 100%;
+}
+
+.entry-invitation-candidates {
+  margin: 4px 0 0;
+  padding: 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  list-style: none;
+  // 候補が少なければ内容の高さのまま、多い場合だけセル内で縦スクロール。
+  // 全候補をDOM上に保持し、折りたたみによる選択漏れは起こさない。
+  max-height: 240px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+
+  &:focus-visible {
+    outline: 2px solid #2b6cb0;
+    outline-offset: 1px;
   }
 
-  &__list {
-    margin: 0 0 10px;
-    padding-left: 0;
-    list-style: none;
+  &__label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #2b6cb0;
   }
+}
 
-  &__item {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 10px;
-    padding: 6px 0;
-    font-size: 0.9rem;
-    min-width: 0;
-    max-width: 100%;
+.entry-invitation-candidate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  padding: 4px 2px;
+  font-size: 0.78rem;
+  min-width: 0;
+  max-width: 100%;
+
+  & + & {
+    border-top: 1px dashed #edf2f7;
   }
 
   // アバター + 名前をまとめてチェックボックスのラベルにする(クリックで選択)。
@@ -1513,9 +1537,8 @@ input[type="text"] {
   &__label {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     margin: 0;
-    padding: 2px 0;
     cursor: pointer;
     min-width: 0;
 
@@ -1524,8 +1547,8 @@ input[type="text"] {
     }
 
     .icon_mini {
-      width: 28px;
-      height: 28px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       object-fit: cover;
     }
@@ -1537,16 +1560,17 @@ input[type="text"] {
   }
 
   &__profile {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     white-space: nowrap;
   }
 
   &__status {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     color: #198754;
+    white-space: nowrap;
 
-    &--failed {
-      color: #dc3545;
+    &--closed {
+      color: #6c757d;
     }
   }
 }
