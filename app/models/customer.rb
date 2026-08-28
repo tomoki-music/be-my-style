@@ -110,6 +110,21 @@ class Customer < ApplicationRecord
   validates :domain_name, presence: true, inclusion: { in: SIGN_UP_DOMAIN_NAMES }, on: :create
   # validates :customer_parts, presence: true
 
+  # 加入年月日（コミュニティに加入した日）。基本は BeMyStyle 登録日だが、
+  # 以前からコミュニティに参加している場合などはプロフィール編集で変更できる。
+  before_validation :set_default_joined_on, on: :create
+  validates :joined_on, presence: true
+  validate :joined_on_cannot_be_in_the_future
+
+  # 最近ログインしているか（アクティブ状態のアイコン表示などに使う共通判定）。
+  # current_sign_in_at のみで判定し、関連を辿らないため N+1 を発生させない。
+  def recently_active?
+    return false if is_deleted?
+    return false if current_sign_in_at.blank?
+
+    current_sign_in_at >= 1.month.ago
+  end
+
   # business
   has_many :posts, dependent: :destroy
   has_many :likes, dependent: :destroy
@@ -310,6 +325,18 @@ class Customer < ApplicationRecord
       .with_session_credit
       .joins(join_part: { song: :event })
       .where(events: { event_start_time: month_range })
+  end
+
+  # 明示的に joined_on が渡された場合は上書きしない。未設定の場合のみ登録日を入れる。
+  def set_default_joined_on
+    self.joined_on ||= Date.current
+  end
+
+  def joined_on_cannot_be_in_the_future
+    return if joined_on.blank?
+    return unless joined_on > Date.current
+
+    errors.add(:joined_on, :in_the_future)
   end
 
   public

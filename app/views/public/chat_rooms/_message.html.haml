@@ -7,13 +7,13 @@
       %li
       - if customer_withdrawn?(chat_message.customer)
         .img-element
-          = customer_avatar_tag(chat_message.customer)
+          = customer_avatar_tag(chat_message.customer, show_active_status: false)
         .name-element
           = customer_display_name(chat_message.customer) + 'さんのメッセージ'
       - else
         = link_to public_customer_path(chat_message.customer), class: "chat-room-customer-link" do
           .img-element
-            = customer_avatar_tag(chat_message.customer)
+            = customer_avatar_tag(chat_message.customer, show_active_status: false)
           .name-element
             = chat_message.customer.name + 'さんのメッセージ'
       %li
@@ -99,7 +99,7 @@
       %li
       = link_to public_customer_path(chat_message.customer), class: "chat-room-customer-link" do
         .img-element
-          = customer_avatar_tag(chat_message.customer)
+          = customer_avatar_tag(chat_message.customer, show_active_status: false)
         .name-element
           = chat_message.customer.name + 'さんのメッセージ'
       %li

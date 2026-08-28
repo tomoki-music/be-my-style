@@ -17,6 +17,7 @@ ja:
         part: パート
         sex: 性別
         birthday: 誕生日
+        joined_on: 加入年月日
         favorite_artist: 好きなアーティスト
         url: 作品HPのURL
         customer_parts: パート
@@ -67,6 +68,11 @@ ja:
         restrict_dependent_destroy:
           has_one: "%{record}が存在しているので削除できません"
           has_many: "%{record}が存在しているので削除できません"
+      models:
+        customer:
+          attributes:
+            joined_on:
+              in_the_future: は今日以前の日付を入力してください
   date:
     abbr_day_names:
     - 日
@@ -102,6 +108,7 @@ ja:
       default: "%Y/%m/%d"
       long: "%Y年%m月%d日(%a)"
       short: "%m/%d"
+      japanese: "%Y年%-m月%-d日"
     month_names:
     - 
     - 1月
