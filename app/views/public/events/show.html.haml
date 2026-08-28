@@ -289,8 +289,10 @@
                                               class: "recruiting-parts__part",
                                               data: { turbolinks: false },
                                               "aria-label": "#{song.song_name}の#{part.join_part_name}パートにエントリーする"
+                                          -# スマホ用ショートカットは氏名表示のみ。操作可能なチェックボックスは
+                                          -# PC用パート表の正規セル1か所だけに描画する(同一targetの二重描画を防ぐ)。
                                           - recruiting_parts.each do |part|
-                                            = render "public/events/experienced_customers", customers: experienced_customers_for(song, part.join_part_name)
+                                            = render "public/events/experienced_customers", customers: experienced_customers_for_display(song, part.join_part_name, exclude_customer_ids: part.customers.map(&:id))
 
                                     %td
                                       .check-part-list
@@ -305,45 +307,72 @@
                                           終了イベントのためチェック不可
 
                                     - part_names.each do |part_name|
-                                      - join_part = song.join_parts.find { |jp| jp.join_part_name == part_name }
+                                      -# 生の完全一致ではなくPartNameNormalizer経由で正規化し、旧表記のJoinPartも
+                                      -# 対応する固定列へ寄せる。同じ正規化パートに複数JoinPartがあり得るため各件を描画する。
+                                      - column_join_parts = normalized_join_parts_for_column(song, part_name)
                                       %td
-                                        - if join_part.present?
-                                          - if join_part.active_customers.any?
-                                            - join_part.active_customers.each do |customer|
-                                              .member-display(style="display:flex; flex-direction:column; align-items:flex-start; gap:4px; margin-bottom:4px;")
-                                                = link_to public_customer_path(customer), data: { turbolinks: false } do
-                                                  = image_tag(customer.profile_image.presence || 'no_image',
-                                                              class: "icon_mini",
-                                                              style: "width:24px; height:24px; border-radius:50%;")
-                                                  = customer.name
-                                                - if @event.paid_participant_for_display?(customer)
-                                                  %span.member-plan-badge.member-plan-badge--paid
-                                                    %i.fa-solid.fa-star
-                                                    有料
-                                                - if @event.session_credit_applied_for?(customer)
-                                                  - if @event.participant_remaining_fee_for(customer).zero?
-                                                    %span.member-plan-badge.member-plan-badge--credit
-                                                      %i.fa-solid.fa-sparkles
-                                                      集金不要
-                                                  - else
-                                                    %span.member-plan-badge.member-plan-badge--credit-partial
-                                                      %i.fa-solid.fa-sparkles
-                                                      当日集金 #{@event.participant_remaining_fee_for(customer).to_s(:delimited)}円
-                                                - if customer == current_customer && join_part.active_customers.include?(current_customer) && @event.event_start_time > Time.current + 7.days
-                                                  = link_to "削除",
-                                                    public_event_delete_path(@event, join_part_id: join_part.id, customer_id: customer.id),
-                                                    method: :delete,
-                                                    data: { confirm: "この参加をキャンセルしますか？" },
-                                                    class: "btn btn-danger w-100"
-                                          - else
-                                            %span.text-danger 募集中
-                                          = render "public/events/experienced_customers", customers: experienced_customers_for(song, part_name)
+                                        - if column_join_parts.present?
+                                          - column_join_parts.each do |join_part|
+                                            -# active_customers(customers.active)はloadedな関連でも再クエリするため、
+                                            -# preload済みのjoin_part.customersからis_deletedを除外してN+1を避ける。
+                                            - part_members = join_part.customers.reject(&:is_deleted)
+                                            - part_member_ids = join_part.customers.map(&:id)
+                                            - if part_members.any?
+                                              - part_members.each do |customer|
+                                                .member-display(style="display:flex; flex-direction:column; align-items:flex-start; gap:4px; margin-bottom:4px;")
+                                                  = link_to public_customer_path(customer), data: { turbolinks: false } do
+                                                    = image_tag(customer.profile_image.presence || 'no_image',
+                                                                class: "icon_mini",
+                                                                style: "width:24px; height:24px; border-radius:50%;")
+                                                    = customer.name
+                                                  - if @event.paid_participant_for_display?(customer)
+                                                    %span.member-plan-badge.member-plan-badge--paid
+                                                      %i.fa-solid.fa-star
+                                                      有料
+                                                  - if @event.session_credit_applied_for?(customer)
+                                                    - if @event.participant_remaining_fee_for(customer).zero?
+                                                      %span.member-plan-badge.member-plan-badge--credit
+                                                        %i.fa-solid.fa-sparkles
+                                                        集金不要
+                                                    - else
+                                                      %span.member-plan-badge.member-plan-badge--credit-partial
+                                                        %i.fa-solid.fa-sparkles
+                                                        当日集金 #{@event.participant_remaining_fee_for(customer).to_s(:delimited)}円
+                                                  - if customer == current_customer && part_members.include?(current_customer) && @event.event_start_time > Time.current + 7.days
+                                                    = link_to "削除",
+                                                      public_event_delete_path(@event, join_part_id: join_part.id, customer_id: customer.id),
+                                                      method: :delete,
+                                                      data: { confirm: "この参加をキャンセルしますか？" },
+                                                      class: "btn btn-danger w-100"
+                                            - else
+                                              %span.text-danger 募集中
+                                            -# 経験者集合から現在参加者をCustomer IDで差し引き、同じセルに二重表示しない。
+                                            - candidates = experienced_customers_for_display(song, join_part.join_part_name, exclude_customer_ids: part_member_ids)
+                                            - if @entry_invitation_ui_enabled
+                                              = render "public/events/entry_invitation_candidates", song: song, join_part: join_part, customers: candidates, current_member_ids: part_member_ids
+                                            - else
+                                              = render "public/events/experienced_customers", customers: candidates
                                         - else
                                           ー
-                - if current_customer.can_destroy_event?(@event) && !@event.ended?
+                - if @entry_invitation_ui_enabled
+                  -# 見出し・説明・送信ボタン・確認画面へのGETフォームだけを、楽曲表の横スクロール
+                  -# 領域外(この%td)へ置く。対象者のチェックボックスは楽曲表の各パート欄にあり、
+                  -# HTML5の form= 属性でこのフォームへ紐付く(フォームの入れ子は作らない)。
+                  - entry_invitation_selectable = entry_invitation_has_selectable_candidate?
                   %tr.entry-invitation-row
                     %td{ colspan: "100" }
-                      = render "public/events/entry_invitation_panel", event: @event
+                      = form_tag new_public_event_entry_invitation_path(@event), method: :get, id: "entry-invitation-form", class: "entry-invitation-form" do
+                        %h3.entry-invitation-form__title 演奏経験者へエントリーをお願いする
+                        %p.entry-invitation-form__desc
+                          楽曲表の各パート欄で対象者にチェックを入れ、確認画面へ進んでください。メールと通知は曲・パートごとに届きます。
+                        %p.entry-invitation-form__mobile-hint.d-md-none
+                          楽曲表を横にスクロールして、依頼したいメンバーを選択してください。
+                        - unless entry_invitation_selectable
+                          %p.entry-invitation-form__empty{ role: "status" } 現在、依頼できる演奏経験者はいません。
+                        = submit_tag "選択した人へエントリーをお願いする",
+                          class: "btn btn-info js-entry-invitation-submit",
+                          disabled: !entry_invitation_selectable,
+                          data: { disable_with: "確認画面へ移動中..." }
                 %tr
                   %th{scope:"row"} イベント補足
                   %td

@@ -45,6 +45,11 @@ RSpec.describe "Public::Events#show 楽曲パート募集欄の経験者表示",
   let(:current_vocal_part) { FactoryBot.create(:join_part, song: current_song, join_part_name: "Vocal") }
 
   before do
+    # このファイルは「一般ユーザー向けの経験者氏名表示」を検証する。
+    # community factory の owner_id 既定値(1)が viewer.id と偶然一致すると
+    # viewer が主催者扱いになり、パート欄が主催者向けの依頼候補UIへ切り替わってしまうため、
+    # 明示的に別の主催者を立てて viewer を非権限者に固定する。
+    community.update!(owner_id: FactoryBot.create(:customer).id)
     CommunityCustomer.find_or_create_by!(customer: viewer, community: community)
     current_vocal_part
     past_vocal_part
