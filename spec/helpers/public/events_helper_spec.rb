@@ -229,12 +229,13 @@ RSpec.describe Public::EventsHelper, type: :helper do
       expect(state.badge).to eq("募集終了")
     end
 
-    it "event_ended: 終了イベントは checkbox無し" do
+    it "event_ended: 終了イベントは checkbox無効・バッジ「開催終了」" do
       allow(current_event).to receive(:ended?).and_return(true)
 
       state = helper.entry_invitation_candidate_state(song, join_part, candidate)
       expect(state.key).to eq(:event_ended)
       expect(state.checkbox_enabled).to be false
+      expect(state.badge).to eq("開催終了")
     end
 
     it "already_entered: 現在参加者は最優先で checkbox無し・バッジ「エントリー済み」" do

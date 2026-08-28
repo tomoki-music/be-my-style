@@ -229,4 +229,175 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
     JS
     expect(submitting).to eq "1"
   end
+
+  # レイアウト崩れ回帰: 候補カード(役職バッジ・緑丸・disabled チェックボックス・
+  # 「募集終了」ラベル・長い名前)と曲名セルの YouTube カードが、パート列(160px)/
+  # 曲名列の内側に収まり、要素同士が重ならないことを bounding rect で確認する。
+  describe "レイアウト崩れ回帰" do
+    let(:long_name) { "演奏経験がとても豊富な山田太郎さんです" }
+    let(:experienced_admin) { create(:customer, name: long_name, is_owner: :admin) }
+
+    before do
+      CommunityCustomer.find_or_create_by!(customer: experienced_admin, community: community)
+      # 過去イベントの Vocal 経験者にする
+      create(:join_part_customer, join_part: past_vocal, customer: experienced_admin)
+      # 現在イベントの Vocal を現役参加者で「募集終了」にする → disabled + 「募集終了」
+      closer = create(:customer, name: "現役参加者")
+      CommunityCustomer.find_or_create_by!(customer: closer, community: community)
+      create(:join_part_customer, join_part: current_vocal, customer: closer)
+      # 最近アクティブ → 緑丸
+      experienced_admin.update!(last_active_at: Time.current)
+      # 曲名セルに YouTube カードを出す
+      current_song.update!(youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    end
+
+    def rects_for(selector_map_js)
+      page.evaluate_script(<<~JS)
+        (function () {
+          function r(el) {
+            if (!el) return null;
+            var b = el.getBoundingClientRect();
+            return { l: b.left, r: b.right, t: b.top, b: b.bottom, w: b.width, h: b.height };
+          }
+          #{selector_map_js}
+        })()
+      JS
+    end
+
+    def overlap?(a, b, tol = 1.0)
+      return false if a.nil? || b.nil?
+      a["l"] < b["r"] - tol && b["l"] < a["r"] - tol && a["t"] < b["b"] - tol && b["t"] < a["b"] - tol
+    end
+
+    it "PC幅: 候補カード各要素がセル内に収まり、役職バッジが名前・緑丸と重ならない" do
+      sign_in_via_form(owner)
+      page.driver.browser.execute_cdp(
+        "Emulation.setDeviceMetricsOverride", width: 1280, height: 900, deviceScaleFactor: 1, mobile: false
+      )
+      visit public_event_path(current_event)
+      expect(page).to have_selector(".entry-invitation-candidate--disabled", text: long_name)
+
+      data = rects_for(<<~JS)
+        var card = Array.prototype.find.call(
+          document.querySelectorAll('.entry-invitation-candidate--disabled'),
+          function (c) { return c.textContent.indexOf(#{long_name.to_json}) !== -1; }
+        );
+        var cell = card.closest('td');
+        return {
+          cell: r(cell),
+          card: r(card),
+          avatar: r(card.querySelector('.avatar-with-badge')),
+          badge: r(card.querySelector('.avatar-role-badge')),
+          dot: r(card.querySelector('.avatar-active-dot')),
+          name: r(card.querySelector('.entry-invitation-candidate__name')),
+          profile: r(card.querySelector('.entry-invitation-candidate__profile')),
+          status: r(card.querySelector('.entry-invitation-candidate__status')),
+          checkbox: r(card.querySelector('.entry-invitation-candidate__checkbox--disabled')),
+          disabled: card.querySelector('.entry-invitation-candidate__checkbox--disabled').disabled
+        };
+      JS
+
+      tol = 1.0
+      # カードがパートセルの内側に収まる
+      expect(data["card"]["l"]).to be >= data["cell"]["l"] - tol
+      expect(data["card"]["r"]).to be <= data["cell"]["r"] + tol
+
+      # アバター・役職バッジ・名前・プロフィールリンク・状態ラベル・チェックボックスがカード内
+      %w[avatar badge dot name profile status checkbox].each do |k|
+        expect(data[k]).not_to be_nil, "#{k} が描画されていない"
+        expect(data[k]["l"]).to be >= data["card"]["l"] - tol, "#{k} がカード左外"
+        expect(data[k]["r"]).to be <= data["card"]["r"] + tol, "#{k} がカード右外"
+        expect(data[k]["t"]).to be >= data["card"]["t"] - tol, "#{k} がカード上外"
+        expect(data[k]["b"]).to be <= data["card"]["b"] + tol, "#{k} がカード下外"
+      end
+
+      # 役職バッジと名前の矩形が重ならない / 緑丸と役職バッジの矩形が重ならない
+      expect(overlap?(data["badge"], data["name"])).to be(false), "役職バッジと名前が重なっている"
+      expect(overlap?(data["dot"], data["badge"])).to be(false), "緑丸と役職バッジが重なっている"
+
+      # disabled チェックボックスが見えていて、選択できない
+      expect(data["checkbox"]["w"]).to be > 0
+      expect(data["checkbox"]["h"]).to be > 0
+      expect(data["disabled"]).to be(true)
+      expect(page).to have_content("募集終了")
+    end
+
+    it "disabled チェックボックスはクリックしても選択されない" do
+      sign_in_via_form(owner)
+      visit public_event_path(current_event)
+      expect(page).to have_selector(".entry-invitation-candidate__checkbox--disabled")
+
+      checked = page.evaluate_script(<<~JS)
+        (function () {
+          var cb = document.querySelector('.entry-invitation-candidate__checkbox--disabled');
+          cb.click();
+          return cb.checked;
+        })()
+      JS
+      expect(checked).to be(false)
+    end
+
+    it "PC幅: YouTubeカードが曲名セル幅に収まり、参加フォーム列へ侵入しない" do
+      sign_in_via_form(owner)
+      page.driver.browser.execute_cdp(
+        "Emulation.setDeviceMetricsOverride", width: 1280, height: 900, deviceScaleFactor: 1, mobile: false
+      )
+      visit public_event_path(current_event)
+      expect(page).to have_selector(".event-songs-table .event-song-youtube-card")
+
+      data = rects_for(<<~JS)
+        var card = document.querySelector('.event-songs-table .event-song-youtube-card');
+        var cell = card.closest('td');
+        var tds = cell.parentElement.querySelectorAll('td');
+        return {
+          card: r(card),
+          cell: r(cell),
+          img: r(card.querySelector('img')),
+          link: r(card.closest('td').querySelector('.song-detail-link')),
+          nextCell: r(tds[1])
+        };
+      JS
+
+      # カード・曲名リンク・画像が曲名セルの幅を超えない(セル rect は罫線の collapse ぶん
+      # ±数px 揺れるため幅で比較する)。
+      expect(data["card"]["w"]).to be <= data["cell"]["w"] + 1
+      expect(data["link"]["w"]).to be <= data["cell"]["w"] + 1
+      expect(data["img"]["r"]).to be <= data["card"]["r"] + 1
+      # 罫線の共有分(border-collapse)を許容しても、次列の内容へは食い込まない。
+      expect(data["card"]["r"]).to be <= data["nextCell"]["l"] + 3, "YouTubeカードが参加フォーム列へ侵入している"
+    end
+
+    # イベント詳細ページには本変更以前から Bootstrap の .row / .col 由来で
+    # 約15〜16px のページ横あふれがある(fbd1da3 で計測)。楽曲表の拡幅は
+    # overflow-x:auto の .responsive-box 内で完結するため、この値を悪化させない。
+    BASELINE_PAGE_OVERFLOW_PX = 16
+
+    [320, 375, 414].each do |width|
+      it "#{width}px幅: 楽曲表は .responsive-box 内だけで横スクロールし、ページ横スクロールを増やさない" do
+        sign_in_via_form(owner)
+        set_mobile_viewport(width)
+        visit public_event_path(current_event)
+        expect(page).to have_selector(".responsive-box")
+
+        data = page.evaluate_script(<<~JS)
+          (function () {
+            var de = document.documentElement;
+            var box = document.querySelector('.responsive-box');
+            return {
+              pageOverflow: de.scrollWidth - de.clientWidth,
+              boxScrollable: box.scrollWidth - box.clientWidth,
+              boxOverflowX: window.getComputedStyle(box).overflowX
+            };
+          })()
+        JS
+
+        # 楽曲表(min-width 1280px)は box 内で横スクロールできる
+        expect(data["boxScrollable"]).to be > 0, "楽曲表が .responsive-box 内で横スクロールできない"
+        expect(data["boxOverflowX"]).to eq("auto")
+        # ページ全体の横スクロールは既存分(約16px)から悪化していない
+        expect(data["pageOverflow"]).to be <= BASELINE_PAGE_OVERFLOW_PX + 2,
+          "ページ横スクロールが既存分を超えて増えている(#{data['pageOverflow']}px / 既存 #{BASELINE_PAGE_OVERFLOW_PX}px)"
+      end
+    end
+  end
 end

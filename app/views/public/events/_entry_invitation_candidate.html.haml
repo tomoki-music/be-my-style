@@ -1,18 +1,26 @@
 -# エントリー依頼候補1人分。state(helper)は表示状態だけを決める。
 -# 送信可否の最終判断はサーバー側(TargetResolver / BatchSender / Sender)。
+-#
+-# 「カードに出す人」は依頼可否に関わらずチェックボックスの表示位置を揃える。
+-#   - 依頼可能 / 再依頼可能: 有効な checkbox(name="targets[]" + form= で外側フォームへ紐付け)
+-#   - 募集終了 / 依頼済み / エントリー済み等: disabled の checkbox(name/value を持たせず送信対象外)
+-#     + 理由ラベルを併記し、表示漏れか仕様かを分かるようにする
+-# 退会者・候補として不正なユーザーは呼び出し側(experienced_customers_for_display /
+-# ExperiencedCustomersQuery)が除外済みで、そもそもここへ来ない。
 - state = entry_invitation_candidate_state(song, join_part, customer, current_member_ids: current_member_ids)
 - checkbox_id = "entry_invitation_target_#{song.id}_#{join_part.id}_#{customer.id}"
 - target_token = "#{song.id}:#{join_part.id}:#{customer.id}"
-%li.entry-invitation-candidate
+- reason_id = ("entry_invitation_reason_#{song.id}_#{join_part.id}_#{customer.id}" if state.badge.present?)
+%li.entry-invitation-candidate{ class: ("entry-invitation-candidate--disabled" unless state.checkbox_enabled) }
   - if state.checkbox_enabled
-    = check_box_tag "targets[]", target_token, false, id: checkbox_id, class: "js-entry-invitation-checkbox", form: "entry-invitation-form"
-    = label_tag checkbox_id, class: "entry-invitation-candidate__label" do
-      = customer_avatar_tag(customer, class_name: "icon_mini")
-      %span.entry-invitation-candidate__name= customer.name
+    = check_box_tag "targets[]", target_token, false, id: checkbox_id, class: "js-entry-invitation-checkbox entry-invitation-candidate__checkbox", form: "entry-invitation-form", "aria-describedby": reason_id
   - else
-    %span.entry-invitation-candidate__label
-      = customer_avatar_tag(customer, class_name: "icon_mini")
-      %span.entry-invitation-candidate__name= customer.name
+    -# 選択不可。送信されると困るため name / value は持たせない(改ざん対策はサーバー側が本体)。
+    -# 位置合わせと「選べない」ことの伝達のためだけに描画する。
+    %input.entry-invitation-candidate__checkbox.entry-invitation-candidate__checkbox--disabled{ type: "checkbox", id: checkbox_id, disabled: true, form: "entry-invitation-form", "aria-describedby": reason_id }
+  = label_tag checkbox_id, class: "entry-invitation-candidate__label" do
+    = customer_avatar_tag(customer, class_name: "icon_mini")
+    %span.entry-invitation-candidate__name= customer.name
   = link_to "プロフィール", public_customer_path(customer), class: "entry-invitation-candidate__profile", data: { turbolinks: false }
-  - if state.badge
-    %span.entry-invitation-candidate__status{ class: ("entry-invitation-candidate__status--closed" unless state.checkbox_enabled) }= state.badge
+  - if state.badge.present?
+    %span.entry-invitation-candidate__status{ id: reason_id, class: ("entry-invitation-candidate__status--closed" unless state.checkbox_enabled) }= state.badge

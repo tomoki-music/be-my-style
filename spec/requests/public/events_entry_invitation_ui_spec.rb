@@ -116,7 +116,7 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
   end
 
   describe "募集・依頼状態" do
-    it "24時間以内に依頼済みは checkbox 無効・バッジ「依頼済み」" do
+    it "24時間以内に依頼済みは checkbox disabled・送信トークン無し・バッジ「依頼済み」" do
       FactoryBot.create(:entry_invitation,
         event: current_event, song: current_song, join_part: current_part,
         customer: experienced_customer, requested_by_customer: owner, sent_at: 1.hour.ago)
@@ -124,8 +124,19 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
       show_event
 
       candidate = doc.at_css(".entry-invitation-candidate")
+      # 有効な送信対象(js hook)にはならない
       expect(candidate.at_css(".js-entry-invitation-checkbox")).to be_nil
+      # ただし「選べないチェックボックス」は表示位置を揃えて描画する
+      disabled = candidate.at_css(".entry-invitation-candidate__checkbox--disabled")
+      expect(disabled).to be_present
+      expect(disabled["disabled"]).to eq "disabled"
+      expect(disabled["name"]).to be_nil
+      expect(disabled["form"]).to eq "entry-invitation-form"
       expect(candidate.text).to include "依頼済み"
+      # ラベルとチェックボックスの関連付けを維持(スクリーンリーダー)
+      label = candidate.at_css("label.entry-invitation-candidate__label")
+      expect(label["for"]).to eq disabled["id"]
+      expect(disabled["aria-describedby"]).to eq candidate.at_css(".entry-invitation-candidate__status")["id"]
     end
 
     it "24時間の再送禁止期間を過ぎた依頼済みは checkbox 有効・バッジ「再依頼可」" do
@@ -136,11 +147,14 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
       show_event
 
       candidate = doc.at_css(".entry-invitation-candidate")
-      expect(candidate.at_css(".js-entry-invitation-checkbox")).to be_present
+      checkbox = candidate.at_css(".js-entry-invitation-checkbox")
+      expect(checkbox).to be_present
+      expect(checkbox["disabled"]).to be_nil
+      expect(checkbox["name"]).to eq "targets[]"
       expect(candidate.text).to include "再依頼可"
     end
 
-    it "募集終了(現役参加者あり)のパートは経験者を表示しつつ checkbox 無し・バッジ「募集終了」" do
+    it "募集終了(現役参加者あり)のパートは経験者を表示しつつ checkbox disabled・トークン無し・バッジ「募集終了」" do
       # current_part に別の現役参加者を入れて募集終了にする。経験太郎は依頼候補として残る。
       joiner = FactoryBot.create(:customer, name: "参加済次郎")
       CommunityCustomer.find_or_create_by!(customer: joiner, community: community)
@@ -151,7 +165,40 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
       candidate = doc.css(".entry-invitation-candidate").find { |c| c.text.include?("経験太郎") }
       expect(candidate).to be_present
       expect(candidate.at_css(".js-entry-invitation-checkbox")).to be_nil
+      disabled = candidate.at_css(".entry-invitation-candidate__checkbox--disabled")
+      expect(disabled["disabled"]).to eq "disabled"
+      expect(disabled["name"]).to be_nil
       expect(candidate.text).to include "募集終了"
+    end
+
+    it "選択不可の候補でもアバター・名前・プロフィールリンク・状態ラベルがカード内に揃う" do
+      FactoryBot.create(:entry_invitation,
+        event: current_event, song: current_song, join_part: current_part,
+        customer: experienced_customer, requested_by_customer: owner, sent_at: 1.hour.ago)
+      sign_in owner
+      show_event
+
+      candidate = doc.at_css(".entry-invitation-candidate--disabled")
+      expect(candidate).to be_present
+      label = candidate.at_css("label.entry-invitation-candidate__label")
+      expect(label.at_css(".avatar-with-badge")).to be_present
+      expect(label.text).to include "経験太郎"
+      expect(candidate.at_css("a.entry-invitation-candidate__profile")["href"]).to eq public_customer_path(experienced_customer)
+      expect(candidate.at_css(".entry-invitation-candidate__status--closed").text).to eq "依頼済み"
+      # 有効候補と選択不可候補で checkbox のクラス(=表示位置)を揃える
+      expect(candidate.at_css(".entry-invitation-candidate__checkbox")).to be_present
+    end
+
+    it "disabled 候補の checkbox は外側フォームの form.elements 用に form 属性を持つが targets[] を送らない" do
+      FactoryBot.create(:entry_invitation,
+        event: current_event, song: current_song, join_part: current_part,
+        customer: experienced_customer, requested_by_customer: owner, sent_at: 1.hour.ago)
+      sign_in owner
+      show_event
+
+      # ページ内の name="targets[]" は有効な候補のぶんだけ(disabled は 0 件でも可)
+      targets = doc.css("input[name='targets[]']")
+      expect(targets.map { |cb| cb["disabled"] }).to all(be_nil)
     end
   end
 

@@ -249,13 +249,16 @@
                           %div.scroll-indicator{id: "scroll-indicator"} →
                           %div.responsive-box
                             - part_names = JoinPart::NAME_OPTIONS
-                            %table.table.table-bordered.event-songs-table{ style: "min-width: 930px; table-layout: fixed;" }
+                            -# table-layout:fixed のため列幅は先頭行の width で決まる(min-width は効かない)。
+                            -# パート列を候補カードが読める幅(160px)に固定し、列数ぶんを min-width に合算する
+                            -# (160 + 160 + 160*6 = 1280px)。あふれは既存の .responsive-box の横スクロールで見る。
+                            %table.table.table-bordered.event-songs-table{ style: "min-width: 1280px; table-layout: fixed;" }
                               %thead
                                 %tr
                                   %th{ style: "width: 160px;" } 曲名 / ステータス
                                   %th{ style: "width: 160px;" } 参加フォーム
                                   - part_names.each do |part|
-                                    %th{ style: "min-width: 90px;" }= part
+                                    %th{ style: "width: 160px;" }= part
                               %tbody
                                 - @event.songs.each do |song|
                                   - recruiting_parts = song.recruiting_join_parts
