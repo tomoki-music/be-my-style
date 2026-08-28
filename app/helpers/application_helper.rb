@@ -101,7 +101,9 @@ module ApplicationHelper
     nil
   end
 
-  def customer_avatar_tag(customer, class_name: nil, wrapper_class: nil, fallback: "no_image")
+  # show_active_status: 最近アクティブなユーザーに緑丸を表示するか。
+  # チャットのメッセージ一覧など、常時表示すると煩雑になる箇所では false を渡す。
+  def customer_avatar_tag(customer, class_name: nil, wrapper_class: nil, fallback: "no_image", show_active_status: true)
     image_source =
       if customer_withdrawn?(customer)
         fallback
@@ -127,7 +129,28 @@ module ApplicationHelper
     content_tag(:span, class: ["avatar-with-badge", wrapper_class].compact.join(" ")) do
       concat image_tag(image_source, class: class_name)
       concat(content_tag(:span, badge_label, class: badge_class)) if badge_label.present?
+      concat(avatar_active_status_dot) if show_active_status && customer_recently_active?(customer)
     end
+  end
+
+  # 退会済み・未ログイン・Customer 以外のオブジェクトはアクティブ扱いしない。
+  def customer_recently_active?(customer)
+    return false if customer_withdrawn?(customer)
+
+    customer.respond_to?(:recently_active?) && customer.recently_active?
+  end
+
+  # 「最近アクティブ」を表す緑丸。色だけで状態が伝わらないよう、
+  # title / aria-label / role を付与する。正確なログイン日時は出さない。
+  def avatar_active_status_dot
+    content_tag(
+      :span,
+      "",
+      class: "avatar-active-dot",
+      title: "最近アクティブ",
+      "aria-label": "最近アクティブ",
+      role: "img"
+    )
   end
 
   # アバター画像を、退会済みならプロフィールへ遷移させない形で描画する。

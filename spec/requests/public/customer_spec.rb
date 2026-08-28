@@ -94,6 +94,72 @@ RSpec.describe "customersコントローラーのテスト", type: :request do
       it 'タイトルが正しく表示されていること' do
         expect(response.body).to include("アーティスト編集画面")
       end
+      it '加入年月日の入力欄が表示されること' do
+        expect(response.body).to include("加入年月日")
+        expect(response.body).to include('name="customer[joined_on]"')
+      end
+    end
+
+    describe "加入年月日(joined_on)" do
+      it '自分の加入年月日を過去日へ更新できること' do
+        patch public_customer_path(customer), params: { customer: { joined_on: "2020-04-15" } }
+
+        expect(customer.reload.joined_on).to eq Date.new(2020, 4, 15)
+      end
+
+      it '当日を保存できること' do
+        patch public_customer_path(customer), params: { customer: { joined_on: Date.current.to_s } }
+
+        expect(customer.reload.joined_on).to eq Date.current
+      end
+
+      it '未来日は保存できないこと' do
+        original = customer.joined_on
+        patch public_customer_path(customer), params: { customer: { joined_on: (Date.current + 1).to_s } }
+
+        expect(customer.reload.joined_on).to eq original
+        expect(response.body).to include("加入年月日は今日以前の日付を入力してください")
+      end
+
+      it '他人の加入年月日は更新できないこと' do
+        original = customer2.joined_on
+        patch public_customer_path(customer2), params: { customer: { joined_on: "2019-01-01" } }
+
+        expect(customer2.reload.joined_on).to eq original
+      end
+
+      it 'プロフィール詳細に加入年月日が日本語形式で表示されること' do
+        customer.update!(joined_on: Date.new(2024, 4, 15))
+
+        get public_customer_path(customer)
+
+        expect(response.body).to include("2024年4月15日")
+      end
+
+      it 'プロフィール詳細に正確なログイン日時が表示されないこと' do
+        customer.update!(current_sign_in_at: Time.zone.local(2026, 8, 20, 9, 30, 0))
+
+        get public_customer_path(customer)
+
+        expect(response.body).not_to include("09:30")
+        expect(response.body).not_to include("2026年8月20日")
+      end
+    end
+
+    describe "アクティブアイコン(緑丸)" do
+      before { customer.update!(current_sign_in_at: Time.current) }
+
+      it 'ヘッダーの自分のアバターには緑丸を表示しないこと' do
+        get edit_public_customer_path(customer)
+
+        expect(response.body).not_to include("avatar-active-dot")
+      end
+
+      it 'プロフィール詳細では最近アクティブなユーザーに緑丸を表示すること' do
+        get public_customer_path(customer)
+
+        expect(response.body).to include("avatar-active-dot")
+      end
     end
   end
   describe '非ログイン' do

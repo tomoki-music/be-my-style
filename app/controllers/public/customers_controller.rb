@@ -59,6 +59,7 @@ class Public::CustomersController < ApplicationController
       :part,
       :sex,
       :birthday,
+      :joined_on,
       :activity_stance,
       :favorite_artist1,
       :favorite_artist2,

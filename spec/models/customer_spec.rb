@@ -594,4 +594,91 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       expect(Customer.active).not_to include(withdrawn_customer)
     end
   end
+
+  describe 'joined_on（加入年月日）' do
+    include ActiveSupport::Testing::TimeHelpers
+
+    it '新規ユーザーで未指定の場合、登録日(Date.current)が設定されること' do
+      travel_to(Time.zone.local(2026, 8, 27, 12, 0, 0)) do
+        new_customer = FactoryBot.build(:customer, joined_on: nil)
+        new_customer.valid?
+
+        expect(new_customer.joined_on).to eq Date.new(2026, 8, 27)
+      end
+    end
+
+    it '明示的に指定した加入年月日は上書きされないこと' do
+      specified = Date.new(2020, 4, 1)
+      new_customer = FactoryBot.build(:customer, joined_on: specified)
+      new_customer.valid?
+
+      expect(new_customer.joined_on).to eq specified
+    end
+
+    it 'nil は無効であること' do
+      customer.joined_on = nil
+      expect(customer.valid?).to eq false
+    end
+
+    it '過去日は有効であること' do
+      customer.joined_on = Date.current - 1
+      expect(customer.valid?).to eq true
+    end
+
+    it '当日は有効であること' do
+      customer.joined_on = Date.current
+      expect(customer.valid?).to eq true
+    end
+
+    it '未来日は無効であること' do
+      customer.joined_on = Date.current + 1
+      expect(customer.valid?).to eq false
+    end
+
+    it '未来日のエラーメッセージが自然な日本語であること' do
+      customer.joined_on = Date.current + 1
+      customer.valid?
+
+      expect(customer.errors.full_messages).to include('加入年月日は今日以前の日付を入力してください')
+    end
+  end
+
+  describe '#recently_active?' do
+    include ActiveSupport::Testing::TimeHelpers
+
+    around do |example|
+      travel_to(Time.zone.local(2026, 8, 27, 12, 0, 0)) { example.run }
+    end
+
+    it '現在ログインしたユーザーは true' do
+      customer.current_sign_in_at = Time.current
+      expect(customer.recently_active?).to eq true
+    end
+
+    it '1週間前のログインは true' do
+      customer.current_sign_in_at = 1.week.ago
+      expect(customer.recently_active?).to eq true
+    end
+
+    it 'ちょうど1か月前のログインは true' do
+      customer.current_sign_in_at = 1.month.ago
+      expect(customer.recently_active?).to eq true
+    end
+
+    it '1か月よりわずかに前のログインは false' do
+      customer.current_sign_in_at = 1.month.ago - 1.minute
+      expect(customer.recently_active?).to eq false
+    end
+
+    it 'current_sign_in_at が nil なら false' do
+      customer.current_sign_in_at = nil
+      expect(customer.recently_active?).to eq false
+    end
+
+    it '退会ユーザーは、最近ログインしていても false' do
+      customer.current_sign_in_at = Time.current
+      customer.is_deleted = true
+      expect(customer.recently_active?).to eq false
+    end
+  end
 end

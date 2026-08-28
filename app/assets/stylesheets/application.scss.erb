@@ -258,6 +258,20 @@ body {
   background: linear-gradient(135deg, #38bdf8, #0ea5e9);
 }
 
+// 「最近アクティブ」を示す緑丸。役職バッジ(右下)と重ならないよう右上に配置する。
+.avatar-active-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.12);
+  pointer-events: none;
+}
+
 .stamp-badge{
   display: inline-block;
   background: #fff7ed;

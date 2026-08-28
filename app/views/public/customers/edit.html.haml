@@ -45,6 +45,12 @@
             %td
               = f.date_field :birthday
           %tr
+            %th{scope:"row"} 加入年月日
+            %td
+              = f.date_field :joined_on
+              %p.text-muted.small.mb-0
+                基本はBeMyStyleへ登録した日です。以前からコミュニティへ参加している場合などは変更できます。
+          %tr
             %th{scope:"row"} パート
             %td
               = f.collection_check_boxes(:part_ids, Part.all, :id, :name) do |tag|

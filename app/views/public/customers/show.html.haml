@@ -86,6 +86,10 @@
               %td
                 = @customer.birthday.strftime("%Y/%m/%d") unless @customer.birthday.nil?
             %tr
+              %th{scope:"row"} 加入年月日
+              %td
+                = l(@customer.joined_on, format: :japanese) if @customer.joined_on.present?
+            %tr
               %th{scope:"row"} 性別
               %td
                 = @customer.human_attribute_enum(:sex)

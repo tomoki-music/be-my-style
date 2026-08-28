@@ -6,6 +6,7 @@ FactoryBot.define do
     password { 'password' }
     password_confirmation { 'password' }
     confirmed_at { Time.current }
+    joined_on { Date.current }
 
     after(:create) do |customer|
       domain = Domain.find_or_create_by!(name: customer.normalized_domain_name || Customer::DEFAULT_SIGN_UP_DOMAIN)
