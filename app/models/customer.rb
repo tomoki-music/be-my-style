@@ -116,13 +116,20 @@ class Customer < ApplicationRecord
   validates :joined_on, presence: true
   validate :joined_on_cannot_be_in_the_future
 
-  # 最近ログインしているか（アクティブ状態のアイコン表示などに使う共通判定）。
-  # current_sign_in_at のみで判定し、関連を辿らないため N+1 を発生させない。
+  # 最終アクティビティ日時。ログイン継続中の利用を記録する last_active_at と、
+  # Devise trackable の current_sign_in_at の新しい方を返す。
+  # どちらも customers レコードの属性のみで完結し、関連を辿らないため N+1 を発生させない。
+  def latest_activity_at
+    [last_active_at, current_sign_in_at].compact.max
+  end
+
+  # 最近アクティブか（アクティブ状態のアイコン表示などに使う共通判定）。
+  # ちょうど1か月前は true（境界を含む）。正確な最終利用日時は画面へ公開しない。
   def recently_active?
     return false if is_deleted?
-    return false if current_sign_in_at.blank?
 
-    current_sign_in_at >= 1.month.ago
+    activity_at = latest_activity_at
+    activity_at.present? && activity_at >= 1.month.ago
   end
 
   # business
