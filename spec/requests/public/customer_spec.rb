@@ -161,6 +161,87 @@ RSpec.describe "customersコントローラーのテスト", type: :request do
         expect(response.body).to include("avatar-active-dot")
       end
     end
+
+    describe "演奏実績のスクロール表示" do
+      let(:history_community) { create(:community) }
+
+      # 終了済みイベント(:event factoryのデフォルト日時は2023年)への出演実績を1件作る。
+      def create_performance(song_name:, part_name: "Vocal")
+        event = create(:event, :event_with_songs, community: history_community)
+        song = create(:song, event: event, song_name: song_name, artist_name: "アーティスト")
+        join_part = create(:join_part, song: song, join_part_name: part_name)
+        create(:join_part_customer, join_part: join_part, customer: customer)
+      end
+
+      context "演奏実績があるとき" do
+        before do
+          create_performance(song_name: "スクロール確認曲")
+          get public_customer_path(customer)
+        end
+
+        it "演奏実績欄が専用のスクロールコンテナで囲まれること" do
+          container = Nokogiri::HTML(response.body).at_css("td .performance-history-scroll")
+
+          expect(container).to be_present
+          expect(container["tabindex"]).to eq "0"
+          expect(container["role"]).to eq "region"
+          expect(container["aria-label"]).to eq "演奏実績一覧"
+        end
+      end
+
+      context "演奏実績が複数あるとき" do
+        it "すべての演奏実績がスクロールコンテナ内のDOMに残ること" do
+          song_names = %w[実績曲アルファ 実績曲ブラボー 実績曲チャーリー]
+          song_names.each { |name| create_performance(song_name: name) }
+
+          get public_customer_path(customer)
+
+          container = Nokogiri::HTML(response.body).at_css(".performance-history-scroll")
+          song_names.each do |name|
+            expect(container.text).to include(name)
+          end
+        end
+      end
+
+      context "演奏実績が0件のとき" do
+        it "スクロールコンテナ自体を表示しないこと" do
+          get public_customer_path(customer)
+
+          expect(response.body).not_to include("performance-history-scroll")
+        end
+      end
+
+      context "演奏実績と演奏可能曲の両方があるとき" do
+        before do
+          create_performance(song_name: "実績側の曲")
+          playable_event = create(:event, :event_with_songs, community: history_community)
+          playable_song = create(:song, event: playable_event, song_name: "演奏可能曲側の曲", artist_name: "アーティスト")
+          create(:customer_song_part, customer: customer, song: playable_song, song_master: playable_song.song_master, part_name: "Guitar")
+
+          get public_customer_path(customer)
+        end
+
+        it "スクロールコンテナには演奏実績のみが含まれ、演奏可能曲は含まれないこと" do
+          container = Nokogiri::HTML(response.body).at_css(".performance-history-scroll")
+
+          expect(container.text).to include("実績側の曲")
+          expect(container.text).not_to include("演奏可能曲側の曲")
+        end
+      end
+
+      context "演奏可能曲だけが登録されているとき" do
+        it "スクロールコンテナを付与しないこと" do
+          playable_event = create(:event, :event_with_songs, community: history_community)
+          playable_song = create(:song, event: playable_event, song_name: "自己申告のみの曲", artist_name: "アーティスト")
+          create(:customer_song_part, customer: customer, song: playable_song, song_master: playable_song.song_master, part_name: "Guitar")
+
+          get public_customer_path(customer)
+
+          expect(response.body).to include("演奏可能曲")
+          expect(response.body).not_to include("performance-history-scroll")
+        end
+      end
+    end
   end
   describe '非ログイン' do
     context "customers詳細ページへ遷移されない" do
