@@ -75,6 +75,7 @@ class ApplicationController < ActionController::Base
   before_action :set_current_domain
   before_action :authenticate_customer!
   before_action :ensure_music_domain_access_for_public_routes!
+  after_action :track_customer_activity
   
   helper_method :current_domain_business
   helper_method :current_domain_music
@@ -98,6 +99,21 @@ class ApplicationController < ActionController::Base
   end
 
   private
+
+  # ログイン済み Customer による通常の Controller リクエストを「利用中」として記録する。
+  # HEAD / OPTIONS と未ログイン・退会ユーザーは対象外。フォーマット（HTML / JS など）は限定しない。
+  # 補助機能のため、記録に失敗しても通常レスポンスは 500 にせず警告ログのみ残す。
+  def track_customer_activity
+    return unless customer_signed_in?
+    return if request.head?
+    return if request.request_method == "OPTIONS"
+
+    Customers::ActivityTracker.touch(current_customer)
+  rescue StandardError => e
+    Rails.logger.warn(
+      "[CustomerActivity] failed customer_id=#{current_customer&.id}: #{e.class}: #{e.message}"
+    )
+  end
 
   def set_current_domain
     @current_domain =

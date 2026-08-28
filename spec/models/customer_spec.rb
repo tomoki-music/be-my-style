@@ -643,11 +643,67 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
     end
   end
 
+  describe '#latest_activity_at' do
+    include ActiveSupport::Testing::TimeHelpers
+
+    around do |example|
+      travel_to(Time.zone.local(2026, 8, 27, 12, 0, 0)) { example.run }
+    end
+
+    it '両方 nil なら nil' do
+      customer.last_active_at = nil
+      customer.current_sign_in_at = nil
+      expect(customer.latest_activity_at).to be_nil
+    end
+
+    it 'last_active_at だけあれば、その日時を返す' do
+      customer.last_active_at = 3.days.ago
+      customer.current_sign_in_at = nil
+      expect(customer.latest_activity_at).to eq 3.days.ago
+    end
+
+    it 'current_sign_in_at だけあれば、その日時を返す' do
+      customer.last_active_at = nil
+      customer.current_sign_in_at = 5.days.ago
+      expect(customer.latest_activity_at).to eq 5.days.ago
+    end
+
+    it '両方ある場合、last_active_at が新しければそちらを返す' do
+      customer.last_active_at = 1.day.ago
+      customer.current_sign_in_at = 10.days.ago
+      expect(customer.latest_activity_at).to eq 1.day.ago
+    end
+
+    it '両方ある場合、current_sign_in_at が新しければそちらを返す' do
+      customer.last_active_at = 10.days.ago
+      customer.current_sign_in_at = 1.minute.ago
+      expect(customer.latest_activity_at).to eq 1.minute.ago
+    end
+  end
+
   describe '#recently_active?' do
     include ActiveSupport::Testing::TimeHelpers
 
     around do |example|
       travel_to(Time.zone.local(2026, 8, 27, 12, 0, 0)) { example.run }
+    end
+
+    it 'last_active_at が2週間前なら true' do
+      customer.last_active_at = 2.weeks.ago
+      customer.current_sign_in_at = nil
+      expect(customer.recently_active?).to eq true
+    end
+
+    it 'last_active_at が nil でも current_sign_in_at が2週間前なら true' do
+      customer.last_active_at = nil
+      customer.current_sign_in_at = 2.weeks.ago
+      expect(customer.recently_active?).to eq true
+    end
+
+    it '両方ある場合は新しい方で判定する（古い方が1か月より前でも true）' do
+      customer.last_active_at = 1.day.ago
+      customer.current_sign_in_at = 2.months.ago
+      expect(customer.recently_active?).to eq true
     end
 
     it '現在ログインしたユーザーは true' do
@@ -660,22 +716,26 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       expect(customer.recently_active?).to eq true
     end
 
-    it 'ちょうど1か月前のログインは true' do
-      customer.current_sign_in_at = 1.month.ago
+    it 'ちょうど1か月前なら true' do
+      customer.last_active_at = 1.month.ago
+      customer.current_sign_in_at = nil
       expect(customer.recently_active?).to eq true
     end
 
-    it '1か月よりわずかに前のログインは false' do
+    it '1か月よりわずかに前なら false' do
+      customer.last_active_at = 1.month.ago - 1.minute
       customer.current_sign_in_at = 1.month.ago - 1.minute
       expect(customer.recently_active?).to eq false
     end
 
-    it 'current_sign_in_at が nil なら false' do
+    it 'last_active_at と current_sign_in_at が両方 nil なら false' do
+      customer.last_active_at = nil
       customer.current_sign_in_at = nil
       expect(customer.recently_active?).to eq false
     end
 
-    it '退会ユーザーは、最近ログインしていても false' do
+    it '退会ユーザーは、最近利用していても false' do
+      customer.last_active_at = Time.current
       customer.current_sign_in_at = Time.current
       customer.is_deleted = true
       expect(customer.recently_active?).to eq false

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_08_28_000000) do
+ActiveRecord::Schema.define(version: 2026_08_28_010000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -366,6 +366,7 @@ ActiveRecord::Schema.define(version: 2026_08_28_000000) do
     t.integer "singing_level", default: 1, null: false
     t.integer "singing_coach_personality", default: 0, null: false
     t.date "joined_on", null: false
+    t.datetime "last_active_at"
     t.index ["email"], name: "index_customers_on_email", unique: true
     t.index ["reset_password_token"], name: "index_customers_on_reset_password_token", unique: true
   end
