@@ -64,6 +64,19 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
       expect(doc.css("form form").size).to eq 0
     end
 
+    it "参加フォームと依頼フォームが分かれており、各ボタンがそれぞれのフォーム側にある" do
+      expect(doc.css("form#join_btn").size).to eq 1
+      expect(doc.css("form#entry-invitation-form").size).to eq 1
+
+      join_btn = doc.at_css("#submit_join_form")
+      expect(join_btn["value"]).to eq "参加確認画面へ"
+      expect(join_btn.ancestors("form").first["id"]).to eq "join_btn"
+
+      invite_btn = doc.at_css(".js-entry-invitation-submit")
+      expect(invite_btn["value"]).to eq "選択した人へエントリーをお願いする"
+      expect(invite_btn.ancestors("form").first["id"]).to eq "entry-invitation-form"
+    end
+
     it "候補チェックボックスは楽曲表内にあり、form属性で外側フォームへ紐付く" do
       checkbox = doc.at_css(".js-entry-invitation-checkbox")
       expect(checkbox["name"]).to eq "targets[]"
@@ -302,37 +315,38 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
     end
   end
 
-  describe "送信ボタンの有効・無効(選択できる候補の有無)" do
-    it "1人でも invitable がいれば送信ボタンは有効(disabled属性なし)" do
+  describe "送信ボタンの初期状態(常に disabled・JSが選択で有効化)" do
+    it "invitable な候補がいても初期HTMLでは disabled(JSが .js-entry-invitation-checkbox の選択で有効化)" do
       sign_in owner
       show_event
 
       button = doc.at_css(".js-entry-invitation-submit")
       expect(button).to be_present
-      expect(button["disabled"]).to be_nil
+      expect(button["disabled"]).to eq "disabled"
       expect(response.body).not_to include "現在、依頼できる演奏経験者はいません"
     end
 
-    it "1人でも invited_resendable がいれば送信ボタンは有効" do
+    it "invited_resendable な候補がいても初期HTMLでは disabled" do
       FactoryBot.create(:entry_invitation,
         event: current_event, song: current_song, join_part: current_part,
         customer: experienced_customer, requested_by_customer: owner, sent_at: 2.days.ago)
       sign_in owner
       show_event
 
-      expect(doc.at_css(".js-entry-invitation-submit")["disabled"]).to be_nil
+      expect(doc.at_css(".js-entry-invitation-submit")["disabled"]).to eq "disabled"
     end
 
-    it "経験者はいるが全員が募集終了(別の参加者あり)でも、依頼可能なので送信ボタンは有効" do
+    it "募集終了(別の参加者あり)でも依頼候補の有効な checkbox は描画され、ボタンは初期 disabled" do
       joiner = FactoryBot.create(:customer, name: "参加済次郎")
       CommunityCustomer.find_or_create_by!(customer: joiner, community: community)
       FactoryBot.create(:join_part_customer, join_part: current_part, customer: joiner)
       sign_in owner
       show_event
 
-      expect(doc.at_css(".js-entry-invitation-submit")["disabled"]).to be_nil
+      expect(doc.at_css(".js-entry-invitation-submit")["disabled"]).to eq "disabled"
       expect(response.body).not_to include "現在、依頼できる演奏経験者はいません"
-      expect(doc.css(".entry-invitation-candidate").text).to include "経験太郎"
+      candidate = doc.css(".entry-invitation-candidate").find { |c| c.text.include?("経験太郎") }
+      expect(candidate.at_css(".js-entry-invitation-checkbox")).to be_present
       expect(doc.css("#entry-invitation-form").size).to eq 1
     end
 
@@ -345,6 +359,30 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
 
       expect(doc.at_css(".js-entry-invitation-submit")["disabled"]).to eq "disabled"
       expect(response.body).to include "現在、依頼できる演奏経験者はいません"
+    end
+
+    it "参加フォームの「参加確認画面へ」ボタンも初期HTMLでは disabled" do
+      sign_in owner
+      show_event
+
+      button = doc.at_css("#submit_join_form")
+      expect(button).to be_present
+      expect(button["disabled"]).to eq "disabled"
+    end
+
+    it "参加パート checkbox と依頼候補 checkbox は class / name / form 属性が混在しない" do
+      sign_in owner
+      show_event
+
+      join_cb = doc.at_css("input.js-join-part-checkbox")
+      expect(join_cb["name"]).to eq "event[join_part_ids][]"
+      expect(join_cb["form"]).to be_nil
+      expect(join_cb["class"]).not_to include "js-entry-invitation-checkbox"
+
+      invite_cb = doc.at_css("input.js-entry-invitation-checkbox")
+      expect(invite_cb["name"]).to eq "targets[]"
+      expect(invite_cb["form"]).to eq "entry-invitation-form"
+      expect(invite_cb["class"]).not_to include "js-join-part-checkbox"
     end
 
     it "一般ユーザーには補足文を表示しない" do

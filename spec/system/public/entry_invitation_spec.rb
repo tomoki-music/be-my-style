@@ -61,8 +61,53 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
     "entry_invitation_target_#{song.id}_#{part.id}_#{customer.id}"
   end
 
+  # 実ユーザーの操作と同じく change を発火させ、ボタン状態同期を動かす。
   def check_via_js(id)
-    page.execute_script("document.getElementById(#{id.to_json}).checked = true")
+    page.execute_script(<<~JS)
+      (function () {
+        var cb = document.getElementById(#{id.to_json});
+        cb.checked = true;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+      })()
+    JS
+  end
+
+  def uncheck_via_js(id)
+    page.execute_script(<<~JS)
+      (function () {
+        var cb = document.getElementById(#{id.to_json});
+        cb.checked = false;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+      })()
+    JS
+  end
+
+  def check_join_part_via_js(part)
+    page.execute_script(<<~JS)
+      (function () {
+        var cb = document.getElementById('event_join_part_ids_#{part.id}');
+        cb.checked = true;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+      })()
+    JS
+  end
+
+  def uncheck_join_part_via_js(part)
+    page.execute_script(<<~JS)
+      (function () {
+        var cb = document.getElementById('event_join_part_ids_#{part.id}');
+        cb.checked = false;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+      })()
+    JS
+  end
+
+  def join_submit_disabled?
+    page.evaluate_script("document.getElementById('submit_join_form').disabled")
+  end
+
+  def invitation_submit_disabled?
+    page.evaluate_script("document.querySelector('#entry-invitation-form .js-entry-invitation-submit').disabled")
   end
 
   def submit_form
@@ -156,12 +201,21 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
     expect(page).to have_content("2人")
   end
 
-  it "選択できる候補がいれば送信ボタンは有効" do
+  it "選択できる候補がいても、未選択の初期状態では送信ボタンは disabled" do
     sign_in_via_form(owner)
     visit public_event_path(current_event)
 
-    expect(page).to have_selector("#entry-invitation-form .js-entry-invitation-submit:not([disabled])")
+    expect(page).to have_selector("#entry-invitation-form .js-entry-invitation-submit[disabled]")
     expect(page).not_to have_content("現在、依頼できる演奏経験者はいません")
+  end
+
+  it "有効な依頼候補を1件チェックすると送信ボタンが有効になる" do
+    sign_in_via_form(owner)
+    visit public_event_path(current_event)
+
+    expect(invitation_submit_disabled?).to be(true)
+    check_via_js(checkbox_id(current_song, current_vocal, experienced_a))
+    expect(invitation_submit_disabled?).to be(false)
   end
 
   it "選択できる候補が0人なら送信ボタンは disabled で補足文を表示する" do
@@ -199,15 +253,25 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
     expect(display).to eq "none"
   end
 
-  it "未選択で送信すると警告が出て遷移しない" do
+  it "未選択のまま送信イベントが起きても警告が出て遷移しない(サーバー到達前の防御)" do
     sign_in_via_form(owner)
     visit public_event_path(current_event)
     expect(page).to have_selector("#entry-invitation-form")
 
-    message = accept_alert { submit_form }
+    # 通常は disabled でクリックできないが、DOM 改変等で submit された場合の JS 側防御を検証する。
+    message = accept_alert do
+      page.execute_script(<<~JS)
+        (function () {
+          var b = document.querySelector('#entry-invitation-form .js-entry-invitation-submit');
+          b.disabled = false;
+          b.click();
+        })()
+      JS
+    end
 
     expect(message).to include "選択"
     expect(page).to have_selector("#entry-invitation-form")
+    expect(page).to have_no_content("エントリー依頼の送信確認")
   end
 
   it "二重送信(連続クリック)を防ぐ" do
@@ -227,6 +291,116 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
       })()
     JS
     expect(submitting).to eq "1"
+  end
+
+  # Phase 3 状態表: 参加フォームとエントリー依頼フォームのボタン制御が完全に分離されていること。
+  describe "参加ボタンと依頼ボタンの分離(状態表)" do
+    before do
+      sign_in_via_form(owner)
+      visit public_event_path(current_event)
+      expect(page).to have_selector("#entry-invitation-form")
+      expect(page).to have_selector("#submit_join_form")
+    end
+
+    it "どちらも未選択: 両ボタン disabled" do
+      expect(join_submit_disabled?).to be(true)
+      expect(invitation_submit_disabled?).to be(true)
+    end
+
+    it "参加パートだけ選択: 参加ボタン enabled / 依頼ボタン disabled" do
+      check_join_part_via_js(current_vocal)
+      expect(join_submit_disabled?).to be(false)
+      expect(invitation_submit_disabled?).to be(true)
+    end
+
+    it "経験者だけ選択: 参加ボタン disabled / 依頼ボタン enabled" do
+      check_via_js(checkbox_id(current_song, current_vocal, experienced_a))
+      expect(join_submit_disabled?).to be(true)
+      expect(invitation_submit_disabled?).to be(false)
+    end
+
+    it "両方選択: 両ボタン enabled" do
+      check_join_part_via_js(current_vocal)
+      check_via_js(checkbox_id(current_song, current_guitar, experienced_b))
+      expect(join_submit_disabled?).to be(false)
+      expect(invitation_submit_disabled?).to be(false)
+    end
+
+    it "経験者を選択後に全解除: 依頼ボタン disabled / 参加ボタンは参加選択に従う" do
+      check_join_part_via_js(current_vocal)
+      check_via_js(checkbox_id(current_song, current_vocal, experienced_a))
+      uncheck_via_js(checkbox_id(current_song, current_vocal, experienced_a))
+      expect(invitation_submit_disabled?).to be(true)
+      expect(join_submit_disabled?).to be(false)
+    end
+
+    it "参加パートを選択後に全解除: 参加ボタン disabled / 依頼ボタンは経験者選択に従う" do
+      check_via_js(checkbox_id(current_song, current_vocal, experienced_a))
+      check_join_part_via_js(current_vocal)
+      uncheck_join_part_via_js(current_vocal)
+      expect(join_submit_disabled?).to be(true)
+      expect(invitation_submit_disabled?).to be(false)
+    end
+
+    it "依頼checkboxを選択した状態で参加フォームを強制submitしても targets[] が混入しない" do
+      check_via_js(checkbox_id(current_song, current_vocal, experienced_a))
+
+      params = page.evaluate_script(<<~JS)
+        (function () {
+          var form = document.getElementById('join_btn');
+          var fd = new FormData(form);
+          var keys = [];
+          fd.forEach(function (_v, k) { keys.push(k); });
+          return keys;
+        })()
+      JS
+      expect(params).not_to include("targets[]")
+    end
+
+    it "参加checkboxを選択した状態で依頼フォームを送信しても event[join_part_ids][] が混入しない" do
+      check_join_part_via_js(current_vocal)
+      check_via_js(checkbox_id(current_song, current_vocal, experienced_a))
+
+      params = page.evaluate_script(<<~JS)
+        (function () {
+          var form = document.getElementById('entry-invitation-form');
+          var fd = new FormData(form);
+          var keys = [];
+          fd.forEach(function (_v, k) { keys.push(k); });
+          return keys;
+        })()
+      JS
+      expect(params).to include("targets[]")
+      expect(params).not_to include("event[join_part_ids][]")
+    end
+
+    it "disabled 候補しかいない場合、依頼ボタンは有効化されない" do
+      # experienced_a / experienced_b を Vocal / Guitar とも 24時間以内に依頼済みにする
+      [current_vocal, current_guitar].each do |part|
+        [experienced_a, experienced_b].each do |c|
+          create(:entry_invitation, event: current_event, song: current_song, join_part: part,
+                                    customer: c, requested_by_customer: owner, sent_at: 1.hour.ago)
+        end
+      end
+      visit public_event_path(current_event)
+
+      expect(page).to have_no_selector(".js-entry-invitation-checkbox")
+      expect(invitation_submit_disabled?).to be(true)
+    end
+
+    it "pageshow(ブラウザバック相当)でボタン状態が再同期される" do
+      check_via_js(checkbox_id(current_song, current_vocal, experienced_a))
+      expect(invitation_submit_disabled?).to be(false)
+
+      # checked 状態はそのままに pageshow だけ発火 → enabled のまま
+      page.execute_script("window.dispatchEvent(new Event('pageshow'))")
+      expect(invitation_submit_disabled?).to be(false)
+
+      # 解除してから pageshow → disabled へ戻る
+      uncheck_via_js(checkbox_id(current_song, current_vocal, experienced_a))
+      page.execute_script("window.dispatchEvent(new Event('pageshow'))")
+      expect(invitation_submit_disabled?).to be(true)
+    end
   end
 
   # レイアウト崩れ回帰: 候補カード(役職バッジ・緑丸・disabled チェックボックス・
