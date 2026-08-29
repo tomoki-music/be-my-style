@@ -4,8 +4,8 @@ class Public::EntryInvitationsController < ApplicationController
   before_action :authorize_sender!
 
   # 確認画面。パネルから GET で渡される targets[] は信用せず、TargetResolver で
-  # 「このイベント・募集中の曲/パート・その演奏経験者」だけに絞り直して表示する。
-  # hidden field へ持ち越すのも検証済みトークンのみ。
+  # 「このイベントの曲/パート・その演奏経験者」だけに絞り直して表示する
+  # (パートの募集状態は問わない)。hidden field へ持ち越すのも検証済みトークンのみ。
   def new
     parsed_count = EntryInvitations::TargetParser.parse(params[:targets]).size
 

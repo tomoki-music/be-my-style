@@ -129,9 +129,9 @@ RSpec.describe EntryInvitations::BatchSender do
       expect(result.recently_sent_count).to eq 1
     end
 
-    it "既に成功したグループを再送しない（部分失敗でも二重送信しない）" do
-      # 曲A Vocal は募集終了させ、グループ単位で送信不可にする
-      FactoryBot.create(:join_part_customer, join_part: current_vocal, customer: FactoryBot.create(:customer))
+    it "対象外グループがあっても他グループの送信は行い、二重送信しない" do
+      # 曲A Vocal は vocalist 本人がすでにエントリー済み → そのグループはスキップされる
+      FactoryBot.create(:join_part_customer, join_part: current_vocal, customer: vocalist)
 
       result = nil
       expect {

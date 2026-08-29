@@ -154,7 +154,7 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
       expect(candidate.text).to include "再依頼可"
     end
 
-    it "募集終了(現役参加者あり)のパートは経験者を表示しつつ checkbox disabled・トークン無し・バッジ「募集終了」" do
+    it "募集終了(現役参加者あり)のパートでも経験者には有効な checkbox を表示し「募集終了」ラベルを出さない" do
       # current_part に別の現役参加者を入れて募集終了にする。経験太郎は依頼候補として残る。
       joiner = FactoryBot.create(:customer, name: "参加済次郎")
       CommunityCustomer.find_or_create_by!(customer: joiner, community: community)
@@ -164,11 +164,15 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
 
       candidate = doc.css(".entry-invitation-candidate").find { |c| c.text.include?("経験太郎") }
       expect(candidate).to be_present
-      expect(candidate.at_css(".js-entry-invitation-checkbox")).to be_nil
-      disabled = candidate.at_css(".entry-invitation-candidate__checkbox--disabled")
-      expect(disabled["disabled"]).to eq "disabled"
-      expect(disabled["name"]).to be_nil
-      expect(candidate.text).to include "募集終了"
+      checkbox = candidate.at_css(".js-entry-invitation-checkbox")
+      expect(checkbox).to be_present
+      expect(checkbox["disabled"]).to be_nil
+      expect(checkbox["name"]).to eq "targets[]"
+      expect(checkbox["value"]).to eq "#{current_song.id}:#{current_part.id}:#{experienced_customer.id}"
+      expect(checkbox["form"]).to eq "entry-invitation-form"
+      expect(candidate.text).not_to include "募集終了"
+      # 楽曲表本来の募集状況表示(参加フォーム欄などの「募集中」)は残る
+      expect(response.body).to include "募集中"
     end
 
     it "選択不可の候補でもアバター・名前・プロフィールリンク・状態ラベルがカード内に揃う" do
@@ -319,16 +323,15 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
       expect(doc.at_css(".js-entry-invitation-submit")["disabled"]).to be_nil
     end
 
-    it "経験者はいるが全員が募集終了なら送信ボタンは disabled + 補足文を表示" do
+    it "経験者はいるが全員が募集終了(別の参加者あり)でも、依頼可能なので送信ボタンは有効" do
       joiner = FactoryBot.create(:customer, name: "参加済次郎")
       CommunityCustomer.find_or_create_by!(customer: joiner, community: community)
       FactoryBot.create(:join_part_customer, join_part: current_part, customer: joiner)
       sign_in owner
       show_event
 
-      expect(doc.at_css(".js-entry-invitation-submit")["disabled"]).to eq "disabled"
-      expect(response.body).to include "現在、依頼できる演奏経験者はいません"
-      # 経験者名と状態バッジ・フォーム本体は引き続き表示する
+      expect(doc.at_css(".js-entry-invitation-submit")["disabled"]).to be_nil
+      expect(response.body).not_to include "現在、依頼できる演奏経験者はいません"
       expect(doc.css(".entry-invitation-candidate").text).to include "経験太郎"
       expect(doc.css("#entry-invitation-form").size).to eq 1
     end

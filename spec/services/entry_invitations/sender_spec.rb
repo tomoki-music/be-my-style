@@ -124,10 +124,8 @@ RSpec.describe EntryInvitations::Sender do
     end
 
     it 'receiverごとのエントリー済み判定（disqualification_reason）が :already_entered を返すこと' do
-      # 通常アプリでは誰かがエントリーするとパートは募集終了になるため、
-      # 「募集中かつ本人がエントリー済み」という状態は前段(validate_context)で弾かれる。
-      # ここでは個別受信者チェックの分岐そのものを検証するため、募集中判定だけスタブする。
-      allow_any_instance_of(Song).to receive(:recruiting_join_parts).and_return([current_vocal_part])
+      # 本人がすでに該当パートへエントリー済み。パートの募集状態は問わない(validate_context で
+      # 弾かれない)ため、個別受信者チェックの :already_entered 分岐がそのまま働く。
       FactoryBot.create(:join_part_customer, join_part: current_vocal_part, customer: experienced_customer)
 
       result = call(customer_ids: [experienced_customer.id])
@@ -144,13 +142,17 @@ RSpec.describe EntryInvitations::Sender do
       expect(EntryInvitation.count).to eq 0
     end
 
-    it '募集終了済み（参加者あり）のパートには送信できない' do
+    it '募集終了済み（別の参加者あり）のパートでも経験者へは送信できる' do
       FactoryBot.create(:join_part_customer, join_part: current_vocal_part, customer: FactoryBot.create(:customer))
 
-      result = call(customer_ids: [experienced_customer.id])
+      result = nil
+      expect {
+        result = call(customer_ids: [experienced_customer.id])
+      }.to change(EntryInvitation, :count).by(1)
+        .and have_enqueued_job(SendEntryInvitationJob)
 
-      expect(result.success?).to be false
-      expect(result.error).to include "募集"
+      expect(result.success?).to be true
+      expect(result.queued).to contain_exactly(experienced_customer)
     end
 
     it 'customer_id改ざんで無関係な人へは送信できない' do

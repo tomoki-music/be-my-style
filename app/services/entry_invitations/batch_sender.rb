@@ -55,7 +55,7 @@ module EntryInvitations
         )
 
         unless result.success?
-          # グループ単位で送信不可(募集が締め切られた等)。既存成功分はそのまま。
+          # グループ単位で送信不可(権限喪失・イベント終了・曲/パート不整合等)。既存成功分はそのまま。
           skipped += group.customers.size
           next
         end

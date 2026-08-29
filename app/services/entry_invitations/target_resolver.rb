@@ -6,9 +6,11 @@ module EntryInvitations
   # 検証内容(送信者の権限・イベント終了判定は呼び出し側で担保):
   #   1. Song が対象 Event に所属している
   #   2. JoinPart が対象 Song に所属している
-  #   3. JoinPart が募集中(現役参加者0人)
-  #   4. Customer が存在する(退会者は ExperiencedCustomersQuery が除外済み)
-  #   5. Customer がその曲・パートの演奏経験者(別の終了済みイベントに実績あり)
+  #   3. Customer が存在する(退会者は ExperiencedCustomersQuery が除外済み)
+  #   4. Customer がその曲・パートの演奏経験者(別の終了済みイベントに実績あり)
+  #
+  # パートの募集状態(recruiting_join_parts)は検証しない。募集終了パートでも経験者へは
+  # 依頼でき、受信者は通常のエントリー導線からそのパートへ参加できる。
   #
   # 24時間以内の再送防止は送信時に EntryInvitations::Sender が再判定するため、ここでは扱わない
   # (確認画面には「依頼済み」バッジ付きで表示し、実送信でスキップする既存 UX を踏襲)。
@@ -49,7 +51,6 @@ module EntryInvitations
 
         join_part = song.join_parts.detect { |part| part.id == join_part_id }
         next unless join_part
-        next unless recruiting?(song, join_part)
 
         key = PerformanceHistory::ExperiencedCustomersQuery.key_for(song.song_master_id, join_part.join_part_name)
         next if key.nil?
@@ -66,10 +67,6 @@ module EntryInvitations
 
     def songs_by_id
       @songs_by_id ||= @event.songs.index_by(&:id)
-    end
-
-    def recruiting?(song, join_part)
-      song.recruiting_join_parts.any? { |part| part.id == join_part.id }
     end
   end
 end
