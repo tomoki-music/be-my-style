@@ -70,21 +70,37 @@ document.addEventListener('turbolinks:load', () => {
   });
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.querySelector('.event-songs-join-form');
-  if (!form) return;
-
-  const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+// 参加フォーム(#join_btn)の「参加確認画面へ」ボタン制御。
+// 参加パート用 checkbox (.js-join-part-checkbox / name="event[join_part_ids][]") の
+// checked 件数だけを見る。楽曲表内には form= 属性で #entry-invitation-form へ紐づく
+// 依頼用 checkbox (.js-entry-invitation-checkbox) も DOM 上は存在するが、
+// 2つのフォームのボタン制御を完全に分離するため、それらは絶対に参照しない。
+const setupJoinSubmitToggle = () => {
+  const form = document.getElementById('join_btn');
   const submitBtn = document.getElementById('submit_join_form');
+  if (!form || !submitBtn) return;
 
-  const toggleButton = () => {
-    const isChecked = Array.from(checkboxes).some(cb => cb.checked);
-    submitBtn.disabled = !isChecked;
+  const joinCheckboxes = () =>
+    form.querySelectorAll('input.js-join-part-checkbox[name="event[join_part_ids][]"]');
+
+  const sync = () => {
+    submitBtn.disabled = !Array.prototype.some.call(joinCheckboxes(), (cb) => cb.checked);
   };
 
-  checkboxes.forEach(cb => cb.addEventListener('change', toggleButton));
-  toggleButton();
-});
+  // ハンドラの多重登録を避ける(turbolinks:load はフォームが新ノードなので毎回 bind、
+  // pageshow の bfcache 復元では同一ノードなので guard で二重 bind を防ぐ)。
+  if (form.dataset.joinToggleBound !== '1') {
+    form.dataset.joinToggleBound = '1';
+    form.addEventListener('change', (e) => {
+      const t = e.target;
+      if (t && t.classList && t.classList.contains('js-join-part-checkbox')) sync();
+    });
+  }
+  sync();
+};
+
+document.addEventListener('turbolinks:load', setupJoinSubmitToggle);
+window.addEventListener('pageshow', setupJoinSubmitToggle);
 
 document.addEventListener('DOMContentLoaded', () => {
   const box = document.querySelector('.responsive-box');

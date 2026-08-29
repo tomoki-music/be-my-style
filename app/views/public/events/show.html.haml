@@ -303,7 +303,7 @@
                                           - song.join_parts.each do |part|
                                             .check-part-item(style="margin-bottom: 4px;")
                                               = label_tag "event_join_part_ids_#{part.id}" do
-                                                = check_box_tag "event[join_part_ids][]", part.id, false, id: "event_join_part_ids_#{part.id}"
+                                                = check_box_tag "event[join_part_ids][]", part.id, false, id: "event_join_part_ids_#{part.id}", class: "js-join-part-checkbox"
                                                 = part.join_part_name
                                               = hidden_field_tag :event_id, @event.id
                                         - else
@@ -372,9 +372,12 @@
                           楽曲表を横にスクロールして、依頼したいメンバーを選択してください。
                         - unless entry_invitation_selectable
                           %p.entry-invitation-form__empty{ role: "status" } 現在、依頼できる演奏経験者はいません。
+                        -# 初期状態は常に disabled。JS が有効な .js-entry-invitation-checkbox の
+                        -# checked 件数を見て有効化する(参加フォームのボタン制御とは完全に分離)。
+                        -# JS 無効時はサーバー側 TargetParser / TargetResolver / BatchSender が空選択を弾く。
                         = submit_tag "選択した人へエントリーをお願いする",
                           class: "btn btn-info js-entry-invitation-submit",
-                          disabled: !entry_invitation_selectable,
+                          disabled: true,
                           data: { disable_with: "確認画面へ移動中..." }
                 %tr
                   %th{scope:"row"} イベント補足
