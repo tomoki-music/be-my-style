@@ -10,7 +10,7 @@
     .singing-profile__cover
     .singing-profile__hero-inner
       .singing-profile__avatar-wrap
-        = customer_avatar_tag(@user, class_name: "singing-profile__avatar", fallback: "no_image")
+        = customer_profile_image_tag(@user, fallback: "no_image")
       .singing-profile__identity
         .singing-profile__eyebrow Music Growth Profile
         %h1.singing-profile__name= @user.name

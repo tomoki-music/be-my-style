@@ -129,28 +129,77 @@ module ApplicationHelper
     content_tag(:span, class: ["avatar-with-badge", wrapper_class].compact.join(" ")) do
       concat image_tag(image_source, class: class_name)
       concat(content_tag(:span, badge_label, class: badge_class)) if badge_label.present?
-      concat(avatar_active_status_dot) if show_active_status && customer_recently_active?(customer)
+      if show_active_status
+        concat(avatar_active_status_dot(customer_login_activity_level(customer), image_class_name: class_name))
+      end
     end
   end
 
-  # 退会済み・未ログイン・Customer 以外のオブジェクトはアクティブ扱いしない。
-  def customer_recently_active?(customer)
-    return false if customer_withdrawn?(customer)
-
-    customer.respond_to?(:recently_active?) && customer.recently_active?
+  # プロフィール / マイページ等で表示する「大きなユーザー画像」の共通表示。
+  # 枠のサイズ・角丸は呼び出し側（frame_class）で既存デザインに合わせて指定し、
+  # はみ出し防止・アスペクト比維持・中央トリミングは .user-profile-image /
+  # .user-profile-image-frame（application.scss）へ一本化する。
+  def customer_profile_image_tag(customer, frame_class: nil, fallback: "no_image", show_active_status: true)
+    customer_avatar_tag(
+      customer,
+      class_name: "user-profile-image",
+      wrapper_class: ["user-profile-image-frame", frame_class].compact.join(" "),
+      fallback: fallback,
+      show_active_status: show_active_status
+    )
   end
 
-  # 「最近アクティブ」を表す緑丸。色だけで状態が伝わらないよう、
+  # 退会済み・未ログイン・Customer 以外のオブジェクトはアクティブ扱いしない。
+  # 戻り値は :active / :semi / :dormant / nil。
+  def customer_login_activity_level(customer)
+    return nil if customer_withdrawn?(customer)
+    return nil unless customer.respond_to?(:login_activity_level)
+
+    customer.login_activity_level
+  end
+
+  AVATAR_ACTIVE_STATUS_LABELS = {
+    active: "24時間以内にログイン",
+    semi: "1週間以内にログイン",
+    dormant: "1か月以内にログイン"
+  }.freeze
+
+  # 丸を 10px（--small）に縮める小サイズアバターの画像クラス。
+  # 各クラスの実寸（28〜38px）は対応する SCSS で定義済みで、ここはその
+  # 「既存のサイズ情報」を参照するだけ。通常サイズ（icon_mini=50px 等）は 14px のまま。
+  SMALL_AVATAR_IMAGE_CLASSES = %w[
+    activity-card-avatar
+    singing-ranking__user-avatar
+    singing-ranking__growth-user-avatar
+    singing-season__user-avatar
+    cheers-history__avatar-img
+  ].freeze
+
+  # アクティブ状態を表す丸（緑 / 黄 / 灰）。色だけで状態が伝わらないよう、
   # title / aria-label / role を付与する。正確なログイン日時は出さない。
-  def avatar_active_status_dot
+  # level が nil（対象外）のときは何も描画しない。
+  # image_class_name: アバター画像の class。小サイズ指定なら丸も小さくする。
+  def avatar_active_status_dot(level, image_class_name: nil)
+    label = AVATAR_ACTIVE_STATUS_LABELS[level&.to_sym]
+    return if label.blank?
+
+    classes = ["avatar-active-dot", "avatar-active-dot--#{level}"]
+    classes << "avatar-active-dot--small" if avatar_class_small?(image_class_name)
+
     content_tag(
       :span,
       "",
-      class: "avatar-active-dot",
-      title: "最近アクティブ",
-      "aria-label": "最近アクティブ",
+      class: classes.join(" "),
+      title: label,
+      "aria-label": label,
       role: "img"
     )
+  end
+
+  def avatar_class_small?(image_class_name)
+    return false if image_class_name.blank?
+
+    (image_class_name.to_s.split & SMALL_AVATAR_IMAGE_CLASSES).any?
   end
 
   # アバター画像を、退会済みならプロフィールへ遷移させない形で描画する。

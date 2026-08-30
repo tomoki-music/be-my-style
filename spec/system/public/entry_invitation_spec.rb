@@ -418,7 +418,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
       create(:entry_invitation, event: current_event, song: current_song, join_part: current_vocal,
                                 customer: experienced_admin, requested_by_customer: owner, sent_at: 1.hour.ago)
       # 最近アクティブ → 緑丸
-      experienced_admin.update!(last_active_at: Time.current)
+      experienced_admin.update!(current_sign_in_at: Time.current)
       # 曲名セルに YouTube カードを出す
       current_song.update!(youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
     end

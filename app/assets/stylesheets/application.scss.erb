@@ -258,18 +258,78 @@ body {
   background: linear-gradient(135deg, #38bdf8, #0ea5e9);
 }
 
-// 「最近アクティブ」を示す緑丸。役職バッジ(右下)と重ならないよう右上に配置する。
+// アクティブ状態を示す丸。役職バッジ(右下)と重ならないよう右上に配置する。
+// 色は最終ログイン日時に応じた 3 段階（--active 緑 / --semi 黄 / --dormant 灰）。
 .avatar-active-dot {
   position: absolute;
   top: -2px;
   right: -2px;
-  width: 10px;
-  height: 10px;
+  // 色付き部分を 14px にして視認性を上げる。白フチはこの外側に付ける。
+  box-sizing: content-box;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: #22c55e;
+  background: #9ca3af;
   border: 2px solid #fff;
   box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.12);
   pointer-events: none;
+}
+
+.avatar-active-dot--active {
+  background: #22c55e;
+}
+
+.avatar-active-dot--semi {
+  background: #f59e0b;
+}
+
+.avatar-active-dot--dormant {
+  background: #9ca3af;
+}
+
+// 小サイズアバター（28〜38px）向け。アイコン本体を隠しすぎないよう色付き部分を
+// 10px に戻す（白フチ2px・色・判定・aria は通常と共通）。付与判定は
+// ApplicationHelper::SMALL_AVATAR_IMAGE_CLASSES（画像クラス＝既存のサイズ情報）。
+.avatar-active-dot--small {
+  top: -1px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+}
+
+// プロフィール / マイページ等の「大きなユーザー画像」共通枠。
+// customer_profile_image_tag ヘルパー専用。枠の寸法・角丸は呼び出し側の
+// frame_class（＝既存デザインのサイズ）に任せ、ここでは
+// 「縦横比を崩さない中央トリミング」と「枠外へはみ出させない」ことを共通化する。
+// customer_avatar_tag が画像を span.avatar-with-badge (inline-block) で包むため、
+// 枠として使うときは block 化して割合指定を効かせる。
+// 枠 span には overflow:hidden を付けない。この span は役職バッジ・アクティブ丸
+// （意図的に枠の外側へはみ出す要素）も内包するため、clip すると欠けてしまう。
+// 画像自体は object-fit:cover が img のボックス内に収めるのではみ出さず、
+// 角丸・円形のトリミングは .user-profile-image に border-radius:inherit で伝える。
+.user-profile-image-frame {
+  &.avatar-with-badge {
+    display: block;
+  }
+  position: relative;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.user-profile-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: inherit;
+}
+
+// サイズ指定済みの既存コンテナ（.img-container）を枠として使う箇所。
+// コンテナの幅・高さいっぱいに枠を広げ、object-fit を効かせる。
+.img-container > .user-profile-image-frame {
+  width: 100%;
+  height: 100%;
 }
 
 .stamp-badge{

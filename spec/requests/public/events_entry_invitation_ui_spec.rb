@@ -123,7 +123,7 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
     show_event
     expect(doc.at_css(".entry-invitation-candidate .avatar-active-dot")).to be_nil
 
-    experienced_customer.update!(last_active_at: Time.current)
+    experienced_customer.update!(current_sign_in_at: Time.current)
     show_event
     expect(doc.at_css(".entry-invitation-candidate .avatar-active-dot")).to be_present
   end
