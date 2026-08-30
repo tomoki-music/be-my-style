@@ -51,6 +51,37 @@ RSpec.describe "chat_roomsコントローラーのテスト", type: :request do
         expect(response.body).to include("チャットルームへようこそ!")
       end
     end
+    context "DMチャットルーム(show)の右側詳細パネルの相手画像" do
+      before do
+        create(:chat_room_customer, chat_room: chat_room, customer: customer)
+        other_customer.update!(introduction: "よろしくお願いします")
+        get public_chat_room_path(chat_room, customer_id: other_customer.id)
+      end
+
+      let(:doc) { Nokogiri::HTML(response.body) }
+
+      it "相手画像が PR #169 の共通枠クラス(user-profile-image / user-profile-image-frame)で描画されること" do
+        frame = doc.at_css(".partner-container .img-container .user-profile-image-frame")
+        image = doc.at_css(".partner-container .img-container img.user-profile-image")
+
+        expect(frame).to be_present
+        expect(image).to be_present
+      end
+
+      it "相手の名前・自己紹介が画像とは別のテキスト領域に配置されること" do
+        text_container = doc.at_css(".partner-container .text-container")
+
+        expect(text_container).to be_present
+        expect(text_container.at_css(".card-title")).to be_present
+        expect(text_container.at_css(".card-text")).to be_present
+        # 画像は .img-container 側にあり、テキスト領域には含まれない。
+        expect(text_container.at_css("img.user-profile-image")).to be_nil
+      end
+
+      it "メッセージ本文の小アイコンには詳細パネル用の画像クラスを出力しないこと" do
+        expect(doc.css(".message-container .user-profile-image")).to be_empty
+      end
+    end
     context "DMチャットルーム(show)の退会済み相手・投稿者表示" do
       before do
         create(:chat_room_customer, chat_room: chat_room, customer: customer)
@@ -128,6 +159,37 @@ RSpec.describe "chat_roomsコントローラーのテスト", type: :request do
       end
       it 'タイトルが正しく表示されていること' do
         expect(response.body).to include("コミュニティチャットルームへようこそ!")
+      end
+    end
+
+    context "コミュニティチャットルーム(show)の右側詳細パネルのコミュニティ画像" do
+      let(:community_chat_room) { create(:chat_room) }
+      let(:doc) { Nokogiri::HTML(response.body) }
+
+      before do
+        create(:chat_room_customer, chat_room: community_chat_room, customer: customer, community: community)
+        CommunityCustomer.find_or_create_by!(customer: customer, community: community)
+        get community_show_public_chat_rooms_path(community_chat_room)
+      end
+
+      it "コミュニティ画像が詳細パネル用の画像クラス(chat-partner-community-image)で描画されること" do
+        image = doc.at_css(".partner-container .img-container img.chat-partner-community-image")
+
+        expect(image).to be_present
+      end
+
+      it "画像未登録時はデフォルト画像を同じクラスで描画すること" do
+        image = doc.at_css(".partner-container .img-container img.chat-partner-community-image")
+
+        expect(image["src"]).to match(/no_image/)
+      end
+
+      it "コミュニティ名・説明が画像とは別のテキスト領域に配置されること" do
+        text_container = doc.at_css(".partner-container .text-container")
+
+        expect(text_container).to be_present
+        expect(text_container.at_css(".card-title").text).to include(community.name)
+        expect(text_container.at_css("img")).to be_nil
       end
     end
 

@@ -47,9 +47,9 @@
           = link_to public_community_path(@community) do
             .img-container
               - if @community.community_image.present?
-                = image_tag @community.community_image
+                = image_tag @community.community_image, class: "chat-partner-community-image"
               - else
-                = image_tag 'no_image'
+                = image_tag 'no_image', class: "chat-partner-community-image"
           .card-body.text-container
             %h5.card-title
               = @community.name
