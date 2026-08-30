@@ -2,15 +2,41 @@ name: Monthly Singing Ranking Aggregate
 
 on:
   schedule:
-    # 毎月28〜31日 14:55 UTC = 23:55 JST に実行し、Job内で月末か判定する
-    - cron: '55 14 28-31 * *'
+    # 毎月28〜31日、06:17 UTC = 15:17 JST に実行し、Job内で月末か判定する。
+    # EC2 は毎日 17:00–21:00 UTC (02:00–06:00 JST) に自動停止するため、
+    # GitHub Actions のスケジュールが数時間遅延しても停止枠に入らない時刻にしている。
+    # 毎時0分付近の混雑を避けるため分は 17。理由を知らずに 14〜17時台 UTC へ戻さないこと。
+    - cron: '17 6 28-31 * *'
   workflow_dispatch:
 
 jobs:
   aggregate-season:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
+      - name: Wait for EC2 SSH port
+        env:
+          EC2_HOST: ${{ secrets.HOST_NAME }}
+        run: |
+          set -euo pipefail
+
+          test -n "$EC2_HOST"
+
+          for attempt in $(seq 1 10); do
+            if nc -z -w 5 "$EC2_HOST" 22; then
+              echo "EC2 SSH port is reachable."
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 10 ]; then
+              echo "EC2 SSH port is not reachable. Retry ${attempt}/10 after 30s."
+              sleep 30
+            fi
+          done
+
+          echo "::error::EC2 SSH port did not become reachable within the retry period."
+          exit 1
+
       - name: SSH into EC2 and run AggregateSeasonRankingJob on month-end
         env:
           EC2_SSH_KEY: ${{ secrets.PRIVATE_KEY }}

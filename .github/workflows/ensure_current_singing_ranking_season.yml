@@ -2,14 +2,39 @@ name: Ensure Current Singing Ranking Season
 
 on:
   schedule:
-    - cron: '0 0 1 * *'  # 毎月1日 00:00 UTC = 09:00 JST
+    # 毎月1日 00:00 UTC = 09:00 JST。EC2 停止枠 (17:00–21:00 UTC) より十分前で、
+    # スケジュールが数時間遅延しても停止枠に入らないため時刻は据え置き。
+    - cron: '0 0 1 * *'
   workflow_dispatch:  # 手動実行も可能
 
 jobs:
   ensure-season:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
+      - name: Wait for EC2 SSH port
+        env:
+          EC2_HOST: ${{ secrets.HOST_NAME }}
+        run: |
+          set -euo pipefail
+
+          test -n "$EC2_HOST"
+
+          for attempt in $(seq 1 10); do
+            if nc -z -w 5 "$EC2_HOST" 22; then
+              echo "EC2 SSH port is reachable."
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 10 ]; then
+              echo "EC2 SSH port is not reachable. Retry ${attempt}/10 after 30s."
+              sleep 30
+            fi
+          done
+
+          echo "::error::EC2 SSH port did not become reachable within the retry period."
+          exit 1
+
       - name: SSH into EC2 and run EnsureCurrentRankingSeasonJob
         env:
           EC2_SSH_KEY: ${{ secrets.PRIVATE_KEY }}
