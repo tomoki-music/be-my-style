@@ -213,22 +213,42 @@
     }
   }
   .partner-container{
-    width: 300px;
+    // スマホ幅でも枠がパネルからはみ出さないよう、固定値ではなく上限付きの
+    // レスポンシブ幅にする（横スクロール防止）。
+    width: 100%;
+    max-width: 300px;
     margin: 0 auto;
+    // DM は customer_profile_image_tag（PR #169 の .user-profile-image /
+    // .user-profile-image-frame 共通クラス）、コミュニティは community_image を
+    // 直接 image_tag。取得方法は違うが「枠いっぱい・アスペクト比維持・
+    // object-fit: cover で中央トリミング・角丸・枠外へはみ出さない」という
+    // 表示要件は共通なので、枠寸法と img の内包指定をここへ一本化する。
+    // .img-container には overflow: hidden を付けない（枠 span が役職バッジ・
+    // アクティブ丸を内包し、意図的に角の外へはみ出す設計のため）。
     .img-container{
-      width: 300px;
+      width: 100%;
+      max-width: 300px;
       height: 250px;
       img {
+        display: block;
         width: 100%;
         height: 100%;
         object-fit: cover;
+        object-position: center;
         border-radius: 10px;
       }
     }
     .text-container{
       text-align: center;
-      width: 300px;
+      width: 100%;
+      max-width: 300px;
       margin-bottom: 5px;
+      // 長いユーザー名・コミュニティ名・URL・連続英数字を枠内で折り返す。
+      overflow-wrap: anywhere;
+      .card-text{
+        // 改行を含む自己紹介・説明文を自然に表示する。
+        white-space: pre-line;
+      }
       .chat-partner-link{
         margin: 10 auto;
       }
