@@ -3648,14 +3648,17 @@ $ranking-accent: #7c4dff;
   display: flex;
   height: 132px;
   justify-content: center;
-  overflow: hidden;
   width: 132px;
 }
 
-.singing-profile__avatar {
+// customer_profile_image_tag の共通枠を 132×132 いっぱいに広げる。
+// 角丸は枠へ持たせ、画像は .user-profile-image の border-radius: inherit で
+// 8px に切り抜かれる。overflow: hidden は付けない（役職バッジ・アクティブ丸が
+// 枠外へはみ出す設計のため、clip すると欠ける）。
+.singing-profile__avatar-wrap > .user-profile-image-frame {
   height: 100%;
-  object-fit: cover;
   width: 100%;
+  border-radius: 8px;
 }
 
 .singing-profile__eyebrow,

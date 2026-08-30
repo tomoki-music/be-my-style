@@ -741,4 +741,76 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       expect(customer.recently_active?).to eq false
     end
   end
+
+  describe '#login_activity_level' do
+    include ActiveSupport::Testing::TimeHelpers
+
+    # 2026-08-27 12:00 を基準に固定。1 か月前は 2026-07-27 12:00（= 31 日前）。
+    around do |example|
+      travel_to(Time.zone.local(2026, 8, 27, 12, 0, 0)) { example.run }
+    end
+
+    context '境界値（基準時刻を固定）' do
+      it '1.day.ago ちょうどは :active（境界を含む）' do
+        customer.current_sign_in_at = 1.day.ago
+        expect(customer.login_activity_level).to eq :active
+      end
+
+      it '1.day.ago の 1 秒前は :semi' do
+        customer.current_sign_in_at = 1.day.ago - 1.second
+        expect(customer.login_activity_level).to eq :semi
+      end
+
+      it '1.week.ago ちょうどは :semi（境界を含む）' do
+        customer.current_sign_in_at = 1.week.ago
+        expect(customer.login_activity_level).to eq :semi
+      end
+
+      it '1.week.ago の 1 秒前は :dormant' do
+        customer.current_sign_in_at = 1.week.ago - 1.second
+        expect(customer.login_activity_level).to eq :dormant
+      end
+
+      it '1.month.ago ちょうどは :dormant（境界を含む）' do
+        customer.current_sign_in_at = 1.month.ago
+        expect(customer.login_activity_level).to eq :dormant
+      end
+
+      it '1.month.ago の 1 秒前は非表示（nil）' do
+        customer.current_sign_in_at = 1.month.ago - 1.second
+        expect(customer.login_activity_level).to be_nil
+      end
+
+      it 'current_sign_in_at が nil なら非表示（nil）' do
+        customer.current_sign_in_at = nil
+        expect(customer.login_activity_level).to be_nil
+      end
+
+      it '未来日時（異常データ）なら非表示（nil）' do
+        customer.current_sign_in_at = 1.second.from_now
+        expect(customer.login_activity_level).to be_nil
+      end
+
+      it '退会済みなら、今ログインしていても非表示（nil）' do
+        customer.current_sign_in_at = Time.current
+        customer.is_deleted = true
+        expect(customer.login_activity_level).to be_nil
+      end
+    end
+
+    it '1.month は固定 30 日ではなく暦上の 1 か月で判定する' do
+      # 基準 2026-08-27 の 1 か月前は 2026-07-27（31 日前）。
+      # 30 日固定なら 31 日前は nil になるが、暦月なので :dormant のまま。
+      customer.current_sign_in_at = 31.days.ago
+      expect(customer.login_activity_level).to eq :dormant
+      customer.current_sign_in_at = 33.days.ago
+      expect(customer.login_activity_level).to be_nil
+    end
+
+    it 'last_active_at が新しくても current_sign_in_at のみで判定する' do
+      customer.last_active_at = Time.current
+      customer.current_sign_in_at = 2.weeks.ago
+      expect(customer.login_activity_level).to eq :dormant
+    end
+  end
 end
