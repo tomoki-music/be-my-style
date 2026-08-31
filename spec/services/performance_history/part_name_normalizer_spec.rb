@@ -42,6 +42,61 @@ RSpec.describe PerformanceHistory::PartNameNormalizer do
       expect(described_class.normalize("Lead Guitar")).to eq "Guitar"
     end
 
+    it '本番調査で確認したレガシー自由入力(綴り誤り・truncation・連番)を現行パートへ変換すること' do
+      {
+        "Durms" => "Drums",
+        "Guiar" => "Guitar",
+        "Guigar" => "Guitar",
+        "Gutar" => "Guitar",
+        "Guitar1" => "Guitar",
+        "Guitar2" => "Guitar",
+        "Guitar(リード)" => "Guitar",
+        "Guitar(リズム)" => "Guitar",
+        "Keyboad" => "Keyboard",
+        "Keyborad" => "Keyboard",
+        "Keyobard" => "Keyboard",
+        "Voca" => "Vocal",
+        "Vocai" => "Vocal"
+      }.each do |raw, expected|
+        expect(described_class.normalize(raw)).to eq(expected), "#{raw.inspect} は #{expected} になるべき"
+      end
+    end
+
+    it 'レガシー表記も大文字小文字の違いを吸収すること' do
+      expect(described_class.normalize("DURMS")).to eq "Drums"
+      expect(described_class.normalize("VOCAI")).to eq "Vocal"
+      expect(described_class.normalize("KeyBoad")).to eq "Keyboard"
+    end
+
+    it 'レガシー表記の前後空白も既存仕様どおり処理されること' do
+      expect(described_class.normalize("  Gutar ")).to eq "Guitar"
+      expect(described_class.normalize(" Voca")).to eq "Vocal"
+    end
+
+    it '"参加します🙌" はパート名ではないためnilのままにすること' do
+      expect(described_class.normalize("参加します🙌")).to be_nil
+    end
+
+    it '既存の日本語・英語エイリアスが引き続き機能すること' do
+      {
+        "Vo" => "Vocal", "ボーカル" => "Vocal", "ヴォーカル" => "Vocal",
+        "Gt" => "Guitar", "ギター" => "Guitar",
+        "Guitar(Lead)" => "Guitar", "Guitar(Rhythm)" => "Guitar", "Guitar(Lythm)" => "Guitar",
+        "Lead Guitar" => "Guitar", "Rhythm Guitar" => "Guitar",
+        "Ba" => "Bass", "ベース" => "Bass",
+        "Dr" => "Drums", "ドラム" => "Drums", "ドラムス" => "Drums",
+        "Key" => "Keyboard", "キーボード" => "Keyboard"
+      }.each do |raw, expected|
+        expect(described_class.normalize(raw)).to eq(expected), "#{raw.inspect} は #{expected} になるべき"
+      end
+    end
+
+    it '正式なNAME_OPTIONSの挙動が変わらないこと' do
+      %w[Vocal Guitar Bass Drums Keyboard Other].each do |name|
+        expect(described_class.normalize(name)).to eq name
+      end
+    end
+
     it '意味を一意に決められない値は勝手に一致させず、nilを返すこと' do
       %w[Cho Chorus コーラス Percussion].each do |ambiguous|
         expect(described_class.normalize(ambiguous)).to be_nil
