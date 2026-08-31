@@ -1,17 +1,3 @@
-# 本番DBの読み取り専用監査(2026-08)で「本来同一の楽曲が別SongMasterへ分裂している」ことを
-# 確認した6組。左が正、右が統合元。統合方向は 統合元 -> 正。
-# 監査で曲名・アーティスト・キー表記を突き合わせ、6組すべて同一楽曲と判断済み。
-# song_masters:merge_known_duplicates タスクでのみ参照する(定数はrakeのnamespace/taskブロック内では
-# 定義できないためファイルスコープに置く)。
-KNOWN_DUPLICATE_SONG_MASTER_MERGES = [
-  { canonical_id: 43,  duplicate_id: 398, note: "GLAMOROUS SKY／中島美嘉" },
-  { canonical_id: 93,  duplicate_id: 102, note: "unravel／TK from 凛として時雨" },
-  { canonical_id: 139, duplicate_id: 162, note: "八月、某、月明かり／ヨルシカ" },
-  { canonical_id: 140, duplicate_id: 239, note: "Cause We've Ended as Lovers／Jeff Beck" },
-  { canonical_id: 176, duplicate_id: 203, note: "Fly Me To The Moon／Key of C major" },
-  { canonical_id: 318, duplicate_id: 324, note: "ワタリドリ／[Alexandros]" }
-].freeze
-
 namespace :song_masters do
   # SongMasterの重複"候補"を検出し、レポートするだけのread-onlyタスク。
   #
@@ -121,59 +107,62 @@ namespace :song_masters do
     SongMasters::TitleAnalysis.call(logger: ->(message) { puts message })
   end
 
-  # 本番監査で確認した「本来同一の楽曲が別SongMasterへ分裂している」6組
-  # (KNOWN_DUPLICATE_SONG_MASTER_MERGES)を、正SongMasterへ統合する。
+  # MERGE_PAIRS で明示的に渡した「本来同一の楽曲が別SongMasterへ分裂している」ペアを、
+  # 正(keep)SongMaster へ統合する。全ペアを単一トランザクションで適用し、1組でも失敗したら
+  # 6組すべてロールバックする。実処理は SongMasters::MergeBatch / SongMasters::Merge に委譲する。
   #
   # 分裂の原因は、SongMasters::Resolver.normalize が「曲名／アーティスト」併記・引用符・括弧・
   # 区切り文字のゆれを、意味的表記ゆれの誤統合を避けるためあえて吸収しないこと。単純に統合元を
-  # 削除するだけだと、同じ旧表記のSongが再保存されたときにSongMasterが再作成され再分裂する。
-  # そのため統合元の正規化キーを SongMasterAlias として正SongMasterへ恒久的に向ける。
-  # 実処理は SongMasters::Merge に委譲する(トランザクション・行ロック・UNIQUE衝突デデュープ・
-  # 未知参照時のロールバック・統合後の検算はそちらを参照)。
+  # 削除するだけだと、同じ旧表記のSongが再保存されたときにSongMasterが再作成され再分裂するため、
+  # 統合元の正規化キーを SongMasterAlias として正SongMaster へ恒久的に向ける。
+  #
+  # 統合対象は MERGE_PAIRS で必ず明示的に渡す(本番IDをタスクにハードコードしない。全SongMasterや
+  # 検出候補を自動統合しない)。形式は "keep:merge" のカンマ区切り。
+  #   MERGE_PAIRS="43:398,93:102,139:162,140:239,176:203,318:324"
+  #
+  # 実行モード:
+  #   - 環境変数なし(または DRY_RUN=true) → DRY RUN。DBを一切変更しない。
+  #   - 本適用は APPLY=true と CONFIRM=MERGE_SONG_MASTERS の「両方」が必須。
+  #     片方だけ・DRY_RUN との矛盾・中途半端な指定はエラーで停止する(黙って本適用しない)。
   #
   # 使い方:
-  #   DRY_RUN=true bundle exec rails song_masters:merge_known_duplicates  # 予定のみ表示(DBは一切変更しない)
-  #   bundle exec rails song_masters:merge_known_duplicates               # 統合を実行(1組ずつ独立トランザクション)
+  #   # DRY RUN(DB変更なし)
+  #   MERGE_PAIRS="43:398,93:102,139:162,140:239,176:203,318:324" \
+  #     bundle exec rails song_masters:merge_pairs
   #
-  # 本番DBに適用する前に、必ずステージング/ローカルで DRY_RUN の結果を確認すること。
-  desc "本番監査で確認した分裂SongMaster 6組を正SongMasterへ統合する(DRY_RUN=trueで予定のみ)"
-  task merge_known_duplicates: :environment do
-    dry_run = ENV["DRY_RUN"] == "true"
-
+  #   # 本適用(全ペア単一トランザクション。1組でも失敗したら全ロールバック)
+  #   MERGE_PAIRS="43:398,93:102,139:162,140:239,176:203,318:324" \
+  #     APPLY=true CONFIRM=MERGE_SONG_MASTERS \
+  #     bundle exec rails song_masters:merge_pairs
+  desc "MERGE_PAIRS(keep:merge のカンマ区切り)の分裂SongMasterペアを統合する。既定はDRY RUN。本適用は APPLY=true CONFIRM=MERGE_SONG_MASTERS が必須"
+  task merge_pairs: :environment do
     log = lambda do |message|
       puts message
-      Rails.logger.info("[song_masters:merge_known_duplicates] #{message}")
+      Rails.logger.info("[song_masters:merge_pairs] #{message}")
     end
 
-    log.call(dry_run ? "DRY RUNモードで実行します(DBは一切変更しません)" : "分裂SongMasterの統合を実行します")
-
-    summary = { performed: 0, already_merged: 0, blocked: 0 }
-
-    KNOWN_DUPLICATE_SONG_MASTER_MERGES.each do |pair|
-      log.call("")
-      log.call("=== #{pair[:note]} : SongMaster##{pair[:duplicate_id]} -> SongMaster##{pair[:canonical_id]} ===")
-
-      result = SongMasters::Merge.call(
-        canonical_id: pair[:canonical_id],
-        duplicate_id: pair[:duplicate_id],
-        dry_run: dry_run,
-        logger: log
-      )
-
-      if result.performed
-        summary[:performed] += 1
-      elsif result.already_merged
-        summary[:already_merged] += 1
-      elsif !dry_run && !result.executable?
-        summary[:blocked] += 1
-        log.call("!! 実行不可のためスキップしました: #{result.aborted_reason}")
-      end
+    begin
+      batch = SongMasters::MergeBatch.from_env(env: ENV, logger: log)
+    rescue SongMasters::MergeBatch::ConfigError => e
+      abort "[song_masters:merge_pairs] #{e.message}"
     end
 
-    log.call("")
     log.call(
-      "完了しました " \
-      "(#{dry_run ? '判定のみ' : "統合#{summary[:performed]}組 / 統合済み#{summary[:already_merged]}組 / 実行不可#{summary[:blocked]}組"})"
+      batch.apply? ?
+        "本適用モードで実行します(APPLY=true / CONFIRM 一致)。全ペア単一トランザクション。" :
+        "DRY RUN モードで実行します(DBは一切変更しません)。"
     )
+
+    result = batch.call
+
+    if batch.apply?
+      abort "[song_masters:merge_pairs] 本適用は行われませんでした: #{result.aborted_reason}" unless result.applied
+      log.call("完了しました(#{result.pair_results.size}組を統合)。")
+    else
+      unless result.ready
+        abort "[song_masters:merge_pairs] 実行不可のペアがあります。本適用すると全体が中止されます。"
+      end
+      log.call("完了しました(DRY RUN。全ペア実行可能。DBは変更していません)。")
+    end
   end
 end

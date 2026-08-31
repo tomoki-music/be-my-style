@@ -21,8 +21,18 @@ module SongMasters
   #     UNIQUE(customer_id, song_master_id, part_name)衝突を安全にデデュープしてから統合元を削除する。
   #   - 統合元を削除する直前に「既知参照が0件」「song_masters を参照する未知の外部キーが無い」ことを
   #     再確認する。未知参照があれば削除せずロールバックする。
-  #   - 意味的に異なる楽曲まで自動統合しない。統合対象は呼び出し元(rake タスク)が監査済みの
-  #     ID ペアを明示的に渡したものだけ。
+  #   - 意味的に異なる楽曲まで自動統合しない。統合対象は呼び出し元(rake タスク)が明示的に渡した
+  #     ID ペアだけ。
+  #   - 統合元SongMasterが存在しない場合(canonical のみ実在)は「既に統合済み」と決めつけず中止する。
+  #     旧merge_idがこのkeep_idへ統合された恒久証跡を持たないため、ID誤り・想定外の削除を成功扱い
+  #     しない(冪等性は「DBを二重更新しない」ことで担保する)。
+  #   - 統合元の正規化キーが「別のSongMaster」へ解決する SongMasterAlias に既に使われている場合は、
+  #     誤ったSongMasterへ寄せないよう中止する。
+  #
+  # 複数ペアをまとめて(全ペア単一トランザクションで)適用したい場合は SongMasters::MergeBatch を使う。
+  # このサービス単体でも本適用は1組を1トランザクションで行うが、MergeBatch の外側トランザクション内で
+  # 呼ばれた場合は(requires_new を使わないため)そのトランザクションに参加し、いずれかのペアで例外が
+  # 出れば全ペアがロールバックされる。
   class Merge
     # song_masters.id を参照している「既知の(このサービスが付け替えを行う)」カラム。
     # information_schema から得た参照カラム集合との差分が「未知参照」。
@@ -42,7 +52,7 @@ module SongMasters
     )
 
     Result = Struct.new(
-      :dry_run, :performed, :already_merged,
+      :dry_run, :performed,
       :canonical_id, :duplicate_id, :canonical, :duplicate,
       :movable_song_count, :movable_customer_song_part_count, :conflicting_customer_song_part_count,
       :conflicts, :planned_alias, :existing_alias,
@@ -78,12 +88,7 @@ module SongMasters
       canonical = SongMaster.find_by(id: @canonical_id)
       duplicate = SongMaster.find_by(id: @duplicate_id)
 
-      plan =
-        if canonical && duplicate.nil?
-          already_merged_result(canonical)
-        else
-          build_plan(canonical, duplicate)
-        end
+      plan = build_plan(canonical, duplicate)
       report_plan(plan)
       plan
     end
@@ -98,11 +103,6 @@ module SongMasters
         canonical = locked[@canonical_id]
         duplicate = locked[@duplicate_id]
 
-        if canonical && duplicate.nil?
-          result = already_merged_result(canonical)
-          next
-        end
-
         plan = build_plan(canonical, duplicate)
         report_plan(plan)
 
@@ -114,13 +114,8 @@ module SongMasters
         songs_moved = Song.where(song_master_id: duplicate.id).update_all(song_master_id: canonical.id)
         deduped = dedupe_conflicting_customer_song_parts!(canonical.id, duplicate.id)
         csp_moved = CustomerSongPart.where(song_master_id: duplicate.id).update_all(song_master_id: canonical.id)
-        SongMasterAlias.where(song_master_id: duplicate.id).update_all(song_master_id: canonical.id)
-
-        alias_record = SongMasterAlias.find_or_create_by!(
-          normalized_song_name: duplicate.normalized_song_name,
-          normalized_artist_name: duplicate.normalized_artist_name.to_s
-        ) { |record| record.song_master_id = canonical.id }
-        alias_record.update!(song_master_id: canonical.id) if alias_record.song_master_id != canonical.id
+        move_aliases_to_canonical!(canonical.id, duplicate.id)
+        alias_record = upsert_legacy_key_alias!(canonical, duplicate)
 
         verify_no_known_references!(duplicate.id)
         verify_no_unknown_references!
@@ -132,7 +127,6 @@ module SongMasters
         result = Result.new(
           dry_run: false,
           performed: true,
-          already_merged: false,
           canonical_id: canonical.id,
           duplicate_id: duplicate.id,
           canonical: canonical,
@@ -183,12 +177,11 @@ module SongMasters
           )
         end
 
-      reason = abort_reason(canonical, duplicate, unknown, conflicts)
+      reason = abort_reason(canonical, duplicate, unknown, conflicts, existing_alias)
 
       Result.new(
         dry_run: @dry_run,
         performed: false,
-        already_merged: false,
         canonical_id: @canonical_id,
         duplicate_id: @duplicate_id,
         canonical: canonical,
@@ -210,10 +203,20 @@ module SongMasters
       )
     end
 
-    def abort_reason(canonical, duplicate, unknown, conflicts)
+    def abort_reason(canonical, duplicate, unknown, conflicts, existing_alias)
       return "正SongMaster(##{@canonical_id})が存在しません" if canonical.nil?
-      return "統合元SongMaster(##{@duplicate_id})が存在しません" if duplicate.nil?
+      if duplicate.nil?
+        return "統合元SongMaster(##{@duplicate_id})が存在しません" \
+               "(既に統合済みかID誤りかを恒久証跡から判別できないため中止します)"
+      end
       return "正と統合元が同じID(##{@canonical_id})です" if canonical.id == duplicate.id
+
+      if existing_alias && ![canonical.id, duplicate.id].include?(existing_alias.song_master_id)
+        return "統合元の正規化キー(#{existing_alias.normalized_song_name.inspect}, " \
+               "#{existing_alias.normalized_artist_name.inspect})は別SongMaster(##{existing_alias.song_master_id})へ" \
+               "解決するエイリアスに使われています。誤ったSongMasterへ統合しないよう中止します"
+      end
+
       if unknown.any?
         return "song_masters を参照する未知の外部キーがあります: #{unknown.join(', ')}"
       end
@@ -266,6 +269,40 @@ module SongMasters
       return 0 if ids.empty?
 
       CustomerSongPart.where(id: ids).delete_all
+    end
+
+    # ---- エイリアスの付け替え ------------------------------------------------------------
+
+    # 統合元が解決先だったエイリアスを正へ移す。
+    # song_master_aliases は (normalized_song_name, normalized_artist_name) にDBの複合UNIQUE制約が
+    # あるため、正側と統合元側が「同じ正規化キーのエイリアス」を同時に持つことはありえない
+    # (=移動時のキー衝突は構造上起きない。万一起きても update_all が RecordNotUnique を投げ、
+    #  外側トランザクションごと安全にロールバックされる)。
+    def move_aliases_to_canonical!(canonical_id, duplicate_id)
+      SongMasterAlias.where(song_master_id: duplicate_id).update_all(song_master_id: canonical_id)
+    end
+
+    # 統合元の正規化キーを「正へ解決するエイリアス」として1件残す(旧表記のSongが再保存されても
+    # 分裂SongMasterを作らせない)。別SongMasterを指す既存エイリアスは abort_reason で事前に弾いて
+    # いるため、ここに来る既存エイリアスは正 or (直前に移動した)統合元由来のものだけ。
+    def upsert_legacy_key_alias!(canonical, duplicate)
+      normalized_song_name = duplicate.normalized_song_name
+      normalized_artist_name = duplicate.normalized_artist_name.to_s
+
+      record = SongMasterAlias.find_by(
+        normalized_song_name: normalized_song_name,
+        normalized_artist_name: normalized_artist_name
+      )
+      if record
+        record.update!(song_master_id: canonical.id) if record.song_master_id != canonical.id
+        record
+      else
+        SongMasterAlias.create!(
+          song_master_id: canonical.id,
+          normalized_song_name: normalized_song_name,
+          normalized_artist_name: normalized_artist_name
+        )
+      end
     end
 
     # ---- 検算 ------------------------------------------------------------------------
@@ -322,36 +359,6 @@ module SongMasters
       KNOWN_REFERENCING_COLUMNS.dup
     end
 
-    # ---- already merged --------------------------------------------------------------
-
-    # 正が存在し統合元が存在しない = 既に統合済み(または統合元IDの指定誤り)。
-    # 監査済みIDペアの再実行を冪等にするため、エラーではなく「実行不可(統合済み)」として返す。
-    def already_merged_result(canonical)
-      Result.new(
-        dry_run: @dry_run,
-        performed: false,
-        already_merged: true,
-        canonical_id: @canonical_id,
-        duplicate_id: @duplicate_id,
-        canonical: canonical,
-        duplicate: nil,
-        movable_song_count: 0,
-        movable_customer_song_part_count: 0,
-        conflicting_customer_song_part_count: 0,
-        conflicts: [],
-        planned_alias: nil,
-        existing_alias: nil,
-        deletable_song_master_id: nil,
-        unknown_references: [],
-        executable: false,
-        aborted_reason: "既に統合済みです(統合元SongMaster ##{@duplicate_id} は存在しません)",
-        songs_moved: nil,
-        customer_song_parts_moved: nil,
-        customer_song_parts_deduped: nil,
-        alias_created: nil
-      )
-    end
-
     # ---- ログ ----------------------------------------------------------------------
 
     def report_plan(plan)
@@ -383,9 +390,7 @@ module SongMasters
         return
       end
 
-      if result.already_merged
-        log("== 既に統合済み: 何もしていません ==")
-      elsif result.performed
+      if result.performed
         log("== 統合完了 ==")
         log("移動したSong: #{result.songs_moved}件")
         log("移動したCustomerSongPart: #{result.customer_song_parts_moved}件 / デデュープ: #{result.customer_song_parts_deduped}件")

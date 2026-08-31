@@ -137,21 +137,53 @@ RSpec.describe SongMasters::Merge do
       expect(resolved&.id).to eq(canonical.id)
     end
 
-    it "統合を再実行しても冪等(統合元が無ければ already_merged としてエラーにしないこと)" do
+    it "統合元が存在しないときは成功扱いせず中止し、DBを二重更新しないこと" do
       described_class.call(canonical_id: canonical.id, duplicate_id: duplicate.id, dry_run: false)
 
       result = nil
       expect { result = described_class.call(canonical_id: canonical.id, duplicate_id: duplicate.id, dry_run: false) }
-        .not_to change { [SongMaster.count, SongMasterAlias.count] }
-      expect(result.already_merged).to be(true)
+        .not_to change { [SongMaster.count, SongMasterAlias.count, Song.count, CustomerSongPart.count] }
+      expect(result.performed).to be_falsey
       expect(result).not_to be_executable
+      expect(result.aborted_reason).to match(/存在しません/)
+      expect(result.aborted_reason).to match(/判別できない/)
     end
 
-    it "同じ統合を再度DRY RUNしても already_merged を返すこと" do
+    it "統合元が存在しないときは DRY RUN でも実行不可を返すこと" do
       described_class.call(canonical_id: canonical.id, duplicate_id: duplicate.id, dry_run: false)
 
       result = described_class.call(canonical_id: canonical.id, duplicate_id: duplicate.id, dry_run: true)
-      expect(result.already_merged).to be(true)
+      expect(result).not_to be_executable
+      expect(result.aborted_reason).to match(/存在しません/)
+    end
+
+    it "統合元の正規化キーが別SongMasterを指すエイリアスに使われている場合は中止すること" do
+      other = FactoryBot.create(:song_master, song_name: "無関係な正")
+      SongMasterAlias.create!(
+        song_master: other,
+        normalized_song_name: SongMasters::Resolver.normalize(legacy_name),
+        normalized_artist_name: ""
+      )
+
+      result = nil
+      expect { result = described_class.call(canonical_id: canonical.id, duplicate_id: duplicate.id, dry_run: false) }
+        .not_to change { [SongMaster.count, SongMasterAlias.count] }
+      expect(result).not_to be_executable
+      expect(result.aborted_reason).to match(/別SongMaster/)
+      expect(SongMaster.exists?(duplicate.id)).to be(true)
+    end
+
+    it "統合元が持っていたエイリアスを正へ移すこと" do
+      moved_key = SongMasters::Resolver.normalize("統合元の旧別名")
+      SongMasterAlias.create!(song_master: duplicate, normalized_song_name: moved_key, normalized_artist_name: "")
+
+      result = described_class.call(canonical_id: canonical.id, duplicate_id: duplicate.id, dry_run: false)
+
+      aggregate_failures do
+        expect(result.performed).to be(true)
+        expect(SongMasterAlias.find_by(normalized_song_name: moved_key).song_master_id).to eq(canonical.id)
+        expect(SongMasterAlias.where(song_master_id: duplicate.id)).to be_empty
+      end
     end
   end
 
