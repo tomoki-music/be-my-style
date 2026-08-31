@@ -37,7 +37,26 @@ module PerformanceHistory
       "ドラム" => "Drums",
       "ドラムス" => "Drums",
       "key" => "Keyboard",
-      "キーボード" => "Keyboard"
+      "キーボード" => "Keyboard",
+
+      # 2025年1月のセレクトボックス化以前に自由入力で保存された、明らかな綴り誤り・
+      # truncation・連番付き表記。本番データ調査で実在を確認済みで、いずれも現行パートの
+      # どれか1つにしか解釈できない(Guitar1/Guitar2は「1人目/2人目のギター」の意で、
+      # Lead/Rhythmと同じく現行パートに区別が無いためGuitarへ寄せる)。
+      # キーは downcase 後(必要なら空白除去後)に突合されるため、小文字で登録する。
+      "durms" => "Drums",
+      "guiar" => "Guitar",
+      "guigar" => "Guitar",
+      "gutar" => "Guitar",
+      "guitar1" => "Guitar",
+      "guitar2" => "Guitar",
+      "guitar(リード)" => "Guitar",
+      "guitar(リズム)" => "Guitar",
+      "keyboad" => "Keyboard",
+      "keyborad" => "Keyboard",
+      "keyobard" => "Keyboard",
+      "voca" => "Vocal",
+      "vocai" => "Vocal"
     }.freeze
 
     # 戻り値: JoinPart::NAME_OPTIONSのいずれか、またはnil(安全に変換できない値)。
