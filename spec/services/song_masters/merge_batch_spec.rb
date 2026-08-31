@@ -180,22 +180,33 @@ RSpec.describe SongMasters::MergeBatch do
         end
       end
 
-      it "2組目以降が失敗したら1組目を含めて全ロールバックすること" do
-        unlinked_song(song_name: legacy_a, song_master: merge_a)
-        broken = [
-          described_class::Pair.new(keep_id: keep_a.id, merge_id: merge_a.id),
-          described_class::Pair.new(keep_id: keep_b.id, merge_id: -1) # 2組目は形式上通るが preflight で不能
-        ]
-        # Pair は parse_pairs を経由しない直接生成なので、merge が存在しないケースを作る
-        broken[1] = described_class::Pair.new(keep_id: keep_b.id, merge_id: 9_999_999)
+      it "preflightを通過した後、2組目の適用で失敗しても1組目を含めて全ロールバックすること" do
+        song_a = unlinked_song(song_name: legacy_a, song_master: merge_a)
+        song_b = unlinked_song(song_name: legacy_b, song_master: merge_b)
+
+        original = SongMasters::Merge.method(:call)
+        call_count = 0
+        allow(SongMasters::Merge).to receive(:call) do |**kwargs|
+          if kwargs[:dry_run]
+            original.call(**kwargs) # preflight は素通し(両ペアとも実行可能)
+          else
+            call_count += 1
+            # 1組目は本当に統合し、2組目の本適用だけ失敗させる
+            call_count >= 2 ? raise("2組目の統合中に想定外エラー") : original.call(**kwargs)
+          end
+        end
 
         result = nil
-        expect { result = described_class.new(pairs: broken, apply: true).call }
-          .not_to change { [SongMaster.count, SongMasterAlias.count, Song.where(song_master_id: merge_a.id).count] }
+        expect { result = described_class.new(pairs: pairs, apply: true).call }
+          .not_to change { [SongMaster.count, SongMasterAlias.count] }
 
-        expect(result.applied).to be(false)
-        expect(result.aborted_reason).to be_present
-        expect(SongMaster.exists?(merge_a.id)).to be(true)
+        aggregate_failures do
+          expect(result.applied).to be(false)
+          expect(SongMaster.exists?(merge_a.id)).to be(true) # 1組目もロールバック
+          expect(SongMaster.exists?(merge_b.id)).to be(true)
+          expect(song_a.reload.song_master_id).to eq(merge_a.id)
+          expect(song_b.reload.song_master_id).to eq(merge_b.id)
+        end
       end
 
       it "merge側が存在しない場合はDB変更なしで全体を中止すること" do

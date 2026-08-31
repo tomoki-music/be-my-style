@@ -214,9 +214,14 @@ module SongMasters
 
           verify_all_pairs!
         end
-      rescue Aborted => e
-        log("!! 中止しました。#{@pairs.size}組すべてをロールバックしました: #{e.message}")
-        return BatchResult.new(apply: true, ready: false, applied: false, aborted_reason: e.message, pair_results: [])
+      rescue Aborted, ActiveRecord::ActiveRecordError, RuntimeError => e
+        # 想定した中止(Aborted)も、統合中の想定外例外も、外側トランザクションごと
+        # 全ペアをロールバックしたうえで「本適用しなかった」として返す(部分適用を残さない)。
+        log("!! 中止しました。#{@pairs.size}組すべてをロールバックしました: #{e.class}: #{e.message}")
+        return BatchResult.new(
+          apply: true, ready: false, applied: false,
+          aborted_reason: "#{e.class}: #{e.message}", pair_results: []
+        )
       end
 
       log("== 本適用完了: #{applied.size}組を統合しました ==")
