@@ -106,4 +106,63 @@ namespace :song_masters do
   task analyze_titles: :environment do
     SongMasters::TitleAnalysis.call(logger: ->(message) { puts message })
   end
+
+  # MERGE_PAIRS で明示的に渡した「本来同一の楽曲が別SongMasterへ分裂している」ペアを、
+  # 正(keep)SongMaster へ統合する。全ペアを単一トランザクションで適用し、1組でも失敗したら
+  # 6組すべてロールバックする。実処理は SongMasters::MergeBatch / SongMasters::Merge に委譲する。
+  #
+  # 分裂の原因は、SongMasters::Resolver.normalize が「曲名／アーティスト」併記・引用符・括弧・
+  # 区切り文字のゆれを、意味的表記ゆれの誤統合を避けるためあえて吸収しないこと。単純に統合元を
+  # 削除するだけだと、同じ旧表記のSongが再保存されたときにSongMasterが再作成され再分裂するため、
+  # 統合元の正規化キーを SongMasterAlias として正SongMaster へ恒久的に向ける。
+  #
+  # 統合対象は MERGE_PAIRS で必ず明示的に渡す(本番IDをタスクにハードコードしない。全SongMasterや
+  # 検出候補を自動統合しない)。形式は "keep:merge" のカンマ区切り。
+  #   MERGE_PAIRS="43:398,93:102,139:162,140:239,176:203,318:324"
+  #
+  # 実行モード:
+  #   - 環境変数なし(または DRY_RUN=true) → DRY RUN。DBを一切変更しない。
+  #   - 本適用は APPLY=true と CONFIRM=MERGE_SONG_MASTERS の「両方」が必須。
+  #     片方だけ・DRY_RUN との矛盾・中途半端な指定はエラーで停止する(黙って本適用しない)。
+  #
+  # 使い方:
+  #   # DRY RUN(DB変更なし)
+  #   MERGE_PAIRS="43:398,93:102,139:162,140:239,176:203,318:324" \
+  #     bundle exec rails song_masters:merge_pairs
+  #
+  #   # 本適用(全ペア単一トランザクション。1組でも失敗したら全ロールバック)
+  #   MERGE_PAIRS="43:398,93:102,139:162,140:239,176:203,318:324" \
+  #     APPLY=true CONFIRM=MERGE_SONG_MASTERS \
+  #     bundle exec rails song_masters:merge_pairs
+  desc "MERGE_PAIRS(keep:merge のカンマ区切り)の分裂SongMasterペアを統合する。既定はDRY RUN。本適用は APPLY=true CONFIRM=MERGE_SONG_MASTERS が必須"
+  task merge_pairs: :environment do
+    log = lambda do |message|
+      puts message
+      Rails.logger.info("[song_masters:merge_pairs] #{message}")
+    end
+
+    begin
+      batch = SongMasters::MergeBatch.from_env(env: ENV, logger: log)
+    rescue SongMasters::MergeBatch::ConfigError => e
+      abort "[song_masters:merge_pairs] #{e.message}"
+    end
+
+    log.call(
+      batch.apply? ?
+        "本適用モードで実行します(APPLY=true / CONFIRM 一致)。全ペア単一トランザクション。" :
+        "DRY RUN モードで実行します(DBは一切変更しません)。"
+    )
+
+    result = batch.call
+
+    if batch.apply?
+      abort "[song_masters:merge_pairs] 本適用は行われませんでした: #{result.aborted_reason}" unless result.applied
+      log.call("完了しました(#{result.pair_results.size}組を統合)。")
+    else
+      unless result.ready
+        abort "[song_masters:merge_pairs] 実行不可のペアがあります。本適用すると全体が中止されます。"
+      end
+      log.call("完了しました(DRY RUN。全ペア実行可能。DBは変更していません)。")
+    end
+  end
 end

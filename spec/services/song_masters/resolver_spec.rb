@@ -220,6 +220,43 @@ RSpec.describe SongMasters::Resolver, type: :model do
       end
     end
 
+    describe 'SongMasterAlias(統合済みの旧表記)経由の解決' do
+      let!(:canonical) { described_class.call(song_name: "ワタリドリ", artist_name: "[Alexandros]") }
+      # 区切り・括弧が無く decompose では分解されない旧表記(統合でしか正へ寄せられない形)
+      let(:legacy_name) { "ワタリドリ〜Alexandros〜" }
+
+      before do
+        SongMasterAlias.create!(
+          song_master: canonical,
+          normalized_song_name: described_class.normalize(legacy_name),
+          normalized_artist_name: ""
+        )
+      end
+
+      it '通常の完全一致が無ければ Alias 経由で正SongMasterへ解決し、新規作成しないこと' do
+        expect {
+          resolved = described_class.call(song_name: legacy_name, artist_name: nil)
+          expect(resolved.id).to eq(canonical.id)
+        }.not_to change(SongMaster, :count)
+      end
+
+      it 'resolve_existing も Alias 経由で解決すること' do
+        expect(described_class.resolve_existing(song_name: legacy_name, artist_name: nil)&.id).to eq(canonical.id)
+      end
+
+      it '実在するSongMasterの完全一致は Alias より優先されること' do
+        real = FactoryBot.create(
+          :song_master,
+          song_name: legacy_name,
+          normalize: false,
+          normalized_song_name: described_class.normalize(legacy_name),
+          normalized_artist_name: ""
+        )
+
+        expect(described_class.call(song_name: legacy_name, artist_name: nil).id).to eq(real.id)
+      end
+    end
+
     describe '意味的な表記ゆれは自動で同一視しないこと(誤統合防止)' do
       it '丸の内と丸ノ内は別のSongMasterになること' do
         first = described_class.call(song_name: "丸の内サディスティック", artist_name: "アーティスト")
