@@ -106,9 +106,11 @@ module SongMasters
           next
         end
 
-        existing = SongMaster.find_by(
-          normalized_song_name: identity.normalized_song_name,
-          normalized_artist_name: identity.normalized_artist_name
+        # 統合済みの旧キー(song_master_aliases)も正SongMasterとして解決する。
+        # これをしないと、統合元の旧表記Songを「新規作成予定」に積んでしまい分裂を再発させる。
+        existing = SongMasters::Resolver.existing_master_for(
+          identity.normalized_song_name,
+          identity.normalized_artist_name
         )
 
         if existing

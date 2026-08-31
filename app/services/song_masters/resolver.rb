@@ -111,10 +111,27 @@ module SongMasters
       identity = identity_for(song_name: song_name, artist_name: artist_name, artist_corroboration: artist_corroboration)
       return nil if identity.nil?
 
+      existing_master_for(identity.normalized_song_name, identity.normalized_artist_name)
+    end
+
+    # 正規化キーからSongMasterを引く。通常の完全一致(song_masters)で見つからなければ、
+    # 「旧表記の正規化キー -> 正SongMaster」のエイリアス(song_master_aliases)を引く。
+    #
+    # エイリアスは SongMasters::Merge が分裂SongMasterを統合したときにだけ作られる。
+    # song_masters の完全一致を常に優先するため、実在するSongMasterがエイリアスに
+    # 上書きされることはない(統合で削除された旧キーだけがエイリアス経由で解決される)。
+    def self.existing_master_for(normalized_song_name, normalized_artist_name)
+      return nil if normalized_song_name.blank?
+
+      normalized_artist_name = normalized_artist_name.to_s
+
       SongMaster.find_by(
-        normalized_song_name: identity.normalized_song_name,
-        normalized_artist_name: identity.normalized_artist_name
-      )
+        normalized_song_name: normalized_song_name,
+        normalized_artist_name: normalized_artist_name
+      ) || SongMasterAlias.find_by(
+        normalized_song_name: normalized_song_name,
+        normalized_artist_name: normalized_artist_name
+      )&.song_master
     end
 
     # 曲名・アーティスト名から正規化キーと表示名を組み立てて返す。
@@ -291,6 +308,11 @@ module SongMasters
     end
 
     def find_or_create(normalized_song_name, normalized_artist_name, display_song_name, display_artist_name, attempt: 0)
+      # 完全一致するSongMaster、無ければ統合済みの旧キー(SongMasterAlias)経由の正SongMasterを使う。
+      # どちらも無いときだけ新規作成する(統合で削除された旧キーで分裂SongMasterを作り直さない)。
+      existing = self.class.existing_master_for(normalized_song_name, normalized_artist_name)
+      return existing if existing
+
       SongMaster.find_or_create_by!(
         normalized_song_name: normalized_song_name,
         normalized_artist_name: normalized_artist_name

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_08_28_010000) do
+ActiveRecord::Schema.define(version: 2026_08_31_000000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -1230,6 +1230,16 @@ ActiveRecord::Schema.define(version: 2026_08_28_010000) do
     t.index ["song_id"], name: "index_song_customers_on_song_id"
   end
 
+  create_table "song_master_aliases", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "song_master_id", null: false
+    t.string "normalized_song_name", null: false
+    t.string "normalized_artist_name", default: "", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["normalized_song_name", "normalized_artist_name"], name: "index_song_master_aliases_on_normalized_name_and_artist", unique: true
+    t.index ["song_master_id"], name: "index_song_master_aliases_on_song_master_id"
+  end
+
   create_table "song_masters", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "normalized_song_name", null: false
     t.string "normalized_artist_name", default: "", null: false
@@ -1461,6 +1471,7 @@ ActiveRecord::Schema.define(version: 2026_08_28_010000) do
   add_foreign_key "singing_share_images", "customers"
   add_foreign_key "song_customers", "customers"
   add_foreign_key "song_customers", "songs"
+  add_foreign_key "song_master_aliases", "song_masters"
   add_foreign_key "song_templates", "communities"
   add_foreign_key "song_templates", "customers"
   add_foreign_key "song_templates", "songs", column: "source_song_id"

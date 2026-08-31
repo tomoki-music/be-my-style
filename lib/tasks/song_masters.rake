@@ -1,3 +1,17 @@
+# 本番DBの読み取り専用監査(2026-08)で「本来同一の楽曲が別SongMasterへ分裂している」ことを
+# 確認した6組。左が正、右が統合元。統合方向は 統合元 -> 正。
+# 監査で曲名・アーティスト・キー表記を突き合わせ、6組すべて同一楽曲と判断済み。
+# song_masters:merge_known_duplicates タスクでのみ参照する(定数はrakeのnamespace/taskブロック内では
+# 定義できないためファイルスコープに置く)。
+KNOWN_DUPLICATE_SONG_MASTER_MERGES = [
+  { canonical_id: 43,  duplicate_id: 398, note: "GLAMOROUS SKY／中島美嘉" },
+  { canonical_id: 93,  duplicate_id: 102, note: "unravel／TK from 凛として時雨" },
+  { canonical_id: 139, duplicate_id: 162, note: "八月、某、月明かり／ヨルシカ" },
+  { canonical_id: 140, duplicate_id: 239, note: "Cause We've Ended as Lovers／Jeff Beck" },
+  { canonical_id: 176, duplicate_id: 203, note: "Fly Me To The Moon／Key of C major" },
+  { canonical_id: 318, duplicate_id: 324, note: "ワタリドリ／[Alexandros]" }
+].freeze
+
 namespace :song_masters do
   # SongMasterの重複"候補"を検出し、レポートするだけのread-onlyタスク。
   #
@@ -105,5 +119,61 @@ namespace :song_masters do
   desc "曲名の表記パターンとResolver改善前後のSongMaster集約変化を集計する(read-only)"
   task analyze_titles: :environment do
     SongMasters::TitleAnalysis.call(logger: ->(message) { puts message })
+  end
+
+  # 本番監査で確認した「本来同一の楽曲が別SongMasterへ分裂している」6組
+  # (KNOWN_DUPLICATE_SONG_MASTER_MERGES)を、正SongMasterへ統合する。
+  #
+  # 分裂の原因は、SongMasters::Resolver.normalize が「曲名／アーティスト」併記・引用符・括弧・
+  # 区切り文字のゆれを、意味的表記ゆれの誤統合を避けるためあえて吸収しないこと。単純に統合元を
+  # 削除するだけだと、同じ旧表記のSongが再保存されたときにSongMasterが再作成され再分裂する。
+  # そのため統合元の正規化キーを SongMasterAlias として正SongMasterへ恒久的に向ける。
+  # 実処理は SongMasters::Merge に委譲する(トランザクション・行ロック・UNIQUE衝突デデュープ・
+  # 未知参照時のロールバック・統合後の検算はそちらを参照)。
+  #
+  # 使い方:
+  #   DRY_RUN=true bundle exec rails song_masters:merge_known_duplicates  # 予定のみ表示(DBは一切変更しない)
+  #   bundle exec rails song_masters:merge_known_duplicates               # 統合を実行(1組ずつ独立トランザクション)
+  #
+  # 本番DBに適用する前に、必ずステージング/ローカルで DRY_RUN の結果を確認すること。
+  desc "本番監査で確認した分裂SongMaster 6組を正SongMasterへ統合する(DRY_RUN=trueで予定のみ)"
+  task merge_known_duplicates: :environment do
+    dry_run = ENV["DRY_RUN"] == "true"
+
+    log = lambda do |message|
+      puts message
+      Rails.logger.info("[song_masters:merge_known_duplicates] #{message}")
+    end
+
+    log.call(dry_run ? "DRY RUNモードで実行します(DBは一切変更しません)" : "分裂SongMasterの統合を実行します")
+
+    summary = { performed: 0, already_merged: 0, blocked: 0 }
+
+    KNOWN_DUPLICATE_SONG_MASTER_MERGES.each do |pair|
+      log.call("")
+      log.call("=== #{pair[:note]} : SongMaster##{pair[:duplicate_id]} -> SongMaster##{pair[:canonical_id]} ===")
+
+      result = SongMasters::Merge.call(
+        canonical_id: pair[:canonical_id],
+        duplicate_id: pair[:duplicate_id],
+        dry_run: dry_run,
+        logger: log
+      )
+
+      if result.performed
+        summary[:performed] += 1
+      elsif result.already_merged
+        summary[:already_merged] += 1
+      elsif !dry_run && !result.executable?
+        summary[:blocked] += 1
+        log.call("!! 実行不可のためスキップしました: #{result.aborted_reason}")
+      end
+    end
+
+    log.call("")
+    log.call(
+      "完了しました " \
+      "(#{dry_run ? '判定のみ' : "統合#{summary[:performed]}組 / 統合済み#{summary[:already_merged]}組 / 実行不可#{summary[:blocked]}組"})"
+    )
   end
 end

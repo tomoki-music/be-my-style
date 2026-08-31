@@ -141,6 +141,25 @@ RSpec.describe SongMasters::BackfillSongs do
     end
   end
 
+  describe "統合済み(SongMasterAlias)との整合" do
+    it "統合元の旧表記Songを、新規SongMaster作成ではなく正SongMasterへ寄せること" do
+      canonical = SongMasters::Resolver.call(song_name: "統合済み曲", artist_name: "統合済みP")
+      legacy_name = "統合済み曲（謎表記！）"
+      SongMasterAlias.create!(
+        song_master: canonical,
+        normalized_song_name: SongMasters::Resolver.normalize(legacy_name),
+        normalized_artist_name: ""
+      )
+      song = create_unlinked_song(song_name: legacy_name)
+
+      result = nil
+      expect { result = described_class.call(dry_run: false) }.not_to change(SongMaster, :count)
+
+      expect(song.reload.song_master_id).to eq(canonical.id)
+      expect(result.creates).to be_empty
+    end
+  end
+
   describe "本番相当: 曲名にアーティスト名・注記が混ざった表記の名寄せ" do
     # 「マリーゴールド」+「あいみょん」が別カラムで入力されたSong(裏付け)が1件でもあれば、
     # 区切り・括弧・先頭注記で表記の揺れた同一曲を、同じ正規SongMasterへ寄せる。
