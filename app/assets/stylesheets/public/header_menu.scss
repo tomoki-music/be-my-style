@@ -85,35 +85,51 @@
     pointer-events: auto;
   }
   @media (min-width: 600px) {
+    // PC ではアカウント導線を右端プロフィールのドロップダウンへ集約するため、
+    // 上部バーの SP メニュー起動アバターは隠す（通知ベルは残す）。
+    // #close/#open の JS ガードは要素の存在チェックのみなので DOM からは消さない。
+    .header-sign-in-list #open {
+      display: none;
+    }
+
     .customer-menu-pc {
-      display: block;
+      // 主要導線(左〜中央)とプロフィール(右端)を横一列に並べる。
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
       width: 90%;
-      // 項目数が多く 1 行に収まらない画面幅では行ごと折り返すため、
-      // 固定 height ではなく min-height にして縦に伸びられるようにする。
       min-height: 50px;
       background-color: lightblue;
       margin: 0 auto;
       border-radius: 10px;
-      ul{
+      padding: 0 12px;
+
+      // 主要メニュー本体。6 項目まで減ったので通常幅では 1 行に収まる。
+      // 幅が足りない中間幅では「文字の途中」ではなく「項目ごと」折り返す保険を残す。
+      .customer-menu-pc__main {
+        flex: 1 1 auto;
         display: flex;
-        // 幅が足りないときはボタン内の文字ではなく「項目ごと」次の行へ折り返す。
         flex-wrap: wrap;
         align-items: center;
         justify-content: center;
         // li の margin-right(共通スタイル)ではなく gap で間隔を揃える。
         gap: 6px 8px;
         min-height: 50px;
-        padding: 6px 12px;
+        padding: 6px 0;
         margin: 0;
       }
-      li{
+
+      li {
         margin: 0;
       }
+
       // メニュー項目のラベルは常に 1 行で表示する（文字の途中で折り返さない）。
-      .btn{
+      .btn {
         white-space: nowrap;
       }
-      .flex-item{
+
+      .flex-item {
         width: 100%;
       }
 
@@ -126,21 +142,107 @@
         margin-left: 8px;
       }
     }
+
+    // --- 右端プロフィール(アカウント)ドロップダウン ---
+    .customer-profile-menu {
+      flex: 0 0 auto;
+    }
+
+    .customer-profile-menu__toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px 3px 4px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.55);
+      cursor: pointer;
+      // 長いユーザー名でもヘッダーを押し広げない（アバターのみ表示なので実質固定幅）
+      max-width: 160px;
+    }
+
+    .customer-profile-menu__toggle:hover {
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    // フォーカスリングは消さない（キーボード操作の可視性を担保）
+    .customer-profile-menu__toggle:focus {
+      outline: 2px solid #1c64f2;
+      outline-offset: 2px;
+    }
+
+    .customer-profile-menu__toggle.dropdown-toggle::after {
+      margin-left: 0;
+      color: #33507a;
+    }
+
+    .customer-profile-menu__avatar {
+      width: 34px;
+      height: 34px;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
+
+    // customer_avatar_tag は img を span.avatar-with-badge で包む。
+    // 役職バッジ(絶対配置)の基準を保ちつつ、inline 由来の隙間で潰れないようにする。
+    .customer-profile-menu__toggle .avatar-with-badge {
+      display: inline-flex;
+      line-height: 0;
+    }
+
+    .customer-profile-menu .dropdown-menu {
+      min-width: 12rem;
+      // sticky ヘッダー(.sticky-top: z-index 1020)配下。本文より前面に出す最小値。
+      z-index: 1021;
+    }
+
+    .customer-profile-menu .dropdown-item {
+      // クリック領域を十分に確保する
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+      white-space: nowrap;
+    }
+
+    // プランUPGRADE は控えめに強調（アイコン + 文字色 + 薄い背景）。
+    // 既存 .menu-upgrade-cta のような装飾(グラデ/アニメ)は使わない。
+    .customer-profile-menu__upgrade.dropdown-item {
+      font-weight: 700;
+      color: #d9531e;
+      background-color: rgba(217, 83, 30, 0.07);
+    }
+
+    .customer-profile-menu__upgrade.dropdown-item:hover,
+    .customer-profile-menu__upgrade.dropdown-item:focus {
+      color: #b23f12;
+      background-color: rgba(217, 83, 30, 0.14);
+    }
+
+    .customer-profile-menu__upgrade-icon {
+      margin-right: 6px;
+    }
+
+    // button_to が生成する form/button を dropdown-item として整える
+    .customer-profile-menu__logout-form {
+      margin: 0;
+    }
+
+    .customer-profile-menu__logout.dropdown-item {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+    }
   }
 
-  // 中間幅（項目が多いログイン時に 1〜2 行へ収めたい帯）ではボタンを少し詰める。
-  @media (min-width: 600px) and (max-width: 1099px) {
+  // 中間幅（タブレット寄り）ではボタンを少し詰めて 1 行維持しやすくする。
+  // 1024px 前後は 6 項目で余裕があるため通常サイズのまま。
+  @media (min-width: 600px) and (max-width: 900px) {
     .customer-menu-pc {
-      .btn{
+      .btn {
         padding: 5px 10px;
         font-size: 13px;
-      }
-      .menu-upgrade-cta{
-        padding: 7px 12px;
-        font-size: 12px;
-      }
-      ul{
-        gap: 5px 6px;
       }
     }
   }
