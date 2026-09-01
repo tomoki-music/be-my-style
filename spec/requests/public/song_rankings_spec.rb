@@ -79,6 +79,59 @@ RSpec.describe "Public::SongRankings", type: :request do
       end
     end
 
+    context "期間UIの表示・有効化(JavaScript無効時のサーバーレンダリング)" do
+      it "初期状態は「すべての期間」が選択され、対象年・対象月は非表示かつdisabledであること" do
+        get public_song_rankings_path
+        doc = Nokogiri::HTML(response.body)
+
+        expect(doc.at_css('select#period option[selected]')['value']).to eq "all"
+        expect(doc.at_css('select#period').text).to include("すべての期間")
+        expect(doc.at_css('.song-ranking__field--year')['hidden']).not_to be_nil
+        expect(doc.at_css('.song-ranking__field--month')['hidden']).not_to be_nil
+        expect(doc.at_css('select#year')['disabled']).not_to be_nil
+        expect(doc.at_css('select#month')['disabled']).not_to be_nil
+      end
+
+      it "「年間」選択時は対象年のみ表示・有効化され、対象月は非表示かつdisabledであること" do
+        get public_song_rankings_path, params: { period: "yearly", year: "2026" }
+        doc = Nokogiri::HTML(response.body)
+
+        expect(doc.at_css('.song-ranking__field--year')['hidden']).to be_nil
+        expect(doc.at_css('select#year')['disabled']).to be_nil
+        expect(doc.at_css('.song-ranking__field--month')['hidden']).not_to be_nil
+        expect(doc.at_css('select#month')['disabled']).not_to be_nil
+      end
+
+      it "「月間」選択時は対象年・対象月がどちらも表示・有効化されること" do
+        get public_song_rankings_path, params: { period: "monthly", year: "2026", month: "9" }
+        doc = Nokogiri::HTML(response.body)
+
+        expect(doc.at_css('.song-ranking__field--year')['hidden']).to be_nil
+        expect(doc.at_css('select#year')['disabled']).to be_nil
+        expect(doc.at_css('.song-ranking__field--month')['hidden']).to be_nil
+        expect(doc.at_css('select#month')['disabled']).to be_nil
+      end
+    end
+
+    context "全期間指定(period=all)" do
+      before do
+        establish(create_event(Time.zone.local(2024, 1, 5, 12)), song_name: "むかしの曲", artist_name: "X")
+        establish(create_event(Time.zone.local(2027, 12, 20, 12)), song_name: "みらいの曲", artist_name: "X")
+      end
+
+      it "初期表示(パラメータなし)で全期間が集計されること" do
+        get public_song_rankings_path
+        expect(response.body).to include("むかしの曲")
+        expect(response.body).to include("みらいの曲")
+      end
+
+      it "period=all に不要な year / month が送信されても集計に影響しないこと" do
+        get public_song_rankings_path, params: { period: "all", year: "2024", month: "1" }
+        expect(response.body).to include("むかしの曲")
+        expect(response.body).to include("みらいの曲")
+      end
+    end
+
     context "不正なパラメータ" do
       it "想定外の文字列でも500にならず200を返すこと" do
         get public_song_rankings_path, params: {

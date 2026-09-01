@@ -116,6 +116,11 @@
   gap: 4px;
 }
 
+// [hidden] の UA スタイル(display:none)は .song-ranking__field の display:flex に負けるため明示する。
+.song-ranking__field[hidden] {
+  display: none;
+}
+
 .song-ranking__field-label {
   font-size: 0.75rem;
   font-weight: 700;
