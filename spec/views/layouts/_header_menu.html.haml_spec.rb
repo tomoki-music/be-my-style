@@ -29,6 +29,10 @@ RSpec.describe "layouts/_header_menu", type: :view do
     Nokogiri::HTML(rendered).at_css(".customer-menu-pc .customer-profile-menu")
   end
 
+  def pc_account
+    Nokogiri::HTML(rendered).at_css(".customer-menu-pc .customer-menu-pc__account")
+  end
+
   def sp_menu
     Nokogiri::HTML(rendered).at_css(".customer-menu-sp")
   end
@@ -109,6 +113,33 @@ RSpec.describe "layouts/_header_menu", type: :view do
       expect(upgrade["class"]).not_to include("menu-upgrade-cta")
     end
 
+    it "PC ヘッダー右端は 通知ベル + プロフィール を 1 つのユーティリティ領域(.customer-menu-pc__account)にまとめる" do
+      account = pc_account
+      expect(account).to be_present
+
+      children = account.element_children
+      # 通知ベル(左) → プロフィール dropdown(右) の順
+      expect(children[0]["class"]).to include("customer-menu-pc__notification")
+      expect(children[1]["class"]).to include("customer-profile-menu")
+    end
+
+    it "PC の通知ベルは公開通知一覧へのリンクで、dropdown の外に常時表示される" do
+      bell = pc_account.at_css(".customer-menu-pc__notification a")
+      expect(bell["href"]).to eq(public_notifications_path)
+      expect(bell.at_css("i.fa-bell")).to be_present
+      # dropdown-menu の内側に通知ベルを入れない
+      expect(profile_menu.at_css(".dropdown-menu .fa-bell")).to be_nil
+    end
+
+    it "上部バー(.header-sign-in-list)の通知ベルは PC 用マークアップと二重に出さない（SP 用にクラスを付ける）" do
+      top_bar = Nokogiri::HTML(rendered).at_css(".header-sign-in-list")
+      bell_li = top_bar.at_css("li.header-sign-in-list__notification")
+      expect(bell_li).to be_present
+      expect(bell_li.at_css("a")["href"]).to eq(public_notifications_path)
+      # 上部バーの通知ベルはこの 1 箇所だけ
+      expect(top_bar.css("a[href='#{public_notifications_path}']").size).to eq(1)
+    end
+
     it "SP メニューは従来の主要導線（正式名称ラベル）をすべて維持する" do
       text = sp_menu.text
       %w[
@@ -165,6 +196,11 @@ RSpec.describe "layouts/_header_menu", type: :view do
 
     it "プロフィールドロップダウンを表示しない" do
       expect(profile_menu).to be_nil
+    end
+
+    it "未ログイン時は PC ユーティリティ領域も通知ベルも表示しない" do
+      expect(pc_account).to be_nil
+      expect(Nokogiri::HTML(rendered).at_css(".customer-menu-pc .customer-menu-pc__notification")).to be_nil
     end
 
     it "ランキングリンクは公開 URL（/song_rankings）を指す" do

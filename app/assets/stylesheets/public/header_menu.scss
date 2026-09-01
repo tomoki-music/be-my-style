@@ -103,10 +103,14 @@
     pointer-events: auto;
   }
   @media (min-width: 600px) {
-    // PC ではアカウント導線を右端プロフィールのドロップダウンへ集約するため、
-    // 上部バーの SP メニュー起動アバターは隠す（通知ベルは残す）。
+    // PC では上部バーのアカウント導線(SP メニュー起動アバター #open)も
+    // 通知ベル(.header-sign-in-list__notification)も使わない。
+    // どちらも .customer-menu-pc 側（右端ユーティリティ領域）へ集約するため、
+    // 上部バーのこのリストは丸ごと隠して二重表示を防ぐ。
     // #close/#open の JS ガードは要素の存在チェックのみなので DOM からは消さない。
-    .header-sign-in-list #open {
+    // ベースの .header-menu .header-sign-in-list(display:flex)と同じ詳細度で
+    // 後勝ちさせるため .header-menu を前置する。
+    .header-menu .header-sign-in-list {
       display: none;
     }
 
@@ -171,14 +175,51 @@
       }
     }
 
-    // --- 右端プロフィール(アカウント)ドロップダウン ---
-    .customer-profile-menu {
+    // --- 右端ユーティリティ領域(通知ベル + プロフィール) ---
+    // 通知ベルとプロフィールを 1 つのまとまりとして扱い、主要6項目と同じ背景・並びの
+    // 中に置かれても「7個目のメインメニュー項目」に見えないよう区切り線で分離する。
+    .customer-menu-pc__account {
       flex: 0 0 auto;
-      // 主要6項目と同じ背景・並びの中に置かれるため、区切り線を入れて
-      // 「7個目のメインメニュー項目」に見えないよう視覚的に分離する。
+      display: flex;
+      align-items: center;
+      // ベルとプロフィールの間隔（既存デザインの目安 8〜12px）。
+      gap: 10px;
       padding-left: 12px;
       margin-left: 4px;
       border-left: 1px solid rgba(255, 255, 255, 0.7);
+    }
+
+    // 通知ベル。バッジ件数・リンク先・既読/未読表示のロジックは partial 側で維持し、
+    // ここではプロフィールアバターと高さ・縦位置をそろえるための整形のみ行う。
+    .customer-menu-pc__notification {
+      display: inline-flex;
+      align-items: center;
+
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        // バッジ(.count-circle)の絶対配置は fa-stack のデフォルトサイズ前提で
+        // px 調整されているため、フォントサイズは基準値のままにして位置ズレを防ぐ。
+        font-size: 16px;
+        color: #33507a;
+        line-height: 1;
+        text-decoration: none;
+      }
+
+      a:hover {
+        color: #1c3a63;
+      }
+
+      a:focus {
+        outline: 2px solid #1c64f2;
+        outline-offset: 2px;
+      }
+    }
+
+    // --- 右端プロフィール(アカウント)ドロップダウン ---
+    .customer-profile-menu {
+      flex: 0 0 auto;
     }
 
     .customer-profile-menu__toggle {

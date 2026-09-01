@@ -1,0 +1,13 @@
+-# 通知ベル本体。PC ヘッダーの右端ユーティリティ領域と SP 上部バーの両方から使う。
+-# バッジ件数・リンク先・既読/未読表示のロジックはここに集約し、表示位置ごとの
+-# CSS(.customer-menu-pc__notification / .header-sign-in-list)で見た目だけ調整する。
+= link_to(public_notifications_path) do
+  - if current_customer.present? && unchecked_notifications.any?
+    %span.fa-stack
+      %i.far.fa-bell.fa-lg.fa-stack-2x
+      %i.fas.fa-circle.n-circle.fa-stack-1x
+      %i.count-circle
+        - notifications = current_customer.passive_notifications
+        = notifications.where(checked: false).count
+  - else
+    %i.far.fa-bell.fa-lg
