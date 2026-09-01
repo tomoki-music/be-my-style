@@ -127,6 +127,28 @@ RSpec.describe "Public::CustomerFeedbacks", type: :request do
       expect(response.body).not_to include(xss)
     end
 
+    describe "管理者メール通知" do
+      it "投稿成功時に全管理者宛メールがキューイングされること" do
+        create_list(:admin, 2)
+
+        expect do
+          post public_customer_feedbacks_path, params: {
+            customer_feedback: { category: "bug_report", subject: "件名", body: "不具合の内容" }
+          }
+        end.to have_enqueued_mail(AdminNotificationMailer, :customer_feedback_created).twice
+      end
+
+      it "バリデーションエラー時はメールがキューイングされないこと" do
+        create(:admin)
+
+        expect do
+          post public_customer_feedbacks_path, params: {
+            customer_feedback: { category: "", body: "" }
+          }
+        end.not_to have_enqueued_mail(AdminNotificationMailer, :customer_feedback_created)
+      end
+    end
+
     describe "送信履歴" do
       let!(:own_feedback) { create(:customer_feedback, customer: customer, subject: "自分の投稿") }
       let!(:others_feedback) { create(:customer_feedback, customer: other_customer, subject: "他人の投稿", admin_note: "内部メモ") }

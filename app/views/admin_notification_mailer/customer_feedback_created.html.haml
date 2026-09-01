@@ -1,0 +1,27 @@
+%p ご意見・ご相談BOXに新しい投稿がありました。
+
+%p
+  %strong カテゴリー:
+  = @feedback.category_label
+
+%p
+  %strong 件名:
+  = @feedback.subject.presence || "（件名なし）"
+
+%p
+  %strong 内容:
+-# simple_format で改行を保持しつつ HTML をサニタイズする（本文はユーザー入力のため）。
+= simple_format(@feedback.body)
+
+%p
+  %strong 投稿者:
+  = @customer.name.presence || "名称未設定"
+
+%p
+  %strong 投稿者メール:
+  = @customer.email
+
+%p
+  管理画面で投稿内容の確認・対応状況の更新ができます。
+  %br
+  = link_to @feedback_url, @feedback_url
