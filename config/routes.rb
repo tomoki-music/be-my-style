@@ -6,6 +6,10 @@ Rails.application.routes.draw do
   end
   root to: 'public/homes#top'
 
+  # 成立楽曲ランキング(ログイン不要の公開ページ)。
+  # /public 配下に置かず ensure_music_domain_access_for_public_routes! の対象外にする。
+  get 'song_rankings', to: 'public/song_rankings#index', as: :public_song_rankings
+
   # オンボーディング
   get "onboarding/music", to: "onboardings#music", as: :onboarding_music
   get "onboarding/business", to: "onboardings#business", as: :onboarding_business

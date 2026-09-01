@@ -1,0 +1,41 @@
+-# 期間・コミュニティ・アーティストの絞り込み。すべて GET パラメータで表現し、
+-# 送信後もフォームに選択状態が保持される(URLの共有・再読み込みで同じ表示になる)。
+= form_with url: public_song_rankings_path, method: :get, local: true, class: "song-ranking__filters directory-search" do
+  .directory-search__form
+    .song-ranking__field
+      = label_tag :period, "期間", class: "song-ranking__field-label"
+      = select_tag :period,
+        options_for_select([["全期間", "all"], ["月間", "monthly"], ["年間", "yearly"]], ranking.period),
+        class: "directory-search__select"
+
+    .song-ranking__field
+      = label_tag :year, "対象年", class: "song-ranking__field-label"
+      = select_tag :year,
+        options_for_select(ranking.year_options.map { |y| ["#{y}年", y] }, ranking.year),
+        class: "directory-search__select"
+
+    .song-ranking__field
+      = label_tag :month, "対象月", class: "song-ranking__field-label"
+      = select_tag :month,
+        options_for_select(ranking.month_options.map { |m| ["#{m}月", m] }, ranking.month),
+        class: "directory-search__select"
+
+    .song-ranking__field
+      = label_tag :community_id, "コミュニティ", class: "song-ranking__field-label"
+      = select_tag :community_id,
+        options_for_select(ranking.community_options, ranking.community_id),
+        include_blank: "すべてのコミュニティ",
+        class: "directory-search__select"
+
+    .song-ranking__field
+      = label_tag :artist_name, "アーティスト", class: "song-ranking__field-label"
+      = select_tag :artist_name,
+        options_for_select(ranking.artist_options.map { |a| [a, a] }, ranking.artist_name),
+        include_blank: "すべてのアーティスト",
+        class: "directory-search__select"
+
+    = submit_tag "この条件で表示", class: "btn btn-info directory-search__submit"
+    = link_to "リセット", public_song_rankings_path, class: "btn btn-outline-secondary directory-search__reset"
+
+  %p.song-ranking__filters-note
+    「対象年」「対象月」は期間が「月間」または「年間」のときに使われます。開催予定のイベントも集計対象です。

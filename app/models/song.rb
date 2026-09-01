@@ -77,6 +77,20 @@ class Song < ApplicationRecord
     join_parts.select { |join_part| join_part.customers.all?(&:is_deleted) }
   end
 
+  # 「必要パートがすべて埋まった」= 現役参加者が0人のパートが1つも無い状態。
+  # Public::EventsController#show の成立/募集中判定、チャットの曲リンクカード、
+  # 成立楽曲ランキング(SongRankings::RankingQuery)で共通利用する Single Source of Truth。
+  # #recruiting_join_parts と同じく customers(preload済みならメモリ上)を見るため追加クエリを発生させない。
+  # 注記: パートが0件の Song も従来どおり established? = true とする(既存の
+  # `join_parts.map { active_customers.length }.include?(0)` 判定と挙動を一致させるため)。
+  def established?
+    recruiting_join_parts.empty?
+  end
+
+  def recruiting?
+    !established?
+  end
+
   def capo_label
     return nil if capo.nil?
     return "なし" if capo.zero?

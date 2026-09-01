@@ -1,0 +1,73 @@
+- content_for :title, "成立楽曲ランキング｜BeMyStyle"
+- content_for :og_title, "成立楽曲ランキング｜BeMyStyle"
+- content_for :og_description, "BeMyStyleのイベントで必要パートがすべて埋まって「成立」した楽曲のランキングです。よく演奏されている曲から、楽曲やコミュニティを探せます。"
+
+.song-ranking-page
+  %header.song-ranking__site-header
+    .song-ranking__site-header-inner
+      = link_to root_path, class: "song-ranking__brand", data: { turbolinks: false } do
+        %span.song-ranking__brand-mark B
+        %span.song-ranking__brand-text BeMyStyle
+      %nav.song-ranking__site-nav{ "aria-label" => "サイト内リンク" }
+        = link_to "コミュニティ", public_communities_path, class: "song-ranking__site-nav-link", data: { turbolinks: false }
+        = link_to "イベント", public_events_path, class: "song-ranking__site-nav-link", data: { turbolinks: false }
+        - if customer_signed_in?
+          = link_to "マイページへ", public_customer_path(current_customer), class: "song-ranking__site-nav-cta", data: { turbolinks: false }
+        - else
+          = link_to "ログイン", new_customer_session_path, class: "song-ranking__site-nav-cta", data: { turbolinks: false }
+
+  %main.song-ranking
+    .song-ranking__hero
+      %p.song-ranking__eyebrow RANKING
+      %h1.song-ranking__title 成立楽曲ランキング
+      %p.song-ranking__lead
+        イベントで必要な演奏パートがすべて埋まり「成立」した楽曲を集計しています。
+        よく演奏されている曲から、気になる楽曲やコミュニティを見つけてみましょう。
+
+    = render "filters", ranking: @ranking
+
+    %p.song-ranking__summary{ "aria-live" => "polite" }
+      - if @rows.any?
+        対象楽曲
+        %strong= @ranking.total_master_count
+        曲 ／ のべ
+        %strong= @ranking.total_established_count
+        回の成立
+      - else
+        条件に一致する成立楽曲はまだありません
+
+    - if @rows.empty?
+      .song-ranking__empty
+        %p.song-ranking__empty-title 表示できるランキングがありません
+        %p.song-ranking__empty-text
+          選んだ期間・コミュニティ・アーティストでは、まだ成立した楽曲がありません。
+          条件を変えるか、
+          = link_to "すべての条件をリセット", public_song_rankings_path, class: "song-ranking__empty-link"
+          してみてください。
+    - else
+      %ol.song-ranking__list
+        - @rows.each do |row|
+          %li.song-ranking__item{ class: ("song-ranking__item--top-#{row.rank}" if row.rank <= 3) }
+            .song-ranking__rank
+              %span.song-ranking__rank-num= row.rank
+              %span.song-ranking__rank-unit 位
+            .song-ranking__body
+              %p.song-ranking__song= row.song_name
+              %p.song-ranking__artist= row.artist_name.presence || "アーティスト不明"
+            .song-ranking__count
+              %span.song-ranking__count-num= row.established_count
+              %span.song-ranking__count-unit 回成立
+            .song-ranking__action
+              - if row.representative_event_id
+                = link_to "楽曲詳細を見る",
+                  public_event_song_path(row.representative_event_id, row.representative_song_id),
+                  class: "btn btn-outline-info btn-sm song-ranking__detail-link",
+                  data: { turbolinks: false }
+
+      .song-ranking__pagination
+        = paginate @rows
+
+  %footer.song-ranking__footer
+    .song-ranking__footer-inner
+      %span © BeMyStyle. All rights reserved.
+      = link_to "トップページ", root_path, data: { turbolinks: false }

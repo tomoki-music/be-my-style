@@ -215,6 +215,38 @@ RSpec.describe Song, type: :model do
     end
   end
 
+  describe '#established? / #recruiting?' do
+    it '現役参加者が0人のパートが1つも無ければ成立とみなすこと' do
+      part = FactoryBot.create(:join_part, song: song, join_part_name: 'ボーカル')
+      FactoryBot.create(:join_part_customer, join_part: part, customer: other_customer)
+
+      expect(song.established?).to eq true
+      expect(song.recruiting?).to eq false
+    end
+
+    it '現役参加者が0人のパートが1つでもあれば募集中とみなすこと' do
+      FactoryBot.create(:join_part, song: song, join_part_name: 'ギター')
+      filled = FactoryBot.create(:join_part, song: song, join_part_name: 'ベース')
+      FactoryBot.create(:join_part_customer, join_part: filled, customer: other_customer)
+
+      expect(song.established?).to eq false
+      expect(song.recruiting?).to eq true
+    end
+
+    it '退会ユーザーだけのパートは埋まっていないものとして扱うこと' do
+      part = FactoryBot.create(:join_part, song: song, join_part_name: 'ドラム')
+      withdrawn = FactoryBot.create(:customer, is_deleted: true)
+      FactoryBot.create(:join_part_customer, join_part: part, customer: withdrawn)
+
+      expect(song.established?).to eq false
+    end
+
+    it 'Public::EventsController#show の既存判定と同じく、パートが0件なら成立扱いになること' do
+      expect(song.join_parts).to be_empty
+      expect(song.established?).to eq true
+    end
+  end
+
   describe '#requested_by_customer' do
     let(:member) { FactoryBot.create(:customer, name: "参加太郎") }
     let(:other_member) { FactoryBot.create(:customer, name: "参加次郎") }

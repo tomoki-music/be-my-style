@@ -1,0 +1,292 @@
+// 成立楽曲ランキング(公開ページ)。既存の directory-* / info系カラーに合わせる。
+// PC・スマートフォンの両方で横スクロールを発生させないこと。
+
+.song-ranking-page {
+  background: #f4f8fc;
+  min-height: 100vh;
+}
+
+.song-ranking__site-header {
+  background: #fff;
+  border-bottom: 1px solid #dfe9f3;
+}
+
+.song-ranking__site-header-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.song-ranking__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #1f2d3d;
+  font-weight: 700;
+}
+
+.song-ranking__brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #17a2b8;
+  color: #fff;
+  font-weight: 800;
+}
+
+.song-ranking__site-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.song-ranking__site-nav-link {
+  color: #37536e;
+  text-decoration: none;
+  font-size: 0.9rem;
+
+  &:hover { text-decoration: underline; }
+}
+
+.song-ranking__site-nav-cta {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #17a2b8;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+
+  &:hover { color: #fff; background: #138b9e; }
+}
+
+.song-ranking {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 18px 48px;
+}
+
+.song-ranking__hero {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.song-ranking__eyebrow {
+  letter-spacing: 2px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #17a2b8;
+  margin: 0 0 4px;
+}
+
+.song-ranking__title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #1f2d3d;
+  margin: 0 0 10px;
+}
+
+.song-ranking__lead {
+  color: #4a5c6e;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin: 0 auto;
+  max-width: 640px;
+}
+
+// --- 絞り込み ---------------------------------------------------------------
+
+.song-ranking__filters {
+  width: 100%;
+}
+
+.song-ranking__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.song-ranking__field-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #5a6b7c;
+  margin: 0;
+}
+
+.song-ranking__filters-note {
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  color: #6b7a89;
+}
+
+// --- サマリー / 空状態 ------------------------------------------------------
+
+.song-ranking__summary {
+  text-align: center;
+  color: #4a5c6e;
+  font-size: 0.9rem;
+  margin: 4px 0 16px;
+
+  strong { color: #17a2b8; font-size: 1.05rem; }
+}
+
+.song-ranking__empty {
+  background: #fff;
+  border: 1px solid #dfe9f3;
+  border-radius: 14px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.song-ranking__empty-title {
+  font-weight: 700;
+  color: #1f2d3d;
+  margin: 0 0 8px;
+}
+
+.song-ranking__empty-text {
+  color: #5a6b7c;
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.7;
+}
+
+// --- ランキング一覧 --------------------------------------------------------
+
+.song-ranking__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.song-ranking__item {
+  background: #fff;
+  border: 1px solid #e0e9f2;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  grid-template-areas: "rank body count" "rank body action";
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 4px;
+}
+
+.song-ranking__item--top-1 { border-color: #e5b567; box-shadow: 0 2px 10px rgba(229, 181, 103, 0.25); }
+.song-ranking__item--top-2 { border-color: #b9c4ce; }
+.song-ranking__item--top-3 { border-color: #d0a184; }
+
+.song-ranking__rank {
+  grid-area: rank;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+  color: #1f2d3d;
+}
+
+.song-ranking__rank-num {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.song-ranking__item--top-1 .song-ranking__rank-num { color: #c8912f; }
+.song-ranking__item--top-2 .song-ranking__rank-num { color: #7d8896; }
+.song-ranking__item--top-3 .song-ranking__rank-num { color: #b06f45; }
+
+.song-ranking__rank-unit { font-size: 0.72rem; color: #6b7a89; }
+
+.song-ranking__body { grid-area: body; min-width: 0; }
+
+.song-ranking__song {
+  margin: 0;
+  font-weight: 700;
+  color: #1f2d3d;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.song-ranking__artist {
+  margin: 2px 0 0;
+  color: #5a6b7c;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.song-ranking__count {
+  grid-area: count;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.song-ranking__count-num {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #17a2b8;
+  font-variant-numeric: tabular-nums;
+}
+
+.song-ranking__count-unit { font-size: 0.72rem; color: #6b7a89; margin-left: 2px; }
+
+.song-ranking__action { grid-area: action; text-align: right; }
+
+.song-ranking__detail-link { white-space: nowrap; }
+
+.song-ranking__pagination {
+  margin-top: 20px;
+
+  .pagination { flex-wrap: wrap; }
+}
+
+// --- フッター -------------------------------------------------------------
+
+.song-ranking__footer {
+  border-top: 1px solid #dfe9f3;
+  background: #fff;
+}
+
+.song-ranking__footer-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: #6b7a89;
+
+  a { color: #37536e; }
+}
+
+// --- スマートフォン ------------------------------------------------------
+
+@media (max-width: 600px) {
+  .song-ranking__item {
+    grid-template-columns: 44px 1fr;
+    grid-template-areas: "rank body" "rank count" "action action";
+    row-gap: 6px;
+  }
+
+  .song-ranking__count { text-align: left; }
+
+  .song-ranking__action { text-align: left; }
+
+  .song-ranking__detail-link { display: inline-block; width: 100%; }
+
+  .song-ranking__rank-num { font-size: 1.25rem; }
+}

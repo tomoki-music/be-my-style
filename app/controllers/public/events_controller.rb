@@ -74,35 +74,15 @@ class Public::EventsController < ApplicationController
       @join_members << Customer.find(member_id)
     end
 
-    #成立楽曲数(退会ユーザーだけのパートは現役参加者0人=募集中として扱う)
-    @complete_song_ids = []
-    @event.songs.each do |song|
-      unless song.join_parts.map{|join_part| join_part.active_customers.length }.include?(0)
-        @complete_song_ids << song.id
-      end
-    end
-    @complete_count = @complete_song_ids.length
+    #成立楽曲 / 募集中楽曲(退会ユーザーだけのパートは現役参加者0人=募集中として扱う)。
+    #判定は Song#established? / Song#recruiting? に一本化する(画面ごとに基準が食い違わないようにする)。
+    @complete_songs = @event.songs.select(&:established?)
+    @complete_song_ids = @complete_songs.map(&:id)
+    @complete_count = @complete_songs.length
 
-    #成立楽曲リスト
-    @complete_songs = []
-    @complete_song_ids.each do |song_id|
-      @complete_songs << Song.find(song_id)
-    end
-
-    #募集中楽曲数(退会ユーザーだけのパートは現役参加者0人=募集中として扱う)
-    @recruiting_song_ids = []
-    @event.songs.each do |song|
-      if song.join_parts.map{|join_part| join_part.active_customers.length }.include?(0)
-        @recruiting_song_ids << song.id
-      end
-    end
-    @recruiting_count = @recruiting_song_ids.length
-
-    #募集中楽曲リスト
-    @recruiting_songs = []
-    @recruiting_song_ids.each do |song_id|
-      @recruiting_songs << Song.find(song_id)
-    end
+    @recruiting_songs = @event.songs.select(&:recruiting?)
+    @recruiting_song_ids = @recruiting_songs.map(&:id)
+    @recruiting_count = @recruiting_songs.length
 
     #楽曲パート募集欄の「演奏経験のある人」(曲数xパート数分のN+1を避けるため、イベント単位で1回だけ取得)
     #終了済みイベントのJoinPartCustomerを正データとする動的判定のため、確定操作は不要
