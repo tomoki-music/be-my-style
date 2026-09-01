@@ -5,7 +5,14 @@ ja:
       customer: アーティスト
       community: コミュニティ
       activity: 活動報告
+      customer_feedback: ご意見・ご相談
     attributes:
+      customer_feedback:
+        category: カテゴリー
+        subject: 件名
+        body: 内容
+        status: 対応状況
+        admin_note: 管理者メモ
       customer:
         email: メールアドレス
         password: パスワード
@@ -249,6 +256,16 @@ ja:
       short: "%m/%d %H:%M"
     pm: 午後
   enums:
+    customer_feedback:
+      category:
+        feature_request: アプリの追加機能要望
+        bug_report: アプリの不具合修正要望
+        consultation: ご相談・お困りごと
+        other: その他
+      status:
+        unread: 未確認
+        reviewing: 確認中
+        completed: 対応済み
     member_profile:
       music_experience_level:
         beginner: 初心者

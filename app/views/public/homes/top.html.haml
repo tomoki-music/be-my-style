@@ -73,3 +73,8 @@
                 target: "_blank",
                 class: "owner-message2" do
         = image_tag 'owner-message.png'
+
+  - if customer_signed_in?
+    .feedback-box-cta
+      %p.feedback-box-cta__text BeMyStyleへのご意見・ご相談はこちら
+      = link_to "ご意見・ご相談BOXを開く", new_public_customer_feedback_path, class: "feedback-box-cta__link", data: { 'turbolinks': false }
