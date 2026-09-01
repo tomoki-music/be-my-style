@@ -111,8 +111,7 @@ RSpec.describe Customer, type: :system do
           visit public_customers_path
         end
         it 'Artist詳細画面へ遷移できる' do
-          show_link = find_all('a')[10]
-          show_link.click
+          within('.customer-menu-sp') { click_link 'マイページ' }
           expect(current_path).to eq('/public/customers/' + customer.id.to_s)
         end
       end
@@ -125,7 +124,9 @@ RSpec.describe Customer, type: :system do
           expect(page).to have_content 'Part'
         end
         it 'プロフィール編集ボタンが表示される' do
-          expect(find_all('a')[10].native.inner_text).to match('プロフィール編集')
+          within('.customer-show-follow') do
+            expect(page).to have_link 'プロフィール編集', href: edit_public_customer_path(customer)
+          end
         end
       end
       context 'Artistのフォローができる' do
@@ -133,18 +134,26 @@ RSpec.describe Customer, type: :system do
           visit public_customer_path(other_customer)
         end
         it '「フォローする」ボタンが表示される' do
-          expect(find_all('a')[10].native.inner_text).to match('フォローする')
+          within('.customer-show-follow') do
+            expect(page).to have_link 'フォローする', href: public_customer_relationships_path(other_customer.id)
+          end
         end
         it '「フォローする」ボタンを押すと「フォロワー数」が1つ増え「フォロー外す」ボタンに変わる' do
-          follow_link = find_all('a')[10]
-          expect{ follow_link.click }.to change{Relationship.count}.by(1)
-          expect(find_all('a')[10].native.inner_text).to match('フォロー外す')
+          expect {
+            within('.customer-show-follow') { click_link 'フォローする' }
+          }.to change { Relationship.count }.by(1)
+          within('.customer-show-follow') do
+            expect(page).to have_link 'フォロー外す'
+          end
         end
         it '「フォロー外す」ボタンを押すと「フォロワー数」が1つ減り「フォローする」ボタンに変わる' do
-          find_all('a')[10].click
-          unfollow_link = find_all('a')[10]
-          expect{ unfollow_link.click }.to change{Relationship.count}.from(1).to(0)
-          expect(find_all('a')[10].native.inner_text).to match('フォローする')
+          within('.customer-show-follow') { click_link 'フォローする' }
+          expect {
+            within('.customer-show-follow') { click_link 'フォロー外す' }
+          }.to change { Relationship.count }.from(1).to(0)
+          within('.customer-show-follow') do
+            expect(page).to have_link 'フォローする'
+          end
         end
       end
     end
@@ -154,8 +163,7 @@ RSpec.describe Customer, type: :system do
           visit public_customer_path(customer)
         end
         it 'Artist編集画面へ遷移できる' do
-          show_link = find_all('a')[10]
-          show_link.click
+          within('.customer-show-follow') { click_link 'プロフィール編集' }
           expect(current_path).to eq('/public/customers/' + customer.id.to_s + '/edit')
         end
       end
@@ -221,14 +229,14 @@ RSpec.describe Customer, type: :system do
         context 'チャット画面に遷移できる' do
           it 'チャットボタンを押すとチャット画面へ遷移する' do
             visit public_matchings_path
-            find_all('a')[10].click
+            within('.matching-index') { click_link(href: public_chat_rooms_path(customer_id: customer.id)) }
             expect(page).to have_content 'チャットルームへようこそ!'
           end
         end
         context 'チャット入力のテスト' do
           before do
             visit public_matchings_path
-            find_all('a')[10].click
+            within('.matching-index') { click_link(href: public_chat_rooms_path(customer_id: customer.id)) }
           end
           it '正常にメッセージが送信できる' do
             fill_in 'chat_message_content', with: "初めまして！"
@@ -256,10 +264,10 @@ RSpec.describe Customer, type: :system do
         before do
           matching(other_customer)
           visit public_matchings_path
-          find_all('a')[10].click
+          within('.matching-index') { click_link(href: public_chat_rooms_path(customer_id: customer.id)) }
           fill_in 'chat_message_content', with: "初めまして！"
           click_button 'メッセージを送信'
-          find_all('a')[5].click
+          click_button 'ログアウト'
           login(customer)
         end
         it 'メッセージを送信された通知が届いている' do
