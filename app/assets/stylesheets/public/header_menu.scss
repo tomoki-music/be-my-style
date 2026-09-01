@@ -7,6 +7,10 @@
     padding: 10px;
     .top-message{
       width: 300px;
+      // 320px 幅では col-8(66.67%) が 300px より狭くなり、固定幅の float が
+      // はみ出して横スクロールを引き起こしていた(実測: clientWidth=320 に対し
+      // window.innerWidth が 326 まで広がる)。所属カラムより広がらないようにする。
+      max-width: 100%;
       float: left;
       .top-message-link {
         text-decoration: none;
@@ -60,6 +64,13 @@
     background: rgba(255, 255, 255, 0.95);
     text-align: right;
     padding: 64px;
+    // 実測: 320px 幅では左右 padding 64px*2=128px で残り 192px しかなく、
+    // 固定 width:200px の .menu-sp-btn がはみ出して横スクロールが発生していた
+    // （document.documentElement.clientWidth=320 に対し window.innerWidth が
+    // 326 まで広がって観測された）。狭い画面では左右 padding を詰めて確保する。
+    @media (max-width: 400px) {
+      padding: 64px 20px;
+    }
     opacity: 0;
     pointer-events: none;
     transition: opacity .4s;
@@ -69,6 +80,7 @@
     }
     .menu-sp-btn{
       width: 200px;
+      max-width: 100%;
       margin: 5px;
       display: inline-flex;
       justify-content: center;
@@ -77,6 +89,12 @@
     }
 
     .menu-upgrade-item {
+      // 共通 .menu-upgrade-item(application.scss.erb) は display:flex; justify-content:center;
+      // だが、それだと中の .menu-upgrade-cta が flex item として縮小され、
+      // 他の .menu-sp-btn（text-align:right で位置決め）と幅・右端がずれる。
+      // SP メニューでは他ボタンと同じ配置方法（text-align:right）に揃える。
+      display: block;
+      width: auto;
       margin: 8px 0;
     }
   }
@@ -94,21 +112,31 @@
 
     .customer-menu-pc {
       // 主要導線(左〜中央)とプロフィール(右端)を横一列に並べる。
+      //
+      // 以前は width:90% で bar 自体を画面幅いっぱいに広げ、.customer-menu-pc__main を
+      // flex:1 1 auto で残り全部に伸ばして「その内側だけ」中央寄せしていた。
+      // その結果、bar 全体（プロフィール込み）の中心と main の中心がズレて main が
+      // 左寄りに固まって見え、6項目とプロフィールの間に大きな空白ができていた
+      // （1440px 実測で main 右端 1290px・プロフィール左端 1298px なのに
+      // bar 右端は 1368px 付近まで伸びており、そこだけ不自然に空く）。
+      // bar 自体をコンテンツ幅に合わせて縮め、ページ中央に置くことで解消する。
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      width: 90%;
+      gap: 4px;
+      width: fit-content;
+      max-width: calc(100% - 24px);
       min-height: 50px;
       background-color: lightblue;
       margin: 0 auto;
       border-radius: 10px;
-      padding: 0 12px;
+      padding: 6px 16px;
 
       // 主要メニュー本体。6 項目まで減ったので通常幅では 1 行に収まる。
       // 幅が足りない中間幅では「文字の途中」ではなく「項目ごと」折り返す保険を残す。
+      // bar 自体が既にコンテンツ幅なので、ここは伸縮させず内容量のまま扱う。
       .customer-menu-pc__main {
-        flex: 1 1 auto;
+        flex: 0 1 auto;
         display: flex;
         flex-wrap: wrap;
         align-items: center;
@@ -146,6 +174,11 @@
     // --- 右端プロフィール(アカウント)ドロップダウン ---
     .customer-profile-menu {
       flex: 0 0 auto;
+      // 主要6項目と同じ背景・並びの中に置かれるため、区切り線を入れて
+      // 「7個目のメインメニュー項目」に見えないよう視覚的に分離する。
+      padding-left: 12px;
+      margin-left: 4px;
+      border-left: 1px solid rgba(255, 255, 255, 0.7);
     }
 
     .customer-profile-menu__toggle {
