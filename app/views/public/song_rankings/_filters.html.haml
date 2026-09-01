@@ -1,0 +1,85 @@
+-# 期間・コミュニティ・アーティストの絞り込み。すべて GET パラメータで表現し、
+-# 送信後もフォームに選択状態が保持される(URLの共有・再読み込みで同じ表示になる)。
+-#
+-# 期間UI:
+-#   - 「すべての期間」(period=all) … 年・月は集計に使わないため入力欄を隠し disabled にする
+-#   - 「年間」(period=yearly) … 対象年のみ
+-#   - 「月間」(period=monthly) … 対象年と対象月
+-# サーバー側(RankingQuery#event_start_range)が period だけで全期間/年間/月間を判定するため、
+-# JavaScript が無効でも正しく動く。初期表示(period=all)の隠し状態もサーバー側でレンダリングする。
+- year_active = ranking.period.in?(%w[yearly monthly])
+- month_active = ranking.period == "monthly"
+= form_with url: public_song_rankings_path, method: :get, local: true, class: "song-ranking__filters directory-search" do
+  .directory-search__form
+    .song-ranking__field
+      = label_tag :period, "期間", class: "song-ranking__field-label"
+      = select_tag :period,
+        options_for_select([["すべての期間", "all"], ["年間", "yearly"], ["月間", "monthly"]], ranking.period),
+        class: "directory-search__select song-ranking__period-select"
+
+    .song-ranking__field.song-ranking__field--year{ hidden: !year_active }
+      = label_tag :year, "対象年", class: "song-ranking__field-label"
+      = select_tag :year,
+        options_for_select(ranking.year_options.map { |y| ["#{y}年", y] }, ranking.year),
+        disabled: !year_active,
+        class: "directory-search__select"
+
+    .song-ranking__field.song-ranking__field--month{ hidden: !month_active }
+      = label_tag :month, "対象月", class: "song-ranking__field-label"
+      = select_tag :month,
+        options_for_select(ranking.month_options.map { |m| ["#{m}月", m] }, ranking.month),
+        disabled: !month_active,
+        class: "directory-search__select"
+
+    .song-ranking__field
+      = label_tag :community_id, "コミュニティ", class: "song-ranking__field-label"
+      = select_tag :community_id,
+        options_for_select(ranking.community_options, ranking.community_id),
+        include_blank: "すべてのコミュニティ",
+        class: "directory-search__select"
+
+    .song-ranking__field
+      = label_tag :artist_name, "アーティスト", class: "song-ranking__field-label"
+      = select_tag :artist_name,
+        options_for_select(ranking.artist_options.map { |a| [a, a] }, ranking.artist_name),
+        include_blank: "すべてのアーティスト",
+        class: "directory-search__select"
+
+    = submit_tag "この条件で表示", class: "btn btn-info directory-search__submit"
+    = link_to "リセット", public_song_rankings_path, class: "btn btn-outline-secondary directory-search__reset"
+
+  %p.song-ranking__filters-note
+    「すべての期間」では年・月の指定は不要です。「年間」は対象年、「月間」は対象年と対象月で絞り込みます。開催予定のイベントも集計対象です。
+
+  -# JS 有効時は period の変更に合わせて対象年・対象月の表示/有効化をその場で切り替える。
+  -# JS 無効時はサーバーが period に応じた初期状態をレンダリング済み(送信→再表示で確定)。
+  :javascript
+    (function () {
+      function toggle(field, select, show) {
+        if (field) { field.hidden = !show; }
+        if (select) { select.disabled = !show; }
+      }
+      function sync(form) {
+        var period = form.querySelector('[name="period"]');
+        if (!period) { return; }
+        var yearly = period.value === 'yearly' || period.value === 'monthly';
+        var monthly = period.value === 'monthly';
+        toggle(form.querySelector('.song-ranking__field--year'), form.querySelector('[name="year"]'), yearly);
+        toggle(form.querySelector('.song-ranking__field--month'), form.querySelector('[name="month"]'), monthly);
+      }
+      function init() {
+        var form = document.querySelector('.song-ranking__filters');
+        if (!form) { return; }
+        var period = form.querySelector('[name="period"]');
+        if (!period || period.dataset.songRankingBound) { return; }
+        period.dataset.songRankingBound = 'true';
+        period.addEventListener('change', function () { sync(form); });
+        sync(form);
+      }
+      document.addEventListener('turbolinks:load', init);
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
