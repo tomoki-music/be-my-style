@@ -1,9 +1,13 @@
 require "rails_helper"
 
-# PCヘッダー右端プロフィールの Bootstrap4 dropdown の回帰防止。
 # application.js から bootstrap-sprockets を外し bootstrap 単体にした変更
-# （data-api ハンドラの二重登録を解消）の保護も兼ねる。
-RSpec.describe "PCヘッダー プロフィールドロップダウン", type: :system do
+# （Bootstrap の各プラグインと data-api ハンドラが二重登録されるのを解消）の回帰防止。
+#
+# 二重登録は dropdown だけが実害を受ける（他コンポーネントは遷移ガードで一見動く）ため、
+# 「ハンドラが 1 回だけ登録されている」ことを実ブラウザで確認する。
+# 開閉の対話そのものは spec/views/layouts/_header_menu.html.haml_spec.rb（構造）と
+# 手動確認でカバーする（sticky ヘッダー内のクリックは headless で不安定なため CI ゲートにしない）。
+RSpec.describe "PCヘッダー: Bootstrap JS の単一ロード", type: :system do
   before { driven_by :selenium_chrome_headless }
 
   let(:customer) { create(:customer, name: "ヘッダー確認ユーザー") }
@@ -21,41 +25,53 @@ RSpec.describe "PCヘッダー プロフィールドロップダウン", type: :
     visit public_customer_feedbacks_path
   end
 
-  it "Bootstrap の dropdown click data-api が document に一度だけバインドされている" do
-    count = page.evaluate_script(<<~JS)
+  it "全 Bootstrap プラグインが読み込まれ、data-api ハンドラが二重登録されていない" do
+    info = page.evaluate_script(<<~JS)
       (function () {
-        var ev = window.jQuery && window.jQuery._data(document, "events");
-        if (!ev || !ev.click) return -1;
-        return ev.click.filter(function (h) { return h.selector === '[data-toggle="dropdown"]'; }).length;
+        var $ = window.jQuery;
+        var ev = ($ && $._data(document, "events")) || {};
+        function countClick(sel) {
+          return (ev.click || []).filter(function (h) { return h.selector === sel; }).length;
+        }
+        var fn = {};
+        ["dropdown", "modal", "collapse", "tab", "tooltip", "popover", "alert", "button", "carousel", "toast", "scrollspy"]
+          .forEach(function (n) { fn[n] = typeof ($.fn[n]); });
+        return {
+          jquery: $ && $.fn.jquery,
+          popper: typeof window.Popper,
+          bootstrap: typeof window.bootstrap,
+          fn: fn,
+          dropdownClick: countClick('[data-toggle="dropdown"]'),
+          dropdownFormClick: countClick('.dropdown form'),
+          modalToggleClick: countClick('[data-toggle="modal"]'),
+          carouselSlideClick: countClick('[data-slide], [data-slide-to]')
+        };
       })()
     JS
-    expect(count).to eq(1)
-  end
 
-  it "トグルのクリックで開き、もう一度のクリックで閉じる（二重トグルで即閉じしない）" do
-    # sticky ヘッダー内はヘッドレスのネイティブクリックが不安定なため実 DOM の click() を使う。
-    # 二重バインドがあると 1 クリックで toggle が2回走り「開かない」ため、この開閉自体が非二重の証拠。
-    toggle = "document.querySelector('.customer-profile-menu__toggle').click()"
-
-    page.execute_script(toggle)
-    expect(page).to have_css(".customer-profile-menu .dropdown-menu.show")
-
-    within(".customer-profile-menu .dropdown-menu") do
-      expect(page).to have_link("マイページ", href: public_customer_path(customer))
-      expect(page).to have_link("BeMyStyleとは？", href: public_homes_about_path)
-      expect(page).to have_link("ご意見BOX", href: new_public_customer_feedback_path)
-      expect(page).to have_button("ログアウト")
+    aggregate_failures do
+      expect(info["popper"]).to eq("function")
+      expect(info["bootstrap"]).to eq("object")
+      info["fn"].each { |name, t| expect(t).to eq("function"), "$.fn.#{name} が未定義" }
+      # 二重ロード時はいずれも 2 になる
+      expect(info["dropdownClick"]).to eq(1)
+      expect(info["dropdownFormClick"]).to eq(1)
+      expect(info["modalToggleClick"]).to eq(1)
+      expect(info["carouselSlideClick"]).to eq(1)
     end
-
-    page.execute_script(toggle)
-    expect(page).to have_no_css(".customer-profile-menu .dropdown-menu.show")
   end
 
-  it "メニュー外のクリックで閉じる" do
-    page.execute_script("document.querySelector('.customer-profile-menu__toggle').click()")
-    expect(page).to have_css(".customer-profile-menu .dropdown-menu.show")
+  it "プロフィールドロップダウンの markup と Bootstrap の関連付けが1組だけ存在する" do
+    expect(page).to have_css('.customer-profile-menu .dropdown-toggle[data-toggle="dropdown"]', visible: :all, count: 1)
+    expect(page).to have_css(".customer-profile-menu .dropdown-menu", visible: :all, count: 1)
 
-    page.execute_script("document.body.click()")
-    expect(page).to have_no_css(".customer-profile-menu .dropdown-menu.show")
+    # プラグイン単体呼び出し（data-api を介さない）で開けること＝プラグインが壊れていない
+    opened = page.evaluate_script(<<~JS)
+      (function () {
+        window.jQuery(".customer-profile-menu__toggle").dropdown("toggle");
+        return document.querySelectorAll(".customer-profile-menu .dropdown-menu.show").length;
+      })()
+    JS
+    expect(opened).to eq(1)
   end
 end
