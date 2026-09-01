@@ -1,0 +1,30 @@
+%p ご意見・ご相談BOXに新しい投稿がありました。
+
+- if @feedback.created_at
+  %p
+    %strong 投稿日時:
+    = l(@feedback.created_at, format: :long)
+
+%p
+  %strong カテゴリー:
+  = @feedback.category_label
+
+%p
+  %strong 件名:
+  = @feedback.subject.presence || "（件名なし）"
+
+%p
+  %strong 内容:
+-# 本文は 100% ユーザー入力。Rails 6.1 の simple_format の既定 sanitize は
+-# <img>/<a> 等の安全タグを残すため、先に h() で全エスケープしてから
+-# sanitize: false で段落・改行のみ整形する。タグは一切通さない。
+= simple_format(h(@feedback.body), {}, sanitize: false)
+
+%p
+  %strong 投稿者:
+  = @customer.name.presence || "名称未設定"
+
+%p
+  投稿者メールなどの詳細・対応状況の更新は管理画面で確認できます。
+  %br
+  = link_to @feedback_url, @feedback_url

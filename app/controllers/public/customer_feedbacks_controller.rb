@@ -17,6 +17,8 @@ class Public::CustomerFeedbacksController < ApplicationController
     @customer_feedback = current_customer.customer_feedbacks.new(customer_feedback_params)
 
     if @customer_feedback.save
+      # 二重送信防止のため callback ではなく save 成功後にここでのみ通知する。
+      AdminCustomerFeedbackNotifier.call(@customer_feedback)
       redirect_to public_customer_feedbacks_path,
                   notice: "ご意見を送信しました。ご協力ありがとうございます！"
     else

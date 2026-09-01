@@ -127,6 +127,112 @@ RSpec.describe "Public::CustomerFeedbacks", type: :request do
       expect(response.body).not_to include(xss)
     end
 
+    describe "管理者メール通知" do
+      it "投稿成功時に全管理者宛メールがキューイングされること" do
+        create_list(:admin, 2)
+
+        expect do
+          post public_customer_feedbacks_path, params: {
+            customer_feedback: { category: "bug_report", subject: "件名", body: "不具合の内容" }
+          }
+        end.to have_enqueued_mail(AdminNotificationMailer, :customer_feedback_created).twice
+      end
+
+      it "正常保存時に Notifier を保存済みレコードで 1 度だけ呼ぶこと" do
+        allow(AdminCustomerFeedbackNotifier).to receive(:call).and_call_original
+
+        post public_customer_feedbacks_path, params: {
+          customer_feedback: { category: "bug_report", body: "本文" }
+        }
+
+        expect(AdminCustomerFeedbackNotifier).to have_received(:call).once.with(CustomerFeedback.last)
+        expect(CustomerFeedback.last).to be_persisted
+      end
+
+      it "バリデーションエラー時はメールも Notifier 呼び出しもされないこと" do
+        create(:admin)
+        allow(AdminCustomerFeedbackNotifier).to receive(:call).and_call_original
+
+        expect do
+          post public_customer_feedbacks_path, params: {
+            customer_feedback: { category: "", body: "" }
+          }
+        end.not_to have_enqueued_mail(AdminNotificationMailer, :customer_feedback_created)
+
+        expect(AdminCustomerFeedbackNotifier).not_to have_received(:call)
+      end
+
+      it "本文文字数超過など save 失敗時は Notifier を呼ばないこと" do
+        create(:admin)
+        allow(AdminCustomerFeedbackNotifier).to receive(:call).and_call_original
+
+        expect do
+          post public_customer_feedbacks_path, params: {
+            customer_feedback: { category: "other", body: "あ" * (CustomerFeedback::BODY_MAX_LENGTH + 1) }
+          }
+        end.not_to change(CustomerFeedback, :count)
+
+        expect(AdminCustomerFeedbackNotifier).not_to have_received(:call)
+      end
+
+      it "Admin 取得が失敗しても投稿は保存され成功レスポンスになること（通知失敗の分離）" do
+        create(:admin)
+        allow(Admin).to receive(:find_each).and_raise(StandardError, "db down")
+
+        expect do
+          post public_customer_feedbacks_path, params: {
+            customer_feedback: { category: "consultation", body: "相談内容" }
+          }
+        end.to change(CustomerFeedback, :count).by(1)
+
+        expect(response).to redirect_to(public_customer_feedbacks_path)
+        follow_redirect!
+        expect(response.body).to include("ご意見を送信しました。ご協力ありがとうございます！")
+      end
+
+      it "Mailer 引数構築 / enqueue が失敗しても投稿は rollback されず成功レスポンスになること" do
+        create(:admin)
+        allow(AdminNotificationMailer).to receive(:with).and_raise(StandardError, "queue down")
+
+        expect do
+          post public_customer_feedbacks_path, params: {
+            customer_feedback: { category: "consultation", body: "相談内容" }
+          }
+        end.to change(CustomerFeedback, :count).by(1)
+
+        expect(response).to redirect_to(public_customer_feedbacks_path)
+        expect(CustomerFeedback.last.body).to eq("相談内容")
+      end
+
+      it "PRG により履歴ページ再読み込みでは再投稿・追加 enqueue が発生しないこと" do
+        create(:admin)
+
+        post public_customer_feedbacks_path, params: {
+          customer_feedback: { category: "bug_report", body: "本文" }
+        }
+        created_count = CustomerFeedback.count
+
+        expect do
+          get public_customer_feedbacks_path # ブラウザ再読み込み相当（GET）
+        end.not_to have_enqueued_mail(AdminNotificationMailer, :customer_feedback_created)
+
+        expect(CustomerFeedback.count).to eq(created_count)
+      end
+
+      it "未ログインの POST では投稿も Notifier もメールも実行されないこと" do
+        sign_out customer
+        create(:admin)
+
+        expect do
+          post public_customer_feedbacks_path, params: {
+            customer_feedback: { category: "bug_report", body: "本文" }
+          }
+        end.not_to have_enqueued_mail(AdminNotificationMailer, :customer_feedback_created)
+
+        expect(CustomerFeedback.count).to eq(0)
+      end
+    end
+
     describe "送信履歴" do
       let!(:own_feedback) { create(:customer_feedback, customer: customer, subject: "自分の投稿") }
       let!(:others_feedback) { create(:customer_feedback, customer: other_customer, subject: "他人の投稿", admin_note: "内部メモ") }
