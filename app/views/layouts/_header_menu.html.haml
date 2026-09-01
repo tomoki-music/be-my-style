@@ -13,18 +13,11 @@
       .col-4
         %ul.list-style-none.header-sign-in-list
           - if customer_signed_in?
-            %li
+            -# SP 上部バーの通知ベル。PC では非表示にし(.header-sign-in-list__notification)、
+            -# PC は .customer-menu-pc 内の右端ユーティリティ領域へ通知ベルを出す。
+            %li.header-sign-in-list__notification
               %div{"data-turbolinks" => "false"}
-                = link_to(public_notifications_path) do
-                  - if current_customer.present? && unchecked_notifications.any?
-                    %span.fa-stack
-                      %i.far.fa-bell.fa-lg.fa-stack-2x
-                      %i.fas.fa-circle.n-circle.fa-stack-1x
-                      %i.count-circle
-                        - notifications = current_customer.passive_notifications
-                        = notifications.where(checked: false).count
-                  - else 
-                    %i.far.fa-bell.fa-lg
+                = render "layouts/notification_bell"
           %li#open
             %span
               = customer_avatar_tag(current_customer, class_name: "icon_mini sp-menu-open", show_active_status: false)
@@ -108,25 +101,31 @@
           = link_to "ランキング", public_song_rankings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
           = link_to "歌唱・演奏診断", public_singing_performance_diagnosis_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
-      .dropdown.customer-profile-menu
-        %button.customer-profile-menu__toggle.dropdown-toggle{ type: "button", id: "pcProfileMenuToggle", data: { toggle: "dropdown" }, "aria-haspopup": "true", "aria-expanded": "false", "aria-label": "アカウントメニュー" }
-          = customer_avatar_tag(current_customer, class_name: "customer-profile-menu__avatar", show_active_status: false)
-        .dropdown-menu.dropdown-menu-right{ "aria-labelledby": "pcProfileMenuToggle" }
-          - if current_customer.present?
-            = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "dropdown-item"
-          = link_to public_lp_path(anchor: "lp-section"), data: { 'turbolinks': false }, class: "dropdown-item customer-profile-menu__upgrade" do
-            %i.fa-solid.fa-arrow-up.customer-profile-menu__upgrade-icon{ "aria-hidden": "true" }
-            プランUPGRADE
-          = link_to "BeMyStyleとは？", public_homes_about_path, data: { 'turbolinks': false }, class: "dropdown-item"
-          -# ページ内の正式名称は「ご意見・ご相談BOX」。メニュー表示は他項目と揃えるため短縮名を使う。
-          = link_to "ご意見BOX", new_public_customer_feedback_path, data: { 'turbolinks': false }, class: "dropdown-item"
-          .dropdown-divider
-          -# キーボード操作・支援技術のため input ではなく button で出す（method: :delete / CSRF は button_to が担保）。
-          = button_to destroy_customer_session_path,
-            method: :delete,
-            form_class: "customer-profile-menu__logout-form",
-            class: "dropdown-item customer-profile-menu__logout" do
-            ログアウト
+      -# PC ヘッダー右端のユーティリティ領域: 通知ベル(左) + プロフィール(右) を
+      -# 1 つの区切られたまとまりとして表示する。通知ベルは dropdown の外に置き、
+      -# PC では常時表示する。
+      .customer-menu-pc__account
+        %div.customer-menu-pc__notification{ "data-turbolinks" => "false" }
+          = render "layouts/notification_bell"
+        .dropdown.customer-profile-menu
+          %button.customer-profile-menu__toggle.dropdown-toggle{ type: "button", id: "pcProfileMenuToggle", data: { toggle: "dropdown" }, "aria-haspopup": "true", "aria-expanded": "false", "aria-label": "アカウントメニュー" }
+            = customer_avatar_tag(current_customer, class_name: "customer-profile-menu__avatar", show_active_status: false)
+          .dropdown-menu.dropdown-menu-right{ "aria-labelledby": "pcProfileMenuToggle" }
+            - if current_customer.present?
+              = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "dropdown-item"
+            = link_to public_lp_path(anchor: "lp-section"), data: { 'turbolinks': false }, class: "dropdown-item customer-profile-menu__upgrade" do
+              %i.fa-solid.fa-arrow-up.customer-profile-menu__upgrade-icon{ "aria-hidden": "true" }
+              プランUPGRADE
+            = link_to "BeMyStyleとは？", public_homes_about_path, data: { 'turbolinks': false }, class: "dropdown-item"
+            -# ページ内の正式名称は「ご意見・ご相談BOX」。メニュー表示は他項目と揃えるため短縮名を使う。
+            = link_to "ご意見BOX", new_public_customer_feedback_path, data: { 'turbolinks': false }, class: "dropdown-item"
+            .dropdown-divider
+            -# キーボード操作・支援技術のため input ではなく button で出す（method: :delete / CSRF は button_to が担保）。
+            = button_to destroy_customer_session_path,
+              method: :delete,
+              form_class: "customer-profile-menu__logout-form",
+              class: "dropdown-item customer-profile-menu__logout" do
+              ログアウト
     - else
       %ul.list-style-none.list.customer-menu-pc__main
         %li
