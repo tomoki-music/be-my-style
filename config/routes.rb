@@ -27,6 +27,9 @@ Rails.application.routes.draw do
     resources :activity_comments
     resources :event_comments
 
+    # ご意見・ご相談BOX（運営による投稿確認・対応状況/メモ更新）
+    resources :customer_feedbacks, only: [:index, :show, :update]
+
     # イベント機能
     resources :events do
       resources :songs, only: [:create, :destroy]
@@ -129,6 +132,9 @@ Rails.application.routes.draw do
 
     # 通知機能
     resources :notifications, only: :index
+
+    # ご意見・ご相談BOX（ログインユーザーの意見・要望・相談投稿と自分の送信履歴）
+    resources :customer_feedbacks, only: [:index, :new, :create]
 
     # マッチング〜チャット機能
     resources :matchings, only: [:index]

@@ -1,0 +1,46 @@
+= render 'layouts/admin_header_menu'
+
+.container.py-4
+  .d-flex.justify-content-between.align-items-center.mb-3.flex-wrap
+    %h2.mb-0 ご意見・ご相談BOX
+    %span.badge.badge-danger.customer-feedback-admin-unread
+      未確認 #{admin_unread_customer_feedback_count}件
+
+  = form_with url: admin_customer_feedbacks_path, method: :get, local: true, html: { class: "form-inline mb-3 customer-feedback-admin-filter" } do
+    .form-group.mr-2.mb-2
+      %label.mr-1 カテゴリー
+      = select_tag :category,
+        options_for_select([["すべて", ""]] + CustomerFeedback.category_options, params[:category]),
+        class: "form-control form-control-sm"
+    .form-group.mr-2.mb-2
+      %label.mr-1 対応状況
+      = select_tag :status,
+        options_for_select([["すべて", ""]] + CustomerFeedback.statuses.keys.map { |k| [CustomerFeedback.status_label(k), k] }, params[:status]),
+        class: "form-control form-control-sm"
+    = submit_tag "絞り込む", class: "btn btn-sm btn-primary mb-2"
+    = link_to "クリア", admin_customer_feedbacks_path, class: "btn btn-sm btn-outline-secondary mb-2 ml-2"
+
+  .table-responsive
+    %table.table.table-striped.table-bordered.customer-feedback-admin-table
+      %thead
+        %tr
+          %th 受付日時
+          %th 投稿者
+          %th カテゴリー
+          %th 件名
+          %th 対応状況
+          %th
+      %tbody
+        - @customer_feedbacks.each do |feedback|
+          %tr{ class: ("table-warning" if feedback.unread?) }
+            %td.text-nowrap= l feedback.created_at, format: :long
+            %td= customer_display_name(feedback.customer)
+            %td= feedback.category_label
+            %td= truncate(feedback.subject.presence || "（件名なし）", length: 40)
+            %td
+              %span.customer-feedback-status{ class: "customer-feedback-status--#{feedback.status}" }
+                = feedback.status_label
+            %td.text-nowrap
+              = link_to "詳細", admin_customer_feedback_path(feedback), class: "btn btn-sm btn-outline-primary"
+
+  = paginate @customer_feedbacks

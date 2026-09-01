@@ -106,6 +106,19 @@ RSpec.describe "Public::Homes", type: :request do
         expect(response.status).to eq 200
         expect(response.body).not_to include("世界とつながる。")
       end
+
+      it "ご意見・ご相談BOXへの補助導線が表示されること" do
+        expect(response.body).to include("BeMyStyleへのご意見・ご相談はこちら")
+        expect(response.body).to include(%(href="#{new_public_customer_feedback_path}"))
+      end
+    end
+
+    context "未ログインの場合はご意見・ご相談BOX導線を表示しないこと" do
+      before { get root_path }
+
+      it "ゲスト向けTOPに補助導線が出ないこと" do
+        expect(response.body).not_to include("BeMyStyleへのご意見・ご相談はこちら")
+      end
     end
   end
 end

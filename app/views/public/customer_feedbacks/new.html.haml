@@ -1,0 +1,26 @@
+= render 'layouts/header_menu'
+
+.customer-feedback-container
+  .customer-feedback-card
+    %h2.customer-feedback-title ご意見・ご相談BOX
+
+    .customer-feedback-lead
+      %p
+        機能のご要望、不具合のご報告、お困りごとなどをお気軽にお送りください。
+        いただいた内容を確認し、今後の改善や運営の参考にさせていただきます。
+      %ul.customer-feedback-notes
+        %li いただいたすべての内容への対応をお約束するものではありません。
+        %li 緊急のご連絡には対応できません。お急ぎの場合は別途ご連絡ください。
+        %li 不具合のご報告では、発生した画面や操作内容を書いていただけると確認がスムーズです。
+        %li パスワードや決済情報などの機密情報は入力しないでください。
+
+    - if @customer_feedback.errors.any?
+      .alert
+        %ul.list-style-none
+          - @customer_feedback.errors.full_messages.each do |message|
+            %li= message
+
+    = render 'form', customer_feedback: @customer_feedback
+
+  .customer-feedback-history-link
+    = link_to "自分の送信履歴を見る", public_customer_feedbacks_path, data: { 'turbolinks': false }

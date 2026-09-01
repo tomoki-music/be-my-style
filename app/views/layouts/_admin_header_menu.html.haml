@@ -1,3 +1,5 @@
+-# 未確認のご意見・ご相談件数。スマホ/PC 両メニュー・一覧画面で共有し、1リクエストにつき1回だけ COUNT する。
+- customer_feedback_unread_count = admin_unread_customer_feedback_count
 .row.justify-content-center
   .col-md-8
     %h2.text-center
@@ -23,6 +25,11 @@
         = link_to "活動コメント", admin_activity_comments_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
       %li
         = link_to "イベントコメント", admin_event_comments_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        = link_to admin_customer_feedbacks_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn" do
+          ご意見BOX
+          - if customer_feedback_unread_count.positive?
+            %span.badge.badge-danger.ml-1= customer_feedback_unread_count
       %li
         = link_to "分析", admin_analytics_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
       %li
@@ -52,6 +59,11 @@
         = link_to "活動コメント", admin_activity_comments_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
       %li
         = link_to "イベントコメント", admin_event_comments_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
+      %li
+        = link_to admin_customer_feedbacks_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn" do
+          ご意見BOX
+          - if customer_feedback_unread_count.positive?
+            %span.badge.badge-danger.ml-1= customer_feedback_unread_count
       %li
         = link_to "分析", admin_analytics_path, data: { 'turbolinks': false }, class: "btn btn-secondary menu-sp-btn"
       %li

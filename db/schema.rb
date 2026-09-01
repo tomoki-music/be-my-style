@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_08_31_000000) do
+ActiveRecord::Schema.define(version: 2026_09_01_000000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -289,6 +289,20 @@ ActiveRecord::Schema.define(version: 2026_08_31_000000) do
     t.index ["customer_id", "domain_id"], name: "index_customer_domains_on_customer_id_and_domain_id", unique: true
     t.index ["customer_id"], name: "index_customer_domains_on_customer_id"
     t.index ["domain_id"], name: "index_customer_domains_on_domain_id"
+  end
+
+  create_table "customer_feedbacks", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.integer "category", null: false
+    t.string "subject"
+    t.text "body", null: false
+    t.integer "status", default: 0, null: false
+    t.text "admin_note"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["created_at"], name: "index_customer_feedbacks_on_created_at"
+    t.index ["customer_id"], name: "index_customer_feedbacks_on_customer_id"
+    t.index ["status"], name: "index_customer_feedbacks_on_status"
   end
 
   create_table "customer_genres", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1373,6 +1387,7 @@ ActiveRecord::Schema.define(version: 2026_08_31_000000) do
   add_foreign_key "community_posts", "customers"
   add_foreign_key "customer_domains", "customers"
   add_foreign_key "customer_domains", "domains"
+  add_foreign_key "customer_feedbacks", "customers"
   add_foreign_key "customer_genres", "customers"
   add_foreign_key "customer_genres", "genres"
   add_foreign_key "customer_parts", "customers"

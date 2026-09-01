@@ -1,0 +1,29 @@
+= render 'layouts/header_menu'
+
+.customer-feedback-container
+  .customer-feedback-card
+    .customer-feedback-history-header
+      %h2.customer-feedback-title 送信履歴
+      = link_to "新しく送る", new_public_customer_feedback_path, class: "btn btn-info", data: { 'turbolinks': false }
+
+    - if @customer_feedbacks.any?
+      .table-responsive
+        %table.table.table-striped.customer-feedback-table
+          %thead
+            %tr
+              %th 送信日時
+              %th カテゴリー
+              %th 件名
+              %th 対応状況
+          %tbody
+            - @customer_feedbacks.each do |feedback|
+              %tr
+                %td.text-nowrap= l feedback.created_at, format: :long
+                %td= feedback.category_label
+                %td= feedback.subject.presence || "（件名なし）"
+                %td
+                  %span.customer-feedback-status{ class: "customer-feedback-status--#{feedback.status}" }
+                    = feedback.status_label
+      = paginate @customer_feedbacks
+    - else
+      %p.customer-feedback-empty まだ送信した投稿はありません。

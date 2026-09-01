@@ -1,0 +1,48 @@
+= render 'layouts/admin_header_menu'
+
+.container.py-4
+  = link_to "← 一覧へ戻る", admin_customer_feedbacks_path, class: "btn btn-sm btn-outline-secondary mb-3"
+
+  - if @customer_feedback.errors.any?
+    .alert.alert-danger
+      %ul.mb-0
+        - @customer_feedback.errors.full_messages.each do |message|
+          %li= message
+
+  .card.shadow-sm.mb-4
+    .card-body
+      %h2.h5.mb-3 投稿内容
+      %dl.row.mb-0
+        %dt.col-sm-3 投稿者
+        %dd.col-sm-9
+          = customer_display_name(@customer_feedback.customer)
+          - if @customer_feedback.customer&.is_deleted?
+            %span.badge.badge-secondary.ml-1 退会済み
+        %dt.col-sm-3 受付日時
+        %dd.col-sm-9= l @customer_feedback.created_at, format: :long
+        %dt.col-sm-3 カテゴリー
+        %dd.col-sm-9= @customer_feedback.category_label
+        %dt.col-sm-3 件名
+        %dd.col-sm-9= @customer_feedback.subject.presence || "（件名なし）"
+        %dt.col-sm-3 対応状況
+        %dd.col-sm-9
+          %span.customer-feedback-status{ class: "customer-feedback-status--#{@customer_feedback.status}" }
+            = @customer_feedback.status_label
+        %dt.col-sm-3 内容
+        %dd.col-sm-9
+          .customer-feedback-body= @customer_feedback.body
+
+  .card.shadow-sm
+    .card-body
+      %h2.h5.mb-3 運営対応（内部用）
+      = form_with model: @customer_feedback, url: admin_customer_feedback_path(@customer_feedback), method: :patch, local: true do |f|
+        .form-group
+          = f.label :status, "対応状況"
+          = f.select :status,
+            CustomerFeedback.statuses.keys.map { |k| [CustomerFeedback.status_label(k), k] },
+            {},
+            class: "form-control"
+        .form-group
+          = f.label :admin_note, "管理者メモ（ユーザーには表示されません）"
+          = f.text_area :admin_note, rows: 6, class: "form-control", maxlength: CustomerFeedback::ADMIN_NOTE_MAX_LENGTH
+        = f.submit "更新する", class: "btn btn-primary"

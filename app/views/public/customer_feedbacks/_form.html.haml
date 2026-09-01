@@ -1,0 +1,29 @@
+= form_with model: [:public, customer_feedback], local: true, html: { class: "customer-feedback-form" } do |f|
+  .form-group
+    = f.label :category, "カテゴリー"
+    %span.customer-feedback-required （必須）
+    = f.select :category,
+      CustomerFeedback.category_options,
+      { prompt: "選択してください" },
+      class: "form-control"
+
+  .form-group
+    = f.label :subject, "件名"
+    %span.customer-feedback-optional （任意）
+    = f.text_field :subject,
+      class: "form-control",
+      maxlength: CustomerFeedback::SUBJECT_MAX_LENGTH,
+      placeholder: "例：イベント検索の絞り込みを増やしてほしい"
+
+  .form-group
+    = f.label :body, "内容"
+    %span.customer-feedback-required （必須）
+    = f.text_area :body,
+      class: "form-control",
+      rows: 10,
+      maxlength: CustomerFeedback::BODY_MAX_LENGTH,
+      placeholder: "ご要望・ご報告・ご相談の内容をご記入ください。\n（不具合の場合は、発生した画面・操作・エラー表示などを書いていただけると助かります）"
+    %small.form-text.text-muted= "#{CustomerFeedback::BODY_MAX_LENGTH}文字以内でご入力ください。"
+
+  .customer-feedback-actions
+    = f.submit "送信する", class: "btn btn-info customer-feedback-submit"

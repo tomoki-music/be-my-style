@@ -1,0 +1,31 @@
+// ご意見・ご相談BOX（管理画面）
+.customer-feedback-admin-unread {
+  font-size: 0.85rem;
+}
+
+.customer-feedback-admin-filter {
+  label {
+    font-size: 0.85rem;
+    margin-bottom: 0;
+  }
+}
+
+.customer-feedback-admin-table {
+  word-break: break-word;
+
+  td,
+  th {
+    vertical-align: middle;
+  }
+}
+
+.customer-feedback-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #f8f9fa;
+  border: 1px solid #e3e3e3;
+  border-radius: 6px;
+  padding: 12px;
+  max-height: 420px;
+  overflow-y: auto;
+}
