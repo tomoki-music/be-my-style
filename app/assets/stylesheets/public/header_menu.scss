@@ -88,15 +88,30 @@
     .customer-menu-pc {
       display: block;
       width: 90%;
-      height: 50px;
+      // 項目数が多く 1 行に収まらない画面幅では行ごと折り返すため、
+      // 固定 height ではなく min-height にして縦に伸びられるようにする。
+      min-height: 50px;
       background-color: lightblue;
       margin: 0 auto;
       border-radius: 10px;
       ul{
         display: flex;
+        // 幅が足りないときはボタン内の文字ではなく「項目ごと」次の行へ折り返す。
+        flex-wrap: wrap;
         align-items: center;
         justify-content: center;
-        height: inherit;
+        // li の margin-right(共通スタイル)ではなく gap で間隔を揃える。
+        gap: 6px 8px;
+        min-height: 50px;
+        padding: 6px 12px;
+        margin: 0;
+      }
+      li{
+        margin: 0;
+      }
+      // メニュー項目のラベルは常に 1 行で表示する（文字の途中で折り返さない）。
+      .btn{
+        white-space: nowrap;
       }
       .flex-item{
         width: 100%;
@@ -109,6 +124,23 @@
 
       .menu-upgrade-item {
         margin-left: 8px;
+      }
+    }
+  }
+
+  // 中間幅（項目が多いログイン時に 1〜2 行へ収めたい帯）ではボタンを少し詰める。
+  @media (min-width: 600px) and (max-width: 1099px) {
+    .customer-menu-pc {
+      .btn{
+        padding: 5px 10px;
+        font-size: 13px;
+      }
+      .menu-upgrade-cta{
+        padding: 7px 12px;
+        font-size: 12px;
+      }
+      ul{
+        gap: 5px 6px;
       }
     }
   }
