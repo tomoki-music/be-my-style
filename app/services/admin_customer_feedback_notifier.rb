@@ -31,7 +31,8 @@ class AdminCustomerFeedbackNotifier
     Admin.find_each { |admin| enqueue_for(admin) }
   rescue StandardError => e
     # 環境判定・Admin 取得など想定外の失敗でも呼び出し元（投稿処理）へ波及させない。
-    Rails.logger.error("#{LOG_TAG} 通知処理で予期しないエラー feedback_id=#{@feedback&.id} error=#{e.class}: #{e.message}")
+    # e.message は宛先/送信元アドレスや SMTP 応答など個人情報を含みうるためログに出さない。
+    Rails.logger.error("#{LOG_TAG} 通知処理で予期しないエラー feedback_id=#{@feedback&.id} error_class=#{e.class}")
   end
 
   private
@@ -42,8 +43,9 @@ class AdminCustomerFeedbackNotifier
       feedback: @feedback
     ).customer_feedback_created.deliver_later
   rescue StandardError => e
-    # 1 人分の enqueue 失敗で他の Admin への通知を止めない。ログは ID と例外情報のみ。
-    Rails.logger.error("#{LOG_TAG} enqueue 失敗 feedback_id=#{@feedback.id} admin_id=#{admin.id} error=#{e.class}: #{e.message}")
+    # 1 人分の enqueue 失敗で他の Admin への通知を止めない。
+    # e.message は個人情報を含みうるため出さず、ID と例外クラスのみ記録する。
+    Rails.logger.error("#{LOG_TAG} enqueue 失敗 feedback_id=#{@feedback.id} admin_id=#{admin.id} error_class=#{e.class}")
   end
 
   # production / test では常に有効。development のみ ENV での明示有効化が必要。

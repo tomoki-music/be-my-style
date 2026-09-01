@@ -22,17 +22,29 @@ RSpec.describe AdminNotificationMailer, type: :mailer do
       expect { mail.subject }.not_to raise_error
     end
 
-    it "宛先が管理者のメールアドレスであること" do
+    it "宛先(to ヘッダ)が管理者のメールアドレスであること" do
       expect(mail.to).to eq(["ops@example.com"])
     end
 
-    it "本文に件名・カテゴリー日本語名・投稿者名・投稿者メールが含まれること" do
+    it "本文に件名・カテゴリー日本語名・投稿者名が含まれること" do
       body = mail.body.encoded
 
       expect(body).to include("検索が動かない")
       expect(body).to include("アプリの不具合修正要望")
       expect(body).to include("投稿者太郎")
-      expect(body).to include("poster@example.com")
+    end
+
+    it "本文に投稿者メールアドレスを含まないこと（詳細は管理画面で確認する方針）" do
+      expect(mail.body.encoded).not_to include("poster@example.com")
+    end
+
+    it "本文に投稿者の電話番号を含まないこと" do
+      customer.update_columns(tell: "09012345678")
+      expect(mail.body.encoded).not_to include("09012345678")
+    end
+
+    it "本文に宛先管理者のメールアドレスを表示しないこと" do
+      expect(mail.body.encoded).not_to include("ops@example.com")
     end
 
     it "本文に投稿日時が含まれること" do

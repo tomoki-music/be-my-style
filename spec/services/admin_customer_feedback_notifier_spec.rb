@@ -146,18 +146,23 @@ RSpec.describe AdminCustomerFeedbackNotifier do
         expect(good).to have_received(:deliver_later).twice
       end
 
-      it "例外ログに feedback ID・admin ID・例外クラスを含み、本文やメールアドレスを含めないこと" do
+      it "例外ログに feedback ID・admin ID・例外クラスのみを含み、例外メッセージ・本文・メールアドレスを含めないこと" do
         allow(Rails.logger).to receive(:error)
-        allow(AdminNotificationMailer).to receive(:with).and_raise(StandardError, "boom")
+        # 例外メッセージに個人情報（宛先アドレス）が混入するケースを再現する
+        pii_message = "SMTP failed for #{customer.email}"
+        allow(AdminNotificationMailer).to receive(:with).and_raise(RuntimeError, pii_message)
 
         described_class.call(feedback)
 
         expect(Rails.logger).to have_received(:error).at_least(:once) do |message|
           expect(message).to include("feedback_id=#{feedback.id}")
           expect(message).to include("admin_id=")
-          expect(message).to include("StandardError")
-          expect(message).not_to include(feedback.body)
+          expect(message).to include("error_class=RuntimeError")
+          expect(message).not_to include(pii_message)
+          expect(message).not_to include("SMTP failed for")
           expect(message).not_to include(customer.email)
+          expect(message).not_to include(feedback.body)
+          expect(message).not_to include(feedback.subject)
         end
       end
 
@@ -175,14 +180,18 @@ RSpec.describe AdminCustomerFeedbackNotifier do
         expect { described_class.call(feedback) }.not_to raise_error
       end
 
-      it "その場合は enqueue されず、feedback ID を含むエラーログのみ残ること" do
-        allow(Admin).to receive(:find_each).and_raise(StandardError, "db down")
+      it "その場合は enqueue されず、feedback ID と例外クラスのみのエラーログが残ること" do
+        pii_message = "connection to #{customer.email} refused"
+        allow(Admin).to receive(:find_each).and_raise(RuntimeError, pii_message)
         allow(Rails.logger).to receive(:error)
 
         expect { described_class.call(feedback) }.not_to mail_matcher
 
         expect(Rails.logger).to have_received(:error).once do |message|
           expect(message).to include("feedback_id=#{feedback.id}")
+          expect(message).to include("error_class=RuntimeError")
+          expect(message).not_to include(pii_message)
+          expect(message).not_to include(customer.email)
           expect(message).not_to include(feedback.body)
         end
       end

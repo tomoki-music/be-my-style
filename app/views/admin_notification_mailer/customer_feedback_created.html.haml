@@ -25,10 +25,6 @@
   = @customer.name.presence || "名称未設定"
 
 %p
-  %strong 投稿者メール:
-  = @customer.email
-
-%p
-  管理画面で投稿内容の確認・対応状況の更新ができます。
+  投稿者メールなどの詳細・対応状況の更新は管理画面で確認できます。
   %br
   = link_to @feedback_url, @feedback_url
