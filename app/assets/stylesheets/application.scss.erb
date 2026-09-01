@@ -865,11 +865,24 @@ input[type="text"] {
     margin-top: 16px;
   }
 
-  .menu-upgrade-item {
+  // SP メニュー専用の幅指定。.menu-upgrade-item / .menu-upgrade-cta は
+  // PC ゲスト向けナビ（customer-menu-pc__main 内の「料金を見る」）とも共有しているため、
+  // ここを無scopeにすると 600〜768px の PC ナビにまで幅が漏れて崩れる。
+  // SP ヘッダーメニュー(.customer-menu-sp)配下に限定する。
+  .customer-menu-sp .menu-upgrade-item {
     width: 100%;
   }
 
-  .menu-upgrade-cta {
-    width: 220px;
+  // 他の .menu-sp-btn（幅 200px 固定）と横幅・左右位置をそろえる。
+  // 以前は 220px 固定 + 親 li の flex-shrink により実際の描画幅が
+  // ビューポート幅ごとに 158px 〜 220px の間でばらつき、隣接ボタンと
+  // 幅も左右端も揃わずズレて見えていた。
+  .customer-menu-sp .menu-upgrade-cta {
+    width: 200px;
+    max-width: 100%;
+    // 他の .menu-sp-btn は margin:5px（header_menu.scss）を持つが、
+    // .menu-upgrade-cta にはこれまで margin が無く、その分だけ右端がずれていた。
+    margin: 5px;
+    flex-shrink: 0;
   }
 }

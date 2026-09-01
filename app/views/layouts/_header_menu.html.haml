@@ -3,8 +3,10 @@
     .row
       .col-8
         .top-message
-          = link_to public_homes_top_path, class: 'top-message-link', data: { 'turbolinks': false } do
-            = image_tag 'mmm.jpg' ,class:"top-message-image"
+          -# ヘッダーロゴが唯一の Top ページ導線（PC メニューからは「Topページ」を撤去）。
+          -# public_homes_top はログイン状態に応じて top / guest_top を出し分けるため遷移先はこのままでよい。
+          = link_to public_homes_top_path, class: 'top-message-link', data: { 'turbolinks': false }, 'aria-label': 'BeMyStyle トップページ' do
+            = image_tag 'mmm.jpg', class: "top-message-image", alt: "BeMyStyle"
             %h1 be My Style
           %p あなたの「やりたい！」を叶える場所！」
           %p 利用可能時間【6:00~26:00】
@@ -84,46 +86,53 @@
         %li
           = link_to "成立楽曲ランキング", public_song_rankings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
 
+  -# PC ヘッダー: 利用頻度の高い主要導線だけを横並びで表示し、
+  -# アカウント系(マイページ / プランUPGRADE / BeMyStyleとは？ / ご意見BOX / ログアウト)は
+  -# 右端プロフィールのドロップダウンへ集約する。SP メニュー(.customer-menu-sp)は従来のまま。
+  -# SP 用ラベルの正式名称は維持し、PC だけ短縮ラベルにする。
   .customer-menu-pc
-    %ul.list-style-none.list
-      - if customer_signed_in?
+    - if customer_signed_in?
+      %ul.list-style-none.list.customer-menu-pc__main
         %li
-          = link_to "Topページ", public_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+          = link_to "コミュニティ", public_communities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
-          = link_to "BeMyStyleとは？", public_homes_about_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
-        %li
-          = link_to "コミュニティ一覧", public_communities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
-        %li
-          - if current_customer.present?
-            = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+          = link_to "イベント", public_events_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
           = link_to public_matchings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn #{'menu-sp-btn-locked' unless feature_available?(:music_direct_chat)}" do
-            個別チャット
+            チャット
             - unless feature_available?(:music_direct_chat)
               %span.menu-lock-note= feature_locked_badge(:music_direct_chat)
         %li
-          = link_to "みんなの活動報告", public_activities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+          = link_to "活動報告", public_activities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
-          = link_to "イベント参加", public_events_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
-        %li
-          = link_to "成立楽曲ランキング", public_song_rankings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+          = link_to "ランキング", public_song_rankings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
           = link_to "歌唱・演奏診断", public_singing_performance_diagnosis_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
-        %li
-          -# ページ内の正式名称は「ご意見・ご相談BOX」。メニューボタンは他項目と同じ1行表示に収めるため短縮名を使う。
-          = link_to "ご意見BOX", new_public_customer_feedback_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
-        %li.menu-upgrade-item
-          = link_to public_lp_path(anchor: "lp-section"), data: { 'turbolinks': false }, class: "menu-upgrade-cta menu-upgrade-cta--compact" do
-            %span.menu-upgrade-cta__spark ✦
-            %span.menu-upgrade-cta__label プランUPGRADE
-            %span.menu-upgrade-cta__spark ✦
-      - else
-        %li
-          = link_to "Topページ", public_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+      .dropdown.customer-profile-menu
+        %button.customer-profile-menu__toggle.dropdown-toggle{ type: "button", id: "pcProfileMenuToggle", data: { toggle: "dropdown" }, "aria-haspopup": "true", "aria-expanded": "false", "aria-label": "アカウントメニュー" }
+          = customer_avatar_tag(current_customer, class_name: "customer-profile-menu__avatar", show_active_status: false)
+        .dropdown-menu.dropdown-menu-right{ "aria-labelledby": "pcProfileMenuToggle" }
+          - if current_customer.present?
+            = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "dropdown-item"
+          = link_to public_lp_path(anchor: "lp-section"), data: { 'turbolinks': false }, class: "dropdown-item customer-profile-menu__upgrade" do
+            %i.fa-solid.fa-arrow-up.customer-profile-menu__upgrade-icon{ "aria-hidden": "true" }
+            プランUPGRADE
+          = link_to "BeMyStyleとは？", public_homes_about_path, data: { 'turbolinks': false }, class: "dropdown-item"
+          -# ページ内の正式名称は「ご意見・ご相談BOX」。メニュー表示は他項目と揃えるため短縮名を使う。
+          = link_to "ご意見BOX", new_public_customer_feedback_path, data: { 'turbolinks': false }, class: "dropdown-item"
+          .dropdown-divider
+          -# キーボード操作・支援技術のため input ではなく button で出す（method: :delete / CSRF は button_to が担保）。
+          = button_to destroy_customer_session_path,
+            method: :delete,
+            form_class: "customer-profile-menu__logout-form",
+            class: "dropdown-item customer-profile-menu__logout" do
+            ログアウト
+    - else
+      %ul.list-style-none.list.customer-menu-pc__main
         %li
           = link_to "BeMyStyleとは？", public_homes_about_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
-          = link_to "成立楽曲ランキング", public_song_rankings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+          = link_to "ランキング", public_song_rankings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li.menu-upgrade-item
           = link_to public_lp_path(anchor: "lp-section"), data: { 'turbolinks': false }, class: "menu-upgrade-cta menu-upgrade-cta--compact" do
             %span.menu-upgrade-cta__spark ✦

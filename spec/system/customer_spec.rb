@@ -267,7 +267,7 @@ RSpec.describe Customer, type: :system do
           within('.matching-index') { click_link(href: public_chat_rooms_path(customer_id: customer.id)) }
           fill_in 'chat_message_content', with: "初めまして！"
           click_button 'メッセージを送信'
-          click_button 'ログアウト'
+          within('.customer-menu-sp') { click_button 'ログアウト' }
           login(customer)
         end
         it 'メッセージを送信された通知が届いている' do

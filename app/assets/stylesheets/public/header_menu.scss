@@ -7,6 +7,10 @@
     padding: 10px;
     .top-message{
       width: 300px;
+      // 320px 幅では col-8(66.67%) が 300px より狭くなり、固定幅の float が
+      // はみ出して横スクロールを引き起こしていた(実測: clientWidth=320 に対し
+      // window.innerWidth が 326 まで広がる)。所属カラムより広がらないようにする。
+      max-width: 100%;
       float: left;
       .top-message-link {
         text-decoration: none;
@@ -60,6 +64,13 @@
     background: rgba(255, 255, 255, 0.95);
     text-align: right;
     padding: 64px;
+    // 実測: 320px 幅では左右 padding 64px*2=128px で残り 192px しかなく、
+    // 固定 width:200px の .menu-sp-btn がはみ出して横スクロールが発生していた
+    // （document.documentElement.clientWidth=320 に対し window.innerWidth が
+    // 326 まで広がって観測された）。狭い画面では左右 padding を詰めて確保する。
+    @media (max-width: 400px) {
+      padding: 64px 20px;
+    }
     opacity: 0;
     pointer-events: none;
     transition: opacity .4s;
@@ -69,6 +80,7 @@
     }
     .menu-sp-btn{
       width: 200px;
+      max-width: 100%;
       margin: 5px;
       display: inline-flex;
       justify-content: center;
@@ -77,6 +89,12 @@
     }
 
     .menu-upgrade-item {
+      // 共通 .menu-upgrade-item(application.scss.erb) は display:flex; justify-content:center;
+      // だが、それだと中の .menu-upgrade-cta が flex item として縮小され、
+      // 他の .menu-sp-btn（text-align:right で位置決め）と幅・右端がずれる。
+      // SP メニューでは他ボタンと同じ配置方法（text-align:right）に揃える。
+      display: block;
+      width: auto;
       margin: 8px 0;
     }
   }
@@ -85,35 +103,61 @@
     pointer-events: auto;
   }
   @media (min-width: 600px) {
+    // PC ではアカウント導線を右端プロフィールのドロップダウンへ集約するため、
+    // 上部バーの SP メニュー起動アバターは隠す（通知ベルは残す）。
+    // #close/#open の JS ガードは要素の存在チェックのみなので DOM からは消さない。
+    .header-sign-in-list #open {
+      display: none;
+    }
+
     .customer-menu-pc {
-      display: block;
-      width: 90%;
-      // 項目数が多く 1 行に収まらない画面幅では行ごと折り返すため、
-      // 固定 height ではなく min-height にして縦に伸びられるようにする。
+      // 主要導線(左〜中央)とプロフィール(右端)を横一列に並べる。
+      //
+      // 以前は width:90% で bar 自体を画面幅いっぱいに広げ、.customer-menu-pc__main を
+      // flex:1 1 auto で残り全部に伸ばして「その内側だけ」中央寄せしていた。
+      // その結果、bar 全体（プロフィール込み）の中心と main の中心がズレて main が
+      // 左寄りに固まって見え、6項目とプロフィールの間に大きな空白ができていた
+      // （1440px 実測で main 右端 1290px・プロフィール左端 1298px なのに
+      // bar 右端は 1368px 付近まで伸びており、そこだけ不自然に空く）。
+      // bar 自体をコンテンツ幅に合わせて縮め、ページ中央に置くことで解消する。
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      width: fit-content;
+      max-width: calc(100% - 24px);
       min-height: 50px;
       background-color: lightblue;
       margin: 0 auto;
       border-radius: 10px;
-      ul{
+      padding: 6px 16px;
+
+      // 主要メニュー本体。6 項目まで減ったので通常幅では 1 行に収まる。
+      // 幅が足りない中間幅では「文字の途中」ではなく「項目ごと」折り返す保険を残す。
+      // bar 自体が既にコンテンツ幅なので、ここは伸縮させず内容量のまま扱う。
+      .customer-menu-pc__main {
+        flex: 0 1 auto;
         display: flex;
-        // 幅が足りないときはボタン内の文字ではなく「項目ごと」次の行へ折り返す。
         flex-wrap: wrap;
         align-items: center;
         justify-content: center;
         // li の margin-right(共通スタイル)ではなく gap で間隔を揃える。
         gap: 6px 8px;
         min-height: 50px;
-        padding: 6px 12px;
+        padding: 6px 0;
         margin: 0;
       }
-      li{
+
+      li {
         margin: 0;
       }
+
       // メニュー項目のラベルは常に 1 行で表示する（文字の途中で折り返さない）。
-      .btn{
+      .btn {
         white-space: nowrap;
       }
-      .flex-item{
+
+      .flex-item {
         width: 100%;
       }
 
@@ -126,21 +170,112 @@
         margin-left: 8px;
       }
     }
+
+    // --- 右端プロフィール(アカウント)ドロップダウン ---
+    .customer-profile-menu {
+      flex: 0 0 auto;
+      // 主要6項目と同じ背景・並びの中に置かれるため、区切り線を入れて
+      // 「7個目のメインメニュー項目」に見えないよう視覚的に分離する。
+      padding-left: 12px;
+      margin-left: 4px;
+      border-left: 1px solid rgba(255, 255, 255, 0.7);
+    }
+
+    .customer-profile-menu__toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px 3px 4px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.55);
+      cursor: pointer;
+      // 長いユーザー名でもヘッダーを押し広げない（アバターのみ表示なので実質固定幅）
+      max-width: 160px;
+    }
+
+    .customer-profile-menu__toggle:hover {
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    // フォーカスリングは消さない（キーボード操作の可視性を担保）
+    .customer-profile-menu__toggle:focus {
+      outline: 2px solid #1c64f2;
+      outline-offset: 2px;
+    }
+
+    .customer-profile-menu__toggle.dropdown-toggle::after {
+      margin-left: 0;
+      color: #33507a;
+    }
+
+    .customer-profile-menu__avatar {
+      width: 34px;
+      height: 34px;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
+
+    // customer_avatar_tag は img を span.avatar-with-badge で包む。
+    // 役職バッジ(絶対配置)の基準を保ちつつ、inline 由来の隙間で潰れないようにする。
+    .customer-profile-menu__toggle .avatar-with-badge {
+      display: inline-flex;
+      line-height: 0;
+    }
+
+    .customer-profile-menu .dropdown-menu {
+      min-width: 12rem;
+      // sticky ヘッダー(.sticky-top: z-index 1020)配下。本文より前面に出す最小値。
+      z-index: 1021;
+    }
+
+    .customer-profile-menu .dropdown-item {
+      // クリック領域を十分に確保する
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+      white-space: nowrap;
+    }
+
+    // プランUPGRADE は控えめに強調（アイコン + 文字色 + 薄い背景）。
+    // 既存 .menu-upgrade-cta のような装飾(グラデ/アニメ)は使わない。
+    .customer-profile-menu__upgrade.dropdown-item {
+      font-weight: 700;
+      color: #d9531e;
+      background-color: rgba(217, 83, 30, 0.07);
+    }
+
+    .customer-profile-menu__upgrade.dropdown-item:hover,
+    .customer-profile-menu__upgrade.dropdown-item:focus {
+      color: #b23f12;
+      background-color: rgba(217, 83, 30, 0.14);
+    }
+
+    .customer-profile-menu__upgrade-icon {
+      margin-right: 6px;
+    }
+
+    // button_to が生成する form/button を dropdown-item として整える
+    .customer-profile-menu__logout-form {
+      margin: 0;
+    }
+
+    .customer-profile-menu__logout.dropdown-item {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+    }
   }
 
-  // 中間幅（項目が多いログイン時に 1〜2 行へ収めたい帯）ではボタンを少し詰める。
-  @media (min-width: 600px) and (max-width: 1099px) {
+  // 中間幅（タブレット寄り）ではボタンを少し詰めて 1 行維持しやすくする。
+  // 1024px 前後は 6 項目で余裕があるため通常サイズのまま。
+  @media (min-width: 600px) and (max-width: 900px) {
     .customer-menu-pc {
-      .btn{
+      .btn {
         padding: 5px 10px;
         font-size: 13px;
-      }
-      .menu-upgrade-cta{
-        padding: 7px 12px;
-        font-size: 12px;
-      }
-      ul{
-        gap: 5px 6px;
       }
     }
   }
