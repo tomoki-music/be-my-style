@@ -1,0 +1,85 @@
+- content_for :title, "演奏実績ランキング｜BeMyStyle"
+
+= render 'layouts/header_menu'
+
+.performance-ranking
+  .directory-page-heading
+    %p.directory-page-heading__eyebrow Ranking
+    %h2 演奏実績ランキング
+    %p.directory-page-heading__lead
+      イベントで活躍しているメンバーをご紹介！
+      %br/
+      演奏数や参加イベント数から、みんなの演奏活動を振り返れます。
+      %br/
+      気になるメンバーの詳細を開くと、参加イベントや演奏した楽曲、担当パートも確認できます。
+
+  = render "public/shared/ranking_type_nav", current: :performances
+
+  = render "filters", ranking: @ranking
+
+  - if @ranking.period_invalid?
+    .performance-ranking__notice
+      開始日は終了日より前の日付を指定してください。
+
+  %p.performance-ranking__summary{ "aria-live" => "polite" }
+    - if @rows.any?
+      演奏実績のあるメンバー
+      %strong= @ranking.total_participant_count
+      人 ／ のべ
+      %strong= @ranking.total_play_count
+      回の演奏
+    - else
+      この条件では、まだ演奏実績がありません
+
+  - if @rows.empty?
+    .performance-ranking__empty
+      %p.performance-ranking__empty-title この期間には、まだ演奏実績がありません
+      %p.performance-ranking__empty-text
+        次のイベントで新しい演奏を楽しみましょう！
+        期間や集計範囲を変えると、これまでの演奏活動が見つかるかもしれません。
+        = link_to "条件をリセット", public_performance_rankings_path, class: "performance-ranking__empty-link", data: { turbolinks: false }
+  - else
+    %ol.performance-ranking__list
+      - @rows.each do |row|
+        - detail_id = "performance-ranking-detail-#{row.customer_id}"
+        %li.performance-ranking__item{ class: ("performance-ranking__item--top-#{row.rank}" if row.rank <= 3) }
+          .performance-ranking__main
+            .performance-ranking__rank
+              %span.performance-ranking__rank-num= row.rank
+              %span.performance-ranking__rank-unit 位
+            .performance-ranking__avatar
+              = customer_avatar_link(row.customer, class_name: "performance-ranking__avatar-img")
+            .performance-ranking__body
+              %p.performance-ranking__name
+                = customer_profile_name_link(row.customer, { class: "performance-ranking__name-link" })
+              %ul.performance-ranking__stats
+                %li.performance-ranking__stat{ class: ("performance-ranking__stat--active" unless @ranking.events_kind?) }
+                  %span.performance-ranking__stat-label 演奏数
+                  %span.performance-ranking__stat-value= row.play_count
+                %li.performance-ranking__stat{ class: ("performance-ranking__stat--active" if @ranking.events_kind?) }
+                  %span.performance-ranking__stat-label 参加イベント
+                  %span.performance-ranking__stat-value= row.event_count
+                %li.performance-ranking__stat
+                  %span.performance-ranking__stat-label 演奏楽曲
+                  %span.performance-ranking__stat-value= "#{row.song_count}曲"
+              - parts = row.sorted_part_breakdown
+              - if parts.any?
+                %p.performance-ranking__primary-parts
+                  主なパート：
+                  = parts.first(3).map { |name, count| "#{name} #{count}回" }.join("・")
+            .performance-ranking__primary
+              - if @ranking.events_kind?
+                %span.performance-ranking__primary-num= row.event_count
+                %span.performance-ranking__primary-unit イベント
+              - else
+                %span.performance-ranking__primary-num= row.play_count
+                %span.performance-ranking__primary-unit 演奏
+
+          %button.performance-ranking__detail-toggle.collapsed{ type: "button", data: { toggle: "collapse", target: "##{detail_id}" }, "aria-expanded": "false", "aria-controls": detail_id }
+            演奏実績の詳細を見る
+
+          %section.collapse.performance-ranking__detail{ id: detail_id, "aria-label" => "#{row.customer.name}さんの演奏実績の詳細" }
+            = render "detail", detail: row.detail
+
+    .performance-ranking__pagination
+      = paginate @rows

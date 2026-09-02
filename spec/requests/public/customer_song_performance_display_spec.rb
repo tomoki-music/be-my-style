@@ -38,7 +38,9 @@ RSpec.describe "プロフィール画面での演奏実績・演奏可能曲の�
 
       get public_customer_path(viewer)
 
-      expect(response.body).not_to include("演奏実績")
+      # ページ全体ではなく演奏実績セクション固有のDOMで判定する
+      # (共通ヘッダーのナビ項目「ユーザー演奏実績ランキング」が本文に "演奏実績" を含むため)。
+      expect(response.body).not_to include("performance-history-scroll")
     end
 
     it '同じ曲・パートを複数回演奏している場合、演奏回数が正しく表示されること' do
@@ -67,7 +69,9 @@ RSpec.describe "プロフィール画面での演奏実績・演奏可能曲の�
     it 'データがない場合、演奏実績セクション自体が表示されないこと' do
       get public_customer_path(viewer)
 
-      expect(response.body).not_to include("演奏実績")
+      # ページ全体ではなく演奏実績セクション固有のDOMで判定する
+      # (共通ヘッダーのナビ項目「ユーザー演奏実績ランキング」が本文に "演奏実績" を含むため)。
+      expect(response.body).not_to include("performance-history-scroll")
     end
   end
 

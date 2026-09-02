@@ -1,0 +1,76 @@
+-# ランキング基準・集計範囲・コミュニティ・期間の絞り込み。すべて GET パラメータで表現し、
+-# 送信後もフォームに選択状態が保持される(URL 共有・再読み込み・ブラウザバックで同じ表示になる)。
+-#
+-# JS 有効時: 期間プリセットに応じてカスタム日付欄の表示/有効化をその場で切り替える。
+-# JS 無効時: サーバーが現在の period に応じた初期状態をレンダリング済み(送信→再表示で確定)。
+- custom_active = ranking.period.preset == "custom"
+= form_with url: public_performance_rankings_path, method: :get, local: true, class: "performance-ranking__filters directory-search" do
+  .directory-search__form
+    .performance-ranking__field
+      = label_tag :kind, "ランキング基準", class: "performance-ranking__field-label"
+      = select_tag :kind,
+        options_for_select([["演奏数", "performances"], ["参加イベント数", "events"]], ranking.kind),
+        class: "directory-search__select performance-ranking__kind-select"
+
+    .performance-ranking__field
+      = label_tag :scope, "集計範囲", class: "performance-ranking__field-label"
+      = select_tag :scope,
+        options_for_select([["BeMyStyle全体", "all"], ["コミュニティ内", "community"]], ranking.scope),
+        class: "directory-search__select"
+
+    .performance-ranking__field
+      = label_tag :community_id, "コミュニティ", class: "performance-ranking__field-label"
+      = select_tag :community_id,
+        options_for_select(ranking.community_options, ranking.community_id),
+        include_blank: "指定しない(全体のとき)",
+        class: "directory-search__select"
+
+    .performance-ranking__field
+      = label_tag :period, "集計期間", class: "performance-ranking__field-label"
+      = select_tag :period,
+        options_for_select([["今月", "this_month"], ["先月", "last_month"], ["今年", "this_year"], ["過去1年間", "past_year"], ["全期間", "all"], ["カスタム期間", "custom"]], ranking.period.preset),
+        class: "directory-search__select performance-ranking__period-select"
+
+    .performance-ranking__field.performance-ranking__field--start{ hidden: !custom_active }
+      = label_tag :start_on, "開始日", class: "performance-ranking__field-label"
+      = date_field_tag :start_on, ranking.period.start_on&.iso8601, disabled: !custom_active, class: "directory-search__select"
+
+    .performance-ranking__field.performance-ranking__field--end{ hidden: !custom_active }
+      = label_tag :end_on, "終了日", class: "performance-ranking__field-label"
+      = date_field_tag :end_on, ranking.period.end_on&.iso8601, disabled: !custom_active, class: "directory-search__select"
+
+    = submit_tag "この条件で表示", class: "btn btn-info directory-search__submit"
+    = link_to "リセット", public_performance_rankings_path, class: "btn btn-outline-secondary directory-search__reset", data: { turbolinks: false }
+
+  %p.performance-ranking__filters-note
+    「コミュニティ内」を選ぶと、そのコミュニティで開催された終了済みイベントの演奏実績だけを集計します。期間はイベント開催日(日本時間)が基準です。
+
+  :javascript
+    (function () {
+      function toggle(field, control, show) {
+        if (field) { field.hidden = !show; }
+        if (control) { control.disabled = !show; }
+      }
+      function sync(form) {
+        var period = form.querySelector('[name="period"]');
+        if (period) {
+          var custom = period.value === 'custom';
+          toggle(form.querySelector('.performance-ranking__field--start'), form.querySelector('[name="start_on"]'), custom);
+          toggle(form.querySelector('.performance-ranking__field--end'), form.querySelector('[name="end_on"]'), custom);
+        }
+      }
+      function init() {
+        var form = document.querySelector('.performance-ranking__filters');
+        if (!form || form.dataset.performanceRankingBound) { return; }
+        form.dataset.performanceRankingBound = 'true';
+        var period = form.querySelector('[name="period"]');
+        if (period) { period.addEventListener('change', function () { sync(form); }); }
+        sync(form);
+      }
+      document.addEventListener('turbolinks:load', init);
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();

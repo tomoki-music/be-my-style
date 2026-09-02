@@ -24,6 +24,8 @@
         イベントで必要な演奏パートがすべて埋まり「成立」した楽曲を集計しています。
         よく演奏されている曲から、気になる楽曲やコミュニティを見つけてみましょう。
 
+    = render "public/shared/ranking_type_nav", current: :songs
+
     = render "filters", ranking: @ranking
 
     %p.song-ranking__summary{ "aria-live" => "polite" }

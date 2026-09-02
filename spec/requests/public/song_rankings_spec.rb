@@ -166,4 +166,36 @@ RSpec.describe "Public::SongRankings", type: :request do
       expect(response.body).to include(%(href="#{public_song_rankings_path}"))
     end
   end
+
+  describe "ランキングの種類切り替え" do
+    it "成立楽曲 / ユーザー演奏実績 の 2 種類が表示されること" do
+      get public_song_rankings_path
+      nav = Nokogiri::HTML(response.body).at_css(".ranking-type-nav")
+      expect(nav).to be_present
+      expect(nav.text).to include("成立楽曲")
+      expect(nav.text).to include("ユーザー演奏実績")
+    end
+
+    it "成立楽曲側が選択状態(aria-current=page)で、その側だけに付くこと" do
+      get public_song_rankings_path
+      nav = Nokogiri::HTML(response.body).at_css(".ranking-type-nav")
+      current = nav.css('[aria-current="page"]')
+      expect(current.size).to eq 1
+      expect(current.first.text.strip).to eq("成立楽曲")
+    end
+
+    it "ユーザー演奏実績ランキングへのリンクを持つこと" do
+      get public_song_rankings_path
+      nav = Nokogiri::HTML(response.body).at_css(".ranking-type-nav")
+      link = nav.css("a").find { |a| a.text.strip == "ユーザー演奏実績" }
+      expect(link["href"]).to eq(public_performance_rankings_path)
+    end
+
+    it "横スクロールを生む固定幅・テーブル構造を使っていないこと" do
+      get public_song_rankings_path
+      nav = Nokogiri::HTML(response.body).at_css(".ranking-type-nav")
+      expect(nav.css("table")).to be_empty
+      expect(nav.to_html).not_to match(/style=/)
+    end
+  end
 end

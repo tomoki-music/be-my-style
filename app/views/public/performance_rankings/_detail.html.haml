@@ -1,0 +1,41 @@
+-# 各ユーザー行のインライン展開(Bootstrap collapse)。参加イベント / 演奏した楽曲 / 担当パート。
+-# 表示条件は一覧と同一の scope・period(PerformanceRankings::CustomerDetailsQuery)。
+- detail ||= nil
+.performance-ranking__detail-inner
+  .performance-ranking__detail-block
+    %h3.performance-ranking__detail-heading 参加イベント
+    - if detail && detail.events.any?
+      %ul.performance-ranking__detail-events
+        - detail.events.each do |event|
+          %li.performance-ranking__detail-event
+            = link_to event.name, public_event_path(event.event_id), class: "performance-ranking__detail-link", data: { turbolinks: false }
+            - if event.held_on
+              %span.performance-ranking__detail-date= l(event.held_on, format: :long)
+            %span.performance-ranking__detail-count= "#{event.play_count}演奏"
+    - else
+      %p.performance-ranking__detail-empty 表示できる参加イベントがありません。
+
+  .performance-ranking__detail-block
+    %h3.performance-ranking__detail-heading 演奏した楽曲
+    - if detail && detail.songs.any?
+      %ul.performance-ranking__detail-songs
+        - detail.songs.each do |song|
+          %li.performance-ranking__detail-song
+            %span.performance-ranking__detail-song-name
+              = song.name
+              - if song.artist_name.present?
+                %span.performance-ranking__detail-song-artist ／ #{song.artist_name}
+            %span.performance-ranking__detail-count= "#{song.play_count}演奏"
+            %span.performance-ranking__detail-song-parts
+              = song.part_counts.map { |name, count| "#{name}：#{count}回" }.join("／")
+    - else
+      %p.performance-ranking__detail-empty 表示できる演奏楽曲がありません。
+
+  .performance-ranking__detail-block
+    %h3.performance-ranking__detail-heading 担当パート
+    - if detail && detail.parts.any?
+      %ul.performance-ranking__detail-parts
+        - detail.parts.each do |name, count|
+          %li.performance-ranking__detail-part= "#{name}：#{count}回"
+    - else
+      %p.performance-ranking__detail-empty 表示できる担当パートがありません。

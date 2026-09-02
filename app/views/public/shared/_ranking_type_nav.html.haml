@@ -1,0 +1,21 @@
+-# ランキングの「種類」切り替え(成立楽曲 / ユーザー演奏実績)。両ランキング画面のタイトル付近で共有する。
+-# これはユーザー演奏実績ランキング内の「ランキング基準(演奏数 / 参加イベント数)」とは別階層:
+-#   ランキングの種類
+-#   ├─ 成立楽曲
+-#   └─ ユーザー演奏実績
+-#      └─ ランキング基準(演奏数 / 参加イベント数)
+-# current: :songs か :performances(選択中の種類)。
+- current = local_assigns.fetch(:current)
+%nav.ranking-type-nav{ "aria-label" => "ランキングの種類" }
+  %span.ranking-type-nav__label ランキングの種類
+  .ranking-type-nav__group{ role: "group" }
+    - if current == :songs
+      %span.btn.btn-info.ranking-type-nav__tab.ranking-type-nav__tab--active{ "aria-current" => "page" }
+        成立楽曲
+    - else
+      = link_to "成立楽曲", public_song_rankings_path, class: "btn btn-outline-info ranking-type-nav__tab", data: { turbolinks: false }
+    - if current == :performances
+      %span.btn.btn-info.ranking-type-nav__tab.ranking-type-nav__tab--active{ "aria-current" => "page" }
+        ユーザー演奏実績
+    - else
+      = link_to "ユーザー演奏実績", public_performance_rankings_path, class: "btn btn-outline-info ranking-type-nav__tab", data: { turbolinks: false }
