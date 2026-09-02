@@ -106,6 +106,9 @@ Rails.application.routes.draw do
       get 'followers' => 'relationships#followers', as: 'followers'
     end
 
+    # 演奏実績ランキング(ログイン中の music ユーザー向け。既存「演奏実績」と同一定義で集計)
+    get "performance_rankings", to: "performance_rankings#index"
+
     # 活動報告機能
     resources :activities do
       resource :favorites, only: [:create, :destroy]

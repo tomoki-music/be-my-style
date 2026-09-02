@@ -110,4 +110,32 @@ RSpec.describe PerformanceHistory::PartNameNormalizer do
       expect(described_class.normalize("   ")).to be_nil
     end
   end
+
+  describe '.sql_normalized_name' do
+    # ランキング集計は 1 本の SQL で正規化まで行う。SQL の CASE 式が #normalize と
+    # 同じ結果を返すことを、実際に MySQL で評価して検証する。
+    def sql_normalize(raw)
+      connection = ActiveRecord::Base.connection
+      expression = described_class.sql_normalized_name(connection.quote(raw))
+      connection.select_value("SELECT #{expression}")
+    end
+
+    inputs = [
+      *JoinPart::NAME_OPTIONS,
+      "Vo", "VO", "vo", "ボーカル", "ヴォーカル", "Voca", "Vocai",
+      "Gt", "ギター", "Guitar(Lead)", "Guitar(Rhythm)", "Guitar(Lythm)",
+      "guitar (lead)", " Guitar(Lythm) ", "Lead Guitar", "Rhythm Guitar",
+      "Guiar", "Guigar", "Gutar", "Guitar1", "Guitar2",
+      "Ba", "ベース", "Dr", "ドラム", "ドラムス", "Durms",
+      "Key", "キーボード", "Keyboad", "Keyborad", "Keyobard",
+      "Cho", "Chorus", "コーラス", "Percussion", "Acoustic Guitar",
+      "参加します🙌", "guitar", "GUITAR", "", "   "
+    ]
+
+    inputs.each do |raw|
+      it "#{raw.inspect} を #normalize と同じ結果に正規化すること" do
+        expect(sql_normalize(raw)).to eq(described_class.normalize(raw))
+      end
+    end
+  end
 end

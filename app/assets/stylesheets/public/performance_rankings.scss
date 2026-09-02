@@ -1,0 +1,251 @@
+// 演奏実績ランキング(ログイン中の music ユーザー向け)。
+// 既存の directory-* / info 系カラーに合わせる。PC・スマートフォンの両方で横スクロールを発生させない。
+
+.performance-ranking {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+}
+
+.performance-ranking__notice {
+  background: #fff3cd;
+  border: 1px solid #ffe69c;
+  color: #7a5c00;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.88rem;
+  margin: 12px 0;
+}
+
+// --- 絞り込み --------------------------------------------------------------
+
+.performance-ranking__filters {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.performance-ranking__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+// [hidden] の UA スタイル(display:none)は display:flex に負けるため明示する。
+.performance-ranking__field[hidden] {
+  display: none;
+}
+
+.performance-ranking__field-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #5a6b7c;
+  margin: 0;
+}
+
+.performance-ranking__filters-note {
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  color: #6b7a89;
+}
+
+// --- サマリー / 空状態 ---------------------------------------------------
+
+.performance-ranking__summary {
+  text-align: center;
+  color: #4a5c6e;
+  font-size: 0.9rem;
+  margin: 16px 0;
+
+  strong {
+    color: #17a2b8;
+    font-size: 1.05rem;
+  }
+}
+
+.performance-ranking__empty {
+  background: #fff;
+  border: 1px solid #dfe9f3;
+  border-radius: 14px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.performance-ranking__empty-title {
+  font-weight: 700;
+  color: #1f2d3d;
+  margin: 0 0 8px;
+}
+
+.performance-ranking__empty-text {
+  color: #5a6b7c;
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.8;
+}
+
+// --- ランキング一覧 -----------------------------------------------------
+
+.performance-ranking__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.performance-ranking__item {
+  background: #fff;
+  border: 1px solid #e0e9f2;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 48px 52px 1fr auto;
+  grid-template-areas: "rank avatar body primary";
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 6px;
+}
+
+.performance-ranking__item--top-1 {
+  border-color: #e5b567;
+  box-shadow: 0 2px 10px rgba(229, 181, 103, 0.25);
+}
+.performance-ranking__item--top-2 { border-color: #b9c4ce; }
+.performance-ranking__item--top-3 { border-color: #d0a184; }
+
+.performance-ranking__rank {
+  grid-area: rank;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+  color: #1f2d3d;
+}
+
+.performance-ranking__rank-num {
+  font-size: 1.4rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.performance-ranking__item--top-1 .performance-ranking__rank-num { color: #c8912f; }
+.performance-ranking__item--top-2 .performance-ranking__rank-num { color: #7d8896; }
+.performance-ranking__item--top-3 .performance-ranking__rank-num { color: #b06f45; }
+
+.performance-ranking__rank-unit { font-size: 0.72rem; color: #6b7a89; }
+
+.performance-ranking__avatar {
+  grid-area: avatar;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.performance-ranking__avatar-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.performance-ranking__body {
+  grid-area: body;
+  min-width: 0;
+}
+
+.performance-ranking__name {
+  margin: 0;
+  font-weight: 700;
+  color: #1f2d3d;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.performance-ranking__name-link {
+  color: #1f2d3d;
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}
+
+.performance-ranking__meta {
+  margin: 2px 0 0;
+  color: #5a6b7c;
+  font-size: 0.85rem;
+
+  strong {
+    color: #17a2b8;
+    font-size: 0.95rem;
+    margin: 0 2px;
+  }
+}
+
+.performance-ranking__parts {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+
+.performance-ranking__part {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  background: #eef5fb;
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 0.75rem;
+  color: #37536e;
+}
+
+.performance-ranking__part-count {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.performance-ranking__primary {
+  grid-area: primary;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.performance-ranking__primary-num {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #17a2b8;
+  font-variant-numeric: tabular-nums;
+}
+
+.performance-ranking__primary-unit {
+  font-size: 0.72rem;
+  color: #6b7a89;
+  margin-left: 2px;
+}
+
+.performance-ranking__pagination {
+  margin-top: 20px;
+
+  .pagination { flex-wrap: wrap; }
+}
+
+// --- スマートフォン ---------------------------------------------------
+
+@media (max-width: 600px) {
+  .performance-ranking__item {
+    grid-template-columns: 38px 44px 1fr;
+    grid-template-areas:
+      "rank avatar body"
+      "rank avatar primary";
+    column-gap: 10px;
+  }
+
+  .performance-ranking__primary {
+    grid-area: primary;
+    text-align: left;
+  }
+
+  .performance-ranking__rank-num { font-size: 1.2rem; }
+}

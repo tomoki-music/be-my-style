@@ -69,5 +69,44 @@ module PerformanceHistory
       key = name.downcase
       SAFE_ALIASES[key] || SAFE_ALIASES[key.gsub(/[[:space:]]+/, "")]
     end
+
+    # #normalize と同じ突合結果を SQL 側で得るための CASE 式(文字列)を返す。
+    # ランキング集計(PerformanceRankings::RankingQuery)で 1 本の GROUP BY クエリに
+    # まとめるために使う。対応表は #normalize と同じ SAFE_ALIASES / JoinPart::NAME_OPTIONS
+    # を参照するため、語彙の増減はこのファイルだけで一元管理される。
+    # 突合できない値には NULL を返す(呼び出し側で「集計対象外」として扱う)。
+    #
+    # SQLite(テスト) / MySQL(本番)の両方で動くよう、移植性のある関数(TRIM / LOWER /
+    # REPLACE / CASE)だけを使う。
+    #
+    # 注記:
+    #   - #normalize の高速パスは大文字小文字を区別するが、MySQL の既定 collation は
+    #     区別しないため、"vocal" のような小文字だけの英語表記では MySQL 側が
+    #     #normalize より緩く一致する可能性がある(実データのパート名にはほぼ存在しない)。
+    #   - TRIM は半角スペースのみ、SQLite の LOWER は ASCII のみを小文字化する。
+    def self.sql_normalized_name(column_sql)
+      connection = ActiveRecord::Base.connection
+      trimmed = "TRIM(#{column_sql})"
+      lowered = "LOWER(#{trimmed})"
+      spaceless = "REPLACE(REPLACE(REPLACE(#{lowered}, ' ', ''), '\t', ''), '　', '')"
+
+      whens = []
+
+      # 高速パス: 既に現行の選択肢そのもの。
+      JoinPart::NAME_OPTIONS.each do |name|
+        quoted = connection.quote(name)
+        whens << "WHEN #{trimmed} = #{quoted} THEN #{quoted}"
+      end
+
+      # レガシー別名: 小文字化した値、および空白除去した値のどちらかが一致すれば正規化する。
+      SAFE_ALIASES.group_by { |_raw, canonical| canonical }.each do |canonical, pairs|
+        keys = pairs.map { |raw, _canonical| connection.quote(raw) }.join(", ")
+        quoted_canonical = connection.quote(canonical)
+        whens << "WHEN #{lowered} IN (#{keys}) THEN #{quoted_canonical}"
+        whens << "WHEN #{spaceless} IN (#{keys}) THEN #{quoted_canonical}"
+      end
+
+      "CASE #{whens.join(' ')} ELSE NULL END"
+    end
   end
 end

@@ -1,0 +1,78 @@
+- content_for :title, "演奏実績ランキング｜BeMyStyle"
+
+= render 'layouts/header_menu'
+
+.performance-ranking
+  .directory-page-heading
+    %p.directory-page-heading__eyebrow Ranking
+    %h2 演奏実績ランキング
+    %p.directory-page-heading__lead
+      みんなの演奏活動を称えるランキングです。これまでの演奏を振り返り、新しい音楽仲間や次に挑戦したい楽曲を見つけましょう！
+
+  = render "filters", ranking: @ranking
+
+  - if @ranking.period_invalid?
+    .performance-ranking__notice
+      開始日は終了日より前の日付を指定してください。
+
+  %p.performance-ranking__summary{ "aria-live" => "polite" }
+    - if @rows.any?
+      演奏実績のあるメンバー
+      %strong= @ranking.total_participant_count
+      人 ／ のべ
+      %strong= @ranking.total_play_count
+      回の演奏
+    - else
+      この条件では、まだ演奏実績がありません
+
+  - if @rows.empty?
+    .performance-ranking__empty
+      %p.performance-ranking__empty-title この期間には、まだ演奏実績がありません
+      %p.performance-ranking__empty-text
+        次のイベントで新しい演奏を楽しみましょう！
+        期間や集計範囲を変えると、これまでの演奏活動が見つかるかもしれません。
+        = link_to "条件をリセット", public_performance_rankings_path, class: "performance-ranking__empty-link", data: { turbolinks: false }
+  - else
+    %ol.performance-ranking__list
+      - @rows.each do |row|
+        %li.performance-ranking__item{ class: ("performance-ranking__item--top-#{row.rank}" if row.rank <= 3) }
+          .performance-ranking__rank
+            %span.performance-ranking__rank-num= row.rank
+            %span.performance-ranking__rank-unit 位
+          .performance-ranking__avatar
+            = customer_avatar_link(row.customer, class_name: "performance-ranking__avatar-img")
+          .performance-ranking__body
+            %p.performance-ranking__name
+              = customer_profile_name_link(row.customer, { class: "performance-ranking__name-link" })
+            %p.performance-ranking__meta
+              - if @ranking.kind == "songs"
+                演奏楽曲数
+                %strong= row.song_count
+                曲 ／ 総演奏
+                = "#{row.play_count}回"
+              - elsif @ranking.kind == "parts"
+                = "#{@ranking.part} の演奏"
+                %strong= row.part_count
+                回 ／ 総演奏
+                = "#{row.play_count}回"
+              - else
+                総演奏
+                %strong= row.play_count
+                回 ／ 楽曲数
+                = "#{row.song_count}曲"
+            - if @ranking.kind != "parts" && row.part_breakdown.values.sum.positive?
+              %ul.performance-ranking__parts
+                - JoinPart::NAME_OPTIONS.each do |part_name|
+                  - count = row.part_breakdown[part_name].to_i
+                  - next unless count.positive?
+                  %li.performance-ranking__part
+                    %span.performance-ranking__part-name= part_name
+                    %span.performance-ranking__part-count= "#{count}回"
+          .performance-ranking__primary
+            - primary_number = @ranking.kind == "songs" ? row.song_count : (@ranking.kind == "parts" ? row.part_count : row.play_count)
+            - primary_unit = @ranking.kind == "songs" ? "曲" : "回"
+            %span.performance-ranking__primary-num= primary_number
+            %span.performance-ranking__primary-unit= primary_unit
+
+    .performance-ranking__pagination
+      = paginate @rows
