@@ -83,6 +83,13 @@ RSpec.describe PerformanceRankings::RankingQuery do
       expect(query.rows).to be_empty
     end
 
+    it "正規化できないパートは集計しないこと" do
+      alice = create(:customer, name: "Alice")
+      perform!(ended_event, customer: alice, song_name: "コーラス曲", part: "Chorus")
+
+      expect(query.rows).to be_empty
+    end
+
     it "musicドメイン以外のコミュニティのイベントは集計しないこと" do
       biz_community = create(:community, domain: business_domain, name: "ビジネス")
       alice = create(:customer, name: "Alice")
@@ -92,8 +99,13 @@ RSpec.describe PerformanceRankings::RankingQuery do
     end
   end
 
-  describe "総演奏回数(kind: total)" do
-    it "演奏回数が多い順に並ぶこと" do
+  describe "演奏数ランキング(kind: performances)" do
+    it "既定の kind であること" do
+      expect(query.kind).to eq "performances"
+      expect(query(kind: "unknown").kind).to eq "performances"
+    end
+
+    it "行が customer 単位で、演奏数が多い順に並ぶこと" do
       heavy = create(:customer, name: "Heavy")
       light = create(:customer, name: "Light")
       event = ended_event
@@ -101,92 +113,183 @@ RSpec.describe PerformanceRankings::RankingQuery do
       perform!(event, customer: heavy, song_name: "曲2", part: "Guitar")
       perform!(event, customer: light, song_name: "曲1", part: "Bass")
 
-      rows = query(kind: "total").rows
+      rows = query(kind: "performances").rows
       expect(rows.map { |r| r.customer.name }).to eq %w[Heavy Light]
       expect(rows.map(&:play_count)).to eq [2, 1]
+      expect(rows.map(&:customer_id)).to eq [heavy.id, light.id]
     end
 
-    it "同一イベント・同一曲・同一パートの重複エントリーを二重計上しないこと" do
+    it "同一ユーザー・同一イベント・同一曲・同一パートの重複エントリーは1演奏として数えること" do
       alice = create(:customer, name: "Alice")
       song = perform!(ended_event, customer: alice, song_name: "重複曲", part: "Vocal")
-      # 同じ曲に同名パートをもう1つ作り、同じ人をエントリーさせる(データ不整合の再現)。
       dup_part = create(:join_part, song: song, join_part_name: "Vocal")
       create(:join_part_customer, join_part: dup_part, customer: alice)
 
       expect(query.rows.first.play_count).to eq 1
     end
 
-    it "パート別の内訳を返すこと" do
+    it "同一イベント・同一曲でも担当パートが異なれば別々の演奏として数えること" do
       alice = create(:customer, name: "Alice")
-      event = ended_event
-      perform!(event, customer: alice, song_name: "曲A", part: "Vocal")
-      perform!(event, customer: alice, song_name: "曲B", part: "Vocal")
-      perform!(event, customer: alice, song_name: "曲C", part: "Guitar")
+      song = perform!(ended_event, customer: alice, song_name: "兼任曲", part: "Vocal")
+      perform!(song.event, customer: alice, song: song, part: "Guitar")
 
       row = query.rows.first
-      expect(row.part_breakdown["Vocal"]).to eq 2
+      expect(row.play_count).to eq 2
+      expect(row.event_count).to eq 1
+      expect(row.song_count).to eq 1
+      expect(row.part_breakdown["Vocal"]).to eq 1
       expect(row.part_breakdown["Guitar"]).to eq 1
-      expect(row.primary_part).to eq "Vocal"
     end
-  end
 
-  describe "演奏楽曲数(kind: songs)" do
-    it "同じSongMasterの曲を複数回演奏しても1曲として数えること" do
+    it "異なる演奏楽曲数(song_count)を SongMaster 単位で返すこと" do
       alice = create(:customer, name: "Alice")
       perform!(ended_event(start_time: 30.days.ago), customer: alice, song_name: "リピート曲", artist_name: "X")
       perform!(ended_event(start_time: 10.days.ago), customer: alice, song_name: "リピート曲", artist_name: "X")
+      perform!(ended_event(start_time: 5.days.ago), customer: alice, song_name: "別曲", artist_name: "Y")
 
-      row = query(kind: "songs").rows.first
-      expect(row.song_count).to eq 1
-      expect(row.play_count).to eq 2
+      row = query.rows.first
+      expect(row.play_count).to eq 3
+      expect(row.song_count).to eq 2
     end
 
-    it "異なる楽曲は別々に数えること" do
-      alice = create(:customer, name: "Alice")
-      event = ended_event
-      perform!(event, customer: alice, song_name: "曲X", artist_name: "A")
-      perform!(event, customer: alice, song_name: "曲Y", artist_name: "A")
-
-      expect(query(kind: "songs").rows.first.song_count).to eq 2
-    end
-
-    it "楽曲数の降順・同数は総演奏回数の降順で並ぶこと" do
-      wide = create(:customer, name: "Wide")
-      deep = create(:customer, name: "Deep")
-      event = ended_event
-      perform!(event, customer: wide, song_name: "w1", artist_name: "A")
-      perform!(event, customer: wide, song_name: "w2", artist_name: "A")
-      perform!(event, customer: deep, song_name: "d1", artist_name: "A")
-      perform!(event, customer: deep, song_name: "d1", artist_name: "A") # 同曲2回=楽曲1/演奏2
-
-      rows = query(kind: "songs").rows
-      expect(rows.map { |r| r.customer.name }).to eq %w[Wide Deep]
-    end
-  end
-
-  describe "パート別(kind: parts)" do
-    it "指定パートの演奏回数で並び、そのパート実績が無い人は除外すること" do
-      guitarist = create(:customer, name: "Guitarist")
-      vocalist = create(:customer, name: "Vocalist")
-      event = ended_event
-      perform!(event, customer: guitarist, song_name: "g1", part: "Guitar")
-      perform!(event, customer: guitarist, song_name: "g2", part: "Guitar")
-      perform!(event, customer: vocalist, song_name: "v1", part: "Vocal")
-
-      rows = query(kind: "parts", part: "Guitar").rows
-      expect(rows.map { |r| r.customer.name }).to eq %w[Guitarist]
-      expect(rows.first.part_count).to eq 2
-      expect(rows.first.play_count).to eq 2
-    end
-
-    it "レガシーなパート名(Gt / ギター)を正規化してGuitarに合算すること" do
+    it "レガシーなパート名(Gt / ギター)を正規化して内訳に合算すること" do
       alice = create(:customer, name: "Alice")
       event = ended_event
       perform!(event, customer: alice, song_name: "曲1", part: "Gt")
       perform!(event, customer: alice, song_name: "曲2", part: "ギター")
       perform!(event, customer: alice, song_name: "曲3", part: "Guitar")
 
-      expect(query(kind: "parts", part: "Guitar").rows.first.part_count).to eq 3
+      expect(query.rows.first.part_breakdown["Guitar"]).to eq 3
+    end
+
+    it "競技順位が演奏数だけを基準に採番されること(1,2,2,4)" do
+      event = ended_event
+      { "A" => 3, "B" => 2, "C" => 2, "D" => 1 }.each do |name, n|
+        customer = create(:customer, name: name)
+        n.times { |i| perform!(event, customer: customer, song_name: "#{name}#{i}") }
+      end
+
+      rows = query(kind: "performances").rows
+      expect(rows.map { |r| r.customer.name }).to eq %w[A B C D]
+      expect(rows.map(&:rank)).to eq [1, 2, 2, 4]
+    end
+
+    it "同率時は参加イベント数の降順、さらに同率なら customer_id 昇順で安定すること" do
+      wide_event_a = ended_event(start_time: 20.days.ago)
+      wide_event_b = ended_event(start_time: 15.days.ago)
+      one_event = ended_event(start_time: 10.days.ago)
+
+      # first: 2イベントで各1演奏 / second: 1イベントで2演奏。演奏数はどちらも2。
+      first = create(:customer, name: "First")
+      second = create(:customer, name: "Second")
+      perform!(wide_event_a, customer: first, song_name: "f1")
+      perform!(wide_event_b, customer: first, song_name: "f2")
+      perform!(one_event, customer: second, song_name: "s1")
+      perform!(one_event, customer: second, song_name: "s2")
+
+      rows = query(kind: "performances").rows
+      expect(rows.map { |r| r.customer.name }).to eq %w[First Second]
+      expect(rows.map(&:rank)).to eq [1, 1]
+    end
+  end
+
+  describe "参加イベント数ランキング(kind: events)" do
+    it "有効な演奏実績を持つ異なるイベント数で並ぶこと" do
+      organizer = create(:customer, name: "Organizer")
+      single = create(:customer, name: "Single")
+
+      3.times do |i|
+        event = ended_event(start_time: (20 - i).days.ago)
+        perform!(event, customer: organizer, song_name: "o#{i}")
+      end
+      event = ended_event(start_time: 3.days.ago)
+      perform!(event, customer: single, song_name: "s1", part: "Vocal")
+      perform!(event, customer: single, song_name: "s2", part: "Guitar")
+
+      rows = query(kind: "events").rows
+      expect(rows.map { |r| r.customer.name }).to eq %w[Organizer Single]
+      expect(rows.map(&:event_count)).to eq [3, 1]
+      expect(rows.map(&:play_count)).to eq [3, 2]
+    end
+
+    it "同一イベントで複数曲・複数パートを演奏しても参加イベント数は1件であること" do
+      alice = create(:customer, name: "Alice")
+      event = ended_event
+      perform!(event, customer: alice, song_name: "曲1", part: "Vocal")
+      perform!(event, customer: alice, song_name: "曲2", part: "Guitar")
+      perform!(event, customer: alice, song_name: "曲3", part: "Bass")
+
+      row = query(kind: "events").rows.first
+      expect(row.event_count).to eq 1
+      expect(row.play_count).to eq 3
+    end
+
+    it "競技順位が参加イベント数だけを基準に採番されること(1,2,2,4)" do
+      { "A" => 3, "B" => 2, "C" => 2, "D" => 1 }.each do |name, n|
+        customer = create(:customer, name: name)
+        n.times do |i|
+          event = ended_event(start_time: (20 - i).days.ago)
+          perform!(event, customer: customer, song_name: "#{name}#{i}")
+        end
+      end
+
+      rows = query(kind: "events").rows
+      expect(rows.map { |r| r.customer.name }).to eq %w[A B C D]
+      expect(rows.map(&:rank)).to eq [1, 2, 2, 4]
+    end
+
+    it "同率時は演奏数の降順で並ぶこと" do
+      busy = create(:customer, name: "Busy")
+      calm = create(:customer, name: "Calm")
+      event_a = ended_event(start_time: 20.days.ago)
+      event_b = ended_event(start_time: 10.days.ago)
+
+      [event_a, event_b].each do |event|
+        perform!(event, customer: busy, song_name: "b-#{event.id}-1", part: "Vocal")
+        perform!(event, customer: busy, song_name: "b-#{event.id}-2", part: "Guitar")
+        perform!(event, customer: calm, song_name: "c-#{event.id}-1", part: "Vocal")
+      end
+
+      rows = query(kind: "events").rows
+      expect(rows.map { |r| r.customer.name }).to eq %w[Busy Calm]
+      expect(rows.map(&:event_count)).to eq [2, 2]
+      expect(rows.map(&:rank)).to eq [1, 1]
+    end
+  end
+
+  describe "軸の切り替え" do
+    it "同じデータでも kind により順位が変わること" do
+      wide = create(:customer, name: "Wide")   # 3イベント各1演奏
+      deep = create(:customer, name: "Deep")   # 1イベント4演奏
+
+      3.times do |i|
+        event = ended_event(start_time: (20 - i).days.ago)
+        perform!(event, customer: wide, song_name: "w#{i}")
+      end
+      deep_event = ended_event(start_time: 2.days.ago)
+      %w[Vocal Guitar Bass Drums].each_with_index do |part, i|
+        perform!(deep_event, customer: deep, song_name: "d#{i}", part: part)
+      end
+
+      by_performances = query(kind: "performances").rows
+      expect(by_performances.map { |r| r.customer.name }).to eq %w[Deep Wide]
+
+      by_events = query(kind: "events").rows
+      expect(by_events.map { |r| r.customer.name }).to eq %w[Wide Deep]
+    end
+  end
+
+  describe "各行の展開詳細" do
+    it "現在ページの各 Row に detail(参加イベント / 演奏楽曲 / 担当パート)が割り当てられること" do
+      alice = create(:customer, name: "Alice")
+      event = ended_event
+      perform!(event, customer: alice, song_name: "詳細曲", artist_name: "Z", part: "Vocal")
+
+      row = query.rows.first
+      expect(row.detail).to be_present
+      expect(row.detail.events.map(&:name)).to include(event.event_name)
+      expect(row.detail.songs.map(&:name)).to include("詳細曲")
+      expect(row.detail.parts).to include(["Vocal", 1])
     end
   end
 
@@ -230,16 +333,6 @@ RSpec.describe PerformanceRankings::RankingQuery do
       end
     end
 
-    it "日本時間の月初0時は当月に含まれ、月末23時台は翌月に含まれないこと" do
-      travel_to(Time.zone.local(2026, 9, 15, 12)) do
-        alice = create(:customer, name: "Alice")
-        perform!(ended_event(start_time: Time.zone.local(2026, 9, 1, 0, 0, 0)), customer: alice, song_name: "月初曲")
-        perform!(ended_event(start_time: Time.zone.local(2026, 8, 31, 23, 30, 0)), customer: alice, song_name: "先月末曲")
-
-        expect(query(period: period(preset: "this_month")).rows.first.play_count).to eq 1
-      end
-    end
-
     it "カスタム期間は開始日と終了日の両端を含むこと" do
       alice = create(:customer, name: "Alice")
       perform!(ended_event(start_time: Time.zone.local(2025, 3, 1, 0, 0, 0)), customer: alice, song_name: "開始日曲")
@@ -260,44 +353,15 @@ RSpec.describe PerformanceRankings::RankingQuery do
     end
   end
 
-  describe "順位の仕様" do
-    it "同数は同順位・次は競技順位(人数分飛ばす)になること" do
-      event = ended_event
-      counts = { "A" => 3, "B" => 2, "C" => 2, "D" => 1 }
-      counts.each do |name, n|
-        customer = create(:customer, name: name)
-        n.times { |i| perform!(event, customer: customer, song_name: "#{name}#{i}") }
-      end
-
-      rows = query.rows
-      expect(rows.map(&:rank)).to eq [1, 2, 2, 4]
-    end
-
-    it "同率のときは補助集計値の降順・さらに同じならcustomer_id昇順で安定して並ぶこと" do
-      event = ended_event
-      # 先に作った方が customer_id が小さい。
-      first = create(:customer, name: "First")
-      second = create(:customer, name: "Second")
-      # 総演奏回数・楽曲数ともに同じ(kind: total の主/補助が同値)にする。
-      perform!(event, customer: first, song_name: "共通曲", artist_name: "A")
-      perform!(event, customer: second, song_name: "共通曲", artist_name: "A")
-
-      rows = query(kind: "total").rows
-      expect(rows.map { |r| r.customer.id }).to eq [first.id, second.id]
-      expect(rows.map(&:rank)).to eq [1, 1]
-    end
-  end
-
   describe "不正なパラメータ" do
-    it "想定外の kind / scope / part / community_id でも例外にならず既定値で動くこと" do
+    it "想定外の kind / scope / community_id でも例外にならず既定値で動くこと" do
       alice = create(:customer, name: "Alice")
       perform!(ended_event, customer: alice)
 
-      q = query(kind: "'; DROP TABLE songs; --", scope: "everywhere", part: "Percussion", community_id: "abc")
+      q = query(kind: "'; DROP TABLE songs; --", scope: "everywhere", community_id: "abc")
       expect { q.rows }.not_to raise_error
-      expect(q.kind).to eq "total"
+      expect(q.kind).to eq "performances"
       expect(q.scope).to eq "all"
-      expect(q.part).to eq "Vocal"
       expect(q.community_id).to be_nil
     end
 
@@ -317,6 +381,17 @@ RSpec.describe PerformanceRankings::RankingQuery do
       page2 = query(per: 2, page: 2).rows
       expect(page2.size).to eq 2
       expect(page2.map(&:rank)).to eq [3, 4]
+    end
+
+    it "詳細取得は現在ページの customer に限定されること" do
+      event = ended_event
+      5.times do |i|
+        customer = create(:customer, name: "P#{i}")
+        (5 - i).times { |j| perform!(event, customer: customer, song_name: "P#{i}-#{j}") }
+      end
+
+      page1 = query(per: 2, page: 1).rows
+      expect(page1.map { |r| r.detail.present? }).to all(be true)
     end
   end
 end

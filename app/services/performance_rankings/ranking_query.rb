@@ -1,5 +1,6 @@
 module PerformanceRankings
-  # 演奏実績ランキングの集計。
+  # 演奏実績ランキングの集計。ランキングの主役は「楽曲」ではなく「ユーザー」。
+  # 1 行 = 1 人の customer で、その人の演奏活動量を比較する。
   #
   # ■ 集計対象(既存「演奏実績」と同一定義)
   #   正データは PerformanceHistory::ProfileQuery / ExperiencedCustomersQuery と同じく、
@@ -8,14 +9,15 @@ module PerformanceRankings
   #     - songs.song_master_id が解決済み(名寄せ不能な旧データは対象外。プロフィール画面と同じ)
   #     - customers.is_deleted = FALSE(退会ユーザーはランキングに載せない)
   #     - パート名は PerformanceHistory::PartNameNormalizer で正規化。突合不能なら対象外
-  #   二重加算防止として (event_id, song_master_id, 正規化パート) を 1 単位とし、
-  #   COUNT(DISTINCT ...) で数える(同一イベント・同一曲・同一パートの重複データを弾く)。
+  #   1 演奏の単位は (customer_id, event_id, song_master_id, 正規化パート)。
+  #   同一ユーザー・同一イベント・同一曲で Vo と Gt を兼任すれば 2 演奏。
+  #   同一ユーザー・同一イベント・同一曲・同一パートの重複データは 1 演奏へ潰す。
   #
-  # ■ 3 種類のランキング
-  #   :total … 演奏回数(= 上記 1 単位の件数)の降順
-  #   :songs … 演奏した異なる SongMaster 数の降順
-  #   :parts … 指定パートの演奏回数の降順(part が必須)
-  #   いずれも 1 本の SQL で customer ごとに集計する。パート別内訳(6 パート分)も同時に取得する。
+  # ■ 2 種類のランキング軸
+  #   :performances … 演奏数(= 上記 1 単位の件数)の降順
+  #   :events       … 参加イベント数(有効な演奏実績を持つ異なる event_id 数)の降順
+  #   競技順位はいずれも「主値のみ」で採番する(1,2,2,4…)。
+  #   演奏楽曲数・パート別回数は独立ランキングにせず、各ユーザーのサマリー値として表示する。
   #
   # ■ 公開範囲
   #   music ドメインのコミュニティに属するイベントのみ。イベント・コミュニティには
@@ -26,15 +28,15 @@ module PerformanceRankings
   #
   # ■ パフォーマンス
   #   集計は派生表 + GROUP BY の 1 クエリ。Ruby 側で読むのは「実績のある customer 数」分の
-  #   集約済み行のみ。順位付け後、表示ページ分の Customer だけを画像添付付きで 1 クエリ取得する
+  #   集約済み行のみ。順位付け後、表示ページ分の Customer だけを画像添付付きで 1 クエリ取得し、
+  #   同じページ分の展開詳細(参加イベント / 演奏楽曲 / 担当パート)も 1 クエリで一括取得する
   #   (行ごとの追加クエリなし)。
   class RankingQuery
-    KINDS = %w[total songs parts].freeze
-    DEFAULT_KIND = "total".freeze
+    KINDS = %w[performances events].freeze
+    DEFAULT_KIND = "performances".freeze
     SCOPES = %w[all community].freeze
     DEFAULT_SCOPE = "all".freeze
     PART_OPTIONS = JoinPart::NAME_OPTIONS
-    DEFAULT_PART = "Vocal".freeze
     DEFAULT_PER = 50
     MAX_PER = 100
 
@@ -43,24 +45,32 @@ module PerformanceRankings
       :customer_id,
       :customer,
       :play_count,
+      :event_count,
       :song_count,
-      :part_count,
       :part_breakdown,
+      :detail,
       keyword_init: true
     ) do
       # 内訳が最も多いパート(同数は JoinPart::NAME_OPTIONS の並び順で安定)。実績が無ければ nil。
       def primary_part
+        best = sorted_part_breakdown.first
+        best&.first
+      end
+
+      # [パート名, 回数] を「回数の降順 → NAME_OPTIONS 順」で。0 回は含めない。
+      def sorted_part_breakdown
         options = PerformanceRankings::RankingQuery::PART_OPTIONS
-        best = options.max_by { |name| [part_breakdown[name].to_i, -options.index(name)] }
-        part_breakdown[best].to_i.positive? ? best : nil
+        options
+          .map { |name| [name, part_breakdown[name].to_i] }
+          .select { |(_, count)| count.positive? }
+          .sort_by { |(name, count)| [-count, options.index(name)] }
       end
     end
 
-    def initialize(kind: nil, scope: nil, community_id: nil, part: nil, period: nil, page: nil, per: nil, now: Time.current)
+    def initialize(kind: nil, scope: nil, community_id: nil, period: nil, page: nil, per: nil, now: Time.current)
       @raw_kind = kind
       @raw_scope = scope
       @raw_community_id = community_id
-      @raw_part = part
       @period = period || Period.new
       @raw_page = page
       @raw_per = per
@@ -79,10 +89,6 @@ module PerformanceRankings
         # 実在する music コミュニティが選ばれていなければ全体に倒す(URL 改ざん対策)。
         requested == "community" && community.present? ? "community" : "all"
       end
-    end
-
-    def part
-      @part ||= PART_OPTIONS.include?(@raw_part.to_s) ? @raw_part.to_s : DEFAULT_PART
     end
 
     def period
@@ -104,8 +110,8 @@ module PerformanceRankings
       community&.id
     end
 
-    def parts_kind?
-      kind == "parts"
+    def events_kind?
+      kind == "events"
     end
 
     def period_invalid?
@@ -130,10 +136,6 @@ module PerformanceRankings
         music_domain_id ? Community.where(domain_id: music_domain_id).order(:name).pluck(:name, :id) : []
     end
 
-    def part_options
-      PART_OPTIONS
-    end
-
     # --- 集計結果 ---------------------------------------------------------------
 
     # 競技順位付きの Row を Kaminari でページングして返す。
@@ -143,6 +145,7 @@ module PerformanceRankings
                              .page(page)
                              .per(per)
         attach_customers!(collection)
+        attach_details!(collection)
         collection
       end
     end
@@ -159,10 +162,10 @@ module PerformanceRankings
     private
 
     # 表示順を決定的にする:
-    #   1. 主集計値の降順   2. 補助集計値の降順   3. customer_id の昇順
+    #   1. 主値の降順   2. 補助値の降順   3. 異なる楽曲数の降順   4. customer_id の昇順
     def sorted_rows
       @sorted_rows ||= aggregated_rows.sort_by do |row|
-        [-primary_value(row), -secondary_value(row), row[:customer_id]]
+        [-primary_value(row), -secondary_value(row), -row[:song_count], row[:customer_id]]
       end
     end
 
@@ -182,46 +185,37 @@ module PerformanceRankings
             customer_id: row[:customer_id],
             customer: nil,
             play_count: row[:play_count],
+            event_count: row[:event_count],
             song_count: row[:song_count],
-            part_count: row[:part_breakdown][part].to_i,
-            part_breakdown: row[:part_breakdown]
+            part_breakdown: row[:part_breakdown],
+            detail: nil
           )
         end
         result
       end
     end
 
+    # 競技順位の基準。演奏数ランキング=演奏数、参加イベント数ランキング=参加イベント数。
     def primary_value(row)
-      case kind
-      when "songs" then row[:song_count]
-      when "parts" then row[:part_breakdown][part].to_i
-      else row[:play_count]
-      end
+      events_kind? ? row[:event_count] : row[:play_count]
     end
 
+    # 同率時の第 1 タイブレーク(もう一方の主値)。
     def secondary_value(row)
-      case kind
-      when "songs" then row[:play_count]
-      when "parts" then row[:play_count]
-      else row[:song_count]
-      end
+      events_kind? ? row[:play_count] : row[:event_count]
     end
 
-    # SQL 集計結果を Ruby の Hash 配列へ。parts ランキングは指定パート実績 0 の行を除外する。
+    # SQL 集計結果を Ruby の Hash 配列へ。
     def aggregated_rows
-      @aggregated_rows ||= begin
-        rows = aggregation.map do |record|
-          breakdown = PART_OPTIONS.index_with { |name| record["cnt_#{name.downcase}"].to_i }
-          {
-            customer_id: record["customer_id"].to_i,
-            play_count: record["play_count"].to_i,
-            song_count: record["song_count"].to_i,
-            part_breakdown: breakdown
-          }
-        end
-
-        rows.select! { |row| row[:part_breakdown][part].to_i.positive? } if parts_kind?
-        rows
+      @aggregated_rows ||= aggregation.map do |record|
+        breakdown = PART_OPTIONS.index_with { |name| record["cnt_#{name.downcase}"].to_i }
+        {
+          customer_id: record["customer_id"].to_i,
+          play_count: record["play_count"].to_i,
+          event_count: record["event_count"].to_i,
+          song_count: record["song_count"].to_i,
+          part_breakdown: breakdown
+        }
       end
     end
 
@@ -266,13 +260,15 @@ module PerformanceRankings
       end.join(",\n          ")
 
       # 内側のクエリで (customer, event, song_master, 正規化パート) 単位に GROUP BY して
-      # 重複エントリーを 1 行へ潰す。外側は customer ごとに件数を数えるだけ。
+      # 重複エントリーを 1 行へ潰す。外側は customer ごとに件数・DISTINCT イベント数・
+      # DISTINCT 楽曲数を数えるだけ。
       # SQLite(テスト)/ MySQL(本番)の両対応のため、複合キーの COUNT(DISTINCT ...) や
       # CONCAT_WS を使わずこの 2 段構成にする。
       sql = <<~SQL.squish
         SELECT
           base.customer_id AS customer_id,
           COUNT(*) AS play_count,
+          COUNT(DISTINCT base.event_id) AS event_count,
           COUNT(DISTINCT base.song_master_id) AS song_count,
           #{part_breakdown_selects}
         FROM (
@@ -309,6 +305,23 @@ module PerformanceRankings
       customers_by_id = Customer.where(id: ids).with_attached_profile_image.index_by(&:id)
       collection.each { |row| row.customer = customers_by_id[row.customer_id] }
       collection.reject! { |row| row.customer.nil? }
+    end
+
+    # 現在ページの Row にだけ展開詳細を割り当てる。一覧と同一の scope・period 条件で
+    # ページ分をまとめて 1 クエリ取得する(アコーディオンを開くたびの遅延読み込みはしない)。
+    def attach_details!(collection)
+      ids = collection.map(&:customer_id).uniq
+      return if ids.empty?
+
+      details = CustomerDetailsQuery.new(
+        customer_ids: ids,
+        scope: scope,
+        community_id: community_id,
+        period: period,
+        now: @now
+      ).call
+
+      collection.each { |row| row.detail = details[row.customer_id] }
     end
 
     def music_domain_id

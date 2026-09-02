@@ -9,7 +9,6 @@ class Public::PerformanceRankingsController < ApplicationController
       kind: params[:kind],
       scope: params[:scope],
       community_id: params[:community_id],
-      part: params[:part],
       period: PerformanceRankings::Period.new(
         preset: params[:period],
         start_on: params[:start_on],
