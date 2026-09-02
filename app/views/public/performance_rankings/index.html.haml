@@ -13,6 +13,8 @@
       %br/
       気になるメンバーの詳細を開くと、参加イベントや演奏した楽曲、担当パートも確認できます。
 
+  = render "public/shared/ranking_type_nav", current: :performances
+
   = render "filters", ranking: @ranking
 
   - if @ranking.period_invalid?

@@ -59,7 +59,7 @@
     .col-md-9
       = render "upcoming_events", community: @community, events: @upcoming_events, more: @more_upcoming_events
       .community-show-ranking-link
-        = link_to "このコミュニティの演奏実績ランキングを見る",
+        = link_to "このコミュニティのユーザー演奏実績ランキングを見る",
           public_performance_rankings_path(scope: "community", community_id: @community.id),
           class: "btn btn-sm btn-outline-info community-show-btn",
           data: { turbolinks: false }

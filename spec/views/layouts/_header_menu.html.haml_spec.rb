@@ -69,10 +69,10 @@ RSpec.describe "layouts/_header_menu", type: :view do
       ])
     end
 
-    it "プロフィールドロップダウンに 6 項目（マイページ / 演奏実績ランキング / プランUPGRADE / BeMyStyleとは？ / ご意見BOX / ログアウト）がある" do
+    it "プロフィールドロップダウンに 6 項目（マイページ / ユーザー演奏実績ランキング / プランUPGRADE / BeMyStyleとは？ / ご意見BOX / ログアウト）がある" do
       menu = profile_menu.at_css(".dropdown-menu")
       link_labels = menu.css("a.dropdown-item").map { |a| a.text.gsub(/\s+/, "") }
-      expect(link_labels).to eq(%w[マイページ 演奏実績ランキング プランUPGRADE BeMyStyleとは？ ご意見BOX])
+      expect(link_labels).to eq(%w[マイページ ユーザー演奏実績ランキング プランUPGRADE BeMyStyleとは？ ご意見BOX])
 
       logout = menu.at_css("form.customer-profile-menu__logout-form button")
       expect(logout.text.strip).to eq("ログアウト")

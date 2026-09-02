@@ -117,6 +117,49 @@ RSpec.describe "Public::PerformanceRankings", type: :request do
     end
   end
 
+  describe "ランキングの種類切り替え" do
+    before { sign_in viewer }
+
+    it "成立楽曲 / ユーザー演奏実績 の 2 種類が表示されること" do
+      get public_performance_rankings_path
+      nav = Nokogiri::HTML(response.body).at_css(".ranking-type-nav")
+      expect(nav).to be_present
+      expect(nav.text).to include("成立楽曲")
+      expect(nav.text).to include("ユーザー演奏実績")
+    end
+
+    it "ユーザー演奏実績側が選択状態(aria-current=page)で、その側だけに付くこと" do
+      get public_performance_rankings_path
+      nav = Nokogiri::HTML(response.body).at_css(".ranking-type-nav")
+      current = nav.css('[aria-current="page"]')
+      expect(current.size).to eq 1
+      expect(current.first.text.strip).to eq("ユーザー演奏実績")
+    end
+
+    it "成立楽曲ランキングへのリンクを持つこと" do
+      get public_performance_rankings_path
+      nav = Nokogiri::HTML(response.body).at_css(".ranking-type-nav")
+      link = nav.css("a").find { |a| a.text.strip == "成立楽曲" }
+      expect(link["href"]).to eq(public_song_rankings_path)
+    end
+
+    it "種類切り替えとは別に、ランキング基準(演奏数 / 参加イベント数)の切り替えも表示すること" do
+      get public_performance_rankings_path
+      doc = Nokogiri::HTML(response.body)
+      kind_select = doc.at_css("select#kind")
+      expect(kind_select).to be_present
+      expect(kind_select.css("option").map(&:text)).to contain_exactly("演奏数", "参加イベント数")
+      # 上位の種類ナビの中に基準セレクトを入れ子にしない(別階層)。
+      expect(doc.at_css(".ranking-type-nav select#kind")).to be_nil
+    end
+
+    it "未ログインでユーザー演奏実績ランキングを開くとログイン画面へ遷移すること(認証仕様の維持)" do
+      sign_out viewer
+      get public_performance_rankings_path
+      expect(response).to redirect_to(new_customer_session_path)
+    end
+  end
+
   describe "展開詳細(インライン)" do
     before { sign_in viewer }
 

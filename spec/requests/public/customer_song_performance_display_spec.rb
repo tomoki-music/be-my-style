@@ -39,7 +39,7 @@ RSpec.describe "プロフィール画面での演奏実績・演奏可能曲の�
       get public_customer_path(viewer)
 
       # ページ全体ではなく演奏実績セクション固有のDOMで判定する
-      # (共通ヘッダーのナビ項目「演奏実績ランキング」が本文に "演奏実績" を含むため)。
+      # (共通ヘッダーのナビ項目「ユーザー演奏実績ランキング」が本文に "演奏実績" を含むため)。
       expect(response.body).not_to include("performance-history-scroll")
     end
 
@@ -70,7 +70,7 @@ RSpec.describe "プロフィール画面での演奏実績・演奏可能曲の�
       get public_customer_path(viewer)
 
       # ページ全体ではなく演奏実績セクション固有のDOMで判定する
-      # (共通ヘッダーのナビ項目「演奏実績ランキング」が本文に "演奏実績" を含むため)。
+      # (共通ヘッダーのナビ項目「ユーザー演奏実績ランキング」が本文に "演奏実績" を含むため)。
       expect(response.body).not_to include("performance-history-scroll")
     end
   end

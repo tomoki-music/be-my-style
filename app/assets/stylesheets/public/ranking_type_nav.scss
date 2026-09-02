@@ -1,0 +1,44 @@
+// ランキングの種類切り替え(成立楽曲 / ユーザー演奏実績)。
+// 成立楽曲ランキング・ユーザー演奏実績ランキングの両画面で共有する共通ナビ。
+// PC は横並び、スマートフォンは横幅いっぱいに 2 分割して折り返し・横スクロールを避ける。
+
+.ranking-type-nav {
+  margin: 14px 0;
+}
+
+.ranking-type-nav__label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #5a6b7c;
+  margin-bottom: 6px;
+}
+
+.ranking-type-nav__group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ranking-type-nav__tab {
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+
+  // 選択中タブ(span)はポインタ操作の対象にしない。
+  &--active {
+    cursor: default;
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .ranking-type-nav__group {
+    width: 100%;
+  }
+
+  .ranking-type-nav__tab {
+    flex: 1 1 0;
+    text-align: center;
+  }
+}
