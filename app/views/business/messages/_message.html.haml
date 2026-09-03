@@ -5,6 +5,6 @@
     = customer_profile_name_link(message.customer, { class: "comment-user" }, profile_path: business_customer_path(message.customer))
     - if message.stamped?
       %p.comment-text
-        %span.stamp-badge= message.stamp_label
+        = render "shared/stamp_display", stamp: message
     - else
       %p.comment-text= message.body

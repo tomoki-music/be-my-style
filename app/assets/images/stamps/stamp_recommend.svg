@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="おすすめ">
+  <title>おすすめ</title>
+  <circle cx="120" cy="102" r="82" fill="#FFC24B"/>
+  <circle cx="120" cy="102" r="82" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="4"/>
+  <path d="M64 60h112c9 0 16 7 16 16v40c0 9-7 16-16 16h-56l-26 22v-22h-30c-9 0-16-7-16-16V76c0-9 7-16 16-16z" fill="#ffffff" stroke="#40332F" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M120 74l10 21 23 3-17 16 4 23-20-11-20 11 4-23-17-16 23-3z" fill="#FFC24B" stroke="#40332F" stroke-width="4" stroke-linejoin="round"/>
+  <g fill="#40332F">
+    <ellipse cx="150" cy="112" rx="7" ry="5" transform="rotate(-18 150 112)"/>
+    <rect x="155" y="88" width="3" height="24" rx="1.5"/>
+  </g>
+  <text x="120" y="223" text-anchor="middle" font-family="'Hiragino Kaku Gothic ProN','Yu Gothic',Meiryo,sans-serif" font-size="34" font-weight="700" fill="#40332F">おすすめ</text>
+</svg>

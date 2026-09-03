@@ -16,7 +16,7 @@
             = link_to '削除', public_event_request_path(request.event, request), method: :delete, remote: true, class: "btn btn-danger", data: { 'turbolinks': false, confirm: "本当に削除しますか？" }
       .request-beneath
         - if request.stamped?
-          %span.stamp-badge= request.stamp_label
+          = render "shared/stamp_display", stamp: request
         - else
           .markdown-body
             = mention_html_for_request(request, valid_mention_customer_ids)

@@ -15,7 +15,7 @@
             = link_to '削除', public_activity_comment_path(comment.activity, comment), method: :delete, remote: true, class: "btn btn-danger", data: { 'turbolinks': false, confirm: "本当に削除しますか？" }
       .comment-beneath
         - if comment.stamped?
-          %span.stamp-badge= comment.stamp_label
+          = render "shared/stamp_display", stamp: comment
         - else
           = comment.comment
         %br

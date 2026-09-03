@@ -132,6 +132,59 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
+  describe 'スタンプ関連ヘルパー' do
+    describe '#stamp_options / #stamp_choices' do
+      it 'stamp_options は新イラストスタンプ10種の { key => 表示名 } を返す（レガシー絵文字は含めない）' do
+        options = helper.stamp_options
+
+        expect(options.size).to eq 10
+        expect(options['like']).to eq 'いいね'
+        expect(options.keys).not_to include('clap', 'fire')
+      end
+
+      it 'stamp_choices は label と asset を持つ定義一覧を返す' do
+        expect(helper.stamp_choices['thanks']).to eq(label: 'ありがとう', asset: 'stamps/stamp_thanks.svg')
+      end
+    end
+
+    describe '#stamp_label_for' do
+      it '新イラストスタンプキーの表示名を解決する' do
+        expect(helper.stamp_label_for('good_job')).to eq 'お疲れ様'
+      end
+
+      it 'レガシー絵文字キーも従来どおり解決する（後方互換）' do
+        expect(helper.stamp_label_for('fire')).to eq '🔥 アツい！'
+      end
+
+      it '未知のキーは nil を返す' do
+        expect(helper.stamp_label_for('bogus')).to be_nil
+      end
+    end
+
+    describe '#stamp_image_tag' do
+      def fragment(html)
+        Nokogiri::HTML.fragment(html)
+      end
+
+      it 'イラストスタンプは定義から解決した src と alt を持つ img を返す' do
+        img = fragment(helper.stamp_image_tag('wonderful')).at_css('img')
+
+        expect(img['src']).to include('stamps/stamp_wonderful')
+        expect(img['alt']).to eq '素敵'
+      end
+
+      it 'クライアント由来の文字列を src に使わない（キーで定義を引くだけ）' do
+        expect(helper.stamp_image_tag('https://evil.example.com/x.svg')).to be_nil
+        expect(helper.stamp_image_tag('../../secret.svg')).to be_nil
+        expect(helper.stamp_image_tag('<script>')).to be_nil
+      end
+
+      it 'レガシー絵文字キーは img を出さない（nil）' do
+        expect(helper.stamp_image_tag('clap')).to be_nil
+      end
+    end
+  end
+
   describe '#customer_profile_image_tag' do
     before do
       allow(helper).to receive(:image_tag).and_return('<img class="user-profile-image">'.html_safe)

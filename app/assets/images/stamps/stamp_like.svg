@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="いいね">
+  <title>いいね</title>
+  <circle cx="120" cy="102" r="82" fill="#FFB86B"/>
+  <circle cx="120" cy="102" r="82" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="4"/>
+  <g fill="#ffffff">
+    <ellipse cx="150" cy="118" rx="13" ry="10" transform="rotate(-18 150 118)"/>
+    <rect x="160" y="72" width="6" height="48" rx="3"/>
+    <path d="M166 72c17 5 15 24 15 24-5-13-15-14-15-14z"/>
+  </g>
+  <g fill="#ffffff" stroke="#40332F" stroke-width="5" stroke-linejoin="round">
+    <path d="M74 96h16l14-22c3-5 10-4 11 3l-3 19h22c6 0 10 5 8 11l-10 34c-1 6-6 9-12 9H74z"/>
+    <rect x="58" y="94" width="18" height="54" rx="4"/>
+  </g>
+  <text x="120" y="223" text-anchor="middle" font-family="'Hiragino Kaku Gothic ProN','Yu Gothic',Meiryo,sans-serif" font-size="36" font-weight="700" fill="#40332F">いいね</text>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="お疲れ様">
+  <title>お疲れ様</title>
+  <circle cx="120" cy="102" r="82" fill="#7FB2F0"/>
+  <circle cx="120" cy="102" r="82" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="4"/>
+  <g fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round">
+    <path d="M104 58c-6 7-6 14 0 21s6 14 0 21"/>
+    <path d="M128 54c-6 7-6 14 0 21s6 14 0 21"/>
+  </g>
+  <g fill="#ffffff" stroke="#40332F" stroke-width="5" stroke-linejoin="round">
+    <path d="M78 108h74l-8 44c-1 8-8 14-16 14h-26c-8 0-15-6-16-14z"/>
+    <path d="M152 116h12c8 0 14 6 14 14s-6 14-14 14h-8" fill="none" stroke-linecap="round"/>
+  </g>
+  <text x="120" y="223" text-anchor="middle" font-family="'Hiragino Kaku Gothic ProN','Yu Gothic',Meiryo,sans-serif" font-size="34" font-weight="700" fill="#40332F">お疲れ様</text>
+</svg>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="また！">
+  <title>また！</title>
+  <circle cx="120" cy="102" r="82" fill="#4FC5D6"/>
+  <circle cx="120" cy="102" r="82" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="4"/>
+  <g fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round">
+    <path d="M150 58c9 4 15 12 16 22"/>
+    <path d="M158 46c14 6 23 19 24 36"/>
+  </g>
+  <g fill="#ffffff" stroke="#40332F" stroke-width="5" stroke-linejoin="round">
+    <path d="M78 150c-6-14-10-30-10-40 0-6 8-7 10-1l6 16V70c0-6 9-6 9 0v34l4-40c1-6 10-5 10 1l-1 39 5-31c1-6 10-5 10 1l-2 45c-1 20-14 34-31 34-9 0-15-4-20-13z"/>
+  </g>
+  <g fill="#ffffff">
+    <ellipse cx="150" cy="120" rx="10" ry="8" transform="rotate(-18 150 120)"/>
+    <rect x="158" y="86" width="5" height="34" rx="2"/>
+    <path d="M163 86c13 4 11 18 11 18-4-10-11-11-11-11z"/>
+  </g>
+  <text x="120" y="223" text-anchor="middle" font-family="'Hiragino Kaku Gothic ProN','Yu Gothic',Meiryo,sans-serif" font-size="36" font-weight="700" fill="#40332F">また！</text>
+</svg>

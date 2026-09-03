@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="快調です">
+  <title>快調です</title>
+  <circle cx="120" cy="102" r="82" fill="#6FD07A"/>
+  <circle cx="120" cy="102" r="82" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="4"/>
+  <path d="M70 140l24-26 20 16 34-42" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M138 66h32v32" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#ffffff" stroke="#40332F" stroke-width="4" stroke-linejoin="round">
+    <ellipse cx="86" cy="150" rx="12" ry="9" transform="rotate(-18 86 150)"/>
+    <rect x="94" y="112" width="5" height="38" rx="2.5"/>
+    <path d="M99 112c14 4 12 19 12 19-4-11-12-12-12-12z"/>
+  </g>
+  <text x="120" y="223" text-anchor="middle" font-family="'Hiragino Kaku Gothic ProN','Yu Gothic',Meiryo,sans-serif" font-size="34" font-weight="700" fill="#40332F">快調です</text>
+</svg>

@@ -25,12 +25,29 @@ module ApplicationHelper
     end
   end
 
+  # 新規投稿用のスタンプ一覧({ key => 表示名 })。レガシー絵文字スタンプは含めない。
   def stamp_options
-    Stampable::STAMP_OPTIONS
+    Stampable::STAMP_DEFINITIONS.transform_values { |definition| definition[:label] }
   end
 
+  # スタンプピッカー用の定義一覧({ key => { label:, asset: } })。
+  def stamp_choices
+    Stampable::STAMP_DEFINITIONS
+  end
+
+  # 保存値から表示名を解決する。新イラスト・レガシー絵文字のどちらのキーにも対応。
   def stamp_label_for(stamp_type)
-    stamp_options[stamp_type.to_s]
+    key = stamp_type.to_s
+    Stampable::STAMP_DEFINITIONS.dig(key, :label) || Stampable::LEGACY_STAMP_LABELS[key]
+  end
+
+  # イラストスタンプの画像タグ。パスは定義から解決し、alt には表示名を入れる。
+  # イラストスタンプでないキー(レガシー絵文字・不正値)の場合は nil を返す。
+  def stamp_image_tag(stamp_type, html_options = {})
+    definition = Stampable::STAMP_DEFINITIONS[stamp_type.to_s]
+    return if definition.blank?
+
+    image_tag(definition[:asset], html_options.reverse_merge(alt: definition[:label]))
   end
 
   def prefecture_options_for_select
