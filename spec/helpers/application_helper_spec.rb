@@ -133,17 +133,46 @@ RSpec.describe ApplicationHelper, type: :helper do
   end
 
   describe 'スタンプ関連ヘルパー' do
-    describe '#stamp_options / #stamp_choices' do
-      it 'stamp_options は新イラストスタンプ10種の { key => 表示名 } を返す（レガシー絵文字は含めない）' do
+    describe '#stamp_options' do
+      it '常時表示ピッカー用にシンプルカテゴリ10種の { key => 表示名 } を返す（人物/どうぶつ/レガシーは含めない）' do
         options = helper.stamp_options
 
         expect(options.size).to eq 10
         expect(options['like']).to eq 'いいね'
-        expect(options.keys).not_to include('clap', 'fire')
+        expect(options.keys).not_to include('clap', 'fire', 'character_like', 'animal_got_it')
+      end
+    end
+
+    describe '#stamp_choices_by_category' do
+      it 'タブ順(シンプル/人物/どうぶつ)で各カテゴリの定義を 10 / 10 / 6 件返す' do
+        by_category = helper.stamp_choices_by_category
+
+        expect(by_category.keys).to eq %i[simple human animal]
+        expect(by_category[:simple].size).to eq 10
+        expect(by_category[:human].size).to eq 10
+        expect(by_category[:animal].size).to eq 6
+        expect(by_category[:human]['character_like']).to include(label: 'いいね', asset: 'stamps/stamp_character_like.png')
+      end
+    end
+
+    describe '#stamp_select_options' do
+      it '全カテゴリをグループ化して返す' do
+        groups = helper.stamp_select_options
+
+        expect(groups.map(&:first)).to eq %w[シンプル 人物 どうぶつ]
+        expect(groups.sum { |(_label, choices)| choices.size }).to eq 26
       end
 
-      it 'stamp_choices は label と asset を持つ定義一覧を返す' do
-        expect(helper.stamp_choices['thanks']).to eq(label: 'ありがとう', asset: 'stamps/stamp_thanks.svg')
+      it '編集対象がレガシーキーのときは「以前のスタンプ」グループにそのキーを残す（保存時に消さない）' do
+        groups = helper.stamp_select_options('fire')
+
+        legacy_group = groups.find { |(label, _choices)| label == '以前のスタンプ' }
+        expect(legacy_group).to be_present
+        expect(legacy_group.last.flatten).to include('fire')
+      end
+
+      it '既知のイラストキーのときは「以前のスタンプ」グループを増やさない' do
+        expect(helper.stamp_select_options('like').map(&:first)).not_to include('以前のスタンプ')
       end
     end
 
@@ -171,6 +200,16 @@ RSpec.describe ApplicationHelper, type: :helper do
 
         expect(img['src']).to include('stamps/stamp_wonderful')
         expect(img['alt']).to eq '素敵'
+      end
+
+      it '人物・どうぶつのPNGスタンプも定義から src / alt を解決する' do
+        human = fragment(helper.stamp_image_tag('character_wonderful')).at_css('img')
+        expect(human['src']).to match(%r{stamps/stamp_character_wonderful.*\.png})
+        expect(human['alt']).to eq '素敵'
+
+        animal = fragment(helper.stamp_image_tag('animal_best')).at_css('img')
+        expect(animal['src']).to match(%r{stamps/stamp_animal_best.*\.png})
+        expect(animal['alt']).to eq '最高！'
       end
 
       it 'クライアント由来の文字列を src に使わない（キーで定義を引くだけ）' do

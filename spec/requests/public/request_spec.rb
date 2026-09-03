@@ -141,12 +141,26 @@ RSpec.describe "Public::Requests", type: :request do
     end
 
     context "スタンプ投稿" do
-      it "スタンプ選択ボタンとパネル(10種)がリクエストフォームに表示されること" do
+      it "スタンプ選択ボタンと3タブ(シンプル/人物/どうぶつ)パネルがリクエストフォームに表示されること" do
         get public_event_path(event)
 
         expect(response.body).to include('data-stamp-picker-toggle')
+        expect(response.body).to match(/data-stamp-tab=["']simple["']/)
+        expect(response.body).to match(/data-stamp-tab=["']human["']/)
+        expect(response.body).to match(/data-stamp-tab=["']animal["']/)
         Stampable::STAMP_DEFINITIONS.each_value do |definition|
           expect(response.body).to include(definition[:label])
+        end
+      end
+
+      it "3タブに含まれるスタンプ選択肢が 10 / 10 / 6 件であること" do
+        get public_event_path(event)
+
+        doc = Nokogiri::HTML(response.body)
+        { "simple" => 10, "human" => 10, "animal" => 6 }.each do |category, expected_count|
+          panel = doc.at_css(%([data-stamp-tabpanel="#{category}"]))
+          expect(panel).to be_present, "#{category} タブパネルが無い"
+          expect(panel.css(".stamp-choice").size).to eq(expected_count), "#{category} タブの件数が #{expected_count} でない"
         end
       end
 
@@ -161,7 +175,7 @@ RSpec.describe "Public::Requests", type: :request do
         expect(created.request).to be_blank
       end
 
-      it "10種すべてのスタンプを投稿できること" do
+      it "26種(シンプル/人物/どうぶつ)すべてのスタンプを投稿できること" do
         Stampable::STAMP_DEFINITIONS.each_key do |key|
           expect do
             post public_event_requests_path(event_id: event.id),
@@ -170,7 +184,7 @@ RSpec.describe "Public::Requests", type: :request do
         end
       end
 
-      it "投稿したスタンプが正しい画像と代替テキストで一覧に表示されること" do
+      it "投稿したSVGスタンプが正しい画像と代替テキストで一覧に表示されること" do
         post public_event_requests_path(event_id: event.id),
              params: { request: { stamp_type: "wonderful" } }, xhr: true
 
@@ -179,6 +193,17 @@ RSpec.describe "Public::Requests", type: :request do
         expect(response.body).to include("stamp-illustration")
         expect(response.body).to match(%r{stamps/stamp_wonderful[^"']*\.svg})
         expect(response.body).to match(/alt=["']素敵["']/)
+      end
+
+      it "投稿した人物PNGスタンプが正しい画像と代替テキストで一覧に表示されること" do
+        post public_event_requests_path(event_id: event.id),
+             params: { request: { stamp_type: "character_see_you" } }, xhr: true
+
+        get public_event_path(event)
+
+        expect(response.body).to include("stamp-illustration")
+        expect(response.body).to match(%r{stamps/stamp_character_see_you[^"']*\.png})
+        expect(response.body).to match(/alt=["']また！["']/)
       end
 
       it "不正なスタンプキー(任意URL)は保存されず、リクエストが作成されないこと" do

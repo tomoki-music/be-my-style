@@ -405,6 +405,35 @@ body {
   color: #6b7280;
 }
 
+// 「シンプル / 人物 / どうぶつ」タブ。スマホでも横スクロールを出さないよう
+// タブは幅を等分し、ラベルは折り返さない。
+.stamp-picker__tabs{
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.stamp-picker__tab{
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 6px 4px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover{ color: #7c2d12; }
+  &:focus-visible{ outline: 2px solid #fb923c; outline-offset: 2px; }
+  &[aria-selected="true"]{ color: #7c2d12; border-bottom-color: #fb923c; }
+}
+
+.stamp-picker__tabpanel[hidden]{ display: none; }
+
 .stamp-picker__grid{
   list-style: none;
   margin: 0;
@@ -449,6 +478,7 @@ body {
   width: 72px;
   height: 72px;
   max-width: 100%;
+  object-fit: contain;
   pointer-events: none;
 }
 

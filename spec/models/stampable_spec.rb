@@ -18,12 +18,24 @@ RSpec.describe Stampable, type: :model do
   end
 
   describe '許可されたスタンプキーのみ保存できる' do
-    it '新しいイラストスタンプ10種すべてを stamp_type に保存できる' do
-      expect(Stampable::STAMP_DEFINITIONS.keys.size).to eq 10
+    it 'イラストスタンプ26種(シンプル10 / 人物10 / どうぶつ6)すべてを stamp_type に保存できる' do
+      by_category = Stampable::STAMP_DEFINITIONS.values.group_by { |definition| definition[:category] }
+      expect(by_category[:simple].size).to eq 10
+      expect(by_category[:human].size).to eq 10
+      expect(by_category[:animal].size).to eq 6
+      expect(Stampable::STAMP_DEFINITIONS.keys.size).to eq 26
 
       Stampable::STAMP_DEFINITIONS.each_key do |key|
         record = build_request(stamp_type: key)
         expect(record).to be_valid, "#{key} が有効になっていない"
+      end
+    end
+
+    it 'レガシー絵文字5種を含めた許可リストになっている' do
+      expect(Stampable::LEGACY_STAMP_LABELS.keys.size).to eq 5
+      expect(Stampable::VALID_STAMP_TYPES).to match_array(Stampable::STAMP_DEFINITIONS.keys | Stampable::LEGACY_STAMP_LABELS.keys)
+      Stampable::LEGACY_STAMP_LABELS.each_key do |key|
+        expect(Stampable::VALID_STAMP_TYPES).to include(key)
       end
     end
 
@@ -90,20 +102,36 @@ RSpec.describe Stampable, type: :model do
       expect(build_request(stamp_type: nil).illustration_stamp?).to eq false
     end
 
-    it 'stamp_definition は label と asset を返す' do
+    it 'stamp_definition は label / asset / category を返す' do
       definition = build_request(stamp_type: 'thanks').stamp_definition
       expect(definition[:label]).to eq 'ありがとう'
       expect(definition[:asset]).to eq 'stamps/stamp_thanks.svg'
+      expect(definition[:category]).to eq :simple
+    end
+
+    it '人物・どうぶつスタンプも stamp_label / illustration_stamp? が解決する' do
+      expect(build_request(stamp_type: 'character_doing_great').stamp_label).to eq '快調です'
+      expect(build_request(stamp_type: 'character_doing_great').illustration_stamp?).to eq true
+      expect(build_request(stamp_type: 'animal_got_it').stamp_label).to eq '了解！'
+      expect(build_request(stamp_type: 'animal_got_it').illustration_stamp?).to eq true
     end
 
     it 'stamp_label はイラストスタンプの日本語名を返す' do
       expect(build_request(stamp_type: 'doing_great').stamp_label).to eq '快調です'
     end
 
-    it 'アセットパスはすべて stamps/ 配下の .svg（外部URLでない）' do
+    it 'アセットパスはすべて stamps/ 配下の .svg / .png（外部URLでない）' do
       Stampable::STAMP_DEFINITIONS.each_value do |definition|
-        expect(definition[:asset]).to match(%r{\Astamps/stamp_[a-z_]+\.svg\z})
+        expect(definition[:asset]).to match(%r{\Astamps/stamp_[a-z_]+\.(svg|png)\z})
       end
+    end
+
+    it 'カテゴリ別の定義一覧(definitions_by_category)がタブ順で 10 / 10 / 6 件を返す' do
+      by_category = Stampable.definitions_by_category
+      expect(by_category.keys).to eq %i[simple human animal]
+      expect(by_category[:simple].size).to eq 10
+      expect(by_category[:human].size).to eq 10
+      expect(by_category[:animal].size).to eq 6
     end
   end
 end

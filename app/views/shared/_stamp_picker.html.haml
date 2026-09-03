@@ -1,9 +1,11 @@
 -# リクエスト / チャット投稿フォーム用のスタンプ選択パネル。
 -# context: :request で event: を、context: :chat で chat_room: / form_url: を受け取る。
+-# パネルは「シンプル / 人物 / どうぶつ」の3タブ構成。タブ切替では送信せず、
 -# 各スタンプは独立した mini フォームで、タップ(submit)で即送信する。誤送信防止のため
--# rails-ujs の confirm ダイアログを挟む。パネルの開閉は stamp_picker.js が担当する。
+-# rails-ujs の confirm ダイアログを挟む。パネルの開閉・タブ切替は stamp_picker.js が担当する。
 - context = local_assigns.fetch(:context)
 - panel_id = "stamp-picker-panel--#{context}"
+- categories = stamp_choices_by_category
 .stamp-picker-field{ data: { "stamp-picker" => "true" } }
   %button.stamp-picker__toggle{ type: "button", "aria-expanded" => "false", "aria-controls" => panel_id,
       data: { "stamp-picker-toggle" => "true" } }
@@ -11,21 +13,34 @@
     %span.stamp-picker__toggle-label スタンプ
   .stamp-picker__panel{ id: panel_id, hidden: true, data: { "stamp-picker-panel" => "true" } }
     %p.stamp-picker__hint スタンプをタップすると送信します
-    %ul.stamp-picker__grid{ role: "list" }
-      - stamp_choices.each do |key, definition|
-        - confirm_text = "「#{definition[:label]}」スタンプを送信します。よろしいですか？"
-        - aria_label = "#{definition[:label]}スタンプを送信"
-        %li.stamp-picker__cell
-          - if context == :request
-            = form_with model: [:public, event, Request.new], local: false, html: { class: "stamp-picker__form" } do |f|
-              = f.hidden_field :stamp_type, value: key
-              %button.stamp-choice{ type: "submit", "aria-label" => aria_label, data: { confirm: confirm_text, "turbolinks" => false } }
-                %img.stamp-choice__img{ src: asset_path(definition[:asset]), alt: "", width: 72, height: 72, loading: "lazy" }
-                %span.stamp-choice__label= definition[:label]
-          - else
-            = form_with model: [:public, ChatMessage.new], url: form_url, local: true, html: { class: "stamp-picker__form" } do |f|
-              = f.hidden_field :chat_room_id, value: chat_room.id
-              = f.hidden_field :stamp_type, value: key
-              %button.stamp-choice{ type: "submit", "aria-label" => aria_label, data: { confirm: confirm_text } }
-                %img.stamp-choice__img{ src: asset_path(definition[:asset]), alt: "", width: 72, height: 72, loading: "lazy" }
-                %span.stamp-choice__label= definition[:label]
+    .stamp-picker__tabs{ role: "tablist", "aria-label" => "スタンプの種類" }
+      - categories.each_with_index do |(category, _definitions), index|
+        %button.stamp-picker__tab{ type: "button", role: "tab",
+            id: "stamp-tab--#{context}-#{category}",
+            "aria-selected" => (index.zero? ? "true" : "false"),
+            "aria-controls" => "stamp-tabpanel--#{context}-#{category}",
+            tabindex: (index.zero? ? "0" : "-1"),
+            data: { "stamp-tab" => category } }
+          = Stampable::STAMP_CATEGORY_LABELS[category]
+    - categories.each_with_index do |(category, definitions), index|
+      .stamp-picker__tabpanel{ id: "stamp-tabpanel--#{context}-#{category}", role: "tabpanel",
+          "aria-labelledby" => "stamp-tab--#{context}-#{category}", hidden: !index.zero?,
+          data: { "stamp-tabpanel" => category } }
+        %ul.stamp-picker__grid{ role: "list" }
+          - definitions.each do |key, definition|
+            - confirm_text = "「#{definition[:label]}」スタンプを送信します。よろしいですか？"
+            - aria_label = "#{definition[:label]}スタンプを送信"
+            %li.stamp-picker__cell
+              - if context == :request
+                = form_with model: [:public, event, Request.new], local: false, html: { class: "stamp-picker__form" } do |f|
+                  = f.hidden_field :stamp_type, value: key
+                  %button.stamp-choice{ type: "submit", "aria-label" => aria_label, data: { confirm: confirm_text, "turbolinks" => false } }
+                    %img.stamp-choice__img{ src: asset_path(definition[:asset]), alt: "", width: 72, height: 72, loading: "lazy" }
+                    %span.stamp-choice__label= definition[:label]
+              - else
+                = form_with model: [:public, ChatMessage.new], url: form_url, local: true, html: { class: "stamp-picker__form" } do |f|
+                  = f.hidden_field :chat_room_id, value: chat_room.id
+                  = f.hidden_field :stamp_type, value: key
+                  %button.stamp-choice{ type: "submit", "aria-label" => aria_label, data: { confirm: confirm_text } }
+                    %img.stamp-choice__img{ src: asset_path(definition[:asset]), alt: "", width: 72, height: 72, loading: "lazy" }
+                    %span.stamp-choice__label= definition[:label]

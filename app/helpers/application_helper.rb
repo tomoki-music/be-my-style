@@ -25,14 +25,38 @@ module ApplicationHelper
     end
   end
 
-  # 新規投稿用のスタンプ一覧({ key => 表示名 })。レガシー絵文字スタンプは含めない。
+  # 常時表示のシンプルなピル型ピッカー(活動コメント・法人投稿コメント)用の一覧
+  # ({ key => 表示名 })。3タブ化したリクエスト/チャットのピッカーとは別物で、
+  # ここではシンプルカテゴリ(既存SVG 10種)のみを出す。レガシー絵文字は含めない。
   def stamp_options
-    Stampable::STAMP_DEFINITIONS.transform_values { |definition| definition[:label] }
+    Stampable::STAMP_DEFINITIONS
+      .select { |_key, definition| definition[:category] == :simple }
+      .transform_values { |definition| definition[:label] }
   end
 
-  # スタンプピッカー用の定義一覧({ key => { label:, asset: } })。
-  def stamp_choices
-    Stampable::STAMP_DEFINITIONS
+  # リクエスト/チャットの3タブピッカー用。{ category => { key => { label:, asset:, category: } } }。
+  def stamp_choices_by_category
+    Stampable.definitions_by_category
+  end
+
+  # 管理画面のスタンプ select 用のグループ化オプション。全カテゴリを扱い、
+  # 編集対象レコードがレガシー(絵文字)キーを持つ場合はそのキーも選択肢に残して、
+  # 保存時に不用意に消えないようにする。
+  def stamp_select_options(current_stamp_type = nil)
+    grouped = Stampable::STAMP_CATEGORY_LABELS.map do |category, category_label|
+      choices = Stampable::STAMP_DEFINITIONS
+                .select { |_key, definition| definition[:category] == category }
+                .map { |key, definition| ["#{definition[:label]}（#{key}）", key] }
+      [category_label, choices]
+    end
+
+    key = current_stamp_type.to_s
+    if key.present? && !Stampable::STAMP_DEFINITIONS.key?(key)
+      legacy_label = Stampable::LEGACY_STAMP_LABELS[key] || key
+      grouped << ["以前のスタンプ", [["#{legacy_label}（#{key}）", key]]]
+    end
+
+    grouped
   end
 
   # 保存値から表示名を解決する。新イラスト・レガシー絵文字のどちらのキーにも対応。

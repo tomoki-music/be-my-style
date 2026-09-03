@@ -683,10 +683,16 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
         sign_in customer
       end
 
-      it "スタンプ選択ボタンとパネル(10種)がチャットフォームに表示されること" do
+      it "スタンプ選択ボタンと3タブ(シンプル/人物/どうぶつ)パネルがチャットフォームに表示されること" do
         get public_chat_room_path(chat_room)
 
         expect(response.body).to include('data-stamp-picker-toggle')
+        doc = Nokogiri::HTML(response.body)
+        { "simple" => 10, "human" => 10, "animal" => 6 }.each do |category, expected_count|
+          panel = doc.at_css(%([data-stamp-tabpanel="#{category}"]))
+          expect(panel).to be_present, "#{category} タブパネルが無い"
+          expect(panel.css(".stamp-choice").size).to eq(expected_count)
+        end
         Stampable::STAMP_DEFINITIONS.each_value do |definition|
           expect(response.body).to include(definition[:label])
         end
@@ -704,7 +710,7 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
         expect(created.content).to be_blank
       end
 
-      it "投稿後、チャット画面にスタンプ画像が表示されること" do
+      it "投稿後、チャット画面にSVGスタンプ画像が表示されること" do
         post public_chat_messages_path, params: {
           chat_message: { stamp_type: "see_you", chat_room_id: chat_room.id }
         }
@@ -714,6 +720,18 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
         expect(response.body).to include("stamp-illustration")
         expect(response.body).to match(%r{stamps/stamp_see_you[^"']*\.svg})
         expect(response.body).to match(/alt=["']また！["']/)
+      end
+
+      it "投稿後、チャット画面にどうぶつPNGスタンプ画像が表示されること" do
+        post public_chat_messages_path, params: {
+          chat_message: { stamp_type: "animal_got_it", chat_room_id: chat_room.id }
+        }
+
+        get public_chat_room_path(chat_room)
+
+        expect(response.body).to include("stamp-illustration")
+        expect(response.body).to match(%r{stamps/stamp_animal_got_it[^"']*\.png})
+        expect(response.body).to match(/alt=["']了解！["']/)
       end
 
       it "不正なスタンプキー(任意URL・パストラバーサル・HTML)は保存されないこと" do
