@@ -1,26 +1,30 @@
 %h2 みんなのリクエスト
-= form_with model: [:public, event, request], local: false do |f|
-  .request-markdown-toolbar{ data: { "markdown-toolbar-root" => "request", "preview-url" => preview_public_event_requests_path(event) } }
-    %p.request-markdown-toolbar__hint 文字を選択して、上のボタンから装飾できます
-    .request-markdown-toolbar__buttons{ role: "toolbar", "aria-label" => "Markdown入力補助" }
-      %button.request-markdown-toolbar__btn{ type: "button", data: { "md-action" => "heading" }, title: "見出しを付ける", "aria-label" => "見出しを付ける" }
-        見出し
-      %button.request-markdown-toolbar__btn{ type: "button", data: { "md-action" => "bold" }, title: "太字にする", "aria-label" => "太字にする" }
-        太字
-      %button.request-markdown-toolbar__btn{ type: "button", data: { "md-action" => "unordered-list" }, title: "箇条書きにする", "aria-label" => "箇条書きにする" }
-        箇条書き
-      %button.request-markdown-toolbar__btn{ type: "button", data: { "md-action" => "ordered-list" }, title: "番号リストにする", "aria-label" => "番号リストにする" }
-        番号リスト
-      %button.request-markdown-toolbar__btn{ type: "button", data: { "md-action" => "quote" }, title: "引用にする", "aria-label" => "引用にする" }
-        引用
-      %button.request-markdown-toolbar__btn{ type: "button", data: { "md-action" => "link" }, title: "リンクを挿入する", "aria-label" => "リンクを挿入する" }
-        リンク
-      %button.request-markdown-toolbar__btn.request-markdown-toolbar__btn--preview{ type: "button", data: { "md-action" => "preview" }, "aria-pressed" => "false", title: "入力内容をプレビュー表示する", "aria-label" => "入力内容をプレビュー表示する" }
-        プレビュー
-    .request-markdown-toolbar__pane.request-markdown-toolbar__pane--edit
-      = f.text_area :request, id: "input_request", rows: 5, class: "form-control request-markdown-toolbar__textarea", placeholder: "〇〇の曲をお願いします！\nMarkdown記法と改行が利用できます。", data: { "markdown-toolbar-textarea" => "true" }
-    .request-markdown-toolbar__pane.request-markdown-toolbar__pane--preview{ hidden: true }
-      .markdown-body.request-markdown-toolbar__preview-body
-        %p.markdown-preview-placeholder プレビューする内容がありません
-  = f.submit 'リクエストする', class: "event-request-btn", data: { 'turbolinks': false, confirm: 'リクエストを送信します。よろしいですか？' }
-= render "shared/stamp_picker", context: :request, event: event
+-# テキスト入力欄とスタンプ導線を1枚の投稿カードにまとめ、スタンプも送信手段の
+-# ひとつだと直感的に分かるようにする。スタンプパネルは入れ子フォームを避けるため
+-# 投稿フォームの外（カード内の直後）に置く。
+.post-composer
+  = form_with model: [:public, event, request], local: false do |f|
+    .request-markdown-toolbar{ data: { "markdown-toolbar-root" => "request", "preview-url" => preview_public_event_requests_path(event) } }
+      %p.request-markdown-toolbar__hint 文字を選択して、上のボタンから装飾できます
+      .request-markdown-toolbar__buttons{ role: "toolbar", "aria-label" => "Markdown入力補助" }
+        %button.request-markdown-toolbar__btn{ type: "button", data: { "md-action" => "heading" }, title: "見出しを付ける", "aria-label" => "見出しを付ける" }
+          見出し
+        %button.request-markdown-toolbar__btn{ type: "button", data: { "md-action" => "bold" }, title: "太字にする", "aria-label" => "太字にする" }
+          太字
+        %button.request-markdown-toolbar__btn{ type: "button", data: { "md-action" => "unordered-list" }, title: "箇条書きにする", "aria-label" => "箇条書きにする" }
+          箇条書き
+        %button.request-markdown-toolbar__btn{ type: "button", data: { "md-action" => "ordered-list" }, title: "番号リストにする", "aria-label" => "番号リストにする" }
+          番号リスト
+        %button.request-markdown-toolbar__btn{ type: "button", data: { "md-action" => "quote" }, title: "引用にする", "aria-label" => "引用にする" }
+          引用
+        %button.request-markdown-toolbar__btn{ type: "button", data: { "md-action" => "link" }, title: "リンクを挿入する", "aria-label" => "リンクを挿入する" }
+          リンク
+        %button.request-markdown-toolbar__btn.request-markdown-toolbar__btn--preview{ type: "button", data: { "md-action" => "preview" }, "aria-pressed" => "false", title: "入力内容をプレビュー表示する", "aria-label" => "入力内容をプレビュー表示する" }
+          プレビュー
+      .request-markdown-toolbar__pane.request-markdown-toolbar__pane--edit
+        = f.text_area :request, id: "input_request", rows: 5, class: "form-control request-markdown-toolbar__textarea", placeholder: "〇〇の曲をお願いします！\nMarkdown記法と改行が利用できます。", data: { "markdown-toolbar-textarea" => "true" }
+      .request-markdown-toolbar__pane.request-markdown-toolbar__pane--preview{ hidden: true }
+        .markdown-body.request-markdown-toolbar__preview-body
+          %p.markdown-preview-placeholder プレビューする内容がありません
+    = f.submit 'リクエストする', class: "event-request-btn", data: { 'turbolinks': false, confirm: 'リクエストを送信します。よろしいですか？' }
+  = render "shared/stamp_picker", context: :request, event: event

@@ -358,24 +358,47 @@ body {
   }
 }
 
+// 投稿カード（app/views/public/requests/_form・chat_rooms/_form）。
+// テキスト入力欄・送信ボタン・スタンプ導線を1つの投稿UIとして視覚的にまとめる。
+.post-composer{
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+
+  // カード内に置いた各投稿フォームの外側 margin を打ち消し、カードの padding で
+  // 余白を統一する（フォーム間で間延びしないように）。
+  > form{ margin-bottom: 0; }
+}
+
 // スタンプ選択パネル（app/views/shared/_stamp_picker.html.haml）。
 // 既存の常時表示ピッカー（.stamp-picker / .stamp-button：コメント・法人投稿）とは別物。
+// .post-composer 内で、送信ボタンのすぐ下に区切り線付きで並ぶ。
 .stamp-picker-field{
   position: relative;
-  margin-top: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #e5e7eb;
 }
 
 .stamp-picker__toggle{
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border: 1px solid #d8dee9;
-  border-radius: 999px;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #fdba74;
+  border-radius: 10px;
   background: #fff7ed;
   color: #7c2d12;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
 
   &:hover{ background: #ffedd5; }
@@ -384,11 +407,35 @@ body {
 }
 
 .stamp-picker__toggle-icon{
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+// 開閉状態を示す下向き三角。パネルを開くと上向きに回転する。
+.stamp-picker__toggle-caret{
+  width: 0;
+  height: 0;
+  flex-shrink: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid currentColor;
+  transition: transform 0.15s ease;
+
+  .stamp-picker__toggle[aria-expanded="true"] &{ transform: rotate(180deg); }
+}
+
+.stamp-picker__note{
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
 }
 
 .stamp-picker__panel{
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
   margin-top: 8px;
   padding: 12px;
   border: 1px solid #e5e7eb;
