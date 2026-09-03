@@ -1,16 +1,20 @@
 -# リクエスト / チャット投稿フォーム用のスタンプ選択パネル。
 -# context: :request で event: を、context: :chat で chat_room: / form_url: を受け取る。
+-# テキスト入力欄と同じ投稿カード内に置き、「スタンプも送信手段のひとつ」と分かる導線にする。
 -# パネルは「シンプル / 人物 / どうぶつ」の3タブ構成。タブ切替では送信せず、
 -# 各スタンプは独立した mini フォームで、タップ(submit)で即送信する。誤送信防止のため
 -# rails-ujs の confirm ダイアログを挟む。パネルの開閉・タブ切替は stamp_picker.js が担当する。
 - context = local_assigns.fetch(:context)
 - panel_id = "stamp-picker-panel--#{context}"
+- note_id = "stamp-picker-note--#{context}"
 - categories = stamp_choices_by_category
 .stamp-picker-field{ data: { "stamp-picker" => "true" } }
   %button.stamp-picker__toggle{ type: "button", "aria-expanded" => "false", "aria-controls" => panel_id,
-      data: { "stamp-picker-toggle" => "true" } }
-    %img.stamp-picker__toggle-icon{ src: asset_path("stamps/stamp_like.svg"), alt: "", width: 22, height: 22, "aria-hidden" => "true" }
-    %span.stamp-picker__toggle-label スタンプ
+      "aria-describedby" => note_id, data: { "stamp-picker-toggle" => "true" } }
+    %img.stamp-picker__toggle-icon{ src: asset_path("stamps/stamp_like.svg"), alt: "", width: 24, height: 24, "aria-hidden" => "true" }
+    %span.stamp-picker__toggle-label スタンプを送る
+    %span.stamp-picker__toggle-caret{ "aria-hidden" => "true" }
+  %p.stamp-picker__note{ id: note_id } スタンプだけでも送信できます
   .stamp-picker__panel{ id: panel_id, hidden: true, data: { "stamp-picker-panel" => "true" } }
     %p.stamp-picker__hint スタンプをタップすると送信します
     .stamp-picker__tabs{ role: "tablist", "aria-label" => "スタンプの種類" }
