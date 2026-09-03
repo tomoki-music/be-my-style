@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="OK">
+  <title>OK</title>
+  <circle cx="120" cy="102" r="82" fill="#6BD1A0"/>
+  <circle cx="120" cy="102" r="82" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="4"/>
+  <g fill="#ffffff">
+    <ellipse cx="158" cy="88" rx="11" ry="8" transform="rotate(-18 158 88)"/>
+    <rect x="166" y="52" width="5" height="36" rx="2.5"/>
+    <path d="M171 52c14 4 12 20 12 20-4-11-12-12-12-12z"/>
+  </g>
+  <g fill="#ffffff" stroke="#40332F" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="104" y="70" width="12" height="46" rx="6"/>
+    <rect x="120" y="66" width="12" height="50" rx="6"/>
+    <rect x="136" y="72" width="12" height="44" rx="6"/>
+    <path d="M96 150c-14 0-26-11-26-26 0-13 10-22 22-24 10-2 16-9 24-9h14c6 0 10 4 10 10v22c0 15-12 27-27 27z"/>
+    <circle cx="88" cy="118" r="15" fill="#6BD1A0"/>
+  </g>
+  <text x="120" y="223" text-anchor="middle" font-family="'Hiragino Kaku Gothic ProN','Yu Gothic',Meiryo,sans-serif" font-size="38" font-weight="700" fill="#40332F">OK</text>
+</svg>

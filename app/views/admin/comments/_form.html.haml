@@ -21,7 +21,7 @@
 
       .form-group
         = f.label :stamp_type, "スタンプ"
-        = f.select :stamp_type, [["未設定", ""]] + stamp_options.map { |key, label| [label, key] }, {}, class: "form-control"
+        = f.select :stamp_type, grouped_options_for_select(stamp_select_options(f.object.stamp_type), f.object.stamp_type), { include_blank: "未設定" }, class: "form-control"
 
       .d-flex.justify-content-between
         = link_to "一覧へ戻る", admin_activity_comments_path, class: "btn btn-outline-secondary"

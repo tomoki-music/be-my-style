@@ -22,7 +22,7 @@
       = render "public/chat_rooms/quote_card", chat_message: chat_message
       .partner-content
         - if chat_message.stamped?
-          %span.stamp-badge= chat_message.stamp_label
+          = render "shared/stamp_display", stamp: chat_message
         - elsif chat_message.content.present?
           - if chat_message.markdown?
             - markdown_class = in_thread ? 'markdown-body markdown-body--thread' : 'markdown-body'
@@ -108,7 +108,7 @@
       = render "public/chat_rooms/quote_card", chat_message: chat_message
       .self-content
         - if chat_message.stamped?
-          %span.stamp-badge= chat_message.stamp_label
+          = render "shared/stamp_display", stamp: chat_message
         - elsif chat_message.content.present?
           - if chat_message.markdown?
             - markdown_class = in_thread ? 'markdown-body markdown-body--thread' : 'markdown-body'

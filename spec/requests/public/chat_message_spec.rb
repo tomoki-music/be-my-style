@@ -677,6 +677,82 @@ RSpec.describe "chat_messagesコントローラーのテスト", type: :request 
         expect(ChatMessage.last.content_format).to eq "markdown"
       end
     end
+    context "スタンプ投稿のテスト" do
+      before do
+        create(:chat_room_customer, chat_room: chat_room, customer: customer)
+        sign_in customer
+      end
+
+      it "スタンプ選択ボタンと3タブ(シンプル/人物/どうぶつ)パネルがチャットフォームに表示されること" do
+        get public_chat_room_path(chat_room)
+
+        expect(response.body).to include('data-stamp-picker-toggle')
+        doc = Nokogiri::HTML(response.body)
+        { "simple" => 10, "human" => 10, "animal" => 6 }.each do |category, expected_count|
+          panel = doc.at_css(%([data-stamp-tabpanel="#{category}"]))
+          expect(panel).to be_present, "#{category} タブパネルが無い"
+          expect(panel.css(".stamp-choice").size).to eq(expected_count)
+        end
+        Stampable::STAMP_DEFINITIONS.each_value do |definition|
+          expect(response.body).to include(definition[:label])
+        end
+      end
+
+      it "有効なスタンプキーでメッセージを投稿でき、本文は空で保存されること" do
+        expect do
+          post public_chat_messages_path, params: {
+            chat_message: { stamp_type: "thanks", chat_room_id: chat_room.id }
+          }
+        end.to change(ChatMessage, :count).by(1)
+
+        created = ChatMessage.order(:created_at).last
+        expect(created.stamp_type).to eq "thanks"
+        expect(created.content).to be_blank
+      end
+
+      it "投稿後、チャット画面にSVGスタンプ画像が表示されること" do
+        post public_chat_messages_path, params: {
+          chat_message: { stamp_type: "see_you", chat_room_id: chat_room.id }
+        }
+
+        get public_chat_room_path(chat_room)
+
+        expect(response.body).to include("stamp-illustration")
+        expect(response.body).to match(%r{stamps/stamp_see_you[^"']*\.svg})
+        expect(response.body).to match(/alt=["']また！["']/)
+      end
+
+      it "投稿後、チャット画面にどうぶつPNGスタンプ画像が表示されること" do
+        post public_chat_messages_path, params: {
+          chat_message: { stamp_type: "animal_got_it", chat_room_id: chat_room.id }
+        }
+
+        get public_chat_room_path(chat_room)
+
+        expect(response.body).to include("stamp-illustration")
+        expect(response.body).to match(%r{stamps/stamp_animal_got_it[^"']*\.png})
+        expect(response.body).to match(/alt=["']了解！["']/)
+      end
+
+      it "不正なスタンプキー(任意URL・パストラバーサル・HTML)は保存されないこと" do
+        ["https://evil.example.com/x.svg", "../../etc/passwd", "<script>alert(1)</script>", "not_real"].each do |bad|
+          expect do
+            post public_chat_messages_path, params: {
+              chat_message: { stamp_type: bad, chat_room_id: chat_room.id }
+            }
+          end.not_to change(ChatMessage, :count)
+        end
+      end
+
+      it "スタンプのみのメッセージは編集不可(削除のみ)であること" do
+        post public_chat_messages_path, params: {
+          chat_message: { stamp_type: "ok", chat_room_id: chat_room.id }
+        }
+
+        expect(ChatMessage.order(:created_at).last.content_editable?).to eq false
+      end
+    end
+
     context "previewアクションのテスト" do
       before { sign_in customer }
 

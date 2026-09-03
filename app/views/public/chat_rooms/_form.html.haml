@@ -39,9 +39,4 @@
             %p.markdown-preview-placeholder 入力するとここにプレビューが表示されます
     = f.file_field :attachments, multiple: true, accept: 'image/*,application/pdf'
     = f.submit "メッセージを送信", data: { disable_with: '送信中', confirm: "メッセージを送信しますか？"}, class: 'btn btn-info chat-form-btn'
-  .stamp-picker
-    - stamp_options.each do |stamp_type, label|
-      = form_with model: [:public, ChatMessage.new], url: form_url, local: true, html: { class: "stamp-picker-form" } do |f|
-        = f.hidden_field :chat_room_id, value: chat_room.id
-        = f.hidden_field :stamp_type, value: stamp_type
-        = f.submit label, class: "stamp-button"
+  = render "shared/stamp_picker", context: :chat, chat_room: chat_room, form_url: form_url

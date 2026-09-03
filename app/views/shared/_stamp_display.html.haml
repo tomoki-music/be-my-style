@@ -1,0 +1,7 @@
+-# スタンプ投稿の表示。stamp は Stampable を include したモデル(Request / ChatMessage / Comment / Message)。
+-# 新しいイラストスタンプは SVG 画像、それ以前のレガシー絵文字スタンプは従来どおりテキストで表示する。
+-# 画像パス・代替テキストは Stampable::STAMP_DEFINITIONS からサーバー側で解決する。
+- if stamp.illustration_stamp?
+  = stamp_image_tag(stamp.stamp_type, class: "stamp-illustration", width: 160, height: 160, loading: "lazy")
+- else
+  %span.stamp-badge= stamp.stamp_label

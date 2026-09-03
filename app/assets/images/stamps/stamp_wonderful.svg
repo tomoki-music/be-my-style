@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="素敵">
+  <title>素敵</title>
+  <circle cx="120" cy="102" r="82" fill="#C89BF0"/>
+  <circle cx="120" cy="102" r="82" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="4"/>
+  <g fill="#ffffff" stroke="#40332F" stroke-width="5" stroke-linejoin="round">
+    <ellipse cx="104" cy="132" rx="17" ry="13" transform="rotate(-18 104 132)"/>
+    <path d="M118 128V64l40-11v58" fill="none" stroke-linecap="round"/>
+    <ellipse cx="144" cy="121" rx="17" ry="13" transform="rotate(-18 144 121)"/>
+  </g>
+  <g fill="#ffffff">
+    <path d="M64 66l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/>
+    <path d="M176 54l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/>
+    <path d="M168 120l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
+  </g>
+  <text x="120" y="223" text-anchor="middle" font-family="'Hiragino Kaku Gothic ProN','Yu Gothic',Meiryo,sans-serif" font-size="38" font-weight="700" fill="#40332F">素敵</text>
+</svg>

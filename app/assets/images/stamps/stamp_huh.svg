@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="あれ？">
+  <title>あれ？</title>
+  <circle cx="120" cy="102" r="82" fill="#9AA7E0"/>
+  <circle cx="120" cy="102" r="82" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="4"/>
+  <g fill="#ffffff">
+    <ellipse cx="78" cy="140" rx="13" ry="10" transform="rotate(-18 78 140)"/>
+    <rect x="88" y="96" width="6" height="44" rx="3"/>
+    <path d="M94 96c16 5 14 22 14 22-5-12-14-13-14-13z"/>
+  </g>
+  <text x="146" y="128" text-anchor="middle" font-family="'Hiragino Kaku Gothic ProN','Yu Gothic',Meiryo,sans-serif" font-size="96" font-weight="700" fill="#ffffff" stroke="#40332F" stroke-width="4" paint-order="stroke">?</text>
+  <text x="120" y="223" text-anchor="middle" font-family="'Hiragino Kaku Gothic ProN','Yu Gothic',Meiryo,sans-serif" font-size="36" font-weight="700" fill="#40332F">あれ？</text>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="お願いします">
+  <title>お願いします</title>
+  <circle cx="120" cy="102" r="82" fill="#F0A6C2"/>
+  <circle cx="120" cy="102" r="82" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="4"/>
+  <g fill="#ffffff" stroke="#40332F" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M116 150V70c0-16-14-28-30-24l-12 3c-5 1-8 6-7 11l10 62c2 12 12 21 24 21z"/>
+    <path d="M124 150V70c0-16 14-28 30-24l12 3c5 1 8 6 7 11l-10 62c-2 12-12 21-24 21z"/>
+    <path d="M92 66l4 34M148 66l-4 34" fill="none"/>
+  </g>
+  <g fill="#ffffff">
+    <path d="M66 92l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/>
+    <path d="M174 96l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
+  </g>
+  <text x="120" y="223" text-anchor="middle" font-family="'Hiragino Kaku Gothic ProN','Yu Gothic',Meiryo,sans-serif" font-size="27" font-weight="700" fill="#40332F">お願いします</text>
+</svg>

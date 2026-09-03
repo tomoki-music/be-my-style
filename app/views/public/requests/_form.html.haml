@@ -23,8 +23,4 @@
       .markdown-body.request-markdown-toolbar__preview-body
         %p.markdown-preview-placeholder プレビューする内容がありません
   = f.submit 'リクエストする', class: "event-request-btn", data: { 'turbolinks': false, confirm: 'リクエストを送信します。よろしいですか？' }
-.stamp-picker
-  - stamp_options.each do |stamp_type, label|
-    = form_with model: [:public, event, Request.new], local: false, html: { class: "stamp-picker-form" } do |f|
-      = f.hidden_field :stamp_type, value: stamp_type
-      = f.submit label, class: "stamp-button"
+= render "shared/stamp_picker", context: :request, event: event
