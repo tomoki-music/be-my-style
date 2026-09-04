@@ -38,14 +38,12 @@ RSpec.describe "スレッドパネル添付画像の表示サイズ", type: :sys
     expect(page).to have_content("ログインしました", wait: 10)
   end
 
+  # 表示幅の指定は spec/support/system_viewport.rb の
+  # use_desktop_viewport / use_mobile_viewport に集約している
+  # (CDP override 方式 + innerWidth の状態確認 + example 終了時の自動解除)。
+
   # Capybaraのネイティブclickはこのボタン(pill型・隣接flex要素あり)に対して
   # クリック座標がずれることがあり不安定なため、JS側で直接clickイベントを発火させる。
-  # Selenium駆動のブラウザはexample間で使い回されるため、モバイル幅テストで
-  # resize_toした結果が後続のテストへ持ち越されないよう、PC幅を明示的に固定する。
-  def use_desktop_viewport
-    page.driver.browser.manage.window.resize_to(1400, 900)
-  end
-
   def open_thread_panel
     expect(page).to have_selector(".thread-replies-button", wait: 10)
     page.evaluate_script("document.querySelector('.thread-replies-button').click();")
@@ -125,7 +123,7 @@ RSpec.describe "スレッドパネル添付画像の表示サイズ", type: :sys
                              reply_to_chat_message: root)
 
       sign_in_via_form(customer)
-      page.driver.browser.manage.window.resize_to(480, 900)
+      use_mobile_viewport
       visit public_chat_room_path(chat_room, customer_id: other_customer.id)
       open_thread_panel
 
