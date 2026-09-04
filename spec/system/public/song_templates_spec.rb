@@ -129,13 +129,16 @@ RSpec.describe "楽曲テンプレート", type: :system do
     end
 
     it "375px幅でもフォームが崩れず横スクロールが発生しないこと" do
-      page.driver.browser.manage.window.resize_to(375, 812)
       sign_in_via_form(customer)
+      # CDP override はページ描画済みの状態でしか効かないため sign_in 後・本画面 visit 前に適用する
+      use_mobile_viewport(width: 375, height: 812)
       visit edit_public_event_path(event)
 
       expect(page).to have_selector("#song-template-select", wait: 10)
       body_scroll_width = page.evaluate_script("document.body.scrollWidth")
-      viewport_width = page.evaluate_script("window.innerWidth")
+      # window.innerWidth は横溢れ分だけ広がって報告されるため、レイアウト
+      # ビューポート幅は document.documentElement.clientWidth で取得する。
+      viewport_width = page.evaluate_script("document.documentElement.clientWidth")
       expect(body_scroll_width).to be <= viewport_width + 1
     end
   end

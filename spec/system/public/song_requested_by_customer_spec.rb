@@ -161,12 +161,12 @@ RSpec.describe "楽曲のリクエストした人", type: :system do
   end
 
   context "モバイル幅(375x812)での表示" do
-    before { page.current_window.resize_to(375, 812) }
-
     it "リクエスト表示によって横スクロールが増えず崩れないこと" do
       song.update!(requested_by_customer_id: member.id)
 
       sign_in_via_form(customer)
+      # CDP override はページ描画済みの状態でしか効かないため sign_in 後・本画面 visit 前に適用する
+      use_mobile_viewport(width: 375, height: 812)
       visit public_event_path(event)
 
       expect(page).to have_selector(".song-requester", text: "参加太郎", wait: 10)
