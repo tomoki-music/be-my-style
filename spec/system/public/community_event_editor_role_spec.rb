@@ -150,12 +150,17 @@ RSpec.describe "コミュニティのイベント編集者ロール", type: :sys
   context "モバイル幅表示", js: true do
     it "375px幅でも役職案内カードが横スクロールを発生させず表示されること" do
       sign_in_via_form(member_customer)
-      page.driver.browser.manage.window.resize_to(375, 812)
+      # resize_to はこの環境の headless Chrome で最小ウィンドウ幅(約500px)へ
+      # 丸められスマホ幅を再現できない。CDP override で真の375px幅を適用する。
+      use_mobile_viewport(width: 375, height: 812)
       visit public_communities_path
 
       expect(page).to have_content("役職について", wait: 10)
       body_scroll_width = page.evaluate_script("document.body.scrollWidth")
-      viewport_width = page.evaluate_script("window.innerWidth")
+      # window.innerWidth は横溢れが起きると溢れ幅の分だけ広がって報告されるため
+      # 基準に使えない(横スクロールがあっても body.scrollWidth と一致してしまう)。
+      # レイアウトビューポート幅は document.documentElement.clientWidth で取得する。
+      viewport_width = page.evaluate_script("document.documentElement.clientWidth")
       expect(body_scroll_width).to be <= viewport_width
     end
   end

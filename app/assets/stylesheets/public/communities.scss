@@ -159,7 +159,9 @@
       }
     }
     .text-container{
-      width: 350px;
+      // 固定 width:350px はカード幅(画面幅90% ≒ 337px)を超え、375px 幅で
+      // 横スクロールを発生させていた。カード内に収まるよう可変幅にする。
+      width: 100%;
       margin-bottom: 5px;
       .community-index-link{
         position: absolute;
