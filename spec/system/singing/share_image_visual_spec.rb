@@ -43,9 +43,8 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
     let(:plan) { "core" }
 
     it "375px幅でもカードが横にはみ出さず、長い曲名でもカード内に収まる" do
-      resize_browser_to(375, 900)
-
       visit singing_share_image_path
+      use_mobile_viewport(width: 375, height: 900)
 
       expect(page).to have_selector(".singing-share-image__card")
       expect(page.html).to include(long_song_title)
@@ -62,9 +61,8 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
     end
 
     it "1280px前後のPC幅でカードが中央表示される" do
-      resize_browser_to(1280, 960)
-
       visit singing_share_image_path
+      use_desktop_viewport(width: 1280, height: 960)
 
       expect(page).to have_selector(".singing-share-image__card")
       expect(page.html).to include(long_song_title)
@@ -82,9 +80,8 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
     let(:plan) { "premium" }
 
     it "シェアカードを表示できる" do
-      resize_browser_to(1280, 960)
-
       visit singing_share_image_path
+      use_desktop_viewport(width: 1280, height: 960)
 
       expect(page).to have_selector(".singing-share-image__card", text: "#{year} YEAR IN VOICE")
       expect(page.html).to include(long_song_title)
@@ -112,9 +109,8 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
     end
 
     it "375px幅でもyearly-wrappedカードが横にはみ出さないこと" do
-      resize_browser_to(375, 900)
-
       visit singing_share_image_path(target: "yearly-wrapped", year: year)
+      use_mobile_viewport(width: 375, height: 900)
 
       expect(page).to have_selector("[data-share-capture-target='yearly-wrapped']")
       expect(page.html).to include("#{year}年")
@@ -132,9 +128,8 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
     end
 
     it "1280px幅でyearly-wrappedカードが中央表示されること" do
-      resize_browser_to(1280, 960)
-
       visit singing_share_image_path(target: "yearly-wrapped", year: year)
+      use_desktop_viewport(width: 1280, height: 960)
 
       expect(page).to have_selector("[data-share-capture-target='yearly-wrapped']")
       expect(page.html).to include("#{year}年")
@@ -177,9 +172,8 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
     end
 
     it "375px幅でもmonthly-wrappedカードが横にはみ出さないこと" do
-      resize_browser_to(375, 900)
-
       visit singing_share_image_path(target: "monthly-wrapped", year: 2026, month: 5)
+      use_mobile_viewport(width: 375, height: 900)
 
       expect(page).to have_selector("[data-share-capture-target='monthly-wrapped']")
       expect(page.html).to include("2026年5月")
@@ -197,9 +191,8 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
     end
 
     it "1280px幅でmonthly-wrappedカードが中央表示されること" do
-      resize_browser_to(1280, 960)
-
       visit singing_share_image_path(target: "monthly-wrapped", year: 2026, month: 5)
+      use_desktop_viewport(width: 1280, height: 960)
 
       expect(page).to have_selector("[data-share-capture-target='monthly-wrapped']")
       expect(page.html).to include("2026年5月")
@@ -234,9 +227,8 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
     end
 
     it "375px幅でもachievement-badgeカードが横にはみ出さないこと" do
-      resize_browser_to(375, 900)
-
       visit singing_share_image_path(target: "achievement-badge")
+      use_mobile_viewport(width: 375, height: 900)
 
       expect(page).to have_selector("[data-share-capture-target='achievement-badge']")
       expect(page.html).to include("Score 90 Club")
@@ -253,9 +245,8 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
     end
 
     it "1280px幅でachievement-badgeカードが中央表示されること" do
-      resize_browser_to(1280, 960)
-
       visit singing_share_image_path(target: "achievement-badge")
+      use_desktop_viewport(width: 1280, height: 960)
 
       expect(page).to have_selector("[data-share-capture-target='achievement-badge']")
       expect(page.html).to include("Score 90 Club")
@@ -271,9 +262,8 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
     end
 
     it "rarity: rareのスタイルが適用されること" do
-      resize_browser_to(1280, 960)
-
       visit singing_share_image_path(target: "achievement-badge")
+      use_desktop_viewport(width: 1280, height: 960)
 
       badge_card = find("[data-share-capture-target='achievement-badge']")
       expect(badge_card["data-rarity"]).to eq("rare")
@@ -291,10 +281,6 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
     )
   end
 
-  def resize_browser_to(width, height)
-    page.driver.browser.manage.window.resize_to(width, height)
-  end
-
   def card_layout(capture_target = nil)
     selector = capture_target ? "[data-share-capture-target='#{capture_target}']" : ".singing-share-image__card"
     page.evaluate_script(<<~JS)
@@ -302,6 +288,10 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
         const card = document.querySelector("#{selector}");
         const cardRect = card.getBoundingClientRect();
         const tolerance = 1;
+        // window.innerWidth は縦スクロールバー幅を含み、また横溢れが起きると
+        // その分だけ広がって報告される。レイアウトビューポート幅
+        // (スクロールバーを除いた実際の表示幅)は clientWidth で取得する。
+        const viewportWidth = document.documentElement.clientWidth;
         const childrenFitCardHorizontally = Array.from(card.querySelectorAll("*")).every((node) => {
           const rect = node.getBoundingClientRect();
           return rect.left >= cardRect.left - tolerance &&
@@ -310,9 +300,9 @@ RSpec.describe "Singing share image visual", type: :system, js: true do
 
         return {
           fitsViewport: cardRect.left >= -tolerance &&
-            cardRect.right <= window.innerWidth + tolerance,
+            cardRect.right <= viewportWidth + tolerance,
           childrenFitCardHorizontally: childrenFitCardHorizontally,
-          centerOffset: (cardRect.left + (cardRect.width / 2)) - (window.innerWidth / 2)
+          centerOffset: (cardRect.left + (cardRect.width / 2)) - (viewportWidth / 2)
         };
       })()
     JS

@@ -75,17 +75,19 @@ RSpec.describe "みんなのリクエストのYouTubeカード", type: :system d
   end
 
   context "モバイル幅(375x812)での表示" do
-    before { page.current_window.resize_to(375, 812) }
-
-    # 注記: このheadless Chrome環境ではresize_to(375, 812)を呼んでも
-    # document.documentElement.clientWidthが500になる(ウィンドウ最小幅の環境制約)。
-    # また、このページには本PRと無関係な既存の水平オーバーフローが元々存在する
+    # 注記: ビューポート幅は spec/support/system_viewport.rb の use_mobile_viewport
+    # (CDP Emulation.setDeviceMetricsOverride)で実際の375px幅を適用する
+    # (page.current_window.resize_to はこの環境の headless Chrome で最小ウィンドウ幅へ
+    # 丸められ375pxを再現できない)。override はページ描画済みの状態でしか効かないため
+    # sign_in 後・本画面 visit 前に適用する。
+    # ただしこのページには本PRと無関係な既存の水平オーバーフローが元々存在する
     # (フォント計測用と見られるposition:absolute; font-size:300pxのspan要素によるもの、
     # カード投稿前でも発生することを確認済み)。そのため「ページ全体で横スクロールが
     # 一切無い」ことではなく、「カード追加によって横スクロール量が増えていない」こと、
     # および「カード自身が投稿の幅内に収まっている」ことを検証する。
     it "カードがモバイル幅に収まり、追加の横スクロールを発生させず、既存UIと重ならないこと" do
       sign_in_via_form(owner)
+      use_mobile_viewport(width: 375, height: 812)
       visit public_event_path(event)
       baseline_scroll_width = page.evaluate_script("document.documentElement.scrollWidth")
       client_width = page.evaluate_script("document.documentElement.clientWidth")
@@ -132,6 +134,7 @@ RSpec.describe "みんなのリクエストのYouTubeカード", type: :system d
 
     it "URLを含まないリクエストではモバイル幅でもカードが表示されないこと" do
       sign_in_via_form(owner)
+      use_mobile_viewport(width: 375, height: 812)
       visit public_event_path(event)
 
       fill_in_request_input("オリジナル曲を１曲お願いします！")

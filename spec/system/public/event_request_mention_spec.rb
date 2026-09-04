@@ -210,10 +210,10 @@ RSpec.describe "イベントリクエストの@メンション", type: :system d
   end
 
   context "モバイル幅(375x812)" do
-    before { page.current_window.resize_to(375, 812) }
-
     it "候補ドロップダウンがモバイル幅でも表示され、mousedownで選択できること" do
       sign_in_via_form(poster)
+      # CDP override はページ描画済みの状態でしか効かないため sign_in 後・本画面 visit 前に適用する
+      use_mobile_viewport(width: 375, height: 812)
       visit public_event_path(event)
 
       type_into_input_request("@")
