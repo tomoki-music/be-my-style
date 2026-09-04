@@ -175,10 +175,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install libmysqlclient (for mysql2 gem native extension)
+      # mysql2 gem のネイティブ拡張ビルドに libmysqlclient-dev が必要。
+      # 併せて、一部の System spec が ActiveStorage の variant 生成
+      # (image_processing → mini_magick、Rails 6.1 の既定 variant_processor)を
+      # 経由するため ImageMagick が必要。ubuntu-latest ランナーには
+      # ImageMagick が標準搭載されていないため、標準の apt リポジトリから明示的に導入する。
+      - name: Install system packages (libmysqlclient for mysql2, ImageMagick for ActiveStorage variants)
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y libmysqlclient-dev
+          sudo apt-get install -y libmysqlclient-dev imagemagick
+          convert -version
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
