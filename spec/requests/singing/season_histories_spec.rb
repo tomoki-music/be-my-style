@@ -206,7 +206,13 @@ RSpec.describe "Singing::SeasonHistories", type: :request do
         it "自分が未参加であれば他ユーザーのスコアは表示されないこと" do
           get singing_season_histories_path
 
-          expect(response.body).not_to include("99")
+          # response.body 全体への include("99") は application.css のアセット
+          # ダイジェスト(16進文字列)とたまたま衝突して誤検知するため、
+          # スコアが実際に描画される要素だけに絞って照合する。
+          result_text = Nokogiri::HTML(response.body)
+                          .css(".singing-history__list .singing-history__result-value")
+                          .text
+          expect(result_text).not_to include("99")
           expect(response.body).to include("まだ参加していません")
         end
       end
