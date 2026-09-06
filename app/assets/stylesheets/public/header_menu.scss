@@ -64,6 +64,11 @@
     background: rgba(255, 255, 255, 0.95);
     text-align: right;
     padding: 64px;
+    // 項目数が多く画面に収まらない場合でも全項目へ到達できるよう、
+    // オーバーレイ内を縦スクロール可能にする（横スクロールは発生させない）。
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
     // 実測: 320px 幅では左右 padding 64px*2=128px で残り 192px しかなく、
     // 固定 width:200px の .menu-sp-btn がはみ出して横スクロールが発生していた
     // （document.documentElement.clientWidth=320 に対し window.innerWidth が
@@ -96,6 +101,115 @@
       display: block;
       width: auto;
       margin: 8px 0;
+    }
+
+    // --- 3 段構成（主要 / その他 / アカウント）---
+    // 主要導線の ul。従来のフラット表示のままだが、下にアコーディオンとアカウント欄を
+    // 分けて並べるためクラスを付けている。
+    .customer-menu-sp__primary {
+      margin: 0;
+      padding: 0;
+    }
+
+    // 「その他」アコーディオン。PC ヘッダーのプロフィールドロップダウン相当を
+    // スマホでは折りたたみで見せる。ネイティブ <details>/<summary> を使うため
+    // JS 無効でも（メニューさえ開けば）開閉できる（lp-singing-mobile-nav と同方式）。
+    // 幅は .menu-sp-btn(200px) + その左右 margin(5px×2) と揃える。
+    .menu-sp-others {
+      width: 210px;
+      max-width: 100%;
+      margin: 14px 0 4px auto;
+      padding-top: 10px;
+      border-top: 1px solid rgba(51, 80, 122, 0.25);
+    }
+
+    // 開閉ボタン。小さなリンクではなく、他の .menu-sp-btn と同じ幅・btn-info 系の色で
+    // 押しやすい大きさ（高さ 44px 以上）にする。
+    .menu-sp-others__toggle {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      width: 200px;
+      max-width: 100%;
+      margin: 0 5px;
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: 4px;
+      background-color: #17a2b8;
+      color: #fff;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+
+    .menu-sp-others__toggle::-webkit-details-marker {
+      display: none;
+    }
+
+    .menu-sp-others__toggle::marker {
+      content: "";
+    }
+
+    .menu-sp-others__toggle:focus-visible {
+      outline: 2px solid #1c64f2;
+      outline-offset: 2px;
+    }
+
+    .menu-sp-others__toggle-label {
+      // 長い場合も 1 文字ずつではなく単語単位で折り返す。
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    // キャレット（閉:右向き / 開:下向き）。色以外でも開閉状態が分かるようにする。
+    .menu-sp-others__toggle-caret {
+      flex: 0 0 auto;
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(-45deg);
+      transition: transform 0.2s ease;
+    }
+
+    .menu-sp-others[open] .menu-sp-others__toggle-caret {
+      transform: rotate(45deg);
+    }
+
+    .menu-sp-others__panel {
+      padding-top: 4px;
+    }
+
+    .menu-sp-others__panel ul {
+      margin: 0;
+      padding: 0;
+    }
+
+    // 閉じているときは中身を隠す。JS 無効時もネイティブ <details> が
+    // [open] 属性を付け外しするのでこれだけで開閉できる。
+    .menu-sp-others:not([open]) .menu-sp-others__panel {
+      display: none;
+    }
+
+    // アカウント欄（マイページ / ログアウト）。主要導線とは区切り線で分ける。
+    .customer-menu-sp__account {
+      width: 210px;
+      max-width: 100%;
+      margin: 14px 0 0 auto;
+      padding-top: 10px;
+      border-top: 1px solid rgba(51, 80, 122, 0.4);
+    }
+
+    .customer-menu-sp__account ul {
+      margin: 0;
+      padding: 0;
+    }
+
+    .customer-menu-sp__logout-item {
+      margin-top: 6px;
     }
   }
   .customer-menu-sp.show {

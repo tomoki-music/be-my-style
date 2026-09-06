@@ -22,21 +22,26 @@
             %span
               = customer_avatar_tag(current_customer, class_name: "icon_mini sp-menu-open", show_active_status: false)
 
+  -# SP メニュー: PC ヘッダーの情報設計に合わせて 3 段構成にする。
+  -#   1. 主要導線(.customer-menu-sp__primary): PC の .customer-menu-pc__main と同じ 6 導線
+  -#      + SP だけに残す「Topページ」。常に表示。
+  -#   2. その他(details.menu-sp-others): PC のプロフィールドロップダウンにある機能系リンク
+  -#      (ユーザー演奏実績ランキング / プランUPGRADE / BeMyStyleとは？ / ご意見BOX)を折りたたむ。
+  -#   3. アカウント(.customer-menu-sp__account): PC ドロップダウンの本人向け項目
+  -#      (マイページ / ログアウト)。区切り線で主要導線と分ける。
+  -# リンク先・表示条件・ラベル(SP は正式名称)は従来のまま。
   .customer-menu-sp
     #close
       %span.fa.fa-times.close-icon
         閉じる
-    %ul.list-style-none
-      - if customer_signed_in?
+    - if customer_signed_in?
+      %ul.list-style-none.customer-menu-sp__primary
         %li
           = link_to "Topページ", public_homes_top_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
-          = link_to "BeMyStyleとは？", public_homes_about_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
-        %li
           = link_to "コミュニティ一覧", public_communities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
-          - if current_customer.present?
-            = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+          = link_to "イベント参加", public_events_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
           = link_to public_matchings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn #{'menu-sp-btn-locked' unless feature_available?(:music_direct_chat)}" do
             個別チャット
@@ -45,29 +50,43 @@
         %li
           = link_to "みんなの活動報告", public_activities_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
-          = link_to "イベント参加", public_events_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
-        %li
           = link_to "成立楽曲ランキング", public_song_rankings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
         %li
-          = link_to "ユーザー演奏実績ランキング", public_performance_rankings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
-        %li
           = link_to "歌唱・演奏診断", public_singing_performance_diagnosis_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
-        %li
-          -# ページ内の正式名称は「ご意見・ご相談BOX」。メニューボタンは他項目と同じ1行表示に収めるため短縮名を使う。
-          = link_to "ご意見BOX", new_public_customer_feedback_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
-        %li.menu-upgrade-item
-          = link_to public_lp_path(anchor: "lp-section"), data: { 'turbolinks': false }, class: "menu-upgrade-cta" do
-            %span.menu-upgrade-cta__spark ✦
-            %span.menu-upgrade-cta__label プランUPGRADE
-            %span.menu-upgrade-cta__spark ✦
-        %li
-          %i.fa-solid.fa-right-from-bracket
-          = button_to "ログアウト",
-            destroy_customer_session_path,
-            method: :delete,
-            form_class: "d-inline",
-            class: "btn btn-secondary menu-sp-btn"
-      - else
+
+      %details.menu-sp-others
+        %summary.menu-sp-others__toggle{ "aria-controls": "sp-menu-others-panel", "aria-expanded": "false" }
+          %span.menu-sp-others__toggle-label その他
+          %span.menu-sp-others__toggle-caret{ "aria-hidden": "true" }
+        #sp-menu-others-panel.menu-sp-others__panel
+          %ul.list-style-none
+            %li
+              = link_to "ユーザー演奏実績ランキング", public_performance_rankings_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+            %li.menu-upgrade-item
+              = link_to public_lp_path(anchor: "lp-section"), data: { 'turbolinks': false }, class: "menu-upgrade-cta" do
+                %span.menu-upgrade-cta__spark ✦
+                %span.menu-upgrade-cta__label プランUPGRADE
+                %span.menu-upgrade-cta__spark ✦
+            %li
+              = link_to "BeMyStyleとは？", public_homes_about_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+            %li
+              -# ページ内の正式名称は「ご意見・ご相談BOX」。メニューボタンは他項目と同じ1行表示に収めるため短縮名を使う。
+              = link_to "ご意見BOX", new_public_customer_feedback_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+
+      .customer-menu-sp__account
+        %ul.list-style-none
+          - if current_customer.present?
+            %li
+              = link_to "マイページ", public_customer_path(current_customer), data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+          %li.customer-menu-sp__logout-item
+            %i.fa-solid.fa-right-from-bracket
+            = button_to "ログアウト",
+              destroy_customer_session_path,
+              method: :delete,
+              form_class: "d-inline",
+              class: "btn btn-secondary menu-sp-btn"
+    - else
+      %ul.list-style-none
         %li
           %i.fa-solid.fa-user-plus
           = link_to "新規登録", new_customer_registration_path, data: { 'turbolinks': false }, class: "btn btn-success menu-sp-btn"

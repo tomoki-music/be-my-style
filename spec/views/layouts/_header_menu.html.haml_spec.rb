@@ -37,6 +37,18 @@ RSpec.describe "layouts/_header_menu", type: :view do
     Nokogiri::HTML(rendered).at_css(".customer-menu-sp")
   end
 
+  def sp_primary
+    Nokogiri::HTML(rendered).at_css(".customer-menu-sp .customer-menu-sp__primary")
+  end
+
+  def sp_others
+    Nokogiri::HTML(rendered).at_css(".customer-menu-sp details.menu-sp-others")
+  end
+
+  def sp_account
+    Nokogiri::HTML(rendered).at_css(".customer-menu-sp .customer-menu-sp__account")
+  end
+
   describe "ログイン時" do
     before do
       stub_common_helpers(signed_in: true, current: customer)
@@ -145,11 +157,89 @@ RSpec.describe "layouts/_header_menu", type: :view do
       text = sp_menu.text
       %w[
         Topページ BeMyStyleとは？ コミュニティ一覧 マイページ 個別チャット
-        みんなの活動報告 イベント参加 成立楽曲ランキング 歌唱・演奏診断 ご意見BOX プランUPGRADE
+        みんなの活動報告 イベント参加 成立楽曲ランキング ユーザー演奏実績ランキング
+        歌唱・演奏診断 ご意見BOX プランUPGRADE
       ].each do |label|
         expect(text).to include(label)
       end
       expect(sp_menu.at_css('form input[type="submit"]')["value"]).to eq("ログアウト")
+    end
+
+    it "SP 主要導線は PC メインメニューと同じ 6 導線 + SP 限定の Topページ を常時表示する" do
+      hrefs = sp_primary.css("li > a").map { |a| a["href"] }
+      expect(hrefs).to eq([
+        public_homes_top_path,
+        public_communities_path,
+        public_events_path,
+        public_matchings_path,
+        public_activities_path,
+        public_song_rankings_path,
+        public_singing_performance_diagnosis_path,
+      ])
+    end
+
+    it "SP「その他」は details/summary のアコーディオンで、初期状態は閉じている" do
+      details = sp_others
+      expect(details).to be_present
+      expect(details.attribute("open")).to be_nil
+
+      summary = details.at_css("summary.menu-sp-others__toggle")
+      expect(summary).to be_present
+      expect(summary["aria-expanded"]).to eq("false")
+      expect(summary["aria-controls"]).to eq("sp-menu-others-panel")
+      expect(summary.text).to include("その他")
+    end
+
+    it "SP「その他」の中身は PC プロフィールドロップダウンの機能系リンク（本人向け項目を除く）と一致する" do
+      panel = sp_others.at_css("#sp-menu-others-panel.menu-sp-others__panel")
+      expect(panel).to be_present
+      expect(sp_others["aria-controls"]).to be_nil # aria-controls は summary 側
+
+      hrefs = panel.css("li a").map { |a| a["href"] }
+      expect(hrefs).to eq([
+        public_performance_rankings_path,
+        public_lp_path(anchor: "lp-section"),
+        public_homes_about_path,
+        new_public_customer_feedback_path,
+      ])
+    end
+
+    it "SP アカウント欄は本人向け項目（マイページ / ログアウト）で、区切って表示する" do
+      account = sp_account
+      expect(account).to be_present
+
+      mypage = account.at_css("a")
+      expect(mypage.text.strip).to eq("マイページ")
+      expect(mypage["href"]).to eq(public_customer_path(customer))
+
+      logout_form = account.at_css("form")
+      expect(logout_form["action"]).to eq(destroy_customer_session_path)
+      expect(logout_form["method"]).to eq("post")
+      expect(logout_form.at_css('input[name="_method"]')["value"]).to eq("delete")
+      expect(logout_form.at_css('input[type="submit"]')["value"]).to eq("ログアウト")
+    end
+
+    it "SP「その他」panel の id は文書内で一意" do
+      doc = Nokogiri::HTML(rendered)
+      ids = doc.css("[id]").map { |n| n["id"] }
+      expect(ids.count("sp-menu-others-panel")).to eq(1)
+      expect(ids.uniq.length).to eq(ids.length)
+    end
+
+    it "SP の各導線のリンク先は PC 側と重複しても一致している（分裂しない）" do
+      sp_hrefs = sp_menu.css("a").map { |a| a["href"] }.compact
+      # 主要 6 導線
+      [
+        public_communities_path, public_events_path, public_matchings_path,
+        public_activities_path, public_song_rankings_path,
+        public_singing_performance_diagnosis_path
+      ].each { |href| expect(sp_hrefs).to include(href) }
+      # その他 + アカウント
+      [
+        public_performance_rankings_path, public_lp_path(anchor: "lp-section"),
+        public_homes_about_path, new_public_customer_feedback_path,
+        public_customer_path(customer)
+      ].each { |href| expect(sp_hrefs).to include(href) }
     end
 
     it "ヘッダーロゴが Top ページへのリンクでアクセシブルネームを持つ" do
@@ -171,6 +261,13 @@ RSpec.describe "layouts/_header_menu", type: :view do
 
     it "チャットボタンにロッククラスとロックバッジが付く" do
       chat_link = pc_main.css("li a").find { |a| a.text.include?("チャット") }
+      expect(chat_link["class"]).to include("menu-sp-btn-locked")
+      expect(chat_link["href"]).to eq(public_matchings_path)
+      expect(chat_link.at_css(".menu-lock-note")).to be_present
+    end
+
+    it "SP 主要導線の「個別チャット」にも同じロッククラス・ロックバッジが付く" do
+      chat_link = sp_primary.css("li a").find { |a| a.text.include?("個別チャット") }
       expect(chat_link["class"]).to include("menu-sp-btn-locked")
       expect(chat_link["href"]).to eq(public_matchings_path)
       expect(chat_link.at_css(".menu-lock-note")).to be_present
