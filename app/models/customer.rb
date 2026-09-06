@@ -118,10 +118,13 @@ class Customer < ApplicationRecord
   validate :joined_on_cannot_be_in_the_future
 
   # 最終アクティビティ日時。ログイン継続中の利用を記録する last_active_at と、
-  # Devise trackable の current_sign_in_at の新しい方を返す。
+  # Devise trackable の current_sign_in_at のうち「未来ではない最新の日時」を返す。
+  # 片方が異常データ（未来日時）でも、もう片方が正常ならそちらを返す。
+  # 両方 nil、または両方が未来なら nil。
   # どちらも customers レコードの属性のみで完結し、関連を辿らないため N+1 を発生させない。
-  def latest_activity_at
-    [last_active_at, current_sign_in_at].compact.max
+  # now: 境界判定の基準時刻。呼び出し側が別の用途でも同じ now を使いたい場合に渡す。
+  def latest_activity_at(now: Time.current)
+    [last_active_at, current_sign_in_at].compact.reject { |time| time > now }.max
   end
 
   # 最近アクティブか（アクティブ状態のアイコン表示などに使う共通判定）。
@@ -129,15 +132,16 @@ class Customer < ApplicationRecord
   def recently_active?
     return false if is_deleted?
 
-    activity_at = latest_activity_at
-    activity_at.present? && activity_at >= 1.month.ago
+    now = Time.current
+    activity_at = latest_activity_at(now: now)
+    activity_at.present? && activity_at >= now - 1.month
   end
 
   # アバターのアクティブ状態インジケーター（緑/黄/灰の丸）用の 3 段階分類。
   # 判定は latest_activity_at（= last_active_at と Devise trackable の
-  # current_sign_in_at の新しい方）で行う。ログイン直後だけでなく、ログイン中の
-  # 通常操作（ApplicationController の track_customer_activity 経由で last_active_at
-  # を更新）も「アクティブ」に反映されるようにするため。
+  # current_sign_in_at のうち未来でない最新の日時）で行う。ログイン直後だけでなく、
+  # ログイン中の通常操作（ApplicationController の track_customer_activity 経由で
+  # last_active_at を更新）も「アクティブ」に反映されるようにするため。
   # 正確な日時や「○日前」は画面へ公開しない。
   #   24 時間以内 → :active   （アクティブ・緑）
   #   1 週間以内  → :semi     （ややアクティブ・黄）
@@ -155,9 +159,7 @@ class Customer < ApplicationRecord
     return nil if is_deleted?
 
     now = Time.current
-    # last_active_at / current_sign_in_at のうち「未来でない最新の日時」で判定する。
-    # 片方が異常データ（未来日時）でも、もう片方が正常ならそちらで判定できる。
-    activity_at = [last_active_at, current_sign_in_at].compact.reject { |time| time > now }.max
+    activity_at = latest_activity_at(now: now)
     return nil if activity_at.blank?
 
     LOGIN_ACTIVITY_WINDOWS.each do |level, window|

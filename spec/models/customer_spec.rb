@@ -679,6 +679,25 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       customer.current_sign_in_at = 1.minute.ago
       expect(customer.latest_activity_at).to eq 1.minute.ago
     end
+
+    it '片方が未来（異常データ）なら、もう片方（未来でない方）を返す' do
+      customer.last_active_at = 1.day.from_now
+      customer.current_sign_in_at = 2.days.ago
+      expect(customer.latest_activity_at).to eq 2.days.ago
+    end
+
+    it '両方が未来（異常データ）なら nil' do
+      customer.last_active_at = 1.day.from_now
+      customer.current_sign_in_at = 2.days.from_now
+      expect(customer.latest_activity_at).to be_nil
+    end
+
+    it 'now: を渡すと、その時刻を基準に未来判定する' do
+      customer.last_active_at = Time.zone.local(2026, 8, 27, 12, 0, 30)
+      customer.current_sign_in_at = Time.zone.local(2026, 8, 27, 11, 0, 0)
+      expect(customer.latest_activity_at(now: Time.zone.local(2026, 8, 27, 12, 0, 0)))
+        .to eq Time.zone.local(2026, 8, 27, 11, 0, 0)
+    end
   end
 
   describe '#recently_active?' do
@@ -739,6 +758,18 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       customer.current_sign_in_at = Time.current
       customer.is_deleted = true
       expect(customer.recently_active?).to eq false
+    end
+
+    it '両方が未来日時（異常データ）なら false' do
+      customer.last_active_at = 1.day.from_now
+      customer.current_sign_in_at = 2.days.from_now
+      expect(customer.recently_active?).to eq false
+    end
+
+    it '片方が未来でも、もう片方が1か月以内なら true' do
+      customer.last_active_at = 1.day.from_now
+      customer.current_sign_in_at = 3.days.ago
+      expect(customer.recently_active?).to eq true
     end
   end
 

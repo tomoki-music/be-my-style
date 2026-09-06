@@ -266,8 +266,8 @@ RSpec.describe "Admin::Homes", type: :request do
 
         dot = name_cell(response.body, customer).at_css(".avatar-active-dot")
         expect(dot["class"]).to include("avatar-active-dot--active")
-        expect(dot["aria-label"]).to eq("24時間以内にログイン")
-        expect(dot["title"]).to eq("24時間以内にログイン")
+        expect(dot["aria-label"]).to eq("24時間以内に利用")
+        expect(dot["title"]).to eq("24時間以内に利用")
       end
 
       it "ログイン中に画面操作したユーザーは、最終ログインが古くても緑丸になること" do
