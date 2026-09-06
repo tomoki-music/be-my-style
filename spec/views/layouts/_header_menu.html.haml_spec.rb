@@ -153,16 +153,36 @@ RSpec.describe "layouts/_header_menu", type: :view do
       expect(top_bar.css("a[href='#{public_notifications_path}']").size).to eq(1)
     end
 
-    it "SP メニューは従来の主要導線（正式名称ラベル）をすべて維持する" do
+    it "SP メニューは主要導線（正式名称ラベル）をすべて維持する" do
       text = sp_menu.text
       %w[
         Topページ BeMyStyleとは？ コミュニティ一覧 マイページ 個別チャット
-        みんなの活動報告 イベント参加 成立楽曲ランキング ユーザー演奏実績ランキング
+        みんなの活動報告 イベント参加 ランキング
         歌唱・演奏診断 ご意見BOX プランUPGRADE
       ].each do |label|
         expect(text).to include(label)
       end
       expect(sp_menu.at_css('form input[type="submit"]')["value"]).to eq("ログアウト")
+    end
+
+    it "SP メニューのランキング導線は「ランキング」1件だけで、個別種別ラベルは残さない" do
+      links = sp_menu.css("a").select { |a| a.text.gsub(/\s+/, "").include?("ランキング") }
+      expect(links.map { |a| a.text.gsub(/\s+/, "") }).to eq(%w[ランキング])
+      expect(links.first["href"]).to eq(public_song_rankings_path)
+
+      expect(sp_menu.text).not_to include("成立楽曲ランキング")
+      expect(sp_menu.text).not_to include("ユーザー演奏実績ランキング")
+      expect(sp_menu.css("a").map { |a| a["href"] }).not_to include(public_performance_rankings_path)
+    end
+
+    it "SP のランキング導線はラベル・リンク先とも PC メインメニューと一致する" do
+      pc_ranking = pc_main.css("li a").find { |a| a.text.gsub(/\s+/, "") == "ランキング" }
+      sp_ranking = sp_primary.css("li a").find { |a| a.text.gsub(/\s+/, "") == "ランキング" }
+
+      expect(sp_ranking).to be_present
+      expect(sp_ranking.text.strip).to eq(pc_ranking.text.strip)
+      expect(sp_ranking["href"]).to eq(pc_ranking["href"])
+      expect(sp_ranking["href"]).to eq(public_song_rankings_path)
     end
 
     it "SP 主要導線は PC メインメニューと同じ 6 導線 + SP 限定の Topページ を常時表示する" do
@@ -190,18 +210,18 @@ RSpec.describe "layouts/_header_menu", type: :view do
       expect(summary.text).to include("その他")
     end
 
-    it "SP「その他」の中身は PC プロフィールドロップダウンの機能系リンク（本人向け項目を除く）と一致する" do
+    it "SP「その他」は PC プロフィールドロップダウンの機能系リンクを 3 件だけ折りたたむ（ランキングは主要導線に集約済み）" do
       panel = sp_others.at_css("#sp-menu-others-panel.menu-sp-others__panel")
       expect(panel).to be_present
       expect(sp_others["aria-controls"]).to be_nil # aria-controls は summary 側
 
       hrefs = panel.css("li a").map { |a| a["href"] }
       expect(hrefs).to eq([
-        public_performance_rankings_path,
         public_lp_path(anchor: "lp-section"),
         public_homes_about_path,
         new_public_customer_feedback_path,
       ])
+      expect(hrefs).not_to include(public_performance_rankings_path)
     end
 
     it "SP アカウント欄は本人向け項目（マイページ / ログアウト）で、区切って表示する" do
@@ -236,7 +256,7 @@ RSpec.describe "layouts/_header_menu", type: :view do
       ].each { |href| expect(sp_hrefs).to include(href) }
       # その他 + アカウント
       [
-        public_performance_rankings_path, public_lp_path(anchor: "lp-section"),
+        public_lp_path(anchor: "lp-section"),
         public_homes_about_path, new_public_customer_feedback_path,
         public_customer_path(customer)
       ].each { |href| expect(sp_hrefs).to include(href) }
@@ -306,11 +326,19 @@ RSpec.describe "layouts/_header_menu", type: :view do
       expect(ranking["href"]).to eq(public_song_rankings_path)
     end
 
-    it "SP メニューは新規登録 / ログイン / Topページ / BeMyStyleとは？ / 成立楽曲ランキング を維持する" do
+    it "SP メニューは新規登録 / ログイン / Topページ / BeMyStyleとは？ / ランキング を維持する" do
       text = sp_menu.text
-      %w[新規登録 ログイン Topページ BeMyStyleとは？ 成立楽曲ランキング].each do |label|
+      %w[新規登録 ログイン Topページ BeMyStyleとは？ ランキング].each do |label|
         expect(text).to include(label)
       end
+      expect(sp_menu.text).not_to include("成立楽曲ランキング")
+    end
+
+    it "SP のランキングリンクはラベル・リンク先とも PC 側（ランキング / 公開URL）と一致する" do
+      sp_ranking = sp_menu.css("a").find { |a| a.text.strip == "ランキング" }
+      pc_ranking = pc_main.css("li a").find { |a| a.text.strip == "ランキング" }
+      expect(sp_ranking["href"]).to eq(public_song_rankings_path)
+      expect(sp_ranking["href"]).to eq(pc_ranking["href"])
     end
   end
 end
