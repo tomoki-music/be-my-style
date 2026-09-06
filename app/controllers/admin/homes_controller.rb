@@ -13,6 +13,7 @@ class Admin::HomesController < ApplicationController
 
     @customers = Customer
       .includes(:member_profile, :subscription, community_owners: :community, community_event_editors: :community)
+      .with_attached_profile_image
       .references(:member_profile)
 
     if params[:member_type].present?

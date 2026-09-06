@@ -807,10 +807,48 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       expect(customer.login_activity_level).to be_nil
     end
 
-    it 'last_active_at が新しくても current_sign_in_at のみで判定する' do
-      customer.last_active_at = Time.current
-      customer.current_sign_in_at = 2.weeks.ago
-      expect(customer.login_activity_level).to eq :dormant
+    context 'last_active_at / current_sign_in_at の新しい方で判定する' do
+      it 'current_sign_in_at が古くても last_active_at が新しければ :active' do
+        customer.current_sign_in_at = 2.weeks.ago
+        customer.last_active_at = 10.minutes.ago
+        expect(customer.login_activity_level).to eq :active
+      end
+
+      it 'last_active_at が古くても current_sign_in_at が新しければ :active' do
+        customer.current_sign_in_at = 10.minutes.ago
+        customer.last_active_at = 2.weeks.ago
+        expect(customer.login_activity_level).to eq :active
+      end
+
+      it 'last_active_at だけあり新しければ :active（ログイン履歴なしでも操作で緑）' do
+        customer.current_sign_in_at = nil
+        customer.last_active_at = 1.hour.ago
+        expect(customer.login_activity_level).to eq :active
+      end
+
+      it '両方 nil なら nil' do
+        customer.current_sign_in_at = nil
+        customer.last_active_at = nil
+        expect(customer.login_activity_level).to be_nil
+      end
+
+      it '両方古ければ、新しい方の日時で境界どおりに判定する' do
+        customer.current_sign_in_at = 2.months.ago
+        customer.last_active_at = 3.days.ago
+        expect(customer.login_activity_level).to eq :semi
+      end
+
+      it '片方が未来（異常データ）でも、もう片方が正常ならそちらで判定する' do
+        customer.current_sign_in_at = 1.day.from_now
+        customer.last_active_at = 10.minutes.ago
+        expect(customer.login_activity_level).to eq :active
+      end
+
+      it '両方未来（異常データ）なら nil' do
+        customer.current_sign_in_at = 1.day.from_now
+        customer.last_active_at = 2.days.from_now
+        expect(customer.login_activity_level).to be_nil
+      end
     end
   end
 end

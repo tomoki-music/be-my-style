@@ -1461,6 +1461,29 @@ input[type="text"] {
     max-width: 100%;
   }
 
+  // 送信ボタン。スマホは横幅いっぱい・タップしやすい高さを確保し、
+  // PC(>=768px)では原則1行に収める。極端に狭い幅では折り返しを許可して
+  // フォームからのはみ出し・横スクロールを防ぐ。
+  // (.entry-invitation-form 直下セレクタで上の .btn ルールと同じ詳細度にし、
+  //  後勝ちで上書きする。JSフックの .js-entry-invitation-submit は装飾に使わない)
+  .entry-invitation-form__submit {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    margin: 8px 0 0;
+    padding: 12px 20px;
+    white-space: normal;
+    line-height: 1.4;
+
+    @media (min-width: 768px) {
+      display: inline-block;
+      width: auto;
+      min-height: 0;
+      padding: 10px 28px;
+      white-space: nowrap;
+    }
+  }
+
   &__title {
     margin: 0 0 6px;
     font-size: 1.05rem;

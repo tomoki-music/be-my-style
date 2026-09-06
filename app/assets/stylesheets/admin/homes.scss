@@ -122,6 +122,31 @@
   white-space: nowrap;
 }
 
+/* 会員一覧の「名前」セル：プロフィールアイコン（右上にアクティブ状況の丸）＋名前。
+   丸の色分け・aria-label は通常画面と同じ customer_avatar_tag / avatar-active-dot を共用する。 */
+.admin-customer-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.admin-customer-avatar {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #e9ecef;
+}
+
+.admin-customer-name__label {
+  min-width: 0;
+  word-break: break-word;
+}
+
 /* フィルター用 select */
 .filter-select {
   background-color: #f8f9fa;

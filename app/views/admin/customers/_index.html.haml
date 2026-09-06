@@ -78,11 +78,13 @@
       %tr{ class: [row_class, ("table-secondary text-muted" if customer.is_deleted)].compact.join(" "), style: row_style }
         %th= customer.id
         %td
-          - if customer.is_deleted
-            %span.badge.bg-secondary.text-white.ms-2 退会済み
-            %span.fw-semibold.text-decoration-line-through= customer.name
-          - else
-            = customer.name
+          .admin-customer-name
+            = customer_avatar_tag(customer, class_name: "admin-customer-avatar")
+            - if customer.is_deleted
+              %span.badge.bg-secondary.text-white 退会済み
+              %span.fw-semibold.text-decoration-line-through= customer.name
+            - else
+              %span.admin-customer-name__label= customer.name
 
         %td
           = admin_customer_role_badges(customer, @direct_owned_communities_by_customer_id[customer.id] || [])

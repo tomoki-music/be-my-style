@@ -134,12 +134,15 @@ class Customer < ApplicationRecord
   end
 
   # アバターのアクティブ状態インジケーター（緑/黄/灰の丸）用の 3 段階分類。
-  # 判定は Devise trackable の current_sign_in_at（最終ログイン日時）のみで行い、
-  # last_active_at は参照しない。正確な日時や「○日前」は画面へ公開しない。
+  # 判定は latest_activity_at（= last_active_at と Devise trackable の
+  # current_sign_in_at の新しい方）で行う。ログイン直後だけでなく、ログイン中の
+  # 通常操作（ApplicationController の track_customer_activity 経由で last_active_at
+  # を更新）も「アクティブ」に反映されるようにするため。
+  # 正確な日時や「○日前」は画面へ公開しない。
   #   24 時間以内 → :active   （アクティブ・緑）
   #   1 週間以内  → :semi     （ややアクティブ・黄）
   #   1 か月以内  → :dormant  （しばらく前・灰）
-  #   それ以前 / ログイン履歴なし / 退会 → nil（丸を表示しない）
+  #   それ以前 / 利用履歴なし / 退会 → nil（丸を表示しない）
   # 各境界はその時刻ちょうどを含む（>=）。dormant の 1.month は固定 30 日ではなく
   # ActiveSupport の暦上の 1 か月（now から 1.month 引いた時刻）で判定する。
   LOGIN_ACTIVITY_WINDOWS = {
@@ -151,14 +154,14 @@ class Customer < ApplicationRecord
   def login_activity_level
     return nil if is_deleted?
 
-    signed_in_at = current_sign_in_at
-    return nil if signed_in_at.blank?
-
     now = Time.current
-    return nil if signed_in_at > now # 異常データ（未来日時）はインジケーター対象外
+    # last_active_at / current_sign_in_at のうち「未来でない最新の日時」で判定する。
+    # 片方が異常データ（未来日時）でも、もう片方が正常ならそちらで判定できる。
+    activity_at = [last_active_at, current_sign_in_at].compact.reject { |time| time > now }.max
+    return nil if activity_at.blank?
 
     LOGIN_ACTIVITY_WINDOWS.each do |level, window|
-      return level if signed_in_at >= now - window
+      return level if activity_at >= now - window
     end
     nil
   end

@@ -214,6 +214,7 @@ module ApplicationHelper
     singing-ranking__growth-user-avatar
     singing-season__user-avatar
     cheers-history__avatar-img
+    admin-customer-avatar
   ].freeze
 
   # アクティブ状態を表す丸（緑 / 黄 / 灰）。色だけで状態が伝わらないよう、
