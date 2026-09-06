@@ -16,12 +16,17 @@ RSpec.describe "ご意見・ご相談BOX（ユーザー側）", type: :system do
   it "PCメニュー・スマホメニュー両方に短縮名「ご意見BOX」の導線が表示され、同じ遷移先を指すこと" do
     visit public_homes_top_path
 
-    sp_links = page.all(".customer-menu-sp a", text: "ご意見BOX", exact_text: true).to_a
-    pc_links = page.all(".customer-menu-pc a", text: "ご意見BOX", exact_text: true).to_a
+    # スマホ版は PC のプロフィールドロップダウン相当を「その他」アコーディオン
+    # (details.menu-sp-others)に畳んでいるため、初期状態では非表示。visible: :all で拾う。
+    sp_links = page.all(".customer-menu-sp a", text: "ご意見BOX", exact_text: true, visible: :all).to_a
+    pc_links = page.all(".customer-menu-pc a", text: "ご意見BOX", exact_text: true, visible: :all).to_a
 
     expect(sp_links).not_to be_empty
     expect(pc_links).not_to be_empty
     expect((sp_links + pc_links).map { |a| a[:href] }.uniq).to eq([new_public_customer_feedback_path])
+
+    # スマホ版のご意見BOXは「その他」アコーディオンの中にある。
+    expect(page.all(".customer-menu-sp .menu-sp-others__panel a", text: "ご意見BOX", visible: :all)).not_to be_empty
   end
 
   it "ログイン後TOPに補助カードが表示されること" do

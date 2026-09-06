@@ -679,6 +679,25 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       customer.current_sign_in_at = 1.minute.ago
       expect(customer.latest_activity_at).to eq 1.minute.ago
     end
+
+    it '片方が未来（異常データ）なら、もう片方（未来でない方）を返す' do
+      customer.last_active_at = 1.day.from_now
+      customer.current_sign_in_at = 2.days.ago
+      expect(customer.latest_activity_at).to eq 2.days.ago
+    end
+
+    it '両方が未来（異常データ）なら nil' do
+      customer.last_active_at = 1.day.from_now
+      customer.current_sign_in_at = 2.days.from_now
+      expect(customer.latest_activity_at).to be_nil
+    end
+
+    it 'now: を渡すと、その時刻を基準に未来判定する' do
+      customer.last_active_at = Time.zone.local(2026, 8, 27, 12, 0, 30)
+      customer.current_sign_in_at = Time.zone.local(2026, 8, 27, 11, 0, 0)
+      expect(customer.latest_activity_at(now: Time.zone.local(2026, 8, 27, 12, 0, 0)))
+        .to eq Time.zone.local(2026, 8, 27, 11, 0, 0)
+    end
   end
 
   describe '#recently_active?' do
@@ -739,6 +758,18 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       customer.current_sign_in_at = Time.current
       customer.is_deleted = true
       expect(customer.recently_active?).to eq false
+    end
+
+    it '両方が未来日時（異常データ）なら false' do
+      customer.last_active_at = 1.day.from_now
+      customer.current_sign_in_at = 2.days.from_now
+      expect(customer.recently_active?).to eq false
+    end
+
+    it '片方が未来でも、もう片方が1か月以内なら true' do
+      customer.last_active_at = 1.day.from_now
+      customer.current_sign_in_at = 3.days.ago
+      expect(customer.recently_active?).to eq true
     end
   end
 
@@ -807,10 +838,48 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       expect(customer.login_activity_level).to be_nil
     end
 
-    it 'last_active_at が新しくても current_sign_in_at のみで判定する' do
-      customer.last_active_at = Time.current
-      customer.current_sign_in_at = 2.weeks.ago
-      expect(customer.login_activity_level).to eq :dormant
+    context 'last_active_at / current_sign_in_at の新しい方で判定する' do
+      it 'current_sign_in_at が古くても last_active_at が新しければ :active' do
+        customer.current_sign_in_at = 2.weeks.ago
+        customer.last_active_at = 10.minutes.ago
+        expect(customer.login_activity_level).to eq :active
+      end
+
+      it 'last_active_at が古くても current_sign_in_at が新しければ :active' do
+        customer.current_sign_in_at = 10.minutes.ago
+        customer.last_active_at = 2.weeks.ago
+        expect(customer.login_activity_level).to eq :active
+      end
+
+      it 'last_active_at だけあり新しければ :active（ログイン履歴なしでも操作で緑）' do
+        customer.current_sign_in_at = nil
+        customer.last_active_at = 1.hour.ago
+        expect(customer.login_activity_level).to eq :active
+      end
+
+      it '両方 nil なら nil' do
+        customer.current_sign_in_at = nil
+        customer.last_active_at = nil
+        expect(customer.login_activity_level).to be_nil
+      end
+
+      it '両方古ければ、新しい方の日時で境界どおりに判定する' do
+        customer.current_sign_in_at = 2.months.ago
+        customer.last_active_at = 3.days.ago
+        expect(customer.login_activity_level).to eq :semi
+      end
+
+      it '片方が未来（異常データ）でも、もう片方が正常ならそちらで判定する' do
+        customer.current_sign_in_at = 1.day.from_now
+        customer.last_active_at = 10.minutes.ago
+        expect(customer.login_activity_level).to eq :active
+      end
+
+      it '両方未来（異常データ）なら nil' do
+        customer.current_sign_in_at = 1.day.from_now
+        customer.last_active_at = 2.days.from_now
+        expect(customer.login_activity_level).to be_nil
+      end
     end
   end
 end

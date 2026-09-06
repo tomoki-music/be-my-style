@@ -326,6 +326,16 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
       expect(response.body).not_to include "現在、依頼できる演奏経験者はいません"
     end
 
+    it "送信ボタンにレスポンシブ用の BEM クラス(entry-invitation-form__submit)が付いている" do
+      sign_in owner
+      show_event
+
+      button = doc.at_css(".js-entry-invitation-submit")
+      expect(button["class"].split).to include("entry-invitation-form__submit")
+      # フォーム直下にあり、CSS の .entry-invitation-form スコープが効く
+      expect(button.ancestors("form").first["id"]).to eq "entry-invitation-form"
+    end
+
     it "invited_resendable な候補がいても初期HTMLでは disabled" do
       FactoryBot.create(:entry_invitation,
         event: current_event, song: current_song, join_part: current_part,

@@ -242,5 +242,77 @@ RSpec.describe "Admin::Homes", type: :request do
 
       expect(queries.size).to be <= 3
     end
+
+    describe "会員一覧のプロフィールアイコンとアクティブ状況" do
+      def name_cell(body, customer)
+        row = Nokogiri::HTML(body).css("table tbody tr").find do |tr|
+          tr.at_css("th")&.text&.strip == customer.id.to_s
+        end
+        row.css("td")[0]
+      end
+
+      it "名前セルにプロフィールアイコン(img)が表示されること" do
+        customer = FactoryBot.create(:customer)
+
+        get admin_homes_top_path
+
+        expect(name_cell(response.body, customer).at_css("img")).to be_present
+      end
+
+      it "最近利用したユーザーには緑丸(.avatar-active-dot--active)と状態説明が付くこと" do
+        customer = FactoryBot.create(:customer, current_sign_in_at: 10.minutes.ago, last_active_at: 5.minutes.ago)
+
+        get admin_homes_top_path
+
+        dot = name_cell(response.body, customer).at_css(".avatar-active-dot")
+        expect(dot["class"]).to include("avatar-active-dot--active")
+        expect(dot["aria-label"]).to eq("24時間以内に利用")
+        expect(dot["title"]).to eq("24時間以内に利用")
+      end
+
+      it "ログイン中に画面操作したユーザーは、最終ログインが古くても緑丸になること" do
+        customer = FactoryBot.create(:customer, current_sign_in_at: 2.weeks.ago, last_active_at: 3.minutes.ago)
+
+        get admin_homes_top_path
+
+        dot = name_cell(response.body, customer).at_css(".avatar-active-dot")
+        expect(dot["class"]).to include("avatar-active-dot--active")
+      end
+
+      it "長期間利用がないユーザーには丸を表示しないこと" do
+        customer = FactoryBot.create(:customer, current_sign_in_at: 3.months.ago, last_active_at: 3.months.ago)
+
+        get admin_homes_top_path
+
+        expect(name_cell(response.body, customer).at_css(".avatar-active-dot")).to be_nil
+      end
+
+      it "退会済みユーザーはアイコンを出しつつ丸は表示しないこと" do
+        customer = FactoryBot.create(:customer, is_deleted: true, current_sign_in_at: Time.current, last_active_at: Time.current)
+
+        get admin_homes_top_path
+
+        cell = name_cell(response.body, customer)
+        expect(cell.at_css("img")).to be_present
+        expect(cell.at_css(".avatar-active-dot")).to be_nil
+        expect(cell.text).to include(customer.name)
+      end
+
+      it "プロフィール画像のためのSQLがCustomer数に比例して増えないこと(N+1回避)" do
+        FactoryBot.create_list(:customer, 3, current_sign_in_at: 1.hour.ago)
+
+        blob_queries = []
+        callback = lambda do |*, payload|
+          sql = payload[:sql]
+          blob_queries << sql if sql.include?("active_storage_blobs") && !sql.match?(/SCHEMA/)
+        end
+
+        ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+          get admin_homes_top_path
+        end
+
+        expect(blob_queries.size).to be <= 2
+      end
+    end
   end
 end

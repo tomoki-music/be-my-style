@@ -199,10 +199,12 @@ module ApplicationHelper
     customer.login_activity_level
   end
 
+  # ログインだけでなく、ログイン中の画面操作（last_active_at）も対象になるため
+  # 「ログイン」ではなく「利用」と表現する。全画面で共通のこの定数を参照する。
   AVATAR_ACTIVE_STATUS_LABELS = {
-    active: "24時間以内にログイン",
-    semi: "1週間以内にログイン",
-    dormant: "1か月以内にログイン"
+    active: "24時間以内に利用",
+    semi: "1週間以内に利用",
+    dormant: "1か月以内に利用"
   }.freeze
 
   # 丸を 10px（--small）に縮める小サイズアバターの画像クラス。
@@ -214,6 +216,7 @@ module ApplicationHelper
     singing-ranking__growth-user-avatar
     singing-season__user-avatar
     cheers-history__avatar-img
+    admin-customer-avatar
   ].freeze
 
   # アクティブ状態を表す丸（緑 / 黄 / 灰）。色だけで状態が伝わらないよう、

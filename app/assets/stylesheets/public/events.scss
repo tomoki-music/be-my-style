@@ -1431,15 +1431,14 @@ input[type="text"] {
 }
 
 // 演奏経験者へのエントリー依頼フォーム(#entry-invitation-form)。
-// フォーム本体(見出し・説明・送信ボタン)だけを楽曲表の外の行へ置き、対象者の
-// チェックボックスは楽曲表の各パート欄に置いて form= 属性で紐付ける。
-// セルを左端に sticky 固定し、フォーム幅をビューポート幅にクランプすることで、
-// 楽曲表を横スクロールしても送信ボタンは常に画面内へ収まり、
-// このフォーム起因の横スクロールを新たに発生させない。
+// フォーム本体(見出し・説明・送信ボタン)だけを楽曲表(.event-songs-table)の外側、
+// .event-show-table の 1 行(.entry-invitation-row)へ置き、対象者のチェックボックスは
+// 楽曲表の各パート欄に置いて form= 属性で紐付ける。
+// .entry-invitation-row は横スクロールしない .event-show-table(width:100%) の行なので、
+// セル自体を sticky 固定したり max-width で潰したりする必要はない。
+// (以前は sticky + max-width:0 を入れていたが、セルとフォームが 0 幅に潰れ、
+//  さらに下記の詳細度負けと合わさって送信ボタンが極端に狭くなっていた)
 .entry-invitation-row > td {
-  position: sticky;
-  left: 0;
-  max-width: 0;
   padding: 12px 0;
 }
 
@@ -1450,7 +1449,9 @@ input[type="text"] {
   border-radius: 10px;
   background: #f8f9fa;
   width: 100%;
-  // 楽曲表の実幅(スクロール領域)ではなくビューポート幅を基準に収める。
+  // イベント詳細は Bootstrap の .row / .col 由来でページ全体に十数 px の横あふれがある。
+  // フォームはセル幅(width:100%)いっぱいに広げつつ、そのあふれを拾わないよう
+  // ビューポート幅からわずかに引いた値でクランプする(PC ではセル幅の方が狭いので無影響)。
   max-width: calc(100vw - 24px);
   box-sizing: border-box;
   overflow-wrap: anywhere;
@@ -1494,6 +1495,46 @@ input[type="text"] {
     font-size: 0.85rem;
     font-weight: 700;
     word-break: break-word;
+  }
+}
+
+// エントリー依頼フォームの送信ボタン(submit_tag → <input type="submit">)。
+//
+// 根本原因: events.scss 上部の
+//   .event-show-container .event-show-table input[type="submit"] { width: 20%; display: inline-block }
+// が詳細度 (0,3,1) でこのボタンにも当たっていた。前回追加した
+//   .entry-invitation-form .entry-invitation-form__submit { width: 100% } は (0,2,0) で負けるため、
+// スマホでボタンが親フォームの 20% 幅に潰れ、文言(「選択した人へエントリーをお願いする」)が
+// 数文字ずつ縦に折り返されていた。PC(>=768px)の width:auto も同じ理由で効いていなかった。
+//
+// 対策: 同じ input[type="submit"] を含めたうえでクラスを1つ多く重ね、
+// 詳細度を (0,4,1) にして !important 無しで正攻法に上書きする。
+// .entry-invitation-form__submit は BEM の装飾フックで、JS フック
+// (.js-entry-invitation-submit)は装飾へ流用しない。disabled 状態を条件に含めないので、
+// JS で有効化される前後で width / display は変化しない。
+.event-show-table .entry-invitation-form input[type="submit"].entry-invitation-form__submit {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  margin: 8px 0 0;
+  padding: 12px 20px;
+  // フォームの overflow-wrap:anywhere を打ち消し、1〜数文字での折り返しを防ぐ。
+  // 375px なら1行、収まらない狭い端末では CJK の通常改行で自然に折り返す。
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  line-height: 1.4;
+
+  // PC は内容幅・原則1行(前回方針を維持)。
+  @media (min-width: 768px) {
+    display: inline-block;
+    width: auto;
+    max-width: 100%;
+    min-height: 0;
+    padding: 10px 28px;
+    white-space: nowrap;
   }
 }
 

@@ -40,14 +40,14 @@ RSpec.describe ApplicationHelper, type: :helper do
       node = fragment(helper.customer_avatar_tag(semi_active_customer))
 
       expect(node.at_css('.avatar-active-dot--semi')).to be_present
-      expect(node.at_css('.avatar-active-dot--semi')['title']).to eq '1週間以内にログイン'
+      expect(node.at_css('.avatar-active-dot--semi')['title']).to eq '1週間以内に利用'
     end
 
     it 'しばらく前にログインしたユーザーには灰丸(.avatar-active-dot--dormant)が表示されること' do
       node = fragment(helper.customer_avatar_tag(dormant_customer))
 
       expect(node.at_css('.avatar-active-dot--dormant')).to be_present
-      expect(node.at_css('.avatar-active-dot--dormant')['title']).to eq '1か月以内にログイン'
+      expect(node.at_css('.avatar-active-dot--dormant')['title']).to eq '1か月以内に利用'
     end
 
     it '非アクティブユーザーには表示されないこと' do
@@ -71,8 +71,8 @@ RSpec.describe ApplicationHelper, type: :helper do
     it 'アクセシビリティ属性(title / aria-label / role)が付くこと' do
       dot = fragment(helper.customer_avatar_tag(active_customer)).at_css('.avatar-active-dot')
 
-      expect(dot['title']).to eq '24時間以内にログイン'
-      expect(dot['aria-label']).to eq '24時間以内にログイン'
+      expect(dot['title']).to eq '24時間以内に利用'
+      expect(dot['aria-label']).to eq '24時間以内に利用'
       expect(dot['role']).to eq 'img'
     end
 
@@ -122,7 +122,7 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(dot['class']).to include('avatar-active-dot--small')
       # 色・ラベルは通常と共通
       expect(dot['class']).to include('avatar-active-dot--active')
-      expect(dot['title']).to eq '24時間以内にログイン'
+      expect(dot['title']).to eq '24時間以内に利用'
     end
 
     it '小サイズ判定は複数クラスのうち1つでも一致すれば有効' do

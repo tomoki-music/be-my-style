@@ -376,7 +376,7 @@
                         -# checked 件数を見て有効化する(参加フォームのボタン制御とは完全に分離)。
                         -# JS 無効時はサーバー側 TargetParser / TargetResolver / BatchSender が空選択を弾く。
                         = submit_tag "選択した人へエントリーをお願いする",
-                          class: "btn btn-info js-entry-invitation-submit",
+                          class: "btn btn-info js-entry-invitation-submit entry-invitation-form__submit",
                           disabled: true,
                           data: { disable_with: "確認画面へ移動中..." }
                 %tr

@@ -50,6 +50,14 @@ RSpec.describe 'ログイン継続中のアクティビティ記録', type: :req
       expect(customer.reload.last_active_at).to be_nil
     end
 
+    it '最終ログインが古くても、画面操作すればアクティブ判定(:active)へ復帰する' do
+      customer.update!(current_sign_in_at: 2.weeks.ago, last_sign_in_at: 3.weeks.ago, last_active_at: nil)
+
+      get public_customer_path(customer)
+
+      expect(customer.reload.login_activity_level).to eq(:active)
+    end
+
     it '正確な last_active_at がレスポンス本文へ表示されない' do
       travel_to(Time.zone.local(2026, 8, 27, 12, 34, 56)) do
         get public_customer_path(customer)

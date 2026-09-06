@@ -572,4 +572,111 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
       end
     end
   end
+
+  # 送信ボタン(「選択した人へエントリーをお願いする」)の幅の回帰。
+  # 以前は events.scss 上部の .event-show-container .event-show-table input[type="submit"]
+  # { width: 20% } が詳細度で勝ち、スマホでボタンが親フォームの 20% 幅へ潰れて
+  # 文言が数文字ずつ縦折り返しになっていた。
+  describe "送信ボタンの幅(スマホは横いっぱい / PC は内容幅)" do
+    # form のコンテンツ幅(左右パディングを除いた内側の幅)と、送信ボタンの実描画幅を返す。
+    def submit_metrics
+      page.evaluate_script(<<~JS)
+        (function () {
+          var form = document.getElementById('entry-invitation-form');
+          var btn = form.querySelector('.entry-invitation-form__submit');
+          var cs = window.getComputedStyle(form);
+          var bs = window.getComputedStyle(btn);
+          var innerWidth = form.clientWidth
+            - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+          var b = btn.getBoundingClientRect();
+          var f = form.getBoundingClientRect();
+          // <input> は子テキストノードを持たず Range で行数を測れないため、
+          // 高さ = 1行ぶんの行ボックス + 上下パディング + 上下ボーダー を基準に推定する。
+          var singleLineHeight = parseFloat(bs.lineHeight)
+            + parseFloat(bs.paddingTop) + parseFloat(bs.paddingBottom)
+            + parseFloat(bs.borderTopWidth) + parseFloat(bs.borderBottomWidth);
+          return {
+            formInnerWidth: innerWidth,
+            buttonWidth: b.width,
+            buttonHeight: b.height,
+            buttonOverflowRight: b.right - f.right,
+            display: bs.display,
+            whiteSpace: bs.whiteSpace,
+            disabled: btn.disabled,
+            singleLineHeight: singleLineHeight,
+            estimatedLines: Math.max(1, Math.round((b.height - singleLineHeight) / parseFloat(bs.lineHeight)) + 1)
+          };
+        })()
+      JS
+    end
+
+    it "375px: ボタン幅が親フォームの内側幅とほぼ一致し、文言が細切れに折り返されない" do
+      sign_in_via_form(owner)
+      set_mobile_viewport(375)
+      visit public_event_path(current_event)
+      expect(page).to have_selector("#entry-invitation-form .entry-invitation-form__submit")
+
+      m = submit_metrics
+      # フォーム内側幅の 92% 以上(パディング/ボーダー差は許容)、はみ出しは 1px 以内
+      expect(m["buttonWidth"]).to be >= m["formInnerWidth"] * 0.92,
+        "ボタンが狭すぎる(button #{m['buttonWidth']}px / form inner #{m['formInnerWidth']}px)"
+      expect(m["buttonWidth"]).to be <= m["formInnerWidth"] + 1
+      expect(m["buttonOverflowRight"]).to be <= 1
+      expect(m["display"]).to eq("block")
+      # 44px 以上のタップ領域、かつ異常に高くない(細切れ折り返しなら 3 行以上になる)
+      expect(m["buttonHeight"]).to be >= 44
+      expect(m["estimatedLines"]).to be <= 2
+    end
+
+    it "320px: ボタンがフォームからはみ出さず、ページ横スクロールを増やさない" do
+      sign_in_via_form(owner)
+      set_mobile_viewport(320)
+      visit public_event_path(current_event)
+      expect(page).to have_selector("#entry-invitation-form .entry-invitation-form__submit")
+
+      m = submit_metrics
+      expect(m["buttonOverflowRight"]).to be <= 1
+      expect(m["buttonWidth"]).to be >= m["formInnerWidth"] * 0.9
+
+      page_overflow = page.evaluate_script(
+        "document.documentElement.scrollWidth - document.documentElement.clientWidth"
+      )
+      expect(page_overflow).to be <= 18
+    end
+
+    it "disabled と enabled で幅・display が変わらない(JS 有効化前後で不変)" do
+      sign_in_via_form(owner)
+      set_mobile_viewport(375)
+      visit public_event_path(current_event)
+      expect(page).to have_selector("#entry-invitation-form .js-entry-invitation-submit[disabled]")
+
+      before_enable = submit_metrics
+      expect(before_enable["disabled"]).to be(true)
+
+      check_via_js(checkbox_id(current_song, current_vocal, experienced_a))
+      expect(invitation_submit_disabled?).to be(false)
+      after_enable = submit_metrics
+      expect(after_enable["disabled"]).to be(false)
+
+      expect((after_enable["buttonWidth"] - before_enable["buttonWidth"]).abs).to be <= 1
+      expect(after_enable["display"]).to eq(before_enable["display"])
+    end
+
+    it "PC幅(1280px): ボタンは内容幅(width:auto)で親フォームより十分狭く、1 行に収まる" do
+      sign_in_via_form(owner)
+      page.driver.browser.execute_cdp(
+        "Emulation.setDeviceMetricsOverride", width: 1280, height: 900, deviceScaleFactor: 1, mobile: false
+      )
+      visit public_event_path(current_event)
+      expect(page).to have_selector("#entry-invitation-form .entry-invitation-form__submit")
+
+      m = submit_metrics
+      expect(m["display"]).to eq("inline-block")
+      expect(m["buttonWidth"]).to be < m["formInnerWidth"]
+      expect(m["buttonOverflowRight"]).to be <= 1
+      # nowrap なので構造上 1 行。高さも 1 行ぶんに収まる。
+      expect(m["whiteSpace"]).to eq("nowrap")
+      expect(m["estimatedLines"]).to eq(1)
+    end
+  end
 end
