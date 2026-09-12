@@ -270,8 +270,7 @@ class Public::EventsController < ApplicationController
   def join
     event = Event.find(params[:event_id])
     community = Community.find(event.community_id)
-    customer_ids = community.customers.pluck(:id)
-    if customer_ids.include?(current_customer.id)
+    if event.community_member?(current_customer)
       join_part_ids_array = valid_join_part_ids_for(event, params[:join_part_ids]&.values)
       if join_part_ids_array.nil?
         redirect_to public_event_path(event), alert: "参加したパートにチェックを入れて下さい。"

@@ -547,18 +547,30 @@
     }    
     
     .responsive-box {
+      // スマホ(768px未満)は横スクロール前提の狭い幅のまま維持する。
       width: 280px;
       overflow-x: auto;
       max-height: 500px;
       overflow-y: auto;
       border: 1px solid #ccc;
-    
+
+      // 以前は@media(min-width:768px)でも固定800pxだったため、PCで表示倍率を下げる/
+      // 画面を広げるほど.col-md-9側に余白が余っていた。テーブル自身に
+      // min-width(下記.event-songs-table)を残したまま、この箱は親要素(.event-songs-join-form)の
+      // 幅いっぱいに追従させる。親幅が.event-songs-tableのmin-widthを下回る間は
+      // 引き続きこのoverflow-x:autoで横スクロールする(スマホに近い挙動を維持)。
       @media (min-width: 768px) {
-        width: 800px;
+        width: 100%;
+        max-width: 100%;
       }
     }
     .event-songs-table {
       min-width: 280px;
+      // .responsive-boxがPC(768px以上)で親幅いっぱいに広がるようになったのに合わせ、
+      // テーブル自身も100%まで広がれるようにする。table-layout:fixedのため、
+      // 実際に使われる幅は max(この100%, HTML側のinline min-width) になり、
+      // 親幅がinline min-widthより狭い間は従来どおり.responsive-boxの横スクロールに委ねる。
+      width: 100%;
       border-collapse: collapse;
       th, td {
         text-align: left;

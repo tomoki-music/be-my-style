@@ -250,15 +250,19 @@
                           %div.responsive-box
                             - part_names = JoinPart::NAME_OPTIONS
                             -# table-layout:fixed のため列幅は先頭行の width で決まる(min-width は効かない)。
-                            -# パート列を候補カードが読める幅(160px)に固定し、列数ぶんを min-width に合算する
-                            -# (160 + 160 + 160*6 = 1280px)。あふれは既存の .responsive-box の横スクロールで見る。
-                            %table.table.table-bordered.event-songs-table{ style: "min-width: 1280px; table-layout: fixed;" }
+                            -# 列数(2 + パート数)で等分した%指定にし、PC(768px以上、.event-songs-tableのwidth:100%)で
+                            -# テーブルが画面幅いっぱいに広がるほど各列も比例して広がるようにする。
+                            -# min-widthはこれまでどおり候補カードが読める幅(160px)換算の合計(160 * 列数)を保ち、
+                            -# 親幅がそれより狭いスマホでは従来どおり.responsive-boxの横スクロールで見る。
+                            - column_count = part_names.size + 2
+                            - column_width_percent = (100.0 / column_count).round(4)
+                            %table.table.table-bordered.event-songs-table{ style: "min-width: #{160 * column_count}px; table-layout: fixed;" }
                               %thead
                                 %tr
-                                  %th{ style: "width: 160px;" } 曲名 / ステータス
-                                  %th{ style: "width: 160px;" } 参加フォーム
+                                  %th{ style: "width: #{column_width_percent}%;" } 曲名 / ステータス
+                                  %th{ style: "width: #{column_width_percent}%;" } 参加フォーム
                                   - part_names.each do |part|
-                                    %th{ style: "width: 160px;" }= part
+                                    %th{ style: "width: #{column_width_percent}%;" }= part
                               %tbody
                                 - @event.songs.each do |song|
                                   - recruiting_parts = song.recruiting_join_parts

@@ -12,3 +12,139 @@
     height: 100%;
   }
 }
+
+// 楽曲詳細ページの「参加状況」(app/views/public/songs/_participation_status.html.haml)。
+// 判定・文言・エントリー処理はイベント楽曲一覧(events.scss/.event-songs-table)と同じものを
+// 再利用するが、一覧の横スクロール表(固定160px列)とは違い縦積みのカード表示にするため、
+// 見た目はこのファイルへ新たに定義する(一覧側のCSSには手を入れない)。
+.song-participation {
+  margin: 20px 0;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  &__deadline {
+    color: #7a5c00;
+    font-weight: 600;
+  }
+
+  &__empty {
+    color: #6c757d;
+  }
+
+  &__parts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+
+    // スマホでは縦1列、画面幅に応じてカードが自然に増える(単一のPC幅決め打ちにしない)。
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+  }
+
+  &__submit {
+    margin-top: 16px;
+    min-height: 48px;
+    font-size: 1.1rem;
+
+    // ボタン自体は最初からタップしやすい全幅(スマホ)にしつつ、PCでは間延びしないよう
+    // 上限を設ける(横幅いっぱいの.event-songs-join-formに対して不自然に大きくしない)。
+    @media (min-width: 768px) {
+      max-width: 320px;
+    }
+  }
+
+  &__closed {
+    margin-top: 12px;
+    color: #6c757d;
+  }
+
+  &__join-community {
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid #ffc107;
+    border-radius: 10px;
+    background: #fff8e1;
+
+    p {
+      margin-bottom: 8px;
+    }
+  }
+}
+
+.song-part {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff;
+  min-width: 0; // grid item内でテキストがはみ出さないようにする
+
+  &__name {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  &__members {
+    margin-bottom: 4px;
+  }
+
+  &__member {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  &__member-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: inherit;
+    min-width: 0;
+
+    &:hover {
+      color: inherit;
+      text-decoration: none;
+    }
+  }
+
+  &__member-name {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  &__cancel {
+    white-space: nowrap;
+  }
+
+  &__entry {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #eee;
+  }
+
+  &__entry-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    // タップ領域を確保する(スマホでの押しやすさ)。
+    min-height: 44px;
+    margin: 0;
+    cursor: pointer;
+
+    input {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+  }
+}
