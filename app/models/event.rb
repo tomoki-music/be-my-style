@@ -78,6 +78,17 @@ class Event < ApplicationRecord
     community.active_customers.distinct
   end
 
+  # 開催コミュニティの所属者かどうか。Public::EventsController#join が参加登録時に
+  # 使う判定基準と同じもの(community.customersに存在するか)を1箇所に集約し、
+  # 楽曲詳細ページ等の表示制御からも同じ基準を参照できるようにする。
+  # 注記: このメソッドはUI表示制御(導線を出す/出さない)にのみ使う。実際の登録可否は
+  # 従来どおりjoinアクション側が独立して再検証する(view側の判定だけに依存しない)。
+  def community_member?(customer)
+    return false if community.blank? || customer.blank?
+
+    community.customers.exists?(id: customer.id)
+  end
+
   def session_credit_applied_for?(customer)
     participation_record_for(customer)&.session_credit_applied?
   end

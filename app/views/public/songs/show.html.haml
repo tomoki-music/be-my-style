@@ -99,6 +99,9 @@
       %th 最終更新日
       %td= l @song.updated_at, format: :short
 
+  %h3.mt-4 参加状況
+  = render "participation_status"
+
   - if @can_save_as_template
     .mt-4
       = button_to "この曲をテンプレートとして保存",
