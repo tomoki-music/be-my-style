@@ -180,6 +180,18 @@ def test_guitar_high_dynamic_range_alone_does_not_reach_the_90s():
     assert expression_score < 80
 
 
+def test_guitar_rms_alone_does_not_change_expression():
+    # guitar's expression formula never references features.rms; this pins that
+    # down with an isolated RMS-only comparison (all other features held equal).
+    quiet = make_features(rms=0.06, dynamic_range=0.17, attack_clarity=0.4, muting_control=0.4)
+    loud = make_features(rms=0.35, dynamic_range=0.17, attack_clarity=0.4, muting_control=0.4)
+
+    _, _, quiet_expression, _ = analyzer._guitar_scores(quiet)
+    _, _, loud_expression, _ = analyzer._guitar_scores(loud)
+
+    assert quiet_expression == loud_expression
+
+
 # ── E. Drums ──────────────────────────────────────────────────────────────────
 
 def test_drums_expression_reflects_attack_clarity():
@@ -203,6 +215,18 @@ def test_drums_dynamic_range_is_target_matched_not_monotonic():
     _, _, extreme_expression, _ = analyzer._drums_scores(extreme)
 
     assert moderate_expression >= extreme_expression
+
+
+def test_drums_rms_alone_does_not_change_expression():
+    # drums' expression formula never references features.rms; this pins that
+    # down with an isolated RMS-only comparison (all other features held equal).
+    quiet = make_features(rms=0.06, dynamic_range=0.22, attack_clarity=0.4, amplitude_stability=0.4)
+    loud = make_features(rms=0.35, dynamic_range=0.22, attack_clarity=0.4, amplitude_stability=0.4)
+
+    _, _, quiet_expression, _ = analyzer._drums_scores(quiet)
+    _, _, loud_expression, _ = analyzer._drums_scores(loud)
+
+    assert quiet_expression == loud_expression
 
 
 # ── F. Vocal ──────────────────────────────────────────────────────────────────
