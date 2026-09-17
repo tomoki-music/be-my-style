@@ -34,6 +34,39 @@ module SingingDiagnoses
       }
     ].freeze
 
+    # performance_type ごとに、expression_score が実際に見ている内容へ合わせた練習文を返す。
+    # ここに無い performance_type (vocal 含む) は MENU_DEFINITIONS のデフォルト文言を使う。
+    EXPRESSION_MENU_BY_PERFORMANCE_TYPE = {
+      "guitar" => {
+        title: "強弱弾き分け練習",
+        description: "同じフレーズを弱・中・強の3段階で弾き分け、アタックや余韻の違いを録音で聴き比べましょう。",
+        reason: "今回の診断では expression_score がやや低めでした。",
+        level: "中級",
+        icon: "✨"
+      },
+      "bass" => {
+        title: "アクセント位置の弾き分け練習",
+        description: "同じフレーズを一定の音価で弾いたあと、アクセントの位置を変えて録音し、聴こえ方の違いを比べましょう。",
+        reason: "今回の診断では expression_score がやや低めでした。",
+        level: "中級",
+        icon: "✨"
+      },
+      "drums" => {
+        title: "強弱コントロール練習",
+        description: "同じパターンを弱め・普通・強めで叩き分け、テンポを崩さずに強弱の差をつけてみましょう。",
+        reason: "今回の診断では expression_score がやや低めでした。",
+        level: "中級",
+        icon: "✨"
+      },
+      "keyboard" => {
+        title: "タッチ強弱の弾き分け練習",
+        description: "同じコード進行を弱め・普通・強めのタッチで弾き分け、音のつながりを保ちながら表現の幅を確認しましょう。",
+        reason: "今回の診断では expression_score がやや低めでした。",
+        level: "中級",
+        icon: "✨"
+      }
+    }.freeze
+
     HIGH_OVERALL_MENU = {
       title: "次のステージ：楽曲表現チャレンジ",
       description: "今の安定感を活かして、Aメロ・サビ・ラストで表情を変えるなど、1曲全体の物語づくりに挑戦しましょう。",
@@ -68,8 +101,17 @@ module SingingDiagnoses
     def low_score_menus
       MENU_DEFINITIONS.filter_map do |menu|
         value = score(menu[:score_key])
-        menu.except(:score_key, :threshold) if value.positive? && value < menu[:threshold]
+        next unless value.positive? && value < menu[:threshold]
+
+        resolved_menu(menu)
       end
+    end
+
+    def resolved_menu(menu)
+      default = menu.except(:score_key, :threshold)
+      return default unless menu[:score_key] == :expression_score
+
+      EXPRESSION_MENU_BY_PERFORMANCE_TYPE[diagnosis.performance_type.to_s] || default
     end
 
     def score(key)

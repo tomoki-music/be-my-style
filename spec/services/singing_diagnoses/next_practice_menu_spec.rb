@@ -32,6 +32,24 @@ RSpec.describe SingingDiagnoses::NextPracticeMenu do
     expect(menu.first[:title]).to eq "表現力アップ練習"
   end
 
+  it "bassでexpression_scoreが低い場合、ボーカル向けではなくベース向けの表現メニューを返すこと" do
+    diagnosis = build_diagnosis(expression_score: 64, performance_type: :bass)
+
+    menu = described_class.new(diagnosis).call
+
+    expect(menu.first[:title]).to eq "アクセント位置の弾き分け練習"
+    expect(menu.first[:description]).not_to include("声", "歌っ")
+  end
+
+  it "keyboardでexpression_scoreが低い場合、ボーカル向けではなくキーボード向けの表現メニューを返すこと" do
+    diagnosis = build_diagnosis(expression_score: 64, performance_type: :keyboard)
+
+    menu = described_class.new(diagnosis).call
+
+    expect(menu.first[:title]).to eq "タッチ強弱の弾き分け練習"
+    expect(menu.first[:description]).not_to include("声", "歌っ")
+  end
+
   it "overall_score が高い場合、上級チャレンジ系メニューを返すこと" do
     menu = described_class.new(build_diagnosis(overall_score: 90)).call
 

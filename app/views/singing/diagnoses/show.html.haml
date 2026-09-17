@@ -214,7 +214,7 @@
         %p.singing-diagnosis__score-note この診断は現時点の音声から見た目安です。絶対的な評価ではなく、練習や振り返りのヒントとしてご活用ください。
         .singing-diagnosis__score-guide-grid
           - [:overall, :pitch, :rhythm, :expression].each do |score_key|
-            - guide = singing_score_guide(score_key)
+            - guide = singing_score_guide(score_key, @diagnosis.performance_type)
             .singing-diagnosis__score-guide
               %h3= guide[:label]
               %p= guide[:description]

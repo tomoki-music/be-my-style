@@ -80,6 +80,39 @@ RSpec.describe Singing::DiagnosesHelper, type: :helper do
       expect(guide[:label]).to eq "音程"
       expect(guide[:description]).to include "目安"
     end
+
+    it "表現の説明文がperformance_typeごとに実際の測定内容と一致すること" do
+      vocal_description = helper.singing_score_guide(:expression, "vocal")[:description]
+      bass_description = helper.singing_score_guide(:expression, "bass")[:description]
+      keyboard_description = helper.singing_score_guide(:expression, "keyboard")[:description]
+      guitar_description = helper.singing_score_guide(:expression, "guitar")[:description]
+      drums_description = helper.singing_score_guide(:expression, "drums")[:description]
+
+      expect(vocal_description).not_to include("ビブラート")
+      expect(bass_description).to include("安定感")
+      expect(bass_description).not_to include("声")
+      expect(keyboard_description).to include("タッチ")
+      expect(keyboard_description).not_to include("声")
+      expect(guitar_description).to include("アタック")
+      expect(drums_description).to include("アクセント")
+    end
+
+    it "未定義のperformance_typeではデフォルトの説明文を返すこと" do
+      guide = helper.singing_score_guide(:expression, "band")
+
+      expect(guide[:description]).to eq Singing::DiagnosesHelper::SCORE_GUIDES[:expression][:description]
+    end
+  end
+
+  describe "#singing_premium_voice_check_items" do
+    it "表現力の説明が実際に測定していない内容(ビブラート・語尾)を含まないこと" do
+      diagnosis = build_diagnosis(performance_type: "vocal")
+
+      item = helper.singing_premium_voice_check_items(diagnosis).find { |i| i[:label] == "表現力" }
+
+      expect(item[:description]).not_to include("ビブラート", "語尾")
+      expect(item[:description]).to include("音量変化")
+    end
   end
 
   describe "#singing_score_comment" do
@@ -836,6 +869,68 @@ RSpec.describe Singing::DiagnosesHelper, type: :helper do
   end
 
   describe "#singing_practice_menus" do
+    it "bassではボーカル向けではなくベース向け練習メニューを返すこと" do
+      diagnosis = build_diagnosis(
+        performance_type: "bass",
+        rhythm_score: 65,
+        expression_score: 60,
+        result_payload: {
+          "specific" => {
+            "groove_score" => 62,
+            "note_length_score" => 64,
+            "stability_score" => 80
+          }
+        }
+      )
+
+      menus = helper.singing_practice_menus(diagnosis)
+      menu_text = menus.map { |menu| [menu[:title], menu[:target], menu[:description]].join }.join
+
+      expect(menus.map { |menu| menu[:title] }).to include "拍頭をそろえるグルーヴ確認", "音価そろえ練習", "アクセント位置の弾き分け練習"
+      expect(menus.map { |menu| menu[:title] }).not_to include "サビ前後の強弱練習", "ロングトーン安定練習"
+      expect(menu_text).not_to include("声", "語尾", "ビブラート")
+    end
+
+    it "bassでスコアが十分高い場合はデフォルトのベース向けメニューを返すこと" do
+      diagnosis = build_diagnosis(
+        performance_type: "bass",
+        rhythm_score: 82,
+        expression_score: 82,
+        result_payload: {
+          "specific" => {
+            "groove_score" => 82,
+            "note_length_score" => 84,
+            "stability_score" => 86
+          }
+        }
+      )
+
+      menus = helper.singing_practice_menus(diagnosis)
+
+      expect(menus).to be_present
+      expect(menus.map { |menu| menu[:title] }).not_to include "サビ前後の強弱練習"
+    end
+
+    it "guitarでは表現が低めの場合にギター向けの強弱練習メニューを返すこと" do
+      diagnosis = build_diagnosis(
+        performance_type: "guitar",
+        rhythm_score: 82,
+        expression_score: 60,
+        result_payload: {
+          "specific" => {
+            "attack_score" => 82,
+            "muting_score" => 84,
+            "stability_score" => 86
+          }
+        }
+      )
+
+      menus = helper.singing_practice_menus(diagnosis)
+
+      expect(menus.map { |menu| menu[:title] }).to include "強弱弾き分け練習"
+      expect(menus.map { |menu| menu[:description] }.join).not_to include("声", "語尾")
+    end
+
     it "drumsではボーカル向けではなくドラム向け練習メニューを返すこと" do
       diagnosis = build_diagnosis(
         performance_type: "drums",
