@@ -117,6 +117,37 @@ def test_bass_high_rms_alone_is_not_a_major_bonus():
     assert abs(loud_expression - quiet_expression) <= 2
 
 
+def test_bass_expression_increases_step_by_step_with_playing_control():
+    # Regression for the "good already caps at 100" saturation bug: with
+    # dynamic_range pinned at its target and note_connection pinned at its ideal
+    # value (so only attack_clarity/amplitude_stability/onset_peak_consistency
+    # vary), each control tier should score strictly higher than the previous
+    # one, and reaching "good" control (0.75) must not already hit the 100 cap.
+    def bass_expression_for_control(ctrl):
+        features = make_features(
+            dynamic_range=0.14,
+            attack_clarity=ctrl,
+            amplitude_stability=ctrl,
+            onset_peak_consistency=ctrl,
+            note_connection=0.58,
+            silence_ratio=0.05,
+        )
+        _, _, expression_score, _ = analyzer._bass_scores(features)
+        return expression_score
+
+    low = bass_expression_for_control(0.3)
+    average = bass_expression_for_control(0.5)
+    good = bass_expression_for_control(0.75)
+    excellent = bass_expression_for_control(0.9)
+    near_excellent = bass_expression_for_control(0.85)
+
+    assert low < average < good < excellent
+    assert good < 100
+    # excellent may legitimately hit 100, but it must not be a wide clamp plateau:
+    # a slightly lower control level should still score meaningfully below it.
+    assert near_excellent < excellent
+
+
 # ── C. Keyboard ───────────────────────────────────────────────────────────────
 
 def test_keyboard_high_dynamic_range_alone_does_not_reach_the_90s():

@@ -1180,14 +1180,17 @@ class DiagnosisAnalyzer:
     def _score_bass_expression(self, features: AudioFeatures, *, note_length_balance: float) -> int:
         # Picked bass naturally produces a wide dynamic_range from attack/decay alone, so
         # that term is target-matched and kept as a minor factor rather than the main
-        # driver. Attack control, note-length balance and amplitude stability carry most
-        # of the weight, since those reflect playing technique rather than instrument
-        # physics.
+        # driver. Attack control and amplitude stability carry most of the weight, since
+        # those reflect sustained playing technique. note_length_balance is a proximity
+        # match against a single note_connection value, so it saturates near-full with
+        # only average control; its weight is kept modest (and shifted toward
+        # attack_clarity) so that hitting the note-length target alone can't carry an
+        # average performance into the 90s.
         dynamics_target = self._target_match(features.dynamic_range, center=0.14, tolerance=0.16)
         return self._clamp_score(
             34
-            + (features.attack_clarity * 20)
-            + (note_length_balance * 18)
+            + (features.attack_clarity * 22)
+            + (note_length_balance * 10)
             + (features.amplitude_stability * 18)
             + (features.onset_peak_consistency * 10)
             + (dynamics_target * 12)
