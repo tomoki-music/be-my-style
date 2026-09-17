@@ -117,7 +117,7 @@ class DiagnosisAnalyzer:
         else:
             pitch_score = self._score_pitch(features)
             rhythm_score = self._score_rhythm(features)
-            expression_score = self._score_expression(features)
+            expression_score = self._score_vocal_expression(features)
             overall_score = self._clamp_score(
                 (pitch_score * 0.4) + (rhythm_score * 0.3) + (expression_score * 0.3)
             )
@@ -171,7 +171,7 @@ class DiagnosisAnalyzer:
             - (features.silence_ratio * 10)
         )
         rhythm_score = self._score_rhythm(features)
-        expression_score = self._score_expression(features)
+        expression_score = self._score_guitar_expression(features)
 
         excess_sustain_control = 1.0 - self._clamp_unit((features.note_connection - 0.68) / 0.32)
         attack_score = self._clamp_score(
@@ -222,9 +222,9 @@ class DiagnosisAnalyzer:
             - (features.silence_ratio * 8)
         )
         rhythm_score = self._score_rhythm(features)
-        expression_score = self._score_expression(features)
 
         note_length_balance = 1.0 - self._clamp_unit(abs(features.note_connection - 0.58) / 0.58)
+        expression_score = self._score_bass_expression(features, note_length_balance=note_length_balance)
         groove_score = self._clamp_score(
             38
             + (features.rhythm_regularity * 42)
@@ -266,7 +266,7 @@ class DiagnosisAnalyzer:
 
     def _drums_scores(self, features: AudioFeatures) -> tuple[int, int, int, dict[str, int]]:
         rhythm_score = self._score_rhythm(features)
-        expression_score = self._score_expression(features)
+        expression_score = self._score_drums_expression(features)
 
         # Drums do not have a meaningful pitch axis in this initial analyzer.
         # Keep a conservative numeric value for backwards-compatible response shape,
@@ -322,7 +322,7 @@ class DiagnosisAnalyzer:
     def _keyboard_scores(self, features: AudioFeatures) -> tuple[int, int, int, dict[str, int]]:
         pitch_score = self._score_pitch(features)
         rhythm_score = self._score_rhythm(features)
-        expression_score = self._score_expression(features)
+        expression_score = self._score_keyboard_expression(features)
 
         chord_stability_score = self._clamp_score(
             38
@@ -1152,13 +1152,75 @@ class DiagnosisAnalyzer:
             - (features.silence_ratio * 20)
         )
 
-    def _score_expression(self, features: AudioFeatures) -> int:
-        dynamics_score = self._clamp_unit(features.dynamic_range / 0.25)
-        volume_score = self._clamp_unit(features.rms / 0.18)
+    def _score_vocal_expression(self, features: AudioFeatures) -> int:
+        # A musically appropriate amount of loudness variation is rewarded via a target
+        # match instead of "bigger dynamic_range / louder rms is always better", since a
+        # louder recording (mic gain, distance, normalization) should not read as more
+        # expressive singing.
+        dynamics_target = self._target_match(features.dynamic_range, center=0.20, tolerance=0.22)
         return self._clamp_score(
-            45
-            + (dynamics_score * 40)
-            + (volume_score * 15)
+            48
+            + (dynamics_target * 42)
+            - (features.silence_ratio * 18)
+        )
+
+    def _score_guitar_expression(self, features: AudioFeatures) -> int:
+        # Guitar expression is about touch control (attack shaping, decay/mute control),
+        # not raw loudness swings, which mostly reflect pick strength or mic gain.
+        dynamics_target = self._target_match(features.dynamic_range, center=0.17, tolerance=0.17)
+        return self._clamp_score(
+            34
+            + (features.attack_clarity * 26)
+            + (features.muting_control * 22)
+            + (features.onset_peak_consistency * 10)
+            + (dynamics_target * 12)
+            - (features.silence_ratio * 10)
+        )
+
+    def _score_bass_expression(self, features: AudioFeatures, *, note_length_balance: float) -> int:
+        # Picked bass naturally produces a wide dynamic_range from attack/decay alone, so
+        # that term is target-matched and kept as a minor factor rather than the main
+        # driver. Attack control and amplitude stability carry most of the weight, since
+        # those reflect sustained playing technique. note_length_balance is a proximity
+        # match against a single note_connection value, so it saturates near-full with
+        # only average control; its weight is kept modest (and shifted toward
+        # attack_clarity) so that hitting the note-length target alone can't carry an
+        # average performance into the 90s.
+        dynamics_target = self._target_match(features.dynamic_range, center=0.14, tolerance=0.16)
+        return self._clamp_score(
+            34
+            + (features.attack_clarity * 22)
+            + (note_length_balance * 10)
+            + (features.amplitude_stability * 18)
+            + (features.onset_peak_consistency * 10)
+            + (dynamics_target * 12)
+            - (features.silence_ratio * 10)
+        )
+
+    def _score_drums_expression(self, features: AudioFeatures) -> int:
+        # Dynamics genuinely matter for drums, but rhythm_regularity is intentionally left
+        # out here since it already drives rhythm_score and tempo_stability_score heavily
+        # for this performance type.
+        dynamics_target = self._target_match(features.dynamic_range, center=0.22, tolerance=0.20)
+        return self._clamp_score(
+            38
+            + (dynamics_target * 30)
+            + (features.attack_clarity * 24)
+            + (features.amplitude_stability * 10)
+            - (features.silence_ratio * 8)
+        )
+
+    def _score_keyboard_expression(self, features: AudioFeatures) -> int:
+        # Keyboard attack/decay naturally produces a large dynamic_range from touch alone,
+        # so it is target-matched and kept secondary to touch precision and note
+        # connection, which reflect playing technique.
+        dynamics_target = self._target_match(features.dynamic_range, center=0.15, tolerance=0.17)
+        return self._clamp_score(
+            36
+            + (features.onset_peak_consistency * 24)
+            + (features.note_connection * 22)
+            + (features.amplitude_stability * 14)
+            + (dynamics_target * 14)
             - (features.silence_ratio * 10)
         )
 

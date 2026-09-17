@@ -63,6 +63,34 @@ RSpec.describe SingingDiagnoses::GenerateAiCommentJob, type: :job do
       expect(diagnosis.ai_commented_at).to be_present
     end
 
+    it "開発環境フォールバックでbassのexpressionが低い場合はボーカル向けではなくベース向けの練習文を返すこと" do
+      customer = FactoryBot.create(:customer, domain_name: "singing")
+      customer.create_subscription!(status: "active", plan: "premium")
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis,
+        customer: customer,
+        status: :completed,
+        performance_type: :bass,
+        overall_score: 75,
+        pitch_score: 82,
+        rhythm_score: 80,
+        expression_score: 55
+      )
+
+      allow(SingingDiagnoses::AiCommentGenerator).to receive(:call).and_raise(
+        SingingDiagnoses::OpenAiResponsesClient::ConfigurationError,
+        "OpenAI API key is not configured."
+      )
+      allow(Rails.env).to receive(:development?).and_return(true)
+
+      described_class.perform_now(diagnosis.id)
+
+      diagnosis.reload
+      expect(diagnosis.ai_comment).to include("アクセントの位置")
+      expect(diagnosis.ai_comment).not_to include("声量")
+      expect(diagnosis.ai_comment).not_to include("語尾")
+    end
+
     it "非開発環境でAPIキー未設定の場合はai_comment_failedにすること" do
       customer = FactoryBot.create(:customer, domain_name: "singing")
       customer.create_subscription!(status: "active", plan: "premium")

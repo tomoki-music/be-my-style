@@ -14,8 +14,18 @@ module Singing::DiagnosesHelper
     },
     expression: {
       label: "表現",
-      description: "音量変化や抑揚の出し方を簡易的に見た目安です。"
+      description: "音量変化や抑揚の幅をもとにした目安です。"
     }
+  }.freeze
+
+  # performance_type ごとに、表現力(expression_score)が実際に計測している内容へ説明文を合わせる。
+  # ここに定義のない performance_type (band 含む) は SCORE_GUIDES[:expression] のデフォルト文言を使う。
+  EXPRESSION_SCORE_DESCRIPTIONS = {
+    "vocal" => "音量変化や抑揚の幅をもとにした目安です。",
+    "guitar" => "強弱、アタック、ミュートや演奏の安定感などをもとにした表現の目安です。",
+    "bass" => "強弱、アタック、音の長さや安定感などをもとにした表現の目安です。",
+    "drums" => "強弱、アクセント、演奏のコントロールなどをもとにした表現の目安です。",
+    "keyboard" => "タッチ、音のつながり、強弱などをもとにした表現の目安です。"
   }.freeze
 
   SCORE_COMPARISON_LABELS = {
@@ -744,8 +754,12 @@ module Singing::DiagnosesHelper
     }
   }.freeze
 
-  def singing_score_guide(score_key)
-    SCORE_GUIDES.fetch(score_key)
+  def singing_score_guide(score_key, performance_type = "vocal")
+    guide = SCORE_GUIDES.fetch(score_key)
+    return guide unless score_key == :expression
+
+    description = EXPRESSION_SCORE_DESCRIPTIONS[performance_type.to_s] || guide[:description]
+    guide.merge(description: description)
   end
 
   def singing_score_comment(score)
@@ -762,6 +776,7 @@ module Singing::DiagnosesHelper
 
   def singing_practice_menus(diagnosis)
     return singing_guitar_practice_menus(diagnosis) if diagnosis.performance_type_guitar?
+    return singing_bass_practice_menus(diagnosis) if diagnosis.performance_type_bass?
     return singing_band_practice_menus(diagnosis) if diagnosis.performance_type_band?
     return singing_drums_practice_menus(diagnosis) if diagnosis.performance_type_drums?
     return singing_keyboard_practice_menus(diagnosis) if diagnosis.performance_type_keyboard?
@@ -1564,7 +1579,7 @@ module Singing::DiagnosesHelper
     [
       premium_check_item("音程", "メロディの正確性、フラットしやすさの目安です。", diagnosis.pitch_score),
       premium_check_item("声量", "声の太さ、響き、前に出る力の目安です。", premium_average_score(diagnosis.overall_score, diagnosis.expression_score)),
-      premium_check_item("表現力", "ビブラート、抑揚、語尾のニュアンスなどの目安です。", diagnosis.expression_score),
+      premium_check_item("表現力", "音量変化や抑揚の幅をもとにした目安です。", diagnosis.expression_score),
       premium_check_item("リラックス", "力み具合、喉の締め付けにくさの目安です。", premium_average_score(diagnosis.pitch_score, diagnosis.rhythm_score)),
       premium_check_item("発音", "歌詞の明瞭性、言葉の届きやすさの目安です。", premium_average_score(diagnosis.pitch_score, diagnosis.rhythm_score, diagnosis.expression_score)),
       premium_check_item("リズム感", "歌のリズム、ノリ、フレーズの入り方の目安です。", diagnosis.rhythm_score)
@@ -3405,6 +3420,7 @@ module Singing::DiagnosesHelper
     menus << guitar_muting_practice_menu if singing_specific_scores(diagnosis)[:muting_score].to_i < 70
     menus << guitar_stability_practice_menu if singing_specific_scores(diagnosis)[:stability_score].to_i < 70
     menus << guitar_rhythm_practice_menu if diagnosis.rhythm_score.to_i < 70
+    menus << guitar_expression_practice_menu if diagnosis.expression_score.to_i < 70
 
     if menus.empty?
       menus << guitar_stability_practice_menu
@@ -3443,6 +3459,39 @@ module Singing::DiagnosesHelper
       title: "クリック合わせ練習",
       target: "リズム",
       description: "メトロノームに合わせて、ピッキングの位置と音の長さを一定に保つ練習をします。"
+    }
+  end
+
+  def guitar_expression_practice_menu
+    {
+      title: "強弱弾き分け練習",
+      target: "表現",
+      description: "同じフレーズを弱・中・強の3段階で弾き分け、アタックや余韻の違いを録音で聴き比べます。"
+    }
+  end
+
+  def singing_bass_practice_menus(diagnosis)
+    specific_scores = singing_specific_scores(diagnosis)
+    menus = []
+
+    menus << bass_groove_practice_menu if specific_scores[:groove_score].to_i < 70 || diagnosis.rhythm_score.to_i < 70
+    menus << bass_note_length_practice_menu if specific_scores[:note_length_score].to_i < 70
+    menus << bass_stability_practice_menu if specific_scores[:stability_score].to_i < 70
+    menus << bass_expression_practice_menu if diagnosis.expression_score.to_i < 70
+
+    if menus.empty?
+      menus << bass_stability_practice_menu
+      menus << bass_groove_practice_menu
+    end
+
+    menus.first(3)
+  end
+
+  def bass_expression_practice_menu
+    {
+      title: "アクセント位置の弾き分け練習",
+      target: "表現",
+      description: "同じフレーズを一定の音価で弾いたあと、アクセントの位置を変えて録音し、聴こえ方の違いを比べます。"
     }
   end
 

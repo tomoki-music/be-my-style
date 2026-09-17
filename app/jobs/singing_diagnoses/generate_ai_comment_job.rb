@@ -153,13 +153,30 @@ module SingingDiagnoses
       when "リズム"
         "次回はメトロノームや原曲に合わせて、歌い出しやフレーズの入りのタイミングを意識して練習してみましょう。"
       when "表現"
-        "次回は強く伝えたい一行を決め、声量や語尾のニュアンスを少し変えて録音で聴き比べてみましょう。"
+        expression_practice_sentence(diagnosis)
       else
         if diagnosis&.performance_type_band?
           "次回は8小節ほどに絞って録音し、音量バランスと入りのタイミングを全員で確認してみましょう。"
         else
           "次回は一番気になる短い範囲を選び、ゆっくり録音してから少しずつテンポを戻してみましょう。"
         end
+      end
+    end
+
+    # performance_type ごとに、expression_score が実際に見ている内容に沿った練習文を返す。
+    # vocal固有の「声量」「語尾」といった表現が、楽器診断のコメントへ紛れ込まないようにする。
+    def expression_practice_sentence(diagnosis)
+      case diagnosis&.performance_type&.to_s
+      when "guitar"
+        "次回は同じフレーズを弱め・普通・強めの3段階で弾き分け、アタックや余韻の違いを録音で聴き比べてみましょう。"
+      when "bass"
+        "次回は同じフレーズを一定の音価で弾いたあと、アクセントの位置を変えて録音し、聴こえ方の違いを比べてみましょう。"
+      when "drums"
+        "次回は同じパターンを弱め・普通・強めで叩き分け、テンポを崩さずに強弱の差をつけてみましょう。"
+      when "keyboard"
+        "次回は同じコード進行を弱め・普通・強めのタッチで弾き分け、音のつながりを保ちながら表現の幅を確認しましょう。"
+      else
+        "次回は強く伝えたい一行を決め、声量や語尾のニュアンスを少し変えて録音で聴き比べてみましょう。"
       end
     end
 

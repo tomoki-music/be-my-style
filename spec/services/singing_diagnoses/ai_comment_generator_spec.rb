@@ -31,6 +31,28 @@ RSpec.describe SingingDiagnoses::AiCommentGenerator do
       end
     end
 
+    it "vocalではexpression_scoreの説明が録音から測れない要素を測定したかのようにならないこと" do
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis,
+        status: :completed,
+        overall_score: 82,
+        pitch_score: 88,
+        rhythm_score: 74,
+        expression_score: 69
+      )
+      client = instance_double(
+        SingingDiagnoses::OpenAiResponsesClient,
+        generate_text: "AIからの練習コメントです。"
+      )
+
+      described_class.call(diagnosis, client: client)
+
+      expect(client).to have_received(:generate_text) do |args|
+        expect(args[:instructions]).to include("expression_scoreは、音量の変化幅など録音から測れる範囲")
+        expect(args[:instructions]).to include("録音から直接測れない要素まで測定したかのようには表現しないでください")
+      end
+    end
+
     it "前回比較がある場合は差分に触れること" do
       customer = FactoryBot.create(:customer, domain_name: "singing")
       FactoryBot.create(
@@ -252,6 +274,8 @@ RSpec.describe SingingDiagnoses::AiCommentGenerator do
         expect(args[:instructions]).to include("vocal固有")
         expect(args[:instructions]).to include("喉")
         expect(args[:instructions]).to include("次に意識する練習")
+        expect(args[:instructions]).to include("expression_scoreは、アタックのコントロールやミュート")
+        expect(args[:instructions]).to include("歌声の抑揚やビブラートとしては解釈しないでください")
         expect(input["performance_type"]).to eq "guitar"
         expect(input["performance_type_label"]).to eq "ギター"
         expect(input["specific_scores"]).to include(include("label" => "アタック"))
@@ -365,6 +389,8 @@ RSpec.describe SingingDiagnoses::AiCommentGenerator do
         expect(args[:instructions]).to include("ベース演奏として曲をどう支えているか")
         expect(args[:instructions]).to include("guitar固有")
         expect(args[:instructions]).to include("ピッキング")
+        expect(args[:instructions]).to include("expression_scoreは、アタックのコントロール・音の長さ・安定感")
+        expect(args[:instructions]).to include("歌声の抑揚やビブラートとしては解釈しないでください")
         expect(input["performance_type"]).to eq "bass"
         expect(input["performance_type_label"]).to eq "ベース"
         expect(input["specific_scores"]).to include(include("label" => "グルーヴ"))
@@ -513,6 +539,8 @@ RSpec.describe SingingDiagnoses::AiCommentGenerator do
         expect(args[:instructions]).to include("guitar固有")
         expect(args[:instructions]).to include("bass固有")
         expect(args[:instructions]).to include("ドラム演奏としてビート")
+        expect(args[:instructions]).to include("expression_scoreは、強弱の付け方やアタックのコントロール")
+        expect(args[:instructions]).to include("歌声の抑揚やビブラートとしては解釈しないでください")
         expect(input["performance_type"]).to eq "drums"
         expect(input["performance_type_label"]).to eq "ドラム"
         expect(input["advanced_feedback"]).to include(include("label" => "テンポ安定"))
@@ -671,6 +699,8 @@ RSpec.describe SingingDiagnoses::AiCommentGenerator do
         expect(args[:instructions]).to include("vocal固有")
         expect(args[:instructions]).to include("guitar固有")
         expect(args[:instructions]).to include("bass固有")
+        expect(args[:instructions]).to include("expression_scoreは、タッチや音のつながり")
+        expect(args[:instructions]).to include("歌声の抑揚やビブラートとしては解釈しないでください")
         expect(args[:instructions]).to include("drums固有")
         expect(args[:instructions]).to include("和音のまとまり")
         expect(args[:instructions]).not_to include("ピッキング")
