@@ -491,6 +491,7 @@ def assert_valid_band_analysis_debug(body):
         "onset_interval_std",
         "spectral_balance",
         "dynamics_range",
+        "scoring",
         "cohesion_inputs",
     }
     assert math.isfinite(debug["rms_mean"]) and debug["rms_mean"] >= 0
@@ -513,6 +514,34 @@ def assert_valid_band_analysis_debug(body):
         "role_clarity": body["specific"]["role_clarity"],
         "dynamics": body["specific"]["dynamics"],
     }
+    assert_valid_expression_scoring_debug(debug["scoring"]["expression"], formula_version="band_dynamics_v1")
+    calibration = debug["scoring"]["expression_calibration"]
+    assert math.isfinite(calibration["calibration_shift"])
+    assert calibration["pre_adjustment_score"] == debug["scoring"]["expression"]["final_score"]
+    assert calibration["post_adjustment_score"] == body["expression_score"]
+
+
+def assert_valid_expression_scoring_debug(expression_debug, *, formula_version):
+    assert expression_debug["formula_version"] == formula_version
+    assert isinstance(expression_debug["features"], dict) and expression_debug["features"]
+    assert all(math.isfinite(value) for value in expression_debug["features"].values())
+
+    contributions = expression_debug["contributions"]
+    assert "base" in contributions
+    assert all(math.isfinite(value) for value in contributions.values())
+
+    reconstructed_raw_score = sum(contributions.values())
+    assert abs(reconstructed_raw_score - expression_debug["raw_score"]) < 0.01
+
+    # final_score is int(round(raw_score)) clamped to [0, 100]; raw_score here is itself
+    # display-rounded to 6dp, so compare with a tolerance rather than re-deriving
+    # round-half-to-even exactly (that tie-breaking can flip on the last displayed digit).
+    assert isinstance(expression_debug["final_score"], int)
+    assert 0 <= expression_debug["final_score"] <= 100
+    assert (
+        abs(expression_debug["final_score"] - expression_debug["raw_score"]) < 0.500001
+        or expression_debug["final_score"] in (0, 100)
+    )
 
 
 def assert_valid_band_quality(body):
@@ -581,7 +610,12 @@ def test_create_diagnosis():
         "relax_score",
         "mix_voice_score",
     }
-    assert body["analysis_debug"] == {}
+    assert set(body["analysis_debug"].keys()) == {"scoring"}
+    assert set(body["analysis_debug"]["scoring"].keys()) == {"expression"}
+    assert_valid_expression_scoring_debug(
+        body["analysis_debug"]["scoring"]["expression"], formula_version="vocal_expression_v1"
+    )
+    assert body["analysis_debug"]["scoring"]["expression"]["final_score"] == body["expression_score"]
     assert body["quality_flags"] == {}
     assert body["quality_message"] is None
     assert all(0 <= body[key] <= 100 for key in body["common"].keys())
@@ -664,6 +698,11 @@ def test_create_diagnosis_accepts_guitar():
         "muting_score",
         "stability_score",
     }
+    assert set(body["analysis_debug"].keys()) == {"scoring"}
+    assert_valid_expression_scoring_debug(
+        body["analysis_debug"]["scoring"]["expression"], formula_version="guitar_expression_v1"
+    )
+    assert body["analysis_debug"]["scoring"]["expression"]["final_score"] == body["expression_score"]
     assert all(0 <= body[key] <= 100 for key in body["common"].keys())
     assert all(0 <= value <= 100 for value in body["specific"].values())
 
@@ -817,6 +856,11 @@ def test_create_diagnosis_accepts_bass():
         "note_length_score",
         "stability_score",
     }
+    assert set(body["analysis_debug"].keys()) == {"scoring"}
+    assert_valid_expression_scoring_debug(
+        body["analysis_debug"]["scoring"]["expression"], formula_version="bass_expression_v1"
+    )
+    assert body["analysis_debug"]["scoring"]["expression"]["final_score"] == body["expression_score"]
     assert all(0 <= body[key] <= 100 for key in body["common"].keys())
     assert all(0 <= value <= 100 for value in body["specific"].values())
 
@@ -943,6 +987,11 @@ def test_create_diagnosis_accepts_drums():
         "dynamics_score",
         "fill_control_score",
     }
+    assert set(body["analysis_debug"].keys()) == {"scoring"}
+    assert_valid_expression_scoring_debug(
+        body["analysis_debug"]["scoring"]["expression"], formula_version="drums_expression_v1"
+    )
+    assert body["analysis_debug"]["scoring"]["expression"]["final_score"] == body["expression_score"]
     assert all(0 <= body[key] <= 100 for key in body["common"].keys())
     assert all(0 <= value <= 100 for value in body["specific"].values())
 
@@ -972,6 +1021,11 @@ def test_create_diagnosis_accepts_keyboard():
         "expression_score": body["expression_score"],
     }
     assert set(body["specific"].keys()) == KEYBOARD_SPECIFIC_KEYS
+    assert set(body["analysis_debug"].keys()) == {"scoring"}
+    assert_valid_expression_scoring_debug(
+        body["analysis_debug"]["scoring"]["expression"], formula_version="keyboard_expression_v1"
+    )
+    assert body["analysis_debug"]["scoring"]["expression"]["final_score"] == body["expression_score"]
     assert all(0 <= body[key] <= 100 for key in body["common"].keys())
     assert all(0 <= value <= 100 for value in body["specific"].values())
 

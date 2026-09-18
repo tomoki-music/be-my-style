@@ -301,3 +301,132 @@ def test_expression_score_always_stays_within_bounds():
         assert 0 <= analyzer._score_bass_expression(features, note_length_balance=control) <= 100
         assert 0 <= analyzer._score_drums_expression(features) <= 100
         assert 0 <= analyzer._score_keyboard_expression(features) <= 100
+
+
+# ── H. Scoring observability metadata ────────────────────────────────────────
+# These pin down the new analysis_debug.scoring.expression breakdown: it must be
+# derived from the exact same base+terms that produce the int score (no separately
+# maintained copy of the formula), and it must not change any score.
+
+BREAKDOWN_BUILDERS = {
+    "vocal": (lambda features: analyzer._vocal_expression_breakdown(features), "vocal_expression_v1"),
+    "guitar": (lambda features: analyzer._guitar_expression_breakdown(features), "guitar_expression_v1"),
+    "bass": (
+        lambda features: analyzer._bass_expression_breakdown(
+            features, note_length_balance=analyzer._bass_note_length_balance(features)
+        ),
+        "bass_expression_v1",
+    ),
+    "drums": (lambda features: analyzer._drums_expression_breakdown(features), "drums_expression_v1"),
+    "keyboard": (lambda features: analyzer._keyboard_expression_breakdown(features), "keyboard_expression_v1"),
+}
+
+
+def assert_valid_breakdown(breakdown, *, expected_formula_version):
+    assert breakdown["formula_version"] == expected_formula_version
+    assert breakdown["features"]
+    assert "base" in breakdown["contributions"]
+
+    reconstructed_raw_score = sum(breakdown["contributions"].values())
+    assert abs(reconstructed_raw_score - breakdown["raw_score"]) < 1e-6
+
+    # final_score is int(round(raw_score)) clamped to [0, 100]; breakdown["raw_score"] is
+    # itself display-rounded to 6dp, so compare with a tolerance rather than re-deriving
+    # round-half-to-even exactly (that tie-breaking can flip on the last displayed digit).
+    assert isinstance(breakdown["final_score"], int)
+    assert 0 <= breakdown["final_score"] <= 100
+    assert abs(breakdown["final_score"] - breakdown["raw_score"]) < 0.500001 or breakdown["final_score"] in (0, 100)
+
+
+def test_expression_breakdown_final_score_matches_the_plain_score_for_every_type():
+    features = make_features(dynamic_range=0.2, attack_clarity=0.6, muting_control=0.7, amplitude_stability=0.55)
+
+    for performance_type, (build_breakdown, formula_version) in BREAKDOWN_BUILDERS.items():
+        breakdown = build_breakdown(features)
+        assert_valid_breakdown(breakdown, expected_formula_version=formula_version)
+
+    assert BREAKDOWN_BUILDERS["vocal"][0](features)["final_score"] == analyzer._score_vocal_expression(features)
+    assert BREAKDOWN_BUILDERS["guitar"][0](features)["final_score"] == analyzer._score_guitar_expression(features)
+    assert BREAKDOWN_BUILDERS["drums"][0](features)["final_score"] == analyzer._score_drums_expression(features)
+    assert BREAKDOWN_BUILDERS["keyboard"][0](features)["final_score"] == analyzer._score_keyboard_expression(features)
+
+    note_length_balance = analyzer._bass_note_length_balance(features)
+    assert BREAKDOWN_BUILDERS["bass"][0](features)["final_score"] == analyzer._score_bass_expression(
+        features, note_length_balance=note_length_balance
+    )
+
+
+def test_expression_breakdown_contributions_sum_to_raw_score_across_the_value_range():
+    sample_values = (0.0, 0.1, 0.35, 0.6, 0.9, 1.0)
+
+    for dynamic_range, control in itertools.product((0.0, 0.15, 0.4, 1.0), sample_values):
+        features = make_features(
+            dynamic_range=dynamic_range,
+            silence_ratio=control,
+            attack_clarity=control,
+            muting_control=control,
+            amplitude_stability=control,
+            onset_peak_consistency=control,
+            note_connection=control,
+            rhythm_regularity=control,
+        )
+
+        for performance_type, (build_breakdown, formula_version) in BREAKDOWN_BUILDERS.items():
+            assert_valid_breakdown(build_breakdown(features), expected_formula_version=formula_version)
+
+
+def test_keyboard_expression_breakdown_reproduces_the_is_this_love_style_99_point_case():
+    # Regression scaffold for the "Is This Love" production report referenced in the
+    # task: several keyboard features landing high at once legitimately pushes
+    # raw_score above 100. This PR does not change that behavior (no scoring change);
+    # it only asserts the clamp is now observable: raw_score > 100 but final_score is
+    # clamped to 100, and every contribution that produced it is visible.
+    features = make_features(
+        onset_peak_consistency=0.91,
+        note_connection=0.88,
+        amplitude_stability=0.94,
+        dynamic_range=0.15,
+        silence_ratio=0.03,
+    )
+
+    breakdown = analyzer._keyboard_expression_breakdown(features)
+
+    assert_valid_breakdown(breakdown, expected_formula_version="keyboard_expression_v1")
+    assert breakdown["raw_score"] > 100
+    assert breakdown["final_score"] == 100
+    assert breakdown["final_score"] == analyzer._score_keyboard_expression(features)
+
+
+def test_expression_breakdown_reflects_low_end_clamp():
+    # Every expression formula's base (34-48) exceeds its worst-case penalty within the
+    # normal [0, 1] feature domain, so raw_score can't actually go negative from realistic
+    # audio features today (confirmed above: min observed raw_score is 24). This exercises
+    # the shared low-end clamp directly with an out-of-domain silence_ratio, so the safety
+    # net itself (not just the currently-unreachable-in-practice branch) is pinned down.
+    features = make_features(
+        onset_peak_consistency=0.0,
+        note_connection=0.0,
+        amplitude_stability=0.0,
+        attack_clarity=0.0,
+        muting_control=0.0,
+        rhythm_regularity=0.0,
+        dynamic_range=1.0,
+        silence_ratio=5.0,
+    )
+
+    for performance_type, (build_breakdown, formula_version) in BREAKDOWN_BUILDERS.items():
+        breakdown = build_breakdown(features)
+        assert breakdown["raw_score"] < 0, f"{performance_type} was expected to go negative for this test to be meaningful"
+        assert_valid_breakdown(breakdown, expected_formula_version=formula_version)
+        assert breakdown["final_score"] == 0
+        assert analyzer._clamp_score(breakdown["raw_score"]) == 0
+
+
+def test_band_expression_breakdown_is_the_single_source_for_band_scores_dynamics():
+    features = make_features(dynamic_range=0.16, amplitude_stability=0.6, rhythm_regularity=0.5, note_connection=0.68)
+
+    _, _, dynamics_score, specific_scores, expression_breakdown = analyzer._band_scores(features)
+
+    assert_valid_breakdown(expression_breakdown, expected_formula_version="band_dynamics_v1")
+    assert expression_breakdown["final_score"] == dynamics_score
+    assert specific_scores["dynamics"] == dynamics_score

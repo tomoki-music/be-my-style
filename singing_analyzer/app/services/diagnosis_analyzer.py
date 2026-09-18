@@ -43,6 +43,19 @@ class DiagnosisAnalyzer:
     SUPPORTED_PERFORMANCE_TYPES = {"vocal", "guitar", "bass", "drums", "keyboard", "band"}
     KNOWN_PERFORMANCE_TYPES = {"vocal", "guitar", "bass", "drums", "keyboard", "band"}
 
+    # Identifies which expression scoring formula produced a given diagnosis, independent
+    # of deploy/Git SHA (a Rails-only change still moves the SHA without touching these
+    # formulas). Bump the relevant entry whenever the weights/terms below change so past
+    # diagnoses stay attributable to the formula that actually scored them.
+    EXPRESSION_FORMULA_VERSIONS = {
+        "vocal": "vocal_expression_v1",
+        "guitar": "guitar_expression_v1",
+        "bass": "bass_expression_v1",
+        "drums": "drums_expression_v1",
+        "keyboard": "keyboard_expression_v1",
+        "band": "band_dynamics_v1",
+    }
+
     def analyze(
         self,
         *,
@@ -76,16 +89,26 @@ class DiagnosisAnalyzer:
             overall_score = self._clamp_score(
                 (pitch_score * 0.25) + (rhythm_score * 0.35) + (expression_score * 0.4)
             )
+            analysis_debug = {"scoring": {"expression": self._guitar_expression_breakdown(features)}}
         elif normalized_performance_type == "bass":
             pitch_score, rhythm_score, expression_score, specific_scores = self._bass_scores(features)
             overall_score = self._clamp_score(
                 (pitch_score * 0.25) + (rhythm_score * 0.4) + (expression_score * 0.35)
             )
+            note_length_balance = self._bass_note_length_balance(features)
+            analysis_debug = {
+                "scoring": {
+                    "expression": self._bass_expression_breakdown(
+                        features, note_length_balance=note_length_balance
+                    )
+                }
+            }
         elif normalized_performance_type == "drums":
             pitch_score, rhythm_score, expression_score, specific_scores = self._drums_scores(features)
             overall_score = self._clamp_score(
                 (rhythm_score * 0.5) + (expression_score * 0.25) + (specific_scores["tempo_stability_score"] * 0.25)
             )
+            analysis_debug = {"scoring": {"expression": self._drums_expression_breakdown(features)}}
         elif normalized_performance_type == "keyboard":
             pitch_score, rhythm_score, expression_score, specific_scores = self._keyboard_scores(features)
             overall_score = self._clamp_score(
@@ -94,10 +117,19 @@ class DiagnosisAnalyzer:
                 + (expression_score * 0.25)
                 + (specific_scores["chord_stability_score"] * 0.2)
             )
+            analysis_debug = {"scoring": {"expression": self._keyboard_expression_breakdown(features)}}
         elif normalized_performance_type == "band":
-            pitch_score, rhythm_score, expression_score, specific_scores = self._band_scores(features)
+            pitch_score, rhythm_score, expression_score, specific_scores, expression_breakdown = self._band_scores(
+                features
+            )
             quality_flags = self._band_quality_flags(features)
-            pitch_score, rhythm_score, expression_score, specific_scores = self._apply_band_score_adjustments(
+            (
+                pitch_score,
+                rhythm_score,
+                expression_score,
+                specific_scores,
+                calibration_shift,
+            ) = self._apply_band_score_adjustments(
                 features,
                 pitch_score=pitch_score,
                 rhythm_score=rhythm_score,
@@ -112,7 +144,13 @@ class DiagnosisAnalyzer:
                 specific_scores=specific_scores,
                 quality_flags=quality_flags,
             )
-            analysis_debug = self._band_analysis_debug(features, specific_scores)
+            analysis_debug = self._band_analysis_debug(
+                features,
+                specific_scores,
+                expression_breakdown=expression_breakdown,
+                calibration_shift=calibration_shift,
+                post_adjustment_expression_score=expression_score,
+            )
             quality_message = self._band_quality_message(features, quality_flags)
         else:
             pitch_score = self._score_pitch(features)
@@ -122,6 +160,7 @@ class DiagnosisAnalyzer:
                 (pitch_score * 0.4) + (rhythm_score * 0.3) + (expression_score * 0.3)
             )
             specific_scores = self._vocal_specific_scores(features)
+            analysis_debug = {"scoring": {"expression": self._vocal_expression_breakdown(features)}}
 
         common_scores = {
             "overall_score": overall_score,
@@ -223,7 +262,7 @@ class DiagnosisAnalyzer:
         )
         rhythm_score = self._score_rhythm(features)
 
-        note_length_balance = 1.0 - self._clamp_unit(abs(features.note_connection - 0.58) / 0.58)
+        note_length_balance = self._bass_note_length_balance(features)
         expression_score = self._score_bass_expression(features, note_length_balance=note_length_balance)
         groove_score = self._clamp_score(
             38
@@ -392,6 +431,9 @@ class DiagnosisAnalyzer:
         connection_support = self._target_match(features.note_connection, center=0.68, tolerance=0.22)
         balance_dynamic_support = self._target_match(features.dynamic_range, center=0.12, tolerance=0.10)
         rms_support = self._target_match(features.rms, center=0.18, tolerance=0.08)
+        expression_breakdown = self._band_expression_breakdown(
+            features, dynamics_target=dynamics_target, connection_support=connection_support
+        )
 
         balance_score = self._clamp_score(
             34
@@ -420,14 +462,7 @@ class DiagnosisAnalyzer:
             + (dynamics_target * 8)
             - (features.silence_ratio * 8)
         )
-        dynamics_score = self._clamp_score(
-            34
-            + (dynamics_target * 32)
-            + (features.amplitude_stability * 14)
-            + (features.rhythm_regularity * 10)
-            + (connection_support * 10)
-            - (features.silence_ratio * 6)
-        )
+        dynamics_score = expression_breakdown["final_score"]
         cohesion_score = self._clamp_score(
             18
             + (balance_score * 0.2)
@@ -450,9 +485,18 @@ class DiagnosisAnalyzer:
                 "dynamics": dynamics_score,
                 "cohesion": cohesion_score,
             },
+            expression_breakdown,
         )
 
-    def _band_analysis_debug(self, features: AudioFeatures, specific_scores: dict[str, int]) -> dict[str, object]:
+    def _band_analysis_debug(
+        self,
+        features: AudioFeatures,
+        specific_scores: dict[str, int],
+        *,
+        expression_breakdown: dict,
+        calibration_shift: float,
+        post_adjustment_expression_score: int,
+    ) -> dict[str, object]:
         return {
             "rms_mean": round(features.rms, 6),
             "rms_std": round(features.rms_std, 6),
@@ -466,6 +510,20 @@ class DiagnosisAnalyzer:
                 "high": round(features.spectral_balance_high, 6),
             },
             "dynamics_range": round(features.dynamic_range, 6),
+            "scoring": {
+                # Pre-calibration breakdown of the band "dynamics" formula (this is what
+                # the top-level expression_score is derived from). The evidence-strength
+                # calibration shift and any low-confidence penalties applied afterwards
+                # (see quality_flags on this same response) are captured separately below
+                # rather than re-derived, since that logic already runs once in
+                # _apply_band_score_adjustments.
+                "expression": expression_breakdown,
+                "expression_calibration": {
+                    "calibration_shift": round(calibration_shift, 6),
+                    "pre_adjustment_score": expression_breakdown["final_score"],
+                    "post_adjustment_score": post_adjustment_expression_score,
+                },
+            },
             "cohesion_inputs": {
                 "balance": int(specific_scores.get("balance", 0)),
                 "tightness": int(specific_scores.get("tightness", 0)),
@@ -537,7 +595,7 @@ class DiagnosisAnalyzer:
         expression_score: int,
         specific_scores: dict[str, int],
         quality_flags: dict[str, bool],
-    ) -> tuple[int, int, int, dict[str, int]]:
+    ) -> tuple[int, int, int, dict[str, int], float]:
         evidence_strength = self._clamp_unit(
             (self._clamp_unit((features.duration_seconds - 8.0) / 22.0) * 0.28)
             + (self._clamp_unit(features.onset_count / 18.0) * 0.2)
@@ -596,7 +654,7 @@ class DiagnosisAnalyzer:
             + (adjusted_pitch * 0.1)
         )
 
-        return adjusted_pitch, adjusted_rhythm, adjusted_expression, adjusted_specific
+        return adjusted_pitch, adjusted_rhythm, adjusted_expression, adjusted_specific, calibration_shift
 
     def _band_overall_score(
         self,
@@ -1153,76 +1211,205 @@ class DiagnosisAnalyzer:
         )
 
     def _score_vocal_expression(self, features: AudioFeatures) -> int:
+        return self._vocal_expression_breakdown(features)["final_score"]
+
+    def _vocal_expression_breakdown(self, features: AudioFeatures) -> dict:
         # A musically appropriate amount of loudness variation is rewarded via a target
         # match instead of "bigger dynamic_range / louder rms is always better", since a
         # louder recording (mic gain, distance, normalization) should not read as more
         # expressive singing.
         dynamics_target = self._target_match(features.dynamic_range, center=0.20, tolerance=0.22)
-        return self._clamp_score(
-            48
-            + (dynamics_target * 42)
-            - (features.silence_ratio * 18)
+        return self._expression_breakdown(
+            formula_version=self.EXPRESSION_FORMULA_VERSIONS["vocal"],
+            base=48,
+            terms=[
+                ("dynamics_target", dynamics_target, 42),
+                ("silence_penalty", features.silence_ratio, -18),
+            ],
+            features={
+                "dynamic_range": features.dynamic_range,
+                "dynamics_target": dynamics_target,
+                "silence_ratio": features.silence_ratio,
+            },
         )
 
     def _score_guitar_expression(self, features: AudioFeatures) -> int:
+        return self._guitar_expression_breakdown(features)["final_score"]
+
+    def _guitar_expression_breakdown(self, features: AudioFeatures) -> dict:
         # Guitar expression is about touch control (attack shaping, decay/mute control),
         # not raw loudness swings, which mostly reflect pick strength or mic gain.
         dynamics_target = self._target_match(features.dynamic_range, center=0.17, tolerance=0.17)
-        return self._clamp_score(
-            34
-            + (features.attack_clarity * 26)
-            + (features.muting_control * 22)
-            + (features.onset_peak_consistency * 10)
-            + (dynamics_target * 12)
-            - (features.silence_ratio * 10)
+        return self._expression_breakdown(
+            formula_version=self.EXPRESSION_FORMULA_VERSIONS["guitar"],
+            base=34,
+            terms=[
+                ("attack_clarity", features.attack_clarity, 26),
+                ("muting_control", features.muting_control, 22),
+                ("onset_peak_consistency", features.onset_peak_consistency, 10),
+                ("dynamics_target", dynamics_target, 12),
+                ("silence_penalty", features.silence_ratio, -10),
+            ],
+            features={
+                "attack_clarity": features.attack_clarity,
+                "muting_control": features.muting_control,
+                "onset_peak_consistency": features.onset_peak_consistency,
+                "dynamic_range": features.dynamic_range,
+                "dynamics_target": dynamics_target,
+                "silence_ratio": features.silence_ratio,
+            },
         )
 
+    def _bass_note_length_balance(self, features: AudioFeatures) -> float:
+        # note_length_balance is a proximity match against a single note_connection
+        # value; shared by the bass "note_length_score" specific score and the bass
+        # expression formula so both read the same derived feature.
+        return 1.0 - self._clamp_unit(abs(features.note_connection - 0.58) / 0.58)
+
     def _score_bass_expression(self, features: AudioFeatures, *, note_length_balance: float) -> int:
+        return self._bass_expression_breakdown(features, note_length_balance=note_length_balance)["final_score"]
+
+    def _bass_expression_breakdown(self, features: AudioFeatures, *, note_length_balance: float) -> dict:
         # Picked bass naturally produces a wide dynamic_range from attack/decay alone, so
         # that term is target-matched and kept as a minor factor rather than the main
         # driver. Attack control and amplitude stability carry most of the weight, since
-        # those reflect sustained playing technique. note_length_balance is a proximity
-        # match against a single note_connection value, so it saturates near-full with
-        # only average control; its weight is kept modest (and shifted toward
-        # attack_clarity) so that hitting the note-length target alone can't carry an
-        # average performance into the 90s.
+        # those reflect sustained playing technique. note_length_balance saturates
+        # near-full with only average control, so its weight is kept modest (and shifted
+        # toward attack_clarity) so that hitting the note-length target alone can't carry
+        # an average performance into the 90s.
         dynamics_target = self._target_match(features.dynamic_range, center=0.14, tolerance=0.16)
-        return self._clamp_score(
-            34
-            + (features.attack_clarity * 22)
-            + (note_length_balance * 10)
-            + (features.amplitude_stability * 18)
-            + (features.onset_peak_consistency * 10)
-            + (dynamics_target * 12)
-            - (features.silence_ratio * 10)
+        return self._expression_breakdown(
+            formula_version=self.EXPRESSION_FORMULA_VERSIONS["bass"],
+            base=34,
+            terms=[
+                ("attack_clarity", features.attack_clarity, 22),
+                ("note_length_balance", note_length_balance, 10),
+                ("amplitude_stability", features.amplitude_stability, 18),
+                ("onset_peak_consistency", features.onset_peak_consistency, 10),
+                ("dynamics_target", dynamics_target, 12),
+                ("silence_penalty", features.silence_ratio, -10),
+            ],
+            features={
+                "attack_clarity": features.attack_clarity,
+                "note_length_balance": note_length_balance,
+                "amplitude_stability": features.amplitude_stability,
+                "onset_peak_consistency": features.onset_peak_consistency,
+                "dynamic_range": features.dynamic_range,
+                "dynamics_target": dynamics_target,
+                "silence_ratio": features.silence_ratio,
+            },
         )
 
     def _score_drums_expression(self, features: AudioFeatures) -> int:
+        return self._drums_expression_breakdown(features)["final_score"]
+
+    def _drums_expression_breakdown(self, features: AudioFeatures) -> dict:
         # Dynamics genuinely matter for drums, but rhythm_regularity is intentionally left
         # out here since it already drives rhythm_score and tempo_stability_score heavily
         # for this performance type.
         dynamics_target = self._target_match(features.dynamic_range, center=0.22, tolerance=0.20)
-        return self._clamp_score(
-            38
-            + (dynamics_target * 30)
-            + (features.attack_clarity * 24)
-            + (features.amplitude_stability * 10)
-            - (features.silence_ratio * 8)
+        return self._expression_breakdown(
+            formula_version=self.EXPRESSION_FORMULA_VERSIONS["drums"],
+            base=38,
+            terms=[
+                ("dynamics_target", dynamics_target, 30),
+                ("attack_clarity", features.attack_clarity, 24),
+                ("amplitude_stability", features.amplitude_stability, 10),
+                ("silence_penalty", features.silence_ratio, -8),
+            ],
+            features={
+                "dynamic_range": features.dynamic_range,
+                "dynamics_target": dynamics_target,
+                "attack_clarity": features.attack_clarity,
+                "amplitude_stability": features.amplitude_stability,
+                "silence_ratio": features.silence_ratio,
+            },
         )
 
     def _score_keyboard_expression(self, features: AudioFeatures) -> int:
+        return self._keyboard_expression_breakdown(features)["final_score"]
+
+    def _keyboard_expression_breakdown(self, features: AudioFeatures) -> dict:
         # Keyboard attack/decay naturally produces a large dynamic_range from touch alone,
         # so it is target-matched and kept secondary to touch precision and note
         # connection, which reflect playing technique.
         dynamics_target = self._target_match(features.dynamic_range, center=0.15, tolerance=0.17)
-        return self._clamp_score(
-            36
-            + (features.onset_peak_consistency * 24)
-            + (features.note_connection * 22)
-            + (features.amplitude_stability * 14)
-            + (dynamics_target * 14)
-            - (features.silence_ratio * 10)
+        return self._expression_breakdown(
+            formula_version=self.EXPRESSION_FORMULA_VERSIONS["keyboard"],
+            base=36,
+            terms=[
+                ("onset_peak_consistency", features.onset_peak_consistency, 24),
+                ("note_connection", features.note_connection, 22),
+                ("amplitude_stability", features.amplitude_stability, 14),
+                ("dynamics_target", dynamics_target, 14),
+                ("silence_penalty", features.silence_ratio, -10),
+            ],
+            features={
+                "onset_peak_consistency": features.onset_peak_consistency,
+                "note_connection": features.note_connection,
+                "amplitude_stability": features.amplitude_stability,
+                "dynamic_range": features.dynamic_range,
+                "dynamics_target": dynamics_target,
+                "silence_ratio": features.silence_ratio,
+            },
         )
+
+    def _band_expression_breakdown(
+        self, features: AudioFeatures, *, dynamics_target: float, connection_support: float
+    ) -> dict:
+        # Mirrors the band "dynamics" formula in _band_scores (dynamics_score there is
+        # exactly this breakdown's final_score) so the formula is defined once. The
+        # evidence-strength calibration and quality-flag penalties applied afterwards in
+        # _apply_band_score_adjustments are captured separately in analysis_debug rather
+        # than folded in here, since they are shared post-processing, not part of this
+        # formula.
+        return self._expression_breakdown(
+            formula_version=self.EXPRESSION_FORMULA_VERSIONS["band"],
+            base=34,
+            terms=[
+                ("dynamics_target", dynamics_target, 32),
+                ("amplitude_stability", features.amplitude_stability, 14),
+                ("rhythm_regularity", features.rhythm_regularity, 10),
+                ("connection_support", connection_support, 10),
+                ("silence_penalty", features.silence_ratio, -6),
+            ],
+            features={
+                "dynamic_range": features.dynamic_range,
+                "dynamics_target": dynamics_target,
+                "amplitude_stability": features.amplitude_stability,
+                "rhythm_regularity": features.rhythm_regularity,
+                "note_connection": features.note_connection,
+                "connection_support": connection_support,
+                "silence_ratio": features.silence_ratio,
+            },
+        )
+
+    def _expression_breakdown(
+        self,
+        *,
+        formula_version: str,
+        base: float,
+        terms: list[tuple[str, float, float]],
+        features: dict[str, float],
+    ) -> dict:
+        # Single source of truth for both the numeric expression_score and its debug
+        # explanation: raw_score/final_score here are computed from the same
+        # base+terms that produce the returned score, so scoring and observability can
+        # never drift apart.
+        contributions = {"base": round(float(base), 6)}
+        raw_score = float(base)
+        for name, value, weight in terms:
+            contribution = value * weight
+            contributions[name] = round(contribution, 6)
+            raw_score += contribution
+
+        return {
+            "formula_version": formula_version,
+            "features": {key: round(value, 6) for key, value in features.items()},
+            "contributions": contributions,
+            "raw_score": round(raw_score, 6),
+            "final_score": self._clamp_score(raw_score),
+        }
 
     def _target_match(self, value: float, *, center: float, tolerance: float) -> float:
         if tolerance <= 0:
