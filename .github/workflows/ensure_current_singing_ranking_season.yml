@@ -38,6 +38,7 @@ jobs:
       - name: SSH into EC2 and run EnsureCurrentRankingSeasonJob
         env:
           EC2_SSH_KEY: ${{ secrets.PRIVATE_KEY }}
+          EC2_SSH_HOST_KEY: ${{ secrets.PRODUCTION_SSH_HOST_KEY }}
           EC2_USER: ${{ secrets.USER_NAME }}
           EC2_HOST: ${{ secrets.HOST_NAME }}
           DEPLOY_PATH: '/home/ec2-user/be-my-style'
@@ -45,18 +46,30 @@ jobs:
           set -euo pipefail
 
           test -n "$EC2_SSH_KEY"
+          test -n "$EC2_SSH_HOST_KEY"
           test -n "$EC2_USER"
           test -n "$EC2_HOST"
           test -n "$DEPLOY_PATH"
 
-          echo "$EC2_SSH_KEY" > private_key
-          chmod 600 private_key
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+
+          printf '%s\n' "$EC2_SSH_KEY" > "$HOME/.ssh/deploy_key"
+          chmod 600 "$HOME/.ssh/deploy_key"
+
+          # StrictHostKeyChecking=no はMITM対策として不十分なため使用しない。
+          # AWS Session Managerで独立確認済みのproduction ED25519 host keyのみを
+          # secrets.PRODUCTION_SSH_HOST_KEY からpinし、既知のホストキーのみ許可する。
+          printf '%s %s\n' "$EC2_HOST" "$EC2_SSH_HOST_KEY" > "$HOME/.ssh/known_hosts_production"
+          chmod 600 "$HOME/.ssh/known_hosts_production"
 
           ssh \
-            -o StrictHostKeyChecking=no \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts_production" \
+            -o GlobalKnownHostsFile=/dev/null \
             -o ServerAliveInterval=30 \
             -o ServerAliveCountMax=10 \
-            -i private_key \
+            -i "$HOME/.ssh/deploy_key" \
             "${EC2_USER}@${EC2_HOST}" "DEPLOY_PATH='${DEPLOY_PATH}' bash -s" << 'EOF'
             set -euo pipefail
 
@@ -71,4 +84,4 @@ jobs:
             echo "EnsureCurrentRankingSeasonJob completed successfully."
           EOF
 
-          rm -f private_key
+          rm -f "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts_production"
