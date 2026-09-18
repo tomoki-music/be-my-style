@@ -7,6 +7,9 @@ class Customer < ApplicationRecord
     "core" => 20,
     "premium" => nil
   }.freeze
+  # イベントオーナー特典。プラン上限への加算ではなく、
+  # 「プラン上限とこの回数の大きい方」を月間上限として適用する(実装は#singing_diagnosis_monthly_limit)。
+  EVENT_OWNER_DIAGNOSIS_LIMIT = 5
   SIGN_UP_DOMAIN_NAMES = %w[music business learning singing].freeze
   DEFAULT_SIGN_UP_DOMAIN = "music".freeze
 
@@ -299,7 +302,30 @@ class Customer < ApplicationRecord
   def singing_diagnosis_monthly_limit
     return nil if admin?
 
-    SINGING_DIAGNOSIS_MONTHLY_LIMITS.fetch(plan, FREE_MONTHLY_SINGING_DIAGNOSIS_LIMIT)
+    base_limit = plan_singing_diagnosis_monthly_limit
+    return base_limit unless event_owner_diagnosis_bonus_active?
+
+    [base_limit, EVENT_OWNER_DIAGNOSIS_LIMIT].max
+  end
+
+  # コミュニティオーナー・イベント編集者(マネージャー)としての恒常的な資格。
+  # 特定の月にイベントを開催しているかは問わない(役割を保持している限り継続する特典のため)。
+  # 1回のリクエスト内で複数回参照されるため、EXISTSクエリの重複実行を避けるためメモ化する。
+  def event_owner_eligible?
+    return @event_owner_eligible if defined?(@event_owner_eligible)
+
+    @event_owner_eligible = manageable_communities.exists? || edited_communities.exists?
+  end
+
+  # イベントオーナー特典が実際に月間上限を引き上げているかどうか。
+  # LIGHT以上のようにプラン上限が既にEVENT_OWNER_DIAGNOSIS_LIMIT以上の場合は
+  # 特典があっても上限は変わらないため、UI側の「特典適用中」表示はこちらを使う。
+  def event_owner_diagnosis_bonus_active?
+    return false if admin?
+    return false unless event_owner_eligible?
+
+    limit = plan_singing_diagnosis_monthly_limit
+    limit.present? && limit < EVENT_OWNER_DIAGNOSIS_LIMIT
   end
 
   def monthly_singing_diagnosis_count(reference_time = Time.current)
@@ -380,6 +406,10 @@ class Customer < ApplicationRecord
     return unless joined_on > Date.current
 
     errors.add(:joined_on, :in_the_future)
+  end
+
+  def plan_singing_diagnosis_monthly_limit
+    SINGING_DIAGNOSIS_MONTHLY_LIMITS.fetch(plan, FREE_MONTHLY_SINGING_DIAGNOSIS_LIMIT)
   end
 
   public

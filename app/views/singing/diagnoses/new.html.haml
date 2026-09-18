@@ -26,6 +26,10 @@
               %span= @daily_challenge.description
 
       .singing-diagnosis-new__quota{ class: ("singing-diagnosis-new__quota--exceeded" if @singing_diagnosis_quota_exceeded) }
+        - if @singing_diagnosis_event_owner_bonus_active
+          .singing-diagnosis-new__quota-badge
+            %strong 🎁 イベントオーナー特典
+            %span イベントオーナーのため、今月は#{@singing_diagnosis_monthly_limit}回まで診断できます
         - if @singing_diagnosis_quota_limited
           .singing-diagnosis-new__quota-row
             %span.singing-diagnosis-new__quota-label 今月の診断

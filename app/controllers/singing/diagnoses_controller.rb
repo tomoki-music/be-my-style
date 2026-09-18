@@ -141,6 +141,7 @@ class Singing::DiagnosesController < Singing::BaseController
     @singing_diagnosis_remaining_quota = current_customer.remaining_singing_diagnosis_quota
     @singing_diagnosis_quota_limited = current_customer.singing_diagnosis_monthly_limited?
     @singing_diagnosis_quota_exceeded = !current_customer.can_create_singing_diagnosis?
+    @singing_diagnosis_event_owner_bonus_active = current_customer.event_owner_diagnosis_bonus_active?
   end
 
   def growth_diagnoses_for(diagnosis)

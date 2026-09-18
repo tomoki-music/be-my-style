@@ -212,6 +212,130 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       end
     end
 
+    context '歌唱・演奏診断のイベントオーナー特典' do
+      include ActiveSupport::Testing::TimeHelpers
+
+      it 'イベントオーナーでなければ通常のFree上限(1回)が適用されること' do
+        expect(customer.event_owner_eligible?).to eq false
+        expect(customer.singing_diagnosis_monthly_limit).to eq 1
+        expect(customer.event_owner_diagnosis_bonus_active?).to eq false
+      end
+
+      it 'コミュニティオーナー(Community#owner_id)であれば月5回まで利用できること' do
+        FactoryBot.create(:community, owner_id: customer.id)
+
+        expect(customer.event_owner_eligible?).to eq true
+        expect(customer.singing_diagnosis_monthly_limit).to eq 5
+        expect(customer.event_owner_diagnosis_bonus_active?).to eq true
+      end
+
+      it 'コミュニティオーナー資格は当月にイベントを開催していなくても適用されること' do
+        FactoryBot.create(:community, owner_id: customer.id)
+
+        expect(Event.where(customer: customer)).to be_empty
+        expect(customer.singing_diagnosis_monthly_limit).to eq 5
+      end
+
+      it '数ヶ月イベント開催がなくても、オーナー資格が続く限り月5回が維持されること' do
+        FactoryBot.create(:community, owner_id: customer.id)
+
+        travel_to(3.months.from_now) do
+          expect(customer.singing_diagnosis_monthly_limit).to eq 5
+        end
+      end
+
+      it 'オーナーが1回利用済みの場合、残り4回になること' do
+        FactoryBot.create(:community, owner_id: customer.id)
+        FactoryBot.create(:singing_diagnosis, customer: customer, status: :completed)
+
+        expect(customer.remaining_singing_diagnosis_quota).to eq 4
+        expect(customer.can_create_singing_diagnosis?).to eq true
+      end
+
+      it 'オーナーが4回利用済みの場合、残り1回になること' do
+        FactoryBot.create(:community, owner_id: customer.id)
+        FactoryBot.create_list(:singing_diagnosis, 4, customer: customer, status: :completed)
+
+        expect(customer.remaining_singing_diagnosis_quota).to eq 1
+        expect(customer.can_create_singing_diagnosis?).to eq true
+      end
+
+      it 'オーナーが5回利用済みの場合、6回目は利用不可になること' do
+        FactoryBot.create(:community, owner_id: customer.id)
+        FactoryBot.create_list(:singing_diagnosis, 5, customer: customer, status: :completed)
+
+        expect(customer.remaining_singing_diagnosis_quota).to eq 0
+        expect(customer.can_create_singing_diagnosis?).to eq false
+      end
+
+      it '月が変わると利用回数が0/5にリセットされること' do
+        FactoryBot.create(:community, owner_id: customer.id)
+
+        travel_to(Time.zone.local(2026, 9, 10)) do
+          FactoryBot.create_list(:singing_diagnosis, 3, customer: customer, status: :completed)
+          expect(customer.monthly_singing_diagnosis_count).to eq 3
+        end
+
+        travel_to(Time.zone.local(2026, 10, 1)) do
+          expect(customer.monthly_singing_diagnosis_count).to eq 0
+          expect(customer.remaining_singing_diagnosis_quota).to eq 5
+        end
+      end
+
+      it '複数コミュニティのオーナーであっても上限は5回のままで加算されないこと' do
+        FactoryBot.create(:community, owner_id: customer.id)
+        CommunityOwner.create!(customer: customer, community: FactoryBot.create(:community, owner_id: other_customer.id))
+
+        expect(customer.singing_diagnosis_monthly_limit).to eq 5
+      end
+
+      it 'マネージャー(CommunityEventEditor)としての資格でも月5回になること' do
+        target_community = FactoryBot.create(:community, owner_id: other_customer.id)
+        CommunityEventEditor.create!(customer: customer, community: target_community)
+
+        expect(customer.event_owner_eligible?).to eq true
+        expect(customer.singing_diagnosis_monthly_limit).to eq 5
+      end
+
+      it 'LIGHTプランは通常上限が5回のため、オーナーでも5回のままであること' do
+        customer.create_subscription!(status: "active", plan: "light")
+        FactoryBot.create(:community, owner_id: customer.id)
+
+        expect(customer.singing_diagnosis_monthly_limit).to eq 5
+        expect(customer.event_owner_diagnosis_bonus_active?).to eq false
+      end
+
+      it 'COREプランは通常上限(20回)がオーナー特典より優先されること' do
+        customer.create_subscription!(status: "active", plan: "core")
+        FactoryBot.create(:community, owner_id: customer.id)
+
+        expect(customer.singing_diagnosis_monthly_limit).to eq 20
+        expect(customer.event_owner_diagnosis_bonus_active?).to eq false
+      end
+
+      it 'PREMIUMプランはオーナーかどうかに関係なく無制限のままであること' do
+        customer.create_subscription!(status: "active", plan: "premium")
+        FactoryBot.create(:community, owner_id: customer.id)
+
+        expect(customer.singing_diagnosis_monthly_limit).to be_nil
+        expect(customer.can_create_singing_diagnosis?).to eq true
+        expect(customer.event_owner_diagnosis_bonus_active?).to eq false
+      end
+
+      it 'オーナー資格を失えば通常プラン上限に戻ること' do
+        owned_community = FactoryBot.create(:community, owner_id: customer.id)
+        # event_owner_eligible?はインスタンス単位でメモ化されるため、状態変化の前後で
+        # 別インスタンス(実際のリクエストごとに読み直されるcurrent_customerと同じ状況)を使う。
+        expect(Customer.find(customer.id).singing_diagnosis_monthly_limit).to eq 5
+
+        owned_community.update!(owner_id: other_customer.id)
+        former_owner = Customer.find(customer.id)
+
+        expect(former_owner.event_owner_eligible?).to eq false
+        expect(former_owner.singing_diagnosis_monthly_limit).to eq 1
+      end
+    end
+
     context '歌唱・演奏診断の機能制御' do
       it 'FEATURE_RULESにsinging用のkeyを含むこと' do
         expect(Customer::FEATURE_RULES.keys).to include(
