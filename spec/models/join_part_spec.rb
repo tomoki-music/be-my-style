@@ -31,6 +31,20 @@ RSpec.describe JoinPart, type: :model do
         expect(JoinPart.reflect_on_association(:join_part_customers).macro).to eq :has_many
       end
     end
+    context 'entry_invitationモデルとの関係' do
+      it 'entry_invitationsと1:N・dependent: :destroyとなっている' do
+        reflection = JoinPart.reflect_on_association(:entry_invitations)
+        expect(reflection.macro).to eq :has_many
+        expect(reflection.options[:dependent]).to eq :destroy
+      end
+
+      it 'JoinPart削除時に紐づくEntryInvitationも削除され、FK違反にならないこと' do
+        invitation = FactoryBot.create(:entry_invitation, join_part: join_part)
+
+        expect { join_part.destroy! }.to change(EntryInvitation, :count).by(-1)
+        expect(EntryInvitation.exists?(invitation.id)).to eq false
+      end
+    end
   end
 
   describe '#active_customers' do

@@ -8,6 +8,9 @@ class JoinPart < ApplicationRecord
   belongs_to :song
   has_many :join_part_customers, dependent: :destroy
   has_many :customers, through: :join_part_customers, dependent: :destroy
+  # entry_invitations.join_part_idはON DELETE CASCADEを持たないFKのため、
+  # ここでlifecycle ownershipを明示しないとJoinPart削除時にFK違反(500)になる。
+  has_many :entry_invitations, dependent: :destroy
 
   with_options presence: true do
     validates :join_part_name

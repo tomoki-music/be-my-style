@@ -728,6 +728,114 @@ RSpec.describe "Public::Events", type: :request do
         expect(target_song.reload.tab_sheet_url).to be_blank
       end
     end
+    context "event編集(update)時のJoinPart削除(EntryInvitationのFK違反回帰テスト)" do
+      def destroy_join_part_params(target_song, target_join_part)
+        {
+          event: {
+            songs_attributes: {
+              "0" => {
+                id: target_song.id,
+                join_parts_attributes: {
+                  "0" => { id: target_join_part.id, _destroy: "1" }
+                }
+              }
+            }
+          }
+        }
+      end
+
+      it "EntryInvitationが存在しないJoinPartを削除でき、従来どおりevent updateが成功すること" do
+        target_song = event.songs.first
+        target_join_part = FactoryBot.create(:join_part, song: target_song, join_part_name: "Vocal")
+
+        expect do
+          put public_event_path(event), params: destroy_join_part_params(target_song, target_join_part)
+        end.to change(JoinPart, :count).by(-1)
+
+        expect(response).to redirect_to(public_event_path(event))
+        expect(JoinPart.exists?(target_join_part.id)).to eq false
+      end
+
+      it "EntryInvitationのみ紐づく(JoinPartCustomerなし)JoinPartを削除してもFK違反にならず、対応するEntryInvitationも削除されること" do
+        target_song = event.songs.first
+        target_join_part = FactoryBot.create(:join_part, song: target_song, join_part_name: "Vocal")
+        invitation = FactoryBot.create(
+          :entry_invitation,
+          event: event,
+          song: target_song,
+          join_part: target_join_part,
+          customer: other_customer,
+          requested_by_customer: customer
+        )
+
+        expect do
+          put public_event_path(event), params: destroy_join_part_params(target_song, target_join_part)
+        end.not_to raise_error
+
+        expect(response).to redirect_to(public_event_path(event))
+        expect(JoinPart.exists?(target_join_part.id)).to eq false
+        expect(EntryInvitation.exists?(invitation.id)).to eq false
+      end
+
+      it "EntryInvitationとJoinPartCustomerの両方が紐づくJoinPartを削除すると、既存仕様どおり両方削除されること" do
+        target_song = event.songs.first
+        target_join_part = FactoryBot.create(:join_part, song: target_song, join_part_name: "Vocal")
+        invitation = FactoryBot.create(
+          :entry_invitation,
+          event: event,
+          song: target_song,
+          join_part: target_join_part,
+          customer: other_customer,
+          requested_by_customer: customer
+        )
+        join_part_customer = FactoryBot.create(:join_part_customer, join_part: target_join_part, customer: other_customer)
+
+        expect do
+          put public_event_path(event), params: destroy_join_part_params(target_song, target_join_part)
+        end.not_to raise_error
+
+        expect(response).to redirect_to(public_event_path(event))
+        expect(JoinPart.exists?(target_join_part.id)).to eq false
+        expect(EntryInvitation.exists?(invitation.id)).to eq false
+        expect(JoinPartCustomer.exists?(join_part_customer.id)).to eq false
+      end
+
+      it "無関係な他JoinPart配下のEntryInvitation/JoinPartCustomerは削除されないこと" do
+        target_song = event.songs.first
+        target_join_part = FactoryBot.create(:join_part, song: target_song, join_part_name: "Vocal")
+        target_invitation = FactoryBot.create(
+          :entry_invitation,
+          event: event,
+          song: target_song,
+          join_part: target_join_part,
+          customer: other_customer,
+          requested_by_customer: customer
+        )
+
+        other_song = FactoryBot.create(:song, event: event)
+        other_join_part = FactoryBot.create(:join_part, song: other_song, join_part_name: "Guitar")
+        other_invitation = FactoryBot.create(
+          :entry_invitation,
+          event: event,
+          song: other_song,
+          join_part: other_join_part,
+          customer: other_customer,
+          requested_by_customer: customer
+        )
+        other_join_part_customer = FactoryBot.create(:join_part_customer, join_part: other_join_part, customer: other_customer)
+
+        put public_event_path(event), params: destroy_join_part_params(target_song, target_join_part)
+
+        expect(response).to redirect_to(public_event_path(event))
+        expect(JoinPart.exists?(target_join_part.id)).to eq false
+        expect(EntryInvitation.exists?(target_invitation.id)).to eq false
+
+        expect(JoinPart.exists?(other_join_part.id)).to eq true
+        expect(EntryInvitation.exists?(other_invitation.id)).to eq true
+        expect(JoinPartCustomer.exists?(other_join_part_customer.id)).to eq true
+        expect(Song.exists?(other_song.id)).to eq true
+      end
+    end
     context "楽曲へのリクエスト者(requested_by_customer)登録" do
       let(:member) { FactoryBot.create(:customer, name: "参加太郎") }
       let(:other_member) { FactoryBot.create(:customer, name: "参加次郎") }
