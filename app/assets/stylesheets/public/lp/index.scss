@@ -3793,6 +3793,13 @@
     }
   }
 
+  &__owner-badge {
+    font-size: 0.78rem;
+    color: #b45309;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+
   &__cta {
     display: flex;
     flex-direction: column;

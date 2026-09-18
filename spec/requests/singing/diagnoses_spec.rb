@@ -167,6 +167,17 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response.body).to include("プランを見る")
     end
 
+    it "イベントオーナー(コミュニティオーナー)のfreeユーザーには特典バナーと5回分の枠を表示すること" do
+      FactoryBot.create(:community, owner_id: singing_customer.id)
+      sign_in singing_customer
+
+      get new_singing_diagnosis_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("🎁 イベントオーナー特典")
+      expect(response.body).to include("0 / 5 回")
+    end
+
     it "musicユーザーも共通診断フォームにアクセスできること" do
       sign_in music_customer
 

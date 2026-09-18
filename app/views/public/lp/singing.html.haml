@@ -506,6 +506,8 @@
           %p.singing-plan-status-card__label 現在のプラン
           %p.singing-plan-status-card__plan= current_customer.plan.upcase
           - monthly_limit = current_customer.singing_diagnosis_monthly_limit
+          - if current_customer.event_owner_diagnosis_bonus_active?
+            %p.singing-plan-status-card__owner-badge 🎁 イベントオーナーのため、今月は#{monthly_limit}回まで診断できます
           - if monthly_limit
             - remaining = current_customer.remaining_singing_diagnosis_quota
             %p.singing-plan-status-card__quota
@@ -516,9 +518,9 @@
               %strong 今月の診断：無制限
         .singing-plan-status-card__cta
           = link_to "今すぐ診断する", new_singing_diagnosis_path, class: "btn-singing-diagnose"
-          - if current_customer.plan == "free"
+          - if monthly_limit && monthly_limit < 5
             = link_to "LIGHTで5回/月に増やす", "#lp-section", class: "singing-plan-status-card__upgrade-link"
-          - elsif current_customer.plan == "light"
+          - elsif monthly_limit && monthly_limit < 20
             = link_to "COREで20回/月に増やす", "#lp-section", class: "singing-plan-status-card__upgrade-link"
 
     = render "singing/shared/recap_movie_cta"

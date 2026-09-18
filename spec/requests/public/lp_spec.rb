@@ -25,5 +25,20 @@ RSpec.describe "Public::Lps", type: :request do
       expect(response.body).to include("利用規約")
       expect(response.body).to include("プライバシーポリシー")
     end
+
+    it "イベントオーナー(コミュニティオーナー)のfreeユーザーには特典表示と5回分の残数を表示し、LIGHTへの誘導は表示しないこと" do
+      singing_domain = Domain.find_or_create_by!(name: "singing")
+      customer = FactoryBot.create(:customer, domain_name: "singing")
+      CustomerDomain.find_or_create_by!(customer: customer, domain: singing_domain)
+      FactoryBot.create(:community, owner_id: customer.id)
+      sign_in customer
+
+      get public_singing_lp_path
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("イベントオーナーのため、今月は5回まで診断できます")
+      expect(response.body).to include("5 / 5回")
+      expect(response.body).not_to include("LIGHTで5回/月に増やす")
+    end
   end
 end
