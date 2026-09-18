@@ -263,6 +263,119 @@ jobs:
           log_step_finish "puma restart" "$PUMA_STARTED_AT"
           sudo systemctl status puma --no-pager --lines=20
 
+          ANALYZER_STARTED_AT=$(date +%s)
+          log_step_start "singing-analyzer change detection"
+
+          # Change detection reuses PREV_COMMIT/NEW_COMMIT from the git update
+          # step above so it is correct across multi-commit pushes, merge
+          # commits, and any number of intermediate commits. It is computed
+          # independently from CHANGED_FILES (which swallows git diff
+          # failures with `|| true`) because a failed detection must never
+          # silently skip an analyzer restart.
+          set +e
+          ANALYZER_DIFF_OUTPUT="$(git diff --name-only "$PREV_COMMIT" "$NEW_COMMIT")"
+          ANALYZER_DIFF_STATUS=$?
+          set -e
+
+          ANALYZER_CHANGED=false
+          ANALYZER_DEPS_CHANGED=false
+
+          if [ "$ANALYZER_DIFF_STATUS" -ne 0 ]; then
+            echo "[deploy] WARNING: singing-analyzer change detection failed (git diff exit=${ANALYZER_DIFF_STATUS})"
+            echo "[deploy] Treating as changed (fail-safe: never silently skip a required restart)"
+            ANALYZER_CHANGED=true
+            ANALYZER_DEPS_CHANGED=true
+          else
+            while IFS= read -r changed_file; do
+              [ -n "$changed_file" ] || continue
+
+              case "$changed_file" in
+                singing_analyzer/*)
+                  ANALYZER_CHANGED=true
+                  ;;
+              esac
+
+              case "$changed_file" in
+                singing_analyzer/requirements.txt)
+                  ANALYZER_DEPS_CHANGED=true
+                  ;;
+              esac
+            done <<< "$ANALYZER_DIFF_OUTPUT"
+          fi
+
+          if [ "$ANALYZER_CHANGED" = "true" ]; then
+            echo "[deploy] singing-analyzer changes: yes"
+
+            ANALYZER_DIR="${DEPLOY_PATH}/singing_analyzer"
+            ANALYZER_VENV_PIP="${ANALYZER_DIR}/.venv/bin/pip"
+
+            if [ "$ANALYZER_DEPS_CHANGED" = "true" ]; then
+              "$ANALYZER_VENV_PIP" install -r "${ANALYZER_DIR}/requirements.txt"
+              echo "[deploy] singing-analyzer dependency install: performed"
+            else
+              echo "[deploy] singing-analyzer dependency install: skipped (requirements.txt unchanged)"
+            fi
+
+            # singing-analyzer.service is not tracked in this repository (it is
+            # managed manually on the production host, see
+            # docs/handover/al2023_migration_wiki.md). There is nothing in git
+            # to diff against, so daemon-reload is intentionally not automated
+            # here. If the unit file is ever brought under version control,
+            # this step must be revisited deliberately rather than having
+            # daemon-reload silently added.
+            echo "[deploy] singing-analyzer daemon-reload: skipped (unit file is not managed by this repository)"
+
+            sudo systemctl restart singing-analyzer
+            echo "[deploy] singing-analyzer restart: performed"
+
+            ANALYZER_ACTIVE=false
+            for _ in 1 2 3 4 5; do
+              if systemctl is-active --quiet singing-analyzer; then
+                ANALYZER_ACTIVE=true
+                break
+              fi
+              sleep 1
+            done
+
+            if [ "$ANALYZER_ACTIVE" = "true" ]; then
+              echo "[deploy] singing-analyzer active check: passed"
+            else
+              echo "[deploy] ERROR: singing-analyzer active check FAILED"
+              echo "[deploy] === singing-analyzer status (failure diagnostics) ==="
+              sudo systemctl status singing-analyzer --no-pager --lines=20 || true
+              echo "[deploy] ======================================================"
+              exit 1
+            fi
+
+            ANALYZER_HEALTH_OK=false
+            ANALYZER_HEALTH_LAST_ERROR=""
+            for attempt in $(seq 1 15); do
+              if ANALYZER_HEALTH_BODY="$(curl --fail --silent --show-error --max-time 5 http://127.0.0.1:8000/health 2>&1)"; then
+                if printf '%s' "$ANALYZER_HEALTH_BODY" | grep -q '"status"[[:space:]]*:[[:space:]]*"ok"'; then
+                  ANALYZER_HEALTH_OK=true
+                  break
+                fi
+                ANALYZER_HEALTH_LAST_ERROR="unexpected /health response body"
+              else
+                ANALYZER_HEALTH_LAST_ERROR="$ANALYZER_HEALTH_BODY"
+              fi
+              echo "[deploy] singing-analyzer health check attempt ${attempt}/15: not ready yet"
+              sleep 2
+            done
+
+            if [ "$ANALYZER_HEALTH_OK" = "true" ]; then
+              echo "[deploy] singing-analyzer health check: passed"
+            else
+              echo "[deploy] ERROR: singing-analyzer health check FAILED after 15 attempts (last error: ${ANALYZER_HEALTH_LAST_ERROR})"
+              exit 1
+            fi
+          else
+            echo "[deploy] singing-analyzer changes: no"
+            echo "[deploy] singing-analyzer restart: skipped"
+          fi
+
+          log_step_finish "singing-analyzer deploy" "$ANALYZER_STARTED_AT"
+
           DEPLOY_FINISHED_AT=$(date +%s)
           echo "[deploy] END: $(date '+%H:%M:%S') ($((DEPLOY_FINISHED_AT - DEPLOY_STARTED_AT))s)"
           echo "Deploy completed successfully."
