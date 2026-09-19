@@ -481,7 +481,7 @@
   padding: 20px;
 }
 
-.singing-diagnosis__radar-copy h2 {
+.singing-diagnosis__radar-copy > h3 {
   color: #1f2937;
   font-size: 20px;
   font-weight: 700;
@@ -595,7 +595,7 @@
   margin: 6px 0 4px;
 }
 
-.singing-diagnosis__score-guides h2 {
+.singing-diagnosis__score-guides > h3 {
   color: #1f2937;
   font-size: 22px;
   font-weight: 700;
@@ -634,7 +634,7 @@
   margin-bottom: 0;
 }
 
-.singing-diagnosis__comparison h2 {
+.singing-diagnosis__comparison > h3 {
   color: #1f2937;
   font-size: 22px;
   font-weight: 700;
@@ -834,7 +834,7 @@
   border-left-color: #0f766e;
 }
 
-.singing-diagnosis__specific-scores h2 {
+.singing-diagnosis__specific-scores > h3 {
   color: #1f2937;
   font-size: 22px;
   font-weight: 700;
@@ -915,7 +915,7 @@
   padding: 24px;
 }
 
-.singing-diagnosis__ensemble-diagnosis h2 {
+.singing-diagnosis__ensemble-diagnosis > h3 {
   color: #134e4a;
   font-size: 24px;
   font-weight: 800;
@@ -995,7 +995,7 @@
   border-left: 6px solid #f59e0b;
 }
 
-.singing-diagnosis__quality-notice h2 {
+.singing-diagnosis__quality-notice > h3 {
   color: #92400e;
   font-size: 22px;
   font-weight: 800;
@@ -1313,7 +1313,7 @@
   border-left-color: #94a3b8;
 }
 
-.singing-diagnosis__advanced-feedback h2 {
+.singing-diagnosis__advanced-feedback > h3 {
   color: #1f2937;
   font-size: 22px;
   font-weight: 700;
@@ -1524,14 +1524,14 @@
   margin-right: 6px;
 }
 
-.singing-diagnosis__premium-report h2,
+.singing-diagnosis__premium-header > h3,
 .singing-diagnosis__premium-section h3 {
   color: #1f2937;
   font-weight: 700;
   margin-bottom: 10px;
 }
 
-.singing-diagnosis__premium-report h2 {
+.singing-diagnosis__premium-header > h3 {
   font-size: 22px;
 }
 
@@ -2039,6 +2039,17 @@
   line-height: 1.8;
   margin: 16px 0 0;
   padding: 14px 16px;
+}
+
+// 元はBootstrapのデフォルトh2見た目(未上書き)に依存していたセクション見出し。
+// 見出しタグをh3へ変更(詳細スコア配下の見出し階層修正)しても見た目が変わらないよう、
+// 従来のh2相当の値(color/font-size/font-weight/line-height/margin-bottom)を明示的に固定する。
+.singing-diagnosis__reference-comparison > h3 {
+  color: #212529;
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.2;
+  margin-bottom: 8px;
 }
 
 .singing-diagnosis__reference-comparison dd {

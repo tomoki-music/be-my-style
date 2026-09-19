@@ -1721,6 +1721,63 @@ RSpec.describe Singing::DiagnosesHelper, type: :helper do
     end
   end
 
+  describe "#singing_result_value_headline / #singing_result_value_subcopy" do
+    let(:individual_feedback_customer) { instance_double(Customer, has_feature?: true) }
+    let(:locked_customer) { instance_double(Customer, has_feature?: false) }
+
+    it "個別フィードバック利用可能・vocalでは「魅力」を訴求するコピーを返すこと" do
+      diagnosis = build_diagnosis(performance_type: "vocal")
+
+      expect(helper.singing_result_value_headline(diagnosis, individual_feedback_customer)).to eq("あなたの歌声の魅力と、次に伸ばすポイント")
+      expect(helper.singing_result_value_subcopy(individual_feedback_customer)).to eq("点数だけでは分からない強みと、次の練習につながるヒントをお届けします。")
+    end
+
+    it "個別フィードバック利用可能・楽器では「演奏」を訴求するコピーを返すこと" do
+      diagnosis = build_diagnosis(performance_type: "guitar")
+
+      expect(helper.singing_result_value_headline(diagnosis, individual_feedback_customer)).to eq("あなたの演奏の魅力と、次に伸ばすポイント")
+      expect(helper.singing_result_value_subcopy(individual_feedback_customer)).to eq("点数だけでは分からない強みと、次の練習につながるヒントをお届けします。")
+    end
+
+    it "個別フィードバック利用不可・vocalでは存在しない情報を匂わせないコピーを返すこと" do
+      diagnosis = build_diagnosis(performance_type: "vocal")
+
+      expect(helper.singing_result_value_headline(diagnosis, locked_customer)).to eq("今回の歌声を振り返り、次の成長へ")
+      expect(helper.singing_result_value_subcopy(locked_customer)).to eq("音声解析の結果から現在の傾向を確認し、次の練習につなげましょう。")
+    end
+
+    it "個別フィードバック利用不可・楽器では存在しない情報を匂わせないコピーを返すこと" do
+      diagnosis = build_diagnosis(performance_type: "guitar")
+
+      expect(helper.singing_result_value_headline(diagnosis, locked_customer)).to eq("今回の演奏を振り返り、次の成長へ")
+      expect(helper.singing_result_value_subcopy(locked_customer)).to eq("音声解析の結果から現在の傾向を確認し、次の練習につなげましょう。")
+    end
+  end
+
+  describe "#singing_individual_feedback_available?" do
+    it "AIコメント機能のみでも利用可能と判定すること" do
+      customer = instance_double(Customer, has_feature?: false)
+      allow(customer).to receive(:has_feature?).with(:singing_diagnosis_ai_comment).and_return(true)
+      allow(customer).to receive(:has_feature?).with(:singing_diagnosis_advanced_feedback).and_return(false)
+
+      expect(helper.singing_individual_feedback_available?(customer)).to be true
+    end
+
+    it "advanced feedback機能のみでも利用可能と判定すること" do
+      customer = instance_double(Customer, has_feature?: false)
+      allow(customer).to receive(:has_feature?).with(:singing_diagnosis_ai_comment).and_return(false)
+      allow(customer).to receive(:has_feature?).with(:singing_diagnosis_advanced_feedback).and_return(true)
+
+      expect(helper.singing_individual_feedback_available?(customer)).to be true
+    end
+
+    it "どちらの機能もない場合は利用不可と判定すること" do
+      customer = instance_double(Customer, has_feature?: false)
+
+      expect(helper.singing_individual_feedback_available?(customer)).to be false
+    end
+  end
+
   def build_diagnosis(overall_score: 75, pitch_score: 75, rhythm_score: 75, expression_score: 75, result_payload: {}, performance_type: "vocal", specific_comparison: nil, reference_comparison: nil, score_comparison: nil, created_at: nil, completed: true)
     Struct.new(:overall_score, :pitch_score, :rhythm_score, :expression_score, :result_payload, :performance_type, :specific_comparison_value, :reference_comparison_value, :score_comparison_value, :created_at, :completed_value) do
       def performance_type_label

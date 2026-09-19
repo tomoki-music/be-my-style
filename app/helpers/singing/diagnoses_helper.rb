@@ -776,13 +776,29 @@ module Singing::DiagnosesHelper
 
   # 結果画面いちばん上の「成長サマリー」領域に使うメインコピー。
   # vocal は「歌声」、それ以外(guitar/bass/drums/keyboard/band)は「演奏」で出し分ける。
-  def singing_result_value_headline(diagnosis)
+  # AIコメントまたはadvanced feedbackで個別の強み・改善点を実際に提示できるユーザーにだけ
+  # 「魅力」を訴求する文言を出し、それ以外には存在しない情報を匂わせない文言にする。
+  def singing_result_value_headline(diagnosis, customer)
     noun = diagnosis.performance_type_vocal? ? "歌声" : "演奏"
-    "あなたの#{noun}の魅力と、次に伸ばすポイント"
+    if singing_individual_feedback_available?(customer)
+      "あなたの#{noun}の魅力と、次に伸ばすポイント"
+    else
+      "今回の#{noun}を振り返り、次の成長へ"
+    end
   end
 
-  def singing_result_value_subcopy
-    "点数だけでは分からない強みと、次の練習につながるヒントを、音声解析とAIコーチによるフィードバックでお届けします。"
+  def singing_result_value_subcopy(customer)
+    if singing_individual_feedback_available?(customer)
+      "点数だけでは分からない強みと、次の練習につながるヒントをお届けします。"
+    else
+      "音声解析の結果から現在の傾向を確認し、次の練習につなげましょう。"
+    end
+  end
+
+  # AIコメント・advanced feedbackのいずれかで、個別の強み・改善点を実際に提示できるか。
+  def singing_individual_feedback_available?(customer)
+    customer.has_feature?(:singing_diagnosis_ai_comment) ||
+      customer.has_feature?(:singing_diagnosis_advanced_feedback)
   end
 
   def singing_practice_menus(diagnosis)

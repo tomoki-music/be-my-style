@@ -150,6 +150,8 @@ RSpec.describe "Singing diagnosis result value UI", type: :system, js: true do
       use_desktop_viewport(width: 1280, height: 1200)
       visit singing_diagnosis_path(@diagnosis)
 
+      expect(page).to have_content("今回の歌声を振り返り、次の成長へ")
+      expect(page).to have_no_content("あなたの歌声の魅力と、次に伸ばすポイント")
       expect(page).to have_content("今回の結果が、これからの成長のスタート地点です。")
       expect(page).to have_content("AIコーチからのフィードバック")
       expect(page).to have_content("Premiumで解放する")

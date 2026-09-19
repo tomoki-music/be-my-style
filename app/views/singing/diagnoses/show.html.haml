@@ -57,7 +57,7 @@
         %dd= @diagnosis.priority_analysis? ? "Premium 優先解析" : "通常解析"
 
     - if @diagnosis.completed?
-      = render "result_value_summary", diagnosis: @diagnosis
+      = render "result_value_summary", diagnosis: @diagnosis, customer: current_customer
 
       = render "ai_coach_feedback", diagnosis: @diagnosis, customer: current_customer
 
