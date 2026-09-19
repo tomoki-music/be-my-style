@@ -158,8 +158,7 @@ module Singing
           Item.new(
             label: growth_community&.description || "Growth Community",
             title: growth_community&.title || "あなたらしい成長を見つける仲間がいます",
-            message: growth_community&.community_message || "歌い方に正解はありません。楽しみながら見つけていきましょう。",
-            meta: "#{growth_community&.member_count.to_i}人の仲間"
+            message: growth_community&.community_message || "歌い方に正解はありません。楽しみながら見つけていきましょう。"
           )
         ],
         cta_label: matching&.cta_label || growth_community&.cta_label || "コミュニティを見る",

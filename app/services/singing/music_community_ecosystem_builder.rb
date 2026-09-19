@@ -50,7 +50,7 @@ module Singing
       all_configs = Singing::GrowthCirclesBuilder::GROWTH_TYPE_CIRCLES.values +
                     Singing::GrowthCirclesBuilder::MISSION_CIRCLES.values +
                     [Singing::GrowthCirclesBuilder::CHEER_CIRCLE_CONFIG]
-      all_configs.count { |config| config[:member_count].to_i >= 1 }
+      all_configs.size
     rescue StandardError
       0
     end

@@ -19,5 +19,27 @@ RSpec.describe "Singing::Challenges", type: :request do
       expect(response.body).to include("仲間の成長を見る")
       expect(response.body).to include("音楽コミュニティホームへ")
     end
+
+    it "GrowthType Communityの実データではない固定人数(「人の仲間」)を表示しないこと" do
+      get singing_challenges_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("人の仲間")
+      expect(response.body).not_to include("growth-type-community__count")
+    end
+
+    it "GrowthType Communityのカード自体（名称・CTA）は表示され続けること" do
+      get singing_challenges_path
+
+      doc = Nokogiri::HTML(response.body)
+      section = doc.at_css(".growth-type-community")
+
+      expect(response).to have_http_status(:ok)
+      expect(section).to be_present
+      expect(section.at_css(".growth-type-community__eyebrow").text).to eq("GrowthType Community")
+      expect(section.at_css(".growth-type-community__title")).to be_present
+      expect(section.at_css(".growth-type-community__message")).to be_present
+      expect(section.at_css(".growth-type-community__button")).to be_present
+    end
   end
 end

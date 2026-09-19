@@ -31,9 +31,14 @@ RSpec.describe Singing::GrowthTypeCommunityBuilder do
 
       expect(result.title).to be_present
       expect(result.community_message).to be_present
-      expect(result.member_count).not_to be_nil
       expect(result.cta_label).to be_present
       expect(result.cta_url).to be_present
+    end
+
+    it "member_count フィールドを保持しない（架空の参加人数は持たせない）" do
+      result = described_class.call(nil, growth_type: growth_type(:emotional_singer))
+
+      expect(result.respond_to?(:member_count)).to be false
     end
 
     it "Emotional Singer向けの文言を返す" do

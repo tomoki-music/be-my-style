@@ -66,15 +66,14 @@ RSpec.describe Singing::GrowthCirclesBuilder do
         expect(growth_circle.title).to include("Emotional Singer Circle")
       end
 
-      it "member_count が正の整数である" do
+      it "member_count フィールドを保持しない（架空の参加人数は持たせない）" do
         customer = create(:customer, domain_name: "singing")
         completed_diagnosis(customer)
 
         circles = described_class.call(customer)
 
         circles.each do |circle|
-          expect(circle.member_count).to be_a(Integer)
-          expect(circle.member_count).to be_positive
+          expect(circle.respond_to?(:member_count)).to be false
         end
       end
     end
@@ -159,7 +158,7 @@ RSpec.describe Singing::GrowthCirclesBuilder do
     end
 
     context "DTO の各フィールド" do
-      it "title, description, member_count, message, circle_type がすべて存在する" do
+      it "title, description, message, circle_type がすべて存在する" do
         customer = create(:customer, domain_name: "singing")
         completed_diagnosis(customer)
 
@@ -168,7 +167,6 @@ RSpec.describe Singing::GrowthCirclesBuilder do
         circles.each do |circle|
           expect(circle.title).to be_present
           expect(circle.description).to be_present
-          expect(circle.member_count).to be_present
           expect(circle.message).to be_present
           expect(circle.circle_type).to be_present
         end

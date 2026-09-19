@@ -377,9 +377,6 @@
               - music_home.growth_circles.each do |circle|
                 .singing-community-home__circle-item
                   %h4.singing-community-home__circle-title= circle.title
-                  %p.singing-community-home__circle-count
-                    %strong= "#{circle.member_count}人"
-                    が参加中
                   %p.singing-community-home__circle-desc= circle.description
           - else
             .singing-home-empty-state
