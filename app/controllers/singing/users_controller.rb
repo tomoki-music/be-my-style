@@ -19,13 +19,18 @@ class Singing::UsersController < Singing::BaseController
   end
 
   def show
-    @pinned_achievement_badges = @user.singing_achievement_badges.pinned.limit(SingingAchievementBadge::PIN_LIMIT)
+    # 公開プロフィール画面のため、非公開診断を根拠にしか成立しないバッジは表示しない。
+    publicly_visible_badge_keys = Singing::PubliclyVisibleAchievementBadges.call(@user)
+    @pinned_achievement_badges = @user.singing_achievement_badges
+                                       .pinned
+                                       .where(badge_key: publicly_visible_badge_keys.to_a)
+                                       .limit(SingingAchievementBadge::PIN_LIMIT)
     # 公開プロフィール画面のため、ranking_opt_in=trueの診断のみを成長記録・診断回数の集計対象にする。
     @recent_diagnoses = @user.singing_diagnoses.publicly_visible.completed.order(created_at: :desc).limit(5)
     @growth_diagnoses = @user.singing_diagnoses.publicly_visible.completed.where.not(overall_score: nil).order(created_at: :asc).limit(12)
     @recent_activities = @user.activities.with_attached_activity_image.includes(:activity_reactions).order(created_at: :desc).limit(3)
     @activity_count = @user.activities.count
-    @best_diagnosis = @user.singing_diagnoses.completed.where(ranking_opt_in: true).where.not(overall_score: nil).order(overall_score: :desc, id: :desc).first
+    @best_diagnosis = @user.singing_diagnoses.publicly_visible.completed.where.not(overall_score: nil).order(overall_score: :desc, id: :desc).first
     @diagnosis_count = @user.singing_diagnoses.publicly_visible.completed.where.not(overall_score: nil).count
     @ranking_position = Singing::RankingQuery.position_for(@user.id)
     @season_position = Singing::RankingQuery.season_position_for(@user.id)
@@ -37,7 +42,7 @@ class Singing::UsersController < Singing::BaseController
     @singer_rank = @user.singer_rank
     @singer_rank_progress = @user.singer_rank_progress
     @singer_next_rank = @user.singer_next_rank
-    @ranking_badges = Singing::RankingBadgeService.badges_for(@user)
+    @ranking_badges = Singing::RankingBadgeService.badges_for(@user, publicly_visible_only: true)
     @next_badges = current_customer == @user ? Singing::NextBadgeService.call(@user) : []
     @growth_entries = Singing::RankingQuery.growth
     @growth_index = @growth_entries.index { |entry| entry.customer.id == @user.id }

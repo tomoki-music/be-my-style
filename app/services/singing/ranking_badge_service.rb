@@ -91,19 +91,23 @@ module Singing
       :first_diagnosis
     ].freeze
 
-    def self.badges_for(customer)
+    # publicly_visible_only: true を渡すと、診断回数・成長幅の算出に
+    # ranking_opt_in=false の診断を一切使わない(他ユーザー向け表示用)。
+    # false(デフォルト)は従来通り全診断を使う(本人専用表示用)。
+    def self.badges_for(customer, publicly_visible_only: false)
       return [] unless customer
 
-      badges_for_bulk([customer])[customer.id] || []
+      badges_for_bulk([customer], publicly_visible_only: publicly_visible_only)[customer.id] || []
     end
 
-    def self.badges_for_bulk(customers)
-      new(customers).badges_for_bulk
+    def self.badges_for_bulk(customers, publicly_visible_only: false)
+      new(customers, publicly_visible_only: publicly_visible_only).badges_for_bulk
     end
 
-    def initialize(customers)
+    def initialize(customers, publicly_visible_only: false)
       @customers = Array(customers).compact.uniq { |customer| customer.id }
       @customer_ids = @customers.map(&:id).compact
+      @publicly_visible_only = publicly_visible_only
     end
 
     def badges_for_bulk
@@ -166,19 +170,13 @@ module Singing
     end
 
     def diagnosis_counts
-      SingingDiagnosis
-        .completed
-        .where(customer_id: customer_ids)
-        .where.not(overall_score: nil)
+      diagnosis_base_scope
         .group(:customer_id)
         .count
     end
 
     def growth_scores
-      diagnoses = SingingDiagnosis
-                    .completed
-                    .where(customer_id: customer_ids)
-                    .where.not(overall_score: nil)
+      diagnoses = diagnosis_base_scope
                     .order(customer_id: :asc, created_at: :desc, id: :desc)
                     .group_by(&:customer_id)
 
@@ -197,11 +195,23 @@ module Singing
       Singing::RankingQuery.growth.first(3).map { |entry| entry.customer.id }
     end
 
+    # diagnosis_counts / growth_scores の集計対象スコープ。
+    # publicly_visible_only の場合のみ ranking_opt_in=false を除外する。
+    def diagnosis_base_scope
+      scope = SingingDiagnosis
+        .completed
+        .where(customer_id: customer_ids)
+        .where.not(overall_score: nil)
+      @publicly_visible_only ? scope.publicly_visible : scope
+    end
+
+    # 総合/シーズンランキングは元々 ranking_opt_in=true の診断のみを対象にしており、
+    # publicly_visible_only の値に関わらず常に非公開診断を除外する(既存挙動を維持)。
     def season_rank_map
       ranked_customer_ids(
         SingingDiagnosis
           .completed
-          .where(ranking_opt_in: true)
+          .publicly_visible
           .where.not(overall_score: nil)
           .where.not(diagnosed_at: nil)
           .where(diagnosed_at: Singing::RankingQuery.current_season_range)
@@ -214,7 +224,7 @@ module Singing
       ranked_customer_ids(
         SingingDiagnosis
           .completed
-          .where(ranking_opt_in: true)
+          .publicly_visible
           .where.not(overall_score: nil)
           .order(overall_score: :desc, id: :desc)
           .pluck(:customer_id)

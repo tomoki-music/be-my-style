@@ -389,8 +389,8 @@ RSpec.describe "Singing::Users", type: :request do
 
     it "公開・非公開の診断が混在する場合、公開診断だけが成長の記録・診断回数に使われる" do
       sign_in other_customer
-      # (成長ランキングの前回スコア比較には非公開診断も使われる既存挙動があるため、
-      #  growth_score が発生しない組み合わせで「成長の記録」「診断回数」だけを検証する)
+      # 成長ランキングのgrowth_scoreは別テストで検証するため、ここでは
+      # 「成長の記録」「診断回数」の絞り込みだけを検証する
       create(:singing_diagnosis, :completed, customer: singing_customer, ranking_opt_in: false, overall_score: 90, created_at: 10.days.ago, diagnosed_at: 10.days.ago)
       create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 77, created_at: 1.day.ago, diagnosed_at: 1.day.ago)
 
@@ -411,6 +411,100 @@ RSpec.describe "Singing::Users", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Vocal User")
+    end
+
+    it "Growthランキングの成長幅は公開診断同士で計算され、非公開診断のスコアは表示されないこと" do
+      sign_in other_customer
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 40, created_at: 3.days.ago)
+      create(:singing_diagnosis, :completed, customer: singing_customer, ranking_opt_in: false, overall_score: 99, created_at: 2.days.ago)
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 65, created_at: 1.day.ago)
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("+25点")
+      expect(response.body).not_to include("99点")
+    end
+
+    it "未ログインでもGrowthランキングの非公開スコアが表示されないこと" do
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 40, created_at: 3.days.ago)
+      create(:singing_diagnosis, :completed, customer: singing_customer, ranking_opt_in: false, overall_score: 99, created_at: 2.days.ago)
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 65, created_at: 1.day.ago)
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("+25点")
+      expect(response.body).not_to include("99点")
+    end
+  end
+
+  describe "GET /singing/users/:id 公開プロフィールでのバッジ表示" do
+    it "公開診断だけで成立するAchievement Badgeはピン止め表示されること" do
+      sign_in other_customer
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 70)
+      create(:singing_achievement_badge, :first_diagnosis, customer: singing_customer, pinned_at: Time.current)
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("First Note")
+    end
+
+    it "非公開診断込みでなければ成立しないAchievement Badgeはピン止めしていても表示されないこと" do
+      sign_in other_customer
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 70)
+      # 実際には非公開診断を含む合計10回で獲得したバッジを模している
+      create(:singing_achievement_badge, :diagnosis_10, customer: singing_customer, pinned_at: Time.current)
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("10 Songs")
+    end
+
+    it "未ログインでも非公開診断込みでなければ成立しないAchievement Badgeは表示されないこと" do
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 70)
+      create(:singing_achievement_badge, :diagnosis_10, customer: singing_customer, pinned_at: Time.current)
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("10 Songs")
+    end
+
+    it "診断内容に依存しないAchievement Badge(recap関連)はピン止めしていれば表示されること" do
+      sign_in other_customer
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 70)
+      create(:singing_achievement_badge, :recap_movie_first_share, customer: singing_customer, pinned_at: Time.current)
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("My Singing Recap")
+    end
+
+    it "公開診断の回数だけで成立するRanking Badgeのみ表示され、非公開診断込みの回数バッジは表示されないこと" do
+      sign_in other_customer
+      3.times { create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 70) }
+      7.times { create(:singing_diagnosis, :completed, customer: singing_customer, ranking_opt_in: false, overall_score: 70) }
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("3回診断達成")
+      expect(response.body).not_to include("10回診断達成")
+    end
+
+    it "未ログインでも非公開診断込みの回数によるRanking Badgeは表示されないこと" do
+      3.times { create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 70) }
+      7.times { create(:singing_diagnosis, :completed, customer: singing_customer, ranking_opt_in: false, overall_score: 70) }
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("3回診断達成")
+      expect(response.body).not_to include("10回診断達成")
     end
   end
 
