@@ -508,6 +508,87 @@ RSpec.describe "Singing::Users", type: :request do
     end
   end
 
+  describe "GET /singing/users/:id XP・シンガーランクの表示制御" do
+    before do
+      singing_customer.update!(singing_xp: 350)
+    end
+
+    it "本人が閲覧するとXPが表示されること" do
+      sign_in singing_customer
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("350 XP")
+    end
+
+    it "本人が閲覧するとシンガーランクが表示されること" do
+      sign_in singing_customer
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("上昇気流")
+      expect(response.body).to include("Lv.3")
+    end
+
+    it "他のログインユーザーが閲覧するとXPが表示されないこと" do
+      sign_in other_customer
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("350 XP")
+    end
+
+    it "他のログインユーザーが閲覧するとシンガーランクが表示されないこと" do
+      sign_in other_customer
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("上昇気流")
+      expect(response.body).not_to include("singer-rank__level")
+    end
+
+    it "未ログインユーザーが閲覧するとXPが表示されないこと" do
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("350 XP")
+    end
+
+    it "未ログインユーザーが閲覧するとシンガーランクが表示されないこと" do
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("上昇気流")
+      expect(response.body).not_to include("singer-rank__level")
+    end
+
+    it "非公開診断を持っていても第三者向けHTMLにXP値が出力されないこと" do
+      sign_in other_customer
+      create(:singing_diagnosis, :completed, customer: singing_customer, ranking_opt_in: false, overall_score: 88)
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("350 XP")
+      expect(response.body).not_to include("singer-rank")
+    end
+
+    it "本人向けの既存表示は壊れていないこと" do
+      sign_in singing_customer
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Vocal User")
+      expect(response.body).to include("プロフィールを編集")
+      expect(response.body).to include("次のランクまで")
+    end
+  end
+
   describe "GET /singing/users 一覧の公開同意(ranking_opt_in)によるフィルタ" do
     it "ranking_opt_in=trueの診断を持つユーザーは一覧に表示される" do
       create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 70)
