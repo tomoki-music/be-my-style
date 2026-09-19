@@ -66,8 +66,8 @@ RSpec.describe Singing::RankingBadgeService, type: :service do
 
     it "成長ランキングTOP3バッジを付与すること" do
       customer = create_singing_customer
-      FactoryBot.create(:singing_diagnosis, :completed, customer: customer,
-                        overall_score: 60, ranking_opt_in: false, created_at: 2.days.ago)
+      FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant, customer: customer,
+                        overall_score: 60, created_at: 2.days.ago)
       FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant, customer: customer,
                         overall_score: 80, created_at: 1.day.ago)
 
@@ -104,7 +104,9 @@ RSpec.describe Singing::RankingBadgeService, type: :service do
 
     it "強い称号を優先して返すこと" do
       customer = create_singing_customer
-      FactoryBot.create_list(:singing_diagnosis, 29, :completed, customer: customer, overall_score: 70)
+      FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant,
+                        customer: customer, overall_score: 60, created_at: 1.day.ago)
+      FactoryBot.create_list(:singing_diagnosis, 28, :completed, customer: customer, overall_score: 70)
       FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant,
                         customer: customer, overall_score: 95, diagnosed_at: Time.zone.now)
 
@@ -123,6 +125,62 @@ RSpec.describe Singing::RankingBadgeService, type: :service do
 
       expect(result.keys).to contain_exactly(customer.id, other_customer.id)
       expect(result[customer.id]).to all(include(:key, :label, :icon, :rarity))
+    end
+  end
+
+  describe "publicly_visible_only: 公開プロフィール向けの絞り込み" do
+    def badge_keys_public(customer)
+      described_class.badges_for(customer, publicly_visible_only: true).map { |badge| badge[:key] }
+    end
+
+    it "デフォルト(publicly_visible_only未指定)は非公開診断込みで判定すること" do
+      customer = create_singing_customer
+      FactoryBot.create_list(:singing_diagnosis, 10, :completed, customer: customer, overall_score: 70)
+
+      expect(badge_keys(customer)).to include(:diagnoses_10)
+    end
+
+    it "publicly_visible_only: true の場合、非公開診断は診断回数バッジの算出に使われないこと" do
+      customer = create_singing_customer
+      FactoryBot.create_list(:singing_diagnosis, 10, :completed, customer: customer, overall_score: 70)
+
+      expect(badge_keys_public(customer)).not_to include(:diagnoses_10)
+    end
+
+    it "publicly_visible_only: true でも公開診断だけで成立するバッジは表示されること" do
+      customer = create_singing_customer
+      FactoryBot.create_list(:singing_diagnosis, 3, :completed, :ranking_participant, customer: customer, overall_score: 70)
+      FactoryBot.create_list(:singing_diagnosis, 7, :completed, customer: customer, overall_score: 70)
+
+      keys = badge_keys_public(customer)
+      expect(keys).to include(:diagnoses_3)
+      expect(keys).not_to include(:diagnoses_10)
+    end
+
+    it "publicly_visible_only: true の場合、非公開診断は成長幅バッジの算出に使われないこと" do
+      customer = create_singing_customer
+      FactoryBot.create(:singing_diagnosis, :completed, customer: customer, overall_score: 60, created_at: 2.days.ago)
+      FactoryBot.create(:singing_diagnosis, :completed, customer: customer, overall_score: 90, created_at: 1.day.ago)
+
+      expect(badge_keys_public(customer)).not_to include(:first_growth, :growth_plus_10)
+    end
+
+    it "publicly_visible_only: true でもシーズン/総合ランキングバッジは従来通り公開診断だけで判定されること(既存仕様を維持)" do
+      customer = create_singing_customer
+      FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant,
+                        customer: customer, overall_score: 90, diagnosed_at: Time.zone.now)
+
+      keys = badge_keys_public(customer)
+      expect(keys).to include(:season_ranked, :season_top_10, :season_top_1, :overall_top_10, :overall_top_3)
+    end
+
+    it ".badges_for_bulk でも publicly_visible_only: true を渡せること" do
+      customer = create_singing_customer
+      FactoryBot.create_list(:singing_diagnosis, 10, :completed, customer: customer, overall_score: 70)
+
+      result = described_class.badges_for_bulk([customer], publicly_visible_only: true)
+
+      expect(result[customer.id].map { |b| b[:key] }).not_to include(:diagnoses_10)
     end
   end
 end

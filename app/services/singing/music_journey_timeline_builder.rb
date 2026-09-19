@@ -44,6 +44,7 @@ module Singing
 
     def fetch_diagnoses
       @customer.singing_diagnoses
+               .publicly_visible
                .completed
                .where.not(overall_score: nil)
                .order(created_at: :asc, id: :asc)

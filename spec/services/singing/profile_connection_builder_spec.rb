@@ -36,10 +36,10 @@ RSpec.describe Singing::ProfileConnectionBuilder do
 
       context "Emotional Singer タイプの診断がある場合" do
         it "emotional_singer が返る" do
-          older  = create(:singing_diagnosis, :completed, customer: customer,
+          older  = create(:singing_diagnosis, :completed, :ranking_participant, customer: customer,
                           expression_score: 50, pitch_score: 50, rhythm_score: 50,
                           overall_score: 60)
-          create(:singing_diagnosis, :completed, customer: customer,
+          create(:singing_diagnosis, :completed, :ranking_participant, customer: customer,
                  expression_score: 65, pitch_score: 52, rhythm_score: 51,
                  overall_score: 65,
                  created_at: older.created_at + 1.day,
@@ -100,6 +100,18 @@ RSpec.describe Singing::ProfileConnectionBuilder do
 
           expect(connection.cta_message).to eq("応援し合える仲間が増えています")
         end
+      end
+    end
+
+    context "公開同意(ranking_opt_in)によるフィルタ" do
+      it "ranking_opt_in=false の診断は circle_slug の判定材料に使われない（デフォルトのまま）" do
+        older = create(:singing_diagnosis, :completed, customer: customer, ranking_opt_in: false,
+                       expression_score: 50, pitch_score: 50, rhythm_score: 50, overall_score: 60)
+        create(:singing_diagnosis, :completed, customer: customer, ranking_opt_in: false,
+               expression_score: 65, pitch_score: 52, rhythm_score: 51, overall_score: 65,
+               created_at: older.created_at + 1.day, diagnosed_at: older.diagnosed_at + 1.day)
+
+        expect(connection.circle_slug).to eq("groove_builder")
       end
     end
   end

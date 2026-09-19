@@ -62,7 +62,7 @@ module Singing
       @candidates ||= Customer
         .joins(:singing_diagnoses)
         .where.not(id: @customer.id)
-        .where(singing_diagnoses: { status: :completed, created_at: window_range })
+        .where(singing_diagnoses: { status: :completed, created_at: window_range, ranking_opt_in: true })
         .where.not(singing_diagnoses: { overall_score: nil })
         .distinct
         .includes(:singing_diagnoses)
@@ -197,20 +197,17 @@ module Singing
       diagnoses_by_customer_id[customer_id.to_i] || []
     end
 
+    # 自分自身の診断は全件、候補者(他ユーザー)の診断は公開同意ありのものだけを判定材料にする。
     def diagnoses_by_customer_id
-      @diagnoses_by_customer_id ||= SingingDiagnosis
-        .completed
-        .where(customer_id: candidate_customer_ids)
-        .where.not(overall_score: nil)
-        .order(created_at: :desc, id: :desc)
-        .to_a
-        .group_by(&:customer_id)
+      @diagnoses_by_customer_id ||= begin
+        base = SingingDiagnosis.completed.where.not(overall_score: nil)
+        candidate_ids = candidates.map(&:id)
+        rows = base.where(customer_id: candidate_ids).publicly_visible.to_a
+        rows += base.where(customer_id: customer_id).to_a if customer_id.present?
+        rows.uniq(&:id).sort_by { |d| [-d.created_at.to_i, -d.id] }.group_by(&:customer_id)
+      end
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError, NoMethodError
       {}
-    end
-
-    def candidate_customer_ids
-      @candidate_customer_ids ||= ([customer_id] + candidates.map(&:id)).compact.uniq
     end
 
     def customer_id

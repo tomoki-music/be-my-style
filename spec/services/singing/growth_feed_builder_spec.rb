@@ -6,7 +6,7 @@ RSpec.describe Singing::GrowthFeedBuilder do
     customer = create(:customer, domain_name: "singing")
     count.times do |i|
       ts = (days_ago_start - i).days.ago
-      create(:singing_diagnosis, :completed,
+      create(:singing_diagnosis, :completed, :ranking_participant,
              customer:         customer,
              overall_score:    65 + i,
              pitch_score:      60 + i,
@@ -68,7 +68,7 @@ RSpec.describe Singing::GrowthFeedBuilder do
       let!(:customer) do
         customer = create(:customer, domain_name: "singing")
         ts = 3.days.ago
-        create(:singing_diagnosis, :completed,
+        create(:singing_diagnosis, :completed, :ranking_participant,
                customer:         customer,
                overall_score:    70,
                pitch_score:      65,
@@ -123,6 +123,72 @@ RSpec.describe Singing::GrowthFeedBuilder do
         item = described_class.call.first
 
         expect(item.reaction_count).to eq(1)
+      end
+    end
+
+    context "公開同意(ranking_opt_in)によるフィルタ" do
+      def diagnosis_for(customer, ranking_opt_in:, days_ago: 3, overall_score: 70)
+        ts = days_ago.days.ago
+        create(:singing_diagnosis, :completed,
+               customer:         customer,
+               ranking_opt_in:   ranking_opt_in,
+               overall_score:    overall_score,
+               pitch_score:      overall_score,
+               rhythm_score:     overall_score,
+               expression_score: overall_score,
+               created_at:       ts,
+               diagnosed_at:     ts)
+      end
+
+      it "ranking_opt_in=true の診断はフィードに含まれる" do
+        customer = create(:customer, domain_name: "singing")
+        diagnosis_for(customer, ranking_opt_in: true)
+
+        result = described_class.call
+        expect(result.map(&:customer)).to include(customer)
+      end
+
+      it "ranking_opt_in=false の診断はフィードに含まれない" do
+        customer = create(:customer, domain_name: "singing")
+        diagnosis_for(customer, ranking_opt_in: false)
+
+        result = described_class.call
+        expect(result.map(&:customer)).not_to include(customer)
+      end
+
+      it "ranking_opt_in が未指定(デフォルトfalse)の診断はフィードに含まれない" do
+        customer = create(:customer, domain_name: "singing")
+        ts = 3.days.ago
+        create(:singing_diagnosis, :completed,
+               customer:         customer,
+               overall_score:    70,
+               pitch_score:      70,
+               rhythm_score:     70,
+               expression_score: 70,
+               created_at:       ts,
+               diagnosed_at:     ts)
+
+        result = described_class.call
+        expect(result.map(&:customer)).not_to include(customer)
+      end
+
+      it "非公開診断しか持たないユーザーはフィードに表示されない" do
+        customer = create(:customer, domain_name: "singing")
+        3.times { |i| diagnosis_for(customer, ranking_opt_in: false, days_ago: 10 - i) }
+
+        result = described_class.call
+        expect(result.map(&:customer)).not_to include(customer)
+      end
+
+      it "公開・非公開の診断が混在する場合は公開診断だけが集計・表示に使われる" do
+        customer = create(:customer, domain_name: "singing")
+        diagnosis_for(customer, ranking_opt_in: false, days_ago: 20, overall_score: 40)
+        diagnosis_for(customer, ranking_opt_in: true,  days_ago: 3,  overall_score: 90)
+
+        item = described_class.call.find { |i| i.customer == customer }
+        expect(item).to be_present
+        # 非公開の40点は「自己ベスト」の比較対象に使われず、公開の90点のみが基準になる
+        expect(item.milestones.map(&:message)).to include("初めての診断を完了しました")
       end
     end
   end

@@ -278,8 +278,8 @@ RSpec.describe "Singing::Rankings", type: :request do
 
         it "成長ランキング参加者の成長幅を表示すること" do
           FactoryBot.create(
-            :singing_diagnosis, :completed,
-            customer: other_customer, overall_score: 60, ranking_opt_in: false,
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: other_customer, overall_score: 60,
             created_at: 2.days.ago
           )
           FactoryBot.create(
@@ -294,8 +294,8 @@ RSpec.describe "Singing::Rankings", type: :request do
 
         it "成長ランキングでバッジを表示すること" do
           FactoryBot.create(
-            :singing_diagnosis, :completed,
-            customer: other_customer, overall_score: 60, ranking_opt_in: false,
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: other_customer, overall_score: 60,
             created_at: 2.days.ago
           )
           FactoryBot.create(
@@ -311,8 +311,8 @@ RSpec.describe "Singing::Rankings", type: :request do
 
         it "成長幅がない（横ばい・下降）ユーザーはランキングに表示しないこと" do
           FactoryBot.create(
-            :singing_diagnosis, :completed,
-            customer: hidden_customer, overall_score: 90, ranking_opt_in: false,
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: hidden_customer, overall_score: 90,
             created_at: 2.days.ago
           )
           FactoryBot.create(
@@ -338,8 +338,8 @@ RSpec.describe "Singing::Rankings", type: :request do
 
         it "成長ランキング参加中のユーザーには自分の成長幅を表示すること" do
           FactoryBot.create(
-            :singing_diagnosis, :completed,
-            customer: singing_customer, overall_score: 60, ranking_opt_in: false,
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: singing_customer, overall_score: 60,
             created_at: 2.days.ago
           )
           FactoryBot.create(
@@ -384,8 +384,8 @@ RSpec.describe "Singing::Rankings", type: :request do
 
         it "参加者がいる場合は下部CTAを表示すること" do
           FactoryBot.create(
-            :singing_diagnosis, :completed,
-            customer: other_customer, overall_score: 60, ranking_opt_in: false,
+            :singing_diagnosis, :completed, :ranking_participant,
+            customer: other_customer, overall_score: 60,
             created_at: 2.days.ago
           )
           FactoryBot.create(
@@ -396,6 +396,59 @@ RSpec.describe "Singing::Rankings", type: :request do
           get singing_rankings_path(type: "growth")
 
           expect(response.body).to include("あなたも次回の診断でランクインできるかもしれません")
+        end
+
+        context "公開同意(ranking_opt_in)によるフィルタ" do
+          it "非公開診断のスコアがレスポンスHTMLへ出力されないこと" do
+            FactoryBot.create(
+              :singing_diagnosis, :completed, customer: other_customer,
+              overall_score: 12, ranking_opt_in: false, created_at: 2.days.ago
+            )
+            FactoryBot.create(
+              :singing_diagnosis, :completed, :ranking_participant,
+              customer: other_customer, overall_score: 34, created_at: 1.day.ago
+            )
+
+            get singing_rankings_path(type: "growth")
+
+            # 非公開診断(12点)がその他ユーザーの成長幅の基準として使われていないこと
+            expect(response.body).not_to include("12点")
+          end
+
+          it "公開→非公開→公開の順に診断がある場合、2件の公開診断同士の比較が表示されること" do
+            FactoryBot.create(
+              :singing_diagnosis, :completed, :ranking_participant,
+              customer: other_customer, overall_score: 40, created_at: 3.days.ago
+            )
+            FactoryBot.create(
+              :singing_diagnosis, :completed, customer: other_customer,
+              overall_score: 99, ranking_opt_in: false, created_at: 2.days.ago
+            )
+            FactoryBot.create(
+              :singing_diagnosis, :completed, :ranking_participant,
+              customer: other_customer, overall_score: 65, created_at: 1.day.ago
+            )
+
+            get singing_rankings_path(type: "growth")
+
+            expect(response.body).to include("+25点")
+            expect(response.body).not_to include("99点")
+          end
+
+          it "公開診断1件＋非公開診断1件のユーザーはランキングに表示しないこと" do
+            FactoryBot.create(
+              :singing_diagnosis, :completed, customer: hidden_customer,
+              overall_score: 60, ranking_opt_in: false, created_at: 2.days.ago
+            )
+            FactoryBot.create(
+              :singing_diagnosis, :completed, :ranking_participant,
+              customer: hidden_customer, overall_score: 80, created_at: 1.day.ago
+            )
+
+            get singing_rankings_path(type: "growth")
+
+            expect(response.body).not_to include(hidden_customer.name)
+          end
         end
       end
 

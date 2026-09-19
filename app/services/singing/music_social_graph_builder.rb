@@ -13,12 +13,13 @@ module Singing
       keyword_init: true
     )
 
-    def self.call(customer:)
-      new(customer: customer).call
+    def self.call(customer:, diagnoses: nil)
+      new(customer: customer, diagnoses: diagnoses).call
     end
 
-    def initialize(customer:)
+    def initialize(customer:, diagnoses: nil)
       @customer = customer
+      @self_diagnoses_scope = diagnoses || customer&.singing_diagnoses
     end
 
     def call
@@ -64,7 +65,7 @@ module Singing
       return [] if my_type.blank?
 
       active_candidates
-        .select { |c| growth_type_for(c)&.type_key == my_type }
+        .select { |c| growth_type_for(c, diagnoses: c.singing_diagnoses.publicly_visible)&.type_key == my_type }
         .map(&:id)
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError, NoMethodError
       []
@@ -75,7 +76,7 @@ module Singing
       return [] if my_mission == :unknown
 
       active_candidates
-        .select { |c| mission_key_for(c) == my_mission }
+        .select { |c| mission_key_for(c, diagnoses: c.singing_diagnoses.publicly_visible) == my_mission }
         .map(&:id)
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError, NoMethodError
       []
@@ -98,7 +99,7 @@ module Singing
       @active_candidates ||= Customer
         .joins(:singing_diagnoses)
         .where.not(id: @customer.id)
-        .where(singing_diagnoses: { status: :completed })
+        .where(singing_diagnoses: { status: :completed, ranking_opt_in: true })
         .where(singing_diagnoses: { created_at: activity_window })
         .distinct
         .limit(CANDIDATE_LIMIT)
@@ -108,25 +109,24 @@ module Singing
     end
 
     def current_growth_type
-      @current_growth_type ||= Singing::GrowthTypeAnalyzer.call(@customer)
+      @current_growth_type ||= Singing::GrowthTypeAnalyzer.call(@customer, diagnoses: @self_diagnoses_scope)
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError, NoMethodError
       nil
     end
 
-    def growth_type_for(customer)
+    def growth_type_for(customer, diagnoses: nil)
       @growth_type_cache ||= {}
-      @growth_type_cache[customer.id] ||= Singing::GrowthTypeAnalyzer.call(customer)
+      @growth_type_cache[customer.id] ||= Singing::GrowthTypeAnalyzer.call(customer, diagnoses: diagnoses || customer.singing_diagnoses)
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError, NoMethodError
       nil
     end
 
     def current_mission_key
-      @current_mission_key ||= mission_key_for(@customer)
+      @current_mission_key ||= mission_key_for(@customer, diagnoses: @self_diagnoses_scope)
     end
 
-    def mission_key_for(customer)
-      diagnoses = customer
-        .singing_diagnoses
+    def mission_key_for(customer, diagnoses: nil)
+      diagnoses = (diagnoses || customer.singing_diagnoses)
         .completed
         .where.not(overall_score: nil)
         .order(created_at: :desc, id: :desc)

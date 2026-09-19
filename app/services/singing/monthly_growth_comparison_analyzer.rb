@@ -21,14 +21,15 @@ module Singing
       keyword_init: true
     )
 
-    def self.call(customer, year:, month:)
-      new(customer, year: year, month: month).call
+    def self.call(customer, year:, month:, diagnoses: nil)
+      new(customer, year: year, month: month, diagnoses: diagnoses).call
     end
 
-    def initialize(customer, year:, month:)
+    def initialize(customer, year:, month:, diagnoses: nil)
       @customer = customer
       @year     = year
       @month    = month
+      @diagnoses_scope = diagnoses || customer&.singing_diagnoses
     end
 
     def call
@@ -37,7 +38,7 @@ module Singing
       range_start = Time.zone.local(@year, @month, 1).beginning_of_month
       range_end   = range_start.end_of_month
 
-      diagnoses = @customer.singing_diagnoses
+      diagnoses = @diagnoses_scope
                            .completed
                            .where.not(overall_score: nil)
                            .where(created_at: range_start..range_end)

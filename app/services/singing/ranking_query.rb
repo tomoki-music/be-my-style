@@ -65,15 +65,18 @@ module Singing
     end
 
     # Returns GrowthEntry list sorted by score improvement (desc).
-    # Only includes customers whose latest ranking_opt_in diagnosis improved
-    # over their immediately preceding completed diagnosis.
+    # Only includes customers whose latest publicly_visible diagnosis improved
+    # over their immediately preceding publicly_visible diagnosis.
+    # previous_diagnosis is also restricted to publicly_visible so that no
+    # non-consented diagnosis (score, existence, or delta) is ever exposed
+    # through this other-user-facing ranking.
     # Uses exactly 2 SQL queries (N+1 safe).
     def growth
-      # Query 1: latest ranking_opt_in diagnosis per customer (with associations)
+      # Query 1: latest publicly_visible diagnosis per customer (with associations)
       latest_by_customer = {}
       SingingDiagnosis
         .completed
-        .where(ranking_opt_in: true)
+        .publicly_visible
         .where.not(overall_score: nil)
         .includes(customer: { profile_image_attachment: :blob })
         .order(created_at: :desc, id: :desc)
@@ -83,9 +86,11 @@ module Singing
 
       return [] if latest_by_customer.empty?
 
-      # Query 2: all completed diagnoses for qualifying customers (for prev lookup)
-      all_by_customer = SingingDiagnosis
+      # Query 2: publicly_visible diagnoses for qualifying customers (for prev lookup).
+      # 非公開診断はGrowthランキングの比較対象に使わないため、ここでも publicly_visible を適用する。
+      visible_by_customer = SingingDiagnosis
         .completed
+        .publicly_visible
         .where.not(overall_score: nil)
         .where(customer_id: latest_by_customer.keys)
         .order(created_at: :desc, id: :desc)
@@ -93,7 +98,7 @@ module Singing
 
       entries = []
       latest_by_customer.each_value do |latest|
-        diagnoses = all_by_customer[latest.customer_id] || []
+        diagnoses = visible_by_customer[latest.customer_id] || []
 
         previous = diagnoses.find do |d|
           d.created_at < latest.created_at ||
@@ -124,7 +129,7 @@ module Singing
       result = []
       SingingDiagnosis
         .completed
-        .where(ranking_opt_in: true)
+        .publicly_visible
         .where.not(overall_score: nil)
         .where.not(diagnosed_at: nil)
         .where(diagnosed_at: range)
@@ -147,7 +152,7 @@ module Singing
       rank = 0
       SingingDiagnosis
         .completed
-        .where(ranking_opt_in: true)
+        .publicly_visible
         .where.not(overall_score: nil)
         .where.not(diagnosed_at: nil)
         .where(diagnosed_at: range)
@@ -167,7 +172,7 @@ module Singing
     def base_scope
       SingingDiagnosis
         .completed
-        .where(ranking_opt_in: true)
+        .publicly_visible
         .where.not(overall_score: nil)
         .order(overall_score: :desc, id: :desc)
     end

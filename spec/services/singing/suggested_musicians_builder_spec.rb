@@ -7,6 +7,7 @@ RSpec.describe Singing::SuggestedMusiciansBuilder do
       :completed,
       {
         customer: customer,
+        ranking_opt_in: true,
         overall_score: 75,
         pitch_score: 72,
         rhythm_score: 74,
@@ -220,6 +221,31 @@ RSpec.describe Singing::SuggestedMusiciansBuilder do
       result = described_class.call(customer, current_customer: customer)
 
       expect(result.musicians.map(&:customer)).not_to include(customer)
+    end
+
+    context "公開同意(ranking_opt_in)によるフィルタ" do
+      it "ranking_opt_in=false の候補者はおすすめに含まれない" do
+        customer = create(:customer, domain_name: "singing")
+        candidate = create(:customer, domain_name: "singing")
+        completed_diagnosis(customer)
+        completed_diagnosis(candidate, ranking_opt_in: false)
+
+        result = described_class.call(customer)
+
+        expect(result.musicians.map(&:customer)).not_to include(candidate)
+      end
+
+      it "非公開診断しか持たない候補者は一覧に表示されない" do
+        customer = create(:customer, domain_name: "singing")
+        candidate = create(:customer, domain_name: "singing")
+        completed_diagnosis(customer)
+        create(:singing_cheer_reaction, customer: customer, target_customer: candidate)
+        completed_diagnosis(candidate, ranking_opt_in: false)
+
+        result = described_class.call(customer)
+
+        expect(result.musicians.map(&:customer)).not_to include(candidate)
+      end
     end
   end
 end

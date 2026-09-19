@@ -18,18 +18,19 @@ module Singing
       expression_score: "表現力"
     }.freeze
 
-    def self.call(customer)
-      new(customer).call
+    def self.call(customer, diagnoses: nil)
+      new(customer, diagnoses: diagnoses).call
     end
 
-    def initialize(customer)
+    def initialize(customer, diagnoses: nil)
       @customer = customer
+      @diagnoses_scope = diagnoses || customer&.singing_diagnoses
     end
 
     def call
       return empty_result if @customer.nil?
 
-      diagnoses = @customer.singing_diagnoses
+      diagnoses = @diagnoses_scope
                            .completed
                            .where.not(overall_score: nil)
                            .order(created_at: :desc, id: :desc)
@@ -39,7 +40,7 @@ module Singing
       latest   = diagnoses.first
       best     = diagnoses.maximum(:overall_score)
       count    = diagnoses.count
-      streak   = Singing::StreakCalculator.call(@customer)
+      streak   = Singing::StreakCalculator.call(@customer, diagnoses: @diagnoses_scope)
       growth_label, growth_delta = recent_growth(diagnoses)
 
       Result.new(

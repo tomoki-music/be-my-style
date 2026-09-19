@@ -58,6 +58,7 @@ module Singing
     def completed_diagnosis_activities
       SingingDiagnosis
         .completed
+        .publicly_visible
         .where(customer_id: friend_ids)
         .select(:customer_id, :created_at, :diagnosed_at)
         .order(created_at: :desc)

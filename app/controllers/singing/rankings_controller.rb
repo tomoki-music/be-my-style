@@ -47,9 +47,10 @@ class Singing::RankingsController < Singing::BaseController
       @my_position = @my_best_diagnosis ? Singing::RankingQuery.position_for(current_customer.id) : nil
     end
 
-    badge_customers = Array(ranking_customers) + [current_customer]
-    @badges_map = Singing::RankingBadgeService.badges_for_bulk(badge_customers)
-    @my_badges = @badges_map[current_customer.id] || []
+    # 一覧(他ユーザーにも見えるランキング本体)は publicly_visible のみで判定し、
+    # 「あなたの順位」カード(本人にのみ表示)は従来通り全診断で判定する。
+    @badges_map = Singing::RankingBadgeService.badges_for_bulk(Array(ranking_customers), publicly_visible_only: true)
+    @my_badges = Singing::RankingBadgeService.badges_for(current_customer)
   end
 
   private

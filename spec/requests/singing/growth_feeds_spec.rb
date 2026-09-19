@@ -11,7 +11,7 @@ RSpec.describe "Singing::GrowthFeeds", type: :request do
 
   describe "GET /singing/growth_feed" do
     it "Growth Feed 2.0のヘッダーとサマリーを表示する" do
-      create(:singing_diagnosis, :completed, customer: customer, overall_score: 70, created_at: Time.current)
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: customer, overall_score: 70, created_at: Time.current)
 
       get singing_growth_feed_path
 

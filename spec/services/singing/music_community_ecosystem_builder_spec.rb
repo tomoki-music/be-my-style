@@ -34,30 +34,36 @@ RSpec.describe Singing::MusicCommunityEcosystemBuilder do
       end
 
       it "直近7日以内のcompleted診断を持つユーザーをカウントする" do
-        create(:singing_diagnosis, :completed, customer: customer, created_at: 3.days.ago)
+        create(:singing_diagnosis, :completed, :ranking_participant, customer: customer, created_at: 3.days.ago)
 
         expect(ecosystem.active_members_count).to eq(1)
       end
 
       it "同一ユーザーの複数診断はdistinctでカウントする" do
-        create(:singing_diagnosis, :completed, customer: customer, created_at: 3.days.ago)
-        create(:singing_diagnosis, :completed, customer: customer, created_at: 1.day.ago)
+        create(:singing_diagnosis, :completed, :ranking_participant, customer: customer, created_at: 3.days.ago)
+        create(:singing_diagnosis, :completed, :ranking_participant, customer: customer, created_at: 1.day.ago)
 
         expect(ecosystem.active_members_count).to eq(1)
       end
 
       it "7日より前の診断は含まない" do
-        create(:singing_diagnosis, :completed, customer: customer, created_at: 8.days.ago)
+        create(:singing_diagnosis, :completed, :ranking_participant, customer: customer, created_at: 8.days.ago)
 
         expect(ecosystem.active_members_count).to eq(0)
       end
 
       it "複数ユーザーを正しくカウントする" do
         other = create(:customer, domain_name: "singing")
-        create(:singing_diagnosis, :completed, customer: customer, created_at: 2.days.ago)
-        create(:singing_diagnosis, :completed, customer: other, created_at: 1.day.ago)
+        create(:singing_diagnosis, :completed, :ranking_participant, customer: customer, created_at: 2.days.ago)
+        create(:singing_diagnosis, :completed, :ranking_participant, customer: other, created_at: 1.day.ago)
 
         expect(ecosystem.active_members_count).to eq(2)
+      end
+
+      it "ranking_opt_in=falseの診断はカウントしない" do
+        create(:singing_diagnosis, :completed, customer: customer, ranking_opt_in: false, created_at: 2.days.ago)
+
+        expect(ecosystem.active_members_count).to eq(0)
       end
     end
 
@@ -133,7 +139,7 @@ RSpec.describe Singing::MusicCommunityEcosystemBuilder do
         it "「今週もたくさんの仲間...」メッセージを返す" do
           50.times do
             c = create(:customer, domain_name: "singing")
-            create(:singing_diagnosis, :completed, customer: c, created_at: 1.day.ago)
+            create(:singing_diagnosis, :completed, :ranking_participant, customer: c, created_at: 1.day.ago)
           end
 
           expect(ecosystem.ecosystem_message).to eq("今週もたくさんの仲間が歌を楽しんでいます🎵")
@@ -144,7 +150,7 @@ RSpec.describe Singing::MusicCommunityEcosystemBuilder do
         it "「仲間たちの挑戦が...」メッセージを返す" do
           20.times do
             c = create(:customer, domain_name: "singing")
-            create(:singing_diagnosis, :completed, customer: c, created_at: 1.day.ago)
+            create(:singing_diagnosis, :completed, :ranking_participant, customer: c, created_at: 1.day.ago)
           end
 
           expect(ecosystem.ecosystem_message).to eq("仲間たちの挑戦がコミュニティを盛り上げています✨")

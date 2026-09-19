@@ -75,12 +75,13 @@ module Singing
 
     EMPTY_MESSAGE = "音楽を楽しむ仲間が集まっています。あなたらしい輪が見つかります。".freeze
 
-    def self.call(customer)
-      new(customer).call
+    def self.call(customer, diagnoses: nil)
+      new(customer, diagnoses: diagnoses).call
     end
 
-    def initialize(customer)
+    def initialize(customer, diagnoses: nil)
       @customer = customer
+      @diagnoses_scope = diagnoses || customer&.singing_diagnoses
     end
 
     def call
@@ -132,7 +133,7 @@ module Singing
     end
 
     def growth_type
-      @growth_type ||= Singing::GrowthTypeAnalyzer.call(@customer)
+      @growth_type ||= Singing::GrowthTypeAnalyzer.call(@customer, diagnoses: @diagnoses_scope)
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError, NoMethodError
       nil
     end
@@ -159,8 +160,7 @@ module Singing
     end
 
     def recent_diagnoses
-      @recent_diagnoses ||= @customer
-        .singing_diagnoses
+      @recent_diagnoses ||= @diagnoses_scope
         .completed
         .where.not(overall_score: nil)
         .order(created_at: :desc, id: :desc)

@@ -16,7 +16,7 @@ RSpec.describe Singing::GrowthFeedSummaryBuilder do
     it "今週の歌った人数、初診断、応援数を集計する" do
       singer = create(:customer, domain_name: "singing")
       supporter = create(:customer, domain_name: "singing")
-      create(:singing_diagnosis, :completed, customer: singer, overall_score: 70, created_at: Time.current)
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: singer, overall_score: 70, created_at: Time.current)
       create(:singing_cheer_reaction, customer: supporter, target_customer: singer, created_at: Time.current)
 
       summary = described_class.call
@@ -30,7 +30,7 @@ RSpec.describe Singing::GrowthFeedSummaryBuilder do
     it "週5回診断をチャレンジ達成として数える" do
       singer = create(:customer, domain_name: "singing")
       5.times do |i|
-        create(:singing_diagnosis, :completed, customer: singer, overall_score: 70 + i, created_at: i.hours.ago)
+        create(:singing_diagnosis, :completed, :ranking_participant, customer: singer, overall_score: 70 + i, created_at: i.hours.ago)
       end
 
       summary = described_class.call
@@ -40,6 +40,18 @@ RSpec.describe Singing::GrowthFeedSummaryBuilder do
 
     it "nil安全" do
       expect { described_class.call }.not_to raise_error
+    end
+
+    context "公開同意(ranking_opt_in)によるフィルタ" do
+      it "ranking_opt_in=false の診断は weekly_singer_count に含まれない" do
+        singer = create(:customer, domain_name: "singing")
+        create(:singing_diagnosis, :completed, customer: singer, ranking_opt_in: false, overall_score: 70, created_at: Time.current)
+
+        summary = described_class.call
+
+        expect(summary.weekly_singer_count).to eq(0)
+        expect(summary.weekly_first_diagnosis_count).to eq(0)
+      end
     end
   end
 end

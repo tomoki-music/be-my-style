@@ -19,13 +19,19 @@ class Singing::UsersController < Singing::BaseController
   end
 
   def show
-    @pinned_achievement_badges = @user.singing_achievement_badges.pinned.limit(SingingAchievementBadge::PIN_LIMIT)
-    @recent_diagnoses = @user.singing_diagnoses.completed.order(created_at: :desc).limit(5)
-    @growth_diagnoses = @user.singing_diagnoses.completed.where.not(overall_score: nil).order(created_at: :asc).limit(12)
+    # 公開プロフィール画面のため、非公開診断を根拠にしか成立しないバッジは表示しない。
+    publicly_visible_badge_keys = Singing::PubliclyVisibleAchievementBadges.call(@user)
+    @pinned_achievement_badges = @user.singing_achievement_badges
+                                       .pinned
+                                       .where(badge_key: publicly_visible_badge_keys.to_a)
+                                       .limit(SingingAchievementBadge::PIN_LIMIT)
+    # 公開プロフィール画面のため、ranking_opt_in=trueの診断のみを成長記録・診断回数の集計対象にする。
+    @recent_diagnoses = @user.singing_diagnoses.publicly_visible.completed.order(created_at: :desc).limit(5)
+    @growth_diagnoses = @user.singing_diagnoses.publicly_visible.completed.where.not(overall_score: nil).order(created_at: :asc).limit(12)
     @recent_activities = @user.activities.with_attached_activity_image.includes(:activity_reactions).order(created_at: :desc).limit(3)
     @activity_count = @user.activities.count
-    @best_diagnosis = @user.singing_diagnoses.completed.where(ranking_opt_in: true).where.not(overall_score: nil).order(overall_score: :desc, id: :desc).first
-    @diagnosis_count = @user.singing_diagnoses.completed.where.not(overall_score: nil).count
+    @best_diagnosis = @user.singing_diagnoses.publicly_visible.completed.where.not(overall_score: nil).order(overall_score: :desc, id: :desc).first
+    @diagnosis_count = @user.singing_diagnoses.publicly_visible.completed.where.not(overall_score: nil).count
     @ranking_position = Singing::RankingQuery.position_for(@user.id)
     @season_position = Singing::RankingQuery.season_position_for(@user.id)
     @season_achievement_entries = season_achievement_entries
@@ -36,16 +42,16 @@ class Singing::UsersController < Singing::BaseController
     @singer_rank = @user.singer_rank
     @singer_rank_progress = @user.singer_rank_progress
     @singer_next_rank = @user.singer_next_rank
-    @ranking_badges = Singing::RankingBadgeService.badges_for(@user)
+    @ranking_badges = Singing::RankingBadgeService.badges_for(@user, publicly_visible_only: true)
     @next_badges = current_customer == @user ? Singing::NextBadgeService.call(@user) : []
     @growth_entries = Singing::RankingQuery.growth
     @growth_index = @growth_entries.index { |entry| entry.customer.id == @user.id }
     @growth_entry = @growth_index.present? ? @growth_entries[@growth_index] : nil
     @growth_position = @growth_index.present? ? @growth_index + 1 : nil
     @safe_profile_url = safe_external_url(@user.url)
-    @journey_summary = Singing::JourneySummaryBuilder.call(@user)
-    @growth_type           = Singing::GrowthTypeAnalyzer.call(@user)
-    @growth_circle_badges  = Singing::GrowthCircleBadgeAnalyzer.call(@user)
+    @journey_summary = Singing::JourneySummaryBuilder.call(@user, diagnoses: @user.singing_diagnoses.publicly_visible)
+    @growth_type           = Singing::GrowthTypeAnalyzer.call(@user, diagnoses: @user.singing_diagnoses.publicly_visible)
+    @growth_circle_badges  = Singing::GrowthCircleBadgeAnalyzer.call(@user, diagnoses: @user.singing_diagnoses.publicly_visible)
     @community_identity       = Singing::ProfileCommunityIdentityBuilder.call(@user)
     @profile_connection       = Singing::ProfileConnectionBuilder.call(@user)
     @music_journey_timeline   = Singing::MusicJourneyTimelineBuilder.call(@user)
@@ -108,7 +114,7 @@ class Singing::UsersController < Singing::BaseController
   def fetch_index_users
     Customer
       .joins(:singing_diagnoses)
-      .where(singing_diagnoses: { status: :completed })
+      .where(singing_diagnoses: { status: :completed, ranking_opt_in: true })
       .where(singing_diagnoses: { created_at: 30.days.ago..Time.current })
       .with_attached_profile_image
       .distinct

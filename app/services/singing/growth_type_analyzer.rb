@@ -35,12 +35,13 @@ module Singing
 
     Result = Struct.new(:type_key, :label, :icon, :description, keyword_init: true)
 
-    def self.call(customer)
-      new(customer).call
+    def self.call(customer, diagnoses: nil)
+      new(customer, diagnoses: diagnoses).call
     end
 
-    def initialize(customer)
+    def initialize(customer, diagnoses: nil)
       @customer = customer
+      @diagnoses_scope = diagnoses || customer&.singing_diagnoses
     end
 
     def call
@@ -55,7 +56,7 @@ module Singing
     def fetch_diagnoses
       return [] if @customer.nil?
 
-      @customer.singing_diagnoses
+      @diagnoses_scope
                .completed
                .where.not(overall_score: nil)
                .order(created_at: :desc, id: :desc)
@@ -65,7 +66,7 @@ module Singing
     def determine_type(diagnoses)
       return :groove_builder if diagnoses.empty?
 
-      streak = Singing::StreakCalculator.call(@customer)
+      streak = Singing::StreakCalculator.call(@customer, diagnoses: @diagnoses_scope)
       return :consistency_hero if streak >= 7
 
       return :dynamic_performer if dynamic_performer?(diagnoses)

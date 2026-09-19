@@ -49,8 +49,9 @@ module Singing
         .joins(:singing_diagnoses)
         .where(
           singing_diagnoses: {
-            status:     :completed,
-            created_at: window_range
+            status:         :completed,
+            created_at:     window_range,
+            ranking_opt_in: true
           }
         )
         .where.not(singing_diagnoses: { overall_score: nil })
@@ -68,6 +69,7 @@ module Singing
 
       now = Time.current
       week_count = customer.singing_diagnoses
+                           .publicly_visible
                            .completed
                            .where(created_at: now.beginning_of_week..now.end_of_week)
                            .count
@@ -78,6 +80,7 @@ module Singing
 
     def build_item(customer)
       recent = customer.singing_diagnoses
+                       .publicly_visible
                        .completed
                        .where.not(overall_score: nil)
                        .where(created_at: window_range)
@@ -87,11 +90,12 @@ module Singing
 
       year  = recent.created_at.year
       month = recent.created_at.month
+      visible_diagnoses = customer.singing_diagnoses.publicly_visible
 
-      comparison             = Singing::MonthlyGrowthComparisonAnalyzer.call(customer, year: year, month: month)
-      growth_type            = Singing::GrowthTypeAnalyzer.call(customer)
-      streak                 = Singing::StreakCalculator.call(customer)
-      growth_circle_badge    = Singing::GrowthCircleBadgeAnalyzer.call(customer).first
+      comparison             = Singing::MonthlyGrowthComparisonAnalyzer.call(customer, year: year, month: month, diagnoses: visible_diagnoses)
+      growth_type            = Singing::GrowthTypeAnalyzer.call(customer, diagnoses: visible_diagnoses)
+      streak                 = Singing::StreakCalculator.call(customer, diagnoses: visible_diagnoses)
+      growth_circle_badge    = Singing::GrowthCircleBadgeAnalyzer.call(customer, diagnoses: visible_diagnoses).first
       completed_challenge_keys = completed_challenges_for(customer, streak)
 
       milestones = milestones_for(customer, recent, streak, growth_type, completed_challenge_keys)
@@ -140,7 +144,7 @@ module Singing
     end
 
     def diagnosis_count(customer)
-      customer.singing_diagnoses.completed.where.not(overall_score: nil).count
+      customer.singing_diagnoses.publicly_visible.completed.where.not(overall_score: nil).count
     rescue NoMethodError
       0
     end
@@ -149,6 +153,7 @@ module Singing
       return false if recent.overall_score.nil?
 
       previous_best = customer.singing_diagnoses
+                              .publicly_visible
                               .completed
                               .where.not(overall_score: nil)
                               .where("created_at < ?", recent.created_at)

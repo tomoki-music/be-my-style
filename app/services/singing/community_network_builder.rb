@@ -56,13 +56,20 @@ module Singing
       Customer
         .joins(:singing_diagnoses)
         .where.not(id: @customer.id)
-        .where(singing_diagnoses: { status: :completed, created_at: window_range })
+        .where(singing_diagnoses: { status: :completed, created_at: window_range, ranking_opt_in: true })
         .where.not(singing_diagnoses: { overall_score: nil })
         .distinct
         .includes(:singing_diagnoses)
         .limit(CANDIDATE_LIMIT)
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError, NoMethodError
       []
+    end
+
+    # 自分自身の診断は全件、候補者(他ユーザー)の診断は公開同意ありのものだけを判定材料にする。
+    def diagnoses_scope_for(customer)
+      return customer.singing_diagnoses if customer.id == @customer&.id
+
+      customer.singing_diagnoses.publicly_visible
     end
 
     def scored_connection_for(candidate)
@@ -157,7 +164,7 @@ module Singing
       return nil if customer.nil?
 
       @growth_type_by_customer_id ||= {}
-      @growth_type_by_customer_id[customer.id] ||= Singing::GrowthTypeAnalyzer.call(customer)
+      @growth_type_by_customer_id[customer.id] ||= Singing::GrowthTypeAnalyzer.call(customer, diagnoses: diagnoses_scope_for(customer))
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError, NoMethodError
       nil
     end
@@ -189,8 +196,7 @@ module Singing
       return [] if customer.nil?
 
       @recent_diagnoses_by_customer_id ||= {}
-      @recent_diagnoses_by_customer_id[customer.id] ||= customer
-        .singing_diagnoses
+      @recent_diagnoses_by_customer_id[customer.id] ||= diagnoses_scope_for(customer)
         .completed
         .where.not(overall_score: nil)
         .order(created_at: :desc, id: :desc)
@@ -210,8 +216,7 @@ module Singing
       return 0 if customer.nil?
 
       @diagnosis_count_by_customer_id ||= {}
-      @diagnosis_count_by_customer_id[customer.id] ||= customer
-        .singing_diagnoses
+      @diagnosis_count_by_customer_id[customer.id] ||= diagnoses_scope_for(customer)
         .completed
         .where.not(overall_score: nil)
         .count
@@ -227,7 +232,7 @@ module Singing
       return 0 if customer.nil?
 
       @streak_by_customer_id ||= {}
-      @streak_by_customer_id[customer.id] ||= Singing::StreakCalculator.call(customer)
+      @streak_by_customer_id[customer.id] ||= Singing::StreakCalculator.call(customer, diagnoses: diagnoses_scope_for(customer))
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError, NoMethodError
       0
     end
