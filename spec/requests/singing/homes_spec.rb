@@ -83,6 +83,15 @@ RSpec.describe "Singing::Homes", type: :request do
         expect(response.body).not_to include("Recap Movie")
       end
 
+      it "Growth Circles / Growth Communityの実データではない固定人数を表示しないこと" do
+        get singing_root_path
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("が参加中")
+        expect(response.body).not_to include("人の仲間")
+        expect(response.body).not_to include("singing-community-home__circle-count")
+      end
+
       it "Community Feed は表示できるが応援CTA・Inbox・Suggested応援CTAは表示しないこと" do
         feed_member = FactoryBot.create(:customer, domain_name: "singing", name: "Feed Member")
         FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant, customer: feed_member, created_at: 1.day.ago)
@@ -169,6 +178,50 @@ RSpec.describe "Singing::Homes", type: :request do
         expect(diagnosis_links).to include("最初の診断をする").or include("診断してみる")
         expect(doc.css(".community-feed__item")).to be_empty
         expect(doc.css(".suggested-musician-card")).to be_empty
+      end
+    end
+
+    context "Growth Circleが実際に成立する場合" do
+      before do
+        sign_in singing_customer
+        FactoryBot.create(
+          :singing_diagnosis, :completed,
+          customer: singing_customer,
+          overall_score: 70, pitch_score: 60, rhythm_score: 60, expression_score: 60,
+          created_at: 2.days.ago
+        )
+        FactoryBot.create(
+          :singing_diagnosis, :completed,
+          customer: singing_customer,
+          overall_score: 78, pitch_score: 61, rhythm_score: 60, expression_score: 80,
+          created_at: 1.day.ago
+        )
+      end
+
+      it "サークル名・説明文は表示しつつ、固定の参加人数(「23人」「が参加中」)は表示しないこと" do
+        get singing_root_path
+
+        doc = Nokogiri::HTML(response.body)
+        circle_item = doc.at_css(".singing-community-home__circle-item")
+
+        expect(response).to have_http_status(:ok)
+        expect(circle_item).to be_present
+        expect(circle_item.at_css(".singing-community-home__circle-title").text).to include("Emotional Singer Circle")
+        expect(circle_item.at_css(".singing-community-home__circle-desc")).to be_present
+        expect(doc.css(".singing-community-home__circle-count")).to be_empty
+        expect(response.body).not_to include("23人")
+        expect(response.body).not_to include("が参加中")
+      end
+
+      it "実データを使うMission Matching / Community Challengeの人数表示は維持されること" do
+        get singing_root_path
+
+        doc = Nokogiri::HTML(response.body)
+        meta_texts = doc.css(".singing-community-home__meta").map(&:text)
+
+        expect(response).to have_http_status(:ok)
+        expect(meta_texts.any? { |text| text.include?("人が近いテーマに挑戦中") }).to be true
+        expect(meta_texts.any? { |text| text.start_with?("参加 ") }).to be true
       end
     end
 

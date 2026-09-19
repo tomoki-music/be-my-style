@@ -97,7 +97,6 @@
             %strong= @growth_type_community.description
           %p.growth-type-community__message= @growth_type_community.community_message
           .growth-type-community__footer
-            %span.growth-type-community__count= "#{@growth_type_community.member_count}人の仲間"
             = link_to @growth_type_community.cta_label, @growth_type_community.cta_url, class: "growth-type-community__button"
 
       .challenge-circle__story-heading

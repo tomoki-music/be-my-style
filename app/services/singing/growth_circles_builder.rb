@@ -6,7 +6,6 @@ module Singing
     GrowthCircle = Struct.new(
       :title,
       :description,
-      :member_count,
       :message,
       :circle_type,
       keyword_init: true
@@ -16,37 +15,31 @@ module Singing
       emotional_singer: {
         title:        "🎭 Emotional Singer Circle",
         description:  "感情表現を大切にする仲間たち",
-        member_count: 23,
         message:      "歌で気持ちを伝えることを大切にしている仲間がいます。"
       },
       rhythm_explorer: {
         title:        "🥁 Rhythm Explorer Circle",
         description:  "リズムを楽しむ仲間たち",
-        member_count: 18,
         message:      "リズムの奥深さを一緒に探求している仲間がいます。"
       },
       consistency_hero: {
         title:        "🔥 Consistency Circle",
         description:  "毎日コツコツ続ける仲間たち",
-        member_count: 31,
         message:      "継続することの大切さを分かち合える仲間がいます。"
       },
       voice_challenger: {
         title:        "🎤 Voice Challenge Circle",
         description:  "音程に挑戦し続ける仲間たち",
-        member_count: 15,
         message:      "正確さを追い求める仲間と、一緒に成長できます。"
       },
       dynamic_performer: {
         title:        "🌟 Dynamic Performer Circle",
         description:  "バランスよく磨く仲間たち",
-        member_count: 12,
         message:      "全方位で成長することを楽しむ仲間がいます。"
       },
       groove_builder: {
         title:        "🎵 Groove Builder Circle",
         description:  "自分スタイルを探す仲間たち",
-        member_count: 20,
         message:      "自分らしい歌を見つける旅を続けている仲間がいます。"
       }
     }.freeze
@@ -55,13 +48,11 @@ module Singing
       expression: {
         title:        "🎭 Expression Challenge Circle",
         description:  "表現力を磨く挑戦中の仲間たち",
-        member_count: 14,
         message:      "感情の色を増やすことに挑戦している仲間がいます。"
       },
       rhythm: {
         title:        "🥁 Rhythm Practice Circle",
         description:  "リズムを練習している仲間たち",
-        member_count: 12,
         message:      "リズムに乗る楽しさを広げている仲間がいます。"
       }
     }.freeze
@@ -69,7 +60,6 @@ module Singing
     CHEER_CIRCLE_CONFIG = {
       title:        "✨ Cheer Circle",
       description:  "仲間を応援することを楽しむ輪",
-      member_count: 27,
       message:      "応援することも、音楽コミュニティを育てる大切な力です。"
     }.freeze
 
@@ -180,7 +170,6 @@ module Singing
       GrowthCircle.new(
         title:        config[:title],
         description:  config[:description],
-        member_count: config[:member_count],
         message:      config[:message],
         circle_type:  circle_type
       )
