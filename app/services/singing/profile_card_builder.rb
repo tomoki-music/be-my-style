@@ -31,6 +31,7 @@ module Singing
       user_ids = users.map(&:id)
       diagnoses_by_user = SingingDiagnosis
         .completed
+        .publicly_visible
         .where.not(overall_score: nil)
         .where(customer_id: user_ids)
         .order(created_at: :desc, id: :desc)
@@ -74,6 +75,7 @@ module Singing
 
     def fetch_diagnoses
       @customer.singing_diagnoses
+               .publicly_visible
                .completed
                .where.not(overall_score: nil)
                .order(created_at: :desc, id: :desc)

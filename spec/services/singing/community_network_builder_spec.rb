@@ -7,6 +7,7 @@ RSpec.describe Singing::CommunityNetworkBuilder do
       :completed,
       {
         customer: customer,
+        ranking_opt_in: true,
         overall_score: 75,
         pitch_score: 72,
         rhythm_score: 74,
@@ -144,6 +145,30 @@ RSpec.describe Singing::CommunityNetworkBuilder do
 
     it "nil安全" do
       expect { described_class.call(nil) }.not_to raise_error
+    end
+
+    context "公開同意(ranking_opt_in)によるフィルタ" do
+      it "ranking_opt_in=false の候補者はconnectionsに含まれない" do
+        customer = create(:customer, domain_name: "singing")
+        candidate = create(:customer, domain_name: "singing")
+        completed_diagnosis(customer)
+        completed_diagnosis(candidate, ranking_opt_in: false)
+
+        network = described_class.call(customer)
+
+        expect(network.connections.map(&:customer_id)).not_to include(candidate.id)
+      end
+
+      it "非公開診断しか持たない候補者は一覧に表示されない" do
+        customer = create(:customer, domain_name: "singing")
+        candidate = create(:customer, domain_name: "singing")
+        completed_diagnosis(customer)
+        3.times { completed_diagnosis(candidate, ranking_opt_in: false, created_at: rand(5).days.ago) }
+
+        network = described_class.call(customer)
+
+        expect(network.connections.map(&:customer_id)).not_to include(candidate.id)
+      end
     end
   end
 end

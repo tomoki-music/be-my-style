@@ -11,7 +11,7 @@ RSpec.describe Singing::FriendActivityHighlightsBuilder do
     it "friend diagnosis を返す" do
       friend = create(:customer, domain_name: "singing", name: "山田")
       connect_friend(friend)
-      create(:singing_diagnosis, :completed, customer: friend, created_at: 1.hour.ago, diagnosed_at: 1.hour.ago)
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: friend, created_at: 1.hour.ago, diagnosed_at: 1.hour.ago)
 
       result = described_class.call(customer)
 
@@ -57,7 +57,7 @@ RSpec.describe Singing::FriendActivityHighlightsBuilder do
       challenge_friend = create(:customer, domain_name: "singing", name: "挑戦")
       [diagnosis_friend, reaction_friend, challenge_friend].each { |friend| connect_friend(friend, occurred_at: 5.days.ago) }
 
-      create(:singing_diagnosis, :completed, customer: diagnosis_friend, created_at: 3.hours.ago, diagnosed_at: 3.hours.ago)
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: diagnosis_friend, created_at: 3.hours.ago, diagnosed_at: 3.hours.ago)
       create(:singing_profile_reaction,
              customer: reaction_friend,
              target_customer: create(:customer, domain_name: "singing"),
@@ -84,6 +84,7 @@ RSpec.describe Singing::FriendActivityHighlightsBuilder do
                created_at: 5.days.ago)
         create(:singing_diagnosis,
                :completed,
+               :ranking_participant,
                customer: friend,
                created_at: (index + 1).hours.ago,
                diagnosed_at: (index + 1).hours.ago)
@@ -116,6 +117,19 @@ RSpec.describe Singing::FriendActivityHighlightsBuilder do
 
       expect(result).not_to be_active
       expect(result.highlights).to eq([])
+    end
+
+    context "公開同意(ranking_opt_in)によるフィルタ" do
+      it "ranking_opt_in=false の診断完了はハイライトに含まれない" do
+        friend = create(:customer, domain_name: "singing", name: "非公開")
+        connect_friend(friend)
+        create(:singing_diagnosis, :completed, customer: friend, ranking_opt_in: false, created_at: 1.hour.ago, diagnosed_at: 1.hour.ago)
+
+        result = described_class.call(customer)
+
+        expect(result).not_to be_active
+        expect(result.highlights).to eq([])
+      end
     end
   end
 end

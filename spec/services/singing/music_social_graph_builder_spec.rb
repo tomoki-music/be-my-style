@@ -16,6 +16,7 @@ RSpec.describe Singing::MusicSocialGraphBuilder do
       :completed,
       {
         customer:         customer,
+        ranking_opt_in:   true,
         overall_score:    75,
         pitch_score:      72,
         rhythm_score:     74,
@@ -211,6 +212,25 @@ RSpec.describe Singing::MusicSocialGraphBuilder do
 
       it "count = 0 のとき育っていくメッセージ" do
         expect(result.graph_message).to include("育っていきます")
+      end
+    end
+
+    context "公開同意(ranking_opt_in)によるフィルタ" do
+      let(:other) { create(:customer, domain_name: "singing") }
+
+      it "ranking_opt_in=false の候補者は growth_type_connections_count に含まれない" do
+        completed_diagnosis(customer, created_at: 5.days.ago)
+        completed_diagnosis(other, created_at: 5.days.ago, ranking_opt_in: false)
+
+        expect(result.growth_type_connections_count).to eq(0)
+        expect(result.connected_members_count).to eq(0)
+      end
+
+      it "自分自身の同意状態に関わらず自分のGrowthType判定はできる" do
+        completed_diagnosis(customer, created_at: 5.days.ago, ranking_opt_in: false)
+        completed_diagnosis(other, created_at: 5.days.ago, ranking_opt_in: true)
+
+        expect(result.growth_type_connections_count).to be >= 1
       end
     end
 

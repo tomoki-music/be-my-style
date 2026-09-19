@@ -100,7 +100,7 @@ RSpec.describe Singing::ProfileCommunityIdentityBuilder do
     describe "mission_label" do
       context "次のミッションタイトルが設定されている場合" do
         it "診断の next_mission_title を返す" do
-          create(:singing_diagnosis, :completed, customer: customer, next_mission_title: "表現力を伸ばす")
+          create(:singing_diagnosis, :completed, :ranking_participant, customer: customer, next_mission_title: "表現力を伸ばす")
 
           expect(identity.mission_label).to eq("表現力を伸ばす")
         end
@@ -160,6 +160,24 @@ RSpec.describe Singing::ProfileCommunityIdentityBuilder do
 
           expect(identity.identity_message).to eq("仲間を応援しながら、音楽の輪を広げています。")
         end
+      end
+    end
+
+    context "公開同意(ranking_opt_in)によるフィルタ" do
+      it "ranking_opt_in=false の診断は next_mission_title の判定材料に使われない" do
+        create(:singing_diagnosis, :completed, customer: customer, ranking_opt_in: false, next_mission_title: "非公開ミッション")
+
+        expect(identity.mission_label).not_to eq("非公開ミッション")
+      end
+
+      it "ranking_opt_in=false の診断は growth_type_label の判定材料に使われない（デフォルトのまま）" do
+        7.times do |i|
+          create(:singing_diagnosis, :completed, customer: customer, ranking_opt_in: false,
+                 overall_score: 70, pitch_score: 68, rhythm_score: 70, expression_score: 69,
+                 created_at: i.days.ago)
+        end
+
+        expect(identity.growth_type_label).to eq("Groove Builder")
       end
     end
   end

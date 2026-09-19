@@ -356,7 +356,7 @@ RSpec.describe "Singing::Users", type: :request do
       sign_in other_customer
       now = Time.zone.now
       create(:singing_diagnosis, :completed, :ranking_participant, customer: other_customer, overall_score: 95, diagnosed_at: now)
-      create(:singing_diagnosis, :completed, customer: singing_customer, overall_score: 75, diagnosed_at: 2.days.ago, created_at: 2.days.ago)
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 75, diagnosed_at: 2.days.ago, created_at: 2.days.ago)
       create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 90, diagnosed_at: now, created_at: now)
 
       get singing_user_path(singing_customer)
@@ -371,6 +371,66 @@ RSpec.describe "Singing::Users", type: :request do
       expect(response.body).to include("今月のシーズン")
       expect(response.body).to include("成長ランキング 1位")
       expect(response.body).to include("+15点")
+    end
+  end
+
+  describe "GET /singing/users/:id 公開同意(ranking_opt_in)によるフィルタ" do
+    it "ranking_opt_in=falseの診断は成長の記録・最近の診断・診断回数に表示されない" do
+      sign_in other_customer
+      create(:singing_diagnosis, :completed, customer: singing_customer, ranking_opt_in: false, overall_score: 88, performance_type: :vocal)
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("88点")
+      expect(response.body).to include("完了した診断が増えると、成長の軌跡がここに表示されます。")
+      expect(response.body).to include("まだ診断結果はありません。")
+    end
+
+    it "公開・非公開の診断が混在する場合、公開診断だけが成長の記録・診断回数に使われる" do
+      sign_in other_customer
+      # (成長ランキングの前回スコア比較には非公開診断も使われる既存挙動があるため、
+      #  growth_score が発生しない組み合わせで「成長の記録」「診断回数」だけを検証する)
+      create(:singing_diagnosis, :completed, customer: singing_customer, ranking_opt_in: false, overall_score: 90, created_at: 10.days.ago, diagnosed_at: 10.days.ago)
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 77, created_at: 1.day.ago, diagnosed_at: 1.day.ago)
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("90点")
+      expect(response.body).to include("77点")
+      achievement_stat_idx = response.body.index("singing-profile__achievement-stat'>\n<span>診断回数")
+      expect(response.body[achievement_stat_idx, 80]).to include("1回")
+    end
+
+    it "非公開診断しか持たないユーザーでも本人がアクセスすればプロフィール自体は表示される" do
+      sign_in singing_customer
+      create(:singing_diagnosis, :completed, customer: singing_customer, ranking_opt_in: false, overall_score: 88)
+
+      get singing_user_path(singing_customer)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Vocal User")
+    end
+  end
+
+  describe "GET /singing/users 一覧の公開同意(ranking_opt_in)によるフィルタ" do
+    it "ranking_opt_in=trueの診断を持つユーザーは一覧に表示される" do
+      create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 70)
+
+      get singing_users_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Vocal User")
+    end
+
+    it "非公開診断しか持たないユーザーは一覧に表示されない" do
+      create(:singing_diagnosis, :completed, customer: singing_customer, ranking_opt_in: false, overall_score: 70)
+
+      get singing_users_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("Vocal User")
     end
   end
 

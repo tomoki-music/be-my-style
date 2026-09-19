@@ -3,9 +3,10 @@ require "rails_helper"
 RSpec.describe Singing::MusicJourneyTimelineBuilder do
   let(:customer) { create(:customer, domain_name: "singing", name: "テストユーザー") }
 
-  def make_diagnosis(score:, created_at:)
+  def make_diagnosis(score:, created_at:, ranking_opt_in: true)
     create(:singing_diagnosis, :completed,
            customer: customer,
+           ranking_opt_in: ranking_opt_in,
            overall_score: score,
            pitch_score: [score - 5, 0].max,
            rhythm_score: score,
@@ -181,6 +182,22 @@ RSpec.describe Singing::MusicJourneyTimelineBuilder do
 
       it "occurred_at が Date である" do
         expect(item.occurred_at).to be_a(Date)
+      end
+    end
+
+    context "公開同意(ranking_opt_in)によるフィルタ" do
+      it "ranking_opt_in=false の診断は timeline に反映されない" do
+        make_diagnosis(score: 65, created_at: 10.days.ago, ranking_opt_in: false)
+
+        expect(result.timeline_items).to eq([])
+      end
+
+      it "公開・非公開の診断が混在する場合は公開診断だけが判定材料になる" do
+        make_diagnosis(score: 90, created_at: 20.days.ago, ranking_opt_in: false)
+        make_diagnosis(score: 65, created_at: 5.days.ago,  ranking_opt_in: true)
+
+        item = result.timeline_items.find { |i| i.type == :first_diagnosis }
+        expect(item.description).to include("65点")
       end
     end
   end

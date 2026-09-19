@@ -43,7 +43,7 @@ module Singing
     private
 
     def circles
-      @circles ||= Singing::GrowthCirclesBuilder.call(@customer)
+      @circles ||= Singing::GrowthCirclesBuilder.call(@customer, diagnoses: publicly_visible_diagnoses)
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError, NoMethodError
       []
     end
@@ -59,9 +59,15 @@ module Singing
     end
 
     def social_graph
-      @social_graph ||= Singing::MusicSocialGraphBuilder.call(customer: @customer)
+      @social_graph ||= Singing::MusicSocialGraphBuilder.call(customer: @customer, diagnoses: publicly_visible_diagnoses)
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError, NoMethodError
       nil
+    end
+
+    # ProfileConnectionBuilder は公開プロフィール画面専用のため、
+    # 本人の同意(ranking_opt_in)がない診断は自身の分類材料にも使わない。
+    def publicly_visible_diagnoses
+      @publicly_visible_diagnoses ||= @customer&.singing_diagnoses&.publicly_visible
     end
 
     def connection_count

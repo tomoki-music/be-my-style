@@ -44,12 +44,13 @@ module Singing
       rising_singer:        { growth_delta:     3.0 }
     }.freeze
 
-    def self.call(customer)
-      new(customer).call
+    def self.call(customer, diagnoses: nil)
+      new(customer, diagnoses: diagnoses).call
     end
 
-    def initialize(customer)
+    def initialize(customer, diagnoses: nil)
       @customer = customer
+      @diagnoses_scope = diagnoses || customer&.singing_diagnoses
     end
 
     # 獲得したバッジをスコア降順で返す（primary は first）
@@ -144,7 +145,7 @@ module Singing
 
     def recent_growth_delta
       @recent_growth_delta ||= begin
-        scores = @customer.singing_diagnoses
+        scores = @diagnoses_scope
                           .completed
                           .where.not(overall_score: nil)
                           .order(created_at: :desc)

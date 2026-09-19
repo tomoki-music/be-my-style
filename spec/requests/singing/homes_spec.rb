@@ -85,7 +85,7 @@ RSpec.describe "Singing::Homes", type: :request do
 
       it "Community Feed は表示できるが応援CTA・Inbox・Suggested応援CTAは表示しないこと" do
         feed_member = FactoryBot.create(:customer, domain_name: "singing", name: "Feed Member")
-        FactoryBot.create(:singing_diagnosis, :completed, customer: feed_member, created_at: 1.day.ago)
+        FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant, customer: feed_member, created_at: 1.day.ago)
 
         get singing_root_path
 
@@ -125,9 +125,9 @@ RSpec.describe "Singing::Homes", type: :request do
         reacted_member = FactoryBot.create(:customer, domain_name: "singing", name: "Reacted Member")
         fresh_member = FactoryBot.create(:customer, domain_name: "singing", name: "Fresh Member")
 
-        FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, overall_score: 78, pitch_score: 76, rhythm_score: 79, expression_score: 77, created_at: 3.days.ago)
-        FactoryBot.create(:singing_diagnosis, :completed, customer: reacted_member, overall_score: 77, pitch_score: 76, rhythm_score: 78, expression_score: 77, created_at: 2.days.ago)
-        FactoryBot.create(:singing_diagnosis, :completed, customer: fresh_member, overall_score: 76, pitch_score: 75, rhythm_score: 77, expression_score: 76, created_at: 1.day.ago)
+        FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant, customer: singing_customer, overall_score: 78, pitch_score: 76, rhythm_score: 79, expression_score: 77, created_at: 3.days.ago)
+        FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant, customer: reacted_member, overall_score: 77, pitch_score: 76, rhythm_score: 78, expression_score: 77, created_at: 2.days.ago)
+        FactoryBot.create(:singing_diagnosis, :completed, :ranking_participant, customer: fresh_member, overall_score: 76, pitch_score: 75, rhythm_score: 77, expression_score: 76, created_at: 1.day.ago)
         FactoryBot.create(:singing_profile_reaction, customer: supporter, target_customer: singing_customer, reaction_type: "cheer")
         FactoryBot.create(:singing_profile_reaction, customer: singing_customer, target_customer: reacted_member, reaction_type: "cheer")
 

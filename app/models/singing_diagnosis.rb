@@ -43,6 +43,10 @@ class SingingDiagnosis < ApplicationRecord
             allow_nil: true
   validate :audio_file_attached
 
+  # ranking_opt_in=true の診断のみが他ユーザー向け表示（ランキング/フィード/推薦/集計等）の対象。
+  # false/nil は本人以外への公開対象外として扱う。
+  scope :publicly_visible, -> { where(ranking_opt_in: true) }
+
   SCORE_ATTRIBUTES = %i[
     overall_score
     pitch_score

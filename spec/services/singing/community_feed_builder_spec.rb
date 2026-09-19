@@ -1,9 +1,10 @@
 require "rails_helper"
 
 RSpec.describe Singing::CommunityFeedBuilder do
-  def make_diagnosis(customer:, score: 70, created_at: Time.current)
+  def make_diagnosis(customer:, score: 70, created_at: Time.current, ranking_opt_in: true)
     create(:singing_diagnosis, :completed,
            customer:       customer,
+           ranking_opt_in: ranking_opt_in,
            overall_score:  score,
            pitch_score:    score,
            rhythm_score:   score,
@@ -354,6 +355,42 @@ RSpec.describe Singing::CommunityFeedBuilder do
 
       it "blank name の customer の item が含まれる" do
         item = result.feed_items.find { |i| i.customer == customer }
+        expect(item).to be_present
+      end
+    end
+
+    context "公開同意(ranking_opt_in)によるフィルタ" do
+      it "ranking_opt_in=true の診断完了は feed に含まれる" do
+        customer = create(:customer, domain_name: "singing", name: "OptIn")
+        make_diagnosis(customer: customer, created_at: 1.day.ago, ranking_opt_in: true)
+
+        item = result.feed_items.find { |i| i.type == :diagnosis_completed && i.customer == customer }
+        expect(item).to be_present
+      end
+
+      it "ranking_opt_in=false の診断完了は feed に含まれない" do
+        customer = create(:customer, domain_name: "singing", name: "OptOut")
+        make_diagnosis(customer: customer, created_at: 1.day.ago, ranking_opt_in: false)
+
+        item = result.feed_items.find { |i| i.customer == customer }
+        expect(item).to be_nil
+      end
+
+      it "非公開診断しか持たないユーザーは feed に表示されない" do
+        customer = create(:customer, domain_name: "singing", name: "AllPrivate")
+        3.times { |i| make_diagnosis(customer: customer, created_at: (i + 1).days.ago, ranking_opt_in: false) }
+
+        expect(result.feed_items.map(&:customer)).not_to include(customer)
+      end
+
+      it "非公開の自己ベストは personal_best の判定材料に使われない" do
+        customer = create(:customer, domain_name: "singing", name: "MixedBest")
+        # 非公開の95点は基準に含まれないため、公開の80点(60点からの更新)が自己ベスト更新として検出される
+        make_diagnosis(customer: customer, score: 95, created_at: 25.days.ago, ranking_opt_in: false)
+        make_diagnosis(customer: customer, score: 60, created_at: 20.days.ago, ranking_opt_in: true)
+        make_diagnosis(customer: customer, score: 80, created_at: 5.days.ago,  ranking_opt_in: true)
+
+        item = result.feed_items.find { |i| i.type == :personal_best && i.customer == customer }
         expect(item).to be_present
       end
     end

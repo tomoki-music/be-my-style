@@ -65,6 +65,7 @@ module Singing
 
       recent_ids = SingingDiagnosis
         .completed
+        .publicly_visible
         .where.not(overall_score: nil)
         .where(created_at: lookback_since..)
         .distinct
@@ -78,6 +79,7 @@ module Singing
 
       rows = SingingDiagnosis
         .completed
+        .publicly_visible
         .where.not(overall_score: nil)
         .where(customer_id: recent_ids)
         .order(:customer_id, :created_at, :id)
@@ -194,6 +196,7 @@ module Singing
     def diagnosis_completed_items
       SingingDiagnosis
         .completed
+        .publicly_visible
         .where.not(overall_score: nil)
         .where(created_at: lookback_since..)
         .includes(:customer)

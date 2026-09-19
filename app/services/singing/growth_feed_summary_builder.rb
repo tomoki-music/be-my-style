@@ -42,6 +42,7 @@ module Singing
 
     def weekly_singer_count
       SingingDiagnosis.completed
+                      .publicly_visible
                       .where(created_at: week_range)
                       .distinct
                       .count(:customer_id)
@@ -51,6 +52,7 @@ module Singing
 
     def weekly_first_diagnosis_count
       SingingDiagnosis.completed
+                      .publicly_visible
                       .where(customer_id: weekly_customer_ids)
                       .group(:customer_id)
                       .minimum(:created_at)
@@ -76,6 +78,7 @@ module Singing
 
     def weekly_five_diagnosis_customers
       SingingDiagnosis.completed
+                      .publicly_visible
                       .where(created_at: week_range)
                       .group(:customer_id)
                       .having("COUNT(*) >= 5")
@@ -85,12 +88,13 @@ module Singing
 
     def weekly_streak_customers
       Customer.where(id: weekly_customer_ids).count do |customer|
-        Singing::StreakCalculator.call(customer) >= 7
+        Singing::StreakCalculator.call(customer, diagnoses: customer.singing_diagnoses.publicly_visible) >= 7
       end
     end
 
     def weekly_customer_ids
       @weekly_customer_ids ||= SingingDiagnosis.completed
+                                              .publicly_visible
                                               .where(created_at: week_range)
                                               .distinct
                                               .pluck(:customer_id)
@@ -103,7 +107,7 @@ module Singing
           source_items.first(8).filter_map { |item| highlight_for(item.growth_type) }
         else
           Customer.where(id: weekly_customer_ids).first(8).filter_map do |customer|
-            highlight_for(Singing::GrowthTypeAnalyzer.call(customer))
+            highlight_for(Singing::GrowthTypeAnalyzer.call(customer, diagnoses: customer.singing_diagnoses.publicly_visible))
           end
         end
 

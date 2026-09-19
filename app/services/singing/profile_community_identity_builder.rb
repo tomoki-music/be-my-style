@@ -67,13 +67,13 @@ module Singing
     end
 
     def growth_type
-      @growth_type ||= Singing::GrowthTypeAnalyzer.call(@customer)
+      @growth_type ||= Singing::GrowthTypeAnalyzer.call(@customer, diagnoses: publicly_visible_diagnoses)
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError, NoMethodError
       nil
     end
 
     def circles
-      @circles ||= Singing::GrowthCirclesBuilder.call(@customer)
+      @circles ||= Singing::GrowthCirclesBuilder.call(@customer, diagnoses: publicly_visible_diagnoses)
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError, NoMethodError
       []
     end
@@ -82,12 +82,17 @@ module Singing
       circles.first
     end
 
+    # ProfileCommunityIdentityBuilder は公開プロフィール画面専用のため、
+    # 本人の同意(ranking_opt_in)がない診断は自身の分類材料にも使わない。
+    def publicly_visible_diagnoses
+      @publicly_visible_diagnoses ||= @customer&.singing_diagnoses&.publicly_visible
+    end
+
     def latest_diagnosis
-      @latest_diagnosis ||= @customer
-        .singing_diagnoses
-        .completed
-        .order(created_at: :desc, id: :desc)
-        .first
+      @latest_diagnosis ||= publicly_visible_diagnoses
+        &.completed
+        &.order(created_at: :desc, id: :desc)
+        &.first
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError, NoMethodError
       nil
     end

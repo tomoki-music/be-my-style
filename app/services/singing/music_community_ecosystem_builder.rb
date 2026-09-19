@@ -38,6 +38,7 @@ module Singing
     def active_members_count
       @active_members_count ||= SingingDiagnosis
         .completed
+        .publicly_visible
         .where(created_at: active_window)
         .distinct
         .count(:customer_id)

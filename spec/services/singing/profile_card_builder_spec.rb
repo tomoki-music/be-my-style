@@ -73,7 +73,7 @@ RSpec.describe Singing::ProfileCardBuilder do
     context "consistency_hero 判定になる場合（連続7日以上）" do
       before do
         7.times do |i|
-          create(:singing_diagnosis, :completed, customer: customer,
+          create(:singing_diagnosis, :completed, :ranking_participant, customer: customer,
                  overall_score: 70, pitch_score: 68, rhythm_score: 70, expression_score: 69,
                  created_at: i.days.ago)
         end
@@ -238,7 +238,7 @@ RSpec.describe Singing::ProfileCardBuilder do
     context "consistency_hero 判定になる場合（連続7日以上）" do
       before do
         7.times do |i|
-          create(:singing_diagnosis, :completed, customer: customer,
+          create(:singing_diagnosis, :completed, :ranking_participant, customer: customer,
                  overall_score: 70, pitch_score: 68, rhythm_score: 70, expression_score: 69,
                  created_at: i.days.ago)
         end
@@ -255,11 +255,11 @@ RSpec.describe Singing::ProfileCardBuilder do
 
       before do
         7.times do |i|
-          create(:singing_diagnosis, :completed, customer: customer,
+          create(:singing_diagnosis, :completed, :ranking_participant, customer: customer,
                  overall_score: 70, pitch_score: 68, rhythm_score: 70, expression_score: 69,
                  created_at: i.days.ago)
         end
-        create(:singing_diagnosis, :completed, customer: other,
+        create(:singing_diagnosis, :completed, :ranking_participant, customer: other,
                overall_score: 65, pitch_score: 60, rhythm_score: 70, expression_score: 60,
                created_at: 1.day.ago)
       end
@@ -274,6 +274,26 @@ RSpec.describe Singing::ProfileCardBuilder do
         cards = described_class.build_collection([customer, other])
         filtered = cards.select { |c| c.growth_type_key.to_s == "consistency_hero" }
         expect(filtered).to all(satisfy { |c| c.growth_type_key == :consistency_hero })
+      end
+    end
+
+    context "公開同意(ranking_opt_in)によるフィルタ" do
+      it "ranking_opt_in=false の診断は growth_type 判定に使われない" do
+        create(:singing_diagnosis, :completed, customer: customer, ranking_opt_in: false,
+               overall_score: 70, pitch_score: 68, rhythm_score: 70, expression_score: 69,
+               created_at: 1.day.ago)
+
+        card = described_class.call(customer)
+        expect(card.growth_type_key).to eq(:groove_builder)
+      end
+
+      it "build_collection でも非公開診断は無視される" do
+        create(:singing_diagnosis, :completed, customer: customer, ranking_opt_in: false,
+               overall_score: 70, pitch_score: 68, rhythm_score: 70, expression_score: 69,
+               created_at: 1.day.ago)
+
+        cards = described_class.build_collection([customer])
+        expect(cards.first.growth_type_key).to eq(:groove_builder)
       end
     end
   end
