@@ -1785,7 +1785,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("次回から成長比較が表示されます")
+      expect(response.body).to include("今回の結果が、これからの成長のスタート地点です")
       expect(response.body).not_to include("diagnosis-comparison__grid")
     end
 
@@ -2245,7 +2245,7 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       get singing_diagnosis_path(diagnosis)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("AIコメント")
+      expect(response.body).to include("AIコーチからのフィードバック")
       expect(response.body).to include("次は語尾を丁寧に整えてみましょう")
     end
 
@@ -2265,6 +2265,211 @@ RSpec.describe "Singing::Diagnoses", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("総合スコア")
       expect(response.body).to include("AIコメントの生成に失敗しました")
+    end
+
+    it "AIコメント生成中の場合は生成中メッセージを表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "premium")
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        ai_comment_status: :ai_comment_processing
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("AIコーチが診断結果を整理しています")
+    end
+
+    it "AIコメント対象外プランでは空カードにせずアップグレード導線を表示すること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("AIコーチからのフィードバック")
+      expect(response.body).to include("Premiumで解放する")
+    end
+
+    it "個別フィードバック利用不可・vocal診断では「歌声」を使い、存在しない情報を匂わせないコピーを表示すること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, performance_type: :vocal)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("今回の歌声を振り返り、次の成長へ")
+      expect(response.body).not_to include("あなたの歌声の魅力と、次に伸ばすポイント")
+    end
+
+    it "個別フィードバック利用不可・guitar診断では「演奏」という表現を使い「歌声」を使わないこと" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, performance_type: :guitar)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("今回の演奏を振り返り、次の成長へ")
+      expect(response.body).not_to include("あなたの歌声")
+      expect(response.body).not_to include("今回の歌声")
+    end
+
+    it "個別フィードバック利用不可・band診断では「演奏」という表現を使うこと" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, performance_type: :band)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("今回の演奏を振り返り、次の成長へ")
+    end
+
+    it "個別フィードバック利用可能(Premium)・vocal診断では「魅力」を訴求するコピーを表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "premium")
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, performance_type: :vocal)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("あなたの歌声の魅力と、次に伸ばすポイント")
+      expect(response.body).to include("点数だけでは分からない強みと、次の練習につながるヒントをお届けします。")
+    end
+
+    it "個別フィードバック利用可能(Core・advanced feedbackのみ)・楽器診断では「魅力」を訴求するコピーを表示すること" do
+      singing_customer.create_subscription!(status: "active", plan: "core")
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, performance_type: :guitar)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("あなたの演奏の魅力と、次に伸ばすポイント")
+      expect(response.body).not_to include("今回の演奏を振り返り、次の成長へ")
+    end
+
+    %w[bass drums keyboard].each do |performance_type|
+      context "#{performance_type}診断" do
+        it "個別フィードバック利用不可の場合は「演奏」の振り返りコピーを表示し、正常にレンダリングされること" do
+          sign_in singing_customer
+          diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, performance_type: performance_type)
+
+          get singing_diagnosis_path(diagnosis)
+
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("今回の演奏を振り返り、次の成長へ")
+          expect(response.body).not_to include("あなたの歌声")
+          expect(response.body).not_to include("今回の歌声")
+        end
+
+        it "個別フィードバック利用可能(Premium)の場合は「演奏」の魅力を訴求するコピーを表示し、正常にレンダリングされること" do
+          singing_customer.create_subscription!(status: "active", plan: "premium")
+          sign_in singing_customer
+          diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, performance_type: performance_type)
+
+          get singing_diagnosis_path(diagnosis)
+
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("あなたの演奏の魅力と、次に伸ばすポイント")
+          expect(response.body).not_to include("あなたの歌声")
+        end
+      end
+    end
+
+    it "AIコーチからのフィードバック領域が詳細スコアより先にHTML上へ出力されること" do
+      singing_customer.create_subscription!(status: "active", plan: "premium")
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        ai_comment_status: :ai_comment_completed,
+        ai_comment: "次は語尾を丁寧に整えてみましょう。",
+        ai_commented_at: Time.current
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      feedback_index = response.body.index("AIコーチからのフィードバック")
+      score_details_index = response.body.index("singing-diagnosis__score-details")
+      expect(feedback_index).to be_present
+      expect(score_details_index).to be_present
+      expect(feedback_index).to be < score_details_index
+    end
+
+    it "総合スコア・レーダーチャート・項目別スコアグリッドが維持されていること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("総合スコア")
+      expect(response.body).to include("singing-diagnosis__radar-chart")
+      expect(response.body).to include("singing-diagnosis__score-grid")
+    end
+
+    it "次回ミッションがある場合は今日からできる練習セクションのCTAが新規診断ルートへつながること" do
+      singing_customer.create_subscription!(status: "active", plan: "premium")
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(
+        :singing_diagnosis,
+        customer: singing_customer,
+        status: :completed,
+        next_mission_title: "リズムキープ強化",
+        next_mission_body: "メトロノームに合わせて発声練習をしてみましょう。"
+      )
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("今日からできる練習")
+      expect(response.body).to include("リズムキープ強化")
+      expect(response.body).to include("このポイントを意識して、もう一度診断する")
+      expect(response.body).to include(new_singing_diagnosis_path)
+    end
+
+    it "詳細スコアはh2、配下の主要セクションはh3として出力され、意図しないh2が残っていないこと" do
+      singing_customer.create_subscription!(status: "active", plan: "premium")
+      sign_in singing_customer
+      FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, performance_type: :vocal, created_at: 3.days.ago)
+      diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer, performance_type: :vocal)
+
+      get singing_diagnosis_path(diagnosis)
+      expect(response).to have_http_status(:ok)
+
+      score_details = Nokogiri::HTML.parse(response.body).at_css(".singing-diagnosis__score-details")
+      expect(score_details).to be_present
+
+      direct_h2 = score_details.css("> h2")
+      expect(direct_h2.size).to eq(1)
+      expect(direct_h2.first.text.strip).to eq("詳細スコア")
+
+      # 詳細スコア配下に「詳細スコア」自身以外のh2が存在しないこと(見出し階層の修正確認)
+      expect(score_details.css("h2").size).to eq(1)
+
+      h3_texts = score_details.css("h3").map { |node| node.text.strip }
+      expect(h3_texts).to include("スコアの見方")
+      expect(h3_texts).to include("前回診断との比較")
+      expect(
+        h3_texts & ["詳しく振り返る", "#{diagnosis.performance_type_label}向け詳細フィードバック", "詳しく振り返りたい方へ"]
+      ).not_to be_empty
+      expect(score_details.at_css(".singing-diagnosis__radar-copy h3")).to be_present
+    end
+
+    it "次回ミッションがない場合も今日からできる練習セクションに再診断CTAを表示すること" do
+      sign_in singing_customer
+      diagnosis = FactoryBot.create(:singing_diagnosis, :completed, customer: singing_customer)
+
+      get singing_diagnosis_path(diagnosis)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("今日からできる練習")
+      expect(response.body).to include("次の診断に挑戦する")
     end
 
     it "最新 closed シーズンのバッジを「今回のあなたの実績」に表示すること" do
