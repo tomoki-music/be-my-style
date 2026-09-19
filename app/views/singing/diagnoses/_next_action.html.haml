@@ -1,0 +1,27 @@
+.singing-diagnosis__next-action
+  %h2 今日からできる練習
+  - if customer.has_feature?(:singing_diagnosis_ai_comment) && diagnosis_has_next_mission?(diagnosis)
+    - prev_diagnosis = diagnosis.previous_completed_diagnosis
+    - mission_result = diagnosis_previous_mission_result(diagnosis, prev_diagnosis)
+    .next-mission-card
+      - if mission_result.present? && prev_diagnosis.present?
+        .next-mission-card__prev-result{ class: mission_result[:success] ? "next-mission-card__prev-result--success" : "" }
+          %span.next-mission-card__prev-result-eyebrow 前回ミッション結果
+          %p.next-mission-card__prev-result-mission
+            = prev_diagnosis.next_mission_title.presence || prev_diagnosis.next_mission_body
+          %p.next-mission-card__prev-result-message
+            = mission_result[:success] ? "📈 " : "🔄 "
+            = mission_result[:message]
+      .next-mission-card__body
+        %span.next-mission-card__eyebrow 次回ミッション
+        - if diagnosis.next_mission_title.present?
+          %h3.next-mission-card__title= diagnosis.next_mission_title
+        - if diagnosis.next_mission_body.present?
+          %p.next-mission-card__text= diagnosis.next_mission_body
+        %p.next-mission-card__encourage= diagnosis_mission_encourage_text(diagnosis)
+    .singing-diagnosis__next-action-cta
+      = link_to "このポイントを意識して、もう一度診断する", new_singing_diagnosis_path, class: "btn btn-primary"
+  - else
+    %p.singing-diagnosis__next-action-lead 次に取り組むと良い練習は、AIコーチのフィードバックや詳細スコアの中でも確認できます。今の気持ちのまま、もう一度チャレンジするのもおすすめです。
+    .singing-diagnosis__next-action-cta
+      = link_to "次の診断に挑戦する", new_singing_diagnosis_path, class: "btn btn-primary"

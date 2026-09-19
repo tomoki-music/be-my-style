@@ -774,6 +774,17 @@ module Singing::DiagnosesHelper
     end
   end
 
+  # 結果画面いちばん上の「成長サマリー」領域に使うメインコピー。
+  # vocal は「歌声」、それ以外(guitar/bass/drums/keyboard/band)は「演奏」で出し分ける。
+  def singing_result_value_headline(diagnosis)
+    noun = diagnosis.performance_type_vocal? ? "歌声" : "演奏"
+    "あなたの#{noun}の魅力と、次に伸ばすポイント"
+  end
+
+  def singing_result_value_subcopy
+    "点数だけでは分からない強みと、次の練習につながるヒントを、音声解析とAIコーチによるフィードバックでお届けします。"
+  end
+
   def singing_practice_menus(diagnosis)
     return singing_guitar_practice_menus(diagnosis) if diagnosis.performance_type_guitar?
     return singing_bass_practice_menus(diagnosis) if diagnosis.performance_type_bass?

@@ -73,6 +73,9 @@
 .singing-diagnosis__plan-features,
 .singing-diagnosis__quota,
 .singing-diagnosis__priority-notice,
+.singing-diagnosis__value-summary,
+.singing-diagnosis__next-action,
+.singing-diagnosis__growth-summary,
 .singing-diagnosis__ranking-opt-in {
   background: #fff;
   border: 1px solid #dde3ec;
@@ -80,6 +83,66 @@
   box-shadow: 0 8px 20px rgba(31, 41, 55, 0.06);
   margin-bottom: 20px;
   padding: 24px;
+}
+
+.singing-diagnosis__value-summary {
+  border-left: 6px solid #7c4dff;
+}
+
+.singing-diagnosis__value-summary h2 {
+  color: #1f2937;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.35;
+  margin-bottom: 10px;
+}
+
+.singing-diagnosis__value-summary-lead {
+  color: #4b5563;
+  line-height: 1.7;
+  margin-bottom: 0;
+}
+
+.singing-diagnosis__next-action h2,
+.singing-diagnosis__growth-summary h2 {
+  color: #1f2937;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.singing-diagnosis__next-action-lead {
+  color: #4b5563;
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.singing-diagnosis__next-action-cta {
+  margin-top: 16px;
+}
+
+.singing-diagnosis__growth-summary .coach-memory-card,
+.singing-diagnosis__growth-summary .diagnosis-comparison {
+  margin: 0 0 16px;
+}
+
+.singing-diagnosis__growth-summary .coach-memory-card:last-child,
+.singing-diagnosis__growth-summary .diagnosis-comparison:last-child {
+  margin-bottom: 0;
+}
+
+.singing-diagnosis__score-details {
+  margin: 32px 0 8px;
+}
+
+.singing-diagnosis__score-details > h2 {
+  color: #6b7280;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .singing-diagnosis__ranking-opt-in {
