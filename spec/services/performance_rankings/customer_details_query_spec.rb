@@ -32,18 +32,147 @@ RSpec.describe PerformanceRankings::CustomerDetailsQuery do
 
   describe "参加イベント" do
     it "そのユーザーが演奏したイベントを開催日の降順で、演奏数つきで返すこと" do
+      travel_to Time.utc(2026, 9, 25, 0, 0, 0) do
+        alice = create(:customer, name: "Alice")
+        old_event = ended_event(start_time: 40.days.ago, name: "古いイベント")
+        new_event = ended_event(start_time: 5.days.ago, name: "新しいイベント")
+        perform!(old_event, customer: alice, song_name: "曲A", part: "Vocal")
+        perform!(new_event, customer: alice, song_name: "曲B", part: "Vocal")
+        perform!(new_event, customer: alice, song_name: "曲C", part: "Guitar")
+
+        detail = call(alice)
+        expect(detail.events.map(&:name)).to eq ["新しいイベント", "古いイベント"]
+        expect(detail.events.map(&:play_count)).to eq [2, 1]
+        expect(detail.events.first.event_id).to eq new_event.id
+        expect(detail.events.first.held_on).to eq new_event.event_start_time.to_date
+      end
+    end
+  end
+
+  describe "開催日のUTC/JST境界" do
+    # DB には UTC で保存される。JST (UTC+9) では 15:00 UTC 以降が翌日になるため、
+    # その境界をまたぐ時刻で開催日(held_on)が正しい JST の日付になることを確認する。
+    around do |example|
+      travel_to(Time.utc(2026, 9, 25, 0, 0, 0)) { example.run }
+    end
+
+    def held_on_for(utc_time)
       alice = create(:customer, name: "Alice")
-      old_event = ended_event(start_time: 40.days.ago, name: "古いイベント")
-      new_event = ended_event(start_time: 5.days.ago, name: "新しいイベント")
-      perform!(old_event, customer: alice, song_name: "曲A", part: "Vocal")
-      perform!(new_event, customer: alice, song_name: "曲B", part: "Vocal")
-      perform!(new_event, customer: alice, song_name: "曲C", part: "Guitar")
+      event = ended_event(start_time: utc_time, name: "境界イベント")
+      perform!(event, customer: alice, song_name: "境界曲")
+      call(alice).events.first.held_on
+    end
+
+    it "UTC 14:59 は JST でも同日" do
+      expect(held_on_for(Time.utc(2026, 9, 19, 14, 59))).to eq Date.new(2026, 9, 19)
+    end
+
+    it "UTC 15:00 は JST で翌日になる" do
+      expect(held_on_for(Time.utc(2026, 9, 19, 15, 0))).to eq Date.new(2026, 9, 20)
+    end
+
+    it "UTC 16:58 は JST で翌日になる" do
+      expect(held_on_for(Time.utc(2026, 9, 19, 16, 58))).to eq Date.new(2026, 9, 20)
+    end
+
+    it "UTC 23:59 は JST で翌日になる" do
+      expect(held_on_for(Time.utc(2026, 9, 19, 23, 59))).to eq Date.new(2026, 9, 20)
+    end
+
+    it "UTC 00:00 は JST でも同日(午前)になる" do
+      expect(held_on_for(Time.utc(2026, 9, 19, 0, 0))).to eq Date.new(2026, 9, 19)
+    end
+
+    it "UTC日付とJST日付が異なるイベントが、開催日時降順で正しく並ぶこと" do
+      alice = create(:customer, name: "Alice")
+      # JST では 9/20 06:00 (先) と 9/20 08:59 (後) の順で新しい方が先頭に来るべき。
+      earlier_in_jst = ended_event(start_time: Time.utc(2026, 9, 19, 21, 0), name: "JST9/20 06:00")
+      later_in_jst   = ended_event(start_time: Time.utc(2026, 9, 19, 23, 59), name: "JST9/20 08:59")
+      perform!(earlier_in_jst, customer: alice, song_name: "曲A")
+      perform!(later_in_jst, customer: alice, song_name: "曲B")
 
       detail = call(alice)
-      expect(detail.events.map(&:name)).to eq ["新しいイベント", "古いイベント"]
-      expect(detail.events.map(&:play_count)).to eq [2, 1]
-      expect(detail.events.first.event_id).to eq new_event.id
-      expect(detail.events.first.held_on).to eq new_event.event_start_time.to_date
+      expect(detail.events.map(&:name)).to eq ["JST9/20 08:59", "JST9/20 06:00"]
+      expect(detail.events.map(&:held_on)).to eq [Date.new(2026, 9, 20), Date.new(2026, 9, 20)]
+    end
+  end
+
+  describe "#held_on_date (private, raw SQL の戻り値の型ごとの扱い)" do
+    # 実運用では select_all の戻り値は DB アダプタにより型が異なる
+    # (MySQL: UTCタグ付き Time / SQLite: タグなし String)ため、両方を明示的にテストする。
+    subject(:held_on_date) { described_class.new(customer_ids: []).send(:held_on_date, value) }
+
+    context "raw SQL がタイムゾーン情報のない UTC 文字列を返す場合(SQLite など)" do
+      let(:value) { "2026-09-19 16:58:00" }
+
+      it "UTC として解釈してから JST の日付にすること" do
+        expect(held_on_date).to eq Date.new(2026, 9, 20)
+      end
+    end
+
+    context "raw SQL が UTC タグ付き Time を返す場合(MySQL など)" do
+      let(:value) { Time.utc(2026, 9, 19, 16, 58) }
+
+      it "二重変換せず正しく JST の日付にすること" do
+        expect(held_on_date).to eq Date.new(2026, 9, 20)
+      end
+    end
+
+    context "ActiveSupport::TimeWithZone が渡る場合" do
+      let(:value) { Time.zone.parse("2026-09-20 01:58") }
+
+      it "不要な再parseをせず JST の日付にすること" do
+        expect(held_on_date).to eq Date.new(2026, 9, 20)
+      end
+    end
+
+    context "値が nil の場合" do
+      let(:value) { nil }
+
+      it "例外にならず nil を返すこと" do
+        expect(held_on_date).to be_nil
+      end
+    end
+
+    context "値が空文字の場合" do
+      let(:value) { "" }
+
+      it "例外にならず nil を返すこと" do
+        expect(held_on_date).to be_nil
+      end
+    end
+
+    context "パース不能な文字列の場合" do
+      let(:value) { "not-a-date" }
+
+      it "誤変換せず nil を返すこと" do
+        expect(held_on_date).to be_nil
+      end
+    end
+  end
+
+  describe "システム TZ への非依存性" do
+    it "ENV['TZ'] が変わっても held_on の変換結果が変わらないこと" do
+      original_tz = ENV["TZ"]
+      alice = create(:customer, name: "Alice")
+
+      begin
+        travel_to(Time.utc(2026, 9, 25, 0, 0, 0)) do
+          event = ended_event(start_time: Time.utc(2026, 9, 19, 16, 58), name: "TZ非依存イベント")
+          perform!(event, customer: alice, song_name: "曲")
+
+          ENV["TZ"] = "UTC"
+          held_on_with_utc_system_tz = call(alice).events.first.held_on
+
+          ENV["TZ"] = "Asia/Tokyo"
+          held_on_with_jst_system_tz = call(alice).events.first.held_on
+
+          expect(held_on_with_utc_system_tz).to eq Date.new(2026, 9, 20)
+          expect(held_on_with_jst_system_tz).to eq Date.new(2026, 9, 20)
+        end
+      ensure
+        ENV["TZ"] = original_tz
+      end
     end
   end
 
