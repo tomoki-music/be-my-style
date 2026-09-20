@@ -1,0 +1,26 @@
+- if customer.has_feature?(:singing_diagnosis_ai_comment)
+  .singing-diagnosis__ai-comment{ class: "singing-diagnosis__ai-comment--#{diagnosis.ai_comment_status}", "aria-busy" => (diagnosis.ai_comment_queued? || diagnosis.ai_comment_processing?) }
+    %h2 AIコーチからのフィードバック
+    - if diagnosis.ai_comment_completed? && diagnosis.ai_comment.present?
+      %p.singing-diagnosis__ai-comment-lead 音声解析の結果をもとに、AIコーチが次の練習につながるコメントを整理しました。
+      .singing-diagnosis__ai-comment-body
+        = simple_format(diagnosis.ai_comment)
+      - if diagnosis.ai_commented_at.present?
+        %p.singing-diagnosis__ai-comment-meta= "生成日時 #{diagnosis.ai_commented_at.strftime('%Y/%m/%d %H:%M')}"
+    - elsif diagnosis.ai_comment_queued? || diagnosis.ai_comment_processing?
+      %p.singing-diagnosis__ai-comment-lead
+        %span.singing-diagnosis__ai-comment-loading-icon{ "aria-hidden" => "true" } ⏳
+        AIコーチが診断結果を整理しています。診断結果はこのまま確認できます。
+    - elsif diagnosis.ai_comment_failed?
+      %p.singing-diagnosis__ai-comment-lead AIコメントの生成に失敗しました。スコア・比較・補足スコアは通常どおり確認できます。
+    - else
+      %p.singing-diagnosis__ai-comment-lead AIコーチのフィードバックは、Premium向けに解析完了後の診断から生成されます。
+- else
+  .singing-diagnosis__ai-comment.singing-diagnosis__ai-comment--locked
+    %h2 AIコーチからのフィードバック
+    %p.singing-diagnosis__ai-comment-lead このスコアをもとに、次の練習へのヒントをAIコーチがコメントします。
+    .singing-diagnosis__ai-comment-locked-preview
+      %span.singing-diagnosis__ai-comment-locked-icon{ "aria-hidden" => "true" } 💬
+      %p.singing-diagnosis__ai-comment-locked-sample 「音程スコアが#{diagnosis.overall_score.present? ? "#{diagnosis.overall_score}点台" : "高め"}で安定感が出てきています。次はリズムの入りを意識すると…」
+      %span.singing-diagnosis__ai-comment-locked-blur ████████████████
+    = link_to "Premiumで解放する", public_singing_lp_path(anchor: "lp-section"), class: "btn btn-primary"

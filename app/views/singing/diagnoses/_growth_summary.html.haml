@@ -1,0 +1,67 @@
+.singing-diagnosis__growth-summary
+  %h2 前回からの成長
+
+  - if coach_reflection&.has_reflection
+    .coach-memory-card
+      .coach-memory-card__header
+        %span.coach-memory-card__icon= coach_reflection.coach_icon
+        .coach-memory-card__title-wrap
+          %h3.coach-memory-card__title Coach Memory
+          %small.coach-memory-card__label= coach_reflection.coach_label
+      .coach-memory-card__body
+        - if coach_reflection.remember.present?
+          .coach-memory-card__section.coach-memory-card__section--remember
+            %span.coach-memory-card__section-label 📖 これまでの歩み
+            %p.coach-memory-card__text= coach_reflection.remember
+        - if coach_reflection.recognize.present?
+          .coach-memory-card__section.coach-memory-card__section--recognize
+            %span.coach-memory-card__section-label ✨ 今のあなたへ
+            %p.coach-memory-card__text= coach_reflection.recognize
+        - if coach_reflection.next_step.present?
+          .coach-memory-card__section.coach-memory-card__section--next
+            %span.coach-memory-card__section-label 🎯 次へ向けて
+            %p.coach-memory-card__text= coach_reflection.next_step
+      .coach-memory-card__stats
+        .coach-memory-card__stat
+          %span.coach-memory-card__stat-value= coach_memory.diagnosis_count
+          %span.coach-memory-card__stat-label 回の診断
+        - if coach_memory.max_streak >= 2
+          .coach-memory-card__stat
+            %span.coach-memory-card__stat-value= coach_memory.max_streak
+            %span.coach-memory-card__stat-label 日連続
+        - if coach_memory.strongest_growth_label.present?
+          .coach-memory-card__stat
+            %span.coach-memory-card__stat-value= coach_memory.strongest_growth_label
+            %span.coach-memory-card__stat-label が最も伸びた
+        - if coach_memory.growth_type
+          .coach-memory-card__stat
+            %span.coach-memory-card__stat-value= coach_memory.growth_type.icon
+            %span.coach-memory-card__stat-label= coach_memory.growth_type.label
+
+  - previous_diagnosis = diagnosis.previous_completed_diagnosis
+  - comparison_items   = diagnosis_comparison_items(diagnosis, previous_diagnosis)
+  - if previous_diagnosis.present?
+    - best_growth = diagnosis_best_growth_item(comparison_items)
+    .diagnosis-comparison
+      .diagnosis-comparison__header
+        %p.diagnosis-comparison__eyebrow Growth
+        %h3.diagnosis-comparison__title 前回との比較
+        - if best_growth.present?
+          .diagnosis-comparison__highlight
+            %span.diagnosis-comparison__highlight-icon 🎉
+            %span.diagnosis-comparison__highlight-text
+              = "今回もっとも伸びたのは「#{best_growth[:label]}」です！"
+      .diagnosis-comparison__grid
+        - comparison_items.each do |item|
+          - delta = diagnosis_score_delta(item[:current], item[:previous])
+          .diagnosis-comparison-card{ class: diagnosis_delta_class(delta) }
+            .diagnosis-comparison-card__label= item[:label]
+            .diagnosis-comparison-card__scores
+              %span.diagnosis-comparison-card__prev= item[:previous] || "-"
+              %span.diagnosis-comparison-card__arrow →
+              %span.diagnosis-comparison-card__current= item[:current] || "-"
+            .diagnosis-comparison-card__delta
+              %span.diagnosis-comparison-card__icon= diagnosis_delta_icon(delta)
+              %span.diagnosis-comparison-card__value= diagnosis_delta_label(delta)
+  - else
+    %p.diagnosis-comparison-first-visit 今回の結果が、これからの成長のスタート地点です。
