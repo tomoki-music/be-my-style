@@ -62,7 +62,7 @@ module PerformanceRankings
           EventLine.new(
             event_id: event_id,
             name: first["event_name"],
-            held_on: to_date(first["event_start_time"]),
+            held_on: held_on_date(first["event_start_time"]),
             play_count: group.size
           )
         end
@@ -77,7 +77,7 @@ module PerformanceRankings
           master = masters[song_master_id]
           next if master.nil?
 
-          last_performed_on = group.filter_map { |r| to_date(r["event_start_time"]) }.max
+          last_performed_on = group.filter_map { |r| held_on_date(r["event_start_time"]) }.max
 
           [
             SongLine.new(
@@ -110,12 +110,26 @@ module PerformanceRankings
       date ? date.to_time.to_i : 0
     end
 
-    def to_date(value)
+    # raw SQL(select_all)の日時カラムは DB 保存値と同じ UTC を表す。
+    # アダプタにより型が変わる(MySQL: UTCタグ付き Time / SQLite: タグなし String)ため、
+    # どちらもまず UTC として明示的に解釈してから Time.zone(Tokyo)へ変換し、その後に日付化する。
+    # (素の値へ Time.zone.parse や to_date を直接使うと UTC 15:00〜23:59 台のイベントの
+    #  開催日が JST では翌日なのに UTC の日付=前日のまま返ってしまう。)
+    def held_on_date(value)
       return nil if value.blank?
-      return value.to_date if value.respond_to?(:to_date)
 
-      Time.zone.parse(value.to_s)&.to_date
-    rescue ArgumentError
+      utc_time =
+        case value
+        when String
+          Time.find_zone!("UTC").parse(value)
+        when Time, DateTime, ActiveSupport::TimeWithZone
+          value
+        else
+          return nil
+        end
+
+      utc_time&.in_time_zone(Time.zone)&.to_date
+    rescue ArgumentError, TypeError
       nil
     end
 
