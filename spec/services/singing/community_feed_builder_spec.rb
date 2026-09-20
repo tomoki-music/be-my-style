@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe Singing::CommunityFeedBuilder do
+  include ActiveSupport::Testing::TimeHelpers
+
   def make_diagnosis(customer:, score: 70, created_at: Time.current, ranking_opt_in: true)
     create(:singing_diagnosis, :completed,
            customer:       customer,
@@ -392,6 +394,88 @@ RSpec.describe Singing::CommunityFeedBuilder do
 
         item = result.feed_items.find { |i| i.type == :personal_best && i.customer == customer }
         expect(item).to be_present
+      end
+    end
+
+    context "UTC/JST 日付境界（streak_milestone のJST基準判定）" do
+      # 「現在時刻」を固定し、絶対日付(2026-09-13〜09-20)がすべて
+      # lookback 期間(30日以内)に収まるようにする。テスト実行時刻に依存しない。
+      around do |example|
+        travel_to(Time.zone.local(2026, 9, 20, 12, 0)) { example.run }
+      end
+
+      let!(:customer) { create(:customer, domain_name: "singing", name: "Boundary") }
+
+      # 境界の影響を受けない安全な時刻（JST正午）で連続日を作る
+      def make_safe_daily_diagnoses(days)
+        days.each do |day|
+          make_diagnosis(customer: customer, created_at: Time.zone.local(2026, 9, day, 12, 0))
+        end
+      end
+
+      context "UTC 14:59（JST 2026-09-19 23:59 / 判定日 09-19）" do
+        before do
+          make_safe_daily_diagnoses(13..18)
+          make_diagnosis(customer: customer, created_at: Time.utc(2026, 9, 19, 14, 59))
+        end
+
+        it "判定日 09-19 として基礎6日と合わせて7日連続になり streak_milestone が生成される" do
+          item = result.feed_items.find { |i| i.type == :streak_milestone && i.customer == customer }
+          expect(item).to be_present
+        end
+      end
+
+      context "UTC 15:00 ちょうど（JST 2026-09-20 00:00 / 判定日 09-20）で日付が切り替わる" do
+        before do
+          make_safe_daily_diagnoses(14..19)
+          make_diagnosis(customer: customer, created_at: Time.utc(2026, 9, 19, 15, 0))
+        end
+
+        it "判定日 09-20 として基礎6日と合わせて7日連続になり streak_milestone が生成される" do
+          # UTC日付のまま扱うと 09-19 の診断と同日になり6日にしかならず、
+          # streak_milestone が生成されない状態になる（境界1分のズレを検知する）。
+          item = result.feed_items.find { |i| i.type == :streak_milestone && i.customer == customer }
+          expect(item).to be_present
+        end
+      end
+
+      context "同一JST日付(09-20)に複数の境界時刻（UTC 16:58 / UTC 23:59）で診断がある場合" do
+        before do
+          make_safe_daily_diagnoses(14..19)
+          make_diagnosis(customer: customer, created_at: Time.utc(2026, 9, 19, 16, 58))
+          make_diagnosis(customer: customer, created_at: Time.utc(2026, 9, 19, 23, 59))
+        end
+
+        it "2件とも判定日 09-20 の1日分として扱われ7日連続で streak_milestone が生成される" do
+          item = result.feed_items.find { |i| i.type == :streak_milestone && i.customer == customer }
+          expect(item).to be_present
+        end
+
+        it "occurred_at はその判定日で最も新しい診断時刻になる" do
+          item = result.feed_items.find { |i| i.type == :streak_milestone && i.customer == customer }
+          expect(item.occurred_at).to be_within(1.second).of(Time.utc(2026, 9, 19, 23, 59))
+        end
+      end
+    end
+
+    context "公開同意(ranking_opt_in)が streak_milestone の生成元にも適用される" do
+      around do |example|
+        travel_to(Time.zone.local(2026, 9, 20, 12, 0)) { example.run }
+      end
+
+      let!(:customer) { create(:customer, domain_name: "singing", name: "StreakOptIn") }
+
+      it "非公開診断を含めないと7日に届かない場合、streak_milestone は生成されない" do
+        (14..18).each do |day|
+          make_diagnosis(customer: customer, created_at: Time.zone.local(2026, 9, day, 12, 0), ranking_opt_in: true)
+        end
+        # 非公開の2日分。これを含めれば7日連続になるが、除外されるべき。
+        (19..20).each do |day|
+          make_diagnosis(customer: customer, created_at: Time.zone.local(2026, 9, day, 12, 0), ranking_opt_in: false)
+        end
+
+        item = result.feed_items.find { |i| i.type == :streak_milestone && i.customer == customer }
+        expect(item).to be_nil
       end
     end
   end
