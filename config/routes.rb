@@ -143,6 +143,15 @@ Rails.application.routes.draw do
     # ご意見・ご相談BOX（ログインユーザーの意見・要望・相談投稿と自分の送信履歴）
     resources :customer_feedbacks, only: [:index, :new, :create]
 
+    # AIテロップ動画(MVP): アップロード→音声抽出→文字起こし→テロップ編集→焼き込み
+    resources :caption_videos, only: [:index, :new, :create, :show, :destroy] do
+      member do
+        get   :edit_captions
+        patch :update_captions
+        post  :render_video
+      end
+    end
+
     # マッチング〜チャット機能
     resources :matchings, only: [:index]
     resources :chat_rooms, only: [:create, :show] do

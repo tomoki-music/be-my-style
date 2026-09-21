@@ -81,10 +81,10 @@ RSpec.describe "layouts/_header_menu", type: :view do
       ])
     end
 
-    it "プロフィールドロップダウンに 6 項目（マイページ / ユーザー演奏実績ランキング / プランUPGRADE / BeMyStyleとは？ / ご意見BOX / ログアウト）がある" do
+    it "プロフィールドロップダウンに 7 項目（マイページ / ユーザー演奏実績ランキング / プランUPGRADE / BeMyStyleとは？ / ご意見BOX / AIテロップ動画 / ログアウト）がある" do
       menu = profile_menu.at_css(".dropdown-menu")
       link_labels = menu.css("a.dropdown-item").map { |a| a.text.gsub(/\s+/, "") }
-      expect(link_labels).to eq(%w[マイページ ユーザー演奏実績ランキング プランUPGRADE BeMyStyleとは？ ご意見BOX])
+      expect(link_labels).to eq(%w[マイページ ユーザー演奏実績ランキング プランUPGRADE BeMyStyleとは？ ご意見BOX AIテロップ動画])
 
       logout = menu.at_css("form.customer-profile-menu__logout-form button")
       expect(logout.text.strip).to eq("ログアウト")
@@ -99,6 +99,7 @@ RSpec.describe "layouts/_header_menu", type: :view do
         public_lp_path(anchor: "lp-section"),
         public_homes_about_path,
         new_public_customer_feedback_path,
+        public_caption_videos_path,
       ])
     end
 
@@ -210,7 +211,7 @@ RSpec.describe "layouts/_header_menu", type: :view do
       expect(summary.text).to include("その他")
     end
 
-    it "SP「その他」は PC プロフィールドロップダウンの機能系リンクを 3 件だけ折りたたむ（ランキングは主要導線に集約済み）" do
+    it "SP「その他」は PC プロフィールドロップダウンの機能系リンクを 4 件だけ折りたたむ（ランキングは主要導線に集約済み）" do
       panel = sp_others.at_css("#sp-menu-others-panel.menu-sp-others__panel")
       expect(panel).to be_present
       expect(sp_others["aria-controls"]).to be_nil # aria-controls は summary 側
@@ -220,6 +221,7 @@ RSpec.describe "layouts/_header_menu", type: :view do
         public_lp_path(anchor: "lp-section"),
         public_homes_about_path,
         new_public_customer_feedback_path,
+        public_caption_videos_path,
       ])
       expect(hrefs).not_to include(public_performance_rankings_path)
     end

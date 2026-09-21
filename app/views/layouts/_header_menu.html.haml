@@ -73,6 +73,8 @@
             %li
               -# ページ内の正式名称は「ご意見・ご相談BOX」。メニューボタンは他項目と同じ1行表示に収めるため短縮名を使う。
               = link_to "ご意見BOX", new_public_customer_feedback_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
+            %li
+              = link_to "AIテロップ動画", public_caption_videos_path, data: { 'turbolinks': false }, class: "btn btn-info menu-sp-btn"
 
       .customer-menu-sp__account
         %ul.list-style-none
@@ -142,6 +144,7 @@
             = link_to "BeMyStyleとは？", public_homes_about_path, data: { 'turbolinks': false }, class: "dropdown-item"
             -# ページ内の正式名称は「ご意見・ご相談BOX」。メニュー表示は他項目と揃えるため短縮名を使う。
             = link_to "ご意見BOX", new_public_customer_feedback_path, data: { 'turbolinks': false }, class: "dropdown-item"
+            = link_to "AIテロップ動画", public_caption_videos_path, data: { 'turbolinks': false }, class: "dropdown-item"
             .dropdown-divider
             -# キーボード操作・支援技術のため input ではなく button で出す（method: :delete / CSRF は button_to が担保）。
             = button_to destroy_customer_session_path,

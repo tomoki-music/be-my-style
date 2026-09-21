@@ -1,0 +1,37 @@
+= render 'layouts/header_menu'
+
+.caption-video-container
+  .caption-video-card
+    .caption-video-header
+      %h2.caption-video-title
+        テロップを編集:
+        = @caption_video.title
+      = link_to "動画に戻る", public_caption_video_path(@caption_video), class: "btn btn-outline-secondary", data: { 'turbolinks': false }
+
+    - if @caption_video.source_video.attached?
+      %video#caption-video-edit-player.caption-video-player{ controls: true, src: rails_blob_path(@caption_video.source_video) }
+
+    - if @caption_video.errors.any?
+      .alert.alert-danger
+        %ul.mb-0
+          - @caption_video.errors.full_messages.each do |message|
+            %li= message
+
+    = form_with model: @caption_video, url: update_captions_public_caption_video_path(@caption_video), method: :patch, local: true, html: { id: "video-captions-form" } do |f|
+      #video-captions-list
+        = f.fields_for :video_captions, @video_captions do |caption_fields|
+          = render "video_caption_fields", f: caption_fields
+
+      = link_to_add_association "テロップを追加", f, :video_captions, partial: "video_caption_fields", class: "btn btn-outline-secondary caption-video-add-btn"
+
+      .caption-video-edit-actions
+        = f.submit "テロップを保存", class: "btn btn-primary", data: { disable_with: "保存中..." }
+
+    .caption-video-render-panel
+      %p.caption-video-render-note 動画を生成する前に、必ず「テロップを保存」を押してください。
+      = button_to "テロップ入り動画を生成する",
+                  render_video_public_caption_video_path(@caption_video),
+                  method: :post,
+                  class: "btn btn-success caption-video-render-btn",
+                  form_class: "d-inline",
+                  data: { 'turbolinks': false, confirm: "現在保存済みのテロップで動画を生成します。よろしいですか？", disable_with: "生成を開始しています..." }

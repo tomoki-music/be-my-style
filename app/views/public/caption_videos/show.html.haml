@@ -1,0 +1,31 @@
+= render 'layouts/header_menu'
+
+.caption-video-container{ data: (@polling_required ? { caption_video_polling: true, caption_video_polling_interval: 5000 } : {}) }
+  .caption-video-card
+    .caption-video-header
+      %h2.caption-video-title= @caption_video.title
+      = link_to "一覧へ戻る", public_caption_videos_path, class: "btn btn-outline-secondary", data: { 'turbolinks': false }
+
+    .caption-video-status-panel
+      %span.caption-video-status{ class: "caption-video-status--#{@caption_video.status}" }
+        = @caption_video.status_message
+      - if @polling_required
+        %p.caption-video-status-note この画面は自動的に更新されます。
+
+    - if @caption_video.failed? && @caption_video.error_message.present?
+      .alert.alert-danger= @caption_video.error_message
+
+    - if @caption_video.source_video.attached?
+      .caption-video-preview
+        %h3.caption-video-section-title 元動画
+        %video.caption-video-player{ controls: true, src: rails_blob_path(@caption_video.source_video) }
+
+    - if @caption_video.rendered_video.attached?
+      .caption-video-preview
+        %h3.caption-video-section-title 完成動画
+        %video.caption-video-player{ controls: true, src: rails_blob_path(@caption_video.rendered_video) }
+        = link_to "ダウンロード", rails_blob_path(@caption_video.rendered_video, disposition: "attachment"), class: "btn btn-primary", data: { 'turbolinks': false }
+
+    .caption-video-actions
+      - if @caption_video.editable?
+        = link_to "テロップを編集する", edit_captions_public_caption_video_path(@caption_video), class: "btn btn-outline-primary", data: { 'turbolinks': false }

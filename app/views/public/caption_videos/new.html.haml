@@ -1,0 +1,33 @@
+= render 'layouts/header_menu'
+
+.caption-video-container
+  .caption-video-card
+    %h2.caption-video-title AIテロップ動画を作成
+
+    %ul.caption-video-guide
+      %li 対応形式: MP4のみ
+      %li 最大サイズ: 500MB
+      %li 最大時間: 10分
+      %li 言語: 日本語(お一人で話している動画を主な対象としています)
+
+    = form_with model: @caption_video, url: public_caption_videos_path, local: true, html: { id: "caption-video-upload-form" } do |f|
+      - if @caption_video.errors.any?
+        .alert.alert-danger
+          %ul.mb-0
+            - @caption_video.errors.full_messages.each do |message|
+              %li= message
+
+      .form-group
+        = f.label :title, "タイトル"
+        = f.text_field :title, class: "form-control", maxlength: CaptionVideo::TITLE_MAX_LENGTH, required: true, placeholder: "例: 2026年9月のライブ配信"
+
+      .form-group
+        = f.label :source_video, "動画ファイル"
+        = f.file_field :source_video, direct_upload: true, accept: "video/mp4", class: "form-control-file", required: true, id: "caption_video_source_video"
+
+      #caption-video-upload-progress.caption-video-upload-progress{ hidden: true }
+        .progress
+          .progress-bar{ role: "progressbar", style: "width: 0%", id: "caption-video-upload-progress-bar" }
+        %p.caption-video-upload-progress-label アップロード中...
+
+      = f.submit "アップロードする", class: "btn btn-primary", data: { disable_with: "アップロード中..." }

@@ -145,3 +145,4 @@ fix/<kebab-case-description>
 - [Stripe 注意事項](docs/handover/stripe_notes.md)
 - [band診断デプロイメモ](docs/band_diagnosis_deploy_notes.md)
 - [band診断リリースチェック](docs/band_diagnosis_release_checklist.md)
+- [AIテロップ動画機能](docs/handover/caption_videos.md)

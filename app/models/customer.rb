@@ -202,6 +202,7 @@ class Customer < ApplicationRecord
   has_many :learning_line_message_templates,
            dependent: :destroy
   has_many :singing_diagnoses, dependent: :destroy
+  has_many :caption_videos, dependent: :destroy
   has_many :singing_ai_challenge_progresses, dependent: :destroy
   has_many :singing_badges, dependent: :destroy
   has_many :singing_achievement_badges, dependent: :destroy

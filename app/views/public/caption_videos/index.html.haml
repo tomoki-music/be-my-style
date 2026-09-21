@@ -1,0 +1,43 @@
+= render 'layouts/header_menu'
+
+.caption-video-container
+  .caption-video-card
+    .caption-video-header
+      %h2.caption-video-title AIテロップ動画
+      = link_to "新規作成", new_public_caption_video_path, class: "btn btn-primary", data: { 'turbolinks': false }
+
+    - if @caption_videos.any?
+      .table-responsive
+        %table.table.table-striped.caption-video-table
+          %thead
+            %tr
+              %th タイトル
+              %th 作成者
+              %th 作成日時
+              %th ステータス
+              %th 元動画
+              %th 完成動画
+              %th
+          %tbody
+            - @caption_videos.each do |caption_video|
+              %tr
+                %td= caption_video.title
+                -# 一覧はcurrent_customer.caption_videos経由(常に自分の投稿)のため、
+                -# 行ごとにcustomer関連を読み込まずcurrent_customerを直接表示してN+1を避ける。
+                %td= current_customer.name
+                %td.text-nowrap= l caption_video.created_at, format: :long
+                %td
+                  %span.caption-video-status{ class: "caption-video-status--#{caption_video.status}" }
+                    = caption_video.status_message
+                %td
+                  - if caption_video.source_video.attached?
+                    = link_to "再生", rails_blob_path(caption_video.source_video, disposition: "inline"), target: "_blank", rel: "noopener", class: "btn btn-sm btn-outline-secondary", data: { 'turbolinks': false }
+                %td
+                  - if caption_video.rendered_video.attached?
+                    = link_to "ダウンロード", rails_blob_path(caption_video.rendered_video, disposition: "attachment"), class: "btn btn-sm btn-outline-primary", data: { 'turbolinks': false }
+                %td.text-nowrap
+                  = link_to "詳細", public_caption_video_path(caption_video), class: "btn btn-sm btn-outline-primary", data: { 'turbolinks': false }
+                  = button_to "削除", public_caption_video_path(caption_video), method: :delete, form_class: "d-inline", class: "btn btn-sm btn-outline-danger", data: { 'turbolinks': false, confirm: "「#{caption_video.title}」を削除します。よろしいですか？" }
+      = paginate @caption_videos
+    - else
+      %p.caption-video-empty まだAIテロップ動画はありません。

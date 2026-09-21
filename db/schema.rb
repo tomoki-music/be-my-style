@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_09_01_000000) do
+ActiveRecord::Schema.define(version: 2026_09_22_000100) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -118,6 +118,28 @@ ActiveRecord::Schema.define(version: 2026_09_01_000000) do
     t.datetime "updated_at", precision: 6, null: false
     t.index ["email"], name: "index_admins_on_email", unique: true
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
+  end
+
+  create_table "caption_videos", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "title", null: false
+    t.string "status", default: "uploaded", null: false
+    t.decimal "duration", precision: 8, scale: 3
+    t.integer "width"
+    t.integer "height"
+    t.string "aspect_ratio"
+    t.text "error_message"
+    t.datetime "processing_started_at"
+    t.datetime "processing_completed_at"
+    t.string "selected_template", default: "standard", null: false
+    t.string "transcript_language", default: "ja", null: false
+    t.datetime "audio_extracted_at"
+    t.datetime "transcribed_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["created_at"], name: "index_caption_videos_on_created_at"
+    t.index ["customer_id"], name: "index_caption_videos_on_customer_id"
+    t.index ["status"], name: "index_caption_videos_on_status"
   end
 
   create_table "chat_mentions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1350,6 +1372,22 @@ ActiveRecord::Schema.define(version: 2026_09_01_000000) do
     t.index ["name"], name: "index_tags_on_name", unique: true
   end
 
+  create_table "video_captions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "caption_video_id", null: false
+    t.decimal "start_time", precision: 8, scale: 3, null: false
+    t.decimal "end_time", precision: 8, scale: 3, null: false
+    t.text "text", null: false
+    t.string "caption_type", default: "normal", null: false
+    t.string "position", default: "bottom_center", null: false
+    t.integer "display_order", default: 0, null: false
+    t.text "emphasis_data"
+    t.boolean "manually_edited", default: false, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["caption_video_id", "display_order"], name: "index_video_captions_on_caption_video_id_and_display_order"
+    t.index ["caption_video_id"], name: "index_video_captions_on_caption_video_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "activities", "customers"
@@ -1357,6 +1395,7 @@ ActiveRecord::Schema.define(version: 2026_09_01_000000) do
   add_foreign_key "activity_reactions", "customers"
   add_foreign_key "admin_notifications", "admins"
   add_foreign_key "admin_notifications", "customers"
+  add_foreign_key "caption_videos", "customers"
   add_foreign_key "chat_mentions", "chat_messages"
   add_foreign_key "chat_mentions", "customers", column: "mentioned_customer_id"
   add_foreign_key "chat_message_link_previews", "chat_messages"
@@ -1495,4 +1534,5 @@ ActiveRecord::Schema.define(version: 2026_09_01_000000) do
   add_foreign_key "songs", "song_masters"
   add_foreign_key "subscriptions", "customers"
   add_foreign_key "taggings", "tags"
+  add_foreign_key "video_captions", "caption_videos"
 end
