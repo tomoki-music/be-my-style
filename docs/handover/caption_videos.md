@@ -3,8 +3,117 @@
 動画をアップロードすると、音声を自動文字起こしし、テロップを確認・編集した上で、
 テロップを焼き込んだ完成動画をダウンロードできる機能。
 
-対応範囲: MP4 / 最大30分 / 最大500MB / 日本語 / 一人で話している動画。
+対応範囲: MP4・MOV / 最大30分 / 最大500MB / 日本語 / 一人で話している動画。
 複数話者識別・リアルタイム文字起こし・BGM追加・自動翻訳・課金処理等はMVPの対象外。
+
+## 対応動画形式(MP4 / MOV)
+
+対応拡張子: `.mp4` `.mov`(大文字小文字は区別しない)。
+対応Content-Type: `video/mp4` `video/quicktime`。ブラウザ/OSがMOVに対して空文字や
+`application/octet-stream`しか申告しない場合も、拡張子が正しければアップロードを許容する
+(`CaptionVideo::GENERIC_SOURCE_CONTENT_TYPES`、正常なMOVを誤って拒否しないための緩和)。
+
+**MOVを入力した場合も、完成動画は常にMP4(H.264/AAC/`+faststart`)で出力される。**
+`CaptionVideos::VideoRenderer`は入力のコンテナ・コーデックによらず常に`libx264`/`aac`で
+再エンコードするため、入力がMOV(HEVC/ProRes等)でも出力はMP4(H.264/AAC)になる。
+
+### 拡張子・Content-Typeだけに頼らない検証
+
+- `CaptionVideo`モデルのバリデーションは拡張子とContent-Typeの組み合わせによる一次チェック。
+  ただしActive Storageの`direct_upload: true`はクライアントが申告したContent-Typeをそのまま
+  受け取るため、悪意あるクライアントから見れば拡張子・Content-Typeは容易に詐称できる。
+- 実体の検証は`CaptionVideos::ExtractAudioJob`が`CaptionVideos::VideoProbe`(ffprobe)で行う。
+  動画ストリームの有無・コンテナ形式(`format_name`)を実ファイル解析で確認するため、
+  拡張子だけMOVに変更した非動画ファイルはここで弾かれる(ユーザーへは内部コマンド・stderr・
+  一時ファイルパス等の詳細を含まない汎用メッセージのみ表示し、詳細はサーバーログにのみ残す)。
+- そのため「モデルバリデーションを通過した = 安全な動画」ではない。最終的な安全性はffprobeの
+  実ファイル検証に依存する設計であり、これは元々MP4に対しても同じだった(既存の脅威モデルを
+  MOVへそのまま拡張しただけで、新たな穴を開けてはいない)。
+
+### iPhone/QuickTimeの回転メタデータ(縦動画)
+
+iPhoneで撮影した縦向きMOVは、映像データ自体は横向きのまま(coded width/height)で、
+回転角度をメタデータ(`side_data_list`のDisplay Matrix、または`tags.rotate`)として持つことが多い。
+
+- `CaptionVideos::VideoProbe`はこの回転メタデータを読み取り、90/270度回転の場合は
+  **表示上の幅・高さを入れ替えて**返す(`width`/`height`は常に表示上の値)。
+  `CaptionVideo#width`/`#height`・アスペクト比・テロップ位置
+  (`CaptionVideos::AssSubtitleGenerator`のPlayResX/PlayResY)は、すべてこの表示上の値を
+  基準に計算される。
+- テロップ焼き込み(`CaptionVideos::VideoRenderer`)では、ffmpegのmov/mp4デマルチプレクサの
+  `autorotate`機能(ffmpeg 4.1以降でデフォルト有効)に回転適用を委譲している。`-vf`で指定した
+  フィルタ(`ass=...`)の前段でffmpegが自動的に回転を適用するため、こちら側で明示的な
+  `transpose`/`rotate`フィルタを追加する必要はない。**追加すると二重回転になるため
+  絶対に追加しないこと**(`app/services/caption_videos/video_renderer.rb`のコメント参照)。
+- この設計により、テロップの位置・サイズは常に最終的な(回転適用後の)映像サイズを基準に
+  計算され、映像とテロップがずれることはない。
+
+### HEVC(H.265)入力への対応について
+
+MOVコンテナは映像コーデックとしてH.264だけでなくHEVC(H.265)やProResを含むことがある
+(iPhoneは「高効率」設定でHEVCを使う)。
+
+`CaptionVideos::AudioExtractor`(音声抽出)は`-vn`で映像を無視して音声のみ扱うため、
+映像コーデックによらず動作する。一方`CaptionVideos::VideoRenderer`(テロップ焼き込み)は
+入力を一度デコードしてから`libx264`で再エンコードするため、**入力デコードに対応した
+映像コーデックのffmpegビルドが必要**。
+
+**HEVCデコード対応はffmpegのビルド設定に依存するため、このドキュメントで「対応済み」と
+断定することはできない。デプロイ前に必ず本番サーバー上で以下を確認すること。**
+
+```bash
+# ffmpegのバージョン・ビルド設定を確認
+ffmpeg -version
+
+# HEVC/H.264のデコーダーが有効か確認(それぞれ一覧に出れば対応)
+ffmpeg -decoders | grep -E 'hevc|h264'
+
+# 実際のHEVC MOVサンプルファイルで確認(事前に用意する。リポジトリへは追加しない)
+ffprobe -v error -show_streams -show_format sample.mov
+ffmpeg -y -i sample.mov -t 1 -f null -
+```
+
+- `ffmpeg -decoders`の出力に`hevc`のデコーダーが含まれていない場合、HEVC入力の動画生成
+  (RenderJob)は失敗する(`VideoRenderer::RenderError`、ユーザーには「動画の生成に失敗しました。
+  もう一度お試しください。」とだけ表示される。内部エラー詳細はログのみ)。
+- 開発環境(Homebrewの`ffmpeg`)は通常フル機能ビルドでHEVCデコードに対応しているが、
+  本番(Amazon Linux 2023)の`/usr/local/bin/ffmpeg`が同様とは限らないため、
+  上記コマンドで個別に確認すること。**本ドキュメントは対応済みかどうかを推測で断定しない。**
+- 音声抽出(ExtractAudioJob)はHEVC入力でも映像を読まないため問題なく動作する。したがって、
+  HEVC非対応のffmpegビルドでは「アップロード・文字起こし・テロップ編集は成功するが、
+  動画生成だけが失敗する」状態になりうる。これは既存の「日本語フォント未導入」ケース
+  (本ドキュメント該当節)と同じ症状パターンのため、障害時はどちらも疑うこと。
+
+### 音声が無いMOV/MP4の挙動
+
+`CaptionVideos::VideoProbe`がffprobeの実ファイル解析で音声ストリームの有無を確認する。
+音声ストリームが存在しない場合、`CaptionVideos::ExtractAudioJob`はffmpegによる音声抽出を
+一切実行せずに(=ffmpegの内部エラーをユーザーへ見せることなく)以下のメッセージで
+`failed`にする。
+
+> この動画から音声を確認できませんでした。音声を含む動画をアップロードしてください。
+
+### 開発・本番でのMOV E2E確認手順
+
+```bash
+# 1. サンプルMOVファイルを用意する(iPhoneで撮影したファイル、またはQuickTimeで書き出したファイル)
+#    リポジトリへは追加しない(バイナリfixtureを避ける方針。自動テストはマジックバイトで代替)
+
+# 2. ffprobeで事前確認(コーデック・回転メタデータ・音声有無)
+ffprobe -v error -show_streams -show_format sample.mov \
+  | grep -E 'codec_name|width|height|rotate|side_data_type|codec_type'
+
+# 3. 開発環境でアップロードして一連の処理を確認する
+#    (Railsサーバー起動中に /public/caption_videos/new からアップロード)
+#    ログで CaptionVideos::ExtractAudioJob → TranscribeJob → (テロップ編集) → RenderJob の
+#    各ステップが成功することを確認する。完成動画(rendered_video)がMP4であること、
+#    縦動画の場合は向きが正しく、テロップ位置がずれていないことを目視確認する。
+
+# 4. 本番デプロイ前チェック(HEVC対応の確認は上記「HEVC(H.265)入力への対応について」を参照)
+ffmpeg -version
+ffmpeg -decoders | grep -E 'hevc|h264'
+sudo systemctl show puma --property=Environment | grep PATH   # ffmpeg/ffprobeのPATH確認(下記節参照)
+```
 
 ## 処理フロー
 
@@ -161,3 +270,7 @@ OpenAI APIキーを設定していない状態でアップロードすると、`
    (同じ `OPENAI_API_KEY` を使用)。
 4. 動画生成(`RenderJob`)だけが失敗する場合は、FFmpegのPATH・日本語フォント導入を疑う
    (本ドキュメントの該当節を参照)。
+5. 元動画がMOV(特にHEVC)の場合のみ動画生成が失敗する場合は、本番ffmpegビルドの
+   HEVCデコード対応を疑う(「HEVC(H.265)入力への対応について」節を参照)。
+   音声抽出・文字起こし・テロップ編集は成功するのに動画生成だけ失敗する、という
+   症状パターンになる。

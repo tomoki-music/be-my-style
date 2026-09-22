@@ -128,7 +128,77 @@ RSpec.describe CaptionVideos::ExtractAudioJob, type: :job do
       end
     end
 
-    context "MP4以外の形式の場合" do
+    context "MOVをアップロードした場合" do
+      let(:video) { create(:caption_video, :mov, customer: customer, status: "uploaded") }
+
+      before do
+        stub_probe(result: CaptionVideos::VideoProbe::Result.new(
+          duration: 16.minutes.to_f, width: 1920, height: 1080, has_audio_stream: true,
+          format_name: "mov,mp4,m4a,3gp,3g2,mj2"
+        ))
+        allow(CaptionVideos::TranscribeJob).to receive(:perform_later)
+      end
+
+      it "時間超過にならず、音声抽出から文字起こしへ進めること" do
+        allow(CaptionVideos::AudioExtractor).to receive(:new) do |input_path:, output_path:, **_opts|
+          File.write(output_path, "DUMMY_AUDIO")
+          instance_double(CaptionVideos::AudioExtractor, call: true)
+        end
+
+        described_class.perform_now(video.id)
+        video.reload
+        expect(video.status).to eq("transcribing")
+        expect(video.duration).to eq(16.minutes.to_f)
+      end
+
+      it "拡張子.movのまま一時ファイルへ書き出し、VideoProbe/AudioExtractorへ渡すこと" do
+        probed_path = nil
+        extracted_input_path = nil
+        allow(CaptionVideos::VideoProbe).to receive(:new) do |path, **_opts|
+          probed_path = path
+          instance_double(CaptionVideos::VideoProbe, call: CaptionVideos::VideoProbe::Result.new(
+            duration: 16.minutes.to_f, width: 1920, height: 1080, has_audio_stream: true,
+            format_name: "mov,mp4,m4a,3gp,3g2,mj2"
+          ))
+        end
+        allow(CaptionVideos::AudioExtractor).to receive(:new) do |input_path:, output_path:, **_opts|
+          extracted_input_path = input_path
+          File.write(output_path, "DUMMY_AUDIO")
+          instance_double(CaptionVideos::AudioExtractor, call: true)
+        end
+
+        described_class.perform_now(video.id)
+
+        expect(probed_path).to end_with(".mov")
+        expect(extracted_input_path).to end_with(".mov")
+      end
+    end
+
+    context "縦向き動画(回転補正済みで幅<高さ)の場合" do
+      let(:video) { create(:caption_video, :mov, customer: customer, status: "uploaded") }
+
+      before do
+        # VideoProbeは回転メタデータを踏まえた表示上のwidth/heightを返す(仕様はVideoProbeSpecで担保)。
+        # ここでは既に入れ替わった値(縦長)を受け取った場合にExtractAudioJobがそのまま保存することを確認する。
+        stub_probe(result: CaptionVideos::VideoProbe::Result.new(
+          duration: 60.0, width: 1080, height: 1920, has_audio_stream: true,
+          format_name: "mov,mp4,m4a,3gp,3g2,mj2", rotation: 90
+        ))
+        stub_audio_extractor
+        allow(CaptionVideos::TranscribeJob).to receive(:perform_later)
+      end
+
+      it "表示上の幅・高さをそのまま保存し、landscape?がfalseになること" do
+        described_class.perform_now(video.id)
+        video.reload
+        expect(video.width).to eq(1080)
+        expect(video.height).to eq(1920)
+        expect(video.aspect_ratio).to eq("9:16")
+        expect(video.landscape?).to be false
+      end
+    end
+
+    context "MP4/MOV以外の形式の場合" do
       let(:video) { create(:caption_video, customer: customer, status: "uploaded") }
 
       before do
@@ -141,7 +211,7 @@ RSpec.describe CaptionVideos::ExtractAudioJob, type: :job do
         described_class.perform_now(video.id)
         video.reload
         expect(video.status).to eq("failed")
-        expect(video.error_message).to include("MP4形式")
+        expect(video.error_message).to include("MP4またはMOV形式")
       end
     end
 
@@ -154,26 +224,51 @@ RSpec.describe CaptionVideos::ExtractAudioJob, type: :job do
         ))
       end
 
-      it "failedになり、音声トラック無しのメッセージを保存すること" do
+      it "failedになり、音声を確認できない旨のメッセージを保存すること" do
         described_class.perform_now(video.id)
         video.reload
         expect(video.status).to eq("failed")
-        expect(video.error_message).to include("音声トラック")
+        expect(video.error_message).to include("音声を確認できませんでした")
       end
     end
 
-    context "ffprobeが失敗する場合" do
+    context "音声トラックが無いMOVの場合" do
+      let(:video) { create(:caption_video, :mov, customer: customer, status: "uploaded") }
+
+      before do
+        stub_probe(result: CaptionVideos::VideoProbe::Result.new(
+          duration: 16.minutes.to_f, width: 1920, height: 1080, has_audio_stream: false,
+          format_name: "mov,mp4,m4a,3gp,3g2,mj2"
+        ))
+      end
+
+      it "failedになり、分かりやすいメッセージを保存すること(FFmpegの内部エラーを含まない)" do
+        described_class.perform_now(video.id)
+        video.reload
+        expect(video.status).to eq("failed")
+        expect(video.error_message).to eq("この動画から音声を確認できませんでした。音声を含む動画をアップロードしてください。")
+      end
+    end
+
+    context "ffprobeが失敗する場合(壊れた動画・拡張子だけ偽装したファイル等)" do
       let(:video) { create(:caption_video, customer: customer, status: "uploaded") }
 
       before do
         probe_double = instance_double(CaptionVideos::VideoProbe)
-        allow(probe_double).to receive(:call).and_raise(CaptionVideos::VideoProbe::ProbeError, "ffprobe failed")
+        allow(probe_double).to receive(:call).and_raise(
+          CaptionVideos::VideoProbe::ProbeError, "ffprobe failed: moov atom not found /tmp/caption_videos/xyz/source.mov"
+        )
         allow(CaptionVideos::VideoProbe).to receive(:new).and_return(probe_double)
       end
 
-      it "failedになること" do
+      it "failedになり、内部コマンドの詳細(ffprobe/一時ファイルパス)を含まないメッセージを保存すること" do
         described_class.perform_now(video.id)
-        expect(video.reload.status).to eq("failed")
+        video.reload
+        expect(video.status).to eq("failed")
+        expect(video.error_message).to include("読み込めませんでした")
+        expect(video.error_message).not_to include("ffprobe")
+        expect(video.error_message).not_to include("moov atom")
+        expect(video.error_message).not_to include("/tmp/")
       end
     end
 

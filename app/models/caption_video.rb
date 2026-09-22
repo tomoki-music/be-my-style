@@ -3,7 +3,11 @@ class CaptionVideo < ApplicationRecord
   MAX_DURATION_SECONDS = 1800 # 30分。CaptionVideos::AudioExtractorの音声ビットレート(64kbps)を
   # 前提とすると、この上限でも抽出音声は最大約14MBでMAX_AUDIO_BYTES(24MB)に収まるため、
   # 音声分割は不要(spec/services/caption_videos/audio_extractor_spec.rb で担保)。
-  ALLOWED_SOURCE_CONTENT_TYPES = %w[video/mp4].freeze
+  ALLOWED_SOURCE_CONTENT_TYPES = %w[video/mp4 video/quicktime].freeze
+  # ブラウザ/OSによってはMOVに対し空文字やapplication/octet-streamしか申告しないことがあるため、
+  # 拡張子が正しければ許容する(実体はffprobeで別途検証するため、ここで緩めても安全性は落ちない)。
+  GENERIC_SOURCE_CONTENT_TYPES = %w[application/octet-stream].freeze
+  ALLOWED_SOURCE_EXTENSIONS = %w[.mp4 .mov].freeze
   TITLE_MAX_LENGTH = 100
   ERROR_MESSAGE_MAX_LENGTH = 500
 
@@ -36,6 +40,7 @@ class CaptionVideo < ApplicationRecord
   validates :transcript_language, presence: true
   validate :source_video_attached
   validate :source_video_content_type
+  validate :source_video_extension
   validate :source_video_size
 
   EDITABLE_STATUSES = %w[ready_for_edit rendering completed failed].freeze
@@ -58,6 +63,16 @@ class CaptionVideo < ApplicationRecord
 
   def landscape?
     width.present? && height.present? && width >= height
+  end
+
+  # ジョブが一時ファイルを書き出す際の拡張子。ffmpeg/ffprobeは拡張子でなく実バイトを見て
+  # コンテナ形式を判定するため処理結果には影響しないが、一時ファイルの内容が
+  # デバッグ時に分かりやすいよう、検証済みのアップロード時拡張子をそのまま使う。
+  def source_video_local_extension
+    return ".mp4" unless source_video.attached?
+
+    ext = File.extname(source_video.filename.to_s).downcase
+    ALLOWED_SOURCE_EXTENSIONS.include?(ext) ? ext : ".mp4"
   end
 
   def mark_processing!(new_status)
@@ -94,8 +109,20 @@ class CaptionVideo < ApplicationRecord
   def source_video_content_type
     return unless source_video.attached?
 
-    unless ALLOWED_SOURCE_CONTENT_TYPES.include?(source_video.content_type)
-      errors.add(:source_video, "はMP4形式のみアップロードできます")
+    content_type = source_video.content_type.to_s
+    return if content_type.blank? # ブラウザ/OSがMOVにContent-Typeを付与しないケースを許容する
+    return if ALLOWED_SOURCE_CONTENT_TYPES.include?(content_type)
+    return if GENERIC_SOURCE_CONTENT_TYPES.include?(content_type)
+
+    errors.add(:source_video, "はMP4またはMOV形式のみアップロードできます")
+  end
+
+  def source_video_extension
+    return unless source_video.attached?
+
+    ext = File.extname(source_video.filename.to_s).downcase
+    unless ALLOWED_SOURCE_EXTENSIONS.include?(ext)
+      errors.add(:source_video, "はMP4(.mp4)またはMOV(.mov)ファイルのみアップロードできます")
     end
   end
 

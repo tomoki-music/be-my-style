@@ -73,6 +73,16 @@ RSpec.describe CaptionVideos::AudioExtractor do
         described_class.new(input_path: "/tmp/in.mp4", output_path: output_path).call
       end.to raise_error(described_class::ExtractionError, /not installed/)
     end
+
+    it "入力がMOV(.mov)でも成功すること(ffmpegはコンテナ内容を見て判定し拡張子には依存しない)" do
+      allow(Open3).to receive(:capture3) do
+        File.write(output_path, "DUMMY_AUDIO_FROM_MOV")
+        ["", "", status_success]
+      end
+
+      result = described_class.new(input_path: "/tmp/in.mov", output_path: output_path).call
+      expect(result).to be true
+    end
   end
 
   describe "MAX_DURATION_SECONDSと音声サイズの整合性(音声分割が不要であることの根拠)" do

@@ -16,7 +16,7 @@ module CaptionVideos
       video.mark_processing!("rendering")
 
       Dir.mktmpdir(["caption_video_render_#{video.id}_"], tmp_root) do |dir|
-        input_path = File.join(dir, "source.mp4")
+        input_path = File.join(dir, "source#{video.source_video_local_extension}")
         download_attachment!(video.source_video, input_path)
 
         ass_path = File.join(dir, "captions.ass")

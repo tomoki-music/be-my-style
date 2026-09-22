@@ -10,6 +10,8 @@ RSpec.describe "Public::CaptionVideos", type: :request do
   # そのためリポジトリへバイナリfixtureを追加する代わりに、Marcelがvideo/mp4と認識できる
   # 最小限のftypボックスをテスト内でTempfileとして生成する。
   MP4_MAGIC_BYTES = "\x00\x00\x00\x18ftypmp42\x00\x00\x00\x00mp42isom".b
+  # QuickTime(MOV)のftypボックス。major brand "qt  " によりMarcelがvideo/quicktimeと判定する。
+  MOV_MAGIC_BYTES = "\x00\x00\x00\x14ftypqt  \x00\x00\x02\x00qt  ".b
 
   def mp4_fixture
     tempfile = Tempfile.new(["caption_video_sample", ".mp4"])
@@ -18,6 +20,34 @@ RSpec.describe "Public::CaptionVideos", type: :request do
     tempfile.rewind
     (@mp4_tempfiles ||= []) << tempfile # GCによる早期unlinkを防ぐため参照を保持
     fixture_file_upload(tempfile.path, "video/mp4")
+  end
+
+  def mov_fixture
+    tempfile = Tempfile.new(["caption_video_sample", ".mov"])
+    tempfile.binmode
+    tempfile.write(MOV_MAGIC_BYTES)
+    tempfile.rewind
+    (@mov_tempfiles ||= []) << tempfile
+    fixture_file_upload(tempfile.path, "video/quicktime")
+  end
+
+  # 実際にはJPEG画像なファイル。拡張子は.mov、宣言されたContent-Typeもvideo/quicktimeに
+  # 詐称しているが、JPEGは強いマジックバイト(\xFF\xD8\xFF)を持つためMarcelが実バイトから
+  # image/jpegと判定し、宣言されたcontent_type/拡張子を上書きする。これにより
+  # 「拡張子とContent-Typeだけを信用しない」設計(content_typeバリデーション)を検証できる。
+  # (なお、あいまいなバイト列=強い署名を持たないファイルの場合はMarcelが拡張子/宣言された
+  #  content_typeへフォールバックするため検知できない。そのケースの安全網は
+  #  CaptionVideos::ExtractAudioJob のffprobe深層検証であり、
+  #  spec/jobs/caption_videos/extract_audio_job_spec.rb で担保している)
+  JPEG_MAGIC_BYTES = "\xFF\xD8\xFF\xE0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00".b
+
+  def fake_mov_fixture
+    tempfile = Tempfile.new(["caption_video_fake", ".mov"])
+    tempfile.binmode
+    tempfile.write(JPEG_MAGIC_BYTES)
+    tempfile.rewind
+    (@fake_mov_tempfiles ||= []) << tempfile
+    fixture_file_upload(tempfile.path, "video/quicktime")
   end
 
   describe "未ログイン" do
@@ -88,6 +118,27 @@ RSpec.describe "Public::CaptionVideos", type: :request do
         }
 
         expect(CaptionVideo.last.customer).to eq(customer)
+      end
+
+      it "MOVファイルでも動画を作成しExtractAudioJobをenqueueすること" do
+        allow(CaptionVideos::ExtractAudioJob).to receive(:perform_later)
+
+        expect do
+          post public_caption_videos_path, params: { caption_video: { title: "MOVテスト動画", source_video: mov_fixture } }
+        end.to change(CaptionVideo, :count).by(1)
+
+        video = CaptionVideo.last
+        expect(video.customer).to eq(customer)
+        expect(video.status).to eq("uploaded")
+        expect(CaptionVideos::ExtractAudioJob).to have_received(:perform_later).with(video.id)
+        expect(response).to redirect_to(public_caption_video_path(video))
+      end
+
+      it "拡張子・Content-Typeを詐称したファイル(実体はJPEG)は作成されないこと" do
+        expect do
+          post public_caption_videos_path, params: { caption_video: { title: "偽装テスト", source_video: fake_mov_fixture } }
+        end.not_to change(CaptionVideo, :count)
+        expect(response).to have_http_status(:ok)
       end
     end
 

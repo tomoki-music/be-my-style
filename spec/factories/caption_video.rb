@@ -8,14 +8,24 @@ FactoryBot.define do
     height { 1080 }
     aspect_ratio { "16:9" }
 
-    # 実際のMP4バイナリは不要(ffprobe/ffmpeg呼び出しはservice/job specでモックする)。
+    transient do
+      source_video_filename { "sample.mp4" }
+      source_video_content_type { "video/mp4" }
+    end
+
+    # 実際のMP4/MOVバイナリは不要(ffprobe/ffmpeg呼び出しはservice/job specでモックする)。
     # モデルレベルのバリデーションが見るのはActive Storageのcontent_type/byte_sizeのみ。
-    after(:build) do |caption_video|
+    after(:build) do |caption_video, evaluator|
       caption_video.source_video.attach(
         io: StringIO.new("dummy video content"),
-        filename: "sample.mp4",
-        content_type: "video/mp4"
+        filename: evaluator.source_video_filename,
+        content_type: evaluator.source_video_content_type
       )
+    end
+
+    trait :mov do
+      source_video_filename { "sample.mov" }
+      source_video_content_type { "video/quicktime" }
     end
 
     trait :ready_for_edit do

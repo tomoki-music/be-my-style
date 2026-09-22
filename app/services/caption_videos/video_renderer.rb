@@ -4,6 +4,12 @@ require "timeout"
 module CaptionVideos
   # ASS字幕を元動画へ焼き込む。解像度・アスペクト比は変更せず(スケールフィルタを掛けない)、
   # 音声も維持する。Web再生しやすいよう +faststart を付与する。
+  #
+  # 回転メタデータを持つ入力(iPhoneの縦動画MOV等)について: ffmpegはmov/mp4デマルチプレクサの
+  # autorotate(デフォルト有効、ffmpeg 4.1以降)により、-vfで指定したフィルタの前段で自動的に
+  # 回転を適用してから ass= フィルタへ渡す。そのため CaptionVideos::VideoProbe が返す width/height
+  # (表示上のサイズ)とこのffmpegの出力は一致する。ここで明示的な transpose/rotate フィルタを
+  # 追加すると二重回転になるため、絶対に追加しないこと。
   class VideoRenderer
     class RenderError < StandardError; end
 

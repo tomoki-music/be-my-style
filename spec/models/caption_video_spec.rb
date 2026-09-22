@@ -43,10 +43,65 @@ RSpec.describe CaptionVideo, type: :model do
       expect(caption_video.errors[:source_video]).to be_present
     end
 
-    it "source_videoのcontent_typeがmp4以外だとinvalidであること" do
+    it "source_videoのcontent_typeがMP4/MOV以外だとinvalidであること" do
       caption_video = build(:caption_video)
       caption_video.source_video.attach(
-        io: StringIO.new("dummy"), filename: "sample.mov", content_type: "video/quicktime"
+        io: StringIO.new("dummy"), filename: "sample.webm", content_type: "video/webm"
+      )
+      expect(caption_video).not_to be_valid
+      expect(caption_video.errors[:source_video]).to be_present
+    end
+
+    it "source_videoの拡張子がMP4/MOV以外だとinvalidであること(content_typeを詐称していても)" do
+      caption_video = build(:caption_video)
+      caption_video.source_video.attach(
+        io: StringIO.new("dummy"), filename: "sample.avi", content_type: "video/mp4"
+      )
+      expect(caption_video).not_to be_valid
+      expect(caption_video.errors[:source_video]).to be_present
+    end
+
+    it "source_videoがMOV(video/quicktime)であればvalidであること" do
+      caption_video = build(:caption_video, :mov)
+      expect(caption_video).to be_valid
+    end
+
+    it "source_videoの拡張子が大文字(.MOV)でもvalidであること" do
+      caption_video = build(:caption_video)
+      caption_video.source_video.attach(
+        io: StringIO.new("dummy"), filename: "SAMPLE.MOV", content_type: "video/quicktime"
+      )
+      expect(caption_video).to be_valid
+    end
+
+    it "source_videoの拡張子が大文字(.MP4)でもvalidであること" do
+      caption_video = build(:caption_video)
+      caption_video.source_video.attach(
+        io: StringIO.new("dummy"), filename: "SAMPLE.MP4", content_type: "video/mp4"
+      )
+      expect(caption_video).to be_valid
+    end
+
+    it "content_typeが空文字でも拡張子が正しければvalidであること(ブラウザ/OSがMOVへContent-Typeを付与しないケース)" do
+      caption_video = build(:caption_video)
+      caption_video.source_video.attach(
+        io: StringIO.new("dummy"), filename: "sample.mov", content_type: ""
+      )
+      expect(caption_video).to be_valid
+    end
+
+    it "content_typeがapplication/octet-streamでも拡張子が正しければvalidであること" do
+      caption_video = build(:caption_video)
+      caption_video.source_video.attach(
+        io: StringIO.new("dummy"), filename: "sample.mov", content_type: "application/octet-stream"
+      )
+      expect(caption_video).to be_valid
+    end
+
+    it "拡張子だけMOVに変更した非動画ファイル(content_typeが明確に別形式)はinvalidであること" do
+      caption_video = build(:caption_video)
+      caption_video.source_video.attach(
+        io: StringIO.new("dummy"), filename: "fake.mov", content_type: "text/plain"
       )
       expect(caption_video).not_to be_valid
       expect(caption_video.errors[:source_video]).to be_present
@@ -57,6 +112,24 @@ RSpec.describe CaptionVideo, type: :model do
       allow(caption_video.source_video).to receive(:byte_size).and_return(described_class::MAX_SOURCE_VIDEO_BYTES + 1)
       expect(caption_video).not_to be_valid
       expect(caption_video.errors[:source_video]).to be_present
+    end
+  end
+
+  describe "#source_video_local_extension" do
+    it "MP4の場合は.mp4を返すこと" do
+      expect(build(:caption_video).source_video_local_extension).to eq(".mp4")
+    end
+
+    it "MOVの場合は.movを返すこと" do
+      expect(build(:caption_video, :mov).source_video_local_extension).to eq(".mov")
+    end
+
+    it "大文字拡張子(.MOV)でも小文字化して返すこと" do
+      caption_video = build(:caption_video)
+      caption_video.source_video.attach(
+        io: StringIO.new("dummy"), filename: "SAMPLE.MOV", content_type: "video/quicktime"
+      )
+      expect(caption_video.source_video_local_extension).to eq(".mov")
     end
   end
 

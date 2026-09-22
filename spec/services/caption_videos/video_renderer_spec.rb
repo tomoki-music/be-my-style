@@ -58,6 +58,33 @@ RSpec.describe CaptionVideos::VideoRenderer do
       end
     end
 
+    it "入力がMOV(.mov)でも成功し、出力はMP4であること(常にlibx264/AAC/MP4へ変換する)" do
+      captured_args = nil
+      allow(Open3).to receive(:capture3) do |*args|
+        captured_args = args
+        File.write(output_path, "DUMMY_MP4")
+        ["", "", status_success]
+      end
+
+      renderer = described_class.new(input_path: "/tmp/in.mov", ass_path: "/tmp/subs.ass", output_path: output_path)
+      expect(renderer.call).to be true
+      expect(captured_args).to include("libx264", "aac")
+    end
+
+    it "明示的な回転/反転フィルタを追加しないこと(ffmpegのautorotateへ委譲し二重回転を避けるため)" do
+      captured_vf = nil
+      allow(Open3).to receive(:capture3) do |*args|
+        vf_idx = args.index("-vf")
+        captured_vf = args[vf_idx + 1] if vf_idx
+        File.write(output_path, "DUMMY_MP4")
+        ["", "", status_success]
+      end
+
+      renderer.call
+
+      expect(captured_vf).not_to match(/transpose|rotate|hflip|vflip/)
+    end
+
     it "ass_pathの':'をffmpegフィルタ用にエスケープしてコマンドへ渡すこと" do
       captured_vf = nil
       allow(Open3).to receive(:capture3) do |*args|

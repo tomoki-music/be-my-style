@@ -5,7 +5,7 @@
     %h2.caption-video-title AIテロップ動画を作成
 
     %ul.caption-video-guide
-      %li 対応形式: MP4のみ
+      %li 対応形式: MP4・MOV
       %li 最大サイズ: 500MB
       %li 最大時間: 30分
       %li 言語: 日本語(お一人で話している動画を主な対象としています)
@@ -23,7 +23,7 @@
 
       .form-group
         = f.label :source_video, "動画ファイル"
-        = f.file_field :source_video, direct_upload: true, accept: "video/mp4", class: "form-control-file", required: true, id: "caption_video_source_video"
+        = f.file_field :source_video, direct_upload: true, accept: "video/mp4,video/quicktime,.mp4,.mov", class: "form-control-file", required: true, id: "caption_video_source_video"
 
       #caption-video-upload-progress.caption-video-upload-progress{ hidden: true }
         .progress

@@ -88,6 +88,49 @@ RSpec.describe CaptionVideos::RenderJob, type: :job do
       end
     end
 
+    context "MOVをアップロードした動画をレンダリングする場合" do
+      def build_mov_video_with_caption(status: "ready_for_edit")
+        video = create(:caption_video, :mov, customer: customer, status: status, width: 1280, height: 720, duration: 16.minutes.to_f)
+        create(:video_caption, caption_video: video, start_time: 0.0, end_time: 2.0, text: "テロップ")
+        video
+      end
+
+      let(:video) { build_mov_video_with_caption }
+
+      before { stub_renderer_success }
+
+      it "完成動画としてMP4が添付されること(content_typeはvideo/mp4)" do
+        described_class.perform_now(video.id)
+        video.reload
+        expect(video.status).to eq("completed")
+        expect(video.rendered_video).to be_attached
+        expect(video.rendered_video.content_type).to eq("video/mp4")
+      end
+
+      it "拡張子.movのまま一時ファイルへ書き出し、VideoRendererへ渡すこと" do
+        captured_input_path = nil
+        allow(CaptionVideos::VideoRenderer).to receive(:new) do |input_path:, output_path:, **_opts|
+          captured_input_path = input_path
+          File.write(output_path, "DUMMY_MP4")
+          instance_double(CaptionVideos::VideoRenderer, call: true)
+        end
+
+        described_class.perform_now(video.id)
+        expect(captured_input_path).to end_with(".mov")
+      end
+    end
+
+    context "縦向き動画(width<height)をレンダリングする場合" do
+      it "AssSubtitleGeneratorへ縦向きの解像度をそのまま渡すこと(入れ替えないこと)" do
+        video = create(:caption_video, customer: customer, status: "ready_for_edit", width: 1080, height: 1920, duration: 60.0)
+        create(:video_caption, caption_video: video, start_time: 0.0, end_time: 2.0, text: "テロップ")
+        stub_renderer_success
+
+        described_class.perform_now(video.id)
+        expect(CaptionVideos::AssSubtitleGenerator).to have_received(:call).with(anything, width: 1080, height: 1920)
+      end
+    end
+
     context "completedからの再生成の場合" do
       let(:video) { build_video_with_caption(status: "completed") }
 
