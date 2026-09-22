@@ -72,12 +72,12 @@ RSpec.describe CaptionVideos::ExtractAudioJob, type: :job do
       end
     end
 
-    context "動画が10分を超える場合" do
+    context "動画が30分を超える場合" do
       let(:video) { create(:caption_video, customer: customer, status: "uploaded") }
 
       before do
         stub_probe(result: CaptionVideos::VideoProbe::Result.new(
-          duration: 700.0, width: 1280, height: 720, has_audio_stream: true, format_name: "mp4"
+          duration: 1900.0, width: 1280, height: 720, has_audio_stream: true, format_name: "mp4"
         ))
       end
 
@@ -85,7 +85,46 @@ RSpec.describe CaptionVideos::ExtractAudioJob, type: :job do
         described_class.perform_now(video.id)
         video.reload
         expect(video.status).to eq("failed")
-        expect(video.error_message).to include("10分")
+        expect(video.error_message).to include("30分")
+      end
+    end
+
+    context "動画がちょうど30分(境界値)の場合" do
+      let(:video) { create(:caption_video, customer: customer, status: "uploaded") }
+
+      before do
+        stub_probe(result: CaptionVideos::VideoProbe::Result.new(
+          duration: CaptionVideo::MAX_DURATION_SECONDS.to_f, width: 1280, height: 720,
+          has_audio_stream: true, format_name: "mp4"
+        ))
+        stub_audio_extractor
+        allow(CaptionVideos::TranscribeJob).to receive(:perform_later)
+      end
+
+      it "時間超過にならず処理が継続すること" do
+        described_class.perform_now(video.id)
+        video.reload
+        expect(video.status).to eq("transcribing")
+      end
+    end
+
+    context "16分程度(実利用を想定した長さ)の動画の場合" do
+      let(:video) { create(:caption_video, customer: customer, status: "uploaded") }
+
+      before do
+        stub_probe(result: CaptionVideos::VideoProbe::Result.new(
+          duration: 16.minutes.to_f, width: 1920, height: 1080,
+          has_audio_stream: true, format_name: "mp4"
+        ))
+        stub_audio_extractor
+        allow(CaptionVideos::TranscribeJob).to receive(:perform_later)
+      end
+
+      it "時間超過にならず、音声抽出から文字起こしへ進めること" do
+        described_class.perform_now(video.id)
+        video.reload
+        expect(video.status).to eq("transcribing")
+        expect(video.duration).to eq(16.minutes.to_f)
       end
     end
 

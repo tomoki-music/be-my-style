@@ -3,7 +3,7 @@
 動画をアップロードすると、音声を自動文字起こしし、テロップを確認・編集した上で、
 テロップを焼き込んだ完成動画をダウンロードできる機能。
 
-対応範囲: MP4 / 最大10分 / 最大500MB / 日本語 / 一人で話している動画。
+対応範囲: MP4 / 最大30分 / 最大500MB / 日本語 / 一人で話している動画。
 複数話者識別・リアルタイム文字起こし・BGM追加・自動翻訳・課金処理等はMVPの対象外。
 
 ## 処理フロー
@@ -34,13 +34,32 @@
 | `OPENAI_TRANSCRIPTION_MODEL` | 文字起こしに使うモデル | `whisper-1` |
 | `OPENAI_TRANSCRIPTION_URL` | Transcriptions APIのエンドポイント | `https://api.openai.com/v1/audio/transcriptions` |
 | `OPENAI_TRANSCRIPTION_TIMEOUT_SECONDS` | OpenAIリクエストのタイムアウト(秒) | `120` |
-| `CAPTION_VIDEO_AUDIO_TIMEOUT_SEC` | ffmpegによる音声抽出のタイムアウト(秒) | `300` |
-| `CAPTION_VIDEO_RENDER_TIMEOUT_SEC` | ffmpegによるテロップ焼き込みのタイムアウト(秒) | `1200` |
+| `CAPTION_VIDEO_AUDIO_TIMEOUT_SEC` | ffmpegによる音声抽出のタイムアウト(秒) | `600` |
+| `CAPTION_VIDEO_RENDER_TIMEOUT_SEC` | ffmpegによるテロップ焼き込みのタイムアウト(秒) | `3600` |
 | `CAPTION_VIDEO_FONT_FAMILY` | テロップ焼き込みに使う日本語フォントのファミリー名(fontconfigで解決可能な名前) | `Noto Sans CJK JP` |
 | `CAPTION_VIDEO_TMP_ROOT` | 各ジョブが使う一時ディレクトリのルート | `tmp/caption_videos` |
 
 APIキーはコード・fixture・ログへ書かない。`Rails.application.credentials.dig(:openai, :api_key)` でも
 設定可能(ENV優先)。歌声診断AIコメント機能(`docs/handover/ai_comment_debug.md`)と同じキーを共用する。
+
+## 音声分割が不要な理由(OpenAI 25MB制限とMAX_DURATION_SECONDSの関係)
+
+`CaptionVideos::AudioExtractor` は音声をモノラル・16kHz・64kbps(`AUDIO_BITRATE`)のMP3に
+固定変換する。ビットレートが動画長によらず一定のため、抽出音声サイズは動画の長さにほぼ
+比例する。`CaptionVideo::MAX_DURATION_SECONDS`(30分 = 1800秒)の場合:
+
+```
+1800秒 × 64,000bit/秒 ÷ 8 ≒ 14.4MB
+```
+
+OpenAI Whisper APIの25MB制限、および安全マージンを取った `AudioExtractor::MAX_AUDIO_BYTES`
+(24MB)のいずれにも収まる(約60%)。そのため、動画の長さ上限が30分である限り、音声を
+複数ファイルに分割してAPIへ送る処理は不要であり、実装していない。この前提は
+`spec/services/caption_videos/audio_extractor_spec.rb` の不変条件テストで担保している。
+
+**注意:** `MAX_DURATION_SECONDS` や `AUDIO_BITRATE` を将来さらに引き上げる場合は、
+上記の計算を再確認し、24MBを超えるようであれば音声分割(タイムスタンプのオフセット補正を含む)
+の実装を検討すること。
 
 ## FFmpeg / FFprobe
 
@@ -124,7 +143,7 @@ OpenAI APIキーを設定していない状態でアップロードすると、`
 ## API料金について
 
 - OpenAI Audio Transcriptions API (`whisper-1`) は音声の長さに応じて課金される。
-  最大10分の動画を1本処理するごとに課金が発生する。
+  最大30分の動画を1本処理するごとに課金が発生する。
 - `TranscribeJob` は `CaptionVideo#transcribed_at` で冪等性を担保しており、同じ動画に対して
   ジョブが再実行されても再度OpenAIを呼ばない(二重課金防止)。ユーザーが手動で「動画を生成する」を
   複数回押しても、OpenAI課金が発生するのは文字起こし(1回だけ)であり、動画生成(FFmpeg)自体は

@@ -74,4 +74,13 @@ RSpec.describe CaptionVideos::AudioExtractor do
       end.to raise_error(described_class::ExtractionError, /not installed/)
     end
   end
+
+  describe "MAX_DURATION_SECONDSと音声サイズの整合性(音声分割が不要であることの根拠)" do
+    it "CaptionVideo::MAX_DURATION_SECONDS一杯の動画でも、想定ビットレートでの抽出音声サイズがMAX_AUDIO_BYTES以内に収まること" do
+      bitrate_bps = described_class::AUDIO_BITRATE.to_i * 1000
+      estimated_bytes = CaptionVideo::MAX_DURATION_SECONDS * bitrate_bps / 8
+
+      expect(estimated_bytes).to be < described_class::MAX_AUDIO_BYTES
+    end
+  end
 end

@@ -1,6 +1,8 @@
 class CaptionVideo < ApplicationRecord
   MAX_SOURCE_VIDEO_BYTES = 500.megabytes
-  MAX_DURATION_SECONDS = 600 # 10分
+  MAX_DURATION_SECONDS = 1800 # 30分。CaptionVideos::AudioExtractorの音声ビットレート(64kbps)を
+  # 前提とすると、この上限でも抽出音声は最大約14MBでMAX_AUDIO_BYTES(24MB)に収まるため、
+  # 音声分割は不要(spec/services/caption_videos/audio_extractor_spec.rb で担保)。
   ALLOWED_SOURCE_CONTENT_TYPES = %w[video/mp4].freeze
   TITLE_MAX_LENGTH = 100
   ERROR_MESSAGE_MAX_LENGTH = 500

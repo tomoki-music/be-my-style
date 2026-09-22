@@ -7,7 +7,7 @@ module CaptionVideos
   class AudioExtractor
     class ExtractionError < StandardError; end
 
-    EXTRACT_TIMEOUT_SEC = ENV.fetch("CAPTION_VIDEO_AUDIO_TIMEOUT_SEC", 300).to_i
+    EXTRACT_TIMEOUT_SEC = ENV.fetch("CAPTION_VIDEO_AUDIO_TIMEOUT_SEC", 600).to_i
     # Whisper APIの上限(25MB)に対して安全マージンを取る。
     MAX_AUDIO_BYTES = 24.megabytes
     AUDIO_BITRATE = "64k"

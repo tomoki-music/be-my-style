@@ -7,7 +7,7 @@ module CaptionVideos
   class VideoRenderer
     class RenderError < StandardError; end
 
-    RENDER_TIMEOUT_SEC = ENV.fetch("CAPTION_VIDEO_RENDER_TIMEOUT_SEC", 1200).to_i
+    RENDER_TIMEOUT_SEC = ENV.fetch("CAPTION_VIDEO_RENDER_TIMEOUT_SEC", 3600).to_i
     MAX_ERROR_LENGTH = 1000
 
     def initialize(input_path:, ass_path:, output_path:, timeout: RENDER_TIMEOUT_SEC)

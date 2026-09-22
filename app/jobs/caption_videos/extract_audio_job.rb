@@ -63,7 +63,7 @@ module CaptionVideos
       end
 
       if probe.duration > CaptionVideo::MAX_DURATION_SECONDS
-        raise IngestValidationError, "動画は10分以内にしてください。"
+        raise IngestValidationError, "動画は30分以内にしてください。"
       end
 
       unless probe.format_name.to_s.split(",").any? { |f| CaptionVideos::VideoProbe::ALLOWED_FORMAT_NAMES.include?(f) }
