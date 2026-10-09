@@ -109,7 +109,9 @@
   gap: 16px;
 }
 
-.card {
+/* .card/.btnはBootstrapと同名のため、他ページへ漏れないようAboutページ内に限定する。
+   :where()は詳細度を上げないので、Aboutページ内の既存の上書き順(Bootstrap等)は変わらない */
+:where(.about-page) .card {
   background: white;
   padding: 20px;
   border-radius: 16px;
@@ -182,7 +184,7 @@
    ボタン
 ===================== */
 
-.btn {
+:where(.about-page) .btn {
   display: inline-block;
   font-weight: bold;
   border-radius: 12px;
@@ -193,7 +195,7 @@
 }
 
 /* メインボタン（CTA） */
-.btn-main {
+:where(.about-page) .btn-main {
   background: linear-gradient(135deg, #17a2b8, #0d6efd);
   color: #ffffff;
   box-shadow: 0 6px 0 #0b5ed7, 0 8px 20px rgba(0,0,0,0.2);
@@ -210,7 +212,7 @@
 }
 
 /* サブボタン */
-.btn-sub {
+:where(.about-page) .btn-sub {
   background: white;
   color: #0d6efd;
   border: 2px solid #0d6efd;
