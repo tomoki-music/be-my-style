@@ -8,6 +8,10 @@ class Event < ApplicationRecord
     upcoming: "開催予定"
   }.freeze
 
+  # 参加者本人が取消できるのは開始時刻のこの期間より前まで。
+  # 楽曲表の「削除」ボタン表示とPublic::EventsController#deleteの両方がこの判定を使う。
+  JOIN_CANCELLATION_DEADLINE = 7.days
+
   has_one_attached :event_image
   has_many :songs, -> { order(position: :asc) }, dependent: :destroy, inverse_of: :event
   # Event -> Song -> JoinPart。join/join_confirmで送信されたjoin_part_idが
@@ -122,5 +126,9 @@ class Event < ApplicationRecord
 
   def ended?(now: Time.current)
     status_key(now: now) == :ended
+  end
+
+  def join_cancellable?(now: Time.current)
+    event_start_time > now + JOIN_CANCELLATION_DEADLINE
   end
 end

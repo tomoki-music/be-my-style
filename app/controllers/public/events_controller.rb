@@ -315,8 +315,20 @@ class Public::EventsController < ApplicationController
 
   def delete
     event = Event.find(params[:event_id])
-    join_part = JoinPart.find(params[:join_part_id])
-    customer = Customer.find(params[:customer_id])
+    # 期限後は「削除」ボタンを出していないため、直接リクエストもここで拒否する。
+    unless event.join_cancellable?
+      redirect_to public_event_path(event), alert: "イベント開始時刻の7日前を過ぎたため、参加を取消できません。"
+      return
+    end
+    # 他人の参加の取消は管理画面(Admin::EventsController#delete)だけが行う。
+    # ここではcustomer_idを信用せずログイン中の本人のみを対象にし、join_partも
+    # このイベント配下に限定する(別イベントIDを指定した期限判定のすり抜けを防ぐ)。
+    join_part = event.join_parts.find_by(id: params[:join_part_id])
+    if join_part.nil? || params[:customer_id].to_s != current_customer.id.to_s
+      redirect_to public_event_path(event), alert: "この参加を取消す権限がありません。"
+      return
+    end
+    customer = current_customer
     join_record = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part.id)
     credited_record = join_record if join_record&.session_credit_applied?
     join_part.customers.delete(customer)

@@ -121,4 +121,32 @@ RSpec.describe "Public::Homes", type: :request do
       end
     end
   end
+
+  describe "GET /public/homes/about" do
+    let!(:customer) { create(:customer, :customer_with_parts) }
+
+    before do
+      sign_in customer
+      get public_homes_about_path
+    end
+
+    it "イベント参加方法を実際の画面と同じ項目名・ボタン名で案内すること" do
+      doc = Nokogiri::HTML(response.body)
+      guide = doc.at_css("#event-join-guide")
+      expect(guide).to be_present
+      expect(guide.css(".event-join-guide__step").size).to eq 4
+      %w[「楽曲」 「参加確認画面へ」 「参加する」 「削除」 「みんなのリクエスト」].each do |label|
+        expect(guide.text).to include(label)
+      end
+    end
+
+    it "取消期限を実装と同じ「開始時刻の7日前より前」で案内すること" do
+      expect(response.body).to include("イベント開始時刻の7日前より前なら")
+    end
+
+    it "はじめ方の「イベントに参加」から参加方法へ移動できること" do
+      doc = Nokogiri::HTML(response.body)
+      expect(doc.at_css(".step-timeline a[href='#event-join-guide']")).to be_present
+    end
+  end
 end

@@ -432,15 +432,195 @@
   font-weight: bold;
 }
 
-/* PCで横並びに進化 */
+/* PCで横並びに進化。flex-wrap + width:45% だと5枚目だけが3段目に孤立するため、
+   gridで2列にして奇数の最後の1枚は全幅にし、広い画面では5枚を1列に並べる */
 @media (min-width: 768px) {
   .story-steps {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .story-step:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1200px) {
+  .story-steps {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
   }
 
   .story-step {
-    width: 45%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .story-step:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+}
+/* =====================
+   イベント参加のしかた
+===================== */
+.event-join-guide__jump {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #17a2b8;
+}
+
+.event-join-guide {
+  text-align: left;
+  scroll-margin-top: 80px;
+
+  .section-title {
+    text-align: center;
+  }
+}
+
+/* パネル自体は他の.alt-bgセクションと同じ全幅にそろえ、文章だけ読みやすい幅に収める */
+.event-join-guide__body {
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.event-join-guide__lead {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.event-join-guide__heading {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 28px 0 12px;
+  padding-left: 10px;
+  border-left: 4px solid #17a2b8;
+}
+
+.event-join-guide__steps {
+  counter-reset: join-step;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.event-join-guide__step {
+  counter-increment: join-step;
+  position: relative;
+  background: white;
+  padding: 14px 14px 14px 56px;
+  border-radius: 14px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+
+  &::before {
+    content: counter(join-step);
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    border-radius: 50%;
+    background: #17a2b8;
+    color: #ffffff;
+    font-weight: bold;
+  }
+
+  h4 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+.event-join-guide__note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.event-join-guide__text {
+  font-size: 14px;
+}
+
+.event-join-guide__tips {
+  padding-left: 20px;
+  font-size: 14px;
+
+  li {
+    margin-bottom: 6px;
+  }
+}
+
+.event-join-guide__welcome {
+  margin-top: 28px;
+  padding: 16px;
+  background: white;
+  border-radius: 14px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* =====================
+   PCの文字サイズ・余白
+   Bootstrapのh4(1.5rem)がセクション見出し(22px)より大きく、見出しの大小が逆転していたため整える
+===================== */
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 26px;
+    margin-bottom: 32px;
+  }
+
+  .about-section.alt-bg {
+    padding: 48px 40px;
+  }
+
+  .concept-item h4,
+  .value-item h4 {
+    font-size: 19px;
+    margin-bottom: 8px;
+  }
+
+  .concept-item p,
+  .value-item p {
+    margin-bottom: 0;
+    line-height: 1.6;
+  }
+
+  .step-content h4 {
+    font-size: 20px;
+  }
+
+  .story-step h4 {
+    font-size: 18px;
+  }
+
+  /* PCの追従ヘッダー(.header_container.sticky-top)は高さ130pxあり、80pxではアンカー移動時に隠れる */
+  .event-join-guide {
+    scroll-margin-top: 146px;
+  }
+
+  .event-join-guide__steps {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .event-join-guide__step p,
+  .event-join-guide__text,
+  .event-join-guide__tips {
+    font-size: 15px;
+    line-height: 1.7;
   }
 }

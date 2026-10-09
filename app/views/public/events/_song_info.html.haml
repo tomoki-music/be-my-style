@@ -17,7 +17,7 @@
             = customer_avatar_tag(customer, class_name: "icon_mini")
             %br
             = customer.name
-          - if ( customer == current_customer ) && ( @event.event_start_time - 1.week > Time.now )
+          - if ( customer == current_customer ) && @event.join_cancellable?
             = link_to '取消', public_event_delete_path(@event, join_part_id: join_part, customer_id: customer), method: :delete, data: { 'turbolinks': false, confirm: 'こちらの参加を取消します。よろしいですか？' }, class: "btn btn-sm btn-danger delete-join-part-btn"
       %hr
     %hr
