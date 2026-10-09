@@ -606,6 +606,11 @@
     font-size: 18px;
   }
 
+  /* PCの追従ヘッダー(.header_container.sticky-top)は高さ130pxあり、80pxではアンカー移動時に隠れる */
+  .event-join-guide {
+    scroll-margin-top: 146px;
+  }
+
   .event-join-guide__steps {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
