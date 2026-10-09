@@ -432,16 +432,32 @@
   font-weight: bold;
 }
 
-/* PCで横並びに進化 */
+/* PCで横並びに進化。flex-wrap + width:45% だと5枚目だけが3段目に孤立するため、
+   gridで2列にして奇数の最後の1枚は全幅にし、広い画面では5枚を1列に並べる */
 @media (min-width: 768px) {
   .story-steps {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .story-step:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1200px) {
+  .story-steps {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
   }
 
   .story-step {
-    width: 45%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .story-step:last-child:nth-child(odd) {
+    grid-column: auto;
   }
 }
 /* =====================
@@ -456,15 +472,18 @@
 }
 
 .event-join-guide {
-  max-width: 640px;
-  margin-left: auto;
-  margin-right: auto;
   text-align: left;
   scroll-margin-top: 80px;
 
   .section-title {
     text-align: center;
   }
+}
+
+/* パネル自体は他の.alt-bgセクションと同じ全幅にそろえ、文章だけ読みやすい幅に収める */
+.event-join-guide__body {
+  max-width: 880px;
+  margin: 0 auto;
 }
 
 .event-join-guide__lead {
@@ -551,4 +570,52 @@
   border-radius: 14px;
   text-align: center;
   font-weight: bold;
+}
+
+/* =====================
+   PCの文字サイズ・余白
+   Bootstrapのh4(1.5rem)がセクション見出し(22px)より大きく、見出しの大小が逆転していたため整える
+===================== */
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 26px;
+    margin-bottom: 32px;
+  }
+
+  .about-section.alt-bg {
+    padding: 48px 40px;
+  }
+
+  .concept-item h4,
+  .value-item h4 {
+    font-size: 19px;
+    margin-bottom: 8px;
+  }
+
+  .concept-item p,
+  .value-item p {
+    margin-bottom: 0;
+    line-height: 1.6;
+  }
+
+  .step-content h4 {
+    font-size: 20px;
+  }
+
+  .story-step h4 {
+    font-size: 18px;
+  }
+
+  .event-join-guide__steps {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .event-join-guide__step p,
+  .event-join-guide__text,
+  .event-join-guide__tips {
+    font-size: 15px;
+    line-height: 1.7;
+  }
 }
