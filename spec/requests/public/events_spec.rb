@@ -1326,6 +1326,61 @@ RSpec.describe "Public::Events", type: :request do
       end
     end
 
+    context "参加取消(delete)はログイン中の本人の参加だけが対象になること" do
+      let(:join_part) { JoinPart.create!(song_id: song.id, join_part_name: "Vocal") }
+      let(:deadline) { event.event_start_time - 7.days }
+
+      before do
+        JoinPartCustomer.create!(customer_id: customer.id, join_part_id: join_part.id)
+        JoinPartCustomer.create!(customer_id: other_customer.id, join_part_id: join_part.id)
+      end
+
+      it "期限内でも、customer_idに他人を指定した直接リクエストでは他人の参加を削除しないこと" do
+        travel_to(deadline - 1.day) do
+          expect do
+            delete public_event_delete_path(event, customer_id: other_customer.id, join_part_id: join_part.id)
+          end.not_to change(JoinPartCustomer, :count)
+        end
+        expect(JoinPartCustomer.exists?(customer_id: other_customer.id, join_part_id: join_part.id)).to eq true
+        expect(JoinPartCustomer.exists?(customer_id: customer.id, join_part_id: join_part.id)).to eq true
+        expect(response).to redirect_to(public_event_path(event))
+        expect(flash[:alert]).to eq "この参加を取消す権限がありません。"
+      end
+
+      it "本人は期限内なら自分の参加だけを削除できること" do
+        travel_to(deadline - 1.day) do
+          expect do
+            delete public_event_delete_path(event, customer_id: customer.id, join_part_id: join_part.id)
+          end.to change(JoinPartCustomer, :count).by(-1)
+        end
+        expect(JoinPartCustomer.exists?(customer_id: customer.id, join_part_id: join_part.id)).to eq false
+        expect(JoinPartCustomer.exists?(customer_id: other_customer.id, join_part_id: join_part.id)).to eq true
+        expect(flash[:alert]).to eq "参加を取消しました!"
+      end
+
+      it "期限後は本人でも削除できないこと" do
+        travel_to(deadline) do
+          expect do
+            delete public_event_delete_path(event, customer_id: customer.id, join_part_id: join_part.id)
+          end.not_to change(JoinPartCustomer, :count)
+        end
+        expect(flash[:alert]).to include("7日前を過ぎたため")
+      end
+
+      it "期限前の別イベントIDを指定しても、期限切れイベントの参加を削除できないこと" do
+        future_event = FactoryBot.create(:event, :event_with_songs, customer: customer, community: community,
+                                                 event_start_time: event.event_start_time + 30.days,
+                                                 event_end_time: event.event_start_time + 30.days + 2.hours)
+        travel_to(deadline) do
+          expect do
+            delete public_event_delete_path(future_event, customer_id: customer.id, join_part_id: join_part.id)
+          end.not_to change(JoinPartCustomer, :count)
+        end
+        expect(response).to redirect_to(public_event_path(future_event))
+        expect(flash[:alert]).to eq "この参加を取消す権限がありません。"
+      end
+    end
+
     context "楽曲パートへの参加登録(join)は常にログイン中の本人のみが対象になること" do
       let(:withdrawn_customer) { FactoryBot.create(:customer, is_deleted: true) }
 

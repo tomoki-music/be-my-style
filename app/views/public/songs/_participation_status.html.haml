@@ -37,7 +37,7 @@
                     = link_to public_customer_path(member), class: "song-part__member-link", data: { turbolinks: false } do
                       = customer_avatar_tag(member, class_name: "icon_mini")
                       %span.song-part__member-name= member.name
-                    - if member == current_customer && part_members.include?(current_customer) && @event.event_start_time > Time.current + 7.days
+                    - if member == current_customer && part_members.include?(current_customer) && @event.join_cancellable?
                       = link_to "取消",
                         public_event_delete_path(@event, join_part_id: join_part.id, customer_id: member.id),
                         method: :delete,
