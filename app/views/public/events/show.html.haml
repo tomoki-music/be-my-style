@@ -226,7 +226,7 @@
                               data: {
                                 toggle: "popover",
                                 html: "true",
-                                content: "①ご希望の「参加パート」にチェックを入れてください。（複数チェック可）<br><br>②「参加確認画面へ」のボタンを押して内容に間違いなければ「参加確定」してください。<br><br>③参加が確定すると楽曲一覧表にご自身のアイコンが表示されます。<br><br>※ご注意※<br>③で参加ができない場合：事前に「開催コミュニティ」へ参加申請を行って下さい。<br><br>【ご参考】<br>現在の参加メンバーは一覧表を右スクロールすると全体像が確認できます🎵",
+                                content: "①ご希望の「参加パート」にチェックを入れてください。（複数チェック可）<br><br>②「参加確認画面へ」のボタンを押して内容に間違いなければ「参加する」ボタンで確定してください。<br><br>③参加が確定すると楽曲一覧表にご自身のアイコンが表示されます。<br><br>※ご注意※<br>③で参加ができない場合：事前に「開催コミュニティ」へ参加申請を行って下さい。<br><br>【ご参考】<br>現在の参加メンバーは一覧表を右スクロールすると全体像が確認できます🎵",
                                 placement: "bottom"
                               }
                             }
@@ -345,7 +345,7 @@
                                                       %span.member-plan-badge.member-plan-badge--credit-partial
                                                         %i.fa-solid.fa-sparkles
                                                         当日集金 #{@event.participant_remaining_fee_for(customer).to_s(:delimited)}円
-                                                  - if customer == current_customer && part_members.include?(current_customer) && @event.event_start_time > Time.current + 7.days
+                                                  - if customer == current_customer && part_members.include?(current_customer) && @event.join_cancellable?
                                                     = link_to "削除",
                                                       public_event_delete_path(@event, join_part_id: join_part.id, customer_id: customer.id),
                                                       method: :delete,

@@ -315,6 +315,11 @@ class Public::EventsController < ApplicationController
 
   def delete
     event = Event.find(params[:event_id])
+    # 期限後は「削除」ボタンを出していないため、直接リクエストもここで拒否する。
+    unless event.join_cancellable?
+      redirect_to public_event_path(event), alert: "イベント開始時刻の7日前を過ぎたため、参加を取消できません。"
+      return
+    end
     join_part = JoinPart.find(params[:join_part_id])
     customer = Customer.find(params[:customer_id])
     join_record = JoinPartCustomer.find_by(customer_id: customer.id, join_part_id: join_part.id)

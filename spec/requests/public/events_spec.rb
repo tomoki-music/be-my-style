@@ -1268,9 +1268,61 @@ RSpec.describe "Public::Events", type: :request do
         event
         join_part = JoinPart.create(song_id: song.id, join_part_name: "vocal")
         JoinPartCustomer.create(customer_id: customer.id, join_part_id: join_part.id)
-        expect do
-          delete public_event_delete_path(event, customer_id: customer, join_part_id: join_part.id)
-        end.to change(JoinPartCustomer, :count).by(-1)
+        travel_to(event.event_start_time - 8.days) do
+          expect do
+            delete public_event_delete_path(event, customer_id: customer, join_part_id: join_part.id)
+          end.to change(JoinPartCustomer, :count).by(-1)
+        end
+      end
+    end
+
+    context "参加取消(delete)の期限はイベント開始時刻の7日前より前であること" do
+      let(:join_part) { JoinPart.create!(song_id: song.id, join_part_name: "Vocal") }
+      let(:deadline) { event.event_start_time - 7.days }
+
+      before do
+        JoinPartCustomer.create!(customer_id: customer.id, join_part_id: join_part.id)
+      end
+
+      def delete_join
+        delete public_event_delete_path(event, customer_id: customer.id, join_part_id: join_part.id)
+      end
+
+      it "開始7日前の1秒前なら取消でき、イベント詳細へリダイレクトすること" do
+        travel_to(deadline - 1.second) do
+          expect { delete_join }.to change(JoinPartCustomer, :count).by(-1)
+        end
+        expect(response).to redirect_to(public_event_path(event))
+        expect(flash[:alert]).to eq "参加を取消しました!"
+      end
+
+      it "ちょうど開始7日前の時刻では取消できないこと" do
+        travel_to(deadline) do
+          expect { delete_join }.not_to change(JoinPartCustomer, :count)
+        end
+        expect(response).to redirect_to(public_event_path(event))
+        expect(flash[:alert]).to include("7日前を過ぎたため")
+      end
+
+      it "開始7日前を過ぎた直接リクエストでは取消できないこと" do
+        travel_to(deadline + 1.day) do
+          expect { delete_join }.not_to change(JoinPartCustomer, :count)
+        end
+        expect(response).to redirect_to(public_event_path(event))
+      end
+
+      it "期限後は楽曲表に「削除」ボタンを表示しないこと" do
+        travel_to(deadline) do
+          get public_event_path(event)
+        end
+        expect(Nokogiri::HTML(response.body).css("a[href='#{public_event_delete_path(event, join_part_id: join_part.id, customer_id: customer.id)}']")).to be_empty
+      end
+
+      it "期限前は楽曲表に「削除」ボタンを表示すること" do
+        travel_to(deadline - 1.second) do
+          get public_event_path(event)
+        end
+        expect(Nokogiri::HTML(response.body).css("a[href='#{public_event_delete_path(event, join_part_id: join_part.id, customer_id: customer.id)}']")).to be_present
       end
     end
 
@@ -1396,12 +1448,13 @@ RSpec.describe "Public::Events", type: :request do
       end
 
       it "ケース8: 開催月内のイベントをすべてキャンセルした後、同じ開催月の別イベントへ特典を再利用できること" do
-        travel_to(Time.zone.local(2026, 8, 5, 12, 0, 0)) do
+        travel_to(Time.zone.local(2026, 8, 1, 12, 0, 0)) do
           post public_event_join_path(same_month_event), params: { join_part_ids: { "0" => join_part_c.id.to_s } }
         end
         expect(customer.session_credit_available_for?(event: another_event)).to eq false
 
-        travel_to(Time.zone.local(2026, 8, 12, 12, 0, 0)) do
+        # same_month_eventの開始(8/10 19:00)の7日前より前に取消す
+        travel_to(Time.zone.local(2026, 8, 2, 12, 0, 0)) do
           delete public_event_delete_path(same_month_event, customer_id: customer.id, join_part_id: join_part_c.id)
         end
         expect(customer.session_credit_available_for?(event: another_event)).to eq true
