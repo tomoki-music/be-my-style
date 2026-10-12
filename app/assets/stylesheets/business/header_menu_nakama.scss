@@ -165,3 +165,293 @@
   }
 
 }
+
+// Business ヘッダー専用の調整。
+// public/header_menu.scss と .header_container / .customer-menu-pc を共有しており、上の共通ブロックは
+// music 側ヘッダーにも効くため、今回の追加分は修飾クラスで Business に限定する。
+.header_container.header_container--business{
+
+  // 右上ユーティリティ: (SP)ナビ開閉 / 通知ベル / アカウントメニュー。PC・SP 共通で表示する。
+  .business-header-utils{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:12px;
+    height:100%;
+    min-height:60px;
+  }
+
+  .business-header-bell{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    color:#2563EB;
+    font-size:20px;
+    text-decoration:none;
+
+    &:hover{
+      background:rgba(37, 99, 235, 0.1);
+    }
+
+    &:focus-visible{
+      outline:2px solid #2563EB;
+      outline-offset:2px;
+    }
+  }
+
+  .business-header-bell__badge{
+    position:absolute;
+    top:0;
+    right:-4px;
+    min-width:18px;
+    height:18px;
+    padding:0 5px;
+    border-radius:9px;
+    background:#dc2626;
+    color:#fff;
+    font-size:11px;
+    font-weight:bold;
+    line-height:18px;
+    text-align:center;
+  }
+
+  .business-account-menu__toggle{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:40px;
+    height:40px;
+    padding:0;
+    border:0;
+    border-radius:50%;
+    background:none;
+    color:#2563EB;
+    cursor:pointer;
+
+    &:focus-visible{
+      outline:2px solid #2563EB;
+      outline-offset:2px;
+    }
+  }
+
+  .business-account-menu__avatar{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    object-fit:cover;
+  }
+
+  .business-account-menu__generic-icon{
+    font-size:32px;
+  }
+
+  .business-account-menu__panel{
+    min-width:200px;
+    max-width:calc(100vw - 32px);
+    margin-top:6px;
+  }
+
+  .business-account-menu__name{
+    max-width:240px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-weight:bold;
+  }
+
+  .business-account-menu__logout-form{
+    margin:0;
+  }
+
+  .business-account-menu__logout{
+    color:#dc2626;
+  }
+
+  .header-menu-toggle{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 8px;
+    border:0;
+    border-radius:8px;
+    background:none;
+    color:#2563EB;
+    font-size:18px;
+    cursor:pointer;
+
+    &:focus-visible{
+      outline:2px solid #2563EB;
+      outline-offset:2px;
+    }
+  }
+
+  .header-menu-toggle__label{
+    font-size:12px;
+    font-weight:bold;
+    white-space:nowrap;
+  }
+
+  // SP はユーザーアイコンをリンクにする(ドロップダウンは開かない)。PC ではこのリンクを隠してドロップダウンを使う。
+  .business-account-link{
+    display:none;
+    align-items:center;
+    justify-content:center;
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    color:#2563EB;
+
+    &:focus-visible{
+      outline:2px solid #2563EB;
+      outline-offset:2px;
+    }
+  }
+
+  // ☰のメニュー。閉じている間は visibility も落として、見えないリンクへ Tab で移動しないようにする。
+  // music 側(public/header_menu.scss)の白背景・右寄せも .customer-menu-sp に効くため、ここで上書きする。
+  .customer-menu-sp{
+    z-index:1050;
+    overflow-y:auto;
+    padding:24px 16px 40px;
+    background:rgba(15, 23, 42, 0.96);
+    text-align:center;
+    visibility:hidden;
+    transition:opacity .3s, visibility 0s linear .3s;
+  }
+
+  .customer-menu-sp.show{
+    visibility:visible;
+    transition:opacity .3s;
+  }
+
+  .business-sp-menu__close{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin:0 auto 16px;
+    padding:8px 16px;
+    border:1px solid rgba(255,255,255,0.4);
+    border-radius:999px;
+    background:transparent;
+    color:#fff;
+    font-size:16px;
+    cursor:pointer;
+
+    &:focus-visible{
+      outline:2px solid #fff;
+      outline-offset:2px;
+    }
+  }
+
+  .business-sp-menu__list{
+    margin:0;
+    padding:0;
+
+    li{
+      margin:0;
+    }
+
+    .menu-sp-btn{
+      width:260px;
+      max-width:100%;
+      margin:6px auto;
+    }
+  }
+
+  .business-sp-menu__heading{
+    margin:20px 0 4px;
+    color:rgba(255,255,255,0.7);
+    font-size:12px;
+    font-weight:bold;
+    letter-spacing:0.08em;
+  }
+
+  .business-sp-menu__list li.business-sp-menu__name{
+    max-width:260px;
+    margin:0 auto 4px;
+    overflow:hidden;
+    color:#fff;
+    font-weight:bold;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .business-sp-menu__badge{
+    min-width:20px;
+    margin-left:8px;
+    padding:0 6px;
+    border-radius:10px;
+    background:#dc2626;
+    color:#fff;
+    font-size:12px;
+    line-height:20px;
+  }
+
+  .business-sp-menu__logout-form{
+    margin:0;
+  }
+
+  // 暗い背景でも読めるよう、Bootstrap の danger より明るい赤にする。
+  .business-sp-menu__list .business-sp-menu__logout{
+    border-color:#fca5a5;
+    color:#fca5a5;
+
+    &:hover,
+    &:focus-visible{
+      background:#fca5a5;
+      color:#7f1d1d;
+    }
+  }
+
+  @media (max-width:599px){
+    .business-header-utils{
+      gap:4px;
+    }
+
+    .business-account-menu{
+      display:none;
+    }
+
+    .business-account-link{
+      display:inline-flex;
+    }
+
+    // 狭い画面ではロゴ・キャッチコピーと右上アイコン群が重ならないよう、ラベルを隠してアイコンのみにする。
+    .header-menu-toggle__label{
+      display:none;
+    }
+  }
+
+  @media (min-width:600px){
+
+    .header-menu-toggle{
+      display:none;
+    }
+
+    .customer-menu-pc{
+      height:auto;
+      min-height:50px;
+
+      // public 側の .customer-menu-pc(display:flex / width:fit-content)も効くため、
+      // ul を縮められる flex アイテムにしないと中間幅で折り返さずにはみ出す。
+      ul{
+        flex:1 1 auto;
+        min-width:0;
+        flex-wrap:wrap;
+        height:auto;
+        min-height:50px;
+        margin:0;
+        padding:4px 8px;
+      }
+
+      .menu-btn{
+        margin:4px 12px;
+        white-space:nowrap;
+      }
+    }
+  }
+}

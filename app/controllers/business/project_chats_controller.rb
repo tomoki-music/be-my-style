@@ -1,16 +1,22 @@
 # app/controllers/business/project_chats_controller.rb
 class Business::ProjectChatsController < ApplicationController
+  include BusinessChatSubmission
+
   before_action :set_project
+  before_action :ensure_project_member!, only: [:create]
 
   def create
-    @chat = @project.project_chats.build(chat_params)
+    attributes = business_chat_attributes(:project_chat)
+    return redirect_to(business_project_path(@project), alert: business_chat_too_many_files_message) if attributes.nil?
+
+    @chat = @project.project_chats.build(attributes)
     @chat.customer = current_customer
 
     if @chat.save
       notify_project_chat!(@chat)
       redirect_to business_project_path(@project), notice: "送信しました"
     else
-      redirect_to business_project_path(@project), alert: "送信できませんでした"
+      redirect_to business_project_path(@project), alert: business_chat_error_message(@chat)
     end
   end
 
@@ -26,8 +32,11 @@ class Business::ProjectChatsController < ApplicationController
     @project = Project.find(params[:project_id])
   end
 
-  def chat_params
-    params.require(:project_chat).permit(:body)
+  # チャットの閲覧画面と同じく、プロジェクト参加者だけが投稿できる。プラン条件は無い。
+  def ensure_project_member!
+    return if @project.members.include?(current_customer)
+
+    redirect_to business_project_path(@project), alert: "チャットはプロジェクト参加者のみ投稿できます。"
   end
 
   def notify_project_chat!(chat)

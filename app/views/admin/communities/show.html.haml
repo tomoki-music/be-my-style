@@ -29,5 +29,25 @@
         %dt.col-sm-3 紹介文
         %dd.col-sm-9= simple_format(@community.introduction)
 
+  - if @community.business_domain?
+    .card.shadow-sm.mt-3.admin-plan-trial-card#plan-trial
+      .card-body
+        .d-flex.flex-wrap.align-items-center.mb-2
+          %h3.h5.mb-0.mr-2= plan_trial_label
+          %span.badge{ class: @community.plan_restrictions_waived? ? "badge-success" : "badge-secondary" }
+            現在：#{plan_trial_status_label(@community)}
+        %p.mb-2= plan_trial_description
+        %p.mb-1.font-weight-bold 無料で利用できるようになる機能
+        %ul.mb-3
+          - plan_trial_unlocked_features.each do |feature|
+            %li= feature
+        %p.small.text-muted
+          対象はこのBusinessコミュニティ内だけです。他のコミュニティや、コミュニティ作成などコミュニティ外の機能、契約プラン・課金情報は変わりません。
+        = form_with model: @community, url: admin_community_plan_trial_path(@community), method: :patch, local: true do |f|
+          .custom-control.custom-switch.mb-3
+            = f.check_box :plan_restrictions_waived, class: "custom-control-input", id: "admin_plan_restrictions_waived"
+            %label.custom-control-label{ for: "admin_plan_restrictions_waived" }= plan_trial_label
+          = f.submit "保存する", class: "btn btn-primary"
+
   .mt-3
     = link_to "一覧へ戻る", admin_communities_path, class: "btn btn-outline-secondary"

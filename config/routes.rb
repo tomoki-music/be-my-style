@@ -26,7 +26,10 @@ Rails.application.routes.draw do
     # アーティスト編集機能
     resources :customers, only: [:edit, :update]
 
-    resources :communities
+    resources :communities do
+      # 「有料機能を無料でお試し」。Businessコミュニティ専用で、コミュニティ詳細画面から操作する。
+      resource :plan_trial, only: [:update], controller: "community_plan_trials"
+    end
     resources :activities
     resources :activity_comments
     resources :event_comments
@@ -242,6 +245,10 @@ Rails.application.routes.draw do
       resources :project_chats, only: [:create, :destroy]
     end
 
+    # タイムライン / プロジェクトチャットの添付ファイル配信(閲覧権限を確認して短時間有効な URL へ転送)。
+    resources :chat_attachments, only: [:show]
+    post "chat_previews" => "chat_previews#create", as: :chat_previews
+
     resources :communities do
       delete "leave" => "communities#leave"
 
@@ -249,6 +256,7 @@ Rails.application.routes.draw do
       get "send/mail" => "communities#send_mail"
       resource :permit, only: [:create, :destroy]
       resource :community_customers, only: [:create, :destroy]
+      resource :plan_trial, only: [:update], controller: "community_plan_trials"
       resources :community_posts
     end
 

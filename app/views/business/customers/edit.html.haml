@@ -30,9 +30,9 @@
         %label 自己紹介
         = f.text_area :introduction, class:"form-control", rows: 6, placeholder: placeholder_markdown_profile
 
-      .form-group
+      .form-group#plan-management
         %label 契約プラン管理
-        = render "shared/subscription_manager", customer: @customer
+        = render "shared/subscription_manager", customer: @customer, offer_light: false
 
       - if @customer.business_user?
 

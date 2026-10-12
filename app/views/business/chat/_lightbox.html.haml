@@ -1,0 +1,4 @@
+-# 添付画像の拡大表示。business/chat_composer.js が [data-business-lightbox] のリンクから開く。
+.business-lightbox{ hidden: true, role: "dialog", "aria-modal" => "true", "aria-label" => "画像の拡大表示", data: { "business-lightbox-dialog" => "true" } }
+  %button.business-lightbox__close{ type: "button", "aria-label" => "閉じる", data: { "business-lightbox-close" => "true" } } ×
+  %img.business-lightbox__image{ alt: "" }

@@ -1,0 +1,45 @@
+-# トップの「プロジェクト」一覧。閲覧範囲はプロジェクト一覧・詳細と同じ(ログイン中の会員のみ)。
+-# 未ログインではプロジェクトを取得しないため、名前・画像・件数は出ない。
+%section.top-projects#top-projects{ "aria-labelledby": "top-projects-title" }
+  .top-projects__header
+    %h2.top-projects__title#top-projects-title プロジェクト
+    - if customer_signed_in? && @top_projects.present?
+      = link_to "すべて見る", business_projects_path, class: "top-projects__more"
+
+  - if !customer_signed_in?
+    .top-projects__empty
+      %p.top-projects__empty-text プロジェクトはログインすると閲覧できます。
+      .top-projects__empty-actions
+        = link_to "ログイン", new_business_customer_session_path, class: "btn btn-primary"
+        = link_to "新規登録", new_business_customer_registration_path, class: "btn btn-outline-primary"
+
+  - elsif @top_projects.empty?
+    .top-projects__empty
+      %p.top-projects__empty-text まだプロジェクトはありません。コミュニティに参加すると、プロジェクトの立ち上げや参加ができます。
+      .top-projects__empty-actions
+        = link_to "コミュニティを探す", business_communities_path, class: "btn btn-primary"
+
+  - else
+    %p.top-projects__note 更新が新しい順に#{Business::HomesController::TOP_PROJECT_LIMIT}件まで表示しています。
+    %ul.top-projects__grid
+      - @top_projects.each do |project|
+        - label, modifier = business_project_participation(project, joined_project_ids: @joined_project_ids, joined_community_ids: @joined_community_ids)
+        %li.top-project-card
+          = link_to business_project_path(project), class: "top-project-card__link" do
+            .top-project-card__image
+              - if project.project_image.attached?
+                = image_tag project.project_image, alt: "", loading: "lazy"
+              - else
+                %span.top-project-card__no-image{ "aria-hidden": "true" } 🚀
+            .top-project-card__body
+              %h3.top-project-card__title= project.title
+              %p.top-project-card__community= project.community.name
+              - if project.description.present?
+                %p.top-project-card__description= truncate(project.description, length: 60)
+              .top-project-card__meta
+                %span.top-project-card__status{ class: "top-project-card__status--#{modifier}" }= label
+                %span.top-project-card__updated
+                  更新：
+                  %time{ datetime: project.updated_at.iso8601 }= l(project.updated_at, format: :short)
+    .top-projects__footer
+      = link_to "すべてのプロジェクトを見る", business_projects_path, class: "btn btn-outline-primary"

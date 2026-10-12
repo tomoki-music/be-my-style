@@ -93,11 +93,12 @@ RSpec.describe "Onboardings - オンボーディング活動報告例外", type:
       end
     end
 
+    # ビジネス投稿は free プランでも利用できるため、オンボーディング例外が無くても投稿できる。
     context "step3 を経由せず直接 /business/posts/new にアクセスした場合（セッションフラグなし）" do
-      it "POST しても Post が増えない" do
+      it "Free プランのまま Post が増える" do
         expect {
           post business_posts_path, params: post_params
-        }.not_to change(Post, :count)
+        }.to change(Post, :count).by(1)
       end
     end
   end

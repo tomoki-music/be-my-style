@@ -3,7 +3,7 @@ class Admin::CommunitiesController < ApplicationController
   before_action :set_community, only: [:show, :edit, :update, :destroy]
 
   def index
-    @communities = Community.includes(:owner, :genres).order(created_at: :desc)
+    @communities = Community.includes(:owner, :genres, :domain).order(created_at: :desc)
   end
 
   def show

@@ -119,7 +119,8 @@
                   %span.chat-time= l(msg.created_at, format: :short)
 
                 .chat-bubble{ class: is_me ? "me" : "" }
-                  .chat-body= simple_format(msg.body)
+                  .chat-body
+                    = render "business/chat/message_content", record: msg
 
                 - if is_me
                   = link_to "削除",
@@ -133,11 +134,13 @@
             %p まだメッセージはありません
             %span 最初の一言を投稿してみよう！
 
+      = render "business/chat/lightbox"
+
       / 投稿フォーム
-      = form_with model: [ :business, @project, @new_message ], local: true, class: "chat-form" do |f|
-        .chat-input-area
-          = f.text_field :body, placeholder: "メッセージを入力...", class: "chat-input"
-          = f.submit "送信", class: "btn btn-primary"
+      .business-chat-compose
+        = form_with model: [ :business, @project, @new_message ], local: true, html: { class: "chat-form business-chat-form" } do |f|
+          = render "business/chat/composer", f: f, placeholder: "メッセージを入力...", submit_label: "送信"
+        = render "business/chat/stamp_picker", url: business_project_project_chats_path(@project), param_key: :project_chat
 
     - else
 

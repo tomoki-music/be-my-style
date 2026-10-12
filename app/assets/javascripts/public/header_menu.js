@@ -7,6 +7,8 @@ document.addEventListener('turbolinks:load', function(){
   const close = document.getElementById('close');
 
   if(!open || !menu || !close) return;
+  // Business(NAKAMA)ヘッダーの☰は business/header_menu_nakama.js が開閉・aria を管理する。
+  if(open.closest('.header_container--business')) return;
 
   open.addEventListener('click', () => {
     menu.classList.add('show');

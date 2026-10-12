@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_09_01_000000) do
+ActiveRecord::Schema.define(version: 2026_10_12_010000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -221,6 +221,7 @@ ActiveRecord::Schema.define(version: 2026_09_01_000000) do
     t.datetime "updated_at", precision: 6, null: false
     t.bigint "domain_id", null: false
     t.string "required_plan_for_event_creation", default: "core", null: false
+    t.boolean "plan_restrictions_waived", default: false, null: false
     t.index ["domain_id"], name: "index_communities_on_domain_id"
   end
 
@@ -277,6 +278,8 @@ ActiveRecord::Schema.define(version: 2026_09_01_000000) do
     t.text "body"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "stamp_type"
+    t.integer "content_format", default: 0, null: false
     t.index ["community_id"], name: "index_community_posts_on_community_id"
     t.index ["customer_id"], name: "index_community_posts_on_customer_id"
   end
@@ -903,6 +906,8 @@ ActiveRecord::Schema.define(version: 2026_09_01_000000) do
     t.text "body"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "stamp_type"
+    t.integer "content_format", default: 0, null: false
     t.index ["customer_id"], name: "index_project_chats_on_customer_id"
     t.index ["project_id"], name: "index_project_chats_on_project_id"
   end

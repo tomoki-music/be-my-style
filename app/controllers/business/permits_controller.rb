@@ -17,7 +17,10 @@ class Business::PermitsController < ApplicationController
     redirect_after_action
   end
 
+  # 本人による申請の取り消しと、運営者による他人の申請の拒否(customer_id 指定)を兼ねる。
   def destroy
+    return reject_permit if rejecting_other_customer?
+
     permit = Permit.find_by(
       community_id: @community.id,
       customer_id: current_customer.id
@@ -30,6 +33,21 @@ class Business::PermitsController < ApplicationController
   end
 
   private
+
+  def rejecting_other_customer?
+    params[:customer_id].present? && params[:customer_id].to_s != current_customer.id.to_s
+  end
+
+  # 拒否できるのは参加申請カードを閲覧できる人(Customer#can_manage_community?)だけ。
+  def reject_permit
+    unless current_customer.can_manage_community?(@community)
+      return redirect_to business_community_path(@community), alert: "参加申請を拒否する権限がありません。"
+    end
+
+    @community.permits.find_by(customer_id: params[:customer_id])&.destroy
+
+    redirect_to business_community_path(@community), alert: "参加申請を拒否しました"
+  end
 
   def set_community
     @community = Community.find_by!(

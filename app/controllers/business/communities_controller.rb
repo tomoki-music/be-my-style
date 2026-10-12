@@ -1,6 +1,8 @@
 class Business::CommunitiesController < ApplicationController
 
   before_action :set_community, only: [:show, :edit, :update, :destroy, :permits]
+  before_action :ensure_community_manager!, only: [:edit, :update, :permits]
+  before_action :ensure_community_owner!, only: [:destroy]
   before_action only: [:new, :create] do
     require_feature!(:business_community_create, redirect_to_path: business_communities_path)
   end
@@ -12,14 +14,15 @@ class Business::CommunitiesController < ApplicationController
   end
 
   def show
-    @permit = Permit.find_by(
-      community: @community,
-      customer: current_customer
-    )
-
     @projects = @community.projects
+    # タイムラインはログイン中の会員なら閲覧できる(従来どおり)。投稿だけ参加者に限定する。
+    @timeline_posts = @community.community_posts.includes(customer: { profile_image_attachment: :blob }).with_attached_attachments.order(created_at: :desc)
+    @can_post_timeline = current_customer.business_community_participant?(@community)
     @permit = @community.permits.find_by(customer: current_customer)
-    @permits = @community.permits.joins(:customer).merge(Customer.active) if @community.owner == current_customer
+
+    # 参加申請カードの表示可否と申請者一覧の取得は同じ判定(承認・拒否できる人)に揃える。
+    @can_review_permits = current_customer.can_manage_community?(@community)
+    @permits = pending_permits if @can_review_permits
   end
 
   def new
@@ -74,16 +77,34 @@ class Business::CommunitiesController < ApplicationController
   end
 
   def permits
-    @permits = @community.permits.joins(:customer).merge(Customer.active)
+    @permits = pending_permits
   end
   
   private
+
+  def pending_permits
+    @community.permits.joins(:customer).merge(Customer.active).includes(:customer).order(:created_at)
+  end
 
   def set_community
     @community = Community.find_by!(
       id: params[:id],
       domain_id: @current_domain.id
     )
+  end
+
+  # 詳細画面の「編集」ボタン・参加申請カードと同じ条件(オーナー / 管理権限 / 管理者)。
+  def ensure_community_manager!
+    return if current_customer.can_manage_community?(@community)
+
+    redirect_to business_community_path(@community), alert: "このコミュニティを編集する権限がありません。"
+  end
+
+  # 削除は取り消せないため、管理権限の付与だけでは許可せずオーナー本人と管理者に限定する。
+  def ensure_community_owner!
+    return if current_customer.admin? || @community.owner_id == current_customer.id
+
+    redirect_to business_community_path(@community), alert: "このコミュニティを削除する権限がありません。"
   end
 
   def community_params

@@ -1,0 +1,28 @@
+-# タイムライン投稿 / プロジェクトチャット 1件分の本文・スタンプ・添付。
+-# 添付の URL は必ず Business::ChatAttachmentsController(閲覧権限チェック付き)を経由させる。
+- record = local_assigns.fetch(:record)
+- if record.body.present?
+  = business_chat_body(record)
+- if record.stamped?
+  .business-chat-stamp
+    = render "shared/stamp_display", stamp: record
+- if record.attachments.attached?
+  - images = record.attachments.select { |file| BusinessChatContent.inline_image?(file) }
+  - documents = record.attachments.reject { |file| BusinessChatContent.inline_image?(file) }
+  - if images.any?
+    %ul.business-chat-images
+      - images.each do |file|
+        %li.business-chat-images__item
+          = link_to business_chat_file_path(file), class: "business-chat-images__link", target: "_blank", rel: "noopener",
+              data: { "business-lightbox" => "true" }, "aria-label" => "画像「#{file.filename}」を拡大表示" do
+            = image_tag business_chat_file_path(file, thumbnail: true), alt: file.filename.to_s, class: "business-chat-images__thumb", loading: "lazy"
+  - if documents.any?
+    %ul.business-chat-files
+      - documents.each do |file|
+        %li.business-chat-files__item
+          %span.business-chat-files__type= business_chat_document_label(file)
+          %span.business-chat-files__meta
+            %span.business-chat-files__name= file.filename.to_s
+            %span.business-chat-files__size= number_to_human_size(file.byte_size)
+          = link_to "ダウンロード", business_chat_file_path(file), class: "business-chat-files__download", rel: "noopener",
+              "aria-label" => "「#{file.filename}」をダウンロード"

@@ -1,0 +1,39 @@
+-# Business の会話用スタンプ選択。開閉・タブ切替(矢印キー / Home / End を含む)は music と共通の
+-# public/stamp_picker.js、見た目は stamp_picker のスタイルを再利用する。
+-# タブ・スタンプは BusinessChatContent.stamp_tabs(サーバー側の許可リストと同じ一覧)から作る。
+-# 各スタンプは独立した mini フォームで、入れ子フォームを避けるため投稿フォームの外に置く。
+-# url: 送信先 / param_key: :community_post または :project_chat
+- url = local_assigns.fetch(:url)
+- param_key = local_assigns.fetch(:param_key)
+- panel_id = "business-stamp-panel--#{param_key}"
+.stamp-picker-field.business-stamp-picker{ data: { "stamp-picker" => "true" } }
+  %button.stamp-picker__toggle{ type: "button", "aria-expanded" => "false", "aria-controls" => panel_id,
+      data: { "stamp-picker-toggle" => "true" } }
+    %img.stamp-picker__toggle-icon{ src: asset_path("stamps/stamp_thanks.svg"), alt: "", width: 24, height: 24, "aria-hidden" => "true" }
+    %span.stamp-picker__toggle-label スタンプを送る
+    %span.stamp-picker__toggle-caret{ "aria-hidden" => "true" }
+  .stamp-picker__panel{ id: panel_id, hidden: true, data: { "stamp-picker-panel" => "true" } }
+    %p.stamp-picker__hint スタンプをタップすると送信します
+    .stamp-picker__tabs{ role: "tablist", "aria-label" => "スタンプの種類" }
+      - BusinessChatContent.stamp_tabs.each_with_index do |(tab, definition), index|
+        %button.stamp-picker__tab{ type: "button", role: "tab",
+            id: "business-stamp-tab--#{param_key}-#{tab}",
+            "aria-selected" => (index.zero? ? "true" : "false"),
+            "aria-controls" => "business-stamp-tabpanel--#{param_key}-#{tab}",
+            tabindex: (index.zero? ? "0" : "-1"),
+            data: { "stamp-tab" => tab } }
+          = definition[:label]
+    - BusinessChatContent.stamp_tabs.each_with_index do |(tab, definition), index|
+      .stamp-picker__tabpanel{ id: "business-stamp-tabpanel--#{param_key}-#{tab}", role: "tabpanel",
+          "aria-labelledby" => "business-stamp-tab--#{param_key}-#{tab}", hidden: !index.zero?,
+          data: { "stamp-tabpanel" => tab } }
+        %ul.stamp-picker__grid{ role: "list" }
+          - definition[:definitions].each do |key, stamp|
+            - name = BusinessChatContent.stamp_accessible_name(stamp)
+            %li.stamp-picker__cell
+              = form_with url: url, method: :post, local: true, html: { class: "stamp-picker__form" } do
+                = hidden_field_tag "#{param_key}[stamp_type]", key, id: nil
+                %button.stamp-choice{ type: "submit", "aria-label" => "#{name}スタンプを送信",
+                    data: { confirm: "「#{name}」スタンプを送信します。よろしいですか？" } }
+                  %img.stamp-choice__img{ src: asset_path(stamp[:asset]), alt: "", width: 64, height: 64, loading: "lazy" }
+                  %span.stamp-choice__label= stamp[:label]

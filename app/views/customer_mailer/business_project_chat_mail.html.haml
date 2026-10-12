@@ -5,8 +5,15 @@
 %br
 「コメント内容」
 %br
-#{@project_chat.body}
-%br
+- if @project_chat.body.present?
+  #{@project_chat.body}
+  %br
+- if @project_chat.stamped?
+  （スタンプ「#{@project_chat.stamp_label}」）
+  %br
+- if @project_chat.attachments.attached?
+  （添付ファイル #{@project_chat.attachments.size}件）
+  %br
 %br
 ⬇️コメントが届いたプロジェクトはこちら⬇️
 %br
