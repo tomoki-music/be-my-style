@@ -69,6 +69,12 @@
         = f.label :introduction, "紹介文"
         = f.text_area :introduction, rows: 8, class: "form-control"
 
+      - if @community.persisted? && @community.business_domain?
+        .alert.alert-info
+          #{plan_trial_label}：
+          %strong= plan_trial_status_label(@community)
+          = link_to "詳細画面で設定を変更する", admin_community_path(@community, anchor: "plan-trial"), class: "ml-2"
+
       .d-flex.justify-content-between
         = link_to "一覧へ戻る", admin_communities_path, class: "btn btn-outline-secondary"
         = f.submit (@community.persisted? ? "更新する" : "登録する"), class: "btn btn-primary"

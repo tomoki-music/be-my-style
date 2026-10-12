@@ -43,32 +43,32 @@ class ApplicationController < ActionController::Base
       upgrade_path: -> { public_lp_path(anchor: "lp-section") }
     },
     business_post_create: {
-      required_plan: "light",
+      required_plan: "free",
       title: "ビジネス投稿",
-      message: "投稿機能はlightプラン以上で利用できます。知見や近況を発信して、つながりを広げられます。",
-      cta: "lightで投稿を始める",
-      upgrade_path: -> { business_root_path(anchor: "business-pricing") }
+      message: "freeプランから投稿できます。知見や近況を発信して、つながりを広げられます。",
+      cta: "投稿を始める",
+      upgrade_path: -> { business_plan_management_path }
     },
     business_community_post_create: {
-      required_plan: "light",
+      required_plan: "free",
       title: "コミュニティ内投稿",
-      message: "コミュニティ内投稿はlightプラン以上で利用できます。所属コミュニティの交流をもっと活性化できます。",
-      cta: "lightでコミュニティ投稿を開放",
-      upgrade_path: -> { business_root_path(anchor: "business-pricing") }
+      message: "参加中のコミュニティでは、freeプランからタイムラインに投稿できます。",
+      cta: "コミュニティに参加する",
+      upgrade_path: -> { business_plan_management_path }
     },
     business_project_create: {
       required_plan: "core",
       title: "プロジェクト作成",
       message: "プロジェクト作成はcoreプラン以上で利用できます。仲間を集めて、企画を前に進めたい方におすすめです。",
       cta: "coreでプロジェクトを始める",
-      upgrade_path: -> { business_root_path(anchor: "business-pricing") }
+      upgrade_path: -> { business_plan_management_path }
     },
     business_community_create: {
       required_plan: "premium",
       title: "コミュニティ作成",
       message: "コミュニティ作成はpremiumプランで利用できます。あなたのテーマで新しい場をつくれます。",
       cta: "premiumでコミュニティを作成",
-      upgrade_path: -> { business_root_path(anchor: "business-pricing") }
+      upgrade_path: -> { business_plan_management_path }
     }
   }.freeze
 
@@ -185,8 +185,11 @@ class ApplicationController < ActionController::Base
     Domain.find_by(name: "singing")
   end
 
-  def feature_available?(feature_key, customer = current_customer)
-    customer.present? && customer.has_feature?(feature_key)
+  def feature_available?(feature_key, customer = current_customer, community: nil)
+    return false if customer.blank?
+    return customer.has_feature?(feature_key) if community.nil?
+
+    customer.has_feature?(feature_key, community: community)
   end
 
   def feature_gate(feature_key)
@@ -201,12 +204,25 @@ class ApplicationController < ActionController::Base
     feature_gate(feature_key)[:cta]
   end
 
+  # Business の契約・料金はプロフィール編集の「契約プラン管理」で扱う(トップには料金表を置かない)。
+  def business_plan_management_path
+    return new_business_customer_session_path unless customer_signed_in?
+
+    edit_business_customer_path(current_customer, anchor: "plan-management")
+  end
+
+  # Stripe(Checkout の cancel_url / ポータルの return_url)へ渡す絶対 URL。
+  # 外部サービスへ渡す URL にはアンカーを付けない(契約プラン管理はプロフィール編集の上部にある)。
+  def business_plan_management_url(**params)
+    edit_business_customer_url(current_customer, params)
+  end
+
   def feature_upgrade_path(feature_key)
     instance_exec(&feature_gate(feature_key)[:upgrade_path])
   end
 
-  def require_feature!(feature_key, redirect_to_path: nil)
-    return if feature_available?(feature_key)
+  def require_feature!(feature_key, redirect_to_path: nil, community: nil)
+    return if feature_available?(feature_key, community: community)
 
     redirect_to(
       redirect_to_path || feature_upgrade_path(feature_key),

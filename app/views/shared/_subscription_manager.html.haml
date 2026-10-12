@@ -1,4 +1,7 @@
 - customer ||= current_customer
+-# offer_light: false … light の新規登録を勧めない(Business は light と free の機能差が無いため)。
+-# 契約中の light はこれまでどおり表示・管理できる。Stripe の商品・価格や購入エンドポイントは変えない。
+- offer_light = local_assigns.fetch(:offer_light, true) || customer.plan == "light"
 
 .subscription-manager
   .subscription-manager__header
@@ -18,14 +21,15 @@
     %p.subscription-manager__copy
       現在のプラン情報は保持されていますが、Stripeの契約情報とはまだ連携されていません。テスト用または管理画面から反映された状態の可能性があります。
     .subscription-manager__plans
-      .subscription-manager__plan
-        %strong light
-        %span ¥1,500/月
-        = link_to "lightを登録し直す",
-          subscription_checkout_path_for("light"),
-          method: :post,
-          class: "btn btn-outline-primary btn-sm",
-          data: { turbolinks: false }
+      - if offer_light
+        .subscription-manager__plan
+          %strong light
+          %span ¥1,500/月
+          = link_to "lightを登録し直す",
+            subscription_checkout_path_for("light"),
+            method: :post,
+            class: "btn btn-outline-primary btn-sm",
+            data: { turbolinks: false }
       .subscription-manager__plan
         %strong core
         %span ¥3,980/月
@@ -46,14 +50,15 @@
     %p.subscription-manager__copy
       新しいプラン登録は、Stripeの決済画面から行えます。
     .subscription-manager__plans
-      .subscription-manager__plan
-        %strong light
-        %span ¥1,500/月
-        = link_to "lightを始める",
-          subscription_checkout_path_for("light"),
-          method: :post,
-          class: "btn btn-outline-primary btn-sm",
-          data: { turbolinks: false }
+      - if offer_light
+        .subscription-manager__plan
+          %strong light
+          %span ¥1,500/月
+          = link_to "lightを始める",
+            subscription_checkout_path_for("light"),
+            method: :post,
+            class: "btn btn-outline-primary btn-sm",
+            data: { turbolinks: false }
       .subscription-manager__plan
         %strong core
         %span ¥3,980/月

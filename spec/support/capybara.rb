@@ -1,6 +1,28 @@
 require "selenium/webdriver"
 require "capybara"
 
+# Capybara 標準の :selenium_chrome_headless と同じ構成に、パスワードマネージャーの無効化だけを足して
+# 上書き登録する。
+#
+# 新しいブラウザで最初にパスワード付きフォーム(ログイン)を送信すると、Chrome が「パスワードを保存」の
+# 確認を出し、その後のネイティブのクリック・キー入力がページへ届かなくなる(最初のクリック1回だけ届く)。
+# 同じブラウザで2つ目以降の example では起きないため、実行順によってヘッダー等の操作 spec が
+# 落ちたり通ったりしていた(以前は sticky ヘッダーが原因と誤認していた)。
+Capybara.register_driver :selenium_chrome_headless do |app|
+  version = Capybara::Selenium::Driver.load_selenium
+  options_key = Capybara::Selenium::Driver::CAPS_VERSION.satisfied_by?(version) ? :capabilities : :options
+  browser_options = Selenium::WebDriver::Chrome::Options.new.tap do |opts|
+    opts.add_argument("--headless=new")
+    opts.add_argument("--disable-gpu") if Gem.win_platform?
+    opts.add_argument("--disable-site-isolation-trials")
+    opts.add_preference("credentials_enable_service", false)
+    opts.add_preference("profile.password_manager_enabled", false)
+    opts.add_preference("profile.password_manager_leak_detection", false)
+  end
+
+  Capybara::Selenium::Driver.new(app, **{ :browser => :chrome, options_key => browser_options })
+end
+
 Capybara.javascript_driver = :selenium_chrome_headless
 Capybara.default_max_wait_time = 5 #5秒に設定
 Selenium::WebDriver.logger.level = :warn

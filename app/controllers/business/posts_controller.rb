@@ -1,6 +1,7 @@
 class Business::PostsController < ApplicationController
   before_action :authenticate_customer!
   before_action :set_post, only: [:show, :edit, :update, :destroy]
+  before_action :ensure_post_owner!, only: [:edit, :update, :destroy]
   before_action only: [:new, :create] do
     unless onboarding_activity_exception?(:business)
       require_feature!(:business_post_create, redirect_to_path: business_posts_path)
@@ -132,6 +133,13 @@ class Business::PostsController < ApplicationController
 
   def set_post
     @post = Post.find(params[:id])
+  end
+
+  # 詳細画面の「編集」「削除」ボタンと同じく、投稿者本人だけに許可する。
+  def ensure_post_owner!
+    return if @post.customer_id == current_customer.id
+
+    redirect_to business_post_path(@post), alert: "この投稿を編集・削除する権限がありません。"
   end
 
   def post_params

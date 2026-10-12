@@ -27,8 +27,8 @@ class Customer < ApplicationRecord
     music_event_create: %w[core premium],
     music_community_mail: %w[premium],
     music_community_create: %w[premium],
-    business_post_create: %w[light core premium],
-    business_community_post_create: %w[light core premium],
+    business_post_create: %w[free light core premium],
+    business_community_post_create: %w[free light core premium],
     business_project_create: %w[core premium],
     business_community_create: %w[premium],
     singing_diagnosis_history: %w[free light core premium],
@@ -358,8 +358,11 @@ class Customer < ApplicationRecord
     Singing::SingerRankService.next_rank_for(singing_xp)
   end
 
-  def has_feature?(feature_key)
+  # community を渡すと、その Business コミュニティのお試し設定(有料プラン制限の解除)も考慮する。
+  # ここはプラン判定のみ。参加・管理などの権限チェックは呼び出し側で別途行う。
+  def has_feature?(feature_key, community: nil)
     return true if admin?
+    return true if community&.plan_restrictions_waived_for?(feature_key)
 
     allowed_plans = FEATURE_RULES[feature_key.to_sym]
     return false if allowed_plans.blank?
@@ -561,9 +564,18 @@ class Customer < ApplicationRecord
   def can_create_project_for?(community)
     return true if admin?
     return true if can_manage_community?(community)
-    return false unless has_feature?(:business_project_create)
+    return false unless has_feature?(:business_project_create, community: community)
 
     community.present? && communities.exists?(id: community.id)
+  end
+
+  # Business コミュニティのタイムライン投稿など、参加者向け機能を使えるか。
+  def business_community_participant?(community)
+    return false if community.blank? || !community.business_domain?
+    return true if can_manage_community?(community)
+
+    communities.exists?(id: community.id)
+
   end
 
   def can_edit_event?(event)

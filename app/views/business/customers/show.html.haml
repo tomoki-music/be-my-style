@@ -80,7 +80,7 @@
             %span.ml-2
               = @customer.subscribed? ? "有効" : "無料プラン"
           - if current_customer == @customer
-            = render "shared/subscription_manager", customer: @customer
+            = render "shared/subscription_manager", customer: @customer, offer_light: false
 
         .card
           %h3 投稿

@@ -1,6 +1,9 @@
 class Business::StripeController < ApplicationController
   include StripeSubscriptionSync
 
+  # 決済・キャンセル・ポータルからの戻り先とエラー時の案内先は、契約状況を確認できる
+  # 「契約プラン管理」(プロフィール編集)にそろえる。
+
   before_action :authenticate_customer!
 
   def create_checkout
@@ -15,7 +18,7 @@ class Business::StripeController < ApplicationController
     price_id = stripe_price_id_for(params[:plan])
 
     unless price_id
-      redirect_to business_root_path(anchor: "business-pricing"), alert: "選択したプランが見つかりません。"
+      redirect_to business_plan_management_path, alert: "選択したプランが見つかりません。"
       return
     end
 
@@ -30,7 +33,7 @@ class Business::StripeController < ApplicationController
       ],
       mode: "subscription",
       success_url: "#{business_success_stripe_url}?session_id={CHECKOUT_SESSION_ID}",
-      cancel_url: business_root_url(canceled: true)
+      cancel_url: business_plan_management_url(canceled: true)
     )
 
     redirect_to session.url, allow_other_host: true
@@ -38,33 +41,33 @@ class Business::StripeController < ApplicationController
 
   def success
     if params[:session_id] == "{CHECKOUT_SESSION_ID}" && current_customer.subscribed?
-      redirect_to business_root_path(anchor: "business-pricing"), notice: "プラン登録が完了しました。"
+      redirect_to business_plan_management_path, notice: "プラン登録が完了しました。"
       return
     end
 
     if sync_subscription_from_checkout_session!(current_customer, params[:session_id])
-      redirect_to business_root_path(anchor: "business-pricing"), notice: "プラン登録が完了しました。"
+      redirect_to business_plan_management_path, notice: "プラン登録が完了しました。"
     else
-      redirect_to business_root_path(anchor: "business-pricing"), alert: "プランの反映を確認できませんでした。しばらくしてから再度ご確認ください。"
+      redirect_to business_plan_management_path, alert: "プランの反映を確認できませんでした。しばらくしてから再度ご確認ください。"
     end
   rescue Stripe::InvalidRequestError => e
     Rails.logger.error("Stripe checkout sync failed: #{e.message}")
     if current_customer.subscribed?
-      redirect_to business_root_path(anchor: "business-pricing"), notice: "プラン登録が完了しました。"
+      redirect_to business_plan_management_path, notice: "プラン登録が完了しました。"
     else
-      redirect_to business_root_path(anchor: "business-pricing"), alert: "プラン反映時にエラーが発生しました。"
+      redirect_to business_plan_management_path, alert: "プラン反映時にエラーが発生しました。"
     end
   end
 
   def portal
     unless current_customer.stripe_managed_subscription?
-      redirect_to business_root_path(anchor: "business-pricing"), alert: "Stripe連携されたサブスクが見つかりません。もう一度プラン登録をお試しください。"
+      redirect_to business_plan_management_path, alert: "Stripe連携されたサブスクが見つかりません。もう一度プラン登録をお試しください。"
       return
     end
 
     session = Stripe::BillingPortal::Session.create(
       customer: current_customer.subscription.stripe_customer_id,
-      return_url: business_root_url
+      return_url: business_plan_management_url
     )
 
     redirect_to session.url, allow_other_host: true

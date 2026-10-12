@@ -67,4 +67,222 @@ RSpec.describe "Business::Communities", type: :request do
       expect(response.body).not_to include("退会済み申請花子")
     end
   end
+
+  describe "GET /business/communities/:id (show) の参加申請カード" do
+    let(:applicant) { create(:customer, name: "申請太郎") }
+    let(:withdrawn_applicant) { create(:customer, name: "退会済み申請花子", is_deleted: true) }
+
+    def permit_card
+      Nokogiri::HTML(response.body).css(".card").find { |card| card.at_css("h3")&.text == "参加申請" }
+    end
+
+    shared_examples "参加申請カードを表示する" do
+      it "申請0件でもエラーにならず、申請が無い旨を表示する" do
+        get business_community_path(community)
+
+        expect(response).to have_http_status(:ok)
+        expect(permit_card.text).to include("現在、参加申請はありません。")
+        expect(permit_card.css(".permit-card")).to be_empty
+      end
+
+      it "申請者(退会済みを除く)と承認・拒否の操作を表示する" do
+        create(:permit, community: community, customer: applicant)
+        create(:permit, community: community, customer: withdrawn_applicant)
+
+        get business_community_path(community)
+
+        expect(response).to have_http_status(:ok)
+        expect(permit_card.css(".permit-card").map { |card| card.at_css("span").text }).to eq ["申請太郎"]
+        expect(permit_card.at_css(%(a[href="#{business_community_community_customers_path(community_id: community.id, customer_id: applicant.id)}"]))).to be_present
+        expect(permit_card.at_css(%(a[href="#{business_community_permit_path(community, customer_id: applicant.id)}"]))).to be_present
+        expect(permit_card.text).not_to include("現在、参加申請はありません。")
+      end
+    end
+
+    shared_examples "参加申請カードも申請者情報も表示しない" do
+      it "申請があっても申請者名を出さない" do
+        create(:permit, community: community, customer: applicant)
+
+        get business_community_path(community)
+
+        expect(response).to have_http_status(:ok)
+        expect(permit_card).to be_nil
+        expect(response.body).not_to include("申請太郎")
+      end
+    end
+
+    context "オーナー" do
+      before { sign_in owner }
+
+      include_examples "参加申請カードを表示する"
+    end
+
+    context "管理権限を付与された CommunityOwner" do
+      before do
+        co_owner = create(:customer)
+        CommunityOwner.create!(community: community, customer: co_owner)
+        sign_in co_owner
+      end
+
+      include_examples "参加申請カードを表示する"
+    end
+
+    context "Customer の is_owner が admin" do
+      before { sign_in create(:customer, is_owner: :admin) }
+
+      include_examples "参加申請カードを表示する"
+    end
+
+    context "一般参加者" do
+      include_examples "参加申請カードも申請者情報も表示しない"
+    end
+
+    context "非参加者" do
+      before { sign_in create(:customer) }
+
+      include_examples "参加申請カードも申請者情報も表示しない"
+    end
+
+    context "本人が申請中" do
+      before { sign_in applicant }
+
+      it "申請中の表示になり、他の申請者の情報は出さない" do
+        create(:permit, community: community, customer: applicant)
+        create(:permit, community: community, customer: create(:customer, name: "別の申請者"))
+
+        get business_community_path(community)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("申請中")
+        expect(permit_card).to be_nil
+        expect(response.body).not_to include("別の申請者")
+      end
+    end
+  end
+
+  describe "編集・更新・削除の権限" do
+    let(:co_owner) { create(:customer) }
+    let(:admin_customer) { create(:customer, is_owner: :admin) }
+    let(:outsider) { create(:customer) }
+
+    before { CommunityOwner.create!(community: community, customer: co_owner) }
+
+    def update_name(name, extra = {})
+      patch business_community_path(community), params: { community: { name: name }.merge(extra) }
+    end
+
+    it "オーナーは編集画面を開き、更新できる" do
+      sign_in owner
+
+      get edit_business_community_path(community)
+      expect(response).to have_http_status(:ok)
+
+      update_name("オーナー更新")
+      expect(community.reload.name).to eq "オーナー更新"
+    end
+
+    it "管理権限を付与された CommunityOwner は更新できるが削除はできない" do
+      sign_in co_owner
+
+      update_name("共同管理者更新")
+      expect(community.reload.name).to eq "共同管理者更新"
+
+      expect { delete business_community_path(community) }.not_to change(Community, :count)
+      expect(flash[:alert]).to eq "このコミュニティを削除する権限がありません。"
+    end
+
+    it "オーナーと管理者は削除できる" do
+      sign_in owner
+      expect { delete business_community_path(community) }.to change(Community, :count).by(-1)
+
+      other = create(:community, owner: owner, domain: business_domain)
+      sign_in admin_customer
+      expect { delete business_community_path(other) }.to change(Community, :count).by(-1)
+    end
+
+    [
+      ["一般メンバー", :customer],
+      ["非参加者", :outsider]
+    ].each do |label, actor|
+      context label do
+        before { sign_in public_send(actor) }
+
+        it "編集画面・承認待ち一覧を開けない" do
+          get edit_business_community_path(community)
+          expect(response).to redirect_to(business_community_path(community))
+
+          get business_permits_path(community)
+          expect(response).to redirect_to(business_community_path(community))
+        end
+
+        it "直接リクエストしても更新・削除できない" do
+          original_name = community.name
+
+          update_name("乗っ取り")
+          expect(response).to redirect_to(business_community_path(community))
+          expect(community.reload.name).to eq original_name
+
+          expect { delete business_community_path(community) }.not_to change(Community, :count)
+        end
+      end
+    end
+
+    it "通常の更新エンドポイントからはお試し設定を変更できない(オーナーでも無視される)" do
+      sign_in owner
+
+      update_name("名前だけ変わる", plan_restrictions_waived: "1")
+
+      expect(community.reload.name).to eq "名前だけ変わる"
+      expect(community.plan_restrictions_waived).to eq false
+    end
+
+    it "権限のないユーザーが通常の更新エンドポイントでお試し設定を送っても変わらない" do
+      sign_in customer
+
+      update_name(community.name, plan_restrictions_waived: "1")
+
+      expect(community.reload.plan_restrictions_waived).to eq false
+    end
+
+    it "他ドメインのコミュニティは Business 画面から更新できない" do
+      music_community = create(:community, owner: owner)
+      sign_in owner
+
+      expect {
+        patch business_community_path(music_community), params: { community: { name: "越境" } }
+      }.to raise_error(ActiveRecord::RecordNotFound)
+    end
+  end
+
+  describe "タイムラインの閲覧範囲(ログイン中の会員)" do
+    before { CommunityPost.create!(community: community, customer: owner, body: "参加者向けタイムラインの投稿") }
+
+    it "非参加者も本文は閲覧できるが、投稿フォームは出さず参加案内を出す" do
+      sign_in create(:customer)
+
+      get business_community_path(community)
+
+      expect(response.body).to include("参加者向けタイムラインの投稿")
+      expect(response.body).not_to include("投稿する...")
+      expect(response.body).to include("タイムラインへの投稿はコミュニティ参加者のみできます。")
+    end
+
+    it "参加者は閲覧できる" do
+      member = create(:customer)
+      CommunityCustomer.create!(customer: member, community: community)
+      sign_in member
+
+      get business_community_path(community)
+
+      expect(response.body).to include("参加者向けタイムラインの投稿")
+    end
+
+    it "未ログインでは閲覧できない" do
+      sign_out customer
+
+      get business_community_path(community)
+
+      expect(response).to redirect_to(new_customer_session_path)
+    end
+  end
 end

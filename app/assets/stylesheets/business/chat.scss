@@ -1,0 +1,486 @@
+// Business のコミュニティ タイムライン / プロジェクト チャット共通の
+// 入力欄(ツールバー・プレビュー・添付)と、本文・添付の表示。
+// application.css は全画面共通なので、必ず business- 接頭辞のクラス配下に書く。
+
+$business-chat-accent: #6366f1;
+$business-chat-border: #e5e7eb;
+$business-chat-muted: #6b7280;
+
+/* ===== 本文(送信後の表示とプレビューで共通) ===== */
+.business-chat-markdown {
+  font-size: 14px;
+  line-height: 1.7;
+  word-break: break-word;
+
+  h1, h2, h3 {
+    margin: 0.4em 0 0.3em;
+    font-weight: bold;
+    line-height: 1.4;
+  }
+
+  h1 { font-size: 1.4em; }
+  h2 { font-size: 1.25em; }
+  h3 { font-size: 1.1em; }
+
+  p { margin: 0 0 0.5em; }
+
+  p:last-child { margin-bottom: 0; }
+
+  ul, ol {
+    margin: 0 0 0.5em;
+    padding-left: 1.4em;
+  }
+
+  a {
+    color: $business-chat-accent;
+    text-decoration: underline;
+    word-break: break-all;
+  }
+
+  img { max-width: 100%; }
+
+  blockquote {
+    margin: 0.5em 0;
+    padding-left: 10px;
+    border-left: 4px solid #d1d5db;
+    color: $business-chat-muted;
+  }
+
+  code {
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: #f3f4f6;
+    font-size: 13px;
+  }
+
+  pre {
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 8px;
+    background: #282c34;
+    color: #abb2bf;
+
+    code {
+      padding: 0;
+      background: none;
+      color: inherit;
+    }
+  }
+}
+
+.business-chat-stamp img {
+  width: 120px;
+  height: auto;
+}
+
+/* ===== 添付: 画像 ===== */
+.business-chat-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.business-chat-images__link {
+  display: block;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid $business-chat-border;
+  background: #f9fafb;
+
+  &:focus-visible {
+    outline: 3px solid $business-chat-accent;
+    outline-offset: 2px;
+  }
+}
+
+.business-chat-images__thumb {
+  display: block;
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+}
+
+/* ===== 添付: 資料 ===== */
+.business-chat-files {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.business-chat-files__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid $business-chat-border;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.business-chat-files__type {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.business-chat-files__meta {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.business-chat-files__name {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.business-chat-files__size {
+  color: $business-chat-muted;
+  font-size: 11px;
+}
+
+.business-chat-files__download {
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: $business-chat-accent;
+  color: #fff;
+  font-size: 12px;
+  line-height: 20px;
+
+  &:hover,
+  &:focus {
+    color: #fff;
+    text-decoration: none;
+    opacity: 0.9;
+  }
+}
+
+/* ===== 入力欄 ===== */
+.business-chat-compose {
+  margin-bottom: 16px;
+}
+
+.business-composer {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #fff;
+
+  &:focus-within {
+    border-color: $business-chat-accent;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
+}
+
+.business-composer__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px;
+  border-bottom: 1px solid $business-chat-border;
+  background: #f9fafb;
+  border-radius: 12px 12px 0 0;
+}
+
+.business-composer__toolbar,
+.business-composer__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.business-composer__tool,
+.business-composer__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #374151;
+  font-size: 13px;
+  cursor: pointer;
+
+  &:hover { background: #eef2ff; }
+
+  &:focus-visible {
+    outline: 2px solid $business-chat-accent;
+    outline-offset: 1px;
+  }
+}
+
+.business-composer__tool-icon {
+  font-weight: bold;
+}
+
+.business-composer__tab.is-active {
+  border-color: $business-chat-border;
+  background: #fff;
+  color: $business-chat-accent;
+  font-weight: bold;
+}
+
+.business-composer__textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 88px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  font-size: 16px; // iOS で入力時に自動ズームさせない
+  line-height: 1.6;
+  resize: vertical;
+
+  &:focus { outline: none; }
+}
+
+.business-composer__preview {
+  min-height: 88px;
+  padding: 10px 12px;
+
+  &[hidden] { display: none; }
+}
+
+.business-composer__placeholder {
+  color: $business-chat-muted;
+}
+
+.business-composer__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px;
+  border-top: 1px solid $business-chat-border;
+}
+
+.business-composer__attach {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  min-width: 0;
+}
+
+.business-composer__attach-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px dashed #9ca3af;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 13px;
+  cursor: pointer;
+
+  &:hover { background: #f9fafb; }
+
+  &:focus-within {
+    outline: 2px solid $business-chat-accent;
+    outline-offset: 1px;
+  }
+}
+
+// 見た目はラベルをボタンにし、input はキーボード・読み上げ用に残す。
+.business-composer__file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.business-composer__limits {
+  margin: 0;
+  color: $business-chat-muted;
+  font-size: 11px;
+}
+
+.business-composer__submit {
+  min-height: 40px;
+  min-width: 88px;
+}
+
+.business-composer__file-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0 8px 8px;
+  list-style: none;
+
+  &[hidden] { display: none; }
+}
+
+.business-composer__file {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 4px 4px 4px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  font-size: 12px;
+}
+
+.business-composer__file-name {
+  overflow: hidden;
+  max-width: 200px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.business-composer__file-remove {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  color: #374151;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover { background: #fee2e2; color: #b91c1c; }
+}
+
+.business-composer__error {
+  margin: 0;
+  padding: 0 10px 8px;
+  color: #b91c1c;
+  font-size: 12px;
+
+  &[hidden] { display: none; }
+}
+
+.business-stamp-picker {
+  margin-top: 8px;
+
+  .stamp-picker__grid {
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  }
+
+  // 「シンプル」は20種あるため、パネルが画面を占有しないようタブの中だけをスクロールさせる。
+  .stamp-picker__tabpanel {
+    max-height: 320px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    // スクロール領域の端でフォーカス枠(outline-offset: 2px)が切れないように余白を取る。
+    padding: 4px;
+  }
+
+  .stamp-picker__tab {
+    min-height: 40px;
+    font-size: 14px;
+  }
+}
+
+/* ===== 画像の拡大表示 ===== */
+.business-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(17, 24, 39, 0.85);
+
+  &[hidden] { display: none; }
+}
+
+.business-lightbox__image {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.business-lightbox__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  color: #111827;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .business-composer__bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .business-composer__toolbar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .business-composer__tool {
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+    min-height: 44px;
+    padding: 4px;
+    font-size: 11px;
+  }
+
+  .business-composer__tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .business-composer__tab {
+    justify-content: center;
+    min-height: 40px;
+  }
+
+  .business-composer__footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .business-composer__submit {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .business-chat-images__thumb {
+    width: 104px;
+    height: 104px;
+  }
+
+  .business-composer__file-name {
+    max-width: 160px;
+  }
+}

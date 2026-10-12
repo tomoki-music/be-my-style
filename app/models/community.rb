@@ -1,5 +1,12 @@
 class Community < ApplicationRecord
   EVENT_CREATION_REQUIRED_PLANS = %w[core premium].freeze
+  # 「有料プラン制限を解除する（無料お試し）」ON で解除する機能。
+  # コミュニティ内で完結する機能だけに限定し、コミュニティ作成やコミュニティ外の
+  # ビジネス投稿など、他の Business へ波及する機能は含めない。
+  PLAN_RESTRICTION_WAIVABLE_FEATURES = %i[
+    business_community_post_create
+    business_project_create
+  ].freeze
 
   extend ActiveHash::Associations::ActiveRecordExtensions
   belongs_to :prefecture
@@ -47,6 +54,18 @@ class Community < ApplicationRecord
 
   def premium_event_creation_required?
     required_plan_for_event_creation == "premium"
+  end
+
+  def business_domain?
+    domain&.name == "business"
+  end
+
+  # Business コミュニティでお試し設定が ON のときだけ true。
+  # music など他ドメインのコミュニティでは、フラグが立っていても解除しない。
+  def plan_restrictions_waived_for?(feature_key)
+    plan_restrictions_waived? &&
+      business_domain? &&
+      PLAN_RESTRICTION_WAIVABLE_FEATURES.include?(feature_key.to_sym)
   end
 
   # 一般・公開画面で退会ユーザーを除外したメンバーを扱う際に使う。

@@ -16,6 +16,7 @@
           %th 参加人数
           %th 活動場所
           %th 登録日
+          %th 有料機能を無料でお試し
           %th
       %tbody
         - @communities.each do |community|
@@ -27,6 +28,13 @@
             %td= community.customers.count
             %td= community.prefecture&.name
             %td= l community.created_at, format: :short
+            %td.text-nowrap
+              - if community.business_domain?
+                %span.badge{ class: community.plan_restrictions_waived? ? "badge-success" : "badge-secondary" }
+                  = community.plan_restrictions_waived? ? "ON" : "OFF"
+                = link_to "設定", admin_community_path(community, anchor: "plan-trial"), class: "btn btn-sm btn-outline-primary ml-1"
+              - else
+                %span.text-muted 対象外（Businessのみ）
             %td.text-nowrap
               = link_to "詳細", admin_community_path(community), class: "btn btn-sm btn-outline-primary"
               = link_to "編集", edit_admin_community_path(community), class: "btn btn-sm btn-outline-success"

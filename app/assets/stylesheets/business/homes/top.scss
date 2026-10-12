@@ -374,3 +374,203 @@ position:static;
 margin-left:8px;
 }
 }
+
+/* ===== トップのプロジェクト一覧 ===== */
+.top-projects{
+  box-sizing:border-box;
+  max-width:1100px;
+  margin:32px auto 0;
+  padding:0 16px;
+  text-align:left;
+}
+
+.top-projects__header{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:6px;
+}
+
+.top-projects__title{
+  margin:0;
+  font-size:24px;
+  font-weight:700;
+  color:#0f172a;
+}
+
+.top-projects__more{
+  flex-shrink:0;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+.top-projects__note{
+  margin:0 0 14px;
+  color:#64748b;
+  font-size:13px;
+}
+
+.top-projects__grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:16px;
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+
+.top-project-card{
+  min-width:0;
+}
+
+.top-project-card__link{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  overflow:hidden;
+  border:1px solid #e2e8f0;
+  border-radius:14px;
+  background:#fff;
+  color:inherit;
+  text-decoration:none;
+  box-shadow:0 6px 18px rgba(15,23,42,0.06);
+  transition:box-shadow .15s ease, transform .15s ease;
+
+  &:hover{
+    color:inherit;
+    text-decoration:none;
+    box-shadow:0 10px 24px rgba(15,23,42,0.12);
+    transform:translateY(-2px);
+  }
+
+  &:focus-visible{
+    outline:3px solid #2563eb;
+    outline-offset:2px;
+  }
+}
+
+.top-project-card__image{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  aspect-ratio:16 / 9;
+  background:linear-gradient(135deg,#dbeafe,#ede9fe);
+
+  img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+}
+
+.top-project-card__no-image{
+  font-size:36px;
+}
+
+.top-project-card__body{
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  gap:4px;
+  padding:14px 16px 16px;
+}
+
+.top-project-card__title{
+  margin:0;
+  font-size:17px;
+  font-weight:700;
+  line-height:1.4;
+  color:#1d4ed8;
+  overflow-wrap:anywhere;
+}
+
+.top-project-card__community{
+  margin:0;
+  color:#475569;
+  font-size:13px;
+  overflow-wrap:anywhere;
+}
+
+.top-project-card__description{
+  margin:4px 0 0;
+  color:#334155;
+  font-size:14px;
+  overflow-wrap:anywhere;
+}
+
+.top-project-card__meta{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px 10px;
+  margin-top:auto;
+  padding-top:10px;
+  font-size:12px;
+  color:#64748b;
+}
+
+.top-project-card__status{
+  padding:2px 10px;
+  border-radius:999px;
+  background:#f1f5f9;
+  color:#334155;
+  font-weight:700;
+
+  &--owner{ background:#ede9fe; color:#5b21b6; }
+  &--joined{ background:#dcfce7; color:#166534; }
+  &--open{ background:#dbeafe; color:#1d4ed8; }
+  &--closed{ background:#f1f5f9; color:#64748b; }
+}
+
+.top-projects__empty{
+  padding:24px 16px;
+  border:1px dashed #cbd5e1;
+  border-radius:14px;
+  background:#f8fafc;
+  text-align:center;
+}
+
+.top-projects__empty-text{
+  margin:0 0 14px;
+  color:#334155;
+}
+
+.top-projects__empty-actions,
+.top-projects__footer{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+}
+
+.top-projects__footer{
+  margin-top:18px;
+}
+
+/* ===== トップのスライダー矢印 =====
+   slick-theme の既定では矢印がスライダーの外側(左右 -25px)に置かれ、スマホでは左右の余白
+   (.top-container の 5%)より外へ出て横スクロールが発生する。スマホ幅では画像の内側に重ねて置く。
+   music のトップも .slider を共有しているため、Business のスライダーだけに限定する。 */
+@media (max-width:767px){
+  .business-top-slider{
+    .slick-prev,
+    .slick-next{
+      z-index:1;
+    }
+
+    .slick-prev{
+      left:8px;
+    }
+
+    .slick-next{
+      right:8px;
+    }
+
+    .slick-prev:before,
+    .slick-next:before{
+      text-shadow:0 1px 3px rgba(15,23,42,0.6);
+    }
+  }
+}

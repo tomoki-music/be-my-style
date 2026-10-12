@@ -19,6 +19,9 @@
         .hero-meta
           👥 #{@community.active_customers.count}人
 
+        - if @community.plan_restrictions_waived?
+          %p.plan-trial-badge 🎁 無料お試し中：このコミュニティ内では有料プランの機能制限が解除されています
+
         / ===== オーナー =====
         .hero-owner
           - if customer_withdrawn?(@community.owner)
@@ -112,21 +115,23 @@
                 %h4= project.title
                 %p= truncate(project.description.to_s, length: 80)
 
-      .card
+      .card#timeline
         %h3 タイムライン
 
-        - if feature_available?(:business_community_post_create)
-          = form_with model: [:business, @community, CommunityPost.new] do |f|
-            = f.text_area :body, placeholder:"投稿する...", class:"post-input"
-            = f.submit "投稿", class:"btn btn-primary"
+        -# 閲覧(本文・添付)はログイン中の会員なら可能。投稿は参加者(メンバー / 管理権限 / 管理者)だけ。
+        - if @can_post_timeline
+          - if feature_available?(:business_community_post_create, community: @community)
+            .business-chat-compose
+              = form_with model: [:business, @community, CommunityPost.new], local: true, html: { class: "business-chat-form" } do |f|
+                = render "business/chat/composer", f: f, placeholder: "投稿する...", submit_label: "投稿"
+              = render "business/chat/stamp_picker", url: business_community_community_posts_path(@community), param_key: :community_post
         - else
-          = render "shared/feature_gate",
-            feature_key: :business_community_post_create,
-            title: "コミュニティ投稿を始める",
-            message: "読むことはそのままで、発信はlightプラン以上で開放できます。",
-            class_name: "feature-gate--inline"
+          %p.timeline-join-note
+            タイムラインへの投稿はコミュニティ参加者のみできます。
+            %br
+            コミュニティに参加すると、freeプランのまま投稿できます。
 
-        - @community.community_posts.order(created_at: :desc).each do |post|
+        - @timeline_posts.each do |post|
 
           .timeline-item
 
@@ -147,7 +152,9 @@
                   %span.time= time_ago_in_words(post.created_at) + "前"
 
             .timeline-body
-              .markdown-body= markdown(post.body)
+              = render "business/chat/message_content", record: post
+
+        = render "business/chat/lightbox"
 
     / ===== 右 =====
     .right
@@ -167,10 +174,32 @@
                   - if customer == @community.owner
                     %span.owner-tag オーナー
 
-      - if current_customer.can_manage_community?(@community)
+      -# 変更できるのはシステム管理者だけ。コミュニティの運営者には状態のみ表示する。
+      - if plan_trial_editable? || current_customer.can_manage_community?(@community)
+        .card.plan-trial-card#plan-trial
+          %h3= plan_trial_label
+          %p.plan-trial-card__status{ class: ("is-on" if @community.plan_restrictions_waived?) }
+            現在：#{plan_trial_status_label(@community)}
+          %p.plan-trial-card__note= plan_trial_description
+          %p.plan-trial-card__features-title 無料で利用できるようになる機能
+          %ul.plan-trial-card__features
+            - plan_trial_unlocked_features.each do |feature|
+              %li= feature
+          - if plan_trial_editable?
+            = form_with model: @community, url: business_community_plan_trial_path(@community), method: :patch, local: true do |f|
+              %label.plan-trial-card__toggle
+                = f.check_box :plan_restrictions_waived
+                %span= plan_trial_label
+              = f.submit "保存する", class: "btn btn-primary btn-small"
+          - else
+            %p.plan-trial-card__readonly= plan_trial_readonly_note
 
+      - if @can_review_permits
         .card
           %h3 参加申請
+
+          - if @permits.empty?
+            %p.permit-empty 現在、参加申請はありません。
 
           - @permits.each do |permit|
             .permit-card

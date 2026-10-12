@@ -491,3 +491,80 @@
     margin-left: 6px;
   }
 }
+/* =========================
+   有料プラン制限の解除（無料お試し）
+========================= */
+
+.plan-trial-badge {
+  display: inline-block;
+  max-width: 100%;
+  margin: 8px 0 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.9);
+  color: #fff;
+  font-size: 13px;
+  font-weight: bold;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.plan-trial-card__toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-weight: bold;
+  cursor: pointer;
+
+  input {
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+}
+
+.plan-trial-card__note {
+  margin: 4px 0 8px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.plan-trial-card__status {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #374151;
+  font-size: 13px;
+  font-weight: bold;
+
+  &.is-on {
+    background: #d1fae5;
+    color: #065f46;
+  }
+}
+
+.plan-trial-card__features-title {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.plan-trial-card__features {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  font-size: 13px;
+}
+
+.plan-trial-card__readonly,
+.permit-empty {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.timeline-join-note {
+  margin: 0 0 12px;
+  color: #6b7280;
+  font-size: 14px;
+}

@@ -9,7 +9,7 @@ class Business::ProjectsController < ApplicationController
       @community = Community.find(params[:community_id])
       @projects = @community.projects
     else
-      @projects = Project.all
+      @projects = Project.in_domain(@current_domain).includes(:community, :customer, project_image_attachment: :blob).recently_updated
     end
   end
 
@@ -32,7 +32,7 @@ class Business::ProjectsController < ApplicationController
 
   def show
     @community = @project.community
-    @messages = @project.project_chats.includes(:customer).order(created_at: :asc)
+    @messages = @project.project_chats.includes(customer: { profile_image_attachment: :blob }).with_attached_attachments.order(created_at: :asc)
     @new_message = ProjectChat.new
   end
 
