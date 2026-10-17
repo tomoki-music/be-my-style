@@ -27,24 +27,28 @@ module EventDeadlineReminders
 
     private
 
+    # 送信予定を過ぎた締め切り前の未送信分に加え、送信中のまま止まったものは締め切りや
+    # 有効/無効に関係なく拾う(引き継いだ後の再確認で送れなければ結果を確定する)。
+    # そうしないと、停止後に締め切りを過ぎた・無効化されたものが「送信中」のまま残り続ける。
     def candidate_ids
-      claimable_scope
-        .where("armed_deadline > ? AND armed_deadline <= ?", @now, @now + EventDeadlineReminder::LEAD_TIME)
-        .order(:armed_deadline, :id)
-        .pluck(:id)
+      due_ids = pending_scope
+                .where("armed_deadline > ? AND armed_deadline <= ?", @now, @now + EventDeadlineReminder::LEAD_TIME)
+                .order(:armed_deadline, :id)
+                .pluck(:id)
+      (stale_sending_scope.order(:id).pluck(:id) + due_ids).uniq
+    end
+
+    def pending_scope
+      EventDeadlineReminder.where(enabled: true, status: EventDeadlineReminder.statuses[:pending])
+    end
+
+    def stale_sending_scope
+      EventDeadlineReminder.where(status: EventDeadlineReminder.statuses[:sending])
+                           .where("event_deadline_reminders.started_at < ?", @now - EventDeadlineReminder::STALE_SENDING_AFTER)
     end
 
     def claimable_scope
-      statuses = EventDeadlineReminder.statuses
-      EventDeadlineReminder
-        .where(enabled: true)
-        .where(
-          "event_deadline_reminders.status = :pending OR " \
-          "(event_deadline_reminders.status = :sending AND event_deadline_reminders.started_at < :stale_before)",
-          pending: statuses[:pending],
-          sending: statuses[:sending],
-          stale_before: @now - EventDeadlineReminder::STALE_SENDING_AFTER
-        )
+      pending_scope.or(stale_sending_scope)
     end
 
     def claim(id)
@@ -86,6 +90,12 @@ module EventDeadlineReminders
 
     # 想定外の例外は自動で再試行しない(実在ユーザーへの多重送信を避けるため)。
     def mark_failed(id, error)
+      EventDeadlineReminderDelivery.where(event_deadline_reminder_id: id, status: EventDeadlineReminderDelivery.statuses[:sending])
+                                   .update_all(
+                                     status: EventDeadlineReminderDelivery.statuses[:failed],
+                                     failure_reason: MailDeliverer::INTERRUPTED_REASON,
+                                     updated_at: @now
+                                   )
       EventDeadlineReminder.where(id: id, status: EventDeadlineReminder.statuses[:sending]).update_all(
         status: EventDeadlineReminder.statuses[:failed],
         failure_reason: error.message.to_s.truncate(250),

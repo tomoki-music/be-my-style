@@ -1,3 +1,5 @@
+require "net/smtp"
+
 module EventDeadlineReminders
   # 確保済み(sending)のリマインドを、対象メンバーへ1人1通ずつメールで送る。
   #
@@ -5,8 +7,21 @@ module EventDeadlineReminders
   # 送信後・更新前にプロセスが止まった場合、その行は sending のまま残る。引き継いだ実行は
   # 実際に届いたか判断できないため failed(結果不明)にし、再送はしない(重複より取りこぼしを選ぶ)。
   class MailDeliverer
-    INTERRUPTED_REASON = "送信処理が中断され結果が不明なため、重複防止のため再送しません".freeze
+    INTERRUPTED_REASON = "[結果不明] 送信処理が中断され結果が不明なため、重複防止のため再送しません".freeze
     STOPPED_REASON = "途中で自動リマインドが無効化されたため、送信を中断しました".freeze
+    NOT_SENT_LABEL = "[未送信確定]".freeze
+    UNKNOWN_LABEL = "[結果不明]".freeze
+    # SMTPサーバーがエラー応答を返した・接続自体ができなかった場合は、メールは受け付けられていない。
+    # 応答待ちのタイムアウトや接続断(Net::ReadTimeout, EOFError 等)は届いた可能性があるため結果不明とする。
+    NOT_SENT_SMTP_ERRORS = [
+      Net::SMTPAuthenticationError,
+      Net::SMTPServerBusy,
+      Net::SMTPSyntaxError,
+      Net::SMTPFatalError,
+      Net::OpenTimeout,
+      Errno::ECONNREFUSED,
+      SocketError
+    ].freeze
 
     def initialize(reminder, now: Time.current)
       @reminder = reminder
@@ -35,6 +50,7 @@ module EventDeadlineReminders
     end
 
     def finalize!(note: nil)
+      mark_interrupted_deliveries
       counts = @reminder.deliveries.group(:status).count.transform_keys(&:to_s)
       delivered = counts["delivered"].to_i
       failed = counts["failed"].to_i
@@ -85,15 +101,29 @@ module EventDeadlineReminders
         return
       end
 
-      begin
-        EventDeadlineReminderMailer.with(delivery: delivery, message: message).remind.deliver_now
+      mail = begin
+        # 本文の組み立て(テンプレート描画)をSMTP送信より先に済ませ、ここでの失敗は未送信が確実と分かるようにする。
+        EventDeadlineReminderMailer.with(delivery: delivery, message: message).remind.tap(&:message)
       rescue StandardError => e
-        Rails.logger.error("[EventDeadlineReminders::MailDeliverer] delivery=#{delivery.id} #{e.class}: #{e.message}")
-        delivery.update!(status: :failed, failure_reason: "#{e.class}: #{e.message}".truncate(250))
+        record_failure(delivery, e, sent: :not_sent)
+        return
+      end
+
+      begin
+        mail.deliver_now
+      rescue StandardError => e
+        record_failure(delivery, e, sent: NOT_SENT_SMTP_ERRORS.any? { |klass| e.is_a?(klass) } ? :not_sent : :unknown)
         return
       end
 
       delivery.update!(status: :delivered, delivered_at: Time.current)
+    end
+
+    # 失敗理由の先頭に、未送信が確実か結果不明かを付けて残す(自動再送はどちらもしない)。
+    def record_failure(delivery, error, sent:)
+      Rails.logger.error("[EventDeadlineReminders::MailDeliverer] delivery=#{delivery.id} #{sent} #{error.class}: #{error.message}")
+      label = sent == :not_sent ? NOT_SENT_LABEL : UNKNOWN_LABEL
+      delivery.update!(status: :failed, failure_reason: "#{label} #{error.class}: #{error.message}".truncate(250))
     end
 
     def message

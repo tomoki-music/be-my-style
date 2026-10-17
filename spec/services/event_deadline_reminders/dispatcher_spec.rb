@@ -291,4 +291,98 @@ RSpec.describe EventDeadlineReminders::Dispatcher do
       expect(ChatMessage.pluck(:content).join).to include("曲リクエスト受付", "エントリー受付")
     end
   end
+
+  describe "失敗・中断時の扱い" do
+    def stall!(reminder, at:)
+      reminder.update_columns(status: EventDeadlineReminder.statuses[:sending], started_at: at)
+    end
+
+    it "送信中のまま停止し締め切りを過ぎたものは、結果不明の宛先を記録して送信済みで確定し、再送しないこと" do
+      reminder = enable!
+      stall!(reminder, at: jst.parse("2026-10-17 12:00"))
+      reminder.deliveries.create!(customer: owner, status: :delivered, delivered_at: Time.current)
+      in_flight = reminder.deliveries.create!(customer: member_a, status: :sending)
+
+      dispatch_at(jst.parse("2026-10-18 06:05"))
+
+      expect(ActionMailer::Base.deliveries).to be_empty
+      expect(in_flight.reload).to be_failed
+      expect(in_flight.failure_reason).to start_with("[結果不明]")
+      expect(reminder.reload).to be_sent
+      expect(reminder.failure_reason).to include("締め切りを過ぎた")
+    end
+
+    it "送信中のまま停止し何も送っていないものは、締め切り後に未送信へ戻すこと" do
+      reminder = enable!(channel: "chat")
+      stall!(reminder, at: jst.parse("2026-10-17 12:00"))
+
+      dispatch_at(jst.parse("2026-10-18 06:05"))
+
+      expect(reminder.reload).to be_pending
+      expect(ChatMessage.count).to eq 0
+    end
+
+    it "送信中のまま停止した後に無効化されたものも引き継いで確定し、送信中のまま残さないこと" do
+      reminder = enable!
+      stall!(reminder, at: jst.parse("2026-10-17 12:00"))
+      reminder.update_columns(enabled: false)
+
+      dispatch_at(jst.parse("2026-10-17 12:20"))
+
+      expect(reminder.reload).to be_pending
+      expect(ActionMailer::Base.deliveries).to be_empty
+    end
+
+    it "停止後15分以内の送信中は他の実行中とみなして触らないこと" do
+      reminder = enable!
+      stall!(reminder, at: jst.parse("2026-10-17 12:00"))
+
+      dispatch_at(jst.parse("2026-10-17 12:10"))
+
+      expect(reminder.reload).to be_sending
+      expect(ActionMailer::Base.deliveries).to be_empty
+    end
+
+    it "SMTPがエラー応答を返した宛先は未送信確定、応答待ちタイムアウトは結果不明として記録し、どちらも再送しないこと" do
+      reminder = enable!
+      allow_any_instance_of(ActionMailer::MessageDelivery).to receive(:deliver_now).and_wrap_original do |original, *args|
+        recipient = original.receiver.message.to.first
+        raise Net::SMTPAuthenticationError, "535 auth" if recipient == member_a.email
+        raise Net::ReadTimeout if recipient == member_b.email
+
+        original.call(*args)
+      end
+
+      dispatch_at(jst.parse("2026-10-17 12:00"))
+      dispatch_at(jst.parse("2026-10-17 12:30"))
+
+      expect(reminder.deliveries.find_by(customer: member_a).failure_reason).to start_with("[未送信確定] Net::SMTPAuthenticationError")
+      expect(reminder.deliveries.find_by(customer: member_b).failure_reason).to start_with("[結果不明] Net::ReadTimeout")
+      expect(reminder.deliveries.find_by(customer: owner)).to be_delivered
+      expect(reminder.reload).to be_sent
+      expect(EventDeadlineReminderDelivery.count).to eq 3
+    end
+
+    it "あるイベントで想定外のエラーが起きても、他のイベントのリマインドは送ること" do
+      other_event = FactoryBot.create(
+        :event, :event_with_songs,
+        customer: owner, community: community,
+        event_start_time: jst.parse("2026-10-26 18:00"),
+        event_end_time: jst.parse("2026-10-26 21:00"),
+        event_entry_deadline: jst.parse("2026-10-17 23:00")
+      )
+      broken = enable!
+      travel_to(jst.parse("2026-10-17 08:00"))
+      other_event.update!(deadline_reminders_attributes: [{ kind: "entry", enabled: "1", channel: "mail" }])
+      allow(EventDeadlineReminders::RecipientResolver).to receive(:new).and_call_original
+      allow(EventDeadlineReminders::RecipientResolver).to receive(:new).with(having_attributes(id: event.id)).and_raise(ActiveRecord::StatementInvalid, "boom")
+
+      dispatch_at(jst.parse("2026-10-17 12:00"))
+
+      expect(broken.reload).to be_failed
+      expect(broken.failure_reason).to include("boom")
+      expect(other_event.deadline_reminders.first.reload).to be_sent
+      expect(ActionMailer::Base.deliveries.size).to eq 3
+    end
+  end
 end

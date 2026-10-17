@@ -17,6 +17,11 @@ module EventDeadlineRemindersHelper
     when "failed"
       return { label: "失敗", modifier: "failed", detail: deadline_reminder_sent_detail(reminder) }
     when "sending"
+      if reminder.started_at.present? && reminder.started_at < now - EventDeadlineReminder::STALE_SENDING_AFTER
+        return { label: "送信中（停止の可能性）", modifier: "warning",
+                 detail: "送信処理が止まっている可能性があります。次回の定期実行で引き継ぎ、結果不明の宛先には再送しません" }
+      end
+
       return { label: "送信中", modifier: "sending", detail: "送信処理を実行しています" }
     end
 
