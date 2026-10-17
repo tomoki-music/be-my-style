@@ -39,6 +39,8 @@ Rails.application.routes.draw do
 
     # イベント機能
     resources :events do
+      post "deadline_reminder_preview", on: :member
+      post "deadline_reminder_preview" => "events#new_deadline_reminder_preview", on: :collection
       resources :songs, only: [:create, :destroy]
       delete "delete" => "events#delete"
     end
@@ -124,7 +126,9 @@ Rails.application.routes.draw do
       member do
         get "copy" => "events#copy"
         get "mention_candidates" => "events#mention_candidates"
+        post "deadline_reminder_preview"
       end
+      post "deadline_reminder_preview" => "events#new_deadline_reminder_preview", on: :collection
       post "join" => "events#join"
       delete "delete" => "events#delete"
       get "join_confirm" => "events#join_confirm"

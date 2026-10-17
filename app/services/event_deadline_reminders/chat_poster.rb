@@ -33,7 +33,7 @@ module EventDeadlineReminders
           chat_room: chat_room,
           community: @community,
           customer: author,
-          content: MessageBuilder.call(event: @event, kind: @reminder.kind, sent_at: @now).chat_body,
+          content: @reminder.message_snapshot!(now: @now)["chat_body"],
           content_format: :markdown,
           system_generated: true
         )

@@ -13,21 +13,22 @@ namespace :event_deadline_reminders do
 
     due = EventDeadlineReminder.includes(:event)
                                .where(enabled: true, status: EventDeadlineReminder.statuses[:pending])
-                               .where("armed_deadline > ? AND armed_deadline <= ?", now, now + EventDeadlineReminder::LEAD_TIME)
+                               .where("armed_deadline > ? AND armed_scheduled_at <= ?", now, now)
     puts "  due_now=#{due.size} (次回の定期実行で送信対象になりうる件数。送信時に再確認する)"
     due.each do |reminder|
       reason = EventDeadlineReminders::Eligibility.reason(reminder, now: now)
       puts "    reminder_id=#{reminder.id} event_id=#{reminder.event_id} kind=#{reminder.kind} channel=#{reminder.channel} " \
+           "lead_hours=#{reminder.lead_hours} custom_message=#{reminder.custom_message?} " \
            "deadline=#{jst.call(reminder.deadline)} skip_reason=#{reason || 'none'}"
     end
 
     upcoming = EventDeadlineReminder.where(enabled: true, status: EventDeadlineReminder.statuses[:pending])
-                                    .where("armed_deadline > ?", now + EventDeadlineReminder::LEAD_TIME)
-                                    .order(:armed_deadline).limit(20)
+                                    .where("armed_scheduled_at > ?", now)
+                                    .order(:armed_scheduled_at).limit(20)
     puts "  upcoming=#{upcoming.size}(最大20件)"
     upcoming.each do |reminder|
       puts "    reminder_id=#{reminder.id} event_id=#{reminder.event_id} kind=#{reminder.kind} channel=#{reminder.channel} " \
-           "scheduled_at=#{jst.call(reminder.armed_deadline - EventDeadlineReminder::LEAD_TIME)}"
+           "lead_hours=#{reminder.lead_hours} scheduled_at=#{jst.call(reminder.armed_scheduled_at)}"
     end
 
     sending = EventDeadlineReminder.where(status: EventDeadlineReminder.statuses[:sending]).order(:started_at)

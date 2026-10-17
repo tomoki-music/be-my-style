@@ -126,8 +126,12 @@ module EventDeadlineReminders
       delivery.update!(status: :failed, failure_reason: "#{label} #{error.class}: #{error.message}".truncate(250))
     end
 
+    # 配信開始時に確定した内容を全受信者に使う(送信中に本文・設定が変わっても混在しない)。
     def message
-      @message ||= MessageBuilder.call(event: @event, kind: @reminder.kind, sent_at: @now)
+      @message ||= begin
+        @reminder.message_snapshot!(now: @now)
+        @reminder.snapshot_message
+      end
     end
 
     # 開発環境は実際の Gmail SMTP 設定のため、実在ユーザーへの誤送信を防ぐ

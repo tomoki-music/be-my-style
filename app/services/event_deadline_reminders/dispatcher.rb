@@ -1,12 +1,14 @@
 module EventDeadlineReminders
   # 定期実行(bin/run_event_deadline_reminders → DispatchJob)から呼ばれ、
-  # 送信予定日時(締め切り-12時間)を過ぎていて締め切り前のリマインドを送る。
+  # 送信予定日時(締め切り-設定した時間)を過ぎていて締め切り前のリマインドを送る。
   #
   # 重複送信の防止:
   #   1. 条件付き UPDATE(pending → sending)でリマインドを確保できた1プロセスだけが処理する。
   #      sending のまま STALE_SENDING_AFTER 以上経ったもの(プロセス停止等)だけは引き継げる。
   #   2. メールは受信者ごとに送信前に履歴行を作り、(リマインド, 受信者) の一意制約で二重送信を防ぐ。
   #   3. チャットは行ロック内で「未投稿」を確認してから投稿と sent への更新を同一トランザクションで行う。
+  # 配信内容(件名・本文・配信方法)は確保後の最初の処理で message_snapshot に確定し、
+  # 停止後に引き継いだ実行も同じ内容で送る(受信者ごとに内容が混在しない)。
   # sent / failed になったリマインドは、締め切り変更・配信方法の切り替えでも自動再送しない。
   class Dispatcher
     def self.call(now: Time.current)
@@ -32,8 +34,8 @@ module EventDeadlineReminders
     # そうしないと、停止後に締め切りを過ぎた・無効化されたものが「送信中」のまま残り続ける。
     def candidate_ids
       due_ids = pending_scope
-                .where("armed_deadline > ? AND armed_deadline <= ?", @now, @now + EventDeadlineReminder::LEAD_TIME)
-                .order(:armed_deadline, :id)
+                .where("armed_deadline > ? AND armed_scheduled_at <= ?", @now, @now)
+                .order(:armed_scheduled_at, :id)
                 .pluck(:id)
       (stale_sending_scope.order(:id).pluck(:id) + due_ids).uniq
     end
@@ -68,7 +70,8 @@ module EventDeadlineReminders
         return :skipped
       end
 
-      deliverer_class = reminder.channel_chat? ? ChatPoster : MailDeliverer
+      snapshot = reminder.message_snapshot!(now: @now)
+      deliverer_class = snapshot["channel"] == "chat" ? ChatPoster : MailDeliverer
       deliverer_class.new(reminder, now: @now).call
       :processed
     rescue StandardError => e
@@ -84,7 +87,8 @@ module EventDeadlineReminders
       if reminder.deliveries.exists?
         MailDeliverer.new(reminder, now: @now).finalize!(note: Eligibility::REASON_LABELS.fetch(reason))
       else
-        reminder.update_columns(status: EventDeadlineReminder.statuses[:pending], started_at: nil, updated_at: @now)
+        reminder.update_columns(status: EventDeadlineReminder.statuses[:pending], started_at: nil,
+                                message_snapshot: nil, updated_at: @now)
       end
     end
 

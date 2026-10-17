@@ -101,7 +101,7 @@ RSpec.describe "イベントの締め切り自動リマインド設定", type: :
       get edit_public_event_path(event)
 
       expect(response.body).to include("未送信（自動送信しません）")
-      expect(response.body).to include("送信予定日時を過ぎてから有効化されたため")
+      expect(response.body).to include("送信予定日時を過ぎているため、自動送信されません（送信予定日時を過ぎてから有効化されました）")
     end
 
     it "編集権限のない一般メンバーは設定を変更できないこと" do

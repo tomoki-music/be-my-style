@@ -1,9 +1,11 @@
 class Public::EventsController < ApplicationController
+  include EventDeadlineReminderPreviewable
+
   include CsvModule
   before_action :authenticate_customer!
-  before_action :set_event, only: [:show, :edit, :update, :destroy, :copy]
-  before_action :authorize_event_creation!, only: [:new, :create]
-  before_action :authorize_event_edit!, only: [:edit, :update]
+  before_action :set_event, only: [:show, :edit, :update, :destroy, :copy, :deadline_reminder_preview]
+  before_action :authorize_event_creation!, only: [:new, :create, :new_deadline_reminder_preview]
+  before_action :authorize_event_edit!, only: [:edit, :update, :deadline_reminder_preview]
   before_action :authorize_event_destroy!, only: [:destroy]
   before_action :authorize_event_copy!, only: [:copy]
   before_action :set_song_templates, only: [:new, :create, :edit, :update]
@@ -188,6 +190,16 @@ class Public::EventsController < ApplicationController
     else
       render "edit", alert: "もう一度お試しください。"
     end
+  end
+
+  # 締め切り自動リマインドの保存前プレビュー(編集中のイベント)。保存・送信はしない。
+  def deadline_reminder_preview
+    render_deadline_reminder_preview(@event)
+  end
+
+  # 締め切り自動リマインドの保存前プレビュー(作成中のイベント)。保存・送信はしない。
+  def new_deadline_reminder_preview
+    render_deadline_reminder_preview(Event.new(community_id: params.dig(:event, :community_id)))
   end
 
   def copy
@@ -387,7 +399,7 @@ class Public::EventsController < ApplicationController
         :requested_by_customer_id,
         join_parts_attributes:[:id, :join_part_name, :_destroy]
       ],
-      deadline_reminders_attributes: [:id, :kind, :enabled, :channel],
+      deadline_reminders_attributes: [:id, :kind, :enabled, :channel, :lead_hours, :custom_message],
     )
   end
 
@@ -509,11 +521,11 @@ class Public::EventsController < ApplicationController
       end
 
     if community_param_present && community.blank?
-      redirect_to public_events_path, alert: "イベントを作成するコミュニティを確認してください。"
+      deny_event_access(public_events_path, "イベントを作成するコミュニティを確認してください。")
     elsif community&.premium_event_creation_required? && !current_customer.premium? && !current_customer.admin? && !current_customer.can_manage_community?(community)
-      redirect_to public_community_path(community), alert: premium_event_creation_required_message
+      deny_event_access(public_community_path(community), premium_event_creation_required_message)
     elsif !current_customer.can_create_event?(community)
-      redirect_to public_events_path, alert: "イベントを作成する権限がありません。"
+      deny_event_access(public_events_path, "イベントを作成する権限がありません。")
     end
   end
 
@@ -523,7 +535,16 @@ class Public::EventsController < ApplicationController
 
   def authorize_event_edit!
     unless current_customer.can_edit_event?(@event)
-      redirect_to public_events_path, alert: "このイベントを編集する権限がありません。"
+      deny_event_access(public_events_path, "このイベントを編集する権限がありません。")
+    end
+  end
+
+  # プレビューAPI(fetch)はリダイレクト先のHTMLを受け取っても扱えないため、403のJSONで返す。
+  def deny_event_access(path, message)
+    if request.format.json?
+      render json: { error: message }, status: :forbidden
+    else
+      redirect_to path, alert: message
     end
   end
 

@@ -1,46 +1,58 @@
 -# イベント作成・編集フォーム(公開画面・管理画面共通)の「締め切り自動リマインド」設定欄。
--# f はイベントのフォームビルダー。
-.deadline-reminder-settings
+-# f はイベントのフォームビルダー、preview_url は保存前プレビューの取得先(POST)。
+.deadline-reminder-settings{ data: { preview_url: preview_url } }
   %p.deadline-reminder-settings__note
-    締め切りの
-    %strong 12時間前
-    に、開催コミュニティのメンバーへお知らせを自動で送ります。日時はすべて日本時間（Asia/Tokyo）です。
+    締め切りの指定時間前に、開催コミュニティのメンバーへお知らせを自動で送ります。日時はすべて日本時間（Asia/Tokyo）です。
     %br
     自動送信は5分ごとの定期処理で行うため、送信予定日時から数分遅れることがあります。
   = f.fields_for :deadline_reminders, event.deadline_reminders_for_form do |rf|
     - reminder = rf.object
-    - status = deadline_reminder_status(reminder)
-    .deadline-reminder-settings__item{ class: "deadline-reminder-settings__item--#{reminder.kind}" }
+    - preview = EventDeadlineReminders::FormPreview.new(event: event, reminder: reminder)
+    - locked = reminder.sending?
+    - dom_prefix = "event_deadline_reminder_#{reminder.kind}"
+    .deadline-reminder-settings__item{ class: "deadline-reminder-settings__item--#{reminder.kind}", data: { reminder_kind: reminder.kind } }
       = rf.hidden_field :kind unless reminder.persisted?
       %h5.deadline-reminder-settings__title= "#{reminder.kind_label}の自動リマインド"
+      - if (locked_note = deadline_reminder_locked_note(reminder))
+        %p.deadline-reminder-settings__locked{ class: "deadline-reminder-settings__locked--#{reminder.status}" }= locked_note
       .deadline-reminder-settings__field
-        = rf.check_box :enabled, { id: "event_deadline_reminder_#{reminder.kind}_enabled" }
-        = rf.label :enabled, "有効にする", for: "event_deadline_reminder_#{reminder.kind}_enabled"
+        = rf.check_box :enabled, { id: "#{dom_prefix}_enabled", data: { reminder_field: "enabled" } }
+        = rf.label :enabled, "有効にする", for: "#{dom_prefix}_enabled"
         %span.deadline-reminder-settings__hint （#{reminder.kind_label}が未設定の場合は有効にできません）
       .deadline-reminder-settings__field
         %span.deadline-reminder-settings__label 配信方法：
         - EventDeadlineReminder::CHANNEL_LABELS.each do |channel, label|
-          - radio_id = "event_deadline_reminder_#{reminder.kind}_channel_#{channel}"
-          = rf.radio_button :channel, channel, id: radio_id
+          - radio_id = "#{dom_prefix}_channel_#{channel}"
+          = rf.radio_button :channel, channel, id: radio_id, disabled: locked, data: { reminder_field: "channel" }
           = rf.label :channel, label, for: radio_id, class: "deadline-reminder-settings__radio-label"
-      %dl.deadline-reminder-settings__status
-        %dt 送信予定日時
-        %dd
-          - if reminder.scheduled_at.present?
-            = deadline_reminder_time(reminder.scheduled_at)
-            （日本時間 / JST）
-          - else
-            締め切り未設定
-        %dt 状態
-        %dd
-          %span.deadline-reminder-settings__badge{ class: "deadline-reminder-settings__badge--#{status[:modifier]}" }= status[:label]
-          - if status[:detail].present?
-            %span.deadline-reminder-settings__detail= status[:detail]
-      - preview = deadline_reminder_preview(reminder)
-      - if preview
-        %details.deadline-reminder-settings__preview
-          %summary 送信メッセージのプレビュー（保存済みの内容で表示）
-          %p.deadline-reminder-settings__preview-subject= preview.subject
-          %pre.deadline-reminder-settings__preview-body= preview.body
-      - else
-        %p.deadline-reminder-settings__hint 締め切りを設定してイベントを保存すると、送信メッセージのプレビューを確認できます。
+      .deadline-reminder-settings__field.deadline-reminder-settings__lead
+        = rf.label :lead_hours, "締め切りの", for: "#{dom_prefix}_lead_hours"
+        = rf.number_field :lead_hours, deadline_reminder_lead_hours_options.merge(id: "#{dom_prefix}_lead_hours",
+          class: "deadline-reminder-settings__lead-input", inputmode: "numeric", disabled: locked,
+          data: { reminder_field: "lead_hours" })
+        %span 時間前に送信
+        %span.deadline-reminder-settings__hint （1〜168時間・最大7日前。初期値は12時間）
+      .deadline-reminder-settings__live{ data: { reminder_live: "status" } }
+        = render "public/events/deadline_reminder_status", preview: preview
+      .deadline-reminder-settings__message
+        = rf.label :custom_message, "送信メッセージ（本文）", for: "#{dom_prefix}_custom_message", class: "deadline-reminder-settings__label"
+        %p.deadline-reminder-settings__hint
+          空欄のときは、自動生成の文章を送ります。件名は常に自動生成です。
+          %br
+          イベント詳細ページのURLは、本文の下に共通フッターとして必ず付きます（編集欄には含まれません）。
+        .deadline-reminder-settings__actions
+          %button.btn.btn-outline-secondary.btn-sm{ type: "button", disabled: locked, data: { reminder_action: "fill_auto" } } 自動生成文を編集欄に入れる
+          %button.btn.btn-outline-secondary.btn-sm{ type: "button", disabled: locked, data: { reminder_action: "reset_auto" } } 自動生成に戻す
+        %p.deadline-reminder-settings__hint
+          「編集欄に入れる」は、その時点の文章のコピーです。あとでイベント名や日時を変えても、編集欄の文章は自動では書き換わりません。
+        = rf.text_area :custom_message, id: "#{dom_prefix}_custom_message", rows: 8, disabled: locked,
+          class: "form-control deadline-reminder-settings__textarea",
+          placeholder: "空欄のままなら自動生成の文章を送ります",
+          data: { reminder_field: "custom_message", max_length: EventDeadlineReminder::CUSTOM_MESSAGE_MAX_LENGTH }
+        %p.deadline-reminder-settings__counter{ data: { reminder_counter: true } }
+          = "#{reminder.custom_message.to_s.length.to_s(:delimited)} / #{EventDeadlineReminder::CUSTOM_MESSAGE_MAX_LENGTH.to_s(:delimited)}文字"
+      %details.deadline-reminder-settings__preview
+        %summary 送信メッセージのプレビュー（保存前の入力内容で表示）
+        .deadline-reminder-settings__live{ data: { reminder_live: "message" } }
+          = render "public/events/deadline_reminder_message", preview: preview
+        %button.btn.btn-link.btn-sm.deadline-reminder-settings__refresh{ type: "button", data: { reminder_action: "refresh" } } プレビューを更新

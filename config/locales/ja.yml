@@ -73,6 +73,10 @@ ja:
         kind: 自動リマインドの締め切り種別
         channel: 自動リマインドの配信方法
         enabled: 自動リマインド
+        lead_hours: 自動リマインドの送信タイミング
+        custom_message: 自動リマインドの送信メッセージ
+        # リマインド側で種別名入りの文言を errors.add(:base, ...) しているため、属性名を付けない。
+        base: ""
     errors:
       messages:
         record_invalid: 'バリデーションに失敗しました: %{errors}'

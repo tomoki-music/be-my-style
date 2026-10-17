@@ -1,0 +1,22 @@
+-# 送信予定日時と状態。初期表示とプレビューAPI(保存前の入力内容)で共用する。
+- reminder = preview.reminder
+- status = deadline_reminder_status(preview.status_reminder)
+%dl.deadline-reminder-settings__status
+  %dt 送信予定日時
+  %dd
+    - if reminder.deadline.blank?
+      締め切り未設定
+    - elsif preview.scheduled_at.blank?
+      送信タイミングを確認してください
+    - else
+      = deadline_reminder_time(preview.scheduled_at)
+      （日本時間 / JST）
+  %dt 状態
+  %dd
+    %span.deadline-reminder-settings__badge{ class: "deadline-reminder-settings__badge--#{status[:modifier]}" }= status[:label]
+    - if status[:detail].present?
+      %span.deadline-reminder-settings__detail= status[:detail]
+- if reminder.errors.any?
+  %ul.deadline-reminder-settings__errors
+    - reminder.errors.full_messages.each do |message|
+      %li= message
