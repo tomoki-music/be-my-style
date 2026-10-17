@@ -64,6 +64,11 @@
               = f.datetime_field :request_deadline, style: "width:260px"
           %tr
             %th{scope:"row"}
+              締め切り自動リマインド
+            %td
+              = render 'public/events/deadline_reminder_fields', f: f, event: event
+          %tr
+            %th{scope:"row"}
               参加費用
               %i.text-red
                 (必須)

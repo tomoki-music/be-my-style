@@ -40,6 +40,10 @@
           = f.label :event_image, "イベント画像"
           = f.file_field :event_image, class: "form-control-file"
 
+      .form-group
+        %label 締め切り自動リマインド
+        = render 'public/events/deadline_reminder_fields', f: f, event: @event
+
       .form-row
         .form-group.col-md-6
           = f.label :place, "開催場所"

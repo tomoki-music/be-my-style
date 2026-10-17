@@ -387,6 +387,7 @@ class Public::EventsController < ApplicationController
         :requested_by_customer_id,
         join_parts_attributes:[:id, :join_part_name, :_destroy]
       ],
+      deadline_reminders_attributes: [:id, :kind, :enabled, :channel],
     )
   end
 
