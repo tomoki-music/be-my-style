@@ -24,7 +24,7 @@
   - 有効、締め切りあり、未送信（pending）
   - 送信予定日時 ≤ 現在 < 締め切り
   - イベント開始前
-  - **armed**: 有効化・締め切り変更・送信タイミング変更の時点で送信予定がまだ未来だった（`armed_deadline` / `armed_scheduled_at` が現在の締め切り・送信予定日時と一致）
+  - **armed**: 有効化・締め切り変更・送信タイミング変更の時点で送信予定がまだ未来だった（`armed_deadline` / `armed_lead_hours` が現在の締め切り・送信タイミングと一致。送信予定日時 = `armed_deadline − armed_lead_hours`）
 - 何が変わったかの判定は `Event#deadline_reminder_schedule_change` に共通化（有効化 > 締め切り > 送信タイミングの順）。保存時（`after_save`）とプレビュー（保存前の値）で同じ判定を使う
 
 | ケース | 挙動 |
@@ -119,10 +119,11 @@ RAILS_ENV=production DISABLE_SPRING=1 ~/.rbenv/shims/bundle exec rails event_dea
 ## 送信タイミング・本文編集の導入（2026-10 追加分）
 
 - マイグレーション `20261018000000_add_lead_hours_and_custom_message_to_event_deadline_reminders` 1件
-  - `lead_hours`（integer, NOT NULL, default 12）、`custom_message`（text）、`armed_scheduled_at`（datetime）、`message_snapshot`（text）を追加
-  - 既存行は 12時間・本文未設定（自動生成）になる。`armed_deadline` がある行だけ `armed_scheduled_at = armed_deadline − 12時間` を記録する。`enabled` / `status` / 送信済み情報は変更しない
+  - `lead_hours`（integer, NOT NULL, default 12）、`custom_message`（text）、`armed_lead_hours`（integer, NOT NULL, default 12）、`message_snapshot`（text）を追加する。**列の追加だけで、既存行の値は書き換えない**
+  - 既存行は既定値により 12時間・本文未設定（自動生成）・送信待ちは12時間前として扱われる。`enabled` / `status` / `armed_deadline` / 送信済み情報は変わらない
+  - マイグレーション後〜Puma再起動前に旧コードが有効化・締め切り変更しても、新しい列は既定値12のままなので、12時間前の送信予定として正しく扱われる
+  - デプロイは「git reset → precompile（数分）→ migrate → Puma再起動」の順。マイグレーション未適用の間の定期実行は `DispatchJob` が何もせず正常終了する（ログに `skip: pending migrations`）。予定を過ぎた分は適用後の次回実行で回収される
 - cron（`bin/run_event_deadline_reminders`、5分ごと）の変更は不要
-- 反映順: マージ → CI/CD（migrate → precompile → Puma 再起動）。migrate 前に新コードの cron が動くとその回だけ失敗するが、次の5分後の実行で回収される
 - 反映後の確認（read-only）: `rails event_deadline_reminders:status`（`due_now` / `upcoming` に `lead_hours` が出る）
 
 ## 本番の定期実行設定（2026-10-17 登録済み）

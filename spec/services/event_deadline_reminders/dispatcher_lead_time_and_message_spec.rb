@@ -117,6 +117,26 @@ RSpec.describe EventDeadlineReminders::Dispatcher, "送信タイミング・送�
     end
   end
 
+  describe "デプロイ中の定期実行" do
+    it "マイグレーション未適用の間は何もせず正常終了し、適用後の実行で予定を過ぎた分を回収すること" do
+      reminder = enable!
+      travel_to(jst.parse("2026-10-17 12:00"))
+      context = ActiveRecord::Base.connection.migration_context
+      allow(ActiveRecord::Base.connection).to receive(:migration_context).and_return(context)
+      allow(context).to receive(:needs_migration?).and_return(true)
+
+      expect(EventDeadlineReminders::DispatchJob.perform_now).to eq(skipped: :pending_migrations)
+      expect(reminder.reload).to be_pending
+      expect(ActionMailer::Base.deliveries).to be_empty
+
+      allow(context).to receive(:needs_migration?).and_return(false)
+      travel_to(jst.parse("2026-10-17 12:05"))
+      EventDeadlineReminders::DispatchJob.perform_now
+
+      expect(reminder.reload).to be_sent
+    end
+  end
+
   describe "送信メッセージ" do
     it "カスタム本文をメールで送り、件名は自動生成のまま、共通フッターのURLを付けること" do
       enable!(custom_message: "今週末が締め切りです🎸\n\n迷っている方もぜひ！")
@@ -201,6 +221,30 @@ RSpec.describe EventDeadlineReminders::Dispatcher, "送信タイミング・送�
       texts = ActionMailer::Base.deliveries.map { |mail| mail_text(mail) }
       expect(texts.size).to eq 3
       expect(texts).to all(include("最初の本文"))
+    end
+
+    it "送信中に画面から無効化すると残りの受信者への送信を中断し、本文などの変更は拒否されること" do
+      reminder = enable!(custom_message: "中断テスト")
+      original = EventDeadlineReminderMailer.method(:with)
+      results = []
+      allow(EventDeadlineReminderMailer).to receive(:with) do |params|
+        if results.empty?
+          editing = Event.find(event.id)
+          results << editing.update(deadline_reminders_attributes: [{ id: reminder.id, custom_message: "途中で変更" }])
+          editing = Event.find(event.id)
+          results << editing.update(deadline_reminders_attributes: [{ id: reminder.id, enabled: "0" }])
+        end
+        original.call(params)
+      end
+
+      dispatch_at(jst.parse("2026-10-17 12:00"))
+
+      expect(results).to eq [false, true]
+      expect(ActionMailer::Base.deliveries.size).to eq 1
+      reminder.reload
+      expect(reminder).to be_sent
+      expect(reminder.custom_message).to eq "中断テスト"
+      expect(reminder.failure_reason).to include("無効化されたため、送信を中断しました")
     end
 
     it "確保後に送れないと分かり未送信へ戻した場合は、確定した本文を破棄すること" do

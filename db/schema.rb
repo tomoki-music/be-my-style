@@ -447,7 +447,7 @@ ActiveRecord::Schema.define(version: 2026_10_18_000000) do
     t.datetime "updated_at", precision: 6, null: false
     t.integer "lead_hours", default: 12, null: false
     t.text "custom_message"
-    t.datetime "armed_scheduled_at"
+    t.integer "armed_lead_hours", default: 12, null: false
     t.text "message_snapshot"
     t.index ["chat_message_id"], name: "index_event_deadline_reminders_on_chat_message_id"
     t.index ["enabled", "status", "armed_deadline"], name: "index_event_deadline_reminders_on_dispatch"

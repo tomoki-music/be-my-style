@@ -33,11 +33,20 @@ module EventDeadlineReminders
     # 有効/無効に関係なく拾う(引き継いだ後の再確認で送れなければ結果を確定する)。
     # そうしないと、停止後に締め切りを過ぎた・無効化されたものが「送信中」のまま残り続ける。
     def candidate_ids
-      due_ids = pending_scope
-                .where("armed_deadline > ? AND armed_scheduled_at <= ?", @now, @now)
-                .order(:armed_scheduled_at, :id)
-                .pluck(:id)
       (stale_sending_scope.order(:id).pluck(:id) + due_ids).uniq
+    end
+
+    # 送信予定日時(armed_deadline - armed_lead_hours)はDB間で同じSQLにしにくいため、
+    # 送信予定がありうる範囲(最大168時間前)を絞り込んでから Ruby で判定する(件数は少ない)。
+    def due_ids
+      max_lead = EventDeadlineReminder::LEAD_HOURS_RANGE.max.hours
+      pending_scope
+        .where("armed_deadline > ? AND armed_deadline <= ?", @now, @now + max_lead)
+        .pluck(:id, :armed_deadline, :armed_lead_hours)
+        .map { |id, deadline, lead_hours| [deadline - lead_hours.hours, id] }
+        .select { |scheduled_at, _id| scheduled_at <= @now }
+        .sort
+        .map(&:last)
     end
 
     def pending_scope

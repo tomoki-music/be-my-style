@@ -11,9 +11,11 @@ namespace :event_deadline_reminders do
     puts "  enabled_by_status=#{EventDeadlineReminder.where(enabled: true).group(:status).count}"
     puts "  all_by_status=#{EventDeadlineReminder.group(:status).count}"
 
-    due = EventDeadlineReminder.includes(:event)
-                               .where(enabled: true, status: EventDeadlineReminder.statuses[:pending])
-                               .where("armed_deadline > ? AND armed_scheduled_at <= ?", now, now)
+    armed = EventDeadlineReminder.includes(:event)
+                                 .where(enabled: true, status: EventDeadlineReminder.statuses[:pending])
+                                 .where("armed_deadline > ?", now)
+                                 .order(:armed_deadline).to_a
+    due = armed.select { |reminder| reminder.armed_scheduled_at <= now }
     puts "  due_now=#{due.size} (次回の定期実行で送信対象になりうる件数。送信時に再確認する)"
     due.each do |reminder|
       reason = EventDeadlineReminders::Eligibility.reason(reminder, now: now)
@@ -22,13 +24,12 @@ namespace :event_deadline_reminders do
            "deadline=#{jst.call(reminder.deadline)} skip_reason=#{reason || 'none'}"
     end
 
-    upcoming = EventDeadlineReminder.where(enabled: true, status: EventDeadlineReminder.statuses[:pending])
-                                    .where("armed_scheduled_at > ?", now)
-                                    .order(:armed_scheduled_at).limit(20)
+    upcoming = armed.select { |reminder| reminder.armed_scheduled_at > now }.sort_by(&:armed_scheduled_at).first(20)
     puts "  upcoming=#{upcoming.size}(最大20件)"
     upcoming.each do |reminder|
       puts "    reminder_id=#{reminder.id} event_id=#{reminder.event_id} kind=#{reminder.kind} channel=#{reminder.channel} " \
-           "lead_hours=#{reminder.lead_hours} scheduled_at=#{jst.call(reminder.armed_scheduled_at)}"
+           "lead_hours=#{reminder.lead_hours} armed_lead_hours=#{reminder.armed_lead_hours} " \
+           "custom_message=#{reminder.custom_message?} scheduled_at=#{jst.call(reminder.armed_scheduled_at)}"
     end
 
     sending = EventDeadlineReminder.where(status: EventDeadlineReminder.statuses[:sending]).order(:started_at)

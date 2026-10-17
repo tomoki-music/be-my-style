@@ -87,8 +87,13 @@ class EventDeadlineReminder < ApplicationRecord
   # 現在の締め切り・送信タイミングに対して送信待ちの状態か(定期実行で送られうるか)。
   # どちらかが記録時から変わっていれば送らない。
   def armed?
-    enabled? && scheduled_at.present? && armed_deadline.present? && armed_scheduled_at.present? &&
-      armed_deadline.to_i == deadline.to_i && armed_scheduled_at.to_i == scheduled_at.to_i
+    enabled? && scheduled_at.present? && armed_deadline.present? &&
+      armed_deadline.to_i == deadline.to_i && armed_lead_hours == lead_hours
+  end
+
+  # 送信待ちとして記録した送信予定日時(定期実行が送信対象を選ぶ基準)。
+  def armed_scheduled_at
+    armed_deadline && armed_lead_hours && (armed_deadline - armed_lead_hours.hours)
   end
 
   # 有効化・締め切り変更・送信タイミング変更・保存のたびに呼ぶ。送信予定日時がまだ未来の
@@ -102,13 +107,13 @@ class EventDeadlineReminder < ApplicationRecord
     return unless pending?
 
     if !enabled? || scheduled_at.blank?
-      assign_attributes(armed_deadline: nil, armed_scheduled_at: nil, disarm_reason: nil)
+      assign_attributes(armed_deadline: nil, disarm_reason: nil)
     elsif armed?
       self.disarm_reason = nil
     elsif scheduled_at > now
-      assign_attributes(armed_deadline: deadline, armed_scheduled_at: scheduled_at, disarm_reason: nil)
+      assign_attributes(armed_deadline: deadline, armed_lead_hours: lead_hours, disarm_reason: nil)
     else
-      assign_attributes(armed_deadline: nil, armed_scheduled_at: nil, disarm_reason: disarm_reason_for(change))
+      assign_attributes(armed_deadline: nil, disarm_reason: disarm_reason_for(change))
     end
   end
 

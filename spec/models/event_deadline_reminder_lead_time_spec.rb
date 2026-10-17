@@ -45,24 +45,51 @@ RSpec.describe EventDeadlineReminder, "送信タイミングと送信メッセ�
       sent.update_columns(status: EventDeadlineReminder.statuses[:sent], sent_at: Time.current)
       migration = AddLeadHoursAndCustomMessageToEventDeadlineReminders.new
 
+      before_rows = EventDeadlineReminder.order(:id).pluck(:id, :enabled, :status, :armed_deadline, :disarm_reason, :sent_at)
+
       ActiveRecord::Migration.suppress_messages do
         migration.migrate(:down)
         EventDeadlineReminder.reset_column_information
-        # 導入前の状態(armed_deadline のみ記録)を再現してから up する。
-        EventDeadlineReminder.where(id: armed.id).update_all(armed_deadline: event.event_entry_deadline)
         migration.migrate(:up)
       end
       EventDeadlineReminder.reset_column_information
 
+      expect(EventDeadlineReminder.order(:id).pluck(:id, :enabled, :status, :armed_deadline, :disarm_reason, :sent_at)).to eq before_rows
       armed = EventDeadlineReminder.find(armed.id)
       sent = EventDeadlineReminder.find(sent.id)
-      expect([armed.lead_hours, sent.lead_hours]).to eq [12, 12]
+      expect([armed.lead_hours, sent.lead_hours, armed.armed_lead_hours]).to eq [12, 12, 12]
+      expect([armed.custom_message, sent.custom_message, armed.message_snapshot]).to eq [nil, nil, nil]
       expect(armed.armed_scheduled_at).to eq jst.parse("2026-10-17 11:59")
       expect(armed).to be_enabled
       expect(armed).to be_pending
       expect(armed).to be_armed
       expect(sent).to be_sent
       expect(sent).to be_enabled
+    end
+  end
+
+  describe "デプロイ中(マイグレーション後〜Puma再起動前)の旧コードとの互換" do
+    it "旧コードが送信予定の締め切りだけを書き換えても、12時間前の送信予定として扱うこと" do
+      reminder = enable!("entry")
+      new_deadline = jst.parse("2026-10-20 20:00")
+      # 旧コードは armed_deadline だけを更新し、新しい列は既定値(12)のまま残る。
+      event.update_columns(event_entry_deadline: new_deadline)
+      reminder.update_columns(armed_deadline: new_deadline)
+
+      reminder = EventDeadlineReminder.find(reminder.id)
+      expect(reminder).to be_armed
+      expect(reminder.armed_scheduled_at).to eq jst.parse("2026-10-20 08:00")
+    end
+
+    it "旧コードが新しい列を指定せずに作成した行は、12時間前・自動生成文になること" do
+      columns = %w[event_id kind enabled channel armed_deadline status delivered_count failed_count created_at updated_at]
+      EventDeadlineReminder.insert_all!([
+        columns.zip([event.id, 1, true, 0, event.event_entry_deadline, 0, 0, 0, Time.current, Time.current]).to_h
+      ])
+
+      reminder = EventDeadlineReminder.last
+      expect([reminder.lead_hours, reminder.armed_lead_hours, reminder.custom_message]).to eq [12, 12, nil]
+      expect(reminder).to be_armed
     end
   end
 
