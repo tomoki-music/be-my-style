@@ -69,6 +69,10 @@ ja:
         request_deadline: リクエスト締切日
       event/songs:
         song_name: 曲名
+      event/deadline_reminders:
+        kind: 自動リマインドの締め切り種別
+        channel: 自動リマインドの配信方法
+        enabled: 自動リマインド
     errors:
       messages:
         record_invalid: 'バリデーションに失敗しました: %{errors}'

@@ -518,6 +518,18 @@
     color: #999;
   }
 
+  /* システムの自動投稿(締め切りリマインド等)であることを示すバッジ */
+  .chat-system-badge {
+    display: inline-block;
+    margin: 4px 0;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #fff4e0;
+    color: #8a5a00;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
   /* 「ピン留め済み」バッジ。edited-labelより視認性を上げ、重要なメッセージだと
      一目でわかるようにする */
   .pinned-label {

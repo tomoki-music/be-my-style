@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_10_12_010000) do
+ActiveRecord::Schema.define(version: 2026_10_17_000200) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -171,6 +171,7 @@ ActiveRecord::Schema.define(version: 2026_10_12_010000) do
     t.integer "replies_count", default: 0, null: false
     t.bigint "quoted_chat_message_id"
     t.datetime "edited_at"
+    t.boolean "system_generated", default: false, null: false
     t.index ["chat_room_id"], name: "index_chat_messages_on_chat_room_id"
     t.index ["community_id"], name: "index_chat_messages_on_community_id"
     t.index ["customer_id"], name: "index_chat_messages_on_customer_id"
@@ -412,6 +413,41 @@ ActiveRecord::Schema.define(version: 2026_10_12_010000) do
     t.index ["join_part_id"], name: "index_entry_invitations_on_join_part_id"
     t.index ["requested_by_customer_id"], name: "index_entry_invitations_on_requested_by_customer_id"
     t.index ["song_id"], name: "index_entry_invitations_on_song_id"
+  end
+
+  create_table "event_deadline_reminder_deliveries", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "event_deadline_reminder_id", null: false
+    t.bigint "customer_id", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "delivered_at"
+    t.string "failure_reason"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_event_deadline_reminder_deliveries_on_customer_id"
+    t.index ["event_deadline_reminder_id", "customer_id"], name: "index_event_deadline_reminder_deliveries_on_reminder_customer", unique: true
+  end
+
+  create_table "event_deadline_reminders", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.integer "kind", null: false
+    t.boolean "enabled", default: false, null: false
+    t.integer "channel", default: 0, null: false
+    t.datetime "armed_deadline"
+    t.integer "disarm_reason"
+    t.integer "status", default: 0, null: false
+    t.datetime "started_at"
+    t.datetime "sent_at"
+    t.integer "sent_channel"
+    t.datetime "sent_for_deadline"
+    t.bigint "chat_message_id"
+    t.integer "delivered_count", default: 0, null: false
+    t.integer "failed_count", default: 0, null: false
+    t.string "failure_reason"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["chat_message_id"], name: "index_event_deadline_reminders_on_chat_message_id"
+    t.index ["enabled", "status", "armed_deadline"], name: "index_event_deadline_reminders_on_dispatch"
+    t.index ["event_id", "kind"], name: "index_event_deadline_reminders_on_event_id_and_kind", unique: true
   end
 
   create_table "events", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1405,6 +1441,10 @@ ActiveRecord::Schema.define(version: 2026_10_12_010000) do
   add_foreign_key "entry_invitations", "events"
   add_foreign_key "entry_invitations", "join_parts"
   add_foreign_key "entry_invitations", "songs"
+  add_foreign_key "event_deadline_reminder_deliveries", "customers", on_delete: :cascade
+  add_foreign_key "event_deadline_reminder_deliveries", "event_deadline_reminders"
+  add_foreign_key "event_deadline_reminders", "chat_messages", on_delete: :nullify
+  add_foreign_key "event_deadline_reminders", "events"
   add_foreign_key "events", "communities"
   add_foreign_key "events", "customers"
   add_foreign_key "favorites", "activities"

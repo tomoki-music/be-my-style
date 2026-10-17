@@ -21,8 +21,10 @@ class Event < ApplicationRecord
   has_many :requests, dependent: :destroy
   belongs_to :customer
   belongs_to :community
+  has_many :deadline_reminders, class_name: "EventDeadlineReminder", dependent: :destroy, inverse_of: :event
 
   accepts_nested_attributes_for :songs, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :deadline_reminders
 
   # 「終了していない」イベント(開催中を含む)。#status_keyの:ended判定
   # (event_end_time <= now)と揃え、event_end_time > nowを終了していない条件とする。
@@ -46,14 +48,51 @@ class Event < ApplicationRecord
   # 既存イベントの投稿者が退会・論理削除された後の無関係な更新まで
   # 巻き込んで保存不能にしないため(退会後も履歴として表示し続ける方針)。
   validate :customer_must_be_active, if: :will_save_change_to_customer_id?
+  validate :enabled_deadline_reminders_require_deadline
+
+  # autosave(nested attributes)によるリマインド保存の後に走らせるため、
+  # has_many/accepts_nested_attributes_for より後ろで after_save として宣言する。
+  after_save :sync_deadline_reminder_arming
 
   private
+
+  def enabled_deadline_reminders_require_deadline
+    deadline_reminders.each do |reminder|
+      next if reminder.marked_for_destruction? || !reminder.enabled?
+      next if reminder.deadline.present?
+
+      errors.add(:base, "#{reminder.kind_label}が未設定のため、#{reminder.kind_label}の自動リマインドは有効にできません")
+    end
+  end
+
+  def sync_deadline_reminder_arming
+    now = Time.current
+    deadline_reminders.each do |reminder|
+      next unless reminder.persisted?
+
+      # 今回の保存で有効化した場合は「有効化が遅かった」扱いを優先する(新規作成時も同様)。
+      deadline_changed = !reminder.saved_change_to_enabled? &&
+        (reminder.kind_request? ? saved_change_to_request_deadline? : saved_change_to_event_entry_deadline?)
+      reminder.sync_arming(now: now, deadline_changed: deadline_changed)
+      reminder.save! if reminder.changed?
+    end
+  end
 
   def customer_must_be_active
     errors.add(:customer, "は退会済みのため設定できません") if customer.present? && customer.is_deleted?
   end
 
   public
+
+  # 作成・編集フォーム用に、締め切り種別ごとのリマインド設定を(未作成なら未保存で)揃えて返す。
+  def deadline_reminders_for_form
+    EventDeadlineReminder.kinds.keys.map { |kind| deadline_reminder_for(kind) }
+  end
+
+  def deadline_reminder_for(kind)
+    deadline_reminders.detect { |reminder| reminder.kind == kind.to_s } ||
+      deadline_reminders.build(kind: kind)
+  end
 
   def participation_records_for(customer)
     JoinPartCustomer

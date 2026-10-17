@@ -1,0 +1,18 @@
+%p #{@recipient.name}さん
+%p
+  - @message.body.split("\n").each do |line|
+    - if line == @event_url
+      = link_to line, line
+    - else
+      = line
+    %br
+%hr
+%p
+  ※このメールは、イベント主催者が設定した締め切りの自動リマインドとして、
+  コミュニティ「#{@event.community.name}」のメンバーの皆さまへお送りしています。
+%p
+  Thank you for using BeMyStyle🎵
+%p
+  メール通知の停止は「マイページ」より設定変更いただけます。
+  %br
+  = link_to @mypage, @mypage

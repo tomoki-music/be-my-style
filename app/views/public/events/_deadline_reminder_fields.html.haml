@@ -1,0 +1,46 @@
+-# イベント作成・編集フォーム(公開画面・管理画面共通)の「締め切り自動リマインド」設定欄。
+-# f はイベントのフォームビルダー。
+.deadline-reminder-settings
+  %p.deadline-reminder-settings__note
+    締め切りの
+    %strong 12時間前
+    に、開催コミュニティのメンバーへお知らせを自動で送ります。日時はすべて日本時間（Asia/Tokyo）です。
+    %br
+    自動送信は5分ごとの定期処理で行うため、送信予定日時から数分遅れることがあります。
+  = f.fields_for :deadline_reminders, event.deadline_reminders_for_form do |rf|
+    - reminder = rf.object
+    - status = deadline_reminder_status(reminder)
+    .deadline-reminder-settings__item{ class: "deadline-reminder-settings__item--#{reminder.kind}" }
+      = rf.hidden_field :kind unless reminder.persisted?
+      %h5.deadline-reminder-settings__title= "#{reminder.kind_label}の自動リマインド"
+      .deadline-reminder-settings__field
+        = rf.check_box :enabled, { id: "event_deadline_reminder_#{reminder.kind}_enabled" }
+        = rf.label :enabled, "有効にする", for: "event_deadline_reminder_#{reminder.kind}_enabled"
+        %span.deadline-reminder-settings__hint （#{reminder.kind_label}が未設定の場合は有効にできません）
+      .deadline-reminder-settings__field
+        %span.deadline-reminder-settings__label 配信方法：
+        - EventDeadlineReminder::CHANNEL_LABELS.each do |channel, label|
+          - radio_id = "event_deadline_reminder_#{reminder.kind}_channel_#{channel}"
+          = rf.radio_button :channel, channel, id: radio_id
+          = rf.label :channel, label, for: radio_id, class: "deadline-reminder-settings__radio-label"
+      %dl.deadline-reminder-settings__status
+        %dt 送信予定日時
+        %dd
+          - if reminder.scheduled_at.present?
+            = deadline_reminder_time(reminder.scheduled_at)
+            （日本時間 / JST）
+          - else
+            締め切り未設定
+        %dt 状態
+        %dd
+          %span.deadline-reminder-settings__badge{ class: "deadline-reminder-settings__badge--#{status[:modifier]}" }= status[:label]
+          - if status[:detail].present?
+            %span.deadline-reminder-settings__detail= status[:detail]
+      - preview = deadline_reminder_preview(reminder)
+      - if preview
+        %details.deadline-reminder-settings__preview
+          %summary 送信メッセージのプレビュー（保存済みの内容で表示）
+          %p.deadline-reminder-settings__preview-subject= preview.subject
+          %pre.deadline-reminder-settings__preview-body= preview.body
+      - else
+        %p.deadline-reminder-settings__hint 締め切りを設定してイベントを保存すると、送信メッセージのプレビューを確認できます。

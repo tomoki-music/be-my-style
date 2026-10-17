@@ -1,0 +1,127 @@
+// イベント作成・編集フォームの「締め切り自動リマインド」設定欄(公開画面・管理画面共通)
+.deadline-reminder-settings {
+  &__note {
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: #555;
+  }
+
+  &__item {
+    margin-bottom: 16px;
+    padding: 12px;
+    border: 1px solid #e3e3e3;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  &__title {
+    margin-bottom: 8px;
+    font-size: 15px;
+    font-weight: bold;
+  }
+
+  &__field {
+    margin-bottom: 8px;
+
+    input[type="checkbox"],
+    input[type="radio"] {
+      margin-right: 4px;
+    }
+  }
+
+  &__label {
+    margin-right: 8px;
+  }
+
+  &__radio-label {
+    margin-right: 16px;
+  }
+
+  &__hint {
+    font-size: 12px;
+    color: #777;
+  }
+
+  &__status {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 4px 12px;
+    margin: 8px 0;
+    font-size: 13px;
+
+    dt {
+      font-weight: bold;
+    }
+
+    dd {
+      margin: 0;
+    }
+  }
+
+  &__badge {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: bold;
+    background: #eee;
+    color: #555;
+
+    &--pending {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    &--sending {
+      background: #fff8e1;
+      color: #8d6e00;
+    }
+
+    &--sent {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    &--warning {
+      background: #fff3e0;
+      color: #b45f06;
+    }
+
+    &--failed {
+      background: #ffebee;
+      color: #c62828;
+    }
+  }
+
+  &__detail {
+    font-size: 12px;
+    color: #555;
+  }
+
+  &__preview {
+    margin-top: 8px;
+
+    summary {
+      cursor: pointer;
+      font-size: 13px;
+      color: #1565c0;
+    }
+  }
+
+  &__preview-subject {
+    margin: 8px 0 4px;
+    font-weight: bold;
+  }
+
+  &__preview-body {
+    max-width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    background: #f7f7f7;
+    font-family: inherit;
+    font-size: 13px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}

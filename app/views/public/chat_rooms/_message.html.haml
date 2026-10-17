@@ -16,6 +16,8 @@
             = customer_avatar_tag(chat_message.customer, show_active_status: false)
           .name-element
             = chat_message.customer.name + 'さんのメッセージ'
+      - if chat_message.system_generated?
+        %span.chat-system-badge 🔔 自動お知らせ
       %li
       - unless in_thread
         = render "public/chat_rooms/reply_source_card", chat_message: chat_message
@@ -102,6 +104,8 @@
           = customer_avatar_tag(chat_message.customer, show_active_status: false)
         .name-element
           = chat_message.customer.name + 'さんのメッセージ'
+      - if chat_message.system_generated?
+        %span.chat-system-badge 🔔 自動お知らせ
       %li
       - unless in_thread
         = render "public/chat_rooms/reply_source_card", chat_message: chat_message
