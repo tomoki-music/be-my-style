@@ -1,8 +1,10 @@
 class Admin::EventsController < ApplicationController
+  include EventDeadlineReminderPreviewable
+
   skip_before_action :authenticate_customer!
   skip_before_action :ensure_music_domain_access_for_public_routes!
   before_action :authenticate_admin!
-  before_action :set_event, only: [:show, :edit, :update, :destroy]
+  before_action :set_event, only: [:show, :edit, :update, :destroy, :deadline_reminder_preview]
   before_action :set_song_templates, only: [:new, :create, :edit, :update]
   before_action :set_requested_by_customer_candidates, only: [:new, :create, :edit, :update]
 
@@ -34,6 +36,15 @@ class Admin::EventsController < ApplicationController
       ensure_song_presence
       render :new
     end
+  end
+
+  # 締め切り自動リマインドの保存前プレビュー。保存・送信はしない。
+  def deadline_reminder_preview
+    render_deadline_reminder_preview(@event)
+  end
+
+  def new_deadline_reminder_preview
+    render_deadline_reminder_preview(Event.new(community_id: params.dig(:event, :community_id)))
   end
 
   def edit
@@ -92,7 +103,7 @@ class Admin::EventsController < ApplicationController
         :requested_by_customer_id,
         join_parts_attributes: [:id, :join_part_name, :_destroy]
       ],
-      deadline_reminders_attributes: [:id, :kind, :enabled, :channel],
+      deadline_reminders_attributes: [:id, :kind, :enabled, :channel, :lead_hours, :custom_message],
     )
   end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_10_17_000200) do
+ActiveRecord::Schema.define(version: 2026_10_18_000000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -445,6 +445,10 @@ ActiveRecord::Schema.define(version: 2026_10_17_000200) do
     t.string "failure_reason"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.integer "lead_hours", default: 12, null: false
+    t.text "custom_message"
+    t.integer "armed_lead_hours", default: 12, null: false
+    t.text "message_snapshot"
     t.index ["chat_message_id"], name: "index_event_deadline_reminders_on_chat_message_id"
     t.index ["enabled", "status", "armed_deadline"], name: "index_event_deadline_reminders_on_dispatch"
     t.index ["event_id", "kind"], name: "index_event_deadline_reminders_on_event_id_and_kind", unique: true

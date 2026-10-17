@@ -112,4 +112,49 @@ RSpec.describe EventDeadlineReminders::MessageBuilder do
       expect(message.chat_body.lines.first.strip).to start_with("**【本日締め切り🎸】")
     end
   end
+
+  describe "共通フッターとカスタム本文" do
+    let(:url) { "https://be-my-style.com/public/events/#{event.id}" }
+    let(:sent_at) { jst.parse("2026-10-17 11:59") }
+
+    it "自動生成文ではイベントURLを共通フッターとして1回だけ付けること" do
+      message = build(kind: :entry, sent_at: sent_at)
+
+      expect(message.body.scan(url).size).to eq 1
+      expect(message.body).to end_with("▼イベント詳細・エントリーはこちら\n#{url}")
+      expect(message.main_body).to eq message.auto_body
+      expect(message.auto_body).not_to include(url)
+      expect(message.chat_body.scan(url).size).to eq 1
+    end
+
+    it "カスタム本文があればその文章を使い、URLを消していてもフッターでURLを付けること" do
+      message = described_class.call(event: event, kind: :request, sent_at: sent_at, custom_message: "リクエスト待ってます！")
+
+      expect(message.body).to eq "リクエスト待ってます！\n\n▼イベント詳細・リクエストはこちら\n#{url}"
+      expect(message.subject).to eq build(kind: :request, sent_at: sent_at).subject
+      expect(message.auto_body).to eq build(kind: :request, sent_at: sent_at).auto_body
+    end
+
+    it "空白だけのカスタム本文は自動生成に戻ること" do
+      message = described_class.call(event: event, kind: :entry, sent_at: sent_at, custom_message: " \n\u3000")
+
+      expect(message.body).to eq build(kind: :entry, sent_at: sent_at).body
+    end
+
+    it "カスタム本文の改行・絵文字を保持し、チャットではHTML風の文字列やMarkdown記号を文字として表示すること" do
+      custom = "# 見出しではない\n- リストではない\n<script>alert(1)</script>🎸\n詳しくは https://example.com/a_b_c を見てね"
+      message = described_class.call(event: event, kind: :entry, sent_at: sent_at, custom_message: custom)
+
+      expect(message.body).to start_with(custom)
+      html = Chat::MarkdownRenderer.call(message.chat_body)
+      expect(html).not_to include("<script")
+      expect(html).not_to include("<h1")
+      expect(html).not_to include("<li")
+      expect(html).to include("🎸")
+      expect(html).to include("<br>")
+      expect(html).to include('href="https://example.com/a_b_c"')
+      expect(html).to include(%(href="#{url}"))
+      expect(message.chat_body).not_to include("**【")
+    end
+  end
 end

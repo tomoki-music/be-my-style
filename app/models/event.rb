@@ -70,10 +70,7 @@ class Event < ApplicationRecord
     deadline_reminders.each do |reminder|
       next unless reminder.persisted?
 
-      # 今回の保存で有効化した場合は「有効化が遅かった」扱いを優先する(新規作成時も同様)。
-      deadline_changed = !reminder.saved_change_to_enabled? &&
-        (reminder.kind_request? ? saved_change_to_request_deadline? : saved_change_to_event_entry_deadline?)
-      reminder.sync_arming(now: now, deadline_changed: deadline_changed)
+      reminder.sync_arming(now: now, change: deadline_reminder_schedule_change(reminder, saved: true))
       reminder.save! if reminder.changed?
     end
   end
@@ -92,6 +89,21 @@ class Event < ApplicationRecord
   def deadline_reminder_for(kind)
     deadline_reminders.detect { |reminder| reminder.kind == kind.to_s } ||
       deadline_reminders.build(kind: kind)
+  end
+
+  # リマインドの送信予定日時に影響する変更のうち、今回の保存(saved: true)または
+  # 保存前の入力(saved: false。プレビュー用)で何が変わったかを返す。
+  # 有効化を最優先し(新規作成時も同様)、次に締め切り、送信タイミングの順に見る。
+  def deadline_reminder_schedule_change(reminder, saved:)
+    changed = lambda do |record, attribute|
+      saved ? record.saved_change_to_attribute?(attribute) : record.will_save_change_to_attribute?(attribute)
+    end
+    deadline_attribute = reminder.kind_request? ? :request_deadline : :event_entry_deadline
+
+    if changed.call(reminder, :enabled) then :enabled
+    elsif changed.call(self, deadline_attribute) then :deadline
+    elsif changed.call(reminder, :lead_hours) then :lead_time
+    end
   end
 
   def participation_records_for(customer)

@@ -9,7 +9,7 @@ module EventDeadlineReminders
       disabled: "自動リマインドが無効です",
       no_deadline: "締め切りが未設定です",
       already_processed: "送信済みのため再送しません",
-      not_armed: "送信予定日時を過ぎてから有効化・締め切り変更されたため自動送信しません",
+      not_armed: "送信予定日時を過ぎてから有効化・締め切り変更・送信タイミング変更されたため自動送信しません",
       before_schedule: "送信予定日時になっていません",
       deadline_passed: "締め切りを過ぎたため送信しません",
       event_started: "イベントの開始日時を過ぎたため送信しません",

@@ -1,0 +1,33 @@
+-# 送信メッセージのプレビュー。実際の送信と同じ MessageBuilder の結果を表示する(送信はしない)。
+- reminder = preview.reminder
+- if (sent_message = preview.sent_message)
+  %p.deadline-reminder-settings__hint
+    = reminder.sending? ? "送信中の内容です（開始時に確定済み）。" : "実際に送信した内容です。"
+  - message = sent_message
+  - channel = reminder.message_snapshot["channel"]
+- else
+  - message = preview.message
+  - channel = reminder.channel
+- if message.nil?
+  %p.deadline-reminder-settings__hint 締め切りと開催日時を入力すると、送信メッセージのプレビューを確認できます。
+- else
+  %p.deadline-reminder-settings__preview-meta
+    配信方法：
+    %strong= EventDeadlineReminder::CHANNEL_LABELS.fetch(channel.to_s, "未選択")
+    - unless sent_message
+      ・本文：
+      %strong= reminder.custom_message? ? "編集した文章" : "自動生成"
+  - if channel.to_s == "chat"
+    %p.deadline-reminder-settings__hint コミュニティチャットに「🔔 自動お知らせ」として、次の内容で投稿されます。
+    .deadline-reminder-settings__preview-chat.markdown-body= Chat::MarkdownRenderer.call(message.chat_body)
+  - else
+    %p.deadline-reminder-settings__preview-subject
+      件名：
+      = "【BeMyStyle】#{message.subject}"
+    - if message.main_body
+      %pre.deadline-reminder-settings__preview-body= message.main_body
+      %p.deadline-reminder-settings__preview-footer-label 共通フッター（必ず付きます）
+      %pre.deadline-reminder-settings__preview-body.deadline-reminder-settings__preview-body--footer= message.footer
+    - else
+      %pre.deadline-reminder-settings__preview-body= message.body
+    %p.deadline-reminder-settings__hint メールでは、本文の前に宛名（「〇〇さん」）、後ろに配信停止の案内も付きます。

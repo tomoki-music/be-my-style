@@ -42,7 +42,8 @@
 
       .form-group
         %label 締め切り自動リマインド
-        = render 'public/events/deadline_reminder_fields', f: f, event: @event
+        = render 'public/events/deadline_reminder_fields', f: f, event: @event,
+          preview_url: @event.persisted? ? deadline_reminder_preview_admin_event_path(@event) : deadline_reminder_preview_admin_events_path
 
       .form-row
         .form-group.col-md-6

@@ -25,13 +25,19 @@ module EventDeadlineRemindersHelper
       return { label: "送信中", modifier: "sending", detail: "送信処理を実行しています" }
     end
 
-    return { label: "無効", modifier: "disabled", detail: nil } if !reminder.persisted? || !reminder.enabled?
+    return { label: "無効", modifier: "disabled", detail: nil } unless reminder.enabled?
     return { label: "締め切り未設定", modifier: "disabled", detail: "締め切りを設定すると有効にできます" } if reminder.deadline.blank?
+    if reminder.scheduled_at.blank?
+      return { label: "送信タイミングを確認してください", modifier: "warning", detail: "1〜168の整数（時間）で入力してください" }
+    end
 
     reason = EventDeadlineReminders::Eligibility.reason(reminder, now: now)
     case reason
-    when nil, :before_schedule
+    when :before_schedule
       { label: "未送信（送信予定）", modifier: "pending", detail: nil }
+    when nil
+      { label: "未送信（送信予定）", modifier: "pending",
+        detail: "送信予定日時を過ぎています。締め切り前の次回の定期実行（5分ごと）で送信します" }
     when :not_armed
       { label: "未送信（自動送信しません）", modifier: "warning", detail: deadline_reminder_disarm_detail(reminder) }
     else
@@ -39,20 +45,29 @@ module EventDeadlineRemindersHelper
     end
   end
 
-  def deadline_reminder_preview(reminder)
-    return if reminder.deadline.blank? || !reminder.event&.persisted?
+  def deadline_reminder_lead_hours_options
+    { min: EventDeadlineReminder::LEAD_HOURS_RANGE.min, max: EventDeadlineReminder::LEAD_HOURS_RANGE.max, step: 1 }
+  end
 
-    sent_at = [reminder.scheduled_at, Time.current].max
-    EventDeadlineReminders::MessageBuilder.call(event: reminder.event, kind: reminder.kind, sent_at: sent_at)
+  # 送信中・送信済み・失敗のときに、設定を変えても今回の通知に反映されないことを示す文言。
+  def deadline_reminder_locked_note(reminder)
+    case reminder.status
+    when "sending"
+      "送信中のため、送信タイミング・配信方法・メッセージは変更できません。送信は開始時に確定した内容で続けます。"
+    when "sent", "failed"
+      "この締め切りの通知は#{reminder.sent? ? '送信済み' : '失敗として確定済み'}のため、送信タイミングやメッセージを変更しても再送されません。"
+    end
   end
 
   private
 
   def deadline_reminder_disarm_detail(reminder)
     if reminder.disarmed_by_deadline_changed_past?
-      "締め切りの変更で送信予定日時が過去になったため、自動では送信しません。"
+      "送信予定日時を過ぎているため、自動送信されません（締め切りの変更で送信予定日時が過去になりました）。"
+    elsif reminder.disarmed_by_lead_time_changed_past?
+      "送信予定日時を過ぎているため、自動送信されません（送信タイミングの変更で送信予定日時が過去になりました）。"
     else
-      "送信予定日時を過ぎてから有効化されたため、自動では送信しません。"
+      "送信予定日時を過ぎているため、自動送信されません（送信予定日時を過ぎてから有効化されました）。"
     end
   end
 
@@ -65,6 +80,9 @@ module EventDeadlineRemindersHelper
       parts << "成功#{reminder.delivered_count}名・失敗#{reminder.failed_count}名・対象外#{skipped}名"
     end
     parts << "締め切り#{deadline_reminder_time(reminder.sent_for_deadline)}分" if reminder.sent_for_deadline.present?
+    if reminder.message_snapshot.present?
+      parts << "#{reminder.message_snapshot['lead_hours']}時間前の設定・#{reminder.message_snapshot['custom'] ? '編集した本文' : '自動生成の本文'}"
+    end
     parts << reminder.failure_reason if reminder.failure_reason.present?
     parts.join(" / ")
   end
