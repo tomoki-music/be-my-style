@@ -85,25 +85,35 @@ jobs:
           DEPLOY_STATE_DIR="${HOME}/.be-my-style-deploy"
           mkdir -p "$DEPLOY_STATE_DIR"
 
-          # サーバー上で手動実行したデプロイとも重ならないようにする。
-          if command -v flock > /dev/null; then
-            exec 9>"${DEPLOY_STATE_DIR}/deploy.lock"
-            if ! flock -w 900 9; then
-              echo "::error::another deploy is still running on the server (lock: ${DEPLOY_STATE_DIR}/deploy.lock)"
-              exit 1
-            fi
-          else
-            echo "::warning::flock is not installed on the server; relying on the Actions concurrency group only"
+          # サーバー上で手動実行したデプロイや、旧ワークフローの Re-run(Actions の concurrency の対象外)とも重ならないようにする。
+          # ロックはこのシェルと子プロセスが終わると OS が解放する(SSH が切れても、実行中のデプロイが終わるまで保持される)。
+          # 排他できない状態ではデプロイしない(git reset 前なので何も変わらない)。
+          if ! command -v flock > /dev/null; then
+            echo "::error::flock is not installed on the server; refusing to deploy without a server-side lock (install util-linux)"
+            exit 1
+          fi
+          exec 9>"${DEPLOY_STATE_DIR}/deploy.lock"
+          if ! flock -w 900 9; then
+            echo "::error::another deploy is still running on the server (lock: ${DEPLOY_STATE_DIR}/deploy.lock)"
+            exit 1
           fi
 
           PREV_COMMIT=$(git rev-parse HEAD)
           echo "[deploy] Before: ${PREV_COMMIT}"
           git fetch origin main
           git reset --hard origin/main
-          echo "[deploy] After: $(git rev-parse HEAD)"
-          # 古い実行を Re-run しても、デプロイするのは常にその時点の origin/main(起動元のコミットではない)。
-          if [ -n "${TRIGGER_COMMIT:-}" ] && [ "$TRIGGER_COMMIT" != "$(git rev-parse HEAD)" ]; then
-            echo "::notice::this run was triggered by ${TRIGGER_COMMIT} but deploys the current origin/main $(git rev-parse HEAD)"
+          DEPLOY_COMMIT=$(git rev-parse HEAD)
+          echo "[deploy] After: ${DEPLOY_COMMIT}"
+          # デプロイするのは常にその時点の origin/main(起動元のコミットではない)。古い実行の Re-run や、
+          # 実行待ちの間に main が進んだ場合に、起動元(CI を通った push)との関係をログに残す。
+          echo "[deploy] Triggered by: ${TRIGGER_COMMIT:-unknown} / Deploying: ${DEPLOY_COMMIT}"
+          if [ -n "${TRIGGER_COMMIT:-}" ] && [ "$TRIGGER_COMMIT" != "$DEPLOY_COMMIT" ]; then
+            if git merge-base --is-ancestor "$TRIGGER_COMMIT" "$DEPLOY_COMMIT" 2>/dev/null; then
+              echo "::notice::this run was triggered by ${TRIGGER_COMMIT} but deploys the current origin/main ${DEPLOY_COMMIT} ($(git rev-list --count "${TRIGGER_COMMIT}..${DEPLOY_COMMIT}") newer commit(s), listed below)"
+              git log --oneline --no-decorate "${TRIGGER_COMMIT}..${DEPLOY_COMMIT}" | head -20
+            else
+              echo "::warning::the triggering commit ${TRIGGER_COMMIT} is not an ancestor of origin/main ${DEPLOY_COMMIT} (main history was rewritten?)"
+            fi
           fi
 
           # 以降は更新後のコードにあるスクリプトで行う(実行中のファイルを git reset で書き換えないよう分けている)。

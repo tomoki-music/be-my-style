@@ -18,7 +18,7 @@
 
 ## 自動デプロイ（GitHub Actions）の順序と失敗時の再実行
 
-`.github/workflows/rails.yml`（main push / 手動実行）が本番サーバーで次の順に実行する。同時に2つは動かない（Actions の `concurrency` とサーバー上の `flock`）。
+`.github/workflows/rails.yml`（main push / 手動実行）が本番サーバーで次の順に実行する。同時に2つは動かない（Actions の `concurrency` とサーバー上の `flock`。`flock` が無いサーバーでは `git reset` の前に失敗する）。
 
 | 順 | 処理 | 実行条件 | 失敗したとき |
 |---|---|---|---|
@@ -30,14 +30,14 @@
 | 6 | `assets:precompile` | アセット関連の変更、コンパイル結果が無い、このコミットでの成功記録が無い | 中断。DB は変更しない。既存アセットは残る |
 | 7 | `db:migrate db:abort_if_pending_migrations db:version` | **毎回**（未適用が無ければ何もしない） | 中断。Puma は再起動しない |
 | 8 | `systemctl restart puma` → active になるまで待つ | 毎回 | 中断 |
-| 9 | Puma の unix ソケットへ `GET /`（2xx/3xx）→ 応答中の `application-*.css` が 200 | 毎回 | 中断（CSS が無い場合は次回 precompile をやり直す） |
+| 9 | Puma の unix ソケットへ `GET /`（Host 127.0.0.1）が 200 で CSS リンクを含む → その `application-*.css` が 200 かつ `public/assets` に precompile 済みファイルがある | 毎回 | 中断（CSS が無い場合は次回 precompile をやり直す）。本番は `assets.compile = true` のため HTTP だけでは判定しない |
 | 10 | singing-analyzer の pip install / 再起動 / `/health` | singing_analyzer の変更 | 中断 |
 | 11 | 成功の記録 `~/.be-my-style-deploy/last_successful_commit` を更新 | 1〜10 がすべて成功 | — |
 
 - **途中で失敗したら、原因を直して同じワークフローを「Re-run」すればよい。** 成功の記録は更新されていないため、再実行でも同じ差分で必要な処理をやり直す（migrate は残りだけ、precompile は済んでいれば省略）。
 - 失敗した段階は Actions のログの `::error::deploy failed at step '...'` で分かる。Puma を再起動する前に失敗した場合、動作中の Puma は旧コードのまま（ディスク上のコードは新しい）。**この状態で夜間自動停止（JST 2:00）からの起動などで Puma が再起動すると、新コードが未マイグレーションの DB で動く**ため、その前に再実行する。
 - 記録が信用できないとき（手動作業の後など）は、手動実行で `force_full_deploy: true` を選ぶとすべて実行する。記録ファイルはリポジトリの外（`~/.be-my-style-deploy/`）にあり、`git reset` では消えない。
-- デプロイするのは常に実行時点の `origin/main`。古いコミットで起動した実行を Re-run しても、main より古いコードには戻らない(起動元と異なる場合はログに `::notice::` を出す)。
+- デプロイするのは常に実行時点の `origin/main`。古いコミットで起動した実行を Re-run しても、main より古いコードには戻らない。ログの `Triggered by: <起動元> / Deploying: <デプロイ対象>` で関係が分かり、異なる場合は `::notice::` と起動元より新しいコミットの一覧を出す。
 - **この仕組みを導入する前(旧ワークフロー)の実行は Re-run しない。** Re-run は起動当時のワークフロー定義で動くため、旧ロジック(排他なし・差分が空なら migrate を省略)が最新コードに対して実行される。やり直したいときは Actions の「Run workflow」(main)で新しく実行する。
 - 手動実行は main の定義だけが動く(ジョブに `github.ref == 'refs/heads/main'` の条件)。
 - 秘密情報をログに出さないため、失敗時も Puma のログ本文は出さない。サーバー上で `sudo journalctl -u puma -n 100` と `log/puma.stderr.log` を確認する（要ユーザー確認）。

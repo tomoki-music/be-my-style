@@ -30,7 +30,7 @@ RSpec.describe "production deploy (.github/workflows/rails.yml + script/deploy/p
             mkdir -p public/assets public/packs
             echo '{}' > public/assets/.sprockets-manifest-stub.json
             echo '{}' > public/packs/manifest.json
-            touch "public/assets/application-$(git rev-parse HEAD:app/assets).css"
+            echo "a{}" > "public/assets/application-$(git rev-parse HEAD:app/assets).css"
             ;;
           db:migrate)
             echo "migrate" >> "$SIM_DIR/events"
@@ -103,14 +103,22 @@ RSpec.describe "production deploy (.github/workflows/rails.yml + script/deploy/p
       for file in "$DEPLOY_PATH"/db/migrate/*.rb; do
         grep -qx "$(basename "$file" .rb)" "$SIM_DIR/db_applied" || healthy=false
       done
-      [ "$(cat "$SIM_DIR/fail_at" 2>/dev/null)" = puma_health ] && healthy=false
+      fail_at=$(cat "$SIM_DIR/fail_at" 2>/dev/null || true)
+      [ "$fail_at" = puma_health ] && healthy=false
       case "$path" in
         /assets/*)
-          if [ -f "$DEPLOY_PATH/public$path" ]; then code=200; else code=404; fi
+          # assets_compile_on_the_fly: 本番の config.assets.compile = true のように、ファイルが無くても 200 を返す
+          if [ -f "$DEPLOY_PATH/public$path" ] || [ "$fail_at" = assets_compile_on_the_fly ]; then code=200; else code=404; fi
           : > "$out"
           ;;
         *)
-          if [ "$healthy" = true ]; then
+          if [ "$fail_at" = puma_redirect ]; then
+            code=302
+            : > "$out"
+          elif [ "$fail_at" = no_stylesheet_link ]; then
+            code=200
+            echo "<html></html>" > "$out"
+          elif [ "$healthy" = true ]; then
             code=200
             echo "<link href=\"/assets/application-$(cat "$SIM_DIR/puma_assets").css\">" > "$out"
           else
@@ -364,13 +372,58 @@ RSpec.describe "production deploy (.github/workflows/rails.yml + script/deploy/p
 
     out, ok = deploy
     expect(ok).to be(false)
-    expect(out).to include("compiled stylesheet")
+    expect(out).to include("HTTP 404, precompiled file present: no")
     expect(out).to include("::error::deploy failed at step 'puma health check'")
 
     out, ok = deploy
     expect(ok).to be(true), out
     expect(events).to include("precompile")
     expect_fully_deployed
+  end
+
+  it "Puma が CSS をその場でコンパイルして 200 を返しても、precompile 済みのファイルが無ければ失敗とし、再実行で precompile をやり直す" do
+    deploy
+    Dir.glob(File.join(server, "public/assets/application-*.css")).each { |file| File.delete(file) }
+
+    out, ok = deploy(fail_at: "assets_compile_on_the_fly")
+    expect(ok).to be(false)
+    expect(events.grep(%r{\AGET /assets/application-\h+\.css 200\z})).not_to be_empty
+    expect(out).to include("precompiled file present: no")
+
+    out, ok = deploy
+    expect(ok).to be(true), out
+    expect(events).to include("precompile")
+    expect_fully_deployed
+  end
+
+  { "puma_redirect" => "HTTP 302", "no_stylesheet_link" => "no compiled stylesheet link" }.each do |failure, message|
+    it "GET / が 200 + CSS リンクでなければ失敗として扱う(#{failure})" do
+      out, ok = deploy(fail_at: failure)
+
+      expect(ok).to be(false)
+      expect(out).to include(message)
+      expect(out).to include("::error::deploy failed at step 'puma health check'")
+      expect(last_success).to eq(@base_commit)
+    end
+  end
+
+  it "サーバーに flock が無ければ、git reset の前に失敗して何も変更しない" do
+    limited_bin = File.join(root, "limited-bin")
+    FileUtils.mkdir_p(limited_bin)
+    %w[hostname mkdir].each do |command|
+      File.symlink(`command -v #{command}`.strip, File.join(limited_bin, command))
+    end
+    bash = `command -v bash`.strip
+
+    out, status = Open3.capture2e(
+      env.merge("PATH" => limited_bin, "DEPLOY_PATH" => server, "FORCE_ASSETS_CLOBBER" => "false", "FORCE_FULL_DEPLOY" => "false"),
+      bash, "-s", stdin_data: remote_script, chdir: root
+    )
+
+    expect(status.success?).to be(false)
+    expect(out).to include("::error::flock is not installed on the server")
+    expect(git!(server, "rev-parse", "HEAD")).to eq(@base_commit)
+    expect(events).to be_empty
   end
 
   it "全工程が成功した後の再実行でも migrate・Puma 再起動・確認を省略せず、precompile は行わない" do
@@ -427,7 +480,9 @@ RSpec.describe "production deploy (.github/workflows/rails.yml + script/deploy/p
     out, ok = deploy("TRIGGER_COMMIT" => @base_commit)
 
     expect(ok).to be(true), out
-    expect(out).to include("::notice::this run was triggered by #{@base_commit} but deploys the current origin/main #{@release_commit}")
+    expect(out).to include("Triggered by: #{@base_commit} / Deploying: #{@release_commit}")
+    expect(out).to include("::notice::this run was triggered by #{@base_commit} but deploys the current origin/main #{@release_commit} (1 newer commit(s), listed below)")
+    expect(out).to match(/^\h{7,} release$/)
     expect_fully_deployed
   end
 

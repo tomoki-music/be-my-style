@@ -320,16 +320,15 @@ puma_get() {
   echo "${status:-000}"
 }
 
+# ゲスト用トップは 200 とコンパイル済み CSS へのリンクを返す(本番で確認済み)。リダイレクトはエラー画面などを見逃すため成功にしない。
 PUMA_HEALTH_OK=false
 PUMA_HEALTH_STATUS=""
 for attempt in $(seq 1 "$PUMA_HEALTH_ATTEMPTS"); do
   PUMA_HEALTH_STATUS=$(puma_get "$PUMA_HEALTHCHECK_PATH")
-  case "$PUMA_HEALTH_STATUS" in
-    2??|3??)
-      PUMA_HEALTH_OK=true
-      break
-      ;;
-  esac
+  if [ "$PUMA_HEALTH_STATUS" = "200" ]; then
+    PUMA_HEALTH_OK=true
+    break
+  fi
   echo "[deploy] Puma health check attempt ${attempt}/${PUMA_HEALTH_ATTEMPTS}: HTTP ${PUMA_HEALTH_STATUS}"
   sleep "$RETRY_INTERVAL"
 done
@@ -339,20 +338,22 @@ if [ "$PUMA_HEALTH_OK" != "true" ]; then
 fi
 echo "[deploy] Puma health check: GET ${PUMA_HEALTHCHECK_PATH} → HTTP ${PUMA_HEALTH_STATUS}"
 
-# 新しい Puma が参照しているコンパイル済み CSS が実際に配信できるか(=precompile 結果と Puma の組み合わせ)を確かめる。
+# 新しい Puma が参照している CSS が precompile 済みで、配信できるかを確かめる。
+# 本番は config.assets.compile = true のため、ファイルが無くても Puma がその場でコンパイルして 200 を返し得る。
+# HTTP だけでなく public/ 配下にファイルがあることも確認する。
 STYLESHEET_PATH=$(grep -oE '/assets/application-[0-9a-f]+\.css' "$HEALTH_BODY_FILE" | head -1 || true)
-if [ -n "$STYLESHEET_PATH" ]; then
-  STYLESHEET_STATUS=$(puma_get "$STYLESHEET_PATH")
-  if [ "$STYLESHEET_STATUS" != "200" ]; then
-    echo "[deploy] ERROR: compiled stylesheet ${STYLESHEET_PATH} returned HTTP ${STYLESHEET_STATUS}"
-    # 再実行で precompile をやり直すよう、コンパイル済みの記録を消す。
-    rm -f "$ASSETS_COMMIT_FILE"
-    false
-  fi
-  echo "[deploy] Stylesheet check: ${STYLESHEET_PATH} → HTTP 200"
-else
-  echo "[deploy] WARNING: no compiled stylesheet link found in the health check response; stylesheet check skipped"
+if [ -z "$STYLESHEET_PATH" ]; then
+  echo "[deploy] ERROR: no compiled stylesheet link (/assets/application-<digest>.css) in the response to GET ${PUMA_HEALTHCHECK_PATH}"
+  false
 fi
+STYLESHEET_STATUS=$(puma_get "$STYLESHEET_PATH")
+if [ "$STYLESHEET_STATUS" != "200" ] || [ ! -s "public${STYLESHEET_PATH}" ]; then
+  echo "[deploy] ERROR: stylesheet ${STYLESHEET_PATH}: HTTP ${STYLESHEET_STATUS}, precompiled file present: $([ -s "public${STYLESHEET_PATH}" ] && echo yes || echo no)"
+  # 再実行で precompile をやり直すよう、コンパイル済みの記録を消す。
+  rm -f "$ASSETS_COMMIT_FILE"
+  false
+fi
+echo "[deploy] Stylesheet check: ${STYLESHEET_PATH} → HTTP 200, precompiled file present"
 log_step_finish "puma health check"
 
 # ---------------------------------------------------------------------------
