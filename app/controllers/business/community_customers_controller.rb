@@ -1,4 +1,5 @@
 class Business::CommunityCustomersController < ApplicationController
+  include BusinessAccessControl
 
   before_action :set_community
 
@@ -9,55 +10,44 @@ class Business::CommunityCustomersController < ApplicationController
       return redirect_to business_community_path(@community), alert: "参加申請を承認する権限がありません。"
     end
 
-    permit = @community.permits.find_by(customer_id: params[:customer_id])
-    unless permit
+    applicant = @community.permits.find_by(customer_id: params[:customer_id])&.customer
+    result = Business::Memberships::ApproveCommunityRequest.call(community: @community, customer_id: params[:customer_id])
+
+    case result
+    when :approved
+      notify_accepted!(applicant)
+      flash[:notice] = "コミュニティへ参加を許可しました"
+    when :withdrawn
+      flash[:alert] = "退会済みのユーザーです。参加を許可できません。"
+    when :suspended
+      flash[:alert] = "アクセス停止中のユーザーです。申請は取り消しました。"
+    else
       return redirect_to business_community_path(@community), alert: "参加申請が見つかりません。"
     end
 
-    customer = permit.customer
-    owner = @community.owner
-
-    if customer.is_deleted?
-      flash[:alert] = "退会済みのユーザーです。参加を許可できません。"
-      return redirect_to business_community_path(@community)
-    end
-
-    # すでに参加してたら何もしない
-    unless @community.customers.include?(customer)
-      CommunityCustomer.create!(
-        community: @community,
-        customer: customer
-      )
-    end
-
-    permit.destroy
-
-    customer.business_notification_accept(owner, @community.id)
-    if customer.confirm_mail
-      CustomerMailer.with(ac_customer: owner, ps_customer: customer, community: @community).business_accept_mail.deliver_later
-    end
-
-    flash[:notice] = "コミュニティへ参加を許可しました"
-    redirect_to business_community_path(@community)
+    redirect_to(params[:return_to] == "permits" ? business_permits_path(@community) : business_community_path(@community))
   end
 
+  # 本人の退会。配下プロジェクトの参加資格も外れる(再参加しても復活しない)。
   def destroy
-    CommunityCustomer.find_by(
-      community: @community,
-      customer: current_customer
-    )&.destroy
+    Business::Memberships::RevokeCommunityAccess.call(community: @community, customer: current_customer)
 
-    flash[:alert] = "コミュニティからメンバーを外しました"
+    flash[:alert] = "コミュニティから退会しました"
     redirect_to business_community_path(@community)
   end
 
   private
 
   def set_community
-    @community = Community.find_by!(
-      id: params[:community_id],
-      domain_id: @current_domain.id
-    )
+    @community = find_business_community!(params[:community_id])
+  end
+
+  def notify_accepted!(customer)
+    owner = @community.owner || current_customer
+    customer.business_notification_accept(owner, @community.id)
+    return unless customer.confirm_mail
+
+    CustomerMailer.with(ac_customer: owner, ps_customer: customer, community: @community).business_accept_mail.deliver_later
   end
 
 end

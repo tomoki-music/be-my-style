@@ -153,7 +153,8 @@ RSpec.describe "Business::Communities", type: :request do
         get business_community_path(community)
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("申請中")
+        expect(response.body).to include("承認待ち")
+        expect(response.body).to include("申請を取り消す")
         expect(permit_card).to be_nil
         expect(response.body).not_to include("別の申請者")
       end
@@ -254,17 +255,20 @@ RSpec.describe "Business::Communities", type: :request do
     end
   end
 
-  describe "タイムラインの閲覧範囲(ログイン中の会員)" do
+  describe "タイムラインの閲覧範囲(コミュニティ参加者のみ)" do
     before { CommunityPost.create!(community: community, customer: owner, body: "参加者向けタイムラインの投稿") }
 
-    it "非参加者も本文は閲覧できるが、投稿フォームは出さず参加案内を出す" do
+    it "非参加者には本文も投稿フォームも出さず、名称・紹介と参加導線だけを出す" do
       sign_in create(:customer)
 
       get business_community_path(community)
 
-      expect(response.body).to include("参加者向けタイムラインの投稿")
+      expect(response.body).to include(community.name)
+      expect(response.body).to include(community.introduction)
+      expect(response.body).not_to include("参加者向けタイムラインの投稿")
       expect(response.body).not_to include("投稿する...")
-      expect(response.body).to include("タイムラインへの投稿はコミュニティ参加者のみできます。")
+      expect(response.body).to include("参加を申請する")
+      expect(response.body).to include("コミュニティの参加者のみ閲覧できます")
     end
 
     it "参加者は閲覧できる" do

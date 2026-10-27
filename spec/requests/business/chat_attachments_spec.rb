@@ -52,7 +52,7 @@ RSpec.describe "Business チャットの添付・スタンプ", type: :request d
     it "プロジェクトチャットへ資料・スタンプを送信できる" do
       expect { post_project_chat(attachments: [upload("report.xlsx")]) }.to change(ProjectChat, :count).by(1)
       expect { post_project_chat(stamp_type: "animal_got_it") }.to change(ProjectChat, :count).by(1)
-      expect(response).to redirect_to(business_project_path(project))
+      expect(response).to redirect_to(business_project_thread_path(project, ProjectThread.default_for(project)))
     end
 
     it "不正なファイル・容量超過・件数超過・不正なスタンプは保存せず理由を表示する" do
@@ -107,7 +107,7 @@ RSpec.describe "Business チャットの添付・スタンプ", type: :request d
         expect(response.body).to include("ダウンロード")
         expect(response.body).not_to include("/rails/active_storage/")
 
-        get business_project_path(project)
+        get business_project_thread_path(project, project_chat.project_thread)
         expect(response.body).to include("memo.docx")
         expect(response.body).to include("Word")
         expect(response.body).not_to include("/rails/active_storage/")
@@ -135,18 +135,29 @@ RSpec.describe "Business チャットの添付・スタンプ", type: :request d
     context "コミュニティ非参加者(ログイン中)" do
       before { sign_in outsider }
 
-      it "タイムラインの本文・添付は閲覧できるが、プロジェクトチャットの添付にはアクセスできない" do
+      it "タイムラインの本文・添付も、プロジェクトチャットの添付も閲覧できない" do
         get business_community_path(community)
-        expect(response.body).to include("sample.pdf")
+        expect(response.body).not_to include("sample.pdf")
         expect(response.body).not_to include("/rails/active_storage/")
 
-        get business_chat_attachment_path(image)
-        expect(response).to have_http_status(:found)
-        get business_chat_attachment_path(pdf)
-        expect(response).to have_http_status(:found)
+        [image, pdf, docx].each do |attachment|
+          get business_chat_attachment_path(attachment)
+          expect(response).to have_http_status(:not_found)
+        end
+      end
+    end
 
-        get business_chat_attachment_path(docx)
-        expect(response).to have_http_status(:not_found)
+    context "コミュニティのアクセス停止中" do
+      before do
+        Business::Memberships::RevokeCommunityAccess.call(community: community, customer: free_member, suspend: true, actor: owner)
+        sign_in free_member
+      end
+
+      it "タイムライン・プロジェクトチャットの添付を取得できない" do
+        [image, docx].each do |attachment|
+          get business_chat_attachment_path(attachment)
+          expect(response).to have_http_status(:not_found)
+        end
       end
     end
 
@@ -172,7 +183,7 @@ RSpec.describe "Business チャットの添付・スタンプ", type: :request d
         sign_in free_member
         get business_community_path(community)
         community_body = response.body
-        get business_project_path(project)
+        get business_project_thread_path(project, project_chat.project_thread)
 
         [image, pdf, docx].each do |attachment|
           expect(community_body + response.body).not_to include(attachment.blob.signed_id)

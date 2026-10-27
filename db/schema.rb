@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_10_18_000000) do
+ActiveRecord::Schema.define(version: 2026_10_27_000300) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -223,7 +223,20 @@ ActiveRecord::Schema.define(version: 2026_10_18_000000) do
     t.bigint "domain_id", null: false
     t.string "required_plan_for_event_creation", default: "core", null: false
     t.boolean "plan_restrictions_waived", default: false, null: false
+    t.integer "join_approval_mode", default: 0, null: false
     t.index ["domain_id"], name: "index_communities_on_domain_id"
+  end
+
+  create_table "community_access_suspensions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "community_id", null: false
+    t.bigint "customer_id", null: false
+    t.bigint "suspended_by_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["community_id", "customer_id"], name: "index_community_access_suspensions_uniqueness", unique: true
+    t.index ["community_id"], name: "index_community_access_suspensions_on_community_id"
+    t.index ["customer_id"], name: "index_community_access_suspensions_on_customer_id"
+    t.index ["suspended_by_id"], name: "index_community_access_suspensions_on_suspended_by_id"
   end
 
   create_table "community_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -940,6 +953,18 @@ ActiveRecord::Schema.define(version: 2026_10_18_000000) do
     t.index ["customer_id"], name: "index_posts_on_customer_id"
   end
 
+  create_table "project_access_suspensions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.bigint "customer_id", null: false
+    t.bigint "suspended_by_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_project_access_suspensions_on_customer_id"
+    t.index ["project_id", "customer_id"], name: "index_project_access_suspensions_uniqueness", unique: true
+    t.index ["project_id"], name: "index_project_access_suspensions_on_project_id"
+    t.index ["suspended_by_id"], name: "index_project_access_suspensions_on_suspended_by_id"
+  end
+
   create_table "project_chats", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "project_id", null: false
     t.bigint "customer_id", null: false
@@ -948,8 +973,20 @@ ActiveRecord::Schema.define(version: 2026_10_18_000000) do
     t.datetime "updated_at", precision: 6, null: false
     t.string "stamp_type"
     t.integer "content_format", default: 0, null: false
+    t.bigint "project_thread_id"
     t.index ["customer_id"], name: "index_project_chats_on_customer_id"
     t.index ["project_id"], name: "index_project_chats_on_project_id"
+    t.index ["project_thread_id"], name: "index_project_chats_on_project_thread_id"
+  end
+
+  create_table "project_join_requests", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.bigint "customer_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_project_join_requests_on_customer_id"
+    t.index ["project_id", "customer_id"], name: "index_project_join_requests_on_project_id_and_customer_id", unique: true
+    t.index ["project_id"], name: "index_project_join_requests_on_project_id"
   end
 
   create_table "project_members", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -961,9 +998,23 @@ ActiveRecord::Schema.define(version: 2026_10_18_000000) do
     t.index ["project_id"], name: "index_project_members_on_project_id"
   end
 
+  create_table "project_threads", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.bigint "customer_id"
+    t.string "title", null: false
+    t.text "description"
+    t.boolean "general"
+    t.datetime "last_posted_at", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_project_threads_on_customer_id"
+    t.index ["project_id", "general"], name: "index_project_threads_on_project_id_and_general", unique: true
+    t.index ["project_id", "last_posted_at"], name: "index_project_threads_on_project_id_and_last_posted_at"
+  end
+
   create_table "projects", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "community_id", null: false
-    t.bigint "customer_id", null: false
+    t.bigint "customer_id"
     t.string "title"
     t.text "description"
     t.datetime "created_at", precision: 6, null: false
@@ -971,6 +1022,7 @@ ActiveRecord::Schema.define(version: 2026_10_18_000000) do
     t.integer "status", default: 0
     t.datetime "deadline"
     t.string "goal"
+    t.integer "join_approval_mode", default: 0, null: false
     t.index ["community_id"], name: "index_projects_on_community_id"
     t.index ["customer_id"], name: "index_projects_on_customer_id"
   end
@@ -1418,6 +1470,9 @@ ActiveRecord::Schema.define(version: 2026_10_18_000000) do
   add_foreign_key "comments", "activities"
   add_foreign_key "comments", "customers"
   add_foreign_key "communities", "domains"
+  add_foreign_key "community_access_suspensions", "communities"
+  add_foreign_key "community_access_suspensions", "customers"
+  add_foreign_key "community_access_suspensions", "customers", column: "suspended_by_id"
   add_foreign_key "community_customers", "communities"
   add_foreign_key "community_customers", "customers"
   add_foreign_key "community_domains", "communities"
@@ -1499,10 +1554,18 @@ ActiveRecord::Schema.define(version: 2026_10_18_000000) do
   add_foreign_key "permits", "communities"
   add_foreign_key "permits", "customers"
   add_foreign_key "posts", "customers"
+  add_foreign_key "project_access_suspensions", "customers"
+  add_foreign_key "project_access_suspensions", "customers", column: "suspended_by_id"
+  add_foreign_key "project_access_suspensions", "projects"
   add_foreign_key "project_chats", "customers"
+  add_foreign_key "project_chats", "project_threads"
   add_foreign_key "project_chats", "projects"
+  add_foreign_key "project_join_requests", "customers"
+  add_foreign_key "project_join_requests", "projects"
   add_foreign_key "project_members", "customers"
   add_foreign_key "project_members", "projects"
+  add_foreign_key "project_threads", "customers"
+  add_foreign_key "project_threads", "projects"
   add_foreign_key "projects", "communities"
   add_foreign_key "projects", "customers"
   add_foreign_key "requests", "customers"

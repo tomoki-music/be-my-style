@@ -1,0 +1,134 @@
+/* =========================
+   コミュニティ / プロジェクトのメンバー管理・参加状態
+========================= */
+
+.membership-admin {
+  max-width: 880px;
+  padding-bottom: 32px;
+}
+
+.membership-admin__title {
+  margin: 8px 0 16px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.membership-admin__card {
+  margin-bottom: 16px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+
+  h3 {
+    margin: 0 0 10px;
+    font-size: 17px;
+    font-weight: 700;
+  }
+}
+
+.membership-admin__mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-bottom: 6px;
+}
+
+.membership-admin__note,
+.membership-admin__empty {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.membership-admin__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.membership-admin__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid #f1f5f9;
+}
+
+.membership-admin__person {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.membership-admin__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.membership-admin__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.membership-admin__date {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.membership-admin__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.membership-admin__tag {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.membership-count-badge {
+  display: inline-block;
+  min-width: 20px;
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+}
+
+.hero-join-mode {
+  margin: 8px 0 0;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.community-locked p {
+  margin: 0;
+  color: #64748b;
+}
+
+@media (max-width: 600px) {
+  .membership-admin__row {
+    align-items: flex-start;
+  }
+
+  .membership-admin__actions {
+    width: 100%;
+
+    .btn {
+      flex: 1 1 auto;
+    }
+  }
+}

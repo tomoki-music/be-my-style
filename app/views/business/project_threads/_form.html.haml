@@ -1,0 +1,17 @@
+- thread = local_assigns.fetch(:thread)
+- if thread.errors.any?
+  .alert.alert-danger
+    %ul
+      - thread.errors.full_messages.each do |message|
+        %li= message
+
+= form_with model: thread, url: (thread.persisted? ? business_project_thread_path(@project, thread) : business_project_threads_path(@project)), local: true do |f|
+  .form-group
+    = f.label :title, "タイトル"
+    = f.text_field :title, class: "form-control", maxlength: ProjectThread::TITLE_MAX_LENGTH, required: true, placeholder: "例）デザイン相談"
+  .form-group
+    = f.label :description, "説明（任意）"
+    = f.text_area :description, class: "form-control", rows: 4, maxlength: ProjectThread::DESCRIPTION_MAX_LENGTH, placeholder: "このスレッドで話すこと"
+  .form-actions
+    = f.submit (thread.persisted? ? "更新する" : "作成する"), class: "btn btn-primary"
+    = link_to "戻る", (thread.persisted? ? business_project_thread_path(@project, thread) : business_project_path(@project, anchor: "threads")), class: "btn btn-light"

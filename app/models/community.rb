@@ -18,6 +18,7 @@ class Community < ApplicationRecord
   has_many :community_event_editors, dependent: :destroy
   has_many :event_editors, through: :community_event_editors, source: :customer
   has_many :permits, dependent: :destroy
+  has_many :community_access_suspensions, dependent: :destroy
   has_many :community_genres, dependent: :destroy
   has_many :genres, through: :community_genres, dependent: :destroy
   has_many :chat_room_customers, dependent: :destroy
@@ -45,6 +46,9 @@ class Community < ApplicationRecord
   validates :name, length: { maximum: 30 }
   validates :introduction, presence: true
   validates :required_plan_for_event_creation, presence: true, inclusion: { in: EVENT_CREATION_REQUIRED_PLANS }
+
+  # Business の参加方式(music では参照しない)。既存・新規とも既定は手動承認。
+  enum join_approval_mode: { manual: 0, auto: 1 }, _prefix: :join
 
   enum activity_stance: {
     beginner: 0,

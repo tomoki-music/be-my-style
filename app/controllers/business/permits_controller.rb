@@ -1,19 +1,14 @@
 class Business::PermitsController < ApplicationController
+  include BusinessAccessControl
 
   before_action :set_community
 
+  # 「参加する(自動承認) / 参加を申請する(手動承認)」。承認方式の判定と重複防止は JoinCommunity で行う。
   def create
-    Permit.create!(
-      community_id: @community.id,
-      customer_id: current_customer.id
-    )
+    result = Business::Memberships::JoinCommunity.call(community: @community, customer: current_customer)
+    notify_owner_of_request! if result == :requested
 
-    owner = Customer.find(@community.owner_id)
-    owner.business_notification_request(current_customer, @community.id)
-    if owner.confirm_mail
-      CustomerMailer.with(ac_customer: current_customer, ps_customer: owner, community: @community).business_request_mail.deliver_later
-    end
-    flash[:notice] = "コミュニティへ参加申請しました"
+    flash_membership_result(COMMUNITY_JOIN_MESSAGES, result)
     redirect_after_action
   end
 
@@ -34,6 +29,11 @@ class Business::PermitsController < ApplicationController
 
   private
 
+  # メンバー管理画面から拒否したときはその画面へ戻す。
+  def reject_redirect_path
+    params[:return_to] == "permits" ? business_permits_path(@community) : business_community_path(@community)
+  end
+
   def rejecting_other_customer?
     params[:customer_id].present? && params[:customer_id].to_s != current_customer.id.to_s
   end
@@ -46,14 +46,21 @@ class Business::PermitsController < ApplicationController
 
     @community.permits.find_by(customer_id: params[:customer_id])&.destroy
 
-    redirect_to business_community_path(@community), alert: "参加申請を拒否しました"
+    redirect_to reject_redirect_path, alert: "参加申請を拒否しました"
   end
 
   def set_community
-    @community = Community.find_by!(
-      id: params[:community_id],
-      domain_id: @current_domain.id
-    )
+    @community = find_business_community!(params[:community_id])
+  end
+
+  def notify_owner_of_request!
+    owner = @community.owner
+    return if owner.blank? || owner.is_deleted?
+
+    owner.business_notification_request(current_customer, @community.id)
+    return unless owner.confirm_mail
+
+    CustomerMailer.with(ac_customer: current_customer, ps_customer: owner, community: @community).business_request_mail.deliver_later
   end
 
   def redirect_after_action

@@ -1,0 +1,18 @@
+= render "layouts/header_menu_nakama"
+
+.container.project-threads-page
+  %nav.project-breadcrumb{ "aria-label" => "現在地" }
+    = link_to @community.name, business_community_path(@community)
+    %span{ "aria-hidden" => "true" } ›
+    = link_to @project.title, business_project_path(@project)
+    %span{ "aria-hidden" => "true" } ›
+    %span スレッド一覧
+
+  = render "business/project_threads/repair_failed"
+
+  .project-section
+    .project-section__header
+      %h2 スレッド一覧
+      = link_to "＋ 新しいスレッド", new_business_project_thread_path(@project), class: "btn btn-primary btn-small"
+
+    = render "business/project_threads/list", project: @project, threads: @threads, post_counts: @thread_post_counts

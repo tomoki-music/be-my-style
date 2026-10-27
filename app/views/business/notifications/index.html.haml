@@ -41,6 +41,14 @@
           %p
             = customer_display_name(notification.visitor)
             がプロジェクトにコメントしました
+        - when "project_request"
+          %p
+            = customer_display_name(notification.visitor)
+            があなたの管理するプロジェクトへ参加申請しました
+        - when "project_accept"
+          %p
+            = customer_display_name(notification.visitor)
+            がプロジェクトへの参加申請を承認しました
         - else
           %p 新しい通知があります
         %small.text-muted= l(notification.created_at, format: :short)

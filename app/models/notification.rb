@@ -19,7 +19,7 @@ class Notification < ApplicationRecord
 
   BUSINESS_POST_ACTIONS = %w[like message].freeze
   BUSINESS_COMMUNITY_ACTIONS = %w[request accept].freeze
-  BUSINESS_PROJECT_ACTIONS = %w[project_created project_joined project_message].freeze
+  BUSINESS_PROJECT_ACTIONS = %w[project_created project_joined project_message project_request project_accept].freeze
 
   # Business(NAKAMA)の通知一覧・ベルで扱う通知。music のチャット・イベント等は含めない。
   # request / accept は music のコミュニティでも使う action 名なので、Business コミュニティ分だけに絞る。

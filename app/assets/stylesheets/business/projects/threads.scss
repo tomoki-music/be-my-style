@@ -1,0 +1,157 @@
+/* =========================
+   プロジェクト内スレッド
+========================= */
+
+.project-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 12px 0;
+  font-size: 13px;
+  color: #64748b;
+
+  a {
+    color: #4f46e5;
+    overflow-wrap: anywhere;
+  }
+}
+
+.project-section__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+
+  h2,
+  h3 {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.project-actions__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.project-join-mode {
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+
+.project-cancel-request {
+  font-size: 12px;
+  color: #fff;
+  text-decoration: underline;
+}
+
+.project-thread-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.project-thread-list__link {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    border-color: #6366f1;
+    text-decoration: none;
+    color: inherit;
+  }
+}
+
+.project-thread-list__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.project-thread-list__title {
+  font-weight: 700;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.project-thread-list__description {
+  font-size: 13px;
+  color: #64748b;
+  overflow-wrap: anywhere;
+}
+
+.project-thread-list__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: center;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.project-thread-more {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.project-thread-header__description {
+  color: #475569;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.project-thread-header__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.project-thread-header__meta {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.project-thread-page .chat-container {
+  max-height: 60vh;
+}
+
+.project-leave {
+  margin-top: 12px;
+  text-align: right;
+}
+
+.project-leave__link {
+  font-size: 12px;
+  color: #64748b;
+  text-decoration: underline;
+}
+
+.project-thread-header__title,
+.project-threads-page h2 {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .project-thread-header__title,
+  .project-threads-page h2 {
+    font-size: 18px;
+  }
+}

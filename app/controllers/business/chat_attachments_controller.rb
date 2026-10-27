@@ -1,5 +1,5 @@
 # Business のタイムライン / プロジェクトチャットに添付されたファイルの配信窓口。
-# 投稿本文を閲覧できる人(タイムライン=ログイン中の会員 / プロジェクトチャット=参加者)だけに、短時間で失効する署名付き URL を発行してリダイレクトする。
+# 投稿本文を閲覧できる人(タイムライン=コミュニティ参加者 / プロジェクトチャット=プロジェクト参加者)だけに、短時間で失効する署名付き URL を発行してリダイレクトする。
 # 画面には ActiveStorage の恒久的な blob URL を出さないため、URL を共有されても権限を迂回できない。
 class Business::ChatAttachmentsController < ApplicationController
   include ActiveStorage::SetCurrent
@@ -24,11 +24,11 @@ class Business::ChatAttachmentsController < ApplicationController
 
   def readable?(record)
     case record
-    # タイムラインの本文と同じく、Business コミュニティの投稿はログイン中の会員なら閲覧できる。
+    # 本文を表示する画面と同じ判定(BusinessAccess)を使う。
     when CommunityPost
-      record.community.present? && record.community.business_domain?
+      current_customer.business_community_participant?(record.community)
     when ProjectChat
-      record.project.members.exists?(current_customer.id)
+      current_customer.business_project_participant?(record.project)
     else
       false
     end

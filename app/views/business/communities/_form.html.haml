@@ -36,6 +36,12 @@
             class: "form-control",
             id: "image-input"
 
+      .form-group
+        %label{ for: "community_join_approval_mode" } 参加方式
+        = f.select :join_approval_mode, business_join_approval_options, {}, class: "form-control"
+        %small.form-text.text-muted
+          変更は、変更後の新しい参加申請から適用されます。承認待ちの申請と参加済みのメンバーはそのままです。
+
       .form-actions
         = f.submit "更新する", class:"btn btn-primary"
         = link_to "戻る", business_communities_path(@community), class:"btn btn-light"

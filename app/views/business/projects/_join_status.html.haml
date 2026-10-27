@@ -1,0 +1,16 @@
+-# コミュニティ参加者向けの、プロジェクト参加ボタンと状態表示(@join_status は ProjectsController#show で決める)。
+- case @join_status
+- when :suspended
+  %span.btn.btn-disabled アクセス停止中
+  %p.join-note このプロジェクトへのアクセスは管理者により停止されています。
+- when :pending
+  %span.btn.btn-disabled 承認待ち
+  = link_to "申請を取り消す", cancel_request_business_project_path(@project),
+    method: :delete, data: { confirm: "参加申請を取り消しますか？" }, class: "project-cancel-request"
+  %p.join-note 管理者が承認すると、スレッドを閲覧・投稿できます。
+- when :closed
+  %span.btn.btn-disabled 募集終了
+- else
+  = link_to business_join_button_label(@project), join_business_project_path(@project),
+    method: :post, class: "btn btn-primary"
+  %p.join-note= business_join_approval_description(@project)

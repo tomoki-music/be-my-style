@@ -131,7 +131,12 @@ class CustomerMailer < ApplicationMailer
   def business_project_chat_mail
     @project = params[:project]
     @project_chat = params[:project_chat]
+    # deliver_later のため、送信までにアクセス停止・退出・退会した人へは本文を送らない。
+    return if @ps_customer.is_deleted? || !@ps_customer.business_project_participant?(@project)
+
+    @project_thread = @project_chat.project_thread
     @project_url = "https://be-my-style.com/business/projects/#{@project.id}"
+    @project_url = "#{@project_url}/threads/#{@project_thread.id}" if @project_thread
     mail to: @ps_customer.email, subject: '参加中のプロジェクトに新しいコメントが届きました！'
   end
 

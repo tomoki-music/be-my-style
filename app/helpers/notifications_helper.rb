@@ -13,7 +13,7 @@ module NotificationsHelper
       business_community_path(notification.community_id) if notification.community_id.present?
     when "follow"
       business_customer_path(notification.visitor_id) if notification.visitor_id.present?
-    when "project_created", "project_joined", "project_message"
+    when *Notification::BUSINESS_PROJECT_ACTIONS
       business_project_path(notification.project_id) if notification.project_id.present?
     end
   end
