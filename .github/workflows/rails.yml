@@ -85,7 +85,8 @@ jobs:
           DEPLOY_STATE_DIR="${HOME}/.be-my-style-deploy"
           mkdir -p "$DEPLOY_STATE_DIR"
 
-          # サーバー上で手動実行したデプロイや、旧ワークフローの Re-run(Actions の concurrency の対象外)とも重ならないようにする。
+          # この定義どうし(Actions の concurrency と重ねて)と、サーバー上で手動実行したデプロイが重ならないようにする。
+          # この仕組みを導入する前のワークフローはこのロックを取らないため、旧実行の Re-run とは排他できない(旧実行は Re-run しない)。
           # ロックはこのシェルと子プロセスが終わると OS が解放する(SSH が切れても、実行中のデプロイが終わるまで保持される)。
           # 排他できない状態ではデプロイしない(git reset 前なので何も変わらない)。
           if ! command -v flock > /dev/null; then
