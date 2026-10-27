@@ -410,10 +410,11 @@ RSpec.describe "production deploy (.github/workflows/rails.yml + script/deploy/p
   it "サーバーに flock が無ければ、git reset の前に失敗して何も変更しない" do
     limited_bin = File.join(root, "limited-bin")
     FileUtils.mkdir_p(limited_bin)
-    %w[hostname mkdir].each do |command|
-      File.symlink(`command -v #{command}`.strip, File.join(limited_bin, command))
+    find_executable = lambda do |name|
+      ENV.fetch("PATH").split(File::PATH_SEPARATOR).map { |dir| File.join(dir, name) }.find { |path| File.executable?(path) }
     end
-    bash = `command -v bash`.strip
+    %w[hostname mkdir].each { |command| File.symlink(find_executable.call(command), File.join(limited_bin, command)) }
+    bash = find_executable.call("bash")
 
     out, status = Open3.capture2e(
       env.merge("PATH" => limited_bin, "DEPLOY_PATH" => server, "FORCE_ASSETS_CLOBBER" => "false", "FORCE_FULL_DEPLOY" => "false"),
