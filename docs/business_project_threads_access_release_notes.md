@@ -164,21 +164,23 @@ sudo journalctl -u puma -n 500 --no-pager | grep -E "ERROR|FATAL|LegacyChatBackf
 - この検証で、`add_reference`(列・索引・外部キーを別々の文で作る)の途中で止まると、再実行で列があるため丸ごと飛ばされ、**外部キーが無いまま「成功」になる**ことが分かったため、列・索引・外部キーを個別に確認して作る形に直した(できあがるスキーマは修正前と同一で、`db/schema.rb` と一致)。
 - 外部キーの追加(`ALTER TABLE ... ADD CONSTRAINT`)は表のコピーを伴い、既存行の外部キーも検査される。本番の `project_chats` に親の無い行(参照先の会員・プロジェクトが無い)があると失敗する。外部キーは以前から張られているため通常は無い。影響確認スクリプトの実行時に合わせて確認できる(下記「本番反映前の確認」)。
 
-### 本番 MySQL のバージョン
+### 本番 MySQL のバージョンと事前確認の結果
 
-- リポジトリ・設定・ドキュメントからは**特定できなかった**。`config/database.yml` は接続の照合順序(`utf8mb4_general_ci`)だけで、`db/schema.rb` の `utf8mb4_0900_ai_ci` は開発 DB(本番では `dump_schema_after_migration = false`)のもの。RDS(MySQL)であることだけが記載されている。
-- そのため検証はローカルの MySQL 9.6 のみ(同じメジャーバージョンでは未検証)。使っている機能(NULL を含む一意索引で NULL 同士は重複扱いにしない・`ADD CONSTRAINT`・`ALTER TABLE ... ADD` 列・`CHANGE`/`MODIFY` の NULL 許容化)は MySQL 5.7・8.0 でも同じ動作の範囲。
-- 本番反映前の確認(要ユーザー確認・読み取り専用):
+2026-10-28 00:10 JST に本番で読み取り専用で確認した(書き込みは Rails と MySQL の READ ONLY トランザクションで禁止し ROLLBACK。スクリプトは `/tmp` に一時配置し実行後に削除。出力は件数のみ)。
 
-```bash
-# 本番サーバー上
-cd /home/ec2-user/be-my-style
-RAILS_ENV=production bundle exec rails runner 'c = ActiveRecord::Base.connection; puts c.select_value("SELECT VERSION()"); puts c.select_value("SELECT COUNT(*) FROM project_chats pc LEFT JOIN projects p ON p.id = pc.project_id LEFT JOIN customers cu ON cu.id = pc.customer_id WHERE p.id IS NULL OR cu.id IS NULL")'
-# または AWS コンソール / CLI(読み取り)
-aws rds describe-db-instances --query 'DBInstances[].[DBInstanceIdentifier,Engine,EngineVersion,BackupRetentionPeriod,LatestRestorableTime,DeletionProtection]'
-```
+| 項目 | 結果 |
+|---|---|
+| MySQL | **8.4.8**(RDS)。`foreign_key_checks=1`、`sql_mode=NO_ENGINE_SUBSTITUTION`、InnoDB |
+| 行数 | communities 16 / projects 1 / project_chats 0 / project_members 1 / community_customers 386 / permits 2 / customers 189 |
+| 親の無い行(外部キー追加の支障) | `project_chats`(プロジェクト・会員)0、`projects`(会員・コミュニティ)0、`project_members` 0、`communities`(ドメイン)0 |
+| 既存の外部キー | project_chats → customers, projects / projects → communities, customers |
+| 新しいテーブル・列 | まだ無い(途中まで適用された状態ではない)。デプロイ済みコードに未適用のマイグレーションは無い(schema version 20261018000000) |
+| `business_access_preflight`(Business 3 コミュニティ・1 プロジェクト) | コミュニティ参加資格の無いプロジェクト参加者 0、同じく作成者 0、重複(参加・申請・プロジェクト参加)0、参加済みなのに残る申請 0、承認できる運営者がいないコミュニティ 0 |
 
-  5.7 系だった場合は、MySQL 5.7 の使い捨て DB で `db/migrate` の4本を同じ手順(main のスキーマ + 旧データ → 途中失敗 → 再実行)で検証してから反映する。8.0 / 8.4 系なら、手元で同じメジャーバージョンを用意して再検証するとより確実(必須ではないと考えるが判断はユーザー)。最後の値(親の無いチャット行)は 0 であること。
+- 切り替えで閲覧できなくなる人はいないため、運営者への個別対応は不要。Business の既存データは小さく、ALTER はすぐに終わる見込み。
+- 互換性: 使っている構文(列追加・表作成・NULL を含む一意索引・外部キー追加・NULL 許容化)は MySQL 8.4 でも有効。8.4 で既定が有効になった `restrict_fk_on_non_standard_key`(一意でないキーへの外部キーを禁止)には、すべての外部キーが参照先の主キー `id` を参照するため該当しない。
+- **MySQL 8.4 での実行検証は未実施**。検証はローカルの MySQL 9.6 のみ(途中失敗 7 か所の再実行を含む)。8.4 の公式バイナリを手元に用意する操作は今回の作業環境の安全確認で許可されなかった。必要なら、ユーザーの判断で `brew install mysql@8.4`(または公式アーカイブ)を用意し、同じ検証(main のスキーマ + 旧データ → 4 本 → 途中失敗 → 再実行)を行う。
+- 注意: 本番の `lock_wait_timeout` は 31536000 秒(既定値)。ALTER はテーブルのメタデータロックを待つため、長いトランザクションが残っていると migrate が待ち続け、その間そのテーブルへの問い合わせも待たされる。Business のデータ・利用が小さく通常は問題にならないが、migrate が終わらない場合は `SHOW PROCESSLIST`(読み取り)で待ちを確認する。
 
 ### 切り戻し(コードを旧版へ戻す)の方針
 
@@ -208,14 +210,33 @@ aws rds describe-db-instances --query 'DBInstances[].[DBInstanceIdentifier,Engin
 ### データベースのバックアップ・復元
 
 - 確認できたこと: リポジトリ・ドキュメントに RDS のバックアップ(自動バックアップの保持期間・ポイントインタイムリカバリ・スナップショット)の記載は無い。デプロイ処理はバックアップを取らない。
-- 未確認: 自動バックアップが有効か・保持期間・最新の復元可能時刻・手動スナップショットの有無・削除保護。上記の `aws rds describe-db-instances`(読み取り)か AWS コンソールで確認する。
-- 推奨(要ユーザー確認): マージ直前に RDS の手動スナップショットを取る(コンソールの「スナップショットの取得」、または `aws rds create-db-snapshot`)。復元は**新しい DB インスタンスとして作られ**、接続先(systemd の `DB_HOST`)の切り替え・`daemon-reload`・Puma 再起動が必要になり、スナップショット以降の書き込み(全機能)は失われる。今回のマイグレーションは既存データを書き換えない(列追加・表追加・`project_thread_id` の設定・NULL 許容化のみ)ため、復元が必要になる場面は想定していない。最終手段として扱う。
+- **未確認**(2026-10-28 時点): 自動バックアップが有効か・保持期間・最新の復元可能時刻・既存スナップショット・削除保護。手元に AWS CLI が無く、EC2 からの AWS 権限の確認は作業環境の安全確認で許可されなかったため。AWS コンソール(RDS → データベース → 対象インスタンス →「メンテナンスとバックアップ」タブ、および「スナップショット」)で確認する。CLI の場合(読み取り):
+
+```bash
+aws rds describe-db-instances --query 'DBInstances[].[DBInstanceIdentifier,EngineVersion,BackupRetentionPeriod,PreferredBackupWindow,LatestRestorableTime,DeletionProtection]' --output table
+aws rds describe-db-snapshots --db-instance-identifier <id> --query 'DBSnapshots[].[DBSnapshotIdentifier,SnapshotType,SnapshotCreateTime,Status]' --output table
+```
+
+  `BackupRetentionPeriod` が 0 なら自動バックアップ(ポイントインタイムリカバリ)は無効。
+
+**マージ直前の手動スナップショット(要ユーザー確認。まだ取らない)**
+
+1. 夜間停止(JST 2:00〜6:00)と利用の多い時間帯を避け、マージの直前に取る。
+2. コンソール: 対象インスタンス →「アクション」→「スナップショットの取得」→ 名前(例 `bms-before-business-threads-20261028`)。CLI: `aws rds create-db-snapshot --db-instance-identifier <id> --db-snapshot-identifier bms-before-business-threads-<日付>`。
+3. 完了確認: 状態が「利用可能」(`available`)になるまで待つ(`aws rds wait db-snapshot-available --db-snapshot-identifier <名前>`、または `describe-db-snapshots` の `Status`)。シングル AZ の MySQL では取得開始時に短い I/O の停止が起き得る。完了を確認してからマージする。
+4. 手動スナップショットは削除するまで残り、保管料金がかかる。不要になったら削除する。
+
+**復元時の注意**
+
+- スナップショット・ポイントインタイムリカバリのどちらでも、**復元は新しい DB インスタンスとして作られる**(既存のインスタンスは上書きされない)。エンドポイントが変わるため、接続先(systemd の `DB_HOST`)の切り替え・`daemon-reload`・Puma 再起動が必要。パラメータグループ・セキュリティグループ・インスタンスクラスは復元時に指定し直す。
+- スナップショット以降の書き込み(Business 以外も含む全機能)は失われる。
+- 今回のマイグレーションは既存データを書き換えない(列追加・表追加・`project_thread_id` の設定・NULL 許容化のみ)ため、復元が必要になる場面は想定していない。最終手段として扱う。
 
 ### 推測・未検証
 
 - 旧 Puma は git reset 後〜再起動までの間(precompile 中の数分を含む)、起動後まだ一度も表示していないビューを初めて表示するときにディスク上の新しいテンプレートを読む可能性がある(Rails の仕組みからの推定)。毎回のデプロイに共通する。なくすには、別ディレクトリでビルドしてから切り替える方式(リリースディレクトリ + シンボリックリンク)への変更が必要で、今回は行っていない。
 - 旧 Puma が古いアセットを参照し続けても、precompile は旧ファイルを残すため表示は崩れないと考えている(本番では未確認)。
-- 本番 RDS の MySQL バージョンでの動作(上記)。
+- MySQL 8.4(本番と同じメジャーバージョン)での実行(上記。構文上の互換性のみ確認)。
 
 ## 退会・会員データ削除時
 
