@@ -13,9 +13,24 @@ on:
         options:
           - 'false'
           - 'true'
+      force_full_deploy:
+        description: '差分に関係なく bundle/yarn/precompile/singing-analyzer 再起動まですべて実行する（デプロイ記録が信用できない場合のみ使用）'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+# 本番デプロイを同時に2つ走らせない(後から来た実行は待つ。実行中のものは取り消さない)。
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
 
 jobs:
   build:
+    # 手動実行でも main の定義だけを使う(別ブランチのワークフロー定義で本番へデプロイしない)。
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -27,6 +42,8 @@ jobs:
         EC2_HOST: ${{ secrets.HOST_NAME }}
         DEPLOY_PATH: '/home/ec2-user/be-my-style'
         FORCE_ASSETS_CLOBBER: ${{ github.event.inputs.force_assets_clobber || 'false' }}
+        FORCE_FULL_DEPLOY: ${{ github.event.inputs.force_full_deploy || 'false' }}
+        TRIGGER_COMMIT: ${{ github.sha }}
       run: |
         set -euo pipefail
 
@@ -55,330 +72,48 @@ jobs:
           -o ServerAliveInterval=30 \
           -o ServerAliveCountMax=20 \
           -i "$HOME/.ssh/deploy_key" \
-          "${EC2_USER}@${EC2_HOST}" "DEPLOY_PATH='${DEPLOY_PATH}' FORCE_ASSETS_CLOBBER='${FORCE_ASSETS_CLOBBER}' bash -s" << 'EOF'
+          "${EC2_USER}@${EC2_HOST}" "DEPLOY_PATH='${DEPLOY_PATH}' FORCE_ASSETS_CLOBBER='${FORCE_ASSETS_CLOBBER}' FORCE_FULL_DEPLOY='${FORCE_FULL_DEPLOY}' TRIGGER_COMMIT='${TRIGGER_COMMIT}' bash -s" << 'EOF'
           set -euo pipefail
 
           echo "Host: $(hostname)"
           echo "Deploy path: ${DEPLOY_PATH}"
-          DEPLOY_STARTED_AT=$(date +%s)
-          echo "[deploy] START: $(date '+%H:%M:%S')"
-          echo "[deploy] FORCE_ASSETS_CLOBBER: ${FORCE_ASSETS_CLOBBER:-false}"
-
-          echo "[deploy] === resource snapshot ==="
-          echo "[deploy] memory:"
-          free -h
-          echo "[deploy] disk:"
-          df -h
-          echo "[deploy] swap:"
-          swapon --show 2>/dev/null || echo "[deploy] WARNING: No swap detected — OOM risk during assets:precompile"
-          echo "[deploy] disk usage (assets/tmp/log):"
-          du -sh "${DEPLOY_PATH}/public/assets" "${DEPLOY_PATH}/public/packs" "${DEPLOY_PATH}/tmp" "${DEPLOY_PATH}/log" 2>/dev/null || true
-          echo "[deploy] ========================="
-
-          log_step_start() {
-            echo "[deploy] $1 start: $(date '+%H:%M:%S')"
-          }
-
-          log_step_finish() {
-            step_name="$1"
-            step_started_at="$2"
-            step_finished_at=$(date +%s)
-            echo "[deploy] ${step_name} finished: $(date '+%H:%M:%S') ($((step_finished_at - step_started_at))s)"
-          }
+          echo "[deploy] FORCE_ASSETS_CLOBBER: ${FORCE_ASSETS_CLOBBER:-false} / FORCE_FULL_DEPLOY: ${FORCE_FULL_DEPLOY:-false}"
 
           cd "${DEPLOY_PATH}"
 
+          # 最後に成功したデプロイの記録。git reset で消えないようリポジトリの外に置く。
+          DEPLOY_STATE_DIR="${HOME}/.be-my-style-deploy"
+          mkdir -p "$DEPLOY_STATE_DIR"
+
+          # サーバー上で手動実行したデプロイとも重ならないようにする。
+          if command -v flock > /dev/null; then
+            exec 9>"${DEPLOY_STATE_DIR}/deploy.lock"
+            if ! flock -w 900 9; then
+              echo "::error::another deploy is still running on the server (lock: ${DEPLOY_STATE_DIR}/deploy.lock)"
+              exit 1
+            fi
+          else
+            echo "::warning::flock is not installed on the server; relying on the Actions concurrency group only"
+          fi
+
           PREV_COMMIT=$(git rev-parse HEAD)
           echo "[deploy] Before: ${PREV_COMMIT}"
-
-          GIT_UPDATE_STARTED_AT=$(date +%s)
-          log_step_start "git update"
           git fetch origin main
           git reset --hard origin/main
-          log_step_finish "git update" "$GIT_UPDATE_STARTED_AT"
-
-          NEW_COMMIT=$(git rev-parse HEAD)
-          echo "[deploy] After: ${NEW_COMMIT}"
-
-          CHANGED_FILES="$(git diff --name-only "$PREV_COMMIT" "$NEW_COMMIT" || true)"
-          CHANGED_FILE_COUNT=$(printf '%s\n' "$CHANGED_FILES" | sed '/^$/d' | wc -l | tr -d ' ')
-          echo "[deploy] Changed files: ${CHANGED_FILE_COUNT}"
-
-          BUNDLE_DEPS_CHANGED=false
-          YARN_DEPS_CHANGED=false
-          ASSETS_CHANGED=false
-          MIGRATIONS_CHANGED=false
-
-          while IFS= read -r changed_file; do
-            [ -n "$changed_file" ] || continue
-
-            case "$changed_file" in
-              Gemfile|Gemfile.lock)
-                BUNDLE_DEPS_CHANGED=true
-                ;;
-            esac
-
-            case "$changed_file" in
-              package.json|yarn.lock)
-                YARN_DEPS_CHANGED=true
-                ;;
-            esac
-
-            case "$changed_file" in
-              app/assets/*|app/javascript/*|app/packs/*|config/webpack/*|config/webpacker.yml|config/initializers/assets.rb|package.json|yarn.lock)
-                ASSETS_CHANGED=true
-                ;;
-            esac
-
-            case "$changed_file" in
-              db/migrate/*)
-                MIGRATIONS_CHANGED=true
-                ;;
-            esac
-          done <<< "$CHANGED_FILES"
-
-          BUNDLE_STARTED_AT=$(date +%s)
-          log_step_start "bundle check/install"
-          ~/.rbenv/shims/bundle config set deployment 'true'
-          ~/.rbenv/shims/bundle config set without 'development test'
-          if ~/.rbenv/shims/bundle check; then
-            echo "[deploy] Skip bundle install: bundle check passed"
-          elif [ "$BUNDLE_DEPS_CHANGED" = "true" ]; then
-            echo "[deploy] bundle install required: Gemfile/Gemfile.lock changed"
-            ~/.rbenv/shims/bundle install --jobs 4 --retry 3
-          else
-            echo "[deploy] bundle install required: bundle check failed even though Gemfile/Gemfile.lock did not change"
-            ~/.rbenv/shims/bundle install --jobs 4 --retry 3
-          fi
-          log_step_finish "bundle check/install" "$BUNDLE_STARTED_AT"
-
-          YARN_STARTED_AT=$(date +%s)
-          log_step_start "yarn check/install"
-          if [ "$YARN_DEPS_CHANGED" = "true" ]; then
-            echo "[deploy] yarn install required: package.json/yarn.lock changed"
-            bin/yarn install --frozen-lockfile
-          else
-            echo "[deploy] Skip yarn install: package.json/yarn.lock unchanged"
-          fi
-          log_step_finish "yarn check/install" "$YARN_STARTED_AT"
-
-          ASSETS_STARTED_AT=$(date +%s)
-          log_step_start "assets check/precompile"
-          BACKUP_DIR="/tmp/be-my-style-assets-backup-$(date +%Y%m%d%H%M%S)"
-          FORCE_CLOBBER="${FORCE_ASSETS_CLOBBER:-false}"
-          SHOULD_PRECOMPILE_ASSETS=false
-
-          if [ "$FORCE_CLOBBER" = "true" ]; then
-            SHOULD_PRECOMPILE_ASSETS=true
-            echo "[deploy] assets:precompile required: FORCE_ASSETS_CLOBBER=true"
-          elif [ "$ASSETS_CHANGED" = "true" ]; then
-            SHOULD_PRECOMPILE_ASSETS=true
-            echo "[deploy] assets:precompile required: asset-related changes detected"
-          else
-            echo "[deploy] Skip assets:precompile: no asset-related changes"
+          echo "[deploy] After: $(git rev-parse HEAD)"
+          # 古い実行を Re-run しても、デプロイするのは常にその時点の origin/main(起動元のコミットではない)。
+          if [ -n "${TRIGGER_COMMIT:-}" ] && [ "$TRIGGER_COMMIT" != "$(git rev-parse HEAD)" ]; then
+            echo "::notice::this run was triggered by ${TRIGGER_COMMIT} but deploys the current origin/main $(git rev-parse HEAD)"
           fi
 
-          if [ "$FORCE_CLOBBER" = "true" ]; then
-            echo "[deploy] FORCE_ASSETS_CLOBBER=true: backing up assets before clobber"
-            mkdir -p "$BACKUP_DIR"
-            [ -d public/assets ] && cp -a public/assets "$BACKUP_DIR/assets"
-            [ -d public/packs ] && cp -a public/packs "$BACKUP_DIR/packs"
-            echo "[deploy] assets backup finished: $BACKUP_DIR"
-
-            echo "[deploy] assets:clobber start: $(date '+%H:%M:%S')"
-            RAILS_ENV=production ~/.rbenv/shims/bundle exec rails assets:clobber
-            echo "[deploy] assets:clobber finished: $(date '+%H:%M:%S')"
-          fi
-
-          if [ "$SHOULD_PRECOMPILE_ASSETS" = "true" ]; then
-            echo "[deploy] --- pre-precompile resource check ---"
-            echo "[deploy] memory:"
-            free -h
-            echo "[deploy] disk:"
-            df -h
-            echo "[deploy] swap:"
-            swapon --show 2>/dev/null || echo "[deploy] WARNING: No swap — OOM risk"
-            echo "[deploy] -------------------------------------"
-
-            echo "[deploy] assets:precompile start: $(date '+%H:%M:%S')"
-            LOOP_COUNT=0
-            (RAILS_ENV=production NODE_OPTIONS=--max_old_space_size=256 ~/.rbenv/shims/bundle exec rails assets:precompile) &
-            PRECOMPILE_PID=$!
-            while kill -0 "$PRECOMPILE_PID" 2>/dev/null; do
-              echo "[deploy] assets:precompile still running: $(date '+%H:%M:%S') mem=$(free -h | awk '/^Mem:/{print $3"/"$2}') disk=$(df -h / | awk 'NR==2{print $5}')"
-              LOOP_COUNT=$((LOOP_COUNT + 1))
-              sleep 30
-            done
-
-            if wait "$PRECOMPILE_PID"; then
-              echo "[deploy] assets:precompile finished: $(date '+%H:%M:%S')"
-              if [ "$FORCE_CLOBBER" = "true" ] && [ -d "$BACKUP_DIR" ]; then
-                rm -rf "$BACKUP_DIR"
-                echo "[deploy] assets backup deleted"
-              fi
-            else
-              echo "[deploy] ERROR: assets:precompile FAILED. Aborting deploy."
-              echo "[deploy] === failure diagnostics ==="
-              echo "[deploy] memory:"
-              free -h
-              echo "[deploy] disk:"
-              df -h
-              echo "[deploy] recent OOM events:"
-              dmesg --time-format reltime 2>/dev/null | grep -iE "killed process|oom.killer|out of memory" | tail -5 || true
-              SWAP_TOTAL=$(free -h | awk '/^Swap:/{print $2}')
-              DISK_FREE=$(df -h / | awk 'NR==2{print $4}')
-              echo "[deploy] HINT: precompile failed — check the above."
-              echo "[deploy] HINT:   swap total: ${SWAP_TOTAL} (0 or small → OOM risk)"
-              echo "[deploy] HINT:   disk free : ${DISK_FREE} (< 500MB → disk full risk)"
-              echo "[deploy] HINT: Fix swap: sudo dd if=/dev/zero of=/swapfile bs=1M count=512 && sudo mkswap /swapfile && sudo swapon /swapfile"
-              echo "[deploy] HINT: Fix disk: du -sh ~/be-my-style/log/* ~/be-my-style/tmp/cache 2>/dev/null"
-              echo "[deploy] =============================="
-              if [ "$FORCE_CLOBBER" = "true" ] && [ -d "$BACKUP_DIR" ]; then
-                echo "[deploy] Restoring assets from backup: $BACKUP_DIR"
-                rm -rf public/assets public/packs
-                [ -d "$BACKUP_DIR/assets" ] && cp -a "$BACKUP_DIR/assets" public/assets
-                [ -d "$BACKUP_DIR/packs" ] && cp -a "$BACKUP_DIR/packs" public/packs
-                echo "[deploy] Assets restored. Existing assets preserved."
-              else
-                echo "[deploy] Existing assets preserved."
-              fi
-              exit 1
-            fi
-          fi
-          log_step_finish "assets check/precompile" "$ASSETS_STARTED_AT"
-
-          MIGRATE_STARTED_AT=$(date +%s)
-          log_step_start "db:migrate"
-          if [ "$MIGRATIONS_CHANGED" = "true" ]; then
-            echo "[deploy] db:migrate required: db/migrate changed"
-            RAILS_ENV=production ~/.rbenv/shims/bundle exec rails db:migrate
-          else
-            echo "[deploy] Skip db:migrate: db/migrate unchanged"
-          fi
-          log_step_finish "db:migrate" "$MIGRATE_STARTED_AT"
-
-          PUMA_STARTED_AT=$(date +%s)
-          log_step_start "puma restart"
-          sudo systemctl restart puma
-          log_step_finish "puma restart" "$PUMA_STARTED_AT"
-          sudo systemctl status puma --no-pager --lines=20
-
-          ANALYZER_STARTED_AT=$(date +%s)
-          log_step_start "singing-analyzer change detection"
-
-          # Change detection reuses PREV_COMMIT/NEW_COMMIT from the git update
-          # step above so it is correct across multi-commit pushes, merge
-          # commits, and any number of intermediate commits. It is computed
-          # independently from CHANGED_FILES (which swallows git diff
-          # failures with `|| true`) because a failed detection must never
-          # silently skip an analyzer restart.
-          set +e
-          ANALYZER_DIFF_OUTPUT="$(git diff --name-only "$PREV_COMMIT" "$NEW_COMMIT")"
-          ANALYZER_DIFF_STATUS=$?
-          set -e
-
-          ANALYZER_CHANGED=false
-          ANALYZER_DEPS_CHANGED=false
-
-          if [ "$ANALYZER_DIFF_STATUS" -ne 0 ]; then
-            echo "[deploy] WARNING: singing-analyzer change detection failed (git diff exit=${ANALYZER_DIFF_STATUS})"
-            echo "[deploy] Treating as changed (fail-safe: never silently skip a required restart)"
-            ANALYZER_CHANGED=true
-            ANALYZER_DEPS_CHANGED=true
-          else
-            while IFS= read -r changed_file; do
-              [ -n "$changed_file" ] || continue
-
-              case "$changed_file" in
-                singing_analyzer/*)
-                  ANALYZER_CHANGED=true
-                  ;;
-              esac
-
-              case "$changed_file" in
-                singing_analyzer/requirements.txt)
-                  ANALYZER_DEPS_CHANGED=true
-                  ;;
-              esac
-            done <<< "$ANALYZER_DIFF_OUTPUT"
-          fi
-
-          if [ "$ANALYZER_CHANGED" = "true" ]; then
-            echo "[deploy] singing-analyzer changes: yes"
-
-            ANALYZER_DIR="${DEPLOY_PATH}/singing_analyzer"
-            ANALYZER_VENV_PIP="${ANALYZER_DIR}/.venv/bin/pip"
-
-            if [ "$ANALYZER_DEPS_CHANGED" = "true" ]; then
-              "$ANALYZER_VENV_PIP" install -r "${ANALYZER_DIR}/requirements.txt"
-              echo "[deploy] singing-analyzer dependency install: performed"
-            else
-              echo "[deploy] singing-analyzer dependency install: skipped (requirements.txt unchanged)"
-            fi
-
-            # singing-analyzer.service is not tracked in this repository (it is
-            # managed manually on the production host, see
-            # docs/handover/al2023_migration_wiki.md). There is nothing in git
-            # to diff against, so daemon-reload is intentionally not automated
-            # here. If the unit file is ever brought under version control,
-            # this step must be revisited deliberately rather than having
-            # daemon-reload silently added.
-            echo "[deploy] singing-analyzer daemon-reload: skipped (unit file is not managed by this repository)"
-
-            sudo systemctl restart singing-analyzer
-            echo "[deploy] singing-analyzer restart: performed"
-
-            ANALYZER_ACTIVE=false
-            for _ in 1 2 3 4 5; do
-              if systemctl is-active --quiet singing-analyzer; then
-                ANALYZER_ACTIVE=true
-                break
-              fi
-              sleep 1
-            done
-
-            if [ "$ANALYZER_ACTIVE" = "true" ]; then
-              echo "[deploy] singing-analyzer active check: passed"
-            else
-              echo "[deploy] ERROR: singing-analyzer active check FAILED"
-              echo "[deploy] === singing-analyzer status (failure diagnostics) ==="
-              sudo systemctl status singing-analyzer --no-pager --lines=20 || true
-              echo "[deploy] ======================================================"
-              exit 1
-            fi
-
-            ANALYZER_HEALTH_OK=false
-            ANALYZER_HEALTH_LAST_ERROR=""
-            for attempt in $(seq 1 15); do
-              if ANALYZER_HEALTH_BODY="$(curl --fail --silent --show-error --max-time 5 http://127.0.0.1:8000/health 2>&1)"; then
-                if printf '%s' "$ANALYZER_HEALTH_BODY" | grep -q '"status"[[:space:]]*:[[:space:]]*"ok"'; then
-                  ANALYZER_HEALTH_OK=true
-                  break
-                fi
-                ANALYZER_HEALTH_LAST_ERROR="unexpected /health response body"
-              else
-                ANALYZER_HEALTH_LAST_ERROR="$ANALYZER_HEALTH_BODY"
-              fi
-              echo "[deploy] singing-analyzer health check attempt ${attempt}/15: not ready yet"
-              sleep 2
-            done
-
-            if [ "$ANALYZER_HEALTH_OK" = "true" ]; then
-              echo "[deploy] singing-analyzer health check: passed"
-            else
-              echo "[deploy] ERROR: singing-analyzer health check FAILED after 15 attempts (last error: ${ANALYZER_HEALTH_LAST_ERROR})"
-              exit 1
-            fi
-          else
-            echo "[deploy] singing-analyzer changes: no"
-            echo "[deploy] singing-analyzer restart: skipped"
-          fi
-
-          log_step_finish "singing-analyzer deploy" "$ANALYZER_STARTED_AT"
-
-          DEPLOY_FINISHED_AT=$(date +%s)
-          echo "[deploy] END: $(date '+%H:%M:%S') ($((DEPLOY_FINISHED_AT - DEPLOY_STARTED_AT))s)"
-          echo "Deploy completed successfully."
+          # 以降は更新後のコードにあるスクリプトで行う(実行中のファイルを git reset で書き換えないよう分けている)。
+          # 差分判定は「最後に成功したデプロイ」を基準にするため、git reset 後に失敗しても再実行で復旧できる。
+          PREV_COMMIT="$PREV_COMMIT" \
+          DEPLOY_PATH="$DEPLOY_PATH" \
+          DEPLOY_STATE_DIR="$DEPLOY_STATE_DIR" \
+          FORCE_ASSETS_CLOBBER="${FORCE_ASSETS_CLOBBER:-false}" \
+          FORCE_FULL_DEPLOY="${FORCE_FULL_DEPLOY:-false}" \
+            bash script/deploy/production_deploy.sh < /dev/null
         EOF
 
         rm -f "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts_production"
