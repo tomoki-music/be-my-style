@@ -46,6 +46,7 @@
 - 外部サービスへ実通信しない(一部イベント関連specはGeocoder経由でGoogle Maps APIへ実通信するが、API未設定時のエラーをアプリ側が握りつぶす設計のため、テスト結果には影響しない。ネットワーク遮断環境ではこの点が新たな失敗要因になり得る)
 - System spec/ブラウザ環境へ強く依存しない
 - Model・Request・Service・Mailerの主要領域、および認証・コミュニティ・イベント参加・Markdown・SSRF対策(内部ホスト)を含む
+- 本番デプロイ処理(`spec/deploy/production_deploy_script_spec.rb`)。`rails.yml` が本番へ送るスクリプトを一時ディレクトリの疑似サーバーで実行する(git は本物、bundle・systemctl・curl はスタブ。本番には接続しない)
 
 対象を増減する場合は、Workflow内のコメントと本ドキュメントを合わせて更新する。
 
