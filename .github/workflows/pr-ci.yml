@@ -106,6 +106,7 @@ jobs:
       #   spec/requests/admin/events_spec.rb              - イベント(管理画面側)
       #   spec/models/join_part_customer_spec.rb          - イベント参加(パート参加)
       #   spec/requests/public/event_mention_candidates_spec.rb - イベントの@メンション候補API
+      #   spec/deploy/production_deploy_script_spec.rb    - 本番デプロイ処理(途中失敗→再実行での復旧。本番には接続しない)
       - name: Run stable RSpec subset
         id: stable_rspec
         run: |
@@ -125,6 +126,7 @@ jobs:
             spec/requests/admin/events_spec.rb \
             spec/models/join_part_customer_spec.rb \
             spec/requests/public/event_mention_candidates_spec.rb \
+            spec/deploy/production_deploy_script_spec.rb \
             --format documentation
 
       - name: Write summary
