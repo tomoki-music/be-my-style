@@ -1,4 +1,8 @@
+require_relative "../../lib/migration_lock_wait_timeout"
+
 class CreateProjectThreads < ActiveRecord::Migration[6.1]
+  include MigrationLockWaitTimeout
+
   DEFAULT_TITLE = "全体トーク".freeze
 
   # アプリのモデル(コールバック・検証)に依存しないよう、移行専用のクラスで扱う。

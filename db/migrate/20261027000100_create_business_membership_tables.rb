@@ -1,4 +1,8 @@
+require_relative "../../lib/migration_lock_wait_timeout"
+
 class CreateBusinessMembershipTables < ActiveRecord::Migration[6.1]
+  include MigrationLockWaitTimeout
+
   # Business のプロジェクト参加申請と、コミュニティ・プロジェクトのアクセス停止。
   # 参加済み(community_customers / project_members)・コミュニティの承認待ち(permits)は既存テーブルをそのまま使う。
   # 途中で失敗しても再実行できるよう、テーブルごとに有無を確認してから作る(MySQL の DDL は巻き戻らない)。

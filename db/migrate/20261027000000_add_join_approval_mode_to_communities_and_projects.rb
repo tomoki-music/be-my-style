@@ -1,4 +1,8 @@
+require_relative "../../lib/migration_lock_wait_timeout"
+
 class AddJoinApprovalModeToCommunitiesAndProjects < ActiveRecord::Migration[6.1]
+  include MigrationLockWaitTimeout
+
   # 0 = 手動承認 / 1 = 自動承認。
   # communities: 既存の参加は「申請 → 運営者が承認」だったため、既存行・新規行とも手動承認(0)。
   #   music のコミュニティにも列は付くが、参照するのは Business の画面だけ。
