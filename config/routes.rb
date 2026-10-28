@@ -244,9 +244,22 @@ Rails.application.routes.draw do
       member do
         post :join
         delete :leave
+        delete :cancel_request
+        get :members
       end
 
+      # スレッド指定の無い旧導線。投稿は「全体トーク」へ送る。
       resources :project_chats, only: [:create, :destroy]
+      resources :threads, controller: "project_threads" do
+        resources :project_chats, only: [:create, :destroy]
+      end
+      resources :join_requests, controller: "project_join_requests", only: [] do
+        member do
+          post :approve
+          delete :reject
+        end
+      end
+      resources :access_suspensions, controller: "project_access_suspensions", only: [:create, :destroy]
     end
 
     # タイムライン / プロジェクトチャットの添付ファイル配信(閲覧権限を確認して短時間有効な URL へ転送)。
@@ -260,6 +273,7 @@ Rails.application.routes.draw do
       get "send/mail" => "communities#send_mail"
       resource :permit, only: [:create, :destroy]
       resource :community_customers, only: [:create, :destroy]
+      resources :access_suspensions, controller: "community_access_suspensions", only: [:create, :destroy]
       resource :plan_trial, only: [:update], controller: "community_plan_trials"
       resources :community_posts
     end

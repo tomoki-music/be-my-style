@@ -24,7 +24,7 @@ RSpec.describe "Business チャットのスタンプ", type: :request do
 
   {
     "タイムライン" => { path: -> { business_community_path(community) }, param: "community_post" },
-    "プロジェクトチャット" => { path: -> { business_project_path(project) }, param: "project_chat" }
+    "プロジェクトチャット" => { path: -> { business_project_thread_path(project, ProjectThread.default_for(project)) }, param: "project_chat" }
   }.each do |label, config|
     it "#{label}のピッカーは「シンプル」「動物」タブに全スタンプを並べ、タブの aria 属性を持つ" do
       get instance_exec(&config[:path])
@@ -69,7 +69,7 @@ RSpec.describe "Business チャットのスタンプ", type: :request do
       }.to change(ProjectChat, :count).by(1), "#{key} を送信できません"
     end
 
-    get business_project_path(project)
+    get business_project_thread_path(project, ProjectThread.default_for(project))
     shown = Nokogiri::HTML(response.body).css(".business-chat-stamp img.stamp-illustration").map { |img| img["alt"] }
     expect(shown.size).to eq 26
   end

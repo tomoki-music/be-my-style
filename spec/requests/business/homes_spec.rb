@@ -179,6 +179,7 @@ RSpec.describe "Business::Homes", type: :request do
       end
 
       it "更新が新しい順に6件まで、名前・コミュニティ・概要・詳細リンクを表示し、一覧への導線を出す" do
+        CommunityCustomer.create!(community: community, customer: viewer)
         projects = (1..8).map { |i| project!("企画#{i}", updated_at: i.hours.ago) }
 
         get business_root_path
@@ -193,14 +194,16 @@ RSpec.describe "Business::Homes", type: :request do
         expect(section.css(%(a[href="#{business_projects_path}"])).size).to eq 2
       end
 
-      it "参加状況(主催 / 参加中 / 募集終了 / 参加できます / コミュニティ参加が必要)を出す" do
+      it "参加状況(主催 / 参加中 / 承認待ち / 募集終了 / 参加できます / 参加申請できます)を出し、未参加コミュニティのプロジェクトは出さない" do
         other_community = create(:community, owner: owner, domain: business_domain)
         CommunityCustomer.create!(community: community, customer: viewer)
         hosted = project!("主催企画", updated_at: 1.minute.ago, customer: viewer)
         joined = project!("参加企画", updated_at: 2.minutes.ago).tap { |p| p.members << viewer }
-        closed = project!("終了企画", updated_at: 3.minutes.ago, deadline: 1.day.ago)
-        open = project!("募集企画", updated_at: 4.minutes.ago)
-        outside = project!("外の企画", updated_at: 5.minutes.ago, community: other_community)
+        pending = project!("申請中企画", updated_at: 3.minutes.ago).tap { |p| ProjectJoinRequest.create!(project: p, customer: viewer) }
+        closed = project!("終了企画", updated_at: 4.minutes.ago, deadline: 1.day.ago)
+        open = project!("自動承認企画", updated_at: 5.minutes.ago, join_approval_mode: :auto)
+        manual = project!("承認制企画", updated_at: 6.minutes.ago)
+        project!("外の企画", updated_at: 1.second.ago, community: other_community)
 
         get business_root_path
 
@@ -208,13 +211,16 @@ RSpec.describe "Business::Homes", type: :request do
         expect(status).to eq(
           hosted.title => "主催",
           joined.title => "参加中",
+          pending.title => "承認待ち",
           closed.title => "募集終了",
           open.title => "参加できます",
-          outside.title => "コミュニティ参加後に参加できます"
+          manual.title => "参加申請できます"
         )
+        expect(response.body).not_to include("外の企画")
       end
 
       it "画像があれば表示し、Business 以外のコミュニティのプロジェクトは出さない" do
+        CommunityCustomer.create!(community: community, customer: viewer)
         with_image = project!("画像あり企画", updated_at: 1.minute.ago)
         with_image.project_image.attach(io: File.open(Rails.root.join("app/assets/images/no_image.jpg")), filename: "p.jpg", content_type: "image/jpeg")
         project!("音楽側の企画", updated_at: Time.current, community: create(:community, owner: owner))

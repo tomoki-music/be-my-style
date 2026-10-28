@@ -1,0 +1,6 @@
+-# 旧コードが残した投稿の紐づけ(LegacyChatBackfill)に失敗したとき。投稿は消えていないことを伝え、再読み込みで再試行させる。
+- if @thread_repair_failed
+  .alert.alert-warning.project-thread-repair-failed{ role: "alert" }
+    %p.mb-1 一部の過去の投稿を表示できていない可能性があります（投稿は削除されていません）。
+    = link_to "再読み込みする", request.path, class: "btn btn-sm btn-outline-secondary"
+    %small.d-block.mt-1.text-muted 解決しない場合は、時間をおいて再度お試しいただくか、運営者へお問い合わせください。

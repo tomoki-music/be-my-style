@@ -1,0 +1,23 @@
+-# スレッド一覧(新しく投稿があった順)。post_counts: { thread_id => 投稿数 }
+- project = local_assigns.fetch(:project)
+- threads = local_assigns.fetch(:threads)
+- post_counts = local_assigns.fetch(:post_counts)
+- if threads.empty?
+  .empty-state
+    %p まだスレッドはありません
+    %span 話題ごとにスレッドを作って会話を整理しましょう
+- else
+  %ul.project-thread-list
+    - threads.each do |thread|
+      %li.project-thread-list__item
+        = link_to business_project_thread_path(project, thread), class: "project-thread-list__link" do
+          .project-thread-list__main
+            %span.project-thread-list__title= thread.title
+            - if thread.description.present?
+              %span.project-thread-list__description= truncate(thread.description, length: 80)
+          .project-thread-list__meta
+            %span.project-thread-list__count 💬 #{post_counts.fetch(thread.id, 0)}件
+            %span.project-thread-list__updated
+              最終更新：
+              %time{ datetime: thread.last_posted_at.iso8601 }= l(thread.last_posted_at, format: :short)
+            %span.project-thread-list__author 作成：#{customer_display_name(thread.customer) || ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL}

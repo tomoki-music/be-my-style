@@ -70,7 +70,7 @@ RSpec.describe "Business チャット入力欄", type: :system, js: true do
     it "#{label}: 書式ボタン・プレビュー・添付の取り消しを使って送信できる" do
       sign_in_via_business_form
       instance_exec(&viewport)
-      visit business_project_path(project)
+      visit business_project_thread_path(project, ProjectThread.default_for(project))
 
       # 未選択で押すと入力例が入る
       press(find_button("太字"))

@@ -54,33 +54,47 @@
               edit_business_community_path(@community),
               class: "btn btn-primary btn-small"
 
-          - if @community.customers.include?(current_customer)
+          - case @join_status
+          - when :member
 
             %span.btn-joined 参加済み
 
-          - elsif @permit.present?
+          - when :manager
+
+            %span.btn-joined 運営者
+
+          - when :suspended
 
             .permit-status
-              %span.permit-badge 🟡 申請中
+              %span.permit-badge アクセス停止中
+              %p.permit-note このコミュニティへのアクセスは運営者により停止されています。
+
+          - when :pending
+
+            .permit-status
+              %span.permit-badge 🟡 承認待ち
 
               = link_to "申請を取り消す",
                 business_community_permit_path(@community, customer_id: current_customer.id),
                 method: :delete,
+                data: { confirm: "参加申請を取り消しますか？" },
                 class:"permit-cancel"
 
           - else
 
             .permit-cta
 
-              = link_to "参加申請する",
+              = link_to business_join_button_label(@community),
                 business_community_permit_path(@community),
                 method: :post,
                 class:"btn btn-primary btn-cta"
 
               %p.permit-note
-                このコミュニティに参加すると、
+                = business_join_approval_description(@community)
                 %br
-                プロジェクトや限定コンテンツに参加できます。
+                参加すると、プロジェクトやタイムラインを閲覧できます。
+
+          %p.hero-join-mode 参加方式：#{business_join_approval_label(@community)}
 
   / =========================
   / メイン
@@ -95,84 +109,86 @@
         .introduction
           .markdown-body= markdown(@community.introduction)
 
-      .card
-        .section-header
-          %h3 プロジェクト
+      - if @can_view_internal
 
-          - if current_customer.can_create_project_for?(@community)
-            = link_to "＋ 作成",
-              new_business_project_path(community_id: @community.id),
-              class:"btn btn-primary btn-small"
-          - elsif @community.customers.include?(current_customer)
-            = link_to feature_upgrade_cta(:business_project_create),
-              feature_upgrade_path(:business_project_create),
-              class:"btn btn-primary btn-small menu-btn-locked"
+        .card
+          .section-header
+            %h3 プロジェクト
 
-        .project-grid
-          - @projects.each do |project|
-            = link_to business_project_path(project) do
-              .project-card
-                %h4= project.title
-                %p= truncate(project.description.to_s, length: 80)
+            - if current_customer.can_create_project_for?(@community)
+              = link_to "＋ 作成",
+                new_business_project_path(community_id: @community.id),
+                class:"btn btn-primary btn-small"
+            - elsif @community.customers.include?(current_customer)
+              = link_to feature_upgrade_cta(:business_project_create),
+                feature_upgrade_path(:business_project_create),
+                class:"btn btn-primary btn-small menu-btn-locked"
 
-      .card#timeline
-        %h3 タイムライン
+          .project-grid
+            - @projects.each do |project|
+              = link_to business_project_path(project) do
+                .project-card
+                  %h4= project.title
+                  %p= truncate(project.description.to_s, length: 80)
 
-        -# 閲覧(本文・添付)はログイン中の会員なら可能。投稿は参加者(メンバー / 管理権限 / 管理者)だけ。
-        - if @can_post_timeline
+        .card#timeline
+          %h3 タイムライン
+
+          -# 閲覧・投稿とも参加者(メンバー / 管理権限 / 管理者)だけ。
           - if feature_available?(:business_community_post_create, community: @community)
             .business-chat-compose
               = form_with model: [:business, @community, CommunityPost.new], local: true, html: { class: "business-chat-form" } do |f|
                 = render "business/chat/composer", f: f, placeholder: "投稿する...", submit_label: "投稿"
               = render "business/chat/stamp_picker", url: business_community_community_posts_path(@community), param_key: :community_post
-        - else
-          %p.timeline-join-note
-            タイムラインへの投稿はコミュニティ参加者のみできます。
-            %br
-            コミュニティに参加すると、freeプランのまま投稿できます。
 
-        - @timeline_posts.each do |post|
+          - @timeline_posts.each do |post|
 
-          .timeline-item
+            .timeline-item
 
-            .timeline-header
+              .timeline-header
 
-              .user-block
+                .user-block
 
-                .avatar
-                  = customer_avatar_tag(post.customer, class_name: "avatar-img")
+                  .avatar
+                    = customer_avatar_tag(post.customer, class_name: "avatar-img")
 
-                .user-info
-                  %span.user-name
-                    = customer_display_name(post.customer)
+                  .user-info
+                    %span.user-name
+                      = customer_display_name(post.customer)
 
-                    - if post.customer == @community.owner && !customer_withdrawn?(post.customer)
-                      %span.owner-tag オーナー
+                      - if post.customer == @community.owner && !customer_withdrawn?(post.customer)
+                        %span.owner-tag オーナー
 
-                  %span.time= time_ago_in_words(post.created_at) + "前"
+                    %span.time= time_ago_in_words(post.created_at) + "前"
 
-            .timeline-body
-              = render "business/chat/message_content", record: post
+              .timeline-body
+                = render "business/chat/message_content", record: post
 
-        = render "business/chat/lightbox"
+          = render "business/chat/lightbox"
+
+      - else
+        .card.community-locked
+          %h3 🔒 参加者限定
+          %p プロジェクト・タイムライン・メンバーは、コミュニティの参加者のみ閲覧できます。
 
     / ===== 右 =====
     .right
 
-      .card
-        %h3 メンバー
+      - if @can_view_internal
+        .card
+          %h3 メンバー
 
-        .member-grid
-          - @community.active_customers.each do |customer|
-            = link_to business_customer_path(customer) do
-              .member-card
-                = customer_avatar_tag(customer, class_name: "member-icon")
+          .member-grid
+            - @community.active_customers.each do |customer|
+              = link_to business_customer_path(customer) do
+                .member-card
+                  = customer_avatar_tag(customer, class_name: "member-icon")
 
-                .member-info
-                  %span.member-name= customer.name
+                  .member-info
+                    %span.member-name= customer.name
 
-                  - if customer == @community.owner
-                    %span.owner-tag オーナー
+                    - if customer == @community.owner
+                      %span.owner-tag オーナー
 
       -# 変更できるのはシステム管理者だけ。コミュニティの運営者には状態のみ表示する。
       - if plan_trial_editable? || current_customer.can_manage_community?(@community)
@@ -196,7 +212,9 @@
 
       - if @can_review_permits
         .card
-          %h3 参加申請
+          .section-header
+            %h3 参加申請
+            = link_to "メンバー管理", business_permits_path(@community), class: "btn btn-light btn-small"
 
           - if @permits.empty?
             %p.permit-empty 現在、参加申請はありません。

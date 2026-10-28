@@ -132,7 +132,7 @@ RSpec.describe "Business スタンプ選択", type: :system, js: true do
   it "スマホ: プロジェクトチャットでも両タブから送信できる" do
     sign_in_via_business_form
     use_mobile_viewport
-    visit business_project_path(project)
+    visit business_project_thread_path(project, ProjectThread.default_for(project))
 
     press(find(".business-stamp-picker .stamp-picker__toggle"))
     press(tab("動物"))

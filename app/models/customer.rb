@@ -1,4 +1,6 @@
 class Customer < ApplicationRecord
+  include BusinessAccess
+
   MONTHLY_SESSION_CREDIT_AMOUNT = 1500
   FREE_MONTHLY_SINGING_DIAGNOSIS_LIMIT = 1
   SINGING_DIAGNOSIS_MONTHLY_LIMITS = {
@@ -178,9 +180,17 @@ class Customer < ApplicationRecord
 
   has_many :community_posts
 
-  has_many :projects, dependent: :destroy
+  # 作成者を完全削除しても、ほかの参加者のスレッド・投稿を含むプロジェクトは残す(作成者欄は「退会済み」表示)。
+  has_many :projects, dependent: :nullify
   has_many :project_members, dependent: :destroy
   has_many :joined_projects, through: :project_members, source: :project
+  has_many :project_join_requests, dependent: :destroy
+  # 作成者を完全削除しても、スレッドとほかの参加者の会話は残す(作成者欄は「退会済み」表示)。
+  has_many :project_threads, dependent: :nullify
+  has_many :community_access_suspensions, dependent: :destroy
+  has_many :project_access_suspensions, dependent: :destroy
+  has_many :issued_community_access_suspensions, class_name: "CommunityAccessSuspension", foreign_key: :suspended_by_id, dependent: :nullify
+  has_many :issued_project_access_suspensions, class_name: "ProjectAccessSuspension", foreign_key: :suspended_by_id, dependent: :nullify
   has_many :learning_students, dependent: :destroy
   has_many :learning_school_groups, dependent: :destroy
   has_many :learning_training_masters, dependent: :destroy
@@ -569,15 +579,6 @@ class Customer < ApplicationRecord
     community.present? && communities.exists?(id: community.id)
   end
 
-  # Business コミュニティのタイムライン投稿など、参加者向け機能を使えるか。
-  def business_community_participant?(community)
-    return false if community.blank? || !community.business_domain?
-    return true if can_manage_community?(community)
-
-    communities.exists?(id: community.id)
-
-  end
-
   def can_edit_event?(event)
     return true if admin?
     return true if event.customer_id == id
@@ -953,6 +954,30 @@ class Customer < ApplicationRecord
     notification = current_customer.active_notifications.new(
       visited_id: id,
       action: 'project_message',
+      community_id: project.community_id,
+      project_id: project.id
+    )
+    notification.save if notification.valid?
+  end
+
+  def business_notification_project_request(current_customer, project)
+    return if current_customer.id == id
+
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'project_request',
+      community_id: project.community_id,
+      project_id: project.id
+    )
+    notification.save if notification.valid?
+  end
+
+  def business_notification_project_accept(current_customer, project)
+    return if current_customer.id == id
+
+    notification = current_customer.active_notifications.new(
+      visited_id: id,
+      action: 'project_accept',
       community_id: project.community_id,
       project_id: project.id
     )

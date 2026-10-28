@@ -1,0 +1,7 @@
+= render "layouts/header_menu_nakama"
+
+.container.form-container
+  .form-card
+    %h2 新しいスレッド
+    %p.text-muted 「#{@project.title}」の参加者全員が閲覧・投稿できます。
+    = render "form", thread: @thread

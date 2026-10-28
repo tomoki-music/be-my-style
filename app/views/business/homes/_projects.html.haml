@@ -1,4 +1,4 @@
--# トップの「プロジェクト」一覧。閲覧範囲はプロジェクト一覧・詳細と同じ(ログイン中の会員のみ)。
+-# トップの「プロジェクト」一覧。閲覧範囲はプロジェクト一覧と同じ(参加中・運営中のコミュニティのプロジェクトのみ)。
 -# 未ログインではプロジェクトを取得しないため、名前・画像・件数は出ない。
 %section.top-projects#top-projects{ "aria-labelledby": "top-projects-title" }
   .top-projects__header
@@ -23,7 +23,7 @@
     %p.top-projects__note 更新が新しい順に#{Business::HomesController::TOP_PROJECT_LIMIT}件まで表示しています。
     %ul.top-projects__grid
       - @top_projects.each do |project|
-        - label, modifier = business_project_participation(project, joined_project_ids: @joined_project_ids, joined_community_ids: @joined_community_ids)
+        - label, modifier = business_project_participation(project, joined_project_ids: @joined_project_ids, joined_community_ids: @joined_community_ids, pending_project_ids: @pending_project_ids)
         %li.top-project-card
           = link_to business_project_path(project), class: "top-project-card__link" do
             .top-project-card__image

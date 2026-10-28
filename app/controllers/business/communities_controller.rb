@@ -1,4 +1,5 @@
 class Business::CommunitiesController < ApplicationController
+  include BusinessAccessControl
 
   before_action :set_community, only: [:show, :edit, :update, :destroy, :permits]
   before_action :ensure_community_manager!, only: [:edit, :update, :permits]
@@ -13,16 +14,18 @@ class Business::CommunitiesController < ApplicationController
       .page(params[:page]).per(5)
   end
 
+  # 未参加者には参加申請に必要な名称・紹介だけを見せ、プロジェクト・タイムライン・メンバーは参加者(運営者を含む)に限る。
   def show
-    @projects = @community.projects
-    # タイムラインはログイン中の会員なら閲覧できる(従来どおり)。投稿だけ参加者に限定する。
-    @timeline_posts = @community.community_posts.includes(customer: { profile_image_attachment: :blob }).with_attached_attachments.order(created_at: :desc)
-    @can_post_timeline = current_customer.business_community_participant?(@community)
-    @permit = @community.permits.find_by(customer: current_customer)
+    @can_view_internal = current_customer.business_community_participant?(@community)
+    @join_status = community_join_status
 
     # 参加申請カードの表示可否と申請者一覧の取得は同じ判定(承認・拒否できる人)に揃える。
     @can_review_permits = current_customer.can_manage_community?(@community)
     @permits = pending_permits if @can_review_permits
+    return unless @can_view_internal
+
+    @projects = @community.projects.recently_updated
+    @timeline_posts = @community.community_posts.includes(customer: { profile_image_attachment: :blob }).with_attached_attachments.order(created_at: :desc)
   end
 
   def new
@@ -76,21 +79,32 @@ class Business::CommunitiesController < ApplicationController
     redirect_to business_communities_path
   end
 
+  # メンバー管理: 参加申請の承認・却下、参加者のアクセス停止・解除。
   def permits
     @permits = pending_permits
+    @members = @community.active_customers.includes(profile_image_attachment: :blob).order("community_customers.created_at")
+    @suspensions = @community.community_access_suspensions.includes(customer: { profile_image_attachment: :blob }).order(:created_at)
+    # 停止ボタンを出さない運営者(can_manage_community? と同じ範囲)を1回の問い合わせで求める。
+    @manager_ids = (@community.community_owners.pluck(:customer_id) + [@community.owner_id]).compact.to_set
   end
-  
+
   private
+
+  def community_join_status
+    return :member if current_customer.business_community_member?(@community)
+    return :manager if current_customer.can_manage_community?(@community)
+    return :suspended if current_customer.business_community_suspended?(@community)
+    return :pending if current_customer.business_community_pending?(@community)
+
+    :none
+  end
 
   def pending_permits
     @community.permits.joins(:customer).merge(Customer.active).includes(:customer).order(:created_at)
   end
 
   def set_community
-    @community = Community.find_by!(
-      id: params[:id],
-      domain_id: @current_domain.id
-    )
+    @community = find_business_community!(params[:id])
   end
 
   # 詳細画面の「編集」ボタン・参加申請カードと同じ条件(オーナー / 管理権限 / 管理者)。
@@ -113,7 +127,8 @@ class Business::CommunitiesController < ApplicationController
       :introduction,
       :prefecture_id,
       :community_image,
-      :activity_stance
+      :activity_stance,
+      :join_approval_mode
     )
   end
 

@@ -37,6 +37,12 @@
           class:"form-control"
 
       .form-group
+        %label{ for: "project_join_approval_mode" } 参加方式
+        = f.select :join_approval_mode, business_join_approval_options, {}, class:"form-control"
+        %small.form-text.text-muted
+          参加できるのは、開催コミュニティの参加者だけです。変更は、変更後の新しい参加申請から適用されます。
+
+      .form-group
         %label 締切日
         = f.date_field :deadline, class:"form-control"
 

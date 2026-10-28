@@ -50,15 +50,15 @@ RSpec.describe "Business::CommunityPosts", type: :request do
       expect(flash[:alert]).to eq "コミュニティに参加すると投稿できます。"
     end
 
-    it "投稿フォームは表示されず、投稿の参加案内が表示される(閲覧はできる)" do
-      CommunityPost.create!(community: community, customer: owner, body: "誰でも読める投稿")
+    it "投稿フォームも本文も表示されず、参加案内が表示される" do
+      CommunityPost.create!(community: community, customer: owner, body: "参加者だけが読める投稿")
 
       get business_community_path(community)
 
-      expect(response.body).to include("誰でも読める投稿")
+      expect(response.body).not_to include("参加者だけが読める投稿")
       expect(response.body).not_to include("投稿する...")
       expect(response.body).not_to include("business-stamp-picker")
-      expect(response.body).to include("タイムラインへの投稿はコミュニティ参加者のみできます。")
+      expect(response.body).to include("コミュニティの参加者のみ閲覧できます")
     end
   end
 

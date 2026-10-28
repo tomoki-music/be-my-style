@@ -57,7 +57,7 @@ RSpec.describe "Business チャットの書式とプレビュー", type: :reques
     get business_community_path(community)
     expect_safe_formatted(Nokogiri::HTML(response.body).at_css(".timeline-body").inner_html)
 
-    get business_project_path(project)
+    get business_project_thread_path(project, ProjectThread.default_for(project))
     expect_safe_formatted(Nokogiri::HTML(response.body).at_css(".chat-body").inner_html)
   end
 
@@ -68,13 +68,13 @@ RSpec.describe "Business チャットの書式とプレビュー", type: :reques
     get business_community_path(community)
     expect(response.body).to include("<h1>旧タイムライン見出し</h1>")
 
-    get business_project_path(project)
+    get business_project_thread_path(project, ProjectThread.default_for(project))
     # 旧チャットはプレーンテキスト表示(simple_format)のまま。
     expect(response.body).to include("**そのまま**\n<br />改行あり")
   end
 
   it "入力欄にわかりやすい書式ボタンとプレビュー、添付の上限案内を表示する" do
-    get business_project_path(project)
+    get business_project_thread_path(project, ProjectThread.default_for(project))
 
     %w[太字 大きい文字 箇条書き リンク プレビュー ファイルを添付 スタンプを送る].each do |label|
       expect(response.body).to include(label)

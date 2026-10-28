@@ -1,20 +1,28 @@
 class Business::ProjectsController < ApplicationController
+  include BusinessAccessControl
 
-  before_action :set_project, only: [:show, :edit, :update, :join, :leave]
-  before_action :set_community, only: [:new, :create, :edit, :update]
+  THREAD_PREVIEW_LIMIT = 5
+
+  before_action :set_project, only: [:show, :edit, :update, :join, :leave, :cancel_request, :members]
+  before_action :set_community, only: [:new, :create]
   before_action :authorize_project_creation!, only: [:new, :create]
+  before_action :require_business_project_manager!, only: [:edit, :update, :members]
 
+  # 一覧に出すのは、内部を閲覧できるコミュニティ(参加済み・運営中)のプロジェクトだけ。
   def index
+    @projects = current_customer.business_visible_projects(@current_domain)
+
     if params[:community_id]
-      @community = Community.find(params[:community_id])
-      @projects = @community.projects
-    else
-      @projects = Project.in_domain(@current_domain).includes(:community, :customer, project_image_attachment: :blob).recently_updated
+      @community = find_business_community!(params[:community_id])
+      return redirect_to(business_community_path(@community), alert: "プロジェクトはコミュニティ参加者のみ閲覧できます。") unless current_customer.business_community_participant?(@community)
+
+      @projects = @projects.where(community_id: @community.id)
     end
+
+    @projects = @projects.includes(:community, :customer, project_image_attachment: :blob).recently_updated
   end
 
   def new
-    @community = Community.find(params[:community_id])
     @project = Project.new
   end
 
@@ -30,16 +38,30 @@ class Business::ProjectsController < ApplicationController
     end
   end
 
+  # 参加者(管理者を含む)にはスレッド・メンバーを、コミュニティ参加者には申請に必要な概要だけを見せる。
   def show
     @community = @project.community
-    @messages = @project.project_chats.includes(customer: { profile_image_attachment: :blob }).with_attached_attachments.order(created_at: :asc)
-    @new_message = ProjectChat.new
+    unless current_customer.business_community_participant?(@community)
+      return redirect_to business_community_path(@community), alert: "このプロジェクトはコミュニティ参加者のみ閲覧できます。"
+    end
+
+    @can_view_internal = current_customer.business_project_participant?(@project)
+    @can_manage_project = current_customer.business_project_manager?(@project)
+    return set_join_status unless @can_view_internal
+
+    @thread_repair_failed = !Business::ProjectThreads::LegacyChatBackfill.call_safely(project: @project)
+    @threads = @project.project_threads.includes(customer: { profile_image_attachment: :blob }).recently_active.limit(THREAD_PREVIEW_LIMIT).to_a
+    @thread_count = @project.project_threads.count
+    @thread_post_counts = ProjectChat.where(project_thread_id: @threads.map(&:id)).group(:project_thread_id).count
+    @pending_request_count = @project.project_join_requests.count if @can_manage_project
   end
 
   def edit
+    @community = @project.community
   end
 
   def update
+    @community = @project.community
     if @project.update(project_params)
       redirect_to business_project_path(@project), notice: "更新しました！"
     else
@@ -47,61 +69,75 @@ class Business::ProjectsController < ApplicationController
     end
   end
 
+  # 自動承認なら即参加、手動承認なら承認待ちにする(ページを開いただけでは参加しない)。
   def join
-    @project = Project.find(params[:id])
-
-    # 締切チェック
-    if @project.deadline.present? && @project.deadline < Time.current
-      redirect_to business_project_path(@project),
-        alert: "このプロジェクトは募集終了しています"
-      return
+    result = Business::Memberships::JoinProject.call(project: @project, customer: current_customer)
+    case result
+    when :joined then notify_project_joined!(@project)
+    when :requested then notify_project_requested!(@project)
     end
 
-    # コミュニティ未参加チェック
-    unless @project.community.members.include?(current_customer)
-      redirect_to business_project_path(@project),
-        alert: "コミュニティへの参加が必要です"
-      return
+    flash_membership_result(PROJECT_JOIN_MESSAGES, result)
+    if result == :community_required
+      redirect_to business_community_path(@project.community)
+    else
+      redirect_to business_project_path(@project)
     end
-
-    unless @project.members.include?(current_customer)
-      @project.members << current_customer
-      notify_project_joined!(@project)
-    end
-
-    redirect_to business_project_path(@project),
-      notice: "プロジェクトに参加しました！"
   end
 
   def leave
-    @project.project_members.find_by(customer: current_customer)&.destroy
-    redirect_to business_project_path(@project)
+    Business::Memberships::RevokeProjectAccess.call(project: @project, customer: current_customer)
+    redirect_to business_project_path(@project), notice: "プロジェクトから退出しました"
+  end
+
+  def cancel_request
+    current_customer.project_join_requests.where(project_id: @project.id).destroy_all
+    redirect_to business_project_path(@project), notice: "参加申請を取り消しました"
+  end
+
+  # 管理画面: 参加申請の承認・却下、参加者のアクセス停止・解除。
+  def members
+    @community = @project.community
+    @join_requests = @project.project_join_requests.joins(:customer).merge(Customer.active).includes(customer: { profile_image_attachment: :blob }).order(:created_at)
+    @members = @project.participating_members.includes(profile_image_attachment: :blob).order("project_members.created_at")
+    @suspensions = @project.project_access_suspensions.includes(customer: { profile_image_attachment: :blob }).order(:created_at)
+    # 停止ボタンを出さない管理者(business_project_manager? と同じ範囲)を1回の問い合わせで求める。
+    @manager_ids = (@community.community_owners.pluck(:customer_id) + [@community.owner_id, @project.customer_id]).compact.to_set
   end
 
   private
 
   def set_project
-    @project = Project.find(params[:id])
+    @project = find_business_project!(params[:id])
   end
 
   def set_community
     community_id =
       params[:community_id] ||
-      params.dig(:project, :community_id) ||
-      @project&.community_id
+      params.dig(:project, :community_id)
 
-    @community = Community.find(community_id)
+    @community = find_business_community!(community_id)
   end
 
+  def set_join_status
+    @join_status =
+      if current_customer.business_project_suspended?(@project) then :suspended
+      elsif current_customer.business_project_pending?(@project) then :pending
+      elsif @project.deadline_passed? then :closed
+      else :none
+      end
+  end
+
+  # 所属コミュニティは作成時の @community で決め、パラメータでは変更させない(他コミュニティへの移動を防ぐ)。
   def project_params
     params.require(:project).permit(
       :title,
       :description,
-      :community_id,
       :project_image,
       :status,
       :deadline,
-      :goal
+      :goal,
+      :join_approval_mode
     )
   end
 
@@ -120,9 +156,7 @@ class Business::ProjectsController < ApplicationController
   end
 
   def notify_project_joined!(project)
-    recipients = project_notification_recipients(project, include_members: true)
-
-    recipients.uniq.each do |customer|
+    project.accessible_customers.where.not(id: current_customer.id).find_each do |customer|
       customer.business_notification_project_joined(current_customer, project)
       next unless customer.confirm_mail
 
@@ -134,12 +168,17 @@ class Business::ProjectsController < ApplicationController
     end
   end
 
-  def project_notification_recipients(project, include_members:)
-    recipients = []
-    recipients.concat(project.community.community_owners.includes(:customer).map(&:customer))
-    recipients << project.community.owner if project.community.owner.present?
-    recipients << project.customer
-    recipients.concat(project.members.to_a) if include_members
+  # 承認できる人(プロジェクト管理者)にだけ、画面内の通知で知らせる。
+  def notify_project_requested!(project)
+    project_manager_recipients(project).each do |customer|
+      customer.business_notification_project_request(current_customer, project)
+    end
+  end
+
+  def project_manager_recipients(project)
+    recipients = project.community.community_owners.includes(:customer).map(&:customer)
+    recipients << project.community.owner
+    recipients << project.customer if project.customer&.business_community_member?(project.community)
 
     recipients.compact.reject { |customer| customer.id == current_customer.id || customer.is_deleted }.uniq
   end

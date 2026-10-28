@@ -1,0 +1,75 @@
+= render "layouts/header_menu_nakama"
+
+.container.membership-admin
+  %nav.project-breadcrumb{ "aria-label" => "現在地" }
+    = link_to @community.name, business_community_path(@community)
+    %span{ "aria-hidden" => "true" } ›
+    = link_to @project.title, business_project_path(@project)
+    %span{ "aria-hidden" => "true" } ›
+    %span メンバー管理
+
+  %h2.membership-admin__title メンバー管理
+
+  %section.membership-admin__card
+    %h3 参加方式
+    %p.membership-admin__mode
+      %strong= business_join_approval_label(@project)
+      %span= business_join_approval_description(@project)
+    %p.membership-admin__note 変更は、変更後の新しい参加申請から適用されます。承認待ちの申請と参加済みのメンバーはそのままです。
+    = link_to "参加方式を変更する", edit_business_project_path(@project), class: "btn btn-light btn-small"
+
+  %section.membership-admin__card#join-requests
+    %h3 参加申請（#{@join_requests.size}件）
+    - if @join_requests.empty?
+      %p.membership-admin__empty 現在、参加申請はありません。
+    - else
+      %ul.membership-admin__list
+        - @join_requests.each do |request|
+          %li.membership-admin__row
+            .membership-admin__person
+              = customer_avatar_tag(request.customer, class_name: "membership-admin__avatar")
+              %span.membership-admin__name= request.customer.name
+              %span.membership-admin__date 申請：#{l(request.created_at, format: :short)}
+            .membership-admin__actions
+              = link_to "承認", approve_business_project_join_request_path(@project, request),
+                method: :post, class: "btn btn-success btn-small"
+              = link_to "却下", reject_business_project_join_request_path(@project, request),
+                method: :delete, data: { confirm: "#{request.customer.name}さんの申請を却下しますか？（再申請はできます）" },
+                class: "btn btn-outline-danger btn-small"
+
+  %section.membership-admin__card#members
+    %h3 参加者（#{@members.size}人）
+    %p.membership-admin__note プロジェクト作成者とコミュニティの運営者は、参加者に含まれていなくても管理できます。
+    - if @members.empty?
+      %p.membership-admin__empty まだ参加者はいません。
+    - else
+      %ul.membership-admin__list
+        - @members.each do |member|
+          %li.membership-admin__row
+            .membership-admin__person
+              = customer_avatar_tag(member, class_name: "membership-admin__avatar")
+              %span.membership-admin__name= member.name
+            .membership-admin__actions
+              - if @manager_ids.include?(member.id) || member.admin?
+                %span.membership-admin__tag 管理者
+              - else
+                = link_to "アクセス停止", business_project_access_suspensions_path(@project, customer_id: member.id),
+                  method: :post, data: { confirm: "#{member.name}さんをプロジェクトから外し、アクセスを停止しますか？（解除するまで再参加できません）" },
+                  class: "btn btn-outline-danger btn-small"
+
+  %section.membership-admin__card#suspensions
+    %h3 アクセス停止中（#{@suspensions.size}人）
+    - if @suspensions.empty?
+      %p.membership-admin__empty アクセス停止中のユーザーはいません。
+    - else
+      %ul.membership-admin__list
+        - @suspensions.each do |suspension|
+          %li.membership-admin__row
+            .membership-admin__person
+              = customer_avatar_tag(suspension.customer, class_name: "membership-admin__avatar")
+              %span.membership-admin__name= customer_display_name(suspension.customer)
+              %span.membership-admin__date 停止：#{l(suspension.created_at, format: :short)}
+            .membership-admin__actions
+              = link_to "停止を解除", business_project_access_suspension_path(@project, suspension),
+                method: :delete, data: { confirm: "停止を解除しますか？（参加するには、本人の再度の参加・申請が必要です）" },
+                class: "btn btn-light btn-small"

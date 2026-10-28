@@ -17,40 +17,28 @@
         %h1.project-title= @project.title
 
         .project-meta
-          %span 👤 #{customer_display_name(@project.customer)}
+          %span 👤 #{customer_display_name(@project.customer) || ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL}
           %span 🏢 #{@project.community.name}
           %span 🗓 #{l(@project.created_at, format: :short)}
 
-        - deadline_over = @project.deadline.present? && @project.deadline < Time.current
-
         .project-actions
 
-          - if @project.customer == current_customer
-            = link_to "編集",
-              edit_business_project_path(@project),
-              class:"btn btn-primary"
+          - if @can_manage_project
+            .project-actions__row
+              = link_to "編集", edit_business_project_path(@project), class:"btn btn-primary"
+              = link_to members_business_project_path(@project), class:"btn btn-light" do
+                メンバー管理
+                - if @pending_request_count.to_i.positive?
+                  %span.membership-count-badge= @pending_request_count
 
-          - if @project.members.include?(current_customer)
+          - if @can_view_internal
             %span.btn.btn-joined.btn-joined--light 参加中
 
-          - elsif deadline_over
-            %span.btn.btn-disabled 募集終了
-
-          - elsif @project.community.customers.include?(current_customer)
-            = link_to "参加",
-              join_business_project_path(@project),
-              method: :post,
-              class:"btn btn-primary"
-
           - else
-            = link_to "コミュニティに参加する",
-              business_community_path(@project.community),
-              class:"btn btn-primary"
+            = render "business/projects/join_status"
 
-            %p.join-note
-              ※このプロジェクトに参加するには、
-              %br
-              開催コミュニティに事前に参加する必要があります。
+        %p.project-join-mode
+          参加方式：#{business_join_approval_label(@project)}
 
         %span.status-badge= @project.status
 
@@ -70,83 +58,49 @@
     %h3 概要
     .markdown-body= markdown(@project.description)
 
-  / =========================
-  / メンバー
-  / =========================
-  .project-section
-    %h3 メンバー
+  - if @can_view_internal
 
-    .member-grid
-      - @project.active_members.each do |customer|
-        = link_to business_customer_path(customer) do
-          .member-card
-            = customer_avatar_tag(customer, class_name: "member-icon")
+    / =========================
+    / スレッド
+    / =========================
+    .project-section#threads
+      = render "business/project_threads/repair_failed"
+      .project-section__header
+        %h3 スレッド
+        = link_to "＋ 新しいスレッド", new_business_project_thread_path(@project), class: "btn btn-primary btn-small"
 
-            .member-info
-              %span.member-name= customer.name
+      = render "business/project_threads/list", project: @project, threads: @threads, post_counts: @thread_post_counts
 
-              - if customer == @project.customer
-                %span.owner-tag オーナー
+      - if @thread_count > @threads.size
+        .project-thread-more
+          = link_to "すべてのスレッドを見る（#{@thread_count}件）", business_project_threads_path(@project), class: "btn btn-outline-primary"
 
-  / =========================
-  / チャット
-  / =========================
-  .project-section
-    %h3 チャット
+    / =========================
+    / メンバー
+    / =========================
+    .project-section
+      %h3 メンバー
 
-    - if @project.members.include?(current_customer)
+      .member-grid
+        - @project.participating_members.each do |customer|
+          = link_to business_customer_path(customer) do
+            .member-card
+              = customer_avatar_tag(customer, class_name: "member-icon")
 
-      .chat-container
+              .member-info
+                %span.member-name= customer.name
 
-        - if @messages.present?
+                - if customer == @project.customer
+                  %span.owner-tag オーナー
 
-          - @messages.each do |msg|
-            - is_me = msg.customer == current_customer
+      - if @project.project_members.exists?(customer_id: current_customer.id)
+        .project-leave
+          = link_to "プロジェクトから退出する", leave_business_project_path(@project),
+            method: :delete, data: { confirm: "退出すると、スレッドを閲覧・投稿できなくなります。よろしいですか？" },
+            class: "project-leave__link"
 
-            .chat-row
+  - else
 
-              .chat-avatar
-                = customer_avatar_tag(msg.customer, class_name: "chat-avatar-img")
-
-              .chat-content
-
-                .chat-header
-                  %span.chat-user= customer_display_name(msg.customer)
-
-                  - if msg.customer == @project.customer && !customer_withdrawn?(msg.customer)
-                    %span.owner-tag オーナー
-
-                  %span.chat-time= l(msg.created_at, format: :short)
-
-                .chat-bubble{ class: is_me ? "me" : "" }
-                  .chat-body
-                    = render "business/chat/message_content", record: msg
-
-                - if is_me
-                  = link_to "削除",
-                    business_project_project_chat_path(@project, msg),
-                    method: :delete,
-                    data: { confirm: "削除する？" },
-                    class: "chat-delete"
-
-        - else
-          .empty-state
-            %p まだメッセージはありません
-            %span 最初の一言を投稿してみよう！
-
-      = render "business/chat/lightbox"
-
-      / 投稿フォーム
-      .business-chat-compose
-        = form_with model: [ :business, @project, @new_message ], local: true, html: { class: "chat-form business-chat-form" } do |f|
-          = render "business/chat/composer", f: f, placeholder: "メッセージを入力...", submit_label: "送信"
-        = render "business/chat/stamp_picker", url: business_project_project_chats_path(@project), param_key: :project_chat
-
-    - else
-
+    .project-section
       .chat-locked
-        %p 🔒 このチャットはプロジェクト参加者のみ閲覧できます
-        = link_to "参加する",
-          join_business_project_path(@project),
-          method: :post,
-          class:"btn btn-primary"
+        %p 🔒 スレッドとメンバーはプロジェクト参加者のみ閲覧できます
