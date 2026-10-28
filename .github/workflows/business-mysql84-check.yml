@@ -66,7 +66,7 @@ jobs:
       - name: Check MySQL server version
         id: version
         run: |
-          VERSION=$(bundle exec ruby -rmysql2 -e 'puts Mysql2::Client.new(host: "127.0.0.1", port: 3306, username: "root").query("SELECT VERSION() AS v").first["v"]')
+          VERSION=$(bundle exec ruby -e 'require "mysql2"; puts Mysql2::Client.new(host: "127.0.0.1", port: 3306, username: "root").query("SELECT VERSION() AS v").first["v"]')
           echo "MySQL server: ${VERSION}"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           if [ "${VERSION}" != "${EXPECTED_MYSQL_VERSION}" ]; then
