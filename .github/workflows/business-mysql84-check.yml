@@ -1,0 +1,101 @@
+name: Business migrations on MySQL 8.4
+
+# Business スレッド・参加承認のマイグレーション(20261027000000〜000300)を、本番 RDS と同じ MySQL 8.4.8 で検証する。
+# ランナー上の使い捨て MySQL(service コンテナ)だけを使い、本番の認証情報・データ・Secrets は使わない。
+# 検証内容は script/business_migration_mysql_check.rb(通常移行・スキーマ一致・制約・途中失敗後の再実行・ロック待ち)。
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "db/migrate/**"
+      - "db/schema.rb"
+      - "lib/migration_lock_wait_timeout.rb"
+      - "script/business_migration_mysql_check.rb"
+      - ".github/workflows/business-mysql84-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: business-mysql84-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  RAILS_ENV: test
+  SECRET_KEY_BASE: ci-dummy-secret-key-base-0123456789abcdef0123456789abcdef
+  # 本番 RDS のバージョン(2026-10-28 に読み取り確認)
+  EXPECTED_MYSQL_VERSION: "8.4.8"
+
+jobs:
+  mysql84-migration-check:
+    name: Business migrations (MySQL 8.4.8)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.4.8
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+    steps:
+      # 起点スキーマ(8acf938f:db/schema.rb)を git show で読むため、履歴をすべて取得する。
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install libmysqlclient (for mysql2 gem native extension)
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y libmysqlclient-dev
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Check MySQL server version
+        id: version
+        run: |
+          VERSION=$(bundle exec ruby -rmysql2 -e 'puts Mysql2::Client.new(host: "127.0.0.1", port: 3306, username: "root").query("SELECT VERSION() AS v").first["v"]')
+          echo "MySQL server: ${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          if [ "${VERSION}" != "${EXPECTED_MYSQL_VERSION}" ]; then
+            echo "::error::MySQL ${VERSION} (expected ${EXPECTED_MYSQL_VERSION})"
+            exit 1
+          fi
+
+      - name: Run migration check
+        id: check
+        env:
+          CHECK_MYSQL_HOST: 127.0.0.1
+          CHECK_MYSQL_PORT: "3306"
+          CHECK_MYSQL_USER: root
+          CONFIRM_DISPOSABLE: "yes"
+        run: |
+          set -o pipefail
+          mkdir -p tmp
+          bundle exec rails runner script/business_migration_mysql_check.rb | tee tmp/business_mysql84_check.txt
+
+      - name: Write summary
+        if: always()
+        run: |
+          {
+            echo "## Business migrations on MySQL 8.4"
+            echo ""
+            echo "- MySQL server: ${{ steps.version.outputs.version }}"
+            echo "- 結果: ${{ steps.check.outcome }}"
+            echo ""
+            echo '```text'
+            cat tmp/business_mysql84_check.txt 2>/dev/null || echo "(出力なし)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
