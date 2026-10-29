@@ -29,10 +29,13 @@ RSpec.describe "ご意見・ご相談BOX（ユーザー側）", type: :system do
     expect(page.all(".customer-menu-sp .menu-sp-others__panel a", text: "ご意見BOX", visible: :all)).not_to be_empty
   end
 
-  it "ログイン後TOPに補助カードが表示されること" do
+  # ログイン後ホームの本文はコミュニティ・プロジェクトの一覧だけにしたため、補助カードは置かずヘッダーから開く。
+  it "ログイン後TOPの本文に補助カードを出さず、ヘッダーのご意見BOXから投稿フォームを開けること" do
     visit public_homes_top_path
-    expect(page).to have_content("BeMyStyleへのご意見・ご相談はこちら")
-    expect(page).to have_link("ご意見・ご相談BOXを開く", href: new_public_customer_feedback_path)
+    expect(page).not_to have_content("BeMyStyleへのご意見・ご相談はこちら")
+
+    find(".customer-menu-pc a", text: "ご意見BOX", exact_text: true, visible: :all).click
+    expect(page).to have_current_path(new_public_customer_feedback_path, wait: 10)
   end
 
   it "投稿フォームで案内文が表示され、カテゴリーが自動選択されていないこと" do

@@ -1,0 +1,94 @@
+-# ログイン後ホームの本文(/ と /business で共通)。紹介用の画像・キャッチコピー・料金表は置かない。
+-# 一覧に出すのは Homes::MyCommunities / Homes::MyProjects が認可条件で絞った対象だけ。承認待ちは名前と状態以外を出さない。
+- communities = @my_communities.communities
+- projects = @my_projects.projects
+- community_search_links = member_home_community_search_links
+- project_search_available = member_home_project_search_available?
+
+%main.member-home
+  %h1.sr-only ホーム
+
+  %section.member-home__section#my-communities{ "aria-labelledby": "my-communities-title" }
+    .member-home__header
+      %h2.member-home__title#my-communities-title
+        コミュニティ
+        - if communities.total_count.positive?
+          %span.member-home__count= "#{communities.total_count}件"
+      - if communities.total_count.positive? && community_search_links.present?
+        .member-home__header-links
+          - community_search_links.each do |label, path|
+            = link_to label, path, class: "member-home__header-link", data: { turbolinks: false }
+
+    - if communities.total_count.zero?
+      .member-home__empty
+        %p.member-home__empty-text 参加しているコミュニティはまだありません。
+        - if community_search_links.present?
+          .member-home__empty-actions
+            - community_search_links.each do |label, path|
+              = link_to label, path, class: "btn btn-outline-primary btn-sm", data: { turbolinks: false }
+    - elsif communities.empty?
+      .member-home__empty
+        %p.member-home__empty-text このページに表示するコミュニティはありません。
+        = link_to "最初のページへ", url_for(request.query_parameters.merge(community_page: nil, anchor: "my-communities")), class: "btn btn-outline-primary btn-sm"
+    - else
+      %ul.member-home__grid
+        - communities.each do |community|
+          - status = @my_communities.statuses.fetch(community.id)
+          - kind_label, kind_modifier = member_home_community_kind(community)
+          %li.member-home-card{ class: "member-home-card--#{status}" }
+            .member-home-card__badges
+              %span.member-home-card__kind{ class: "member-home-card__kind--#{kind_modifier}" }= kind_label
+              %span.member-home-card__status{ class: "member-home-card__status--#{status}" }= member_home_community_status_label(status)
+            %h3.member-home-card__title= community.name
+            - if status == :pending
+              %p.member-home-card__note 承認されると参加者向けの機能を利用できます。
+            - elsif community.introduction.present?
+              %p.member-home-card__text= truncate(community.introduction, length: 40)
+            .member-home-card__actions
+              = link_to "詳細を見る", member_home_community_path(community), class: "btn btn-primary btn-sm", data: { turbolinks: false }, "aria-label": "#{community.name}の詳細を見る"
+              - unless community.business_domain?
+                = link_to "イベントを見る", public_events_path(community_id: community.id, status: "upcoming"), class: "btn btn-outline-primary btn-sm", data: { turbolinks: false }, "aria-label": "#{community.name}のイベントを見る"
+      = paginate communities, param_name: :community_page, params: { anchor: "my-communities" }
+
+  %section.member-home__section#my-projects{ "aria-labelledby": "my-projects-title" }
+    .member-home__header
+      %h2.member-home__title#my-projects-title
+        プロジェクト
+        - if projects.total_count.positive?
+          %span.member-home__count= "#{projects.total_count}件"
+      - if projects.total_count.positive? && project_search_available
+        .member-home__header-links
+          = link_to "プロジェクトを探す", business_projects_path, class: "member-home__header-link"
+
+    - if projects.total_count.zero?
+      .member-home__empty
+        -# プロジェクト一覧(/business/projects)は参加中コミュニティの分しか出ないため、前提のコミュニティ参加への導線も並べる。
+        - if project_search_available
+          %p.member-home__empty-text 参加しているプロジェクトはまだありません。Business コミュニティに参加すると、そのコミュニティのプロジェクトへ参加を申請できます。
+          .member-home__empty-actions
+            = link_to "プロジェクトを探す", business_projects_path, class: "btn btn-outline-primary btn-sm"
+            = link_to "Businessコミュニティを探す", business_communities_path, class: "btn btn-outline-primary btn-sm"
+        - else
+          %p.member-home__empty-text プロジェクトは Business（NAKAMA）のコミュニティで利用できる機能です。
+          .member-home__empty-actions
+            = link_to "NAKAMAの利用を始める", business_join_path, class: "btn btn-outline-primary btn-sm"
+    - elsif projects.empty?
+      .member-home__empty
+        %p.member-home__empty-text このページに表示するプロジェクトはありません。
+        = link_to "最初のページへ", url_for(request.query_parameters.merge(project_page: nil, anchor: "my-projects")), class: "btn btn-outline-primary btn-sm"
+    - else
+      %ul.member-home__grid
+        - projects.each do |project|
+          - status = @my_projects.statuses.fetch(project.id)
+          %li.member-home-card{ class: "member-home-card--#{status}" }
+            .member-home-card__badges
+              %span.member-home-card__status{ class: "member-home-card__status--#{status}" }= member_home_project_status_label(status)
+            %h3.member-home-card__title= project.title
+            %p.member-home-card__community
+              %i.fa-solid.fa-users{ "aria-hidden": "true" }
+              = project.community.name
+            - if status == :pending
+              %p.member-home-card__note 承認されるとスレッドや投稿を見られます。
+            .member-home-card__actions
+              = link_to "プロジェクトを開く", business_project_path(project), class: "btn btn-primary btn-sm", "aria-label": "#{project.title}を開く"
+      = paginate projects, param_name: :project_page, params: { anchor: "my-projects" }

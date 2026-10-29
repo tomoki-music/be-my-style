@@ -102,14 +102,43 @@ RSpec.describe "Public::Homes", type: :request do
         get root_path
       end
 
-      it "200 OKで従来のホーム画面(top.html.haml)を表示すること" do
+      it "本文はコミュニティ・プロジェクトの2つの一覧だけで、紹介用の画像・キャッチコピーを出さないこと" do
+        doc = Nokogiri::HTML(response.body)
+
         expect(response.status).to eq 200
+        expect(doc.css(".member-home__section").map { |s| s["id"] }).to eq %w[my-communities my-projects]
+        expect(doc.css(".member-home__title").map { |t| t.text.squish }).to eq %w[コミュニティ プロジェクト]
         expect(response.body).not_to include("世界とつながる。")
+        expect(response.body).not_to include("public-top2")
+        expect(doc.at_css(".slider, .parallax, .top-cta, .owners-container")).to be_nil
+        expect(response.body).not_to include("BeMyStyleへのご意見・ご相談はこちら")
       end
 
-      it "ご意見・ご相談BOXへの補助導線が表示されること" do
-        expect(response.body).to include("BeMyStyleへのご意見・ご相談はこちら")
-        expect(response.body).to include(%(href="#{new_public_customer_feedback_path}"))
+      it "共通ヘッダーは維持し、ご意見BOX・ログアウトはヘッダーから使えること" do
+        doc = Nokogiri::HTML(response.body)
+
+        expect(doc.at_css(".customer-menu-pc")).to be_present
+        expect(doc.css(%(a[href="#{new_public_customer_feedback_path}"]))).not_to be_empty
+        expect(doc.css(%(form[action="#{destroy_customer_session_path}"]))).not_to be_empty
+      end
+
+      it "0件では空状態と、既存のコミュニティ一覧への導線を出すこと" do
+        doc = Nokogiri::HTML(response.body)
+        communities = doc.at_css("#my-communities")
+        projects = doc.at_css("#my-projects")
+
+        expect(communities.text).to include("参加しているコミュニティはまだありません。")
+        expect(communities.at_css(%(a[href="#{public_communities_path}"]))).to be_present
+        expect(projects.text).to include("プロジェクトは Business（NAKAMA）のコミュニティで利用できる機能です。")
+        expect(projects.at_css(%(a[href="#{business_join_path}"]))).to be_present
+        expect(doc.css(".member-home-card")).to be_empty
+      end
+
+      it "Business 未登録でも、プロジェクト欄の導線から既存の Business 利用開始画面を開けること" do
+        Domain.find_or_create_by!(name: "business")
+        get business_join_path
+
+        expect(response).to have_http_status(:ok)
       end
     end
 
@@ -119,6 +148,150 @@ RSpec.describe "Public::Homes", type: :request do
       it "ゲスト向けTOPに補助導線が出ないこと" do
         expect(response.body).not_to include("BeMyStyleへのご意見・ご相談はこちら")
       end
+
+      it "ログイン後ホームの一覧を出さないこと" do
+        expect(response.body).not_to include("member-home")
+      end
+    end
+  end
+
+  describe "GET / (ログイン後ホームの一覧)" do
+    let(:music_domain) { Domain.find_or_create_by!(name: "music") }
+    let(:business_domain) { Domain.find_or_create_by!(name: "business") }
+    let(:other) { create(:customer) }
+    let(:customer) { create(:customer).tap { |c| CustomerDomain.create!(customer: c, domain: business_domain) } }
+
+    before { sign_in customer }
+
+    def doc
+      Nokogiri::HTML(response.body)
+    end
+
+    def card_titles(section_id)
+      doc.css("##{section_id} .member-home-card__title").map(&:text)
+    end
+
+    it "音楽コミュニティは詳細とイベント一覧(従来の導線)へ、Businessは詳細へ進めること" do
+      music = create(:community, name: "音楽サークル", owner: other, domain: music_domain)
+      business = create(:community, name: "企画の会", owner: other, domain: business_domain)
+      CommunityCustomer.create!(community: music, customer: customer)
+      CommunityCustomer.create!(community: business, customer: customer)
+
+      get root_path
+
+      cards = doc.css("#my-communities .member-home-card").to_h { |card| [card.at_css(".member-home-card__title").text, card] }
+      expect(cards.keys).to contain_exactly("音楽サークル", "企画の会")
+      expect(cards["音楽サークル"].at_css(".member-home-card__kind").text).to eq "音楽"
+      expect(cards["音楽サークル"].at_css(".member-home-card__status").text).to eq "参加中"
+      expect(cards["音楽サークル"].at_css(%(a[href="#{public_community_path(music)}"]))).to be_present
+      expect(cards["音楽サークル"].at_css(%(a[href="#{public_events_path(community_id: music.id, status: "upcoming")}"]))).to be_present
+      expect(cards["企画の会"].at_css(".member-home-card__kind").text).to eq "Business"
+      expect(cards["企画の会"].at_css(%(a[href="#{business_community_path(business)}"]))).to be_present
+      expect(cards["企画の会"].text).not_to include("イベントを見る")
+    end
+
+    it "申請中は状態だけを出し、紹介文などの中身を出さないこと" do
+      pending = create(:community, name: "申請先", introduction: "参加者向けの紹介文", owner: other, domain: business_domain)
+      Permit.create!(community: pending, customer: customer)
+
+      get root_path
+
+      card = doc.at_css("#my-communities .member-home-card")
+      expect(card.at_css(".member-home-card__status").text).to eq "承認待ち"
+      expect(card.text).not_to include("参加者向けの紹介文")
+    end
+
+    it "権限の無いコミュニティ・プロジェクトは名前も件数も出さないこと" do
+      hidden = create(:community, name: "見えない会", owner: other, domain: business_domain)
+      Project.create!(community: hidden, customer: other, title: "見えない企画")
+      joined = create(:community, name: "参加の会", owner: other, domain: business_domain)
+      CommunityCustomer.create!(community: joined, customer: customer)
+      Project.create!(community: joined, customer: other, title: "未参加の企画")
+
+      get root_path
+
+      expect(response.body).not_to include("見えない会")
+      expect(response.body).not_to include("見えない企画")
+      expect(response.body).not_to include("未参加の企画")
+      expect(doc.at_css("#my-communities .member-home__count").text).to eq "1件"
+      expect(doc.at_css("#my-projects .member-home__count")).to be_nil
+      expect(doc.at_css("#my-projects").text).to include("参加しているプロジェクトはまだありません。")
+    end
+
+    it "未参加のコミュニティ・プロジェクトへは、既存の一覧から公開範囲どおりに参加申請へ進めること" do
+      music = create(:community, name: "未参加の音楽サークル", owner: other, domain: music_domain)
+      business = create(:community, name: "未参加の企画の会", owner: other, domain: business_domain)
+      hidden_project = Project.create!(community: business, customer: other, title: "未参加の会の企画")
+
+      get root_path
+      expect(doc.at_css(%(#my-communities a[href="#{public_communities_path}"]))).to be_present
+      expect(doc.at_css(%(#my-communities a[href="#{business_communities_path}"]))).to be_present
+      expect(doc.at_css(%(#my-projects a[href="#{business_projects_path}"]))).to be_present
+      expect(doc.at_css(%(#my-projects a[href="#{business_communities_path}"]))).to be_present
+
+      get public_community_path(music)
+      expect(response).to have_http_status(:ok)
+      get business_community_path(business)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("未参加の会の企画")
+
+      # 未参加コミュニティのプロジェクトは、従来どおりプロジェクト一覧にも出ず詳細も開けない。
+      get business_projects_path
+      expect(response.body).not_to include("未参加の会の企画")
+      get business_project_path(hidden_project)
+      expect(response).to redirect_to(business_community_path(business))
+
+      post business_community_permit_path(business)
+      expect(Permit.where(community: business, customer: customer)).to exist
+      get root_path
+      expect(doc.at_css("#my-communities .member-home-card__status").text).to eq "承認待ち"
+    end
+
+    it "プロジェクトは名前・コミュニティ名・状態を出し、詳細へ直接進めること" do
+      community = create(:community, name: "企画の会", owner: other, domain: business_domain)
+      CommunityCustomer.create!(community: community, customer: customer)
+      project = Project.create!(community: community, customer: other, title: "サイト制作")
+      ProjectMember.create!(project: project, customer: customer)
+
+      get root_path
+
+      card = doc.at_css("#my-projects .member-home-card")
+      expect(card.at_css(".member-home-card__title").text).to eq "サイト制作"
+      expect(card.at_css(".member-home-card__community").text.squish).to eq "企画の会"
+      expect(card.at_css(".member-home-card__status").text).to eq "参加中"
+      expect(card.at_css(%(a[href="#{business_project_path(project)}"]))).to be_present
+
+      get business_project_path(project)
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "カード内のリンクを入れ子にしないこと" do
+      community = create(:community, owner: other, domain: music_domain)
+      CommunityCustomer.create!(community: community, customer: customer)
+
+      get root_path
+
+      expect(doc.css("a a, a button, button a")).to be_empty
+      expect(doc.css(".member-home-card > a")).to be_empty
+    end
+
+    it "一覧ごとにページ番号を分け、片方をめくってももう片方のページが変わらないこと" do
+      community = create(:community, name: "企画の会", owner: other, domain: business_domain)
+      CommunityCustomer.create!(community: community, customer: customer)
+      6.times { |i| CommunityCustomer.create!(community: create(:community, name: "c#{i}", owner: other, domain: music_domain, updated_at: (i + 1).minutes.from_now), customer: customer) }
+      7.times { |i| ProjectMember.create!(project: Project.create!(community: community, customer: other, title: "p#{i}").tap { |p| p.update_columns(updated_at: i.minutes.ago) }, customer: customer) }
+
+      get root_path(community_page: 2)
+
+      expect(card_titles("my-communities")).to eq %w[企画の会]
+      expect(card_titles("my-projects")).to eq %w[p0 p1 p2 p3 p4 p5]
+      project_next = doc.at_css(%(#my-projects .pagination a[href*="project_page=2"]))
+      expect(project_next["href"]).to include("community_page=2")
+
+      get root_path(community_page: 2, project_page: 2)
+
+      expect(card_titles("my-communities")).to eq %w[企画の会]
+      expect(card_titles("my-projects")).to eq %w[p6]
     end
   end
 
