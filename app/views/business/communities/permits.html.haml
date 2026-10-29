@@ -1,5 +1,8 @@
 = render "layouts/header_menu_nakama"
 
+.manage-bar-wrap
+  = render "shared/manage_bar", items: business_community_manage_items(@community, current: :members, pending_count: @permits.size)
+
 .container.membership-admin
   %nav.project-breadcrumb{ "aria-label" => "現在地" }
     = link_to @community.name, business_community_path(@community)

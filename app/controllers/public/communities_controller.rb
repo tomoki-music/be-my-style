@@ -6,6 +6,7 @@ class Public::CommunitiesController < ApplicationController
   before_action :set_community, only: [:show, :edit, :update, :destroy, :leave, :new_mail, :send_mail, :permits]
   before_action :ensure_correct_customer, only: [:edit, :update, :destroy, :permits]
   before_action :check_mail, only: [:send_mail]
+  before_action :load_pending_permit_count, only: [:edit, :update]
   before_action only: [:new, :create] do
     require_feature!(:music_community_create, redirect_to_path: public_communities_path)
   end
@@ -54,8 +55,11 @@ class Public::CommunitiesController < ApplicationController
     @communities = communities.page(params[:page]).per(5)
   end
 
+  # 編集・削除・承認はオーナーだけ(ensure_correct_customer と同じ範囲)。通常画面には管理メニューの導線だけを出す。
   def show
     @owner = @community.owner
+    @can_manage = @community.owner_id == current_customer.id
+    load_pending_permit_count if @can_manage
 
     upcoming_events = @community.events
       .upcoming_or_ongoing
@@ -158,10 +162,18 @@ class Public::CommunitiesController < ApplicationController
   end
 
   def permits
-    @permits = @community.permits.joins(:customer).merge(Customer.active).page(params[:page])
+    @permits = pending_permits.page(params[:page])
   end
 
   private
+
+  def load_pending_permit_count
+    @pending_permit_count = pending_permits.count
+  end
+
+  def pending_permits
+    @community.permits.joins(:customer).merge(Customer.active)
+  end
 
   def set_community
     @community = Community.find_by!(
@@ -188,9 +200,9 @@ class Public::CommunitiesController < ApplicationController
   end
 
   def ensure_correct_customer
-    unless @community.owner_id == current_customer.id
-      redirect_to public_communities_path, alert: "編集・削除する権限がありません。"
-    end
+    return if @community.owner_id == current_customer.id
+
+    redirect_to public_communities_path, alert: "編集・削除する権限がありません。"
   end
 
   def check_mail

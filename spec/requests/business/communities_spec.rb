@@ -68,45 +68,67 @@ RSpec.describe "Business::Communities", type: :request do
     end
   end
 
-  describe "GET /business/communities/:id (show) の参加申請カード" do
+  describe "通常画面とメンバー管理画面の分離(参加申請)" do
     let(:applicant) { create(:customer, name: "申請太郎") }
     let(:withdrawn_applicant) { create(:customer, name: "退会済み申請花子", is_deleted: true) }
 
-    def permit_card
-      Nokogiri::HTML(response.body).css(".card").find { |card| card.at_css("h3")&.text == "参加申請" }
+    def doc
+      Nokogiri::HTML(response.body)
     end
 
-    shared_examples "参加申請カードを表示する" do
-      it "申請0件でもエラーにならず、申請が無い旨を表示する" do
-        get business_community_path(community)
+    def manage_bar
+      doc.at_css("nav.manage-bar")
+    end
 
-        expect(response).to have_http_status(:ok)
-        expect(permit_card.text).to include("現在、参加申請はありません。")
-        expect(permit_card.css(".permit-card")).to be_empty
-      end
-
-      it "申請者(退会済みを除く)と承認・拒否の操作を表示する" do
+    shared_examples "通常画面には導線だけを出し、承認・拒否はメンバー管理画面で行う" do
+      it "通常画面に承認・拒否・設定フォームを出さず、管理メニューに承認待ち件数を出す" do
         create(:permit, community: community, customer: applicant)
         create(:permit, community: community, customer: withdrawn_applicant)
 
         get business_community_path(community)
 
         expect(response).to have_http_status(:ok)
-        expect(permit_card.css(".permit-card").map { |card| card.at_css("span").text }).to eq ["申請太郎"]
-        expect(permit_card.at_css(%(a[href="#{business_community_community_customers_path(community_id: community.id, customer_id: applicant.id)}"]))).to be_present
-        expect(permit_card.at_css(%(a[href="#{business_community_permit_path(community, customer_id: applicant.id)}"]))).to be_present
-        expect(permit_card.text).not_to include("現在、参加申請はありません。")
+        expect(manage_bar).to be_present
+        expect(manage_bar.at_css(%(a[href="#{edit_business_community_path(community)}"])).text).to include("編集")
+        member_link = manage_bar.at_css(%(a[href="#{business_permits_path(community)}"]))
+        expect(member_link.text).to include("メンバー管理")
+        expect(member_link.at_css(".manage-bar__badge").text).to eq "1"
+        expect(manage_bar.at_css(%([aria-current="page"])).text).to eq "通常画面"
+
+        expect(doc.css(".permit-card")).to be_empty
+        expect(doc.at_css(%(a[href*="community_customers"]))).to be_nil
+        expect(doc.at_css(%(a[href*="access_suspensions"]))).to be_nil
+        expect(doc.at_css(%(form[action="#{business_community_path(community)}"]))).to be_nil
+        expect(doc.at_css(%(form[action="#{business_community_plan_trial_path(community)}"]))).to be_nil
+        expect(doc.at_css(".danger-zone")).to be_nil
+        expect(response.body).not_to include("申請太郎")
+      end
+
+      it "メンバー管理画面に申請者(退会済みを除く)と承認・却下の操作を出し、通常画面へ戻れる" do
+        create(:permit, community: community, customer: applicant)
+        create(:permit, community: community, customer: withdrawn_applicant)
+
+        get business_permits_path(community)
+
+        expect(response).to have_http_status(:ok)
+        expect(doc.css(".permit-card .membership-admin__name").map(&:text)).to eq ["申請太郎"]
+        expect(doc.at_css(%(a[href="#{business_community_community_customers_path(community_id: community.id, customer_id: applicant.id, return_to: "permits")}"]))).to be_present
+        expect(doc.at_css(%(a[href="#{business_community_permit_path(community, customer_id: applicant.id, return_to: "permits")}"]))).to be_present
+        expect(manage_bar.at_css(%(a[href="#{business_community_path(community)}"])).text.strip).to eq "通常画面"
+        expect(manage_bar.at_css(%([aria-current="page"])).text).to eq "メンバー管理"
       end
     end
 
-    shared_examples "参加申請カードも申請者情報も表示しない" do
-      it "申請があっても申請者名を出さない" do
+    shared_examples "管理メニューも申請者情報も表示しない" do
+      it "申請があっても管理導線・申請者名を出さない" do
         create(:permit, community: community, customer: applicant)
 
         get business_community_path(community)
 
         expect(response).to have_http_status(:ok)
-        expect(permit_card).to be_nil
+        expect(manage_bar).to be_nil
+        expect(doc.at_css(%(a[href="#{edit_business_community_path(community)}"]))).to be_nil
+        expect(doc.at_css(%(a[href="#{business_permits_path(community)}"]))).to be_nil
         expect(response.body).not_to include("申請太郎")
       end
     end
@@ -114,7 +136,7 @@ RSpec.describe "Business::Communities", type: :request do
     context "オーナー" do
       before { sign_in owner }
 
-      include_examples "参加申請カードを表示する"
+      include_examples "通常画面には導線だけを出し、承認・拒否はメンバー管理画面で行う"
     end
 
     context "管理権限を付与された CommunityOwner" do
@@ -124,29 +146,29 @@ RSpec.describe "Business::Communities", type: :request do
         sign_in co_owner
       end
 
-      include_examples "参加申請カードを表示する"
+      include_examples "通常画面には導線だけを出し、承認・拒否はメンバー管理画面で行う"
     end
 
     context "Customer の is_owner が admin" do
       before { sign_in create(:customer, is_owner: :admin) }
 
-      include_examples "参加申請カードを表示する"
+      include_examples "通常画面には導線だけを出し、承認・拒否はメンバー管理画面で行う"
     end
 
     context "一般参加者" do
-      include_examples "参加申請カードも申請者情報も表示しない"
+      include_examples "管理メニューも申請者情報も表示しない"
     end
 
     context "非参加者" do
       before { sign_in create(:customer) }
 
-      include_examples "参加申請カードも申請者情報も表示しない"
+      include_examples "管理メニューも申請者情報も表示しない"
     end
 
     context "本人が申請中" do
       before { sign_in applicant }
 
-      it "申請中の表示になり、他の申請者の情報は出さない" do
+      it "申請中の表示と申請取消の操作を残し、他の申請者の情報は出さない" do
         create(:permit, community: community, customer: applicant)
         create(:permit, community: community, customer: create(:customer, name: "別の申請者"))
 
@@ -155,7 +177,7 @@ RSpec.describe "Business::Communities", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("承認待ち")
         expect(response.body).to include("申請を取り消す")
-        expect(permit_card).to be_nil
+        expect(manage_bar).to be_nil
         expect(response.body).not_to include("別の申請者")
       end
     end

@@ -39,6 +39,7 @@ class Business::ProjectsController < ApplicationController
   end
 
   # 参加者(管理者を含む)にはスレッド・メンバーを、コミュニティ参加者には申請に必要な概要だけを見せる。
+  # 管理者にも参加者と同じ画面を出し、設定変更・承認・停止は編集 / メンバー管理画面へ分ける。
   def show
     @community = @project.community
     unless current_customer.business_community_participant?(@community)
@@ -58,10 +59,12 @@ class Business::ProjectsController < ApplicationController
 
   def edit
     @community = @project.community
+    @pending_request_count = @project.project_join_requests.count
   end
 
   def update
     @community = @project.community
+    @pending_request_count = @project.project_join_requests.count
     if @project.update(project_params)
       redirect_to business_project_path(@project), notice: "更新しました！"
     else

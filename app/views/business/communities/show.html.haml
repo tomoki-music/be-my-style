@@ -1,5 +1,14 @@
 = render "layouts/header_menu_nakama"
 
+-# 運営者にも参加者と同じ画面を出す。設定フォーム・承認・停止は編集 / メンバー管理画面に置き、ここには移動の導線だけを出す。
+- if @can_manage
+  .manage-bar-wrap
+    = render "shared/manage_bar", items: business_community_manage_items(@community, current: :show, pending_count: @pending_permit_count)
+- elsif plan_trial_editable?
+  -# システム管理者(Admin セッション)で運営者ではない場合、お試し設定は管理画面のコミュニティ詳細で変更する。
+  .manage-bar-wrap
+    = render "shared/manage_bar", items: [{ label: "お試し設定（管理画面）", path: admin_community_path(@community), data: { turbolinks: false } }]
+
 .community-container
 
   / =========================
@@ -47,12 +56,6 @@
 
         / ===== アクション =====
         .hero-actions
-
-          - if current_customer.can_manage_community?(@community)
-
-            = link_to "✏️ 編集",
-              edit_business_community_path(@community),
-              class: "btn btn-primary btn-small"
 
           - case @join_status
           - when :member
@@ -189,47 +192,3 @@
 
                     - if customer == @community.owner
                       %span.owner-tag オーナー
-
-      -# 変更できるのはシステム管理者だけ。コミュニティの運営者には状態のみ表示する。
-      - if plan_trial_editable? || current_customer.can_manage_community?(@community)
-        .card.plan-trial-card#plan-trial
-          %h3= plan_trial_label
-          %p.plan-trial-card__status{ class: ("is-on" if @community.plan_restrictions_waived?) }
-            現在：#{plan_trial_status_label(@community)}
-          %p.plan-trial-card__note= plan_trial_description
-          %p.plan-trial-card__features-title 無料で利用できるようになる機能
-          %ul.plan-trial-card__features
-            - plan_trial_unlocked_features.each do |feature|
-              %li= feature
-          - if plan_trial_editable?
-            = form_with model: @community, url: business_community_plan_trial_path(@community), method: :patch, local: true do |f|
-              %label.plan-trial-card__toggle
-                = f.check_box :plan_restrictions_waived
-                %span= plan_trial_label
-              = f.submit "保存する", class: "btn btn-primary btn-small"
-          - else
-            %p.plan-trial-card__readonly= plan_trial_readonly_note
-
-      - if @can_review_permits
-        .card
-          .section-header
-            %h3 参加申請
-            = link_to "メンバー管理", business_permits_path(@community), class: "btn btn-light btn-small"
-
-          - if @permits.empty?
-            %p.permit-empty 現在、参加申請はありません。
-
-          - @permits.each do |permit|
-            .permit-card
-              %span= permit.customer.name
-
-              .permit-actions
-                = link_to "承認",
-                  business_community_community_customers_path(community_id: @community.id, customer_id: permit.customer.id),
-                  method: :post,
-                  class:"btn btn-success btn-small"
-
-                = link_to "拒否",
-                  business_community_permit_path(@community, customer_id: permit.customer.id),
-                  method: :delete,
-                  class:"btn btn-danger btn-small"

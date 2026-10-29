@@ -7,7 +7,7 @@ class Business::CommunityPlanTrialsController < ApplicationController
     waived = ActiveModel::Type::Boolean.new.cast(params.dig(:community, :plan_restrictions_waived)) || false
 
     if @community.update(plan_restrictions_waived: waived)
-      redirect_to business_community_path(@community, anchor: "plan-trial"), notice: helpers.plan_trial_saved_message(@community)
+      redirect_to business_community_path(@community), notice: helpers.plan_trial_saved_message(@community)
     else
       redirect_to business_community_path(@community), alert: "設定を保存できませんでした。"
     end

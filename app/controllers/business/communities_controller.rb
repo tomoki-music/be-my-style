@@ -4,6 +4,7 @@ class Business::CommunitiesController < ApplicationController
   before_action :set_community, only: [:show, :edit, :update, :destroy, :permits]
   before_action :ensure_community_manager!, only: [:edit, :update, :permits]
   before_action :ensure_community_owner!, only: [:destroy]
+  before_action :load_pending_permit_count, only: [:edit, :update]
   before_action only: [:new, :create] do
     require_feature!(:business_community_create, redirect_to_path: business_communities_path)
   end
@@ -15,13 +16,13 @@ class Business::CommunitiesController < ApplicationController
   end
 
   # 未参加者には参加申請に必要な名称・紹介だけを見せ、プロジェクト・タイムライン・メンバーは参加者(運営者を含む)に限る。
+  # 運営者にも参加者と同じ画面を出し、承認・停止・設定変更はメンバー管理 / 編集画面へ分ける。
   def show
     @can_view_internal = current_customer.business_community_participant?(@community)
     @join_status = community_join_status
 
-    # 参加申請カードの表示可否と申請者一覧の取得は同じ判定(承認・拒否できる人)に揃える。
-    @can_review_permits = current_customer.can_manage_community?(@community)
-    @permits = pending_permits if @can_review_permits
+    @can_manage = current_customer.can_manage_community?(@community)
+    load_pending_permit_count if @can_manage
     return unless @can_view_internal
 
     @projects = @community.projects.recently_updated
@@ -99,6 +100,10 @@ class Business::CommunitiesController < ApplicationController
     :none
   end
 
+  def load_pending_permit_count
+    @pending_permit_count = pending_permits.count
+  end
+
   def pending_permits
     @community.permits.joins(:customer).merge(Customer.active).includes(:customer).order(:created_at)
   end
@@ -107,7 +112,7 @@ class Business::CommunitiesController < ApplicationController
     @community = find_business_community!(params[:id])
   end
 
-  # 詳細画面の「編集」ボタン・参加申請カードと同じ条件(オーナー / 管理権限 / 管理者)。
+  # 通常画面の管理メニューと同じ条件(オーナー / 管理権限 / 管理者)。
   def ensure_community_manager!
     return if current_customer.can_manage_community?(@community)
 

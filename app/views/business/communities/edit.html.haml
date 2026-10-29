@@ -1,7 +1,17 @@
 = render "layouts/header_menu_nakama"
 
-.container
+.manage-bar-wrap
+  = render "shared/manage_bar", items: business_community_manage_items(@community, current: :edit, pending_count: @pending_permit_count)
 
-  %h2 コミュニティ編集
+.manage-page.business-community-edit
+  %nav.manage-page__breadcrumb{ "aria-label": "現在地" }
+    = link_to @community.name_was.presence || @community.name, business_community_path(@community)
+    %span{ "aria-hidden": "true" } ›
+    %span 編集
 
-  = render "form", community: @community
+  %h2.manage-page__title コミュニティ編集
+
+  = render "form", community: @community, cancel_path: business_community_path(@community)
+
+  -# お試し設定は通常の更新とは別の窓口(システム管理者のみ変更可)なので、フォームを分けて置く。
+  = render "plan_trial", community: @community

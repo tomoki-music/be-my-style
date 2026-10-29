@@ -1,5 +1,10 @@
 = render "layouts/header_menu_nakama"
 
+-# 管理者にも参加者と同じ画面を出す。設定フォーム・承認・停止は編集 / メンバー管理画面に置き、ここには移動の導線だけを出す。
+- if @can_manage_project
+  .manage-bar-wrap
+    = render "shared/manage_bar", items: business_project_manage_items(@project, current: :show, pending_count: @pending_request_count)
+
 .container.project-show
 
   / =========================
@@ -22,14 +27,6 @@
           %span 🗓 #{l(@project.created_at, format: :short)}
 
         .project-actions
-
-          - if @can_manage_project
-            .project-actions__row
-              = link_to "編集", edit_business_project_path(@project), class:"btn btn-primary"
-              = link_to members_business_project_path(@project), class:"btn btn-light" do
-                メンバー管理
-                - if @pending_request_count.to_i.positive?
-                  %span.membership-count-badge= @pending_request_count
 
           - if @can_view_internal
             %span.btn.btn-joined.btn-joined--light 参加中

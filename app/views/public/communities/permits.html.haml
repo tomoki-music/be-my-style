@@ -1,6 +1,13 @@
 = render 'layouts/header_menu'
 
+.manage-bar-wrap
+  = render "shared/manage_bar", items: music_community_manage_items(@community, current: :members, pending_count: @permits.total_count)
+
 .community-permits-container
+  %nav.manage-page__breadcrumb{ "aria-label": "現在地" }
+    = link_to @community.name, public_community_path(@community), data: { turbolinks: false }
+    %span{ "aria-hidden": "true" } ›
+    %span メンバー管理
   %h4
     = @community.name.to_s + "承認待ち一覧"
 

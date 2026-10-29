@@ -1,0 +1,18 @@
+-# 変更できるのはシステム管理者(Admin セッション)だけ。コミュニティの運営者には状態のみ表示する。
+%section.manage-page__section.plan-trial-card#plan-trial
+  %h3= plan_trial_label
+  %p.plan-trial-card__status{ class: ("is-on" if community.plan_restrictions_waived?) }
+    現在：#{plan_trial_status_label(community)}
+  %p.plan-trial-card__note= plan_trial_description
+  %p.plan-trial-card__features-title 無料で利用できるようになる機能
+  %ul.plan-trial-card__features
+    - plan_trial_unlocked_features.each do |feature|
+      %li= feature
+  - if plan_trial_editable?
+    = form_with model: community, url: business_community_plan_trial_path(community), method: :patch, local: true do |f|
+      %label.plan-trial-card__toggle
+        = f.check_box :plan_restrictions_waived
+        %span= plan_trial_label
+      = f.submit "保存する", class: "btn btn-primary btn-small"
+  - else
+    %p.plan-trial-card__readonly= plan_trial_readonly_note
