@@ -158,4 +158,27 @@ RSpec.describe "Sessions", type: :request do
       expect(response).to redirect_to(root_path)
     end
   end
+
+  # ログイン後ホーム(コミュニティ・プロジェクトの2つの一覧)へ、ログイン直後・ロゴ/HOME と同じ URL で着地すること。
+  # 未ログインで開こうとしたページへは戻さない(after_sign_in_path_for が stored_location を使わない現行仕様のまま)。
+  describe "ログイン後の着地先" do
+    it "音楽ログインは / のホームに着地し、開こうとしていたページへは戻らない" do
+      get public_events_path
+      expect(response).to redirect_to(new_customer_session_path)
+
+      post customer_session_path, params: { customer: { email: music_customer.email, password: "password" } }
+      expect(response).to redirect_to(root_path)
+
+      follow_redirect!
+      expect(Nokogiri::HTML(response.body).css(".member-home__section").map { |s| s["id"] }).to eq %w[my-communities my-projects]
+    end
+
+    it "Businessログインは /business のホームに着地する" do
+      post business_customer_session_path, params: { customer: { email: business_customer.email, password: "password" } }
+      expect(response).to redirect_to(business_root_path)
+
+      follow_redirect!
+      expect(Nokogiri::HTML(response.body).css(".member-home__section").map { |s| s["id"] }).to eq %w[my-communities my-projects]
+    end
+  end
 end

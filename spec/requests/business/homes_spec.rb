@@ -81,7 +81,8 @@ RSpec.describe "Business::Homes", type: :request do
         get business_root_path
 
         html = Nokogiri::HTML(response.body)
-        project_links = html.css(%(a[href="#{business_projects_path}"]))
+        # 本文(ログイン後ホーム)の「プロジェクトを探す」は除き、共通メニューだけを見る。
+        project_links = html.css(%(a[href="#{business_projects_path}"])).reject { |link| link.ancestors(".member-home").any? }
 
         expect(project_links.size).to eq 2
         project_links.each do |link|
@@ -129,38 +130,29 @@ RSpec.describe "Business::Homes", type: :request do
     end
   end
 
-  describe "GET /business のプロジェクト一覧" do
+  describe "GET /business の本文" do
     let(:owner) { create(:customer, domain_name: "business", onboarding_done: true) }
     let(:community) { create(:community, owner: owner, domain: business_domain, name: "企画コミュニティ") }
 
-    def project!(title, updated_at:, **attrs)
-      Project.create!({ community: community, customer: owner, title: title, description: "#{title}の概要です" }.merge(attrs)).tap do |project|
-        project.update_columns(updated_at: updated_at)
-      end
-    end
-
-    def cards
-      Nokogiri::HTML(response.body).css(".top-project-card")
-    end
-
-    def section
-      Nokogiri::HTML(response.body).at_css("#top-projects")
+    def doc
+      Nokogiri::HTML(response.body)
     end
 
     context "未ログイン" do
-      it "プロジェクトを取得・表示せず、名前や件数を出さずにログイン導線を出す" do
-        project!("非公開になり得る企画", updated_at: 1.hour.ago)
+      it "紹介ページのまま、プロジェクトを取得・表示せずログイン導線を出す" do
+        Project.create!(community: community, customer: owner, title: "非公開になり得る企画")
 
         get business_root_path
 
         expect(response).to have_http_status(:ok)
-        expect(cards).to be_empty
+        expect(doc.at_css(".hero-section")).to be_present
+        expect(doc.at_css(".member-home")).to be_nil
         expect(response.body).not_to include("非公開になり得る企画")
         expect(response.body).not_to include("企画コミュニティ")
+        section = doc.at_css("#top-projects")
         expect(section.text).to include("プロジェクトはログインすると閲覧できます。")
         expect(section.at_css(%(a[href="#{new_business_customer_session_path}"]))).to be_present
         expect(section.at_css(%(a[href="#{new_business_customer_registration_path}"]))).to be_present
-        expect(section.at_css(%(a[href="#{business_projects_path}"]))).to be_nil
       end
     end
 
@@ -169,66 +161,74 @@ RSpec.describe "Business::Homes", type: :request do
 
       before { sign_in viewer }
 
-      it "0件ならコミュニティへの導線を出し、すべて見るは出さない" do
+      it "紹介用のヒーロー・スライダー・お知らせを出さず、コミュニティ・プロジェクトの2つの一覧にする" do
         get business_root_path
 
-        expect(cards).to be_empty
-        expect(section.text).to include("まだプロジェクトはありません。")
-        expect(section.at_css(%(a[href="#{business_communities_path}"]))).to be_present
-        expect(section.at_css(%(a[href="#{business_projects_path}"]))).to be_nil
+        expect(doc.at_css(".hero-section, .business-top-slider, .notice-section, #top-projects")).to be_nil
+        expect(doc.css(".member-home__section").map { |s| s["id"] }).to eq %w[my-communities my-projects]
+        expect(doc.at_css(".header_container--business")).to be_present
       end
 
-      it "更新が新しい順に6件まで、名前・コミュニティ・概要・詳細リンクを表示し、一覧への導線を出す" do
-        CommunityCustomer.create!(community: community, customer: viewer)
-        projects = (1..8).map { |i| project!("企画#{i}", updated_at: i.hours.ago) }
-
+      it "0件ならBusinessコミュニティ・プロジェクトを探す導線を出す" do
         get business_root_path
 
-        expect(cards.size).to eq 6
-        expect(cards.map { |card| card.at_css(".top-project-card__title").text }).to eq projects.first(6).map(&:title)
-        first = cards.first
-        expect(first.at_css(".top-project-card__community").text).to eq "企画コミュニティ"
-        expect(first.at_css(".top-project-card__description").text).to eq "企画1の概要です"
-        expect(first.at_css(%(a[href="#{business_project_path(projects.first)}"]))).to be_present
-        expect(response.body).not_to include("企画7")
-        expect(section.css(%(a[href="#{business_projects_path}"])).size).to eq 2
+        expect(doc.at_css("#my-communities").text).to include("参加しているコミュニティはまだありません。")
+        expect(doc.at_css(%(#my-communities a[href="#{business_communities_path}"]))).to be_present
+        expect(doc.at_css(%(#my-communities a[href="#{public_communities_path}"]))).to be_nil
+        expect(doc.at_css(%(#my-projects a[href="#{business_projects_path}"]))).to be_present
+        expect(doc.at_css(%(#my-projects a[href="#{business_communities_path}"]))).to be_present
       end
 
-      it "参加状況(主催 / 参加中 / 承認待ち / 募集終了 / 参加できます / 参加申請できます)を出し、未参加コミュニティのプロジェクトは出さない" do
-        other_community = create(:community, owner: owner, domain: business_domain)
+      it "参加中・主催・承認待ちのプロジェクトだけを出し、参加していないものは出さない" do
         CommunityCustomer.create!(community: community, customer: viewer)
-        hosted = project!("主催企画", updated_at: 1.minute.ago, customer: viewer)
-        joined = project!("参加企画", updated_at: 2.minutes.ago).tap { |p| p.members << viewer }
-        pending = project!("申請中企画", updated_at: 3.minutes.ago).tap { |p| ProjectJoinRequest.create!(project: p, customer: viewer) }
-        closed = project!("終了企画", updated_at: 4.minutes.ago, deadline: 1.day.ago)
-        open = project!("自動承認企画", updated_at: 5.minutes.ago, join_approval_mode: :auto)
-        manual = project!("承認制企画", updated_at: 6.minutes.ago)
-        project!("外の企画", updated_at: 1.second.ago, community: other_community)
+        Project.create!(community: community, customer: viewer, title: "主催企画")
+        Project.create!(community: community, customer: owner, title: "参加企画").tap { |p| p.members << viewer }
+        Project.create!(community: community, customer: owner, title: "申請中企画").tap { |p| ProjectJoinRequest.create!(project: p, customer: viewer) }
+        Project.create!(community: community, customer: owner, title: "未参加企画")
 
         get business_root_path
 
-        status = cards.to_h { |card| [card.at_css(".top-project-card__title").text, card.at_css(".top-project-card__status").text] }
-        expect(status).to eq(
-          hosted.title => "主催",
-          joined.title => "参加中",
-          pending.title => "承認待ち",
-          closed.title => "募集終了",
-          open.title => "参加できます",
-          manual.title => "参加申請できます"
-        )
-        expect(response.body).not_to include("外の企画")
+        status = doc.css("#my-projects .member-home-card").to_h do |card|
+          [card.at_css(".member-home-card__title").text, card.at_css(".member-home-card__status").text]
+        end
+        expect(status).to eq("主催企画" => "主催", "参加企画" => "参加中", "申請中企画" => "承認待ち")
+        expect(response.body).not_to include("未参加企画")
       end
 
-      it "画像があれば表示し、Business 以外のコミュニティのプロジェクトは出さない" do
+      it "承認待ちのプロジェクトのリンク先では概要だけが見え、スレッドは見えない(表示と認可が一致する)" do
         CommunityCustomer.create!(community: community, customer: viewer)
-        with_image = project!("画像あり企画", updated_at: 1.minute.ago)
-        with_image.project_image.attach(io: File.open(Rails.root.join("app/assets/images/no_image.jpg")), filename: "p.jpg", content_type: "image/jpeg")
-        project!("音楽側の企画", updated_at: Time.current, community: create(:community, owner: owner))
+        project = Project.create!(community: community, customer: owner, title: "申請中企画")
+        ProjectJoinRequest.create!(project: project, customer: viewer)
+
+        get business_root_path
+        expect(doc.at_css(%(#my-projects a[href="#{business_project_path(project)}"]))).to be_present
+
+        get business_project_path(project)
+        expect(response).to have_http_status(:ok)
+        get business_project_thread_path(project, ProjectThread.default_for(project))
+        expect(response).to have_http_status(:redirect)
+      end
+
+      it "コミュニティのアクセス停止後は、そのコミュニティとプロジェクトを一覧に出さない" do
+        CommunityCustomer.create!(community: community, customer: viewer)
+        Project.create!(community: community, customer: owner, title: "参加企画").tap { |p| p.members << viewer }
+        Business::Memberships::RevokeCommunityAccess.call(community: community, customer: viewer, suspend: true, actor: owner)
 
         get business_root_path
 
-        expect(cards.first.at_css(".top-project-card__image img")).to be_present
-        expect(response.body).not_to include("音楽側の企画")
+        expect(response.body).not_to include("企画コミュニティ")
+        expect(response.body).not_to include("参加企画")
+      end
+
+      it "コミュニティ運営者には運営・管理として出す" do
+        sign_in owner
+        CommunityCustomer.create!(community: community, customer: owner)
+        Project.create!(community: community, customer: create(:customer, domain_name: "business"), title: "メンバーの企画")
+
+        get business_root_path
+
+        expect(doc.at_css("#my-communities .member-home-card__status").text).to eq "運営"
+        expect(doc.at_css("#my-projects .member-home-card__status").text).to eq "管理"
       end
     end
   end

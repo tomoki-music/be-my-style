@@ -1,54 +1,53 @@
 = render 'layouts/header_menu_nakama'
 
-.top-container
-  .hero-section
-    .hero-content
-      %p.hero-eyebrow Build your circle, move your work
-      %h1.hero-title
-        見つけるだけで終わらない。<br>
-        仲間と企画を動かすビジネスコミュニティへ。
+-# ログイン後は紹介(ヒーロー・スライダー・お知らせ)を出さず、/ と同じホーム本文にする。
+- if customer_signed_in?
+  = render "shared/member_home"
+- else
+  .top-container
+    .hero-section
+      .hero-content
+        %p.hero-eyebrow Build your circle, move your work
+        %h1.hero-title
+          見つけるだけで終わらない。<br>
+          仲間と企画を動かすビジネスコミュニティへ。
 
-      %p.hero-subtitle
-        NAKAMAは、見る・つながる・募集する・育てるを段階的に広げられるビジネスSNSです。
+        %p.hero-subtitle
+          NAKAMAは、見る・つながる・募集する・育てるを段階的に広げられるビジネスSNSです。
 
-      - unless customer_signed_in?
         .hero-buttons
           = link_to "新規登録", new_business_customer_registration_path, class:"btn btn-success hero-btn"
           = link_to "ログイン", new_business_customer_session_path, class:"btn btn-primary hero-btn"
-      - else
-        .hero-buttons
-          = link_to "投稿を見る", business_posts_path, class:"btn btn-primary hero-btn"
-          = link_to "プロジェクトを探す", "#top-projects", class:"btn btn-outline-light hero-btn"
 
-  = render "business/homes/projects"
+    = render "business/homes/projects"
 
-  / ===== SLIDER =====
-  .slider.business-top-slider
+    / ===== SLIDER =====
+    .slider.business-top-slider
 
-    = image_tag 'business1.png', class:"images"
-    = image_tag 'business2.png', class:"images"
-    = image_tag 'business3.png', class:"images"
-    = image_tag 'business4.png', class:"images"
-    = image_tag 'business5.png', class:"images"
+      = image_tag 'business1.png', class:"images"
+      = image_tag 'business2.png', class:"images"
+      = image_tag 'business3.png', class:"images"
+      = image_tag 'business4.png', class:"images"
+      = image_tag 'business5.png', class:"images"
 
 
-  / ===== NOTICE =====
-  .notice-section
+    / ===== NOTICE =====
+    .notice-section
 
-    %h3.notice-title お知らせ
+      %h3.notice-title お知らせ
 
-    %ul.notice-list
+      %ul.notice-list
 
-      %li
-        %span.notice-date
-          2026年3月1日
+        %li
+          %span.notice-date
+            2026年3月1日
 
-        NAKAMA ビジネスコミュニティを公開しました。
+          NAKAMA ビジネスコミュニティを公開しました。
 
-      %li
-        %span.notice-date
-          2026年3月5日
+        %li
+          %span.notice-date
+            2026年3月5日
 
-        コミュニティ機能を追加しました。
+          コミュニティ機能を追加しました。
 
-  / ===== DASHBOARD =====
+    / ===== DASHBOARD =====

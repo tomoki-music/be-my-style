@@ -338,56 +338,6 @@ RSpec.describe "Business ヘッダー: アカウントメニューと通知ベ�
     end
   end
 
-  context "トップのプロジェクト一覧" do
-    let(:community) { create(:community, owner: customer, domain: business_domain, name: "とても長いコミュニティ名称です") }
-
-    # 一覧(#top-projects)内の要素が画面外へはみ出しておらず、カード同士が重ならないこと。
-    def top_projects_layout
-      page.evaluate_script(<<~JS)
-        (function () {
-          var width = document.documentElement.clientWidth;
-          var overflow = 0;
-          document.querySelectorAll("#top-projects *").forEach(function (el) {
-            var r = el.getBoundingClientRect();
-            if (r.width === 0 && r.height === 0) return;
-            overflow = Math.max(overflow, r.right - width, -r.left);
-          });
-          var cards = Array.from(document.querySelectorAll(".top-project-card")).map(function (el) { return el.getBoundingClientRect(); });
-          var overlap = cards.some(function (a, i) {
-            return cards.some(function (b, j) {
-              return i < j && a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
-            });
-          });
-          return { overflow: Math.ceil(overflow), overlap: overlap, cards: cards.length };
-        })()
-      JS
-    end
-
-    [375, 768, 1280].each do |width|
-      it "幅#{width}px: 0件・複数件とも崩れず、カードから詳細へ移動できる" do
-        sign_in_via_business_form
-        set_viewport(width)
-        visit business_root_path
-        expect(page).to have_css("#top-projects", text: "まだプロジェクトはありません。")
-        expect(top_projects_layout).to eq("overflow" => 0, "overlap" => false, "cards" => 0)
-
-        projects = Array.new(7) do |i|
-          Project.create!(community: community, customer: customer, title: "長いプロジェクト名の企画#{i}" * 3, description: "概要" * 80)
-        end
-        projects.last.project_image.attach(io: File.open(Rails.root.join("app/assets/images/no_image.jpg")), filename: "p.jpg", content_type: "image/jpeg")
-        visit business_root_path
-
-        expect(top_projects_layout).to eq("overflow" => 0, "overlap" => false, "cards" => 6)
-        page.execute_script("document.getElementById('top-projects').scrollIntoView()")
-        page.save_screenshot(Rails.root.join("tmp/screenshots/business_top_projects_#{width}.png").to_s)
-
-        page.execute_script("arguments[0].scrollIntoView({ block: 'center' })", find(".top-project-card__link", match: :first))
-        find(".top-project-card__link", match: :first).click
-        expect(page).to have_current_path(business_project_path(projects.last), wait: 10)
-      end
-    end
-  end
-
   context "トップのスライダー" do
     [375, 768, 1280].each do |width|
       it "幅#{width}px: 矢印が画面内に収まり、ページ全体が横にはみ出さない" do
