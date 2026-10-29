@@ -10,6 +10,7 @@
   // 下部ナビを隠したままにしない。
   var TYPING_TARGET = 'textarea, input:not([type]), input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input[type="number"], input[type="password"]';
   var current = null;
+  var sheetLinkClicked = false;
 
   function setup() {
     var toggle = document.getElementById('baMenuToggle');
@@ -61,6 +62,21 @@
       });
     });
 
+    // メニューのリンクを選んだら、新しい画面が出るまで待たずにシートを閉じる。
+    // 開いたままだと、読み込み中の続けてのタップがシートの「ログアウト」などに当たる。
+    // 移った先で消える要素なので、フォーカスは「メニュー」へ戻さない。
+    sheet.addEventListener('click', function (event) {
+      var link = event.target.closest('a[href]');
+      if (!link || event.defaultPrevented || event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      close(false);
+      sheetLinkClicked = true;
+      // Turbolinks はこのクリックの中で同期的に turbolinks:visit を出す。出なければ(通常の遷移など)何もしない。
+      setTimeout(function () {
+        sheetLinkClicked = false;
+      }, 0);
+    });
+
     current = { sheet: sheet, isOpen: isOpen, close: close, focusables: focusables };
   }
 
@@ -105,11 +121,34 @@
     }, 0);
   });
 
+  // メニューのリンクで Turbolinks の画面遷移が始まったら、表示が切り替わるまでタップを受け付けない。
+  // 成功・エラー画面の表示では body が入れ替わり、通信失敗では再読み込みになるため、この状態は残らない。
+  document.addEventListener('turbolinks:visit', function () {
+    if (!sheetLinkClicked || !document.body.classList.contains('ba-body')) return;
+    sheetLinkClicked = false;
+    document.body.classList.add('ba-nav-pending');
+  });
+
+  function clearNavPending() {
+    document.body.classList.remove('ba-nav-pending');
+  }
+
   // 開いたままキャッシュされると、戻る操作で開いた状態が復元されるため閉じておく。
   document.addEventListener('turbolinks:before-cache', function () {
     if (current) current.close(false);
     document.body.classList.remove('ba-is-typing');
+    clearNavPending();
   });
 
-  document.addEventListener('turbolinks:load', setup);
+  // ブラウザの戻る・進むでページごと復元された場合(bfcache)も、閉じて操作できる状態に戻す。
+  window.addEventListener('pageshow', function (event) {
+    if (!event.persisted) return;
+    if (current) current.close(false);
+    clearNavPending();
+  });
+
+  document.addEventListener('turbolinks:load', function () {
+    clearNavPending();
+    setup();
+  });
 })();

@@ -334,6 +334,12 @@
     overflow: hidden;
   }
 
+  // メニューのリンクで画面を移る間は、続けてのタップが背後のナビ・ボタンに当たらないようにする。
+  // 新しい画面が表示されると body ごと入れ替わるため、このクラスは残らない。
+  &.ba-nav-pending {
+    pointer-events: none;
+  }
+
   // ===== PC: 左ナビ =====
   @media (min-width: 992px) {
     padding-left: var(--ba-rail-width);
