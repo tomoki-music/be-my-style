@@ -1,0 +1,38 @@
+= render "layouts/header_menu_nakama"
+
+.manage-bar-wrap
+  = render "shared/manage_bar", items: business_community_manage_items(@community, current: :projects, pending_count: @pending_permit_count, manage: @can_manage_community)
+
+.manage-page.project-management
+  %nav.manage-page__breadcrumb{ "aria-label": "現在地" }
+    = link_to @community.name, business_community_path(@community)
+    %span{ "aria-hidden": "true" } ›
+    %span プロジェクト管理
+
+  %h2.manage-page__title プロジェクト管理
+
+  %section.manage-page__section
+    %h3 新しいプロジェクト
+    %p.manage-page__note
+      「#{@community.name}」の中にプロジェクトを作成します。参加できるのは、このコミュニティの参加者です。
+    .manage-page__actions
+      = link_to "新しいプロジェクトを作成", new_business_project_path(community_id: @community.id), class: "btn btn-primary"
+
+  %section.manage-page__section#projects
+    %h3 このコミュニティのプロジェクト（#{@projects.size}件）
+    - if @projects.empty?
+      %p.manage-page__note まだプロジェクトはありません。
+    - else
+      %ul.project-management__list
+        - @projects.each do |project|
+          %li.project-management__row
+            .project-management__info
+              = link_to project.title, business_project_path(project), class: "project-management__title"
+              %span.project-management__meta
+                作成：#{customer_display_name(project.customer) || ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL}
+                ／ 更新：#{l(project.updated_at, format: :short)}
+            .project-management__actions
+              = link_to "通常画面", business_project_path(project), class: "btn btn-light btn-sm"
+              - if @manageable_project_ids.include?(project.id)
+                = link_to "編集", edit_business_project_path(project), class: "btn btn-outline-primary btn-sm"
+                = link_to "メンバー管理", members_business_project_path(project), class: "btn btn-outline-primary btn-sm"

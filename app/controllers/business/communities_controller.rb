@@ -22,6 +22,7 @@ class Business::CommunitiesController < ApplicationController
     @join_status = community_join_status
 
     @can_manage = current_customer.can_manage_community?(@community)
+    @can_create_project = current_customer.can_create_project_for?(@community)
     load_pending_permit_count if @can_manage
     return unless @can_view_internal
 

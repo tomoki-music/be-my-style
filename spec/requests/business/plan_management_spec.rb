@@ -16,7 +16,8 @@ RSpec.describe "Business の契約プラン管理への導線", type: :request d
 
     get business_community_path(community)
 
-    cta = Nokogiri::HTML(response.body).at_css("a.menu-btn-locked")
+    # 作成ボタンではなく、通常画面のプロジェクト欄にプランの案内として出す。
+    cta = Nokogiri::HTML(response.body).at_css(".project-create-note a")
     expect(cta.text.strip).to eq "coreでプロジェクトを始める"
     expect(cta["href"]).to eq edit_business_customer_path(customer, anchor: "plan-management")
   end

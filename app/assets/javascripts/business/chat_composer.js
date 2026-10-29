@@ -1,14 +1,10 @@
 // Business のタイムライン / プロジェクトチャット入力欄(.business-composer)。
-// マークアップは app/views/business/chat/_composer.html.haml。
-// - 書式ボタン: 選択中の文字に Markdown 記法を付ける。未選択なら入力例を入れて選択状態にする。
-// - プレビュー: 送信後と同じ Chat::MarkdownRenderer の結果(サーバーでサニタイズ済み)を表示する。
+// マークアップは app/views/business/chat/_composer.html.haml。入力欄は書式なしの textarea。
 // - 添付: 選んだファイルを一覧表示し、送信前に1件ずつ取り消せる。形式・容量・件数は
 //   画面でも確認するが、最終的な判定はサーバー側(BusinessChatContent)で行う。
 // - 添付画像の拡大表示([data-business-lightbox])。
 (function () {
   'use strict';
-
-  var PREVIEW_DEBOUNCE_MS = 400;
 
   document.addEventListener('turbolinks:load', function () {
     document.querySelectorAll('[data-business-composer]').forEach(initComposer);
@@ -22,13 +18,6 @@
     var form = composer.closest('form');
     if (!textarea || !form) return;
 
-    composer.querySelectorAll('[data-format]').forEach(function (button) {
-      button.addEventListener('click', function () {
-        applyFormat(textarea, button.dataset.format);
-      });
-    });
-
-    initPreview(composer, textarea);
     var files = initAttachments(composer);
 
     form.addEventListener('submit', function (event) {
@@ -37,166 +26,6 @@
       showError(composer, 'メッセージを入力するか、ファイルを選んでください。');
       enableSubmit(form);
     });
-  }
-
-  // ---------- 書式 ----------
-
-  function applyFormat(textarea, format) {
-    switch (format) {
-      case 'bold':
-        wrapSelection(textarea, '**', '**', '太字にしたい文字');
-        break;
-      case 'heading':
-        prefixLines(textarea, '## ', '大きく表示したい文字');
-        break;
-      case 'list':
-        prefixLines(textarea, '- ', '項目');
-        break;
-      case 'link':
-        insertLink(textarea);
-        break;
-      default:
-        return;
-    }
-    textarea.dispatchEvent(new Event('input'));
-  }
-
-  function replaceRange(textarea, start, end, text, selectFrom, selectTo) {
-    var value = textarea.value;
-    textarea.value = value.slice(0, start) + text + value.slice(end);
-    textarea.focus();
-    textarea.setSelectionRange(start + selectFrom, start + selectTo);
-  }
-
-  function wrapSelection(textarea, before, after, example) {
-    var start = textarea.selectionStart;
-    var end = textarea.selectionEnd;
-    var selected = textarea.value.slice(start, end);
-    var inner = selected || example;
-    replaceRange(textarea, start, end, before + inner + after, before.length, before.length + inner.length);
-  }
-
-  // 選択範囲の各行(未選択ならカーソル行)の先頭に記号を付ける。空の行には入力例を入れる。
-  function prefixLines(textarea, prefix, example) {
-    var value = textarea.value;
-    var start = textarea.selectionStart;
-    var end = textarea.selectionEnd;
-    var lineStart = value.lastIndexOf('\n', start - 1) + 1;
-    var lineEndIndex = value.indexOf('\n', end);
-    var lineEnd = lineEndIndex === -1 ? value.length : lineEndIndex;
-    var block = value.slice(lineStart, lineEnd);
-
-    if (block.trim() === '') {
-      var text = prefix + example;
-      // 前後の行とつながらないよう、必要なら改行を補う。
-      var lead = lineStart > 0 && value[lineStart - 1] !== '\n' ? '\n' : '';
-      replaceRange(textarea, lineStart, lineEnd, lead + text, lead.length + prefix.length, lead.length + text.length);
-      return;
-    }
-
-    var lines = block.split('\n').map(function (line) {
-      if (line.trim() === '' || line.indexOf(prefix) === 0) return line;
-      return prefix + line.replace(/^(#{1,6}\s+|[-*+]\s+)/, '');
-    });
-    var result = lines.join('\n');
-    replaceRange(textarea, lineStart, lineEnd, result, 0, result.length);
-  }
-
-  function insertLink(textarea) {
-    var start = textarea.selectionStart;
-    var end = textarea.selectionEnd;
-    var selected = textarea.value.slice(start, end).trim();
-    var selectedIsUrl = /^https?:\/\/\S+$/.test(selected);
-
-    var url = selectedIsUrl ? selected : window.prompt('リンク先のURLを入力してください（https:// から始まるもの）', 'https://');
-    if (url === null) return;
-    url = url.trim();
-    if (!/^https?:\/\/[^\s()<>]+$/.test(url)) {
-      window.alert('リンクにできるのは http:// または https:// から始まるURLです。');
-      return;
-    }
-
-    var label = selected && !selectedIsUrl ? selected : 'リンクの文字';
-    var text = '[' + label + '](' + url + ')';
-    replaceRange(textarea, start, end, text, 1, 1 + label.length);
-  }
-
-  // ---------- プレビュー ----------
-
-  function initPreview(composer, textarea) {
-    var editPane = composer.querySelector('.business-composer__edit');
-    var previewPane = composer.querySelector('.business-composer__preview');
-    var previewBody = composer.querySelector('.business-composer__preview-body');
-    var tabs = composer.querySelectorAll('[data-composer-tab]');
-    var toolbarButtons = composer.querySelectorAll('[data-format]');
-    var previewUrl = composer.dataset.previewUrl;
-    var timer = null;
-    var requestId = 0;
-
-    tabs.forEach(function (tab) {
-      tab.addEventListener('click', function () {
-        var showPreview = tab.dataset.composerTab === 'preview';
-        tabs.forEach(function (t) {
-          var active = t === tab;
-          t.classList.toggle('is-active', active);
-          t.setAttribute('aria-pressed', active ? 'true' : 'false');
-        });
-        editPane.hidden = showPreview;
-        previewPane.hidden = !showPreview;
-        toolbarButtons.forEach(function (button) { button.disabled = showPreview; });
-        if (showPreview) {
-          render();
-        } else {
-          textarea.focus();
-        }
-      });
-    });
-
-    textarea.addEventListener('input', function () {
-      if (previewPane.hidden) return;
-      clearTimeout(timer);
-      timer = setTimeout(render, PREVIEW_DEBOUNCE_MS);
-    });
-
-    function setPlaceholder(message) {
-      previewBody.innerHTML = '';
-      var p = document.createElement('p');
-      p.className = 'business-composer__placeholder';
-      p.textContent = message;
-      previewBody.appendChild(p);
-    }
-
-    function render() {
-      var content = textarea.value;
-      if (content.trim() === '') {
-        setPlaceholder('入力した内容が、送信後と同じ見た目でここに表示されます。');
-        return;
-      }
-
-      var currentRequest = ++requestId;
-      var csrf = document.querySelector('meta[name="csrf-token"]');
-      fetch(previewUrl, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': csrf ? csrf.content : '',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({ content: content })
-      })
-        .then(function (response) { return response.json(); })
-        .then(function (data) {
-          if (currentRequest !== requestId) return;
-          if (typeof data.html !== 'string') throw new Error('invalid');
-          // サーバー側(Chat::MarkdownRenderer)でサニタイズ済みの HTML のみを挿入する。
-          previewBody.innerHTML = data.html;
-        })
-        .catch(function () {
-          if (currentRequest !== requestId) return;
-          setPlaceholder('プレビューを表示できませんでした。');
-        });
-    }
   }
 
   // ---------- 添付 ----------

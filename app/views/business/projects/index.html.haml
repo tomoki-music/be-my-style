@@ -1,12 +1,18 @@
 = render "layouts/header_menu_nakama"
 
+-# 一覧は参加者向けの画面。作成は管理メニューの「プロジェクト管理」から行う。
+- if @community.present?
+  - can_manage_community = current_customer.can_manage_community?(@community)
+  - can_create_project = current_customer.can_create_project_for?(@community)
+  - if can_manage_community || can_create_project
+    .manage-bar-wrap
+      = render "shared/manage_bar", items: business_community_manage_items(@community, current: nil, manage: can_manage_community, projects: can_create_project)
+
 .container.project-container
 
   .page-header
     %h2 プロジェクト一覧
-    - if @community.present? && current_customer.can_create_project_for?(@community)
-      = link_to "＋ 作成", new_business_project_path(community_id: @community.id), class:"btn btn-primary new-btn"
-    - elsif @community.present? && @community.customers.include?(current_customer)
+    - if @community.present? && !current_customer.can_create_project_for?(@community) && @community.customers.include?(current_customer)
       = render "shared/feature_gate",
         feature_key: :business_project_create,
         title: "このコミュニティでプロジェクトを始める",

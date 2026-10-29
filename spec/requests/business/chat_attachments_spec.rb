@@ -38,7 +38,7 @@ RSpec.describe "Business チャットの添付・スタンプ", type: :request d
       }.to change(CommunityPost, :count).by(1)
       created = CommunityPost.last
       expect(created.attachments.count).to eq 2
-      expect(created).to be_content_format_markdown
+      expect(created).to be_content_format_plain
 
       expect { post_timeline(attachments: [upload("memo.docx")]) }.to change(CommunityPost, :count).by(1)
       expect(CommunityPost.last.body).to be_blank
