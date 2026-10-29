@@ -1,6 +1,7 @@
-= render "layouts/header_menu_nakama"
+= render "business/project_threads/breadcrumb", current: "編集", thread: @thread
 
-.container.form-container
-  .form-card
-    %h2 スレッドを編集
-    = render "form", thread: @thread
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title スレッドを編集
+
+= render "form", thread: @thread

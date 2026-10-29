@@ -2,7 +2,8 @@
 %html
   %head
     %meta{:content => "text/haml; charset=UTF-8mb4", "http-equiv" => "Content-Type"}/
-    %meta{:content => "width=device-width,initial-scale=1", :name => "viewport"}/
+    -# Business のログイン後画面は下部ナビを iPhone のセーフエリアに合わせるため viewport-fit=cover を付ける(layouts/business)。
+    %meta{:content => (content_for?(:viewport) ? yield(:viewport) : "width=device-width,initial-scale=1"), :name => "viewport"}/
     - page_description = content_for?(:og_description) ? yield(:og_description) : "好きで繋がった仲間は一生もの。音楽人の為のコミュニティアプリです。"
     %meta{:content => page_description, :name => "description"}/
     %title= content_for?(:title) ? yield(:title) : "BeMyStyle"
@@ -30,8 +31,8 @@
     = javascript_include_tag 'application', 'data-turbolinks-track': 'reload'
     %script{:type => "text/javascript", :src => "//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"}
     %script{:type => "text/javascript", :src => "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"}
-  %body
+  %body{ class: content_for?(:body_class) ? yield(:body_class) : nil }
     .notifications
       - flash.each do |key, value|
         = content_tag(:div, value, class: key)
-    = yield
+    = content_for?(:layout_content) ? yield(:layout_content) : yield

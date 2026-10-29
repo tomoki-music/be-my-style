@@ -60,7 +60,7 @@ RSpec.describe "通常画面・編集画面・メンバー管理画面の分離"
           expect(response).to have_http_status(:ok)
           expect(current_tab).to eq "編集"
           expect(doc.at_css(%(form[action="#{business_project_path(project)}"] input[type="submit"][value="保存する"]))).to be_present
-          expect(doc.at_css(%(.form-actions a[href="#{business_project_path(project)}"])).text).to eq "キャンセル"
+          expect(doc.at_css(%(.ba-form-actions a[href="#{business_project_path(project)}"])).text).to eq "キャンセル"
           expect(manage_bar.at_css(%(a[href="#{business_project_path(project)}"])).text.strip).to eq "通常画面"
           expect(manage_bar.at_css(%(a[href="#{members_business_project_path(project)}"]))).to be_present
           expect(doc.at_css("#threads")).to be_nil
@@ -181,7 +181,7 @@ RSpec.describe "通常画面・編集画面・メンバー管理画面の分離"
 
         expect(new_project_link).to be_nil
         expect(response.body).not_to include("＋ 作成")
-        expect(doc.at_css(%(.project-grid a[href="#{business_project_path(project)}"]))).to be_present
+        expect(doc.at_css(%(.ba-project-grid a[href="#{business_project_path(project)}"]))).to be_present
         expect(manage_bar.css("a, [aria-current]").map { |el| el.text.strip.sub(/\d+\z/, "") }).to eq %w[通常画面 編集 メンバー管理 プロジェクト管理]
       end
 
@@ -189,14 +189,14 @@ RSpec.describe "通常画面・編集画面・メンバー管理画面の分離"
         get edit_business_community_path(community)
 
         section = doc.at_css("#project-management")
-        expect(section.at_css("h3").text).to eq "プロジェクト管理"
+        expect(section.at_css("h2").text).to eq "プロジェクト管理"
         expect(section.at_css(%(a[href="#{new_business_project_path(community_id: community.id)}"])).text).to eq "新しいプロジェクトを作成"
 
         get new_business_project_path(community_id: community.id)
         expect(response).to have_http_status(:ok)
-        expect(doc.at_css(".project-new-community strong").text).to eq community.name
-        expect(doc.at_css(%(.manage-page__breadcrumb a[href="#{business_community_project_management_path(community)}"]))).to be_present
-        expect(doc.at_css(%(.form-actions a[href="#{business_community_project_management_path(community)}"])).text).to include("キャンセル")
+        expect(doc.at_css(".ba-project-community strong").text).to eq community.name
+        expect(doc.at_css(%(.ba-breadcrumb a[href="#{business_community_project_management_path(community)}"]))).to be_present
+        expect(doc.at_css(%(.ba-form-actions a[href="#{business_community_project_management_path(community)}"])).text).to include("キャンセル")
 
         expect { create_project(community) }.to change(community.projects, :count).by(1)
         expect(response).to redirect_to(business_community_path(community))
@@ -208,7 +208,7 @@ RSpec.describe "通常画面・編集画面・メンバー管理画面の分離"
 
         expect(response).to have_http_status(:ok)
         expect(current_tab).to eq "プロジェクト管理"
-        expect(new_project_link.text).to eq "新しいプロジェクトを作成"
+        expect(new_project_link.text.strip).to eq "新しいプロジェクトを作成"
         expect(doc.at_css(%(.project-management__actions a[href="#{edit_business_project_path(project)}"]))).to be_present
       end
     end
@@ -303,10 +303,10 @@ RSpec.describe "通常画面・編集画面・メンバー管理画面の分離"
       expect(response).to have_http_status(:ok)
       expect(current_tab).to eq "編集"
       expect(doc.at_css(%(form[action="#{business_community_path(community)}"] input[type="submit"][value="保存する"]))).to be_present
-      expect(doc.at_css(%(.form-actions a[href="#{business_community_path(community)}"])).text).to eq "キャンセル"
+      expect(doc.at_css(%(.ba-form-actions a[href="#{business_community_path(community)}"])).text).to eq "キャンセル"
       expect(manage_bar.at_css(%(a[href="#{business_community_path(community)}"]))).to be_present
       expect(manage_bar.at_css(%(a[href="#{business_permits_path(community)}"]))).to be_present
-      expect(doc.css("h2").map(&:text).count("コミュニティ編集")).to eq 1
+      expect(doc.css("h1").map(&:text).count("コミュニティ編集")).to eq 1
     end
 
     it "保存に成功すると通常画面へ戻り、成功メッセージを出す" do
@@ -322,9 +322,9 @@ RSpec.describe "通常画面・編集画面・メンバー管理画面の分離"
       patch business_community_path(community), params: { community: { name: "", introduction: "書きかけの紹介" } }
 
       expect(response).to have_http_status(:ok)
-      expect(doc.at_css(".alert-danger")).to be_present
+      expect(doc.at_css(".ba-errors")).to be_present
       expect(doc.at_css("textarea[name='community[introduction]']").text.strip).to eq "書きかけの紹介"
-      expect(doc.at_css(".manage-page__breadcrumb a").text).to eq "元の名前"
+      expect(doc.at_css(".ba-breadcrumb a").text).to eq "元の名前"
       expect(community.reload.name).to eq "元の名前"
       expect(community.introduction).to eq "元の紹介"
     end

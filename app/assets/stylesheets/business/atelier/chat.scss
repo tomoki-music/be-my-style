@@ -1,0 +1,355 @@
+// Social Atelier: タイムライン・スレッドの投稿、入力欄、スレッド一覧。
+// 既存の business/chat.scss(添付・入力欄の構造)の上から、.ba-body 配下だけ見た目を揃える。
+
+.ba-body {
+  // ===== 投稿(アバター → 名前・時刻 → 本文) =====
+  .ba-feed {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    > li {
+      margin: 0;
+      border-top: 1px solid var(--ba-border);
+    }
+
+    > li:first-child {
+      border-top: 0;
+    }
+  }
+
+  .ba-post {
+    display: flex;
+    gap: var(--ba-space-3);
+    padding: var(--ba-space-4) 0;
+    min-width: 0;
+  }
+
+  .ba-post__avatar {
+    flex: none;
+    width: 40px;
+
+    img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  }
+
+  .ba-post__main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ba-post__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px var(--ba-space-2);
+    margin-bottom: var(--ba-space-1);
+  }
+
+  .ba-post__name {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-post__time {
+    font-size: 13px;
+    color: var(--ba-text-muted);
+  }
+
+  // 本文は読みやすい幅に抑え、長い URL・長文・空行でも崩れないようにする。
+  .ba-post__body {
+    max-width: var(--ba-reading-width);
+    font-size: 16px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+    word-break: normal;
+
+    a {
+      overflow-wrap: anywhere;
+      word-break: break-all;
+    }
+  }
+
+  .ba-post__actions {
+    margin-top: var(--ba-space-1);
+  }
+
+  .ba-post__delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 36px;
+    font-size: 13px;
+    color: var(--ba-text-muted);
+  }
+
+  .ba-post__delete:hover {
+    color: var(--ba-danger);
+  }
+
+  .business-chat-plain,
+  .business-chat-markdown {
+    color: var(--ba-text);
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .business-chat-stamp img {
+    width: 112px;
+  }
+
+  .business-chat-images {
+    gap: var(--ba-space-2);
+  }
+
+  .business-chat-images__link {
+    border-radius: var(--ba-radius-control);
+    border-color: var(--ba-border);
+  }
+
+  .business-chat-images__thumb {
+    width: 160px;
+    height: 160px;
+  }
+
+  .business-chat-files__item {
+    border-radius: var(--ba-radius-control);
+    border-color: var(--ba-border);
+    max-width: var(--ba-reading-width);
+  }
+
+  .business-chat-files__download {
+    min-height: 40px;
+    border-radius: var(--ba-radius-small);
+    background: var(--ba-accent);
+    color: #fff;
+  }
+
+  .business-chat-files__download:hover,
+  .business-chat-files__download:focus {
+    background: var(--ba-accent-strong);
+    color: #fff;
+  }
+
+  // ===== 入力欄(書式なし。添付・送信・スタンプを迷わず押せる配置) =====
+  .business-chat-compose {
+    margin-bottom: var(--ba-space-4);
+  }
+
+  .business-composer {
+    border-color: var(--ba-border-strong);
+    border-radius: var(--ba-radius-card);
+
+    &:focus-within {
+      border-color: var(--ba-accent);
+      box-shadow: var(--ba-focus);
+    }
+  }
+
+  .business-composer__textarea {
+    padding: var(--ba-space-3) var(--ba-space-4);
+    color: var(--ba-text);
+  }
+
+  .business-composer__footer {
+    padding: var(--ba-space-2) var(--ba-space-3);
+    border-top-color: var(--ba-border);
+  }
+
+  .business-composer__attach-btn {
+    min-height: var(--ba-tap);
+    padding: 8px 14px;
+    border: 1px solid var(--ba-border-strong);
+    border-radius: var(--ba-radius-control);
+    color: var(--ba-text);
+    font-size: 14px;
+    font-weight: 600;
+    gap: 6px;
+
+    &:hover {
+      background: var(--ba-surface-muted);
+    }
+
+    &:focus-within {
+      outline: none;
+      box-shadow: var(--ba-focus);
+    }
+  }
+
+  .business-composer__limits {
+    font-size: 12px;
+    color: var(--ba-text-muted);
+  }
+
+  .business-composer__submit {
+    min-height: var(--ba-tap);
+    min-width: 96px;
+  }
+
+  .business-stamp-picker {
+    margin-top: var(--ba-space-2);
+
+    .stamp-picker__toggle {
+      min-height: var(--ba-tap);
+      border-radius: var(--ba-radius-control);
+      border: 1px solid var(--ba-border-strong);
+      background: var(--ba-surface);
+      color: var(--ba-text);
+      font-weight: 600;
+    }
+
+    .stamp-picker__toggle[aria-expanded="true"] {
+      border-color: var(--ba-accent);
+      background: var(--ba-accent-soft);
+    }
+
+    .stamp-picker__panel {
+      border-radius: var(--ba-radius-card);
+      border-color: var(--ba-border);
+    }
+
+    .stamp-picker__tab[aria-selected="true"] {
+      border-color: var(--ba-accent);
+      color: var(--ba-accent-strong);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .business-chat-images__thumb {
+      width: 120px;
+      height: 120px;
+    }
+  }
+
+  // ===== スレッドの会話画面 =====
+  .ba-thread-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--ba-space-3);
+    margin-bottom: var(--ba-space-4);
+  }
+
+  .ba-thread-header__text {
+    flex: 1 1 280px;
+    min-width: 0;
+  }
+
+  .ba-thread-header__description {
+    margin-top: var(--ba-space-2);
+    color: var(--ba-text-muted);
+    overflow-wrap: anywhere;
+
+    p {
+      margin: 0 0 var(--ba-space-1);
+    }
+  }
+
+  .ba-thread-header__meta {
+    margin: var(--ba-space-2) 0 0;
+    font-size: 13px;
+    color: var(--ba-text-muted);
+  }
+
+  .ba-thread-header__actions {
+    display: flex;
+    gap: var(--ba-space-2);
+  }
+
+  .ba-conversation {
+    padding-top: var(--ba-space-2);
+  }
+
+  .ba-conversation__compose {
+    margin: var(--ba-space-4) 0 0;
+    padding-top: var(--ba-space-4);
+    border-top: 1px solid var(--ba-border);
+  }
+
+  // ===== スレッド一覧 =====
+  .ba-thread-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ba-thread-list__item {
+    margin: 0;
+    border-top: 1px solid var(--ba-border);
+  }
+
+  .ba-thread-list__item:first-child {
+    border-top: 0;
+  }
+
+  .ba-thread-list__link {
+    display: flex;
+    align-items: center;
+    gap: var(--ba-space-3);
+    padding: var(--ba-space-3) var(--ba-space-2);
+    margin: 0 calc(-1 * var(--ba-space-2));
+    border-radius: var(--ba-radius-control);
+    color: var(--ba-text);
+    text-decoration: none;
+  }
+
+  .ba-thread-list__link:hover {
+    background: var(--ba-surface-muted);
+    color: var(--ba-text);
+  }
+
+  .ba-thread-list__icon {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--ba-radius-control);
+    background: var(--ba-accent-soft);
+    color: var(--ba-accent);
+  }
+
+  .ba-thread-list__main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .ba-thread-list__title {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-thread-list__description {
+    font-size: 14px;
+    color: var(--ba-text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .ba-thread-list__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px var(--ba-space-3);
+    font-size: 12px;
+    color: var(--ba-text-muted);
+  }
+
+  .ba-thread-list__chevron {
+    flex: none;
+    font-size: 12px;
+    color: var(--ba-text-subtle);
+  }
+
+  .ba-more {
+    margin-top: var(--ba-space-3);
+    text-align: center;
+  }
+}

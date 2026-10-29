@@ -1,75 +1,44 @@
-= render "layouts/header_menu_nakama"
+= render "business/project_threads/breadcrumb", current: @thread.title, thread: @thread
+= render "business/project_threads/repair_failed"
 
-.container.project-show.project-thread-page
-  %nav.project-breadcrumb{ "aria-label" => "現在地" }
-    = link_to @community.name, business_community_path(@community)
-    %span{ "aria-hidden" => "true" } ›
-    = link_to @project.title, business_project_path(@project)
-    %span{ "aria-hidden" => "true" } ›
-    = link_to "スレッド一覧", business_project_threads_path(@project)
-
-  = render "business/project_threads/repair_failed"
-
-  .project-section.project-thread-header
-    .project-section__header
-      %h2.project-thread-header__title= @thread.title
-      .project-thread-header__actions
-        - if current_customer.can_edit_project_thread?(@thread)
-          = link_to "編集", edit_business_project_thread_path(@project, @thread), class: "btn btn-light btn-small"
-        - if current_customer.can_destroy_project_thread?(@thread)
-          = link_to "削除", business_project_thread_path(@project, @thread),
-            method: :delete, data: { confirm: "スレッドと、その中の投稿をすべて削除します。よろしいですか？" },
-            class: "btn btn-danger btn-small"
+%header.ba-thread-header
+  .ba-thread-header__text
+    %h1.ba-page-title= @thread.title
     - if @thread.description.present?
-      .project-thread-header__description= simple_format(@thread.description)
-    %p.project-thread-header__meta
+      .ba-thread-header__description= simple_format(@thread.description)
+    %p.ba-thread-header__meta
       作成：#{customer_display_name(@thread.customer) || ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL}
-      ・
+      %span{ "aria-hidden": "true" } ・
       最終更新：#{l(@thread.last_posted_at, format: :short)}
+  -# 編集・削除の可否はスレッドごとの権限(全体トークは削除不可)に従う。
+  - if current_customer.can_edit_project_thread?(@thread) || current_customer.can_destroy_project_thread?(@thread)
+    .ba-thread-header__actions
+      - if current_customer.can_edit_project_thread?(@thread)
+        = link_to edit_business_project_thread_path(@project, @thread), class: "ba-btn ba-btn--secondary ba-btn--sm" do
+          %i.fa-solid.fa-pen{ "aria-hidden": "true" }
+          編集
+      - if current_customer.can_destroy_project_thread?(@thread)
+        = link_to business_project_thread_path(@project, @thread),
+          method: :delete, data: { confirm: "スレッドと、その中の投稿をすべて削除します。よろしいですか？" },
+          class: "ba-btn ba-btn--danger ba-btn--sm" do
+          %i.fa-regular.fa-trash-can{ "aria-hidden": "true" }
+          削除
 
-  .project-section
-    .chat-container
+%section.ba-card.ba-conversation{ "aria-label": "メッセージ" }
+  - if @messages.present?
+    %ol.ba-feed
+      - @messages.each do |msg|
+        %li
+          = render "business/chat/post", record: msg, owner: @project.customer,
+            delete_path: (msg.customer == current_customer ? business_project_thread_project_chat_path(@project, @thread, msg) : nil)
+  - else
+    .ba-empty
+      %p.ba-empty__title まだメッセージはありません
+      %p 最初の一言を投稿してみよう！
 
-      - if @messages.present?
+  = render "business/chat/lightbox"
 
-        - @messages.each do |msg|
-          - is_me = msg.customer == current_customer
-
-          .chat-row
-
-            .chat-avatar
-              = customer_avatar_tag(msg.customer, class_name: "chat-avatar-img")
-
-            .chat-content
-
-              .chat-header
-                %span.chat-user= customer_display_name(msg.customer)
-
-                - if msg.customer == @project.customer && !customer_withdrawn?(msg.customer)
-                  %span.owner-tag オーナー
-
-                %span.chat-time= l(msg.created_at, format: :short)
-
-              .chat-bubble{ class: is_me ? "me" : "" }
-                .chat-body
-                  = render "business/chat/message_content", record: msg
-
-              - if is_me
-                = link_to "削除",
-                  business_project_thread_project_chat_path(@project, @thread, msg),
-                  method: :delete,
-                  data: { confirm: "削除する？" },
-                  class: "chat-delete"
-
-      - else
-        .empty-state
-          %p まだメッセージはありません
-          %span 最初の一言を投稿してみよう！
-
-    = render "business/chat/lightbox"
-
-    / 投稿フォーム
-    .business-chat-compose
-      = form_with model: @new_message, url: business_project_thread_project_chats_path(@project, @thread), local: true, html: { class: "chat-form business-chat-form" } do |f|
-        = render "business/chat/composer", f: f, placeholder: "メッセージを入力...", submit_label: "送信"
-      = render "business/chat/stamp_picker", url: business_project_thread_project_chats_path(@project, @thread), param_key: :project_chat
+  .business-chat-compose.ba-conversation__compose
+    = form_with model: @new_message, url: business_project_thread_project_chats_path(@project, @thread), local: true, html: { class: "chat-form business-chat-form" } do |f|
+      = render "business/chat/composer", f: f, placeholder: "メッセージを入力...", submit_label: "送信"
+    = render "business/chat/stamp_picker", url: business_project_thread_project_chats_path(@project, @thread), param_key: :project_chat

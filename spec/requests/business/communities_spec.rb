@@ -95,7 +95,7 @@ RSpec.describe "Business::Communities", type: :request do
         expect(member_link.at_css(".manage-bar__badge").text).to eq "1"
         expect(manage_bar.at_css(%([aria-current="page"])).text).to eq "通常画面"
 
-        expect(doc.css(".permit-card")).to be_empty
+        expect(doc.at_css("#join-requests")).to be_nil
         expect(doc.at_css(%(a[href*="community_customers"]))).to be_nil
         expect(doc.at_css(%(a[href*="access_suspensions"]))).to be_nil
         expect(doc.at_css(%(form[action="#{business_community_path(community)}"]))).to be_nil
@@ -111,7 +111,7 @@ RSpec.describe "Business::Communities", type: :request do
         get business_permits_path(community)
 
         expect(response).to have_http_status(:ok)
-        expect(doc.css(".permit-card .membership-admin__name").map(&:text)).to eq ["申請太郎"]
+        expect(doc.css("#join-requests .ba-person__name").map(&:text)).to eq ["申請太郎"]
         expect(doc.at_css(%(a[href="#{business_community_community_customers_path(community_id: community.id, customer_id: applicant.id, return_to: "permits")}"]))).to be_present
         expect(doc.at_css(%(a[href="#{business_community_permit_path(community, customer_id: applicant.id, return_to: "permits")}"]))).to be_present
         expect(manage_bar.at_css(%(a[href="#{business_community_path(community)}"])).text.strip).to eq "通常画面"

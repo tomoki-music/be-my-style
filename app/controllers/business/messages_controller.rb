@@ -1,4 +1,7 @@
 class Business::MessagesController < ApplicationController
+  # 保存に失敗したときは投稿詳細(business/posts/show)を同じ枠で出し直す。
+  layout "business"
+
   def create
     @post = Post.find(params[:post_id])
     @message = @post.messages.new(message_params)

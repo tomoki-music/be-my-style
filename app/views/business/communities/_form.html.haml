@@ -1,50 +1,44 @@
-.container.form-container
-
+-# コミュニティの作成・編集フォーム。キャンセル・戻るは画面を移るだけで、入力中の内容は送信しない。
+= form_with model: [:business, community], local: true, html: { class: "ba-form" } do |f|
   - if community.errors.any?
-    .alert.alert-danger
+    .ba-errors{ role: "alert" }
       %ul
         - community.errors.full_messages.each do |message|
           %li= message
 
-  .form-card
+  %fieldset.ba-fieldset
+    %legend.ba-fieldset__legend 基本情報
+    .ba-field
+      = f.label :name, "コミュニティ名", class: "ba-label"
+      = f.text_field :name, class: "form-control", maxlength: 30
+      %small.ba-help 30文字まで
+    .ba-field
+      = f.label :introduction, "紹介文", class: "ba-label"
+      = f.text_area :introduction, class: "form-control", rows: 8, placeholder: "# コミュニティ概要\n\n## 目的\n- 学び合う\n- 仲間を見つける\n\n## こんな人におすすめ\n- 起業準備中\n- 営業を強化したい"
 
-    = form_with model: [:business, community], local: true do |f|
-
-      .form-group
-        %label コミュニティ名
-        = f.text_field :name, class:"form-control", maxlength: 30
-
-      .form-group
-        %label 紹介文
-        = f.text_area :introduction, class:"form-control", rows: 8, placeholder: "# コミュニティ概要\n\n## 目的\n- 学び合う\n- 仲間を見つける\n\n## こんな人におすすめ\n- 起業準備中\n- 営業を強化したい"
-
-      .form-group
-        %label カバー画像
-
-        .image-upload-area
-
-          .image-preview
-            - if community.community_image.attached?
-              = image_tag community.community_image, id:"preview-image", class:"preview-img"
-            - else
-              = image_tag "no_image", id:"preview-image", class:"preview-img"
-
-          = f.file_field :community_image,
-            accept: "image/*",
-            class: "form-control",
-            id: "image-input"
-
-      .form-group
-        %label{ for: "community_join_approval_mode" } 参加方式
-        = f.select :join_approval_mode, business_join_approval_options, {}, class: "form-control"
-        %small.form-text.text-muted
-          変更は、変更後の新しい参加申請から適用されます。承認待ちの申請と参加済みのメンバーはそのままです。
-
-      -# キャンセル・戻るは画面を移るだけで、入力中の内容は送信しない。
-      .form-actions.manage-page__actions
-        - if community.persisted?
-          = f.submit "保存する", class:"btn btn-primary"
-          = link_to "キャンセル", local_assigns.fetch(:cancel_path), class:"btn btn-light"
+  %fieldset.ba-fieldset
+    %legend.ba-fieldset__legend 画像
+    .ba-field
+      = f.label :community_image, "カバー画像", class: "ba-label", for: "image-input"
+      .ba-image-field
+        - if community.community_image.attached?
+          = image_tag community.community_image, id: "preview-image", class: "ba-image-field__preview", alt: "現在のカバー画像"
         - else
-          = f.submit "作成する", class:"btn btn-primary"
-          = link_to "戻る", business_communities_path, class:"btn btn-light"
+          = image_tag "no_image", id: "preview-image", class: "ba-image-field__preview", alt: "画像は未設定です"
+        = f.file_field :community_image, accept: "image/*", class: "form-control", id: "image-input"
+      %small.ba-help 一覧やホームでは丸く切り抜いて表示されます。
+
+  %fieldset.ba-fieldset
+    %legend.ba-fieldset__legend 参加方式
+    .ba-field
+      = f.label :join_approval_mode, "参加方式", class: "ba-label"
+      = f.select :join_approval_mode, business_join_approval_options, {}, class: "form-control"
+      %small.ba-help 変更は、変更後の新しい参加申請から適用されます。承認待ちの申請と参加済みのメンバーはそのままです。
+
+  .ba-form-actions
+    - if community.persisted?
+      = f.submit "保存する", class: "ba-btn ba-btn--primary"
+      = link_to "キャンセル", local_assigns.fetch(:cancel_path), class: "ba-btn ba-btn--secondary"
+    - else
+      = f.submit "作成する", class: "ba-btn ba-btn--primary"
+      = link_to "戻る", business_communities_path, class: "ba-btn ba-btn--secondary"

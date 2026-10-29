@@ -58,10 +58,10 @@ RSpec.describe "Business チャットの本文(書式なし)と過去の投稿�
     end
 
     get business_community_path(community)
-    expect_plain(Nokogiri::HTML(response.body).at_css(".timeline-body").inner_html)
+    expect_plain(Nokogiri::HTML(response.body).at_css(".ba-post__body").inner_html)
 
     get business_project_thread_path(project, ProjectThread.default_for(project))
-    expect_plain(Nokogiri::HTML(response.body).at_css(".chat-body").inner_html)
+    expect_plain(Nokogiri::HTML(response.body).at_css(".ba-post__body").inner_html)
   end
 
   it "リクエストで書式(content_format)を指定しても、サーバー側で plain として保存する" do
@@ -72,7 +72,7 @@ RSpec.describe "Business チャットの本文(書式なし)と過去の投稿�
     expect(ProjectChat.last).to be_content_format_plain
 
     get business_community_path(community)
-    expect(Nokogiri::HTML(response.body).at_css(".timeline-body strong")).to be_nil
+    expect(Nokogiri::HTML(response.body).at_css(".ba-post__body strong")).to be_nil
   end
 
   it "URL のリンク化で属性や HTML を差し込めず、http(s) 以外はリンクにしない" do
@@ -86,7 +86,7 @@ RSpec.describe "Business チャットの本文(書式なし)と過去の投稿�
     post business_community_community_posts_path(community), params: { community_post: { body: body } }
 
     get business_community_path(community)
-    plain = Nokogiri::HTML(response.body).at_css(".timeline-body .business-chat-plain")
+    plain = Nokogiri::HTML(response.body).at_css(".ba-post__body .business-chat-plain")
 
     expect(plain.css("a").map { |a| a["href"] }).to eq %w[https://example.com/a https://example.com/b https://example.com/c]
     plain.css("a").each do |link|
@@ -105,14 +105,14 @@ RSpec.describe "Business チャットの本文(書式なし)と過去の投稿�
     ProjectChat.create!(project: project, customer: owner, body: body, content_format: :markdown)
 
     get business_community_path(community)
-    timeline = Nokogiri::HTML(response.body).at_css(".timeline-body")
+    timeline = Nokogiri::HTML(response.body).at_css(".ba-post__body")
     expect(timeline.at_css(".business-chat-markdown strong").text).to eq "太字"
     expect(timeline.at_css(".business-chat-markdown h2").text).to eq "大きい文字"
     expect(timeline.at_css("script")).to be_nil
     expect(timeline.at_css(".business-chat-stamp img[alt='ありがとう']")).to be_present
 
     get business_project_thread_path(project, ProjectThread.default_for(project))
-    chat = Nokogiri::HTML(response.body).at_css(".chat-body")
+    chat = Nokogiri::HTML(response.body).at_css(".ba-post__body")
     expect(chat.at_css(".business-chat-markdown li").text.strip).to eq "項目1"
     expect(chat.at_css("script")).to be_nil
   end

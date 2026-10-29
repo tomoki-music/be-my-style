@@ -1,6 +1,8 @@
 class Business::CommunitiesController < ApplicationController
   include BusinessAccessControl
 
+  layout "business"
+
   before_action :set_community, only: [:show, :edit, :update, :destroy, :permits]
   before_action :ensure_community_manager!, only: [:edit, :update, :permits]
   before_action :ensure_community_owner!, only: [:destroy]
@@ -12,6 +14,7 @@ class Business::CommunitiesController < ApplicationController
   def index
     @communities = Community
       .where(domain_id: @current_domain.id)
+      .with_attached_community_image
       .page(params[:page]).per(5)
   end
 
@@ -26,7 +29,7 @@ class Business::CommunitiesController < ApplicationController
     load_pending_permit_count if @can_manage
     return unless @can_view_internal
 
-    @projects = @community.projects.recently_updated
+    @projects = @community.projects.with_attached_project_image.recently_updated
     @timeline_posts = @community.community_posts.includes(customer: { profile_image_attachment: :blob }).with_attached_attachments.order(created_at: :desc)
   end
 

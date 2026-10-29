@@ -102,7 +102,7 @@ RSpec.describe "通常画面・編集画面・メンバー管理画面", type: :
 
       results = pages.to_h do |name, path|
         visit path.call(self)
-        expect(page).to have_css(name == "project_new" ? ".project-new-community" : "nav.manage-bar")
+        expect(page).to have_css(name == "project_new" ? ".ba-project-community" : "nav.manage-bar")
         [name, { "overflow" => page_overflow, "links_inside" => name == "project_new" || manage_bar_links_inside? }]
       end
 
@@ -127,7 +127,7 @@ RSpec.describe "通常画面・編集画面・メンバー管理画面", type: :
       widths.each do |width|
         set_viewport(width, width < 600 ? 1600 : 1100)
         visit path
-        expect(page).to have_css(name == "manage_project_new" ? ".project-new-community" : "nav.manage-bar")
+        expect(page).to have_css(name == "manage_project_new" ? ".ba-project-community" : "nav.manage-bar")
         screenshot!("#{name}_#{width}")
       end
     end
@@ -164,7 +164,7 @@ RSpec.describe "通常画面・編集画面・メンバー管理画面", type: :
     # fill_in で空文字を入れても Selenium では欄が空にならないことがあるため、値を直接空にする。
     page.execute_script("arguments[0].value = ''", field)
     click_button "保存する"
-    expect(page).to have_css(".alert-danger")
+    expect(page).to have_css(".ba-errors")
     expect(page).to have_css("nav.manage-bar [aria-current='page']", text: "編集")
 
     fill_in "community[name]", with: "地域イベント企画ラボ2"
@@ -192,7 +192,7 @@ RSpec.describe "通常画面・編集画面・メンバー管理画面", type: :
     expect(page).to have_current_path(business_project_path(project))
     expect(page).to have_content("更新しました！")
     expect(page).to have_css("h1", text: "夏祭りステージ運営（確定版）")
-    expect(page).to have_link("＋ 新しいスレッド")
+    expect(page).to have_link("新しいスレッド")
   end
 
   it "管理メニュー → 編集 → プロジェクト管理セクションから、プロジェクトを作成できる" do
@@ -202,13 +202,13 @@ RSpec.describe "通常画面・編集画面・メンバー管理画面", type: :
 
     within("nav.manage-bar") { click_link "編集" }
     within("#project-management") { click_link "新しいプロジェクトを作成" }
-    expect(page).to have_css(".project-new-community strong", text: "地域イベント企画ラボ")
+    expect(page).to have_css(".ba-project-community strong", text: "地域イベント企画ラボ")
     fill_in "project[title]", with: "秋の収穫祭ブース"
     click_button "作成する"
 
     expect(page).to have_current_path(business_community_path(business_community))
     expect(page).to have_content("プロジェクトを作成しました")
-    expect(page).to have_css(".project-grid", text: "秋の収穫祭ブース")
+    expect(page).to have_css(".ba-project-grid", text: "秋の収穫祭ブース")
   end
 
   it "一般参加者は管理メニューが出ず、編集画面の URL を開いても通常画面へ戻される" do

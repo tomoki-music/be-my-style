@@ -1,7 +1,8 @@
-= render "layouts/header_menu_nakama"
+= render "business/project_threads/breadcrumb", current: "新しいスレッド"
 
-.container.form-container
-  .form-card
-    %h2 新しいスレッド
-    %p.text-muted 「#{@project.title}」の参加者全員が閲覧・投稿できます。
-    = render "form", thread: @thread
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title 新しいスレッド
+    %p.ba-page-lead 「#{@project.title}」の参加者全員が閲覧・投稿できます。
+
+= render "form", thread: @thread

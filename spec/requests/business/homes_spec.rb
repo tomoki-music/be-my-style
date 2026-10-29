@@ -33,20 +33,25 @@ RSpec.describe "Business::Homes", type: :request do
 
       before { sign_in customer }
 
-      it "メニュー内にプロフィール・設定・DELETE のログアウトを出し、ログインは出さない" do
+      it "左ナビと SP のメニューにプロフィール・設定・DELETE のログアウトを出し、ログインは出さない" do
         get business_root_path
 
         html = Nokogiri::HTML(response.body)
-        menu = account_menu(html)
         logout_forms = html.css(%(form[action="#{destroy_customer_session_path}"]))
 
-        # PC のドロップダウンと SP の☰メニューに1つずつ(表示は画面幅で切り替え)。
+        # PC の左ナビと SP のメニューシートに1つずつ(表示は画面幅で切り替え)。
         expect(logout_forms.size).to eq 2
-        expect(menu.at_css("form.business-account-menu__logout-form")).to eq logout_forms.first
-        logout_forms.each { |form| expect(form.at_css('input[name="_method"]')["value"]).to eq "delete" }
-        expect(logout_forms.first.at_css("button.dropdown-item").text.strip).to eq "ログアウト"
-        expect(menu.at_css(%(a[href="#{business_customer_path(customer)}"])).text).to eq "プロフィール"
-        expect(menu.at_css(%(a[href="#{edit_business_customer_path(customer)}"])).text).to eq "プロフィール設定"
+        expect(logout_forms.map { |form| form["class"] }).to contain_exactly("ba-sidenav__logout-form", "ba-sheet__logout-form")
+        logout_forms.each do |form|
+          expect(form.at_css('input[name="_method"]')["value"]).to eq "delete"
+          expect(form.at_css("button").text.strip).to eq "ログアウト"
+        end
+        [".ba-sidenav__account", "#baMenuSheet"].each do |scope|
+          expect(html.at_css(%(#{scope} a[href="#{business_customer_path(customer)}"]))).to be_present
+        end
+        # 左ナビは縮約時に短い表示(「設定」)にするため、読み上げ名で確かめる。
+        expect(html.at_css(%(.ba-sidenav__account a[href="#{edit_business_customer_path(customer)}"]))["aria-label"]).to eq "プロフィール設定"
+        expect(html.at_css(%(#baMenuSheet a[href="#{edit_business_customer_path(customer)}"])).text.strip).to eq "プロフィール設定"
         expect(response.body).not_to include(%(href="#{new_business_customer_session_path}"))
         expect(response.body).not_to include(%(href="#{new_customer_session_path}"))
       end
@@ -54,7 +59,7 @@ RSpec.describe "Business::Homes", type: :request do
       it "プロフィール画像が未設定なら汎用アイコンを出す" do
         get business_root_path
 
-        expect(account_menu(Nokogiri::HTML(response.body)).at_css(".business-account-menu__toggle i.fa-circle-user")).to be_present
+        expect(Nokogiri::HTML(response.body).at_css(".ba-sidenav__profile i.fa-circle-user")).to be_present
       end
 
       context "プロフィール画像を設定済み" do
@@ -71,9 +76,9 @@ RSpec.describe "Business::Homes", type: :request do
         it "その画像をアイコンに出す" do
           get business_root_path
 
-          toggle = account_menu(Nokogiri::HTML(response.body)).at_css(".business-account-menu__toggle")
-          expect(toggle.at_css("img.business-account-menu__avatar")).to be_present
-          expect(toggle.at_css("i.fa-circle-user")).to be_nil
+          profile = Nokogiri::HTML(response.body).at_css(".ba-sidenav__profile")
+          expect(profile.at_css("img.business-account-menu__avatar")).to be_present
+          expect(profile.at_css("i.fa-circle-user")).to be_nil
         end
       end
 
@@ -81,8 +86,8 @@ RSpec.describe "Business::Homes", type: :request do
         get business_root_path
 
         html = Nokogiri::HTML(response.body)
-        # 本文(ログイン後ホーム)の「プロジェクトを探す」は除き、共通メニューだけを見る。
-        project_links = html.css(%(a[href="#{business_projects_path}"])).reject { |link| link.ancestors(".member-home").any? }
+        # 本文(ログイン後ホーム)の「プロジェクトを探す」は除き、共通メニュー(PC の左ナビ・SP の下部ナビ)だけを見る。
+        project_links = html.css(%(a[href="#{business_projects_path}"])).reject { |link| link.ancestors(".ba-main").any? }
 
         expect(project_links.size).to eq 2
         project_links.each do |link|
@@ -165,8 +170,10 @@ RSpec.describe "Business::Homes", type: :request do
         get business_root_path
 
         expect(doc.at_css(".hero-section, .business-top-slider, .notice-section, #top-projects")).to be_nil
-        expect(doc.css(".member-home__section").map { |s| s["id"] }).to eq %w[my-communities my-projects]
-        expect(doc.at_css(".header_container--business")).to be_present
+        expect(doc.css(".ba-home__section").map { |s| s["id"] }).to eq %w[my-communities my-projects]
+        # ログイン後は Business の枠(左ナビ・下部ナビ)で表示し、ログイン前の紹介用ヘッダーは出さない。
+        expect(doc.at_css("body.ba-body nav.ba-sidenav")).to be_present
+        expect(doc.at_css(".header_container--business")).to be_nil
       end
 
       it "0件ならBusinessコミュニティ・プロジェクトを探す導線を出す" do
@@ -188,8 +195,8 @@ RSpec.describe "Business::Homes", type: :request do
 
         get business_root_path
 
-        status = doc.css("#my-projects .member-home-card").to_h do |card|
-          [card.at_css(".member-home-card__title").text, card.at_css(".member-home-card__status").text]
+        status = doc.css("#my-projects .ba-project-card").to_h do |card|
+          [card.at_css(".ba-project-card__title").text, card.at_css(".ba-status").text.strip]
         end
         expect(status).to eq("主催企画" => "主催", "参加企画" => "参加中", "申請中企画" => "承認待ち")
         expect(response.body).not_to include("未参加企画")
@@ -227,8 +234,8 @@ RSpec.describe "Business::Homes", type: :request do
 
         get business_root_path
 
-        expect(doc.at_css("#my-communities .member-home-card__status").text).to eq "運営"
-        expect(doc.at_css("#my-projects .member-home-card__status").text).to eq "管理"
+        expect(doc.at_css("#my-communities .ba-status").text.strip).to eq "運営"
+        expect(doc.at_css("#my-projects .ba-status").text.strip).to eq "管理"
       end
     end
   end
@@ -248,18 +255,26 @@ RSpec.describe "Business::Homes", type: :request do
       expect(sp_menu.css("a").map { |a| a.text.strip }).to eq %w[HOME ログイン 新規登録]
     end
 
-    it "ログイン済み: ☰に移動項目とアカウント項目を重複なくまとめ、アイコンはプロフィールへのリンク" do
+    it "ログイン済み: 下部ナビとメニューに移動項目・アカウント項目を重複なくまとめる" do
       customer = create(:customer, domain_name: "business", onboarding_done: true)
       sign_in customer
 
       get business_root_path
 
       html = Nokogiri::HTML(response.body)
-      expect(html.at_css(%(a.business-account-link[href="#{business_customer_path(customer)}"]))).to be_present
-      labels = sp_menu.css("a, button").map { |el| el.text.strip.split.first }
-      expect(labels).to eq %w[閉じる HOME タイムライン コミュニティ 投稿 プロジェクト プロフィール プロフィール設定 通知 ログアウト]
-      expect(labels.uniq).to eq labels
-      logout = sp_menu.at_css(%(form[action="#{destroy_customer_session_path}"]))
+      expect(html.at_css("#businessSpMenu")).to be_nil
+      bottom = html.css(".ba-bottomnav a, .ba-bottomnav button").map { |el| el.text.strip.split.first }
+      expect(bottom).to eq %w[ホーム コミュニティ プロジェクト 通知 メニュー]
+      toggle = html.at_css("button#baMenuToggle")
+      expect(toggle["aria-controls"]).to eq "baMenuSheet"
+      expect(toggle["aria-expanded"]).to eq "false"
+
+      sheet = html.at_css("#baMenuSheet")
+      expect(sheet.at_css(%(a.ba-sheet__profile[href="#{business_customer_path(customer)}"]))).to be_present
+      labels = sheet.css(".ba-sheet__list a, .ba-sheet__list button").map { |el| el.text.strip.split.first }
+      expect(labels).to eq %w[タイムライン 投稿 プロフィール設定 ログアウト]
+      expect((bottom + labels).uniq).to eq bottom + labels
+      logout = sheet.at_css(%(form[action="#{destroy_customer_session_path}"]))
       expect(logout.at_css('input[name="_method"]')["value"]).to eq "delete"
     end
   end

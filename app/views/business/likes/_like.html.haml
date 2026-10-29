@@ -5,7 +5,8 @@
     = link_to business_post_like_path(post),
       method: :delete,
       remote: true,
-      class: "like-btn liked" do
+      class: "like-btn liked",
+      "aria-label": "いいねを取り消す（#{post.likes.count}件）" do
 
       %i.fa-solid.fa-heart
       = post.likes.count
@@ -15,7 +16,8 @@
     = link_to business_post_like_path(post),
       method: :post,
       remote: true,
-      class: "like-btn" do
+      class: "like-btn",
+      "aria-label": "いいねする（#{post.likes.count}件）" do
 
       %i.fa-regular.fa-heart
       = post.likes.count

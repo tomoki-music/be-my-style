@@ -1,61 +1,65 @@
-.container
+%nav.ba-breadcrumb{ "aria-label": "現在地" }
+  %ol
+    %li= link_to "プロフィール", business_customer_path(@customer)
+    %li
+      %span{ "aria-current": "page" } プロフィール設定
 
-  .edit-card
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title プロフィール設定
 
-    %h2 プロフィール編集
+= form_with model: @customer, url: business_customer_path(@customer), method: :patch, html: { class: "ba-form" } do |f|
+  - if @customer.errors.any?
+    .ba-errors{ role: "alert" }
+      %ul
+        - @customer.errors.full_messages.each do |message|
+          %li= message
 
-    = form_with model: @customer, url: business_customer_path(@customer), method: :patch do |f|
+  %fieldset.ba-fieldset
+    %legend.ba-fieldset__legend 基本情報
+    .ba-field
+      = f.label :name, "名前", class: "ba-label"
+      = f.text_field :name, class: "form-control"
+    .ba-field
+      = f.label :profile_image, "プロフィール画像", class: "ba-label", for: "image-input"
+      .ba-image-field
+        - if @customer.profile_image.attached?
+          = image_tag @customer.profile_image, id: "preview-image", class: "ba-image-field__preview ba-image-field__preview--round", alt: "現在のプロフィール画像"
+        - else
+          = image_tag "no_image", id: "preview-image", class: "ba-image-field__preview ba-image-field__preview--round", alt: "画像は未設定です"
+        = f.file_field :profile_image, accept: "image/*", class: "form-control", id: "image-input"
+    .ba-field
+      = f.label :introduction, "自己紹介", class: "ba-label"
+      = f.text_area :introduction, class: "form-control", rows: 6, placeholder: placeholder_markdown_profile
 
-      .form-group
-        %label 名前
-        = f.text_field :name, class:"form-control"
+  - if @customer.business_user?
+    %fieldset.ba-fieldset
+      %legend.ba-fieldset__legend 仕事
+      .ba-field
+        = f.label :job, "職種", class: "ba-label"
+        = f.text_field :job, class: "form-control"
+      .ba-field
+        = f.label :skills, "スキル", class: "ba-label"
+        = f.text_area :skills, class: "form-control", rows: 6, placeholder: "## 得意領域\n- Rails\n- 営業企画\n- UI設計"
+      .ba-field
+        = f.label :achievements, "実績", class: "ba-label"
+        = f.text_area :achievements, class: "form-control", rows: 6, placeholder: "## 実績\n- 2025年に新規事業立ち上げ\n- BtoB営業で月間MVP"
 
-      .form-group
-        %label プロフィール画像
+  - if @customer.music_user?
+    %fieldset.ba-fieldset
+      %legend.ba-fieldset__legend 音楽
+      .ba-field
+        %p.ba-label パート
+        .ba-checks= f.collection_check_boxes(:part_ids, Part.all, :id, :name) { |b| b.label(class: "ba-check") { b.check_box + b.text } }
+      .ba-field
+        %p.ba-label ジャンル
+        .ba-checks= f.collection_check_boxes(:genre_ids, Genre.all, :id, :name) { |b| b.label(class: "ba-check") { b.check_box + b.text } }
 
-        .image-upload-area
+  .ba-form-actions
+    = f.submit "更新する", class: "ba-btn ba-btn--primary"
+    = link_to "キャンセル", business_customer_path(@customer), class: "ba-btn ba-btn--secondary"
 
-          .image-preview
-            - if @customer.profile_image.attached?
-              = image_tag @customer.profile_image, id:"preview-image", class:"preview-avatar"
-            - else
-              = image_tag "no_image", id:"preview-image", class:"preview-avatar"
-
-            = f.file_field :profile_image,
-            accept: "image/*",
-            class: "image-input",
-            id: "image-input"
-
-      .form-group
-        %label 自己紹介
-        = f.text_area :introduction, class:"form-control", rows: 6, placeholder: placeholder_markdown_profile
-
-      .form-group#plan-management
-        %label 契約プラン管理
-        = render "shared/subscription_manager", customer: @customer, offer_light: false
-
-      - if @customer.business_user?
-
-        .form-group
-          %label 職種
-          = f.text_field :job, class:"form-control"
-
-        .form-group
-          %label スキル
-          = f.text_area :skills, class:"form-control", rows: 6, placeholder: "## 得意領域\n- Rails\n- 営業企画\n- UI設計"
-
-        .form-group
-          %label 実績
-          = f.text_area :achievements, class:"form-control", rows: 6, placeholder: "## 実績\n- 2025年に新規事業立ち上げ\n- BtoB営業で月間MVP"
-
-      - if @customer.music_user?
-
-        .form-group
-          %label パート
-          = f.collection_check_boxes(:part_ids, Part.all, :id, :name)
-
-        .form-group
-          %label ジャンル
-          = f.collection_check_boxes(:genre_ids, Genre.all, :id, :name)
-
-      = f.submit "更新する", class:"btn btn-primary"
+-# 契約プランの操作は Stripe の画面へ移るリンクだけなので、プロフィールの保存とは別のまとまりにする。
+%section.ba-fieldset.ba-form.ba-anchor-target#plan-management{ "aria-labelledby": "plan-management-title" }
+  %h2.ba-fieldset__legend#plan-management-title 契約プラン管理
+  = render "shared/subscription_manager", customer: @customer, offer_light: false

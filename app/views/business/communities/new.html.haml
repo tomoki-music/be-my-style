@@ -1,7 +1,12 @@
-= render "layouts/header_menu_nakama"
+%nav.ba-breadcrumb{ "aria-label": "現在地" }
+  %ol
+    %li= link_to "コミュニティ", business_communities_path
+    %li
+      %span{ "aria-current": "page" } 作成
 
-.container
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title コミュニティ作成
+    %p.ba-page-lead 作成すると、あなたが運営者になります。
 
-  %h2 コミュニティ作成
-
-  = render "form", community: @community
+= render "form", community: @community

@@ -1,18 +1,14 @@
-= render "layouts/header_menu_nakama"
+= render "business/project_threads/breadcrumb", current: "スレッド一覧"
+= render "business/project_threads/repair_failed"
 
-.container.project-threads-page
-  %nav.project-breadcrumb{ "aria-label" => "現在地" }
-    = link_to @community.name, business_community_path(@community)
-    %span{ "aria-hidden" => "true" } ›
-    = link_to @project.title, business_project_path(@project)
-    %span{ "aria-hidden" => "true" } ›
-    %span スレッド一覧
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title スレッド一覧
+    %p.ba-page-lead 「#{@project.title}」の話題ごとの会話です。
+  .ba-page-actions
+    = link_to new_business_project_thread_path(@project), class: "ba-btn ba-btn--primary" do
+      %i.fa-solid.fa-plus{ "aria-hidden": "true" }
+      新しいスレッド
 
-  = render "business/project_threads/repair_failed"
-
-  .project-section
-    .project-section__header
-      %h2 スレッド一覧
-      = link_to "＋ 新しいスレッド", new_business_project_thread_path(@project), class: "btn btn-primary btn-small"
-
-    = render "business/project_threads/list", project: @project, threads: @threads, post_counts: @thread_post_counts
+.ba-card
+  = render "business/project_threads/list", project: @project, threads: @threads, post_counts: @thread_post_counts

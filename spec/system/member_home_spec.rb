@@ -52,19 +52,19 @@ RSpec.describe "ログイン後ホーム", type: :system, js: true do
     )
   end
 
-  # ホーム本文(.member-home)内の要素が画面外へはみ出さず、カード同士が重ならないこと。
+  # ホーム本文(/ は .member-home、/business は .ba-home)内の要素が画面外へはみ出さず、カード同士が重ならないこと。
   # 共通ヘッダーの既存の横はみ出し(SP)は別課題のため、本文だけを測る。
-  def member_home_layout
-    page.evaluate_script(<<~JS)
-      (function () {
+  def member_home_layout(root = ".member-home", card = ".member-home-card")
+    page.evaluate_script(<<~JS, root, card)
+      (function (root, card) {
         var width = document.documentElement.clientWidth;
         var overflow = 0;
-        document.querySelectorAll(".member-home *").forEach(function (el) {
+        document.querySelectorAll(root + " *").forEach(function (el) {
           var r = el.getBoundingClientRect();
           if (r.width === 0 && r.height === 0) return;
           overflow = Math.max(overflow, r.right - width, -r.left);
         });
-        var cards = Array.from(document.querySelectorAll(".member-home-card")).map(function (el) { return el.getBoundingClientRect(); });
+        var cards = Array.from(document.querySelectorAll(card)).map(function (el) { return el.getBoundingClientRect(); });
         var overlap = cards.some(function (a, i) {
           return cards.some(function (b, j) {
             return i < j && a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
@@ -72,7 +72,7 @@ RSpec.describe "ログイン後ホーム", type: :system, js: true do
         });
         var firstRow = cards.length ? cards.filter(function (r) { return Math.abs(r.top - cards[0].top) < 1; }).length : 0;
         return { overflow: Math.ceil(overflow), overlap: overlap, cards: cards.length, columns: firstRow };
-      })()
+      })(arguments[0], arguments[1])
     JS
   end
 
@@ -116,9 +116,9 @@ RSpec.describe "ログイン後ホーム", type: :system, js: true do
     set_viewport(375, 2200)
     visit business_root_path
 
-    expect(page).to have_css(".header_container--business")
-    expect(page).to have_no_css(".hero-section, .business-top-slider")
-    expect(member_home_layout).to include("overflow" => 0, "overlap" => false, "cards" => 7)
+    expect(page).to have_css("nav.ba-bottomnav", visible: :visible)
+    expect(page).to have_no_css(".hero-section, .business-top-slider, .header_container--business")
+    expect(member_home_layout(".ba-home", ".ba-circle-item, .ba-project-card")).to include("overflow" => 0, "overlap" => false, "cards" => 7)
     expect(page.evaluate_script("document.documentElement.scrollWidth - document.documentElement.clientWidth")).to be <= 0
     screenshot!("member_home_business_375")
   end
@@ -128,7 +128,8 @@ RSpec.describe "ログイン後ホーム", type: :system, js: true do
     set_viewport(1280, 1300)
     visit business_root_path
 
-    expect(member_home_layout).to include("overflow" => 0, "overlap" => false, "columns" => 3)
+    expect(page).to have_css("nav.ba-sidenav", visible: :visible)
+    expect(member_home_layout(".ba-home", ".ba-project-card")).to include("overflow" => 0, "overlap" => false, "columns" => 3)
     screenshot!("member_home_business_1280")
   end
 
@@ -150,17 +151,18 @@ RSpec.describe "ログイン後ホーム", type: :system, js: true do
       expect(page).to have_current_path(public_communities_path, wait: 10)
     end
 
-    it "/business はページ全体が横にはみ出さず、☰メニューを開くと全項目が画面内で押せる" do
+    it "/business はページ全体が横にはみ出さず、下部ナビとメニューの全項目が画面内で押せる" do
       sign_in_via_form
       set_viewport(375)
       visit business_root_path
 
       expect(page_overflow).to be <= 0
       expect(clipped_elements).to eq []
+      expect(clipped_elements(".ba-bottomnav a, .ba-bottomnav button")).to eq []
 
-      find("button#open").click
-      expect(page).to have_css("#businessSpMenu a", text: "プロジェクト", visible: :visible, wait: 5)
-      expect(clipped_elements("#businessSpMenu a, #businessSpMenu button")).to eq []
+      find("button#baMenuToggle").click
+      expect(page).to have_css("#baMenuSheet a", text: "タイムライン", visible: :visible, wait: 5)
+      expect(clipped_elements("#baMenuSheet a, #baMenuSheet button")).to eq []
       expect(page_overflow).to be <= 0
     end
   end

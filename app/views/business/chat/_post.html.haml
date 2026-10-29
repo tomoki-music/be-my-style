@@ -1,0 +1,22 @@
+-# タイムライン投稿 / スレッドのメッセージ 1件分(アバター・名前・時刻・本文の順)。
+-# record: CommunityPost / ProjectChat、owner: 「オーナー」表示の対象、delete_path: 削除できる人にだけ渡す。
+- record = local_assigns.fetch(:record)
+- owner = local_assigns[:owner]
+- delete_path = local_assigns[:delete_path]
+- author = record.customer
+%article.ba-post{ id: "post-#{record.class.name.underscore}-#{record.id}" }
+  .ba-post__avatar
+    = customer_avatar_tag(author, class_name: "ba-post__avatar-img")
+  .ba-post__main
+    %header.ba-post__header
+      %span.ba-post__name= customer_display_name(author)
+      - if owner.present? && author == owner && !customer_withdrawn?(author)
+        %span.ba-status.ba-status--owner オーナー
+      %time.ba-post__time{ datetime: record.created_at.iso8601, title: l(record.created_at, format: :long) }= l(record.created_at, format: :short)
+    .ba-post__body
+      = render "business/chat/message_content", record: record
+    - if delete_path
+      .ba-post__actions
+        = link_to delete_path, method: :delete, data: { confirm: "削除する？" }, class: "ba-post__delete" do
+          %i.fa-regular.fa-trash-can{ "aria-hidden": "true" }
+          削除

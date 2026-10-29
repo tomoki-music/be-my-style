@@ -1,54 +1,34 @@
-= render "layouts/header_menu_nakama"
-
-.container.community-container
-
-  / =========================
-  / ヘッダー
-  / =========================
-  .page-header
-
-    %h2.page-title コミュニティ一覧
-
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title コミュニティ
+    %p.ba-page-lead Business コミュニティを探して、参加を申請できます。
+  .ba-page-actions
     - if feature_available?(:business_community_create)
-      = link_to "＋ 新規作成",
-        new_business_community_path,
-        class:"btn btn-primary new-btn"
-    - else
-      = render "shared/feature_gate",
-        feature_key: :business_community_create,
-        title: "自分のコミュニティを作る",
-        message: "まずは既存コミュニティを見ながら雰囲気を確認できます。premiumで新しい場を作れます。",
-        class_name: "feature-gate--inline"
+      = link_to new_business_community_path, class: "ba-btn ba-btn--primary" do
+        %i.fa-solid.fa-plus{ "aria-hidden": "true" }
+        コミュニティを作成
 
-  / =========================
-  / グリッド
-  / =========================
-  .community-grid
+- unless feature_available?(:business_community_create)
+  = render "shared/feature_gate",
+    feature_key: :business_community_create,
+    title: "自分のコミュニティを作る",
+    message: "まずは既存コミュニティを見ながら雰囲気を確認できます。premiumで新しい場を作れます。",
+    class_name: "feature-gate--inline"
 
+- if @communities.load.empty?
+  .ba-empty
+    %p コミュニティはまだありません。
+- else
+  %ul.ba-community-list
     - @communities.each do |community|
-
-      = link_to business_community_path(community), class:"community-link" do
-
-        .community-card
-
-          / --- 画像 ---
-          .card-image
-            - if community.community_image.attached?
-              = image_tag community.community_image, class:"community-img"
-            - else
-              = image_tag "no_image", class:"community-img"
-
-          / --- 本文 ---
-          .card-body
-
-            %h3.community-name
-              = community.name
-
-            .community-meta
-              %span.member-count
-                👥
-                = community.customers.count
-                人
-
-            %p.community-desc
-              = truncate(community.introduction, length:70)
+      %li
+        = link_to business_community_path(community), class: "ba-community-tile" do
+          = business_community_avatar(community, size: :lg)
+          %span.ba-community-tile__text
+            %span.ba-community-tile__name= community.name
+            %span.ba-community-tile__meta
+              %i.fa-solid.fa-user-group{ "aria-hidden": "true" }
+              = "#{community.customers.count}人"
+            - if community.introduction.present?
+              %span.ba-community-tile__desc= truncate(community.introduction, length: 70)
+  = paginate @communities

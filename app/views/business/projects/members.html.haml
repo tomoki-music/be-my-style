@@ -1,78 +1,98 @@
-= render "layouts/header_menu_nakama"
+= render "shared/manage_bar", items: business_project_manage_items(@project, current: :members, pending_count: @join_requests.size)
 
-.manage-bar-wrap
-  = render "shared/manage_bar", items: business_project_manage_items(@project, current: :members, pending_count: @join_requests.size)
+%nav.ba-breadcrumb{ "aria-label": "現在地" }
+  %ol
+    %li= link_to @community.name, business_community_path(@community)
+    %li= link_to @project.title, business_project_path(@project)
+    %li
+      %span{ "aria-current": "page" } メンバー管理
 
-.container.membership-admin
-  %nav.project-breadcrumb{ "aria-label" => "現在地" }
-    = link_to @community.name, business_community_path(@community)
-    %span{ "aria-hidden" => "true" } ›
-    = link_to @project.title, business_project_path(@project)
-    %span{ "aria-hidden" => "true" } ›
-    %span メンバー管理
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title メンバー管理
 
-  %h2.membership-admin__title メンバー管理
+.ba-card.ba-join-mode
+  .ba-join-mode__text
+    %p.ba-label 参加方式：#{business_join_approval_label(@project)}
+    %p.ba-note= business_join_approval_description(@project)
+    %p.ba-note 変更は、変更後の新しい参加申請から適用されます。承認待ちの申請と参加済みのメンバーはそのままです。
+  = link_to "参加方式を変更する", edit_business_project_path(@project), class: "ba-btn ba-btn--secondary ba-btn--sm"
 
-  %section.membership-admin__card
-    %h3 参加方式
-    %p.membership-admin__mode
-      %strong= business_join_approval_label(@project)
-      %span= business_join_approval_description(@project)
-    %p.membership-admin__note 変更は、変更後の新しい参加申請から適用されます。承認待ちの申請と参加済みのメンバーはそのままです。
-    = link_to "参加方式を変更する", edit_business_project_path(@project), class: "btn btn-light btn-small"
+%section.ba-card.ba-anchor-target#join-requests{ "aria-labelledby": "join-requests-title" }
+  %h2.ba-section-title#join-requests-title
+    %span.ba-status.ba-status--pending
+      %i.fa-regular.fa-clock{ "aria-hidden": "true" }
+      承認待ち
+    参加申請
+    %span.ba-count （#{@join_requests.size}件）
+  - if @join_requests.empty?
+    %p.ba-muted.ba-section-body 現在、参加申請はありません。
+  - else
+    %ul.ba-rows
+      - @join_requests.each do |request|
+        %li.ba-row
+          .ba-row__main
+            .ba-person
+              .ba-person__avatar= customer_avatar_tag(request.customer, class_name: "ba-person__img")
+              .ba-person__text
+                %span.ba-person__name= request.customer.name
+                %span.ba-person__meta 申請：#{l(request.created_at, format: :short)}
+          .ba-row__actions
+            = link_to "承認", approve_business_project_join_request_path(@project, request),
+              method: :post, class: "ba-btn ba-btn--success ba-btn--sm"
+            = link_to "却下", reject_business_project_join_request_path(@project, request),
+              method: :delete, data: { confirm: "#{request.customer.name}さんの申請を却下しますか？（再申請はできます）" },
+              class: "ba-btn ba-btn--secondary ba-btn--sm"
 
-  %section.membership-admin__card#join-requests
-    %h3 参加申請（#{@join_requests.size}件）
-    - if @join_requests.empty?
-      %p.membership-admin__empty 現在、参加申請はありません。
-    - else
-      %ul.membership-admin__list
-        - @join_requests.each do |request|
-          %li.membership-admin__row
-            .membership-admin__person
-              = customer_avatar_tag(request.customer, class_name: "membership-admin__avatar")
-              %span.membership-admin__name= request.customer.name
-              %span.membership-admin__date 申請：#{l(request.created_at, format: :short)}
-            .membership-admin__actions
-              = link_to "承認", approve_business_project_join_request_path(@project, request),
-                method: :post, class: "btn btn-success btn-small"
-              = link_to "却下", reject_business_project_join_request_path(@project, request),
-                method: :delete, data: { confirm: "#{request.customer.name}さんの申請を却下しますか？（再申請はできます）" },
-                class: "btn btn-outline-danger btn-small"
+%section.ba-card.ba-anchor-target#members{ "aria-labelledby": "members-title" }
+  %h2.ba-section-title#members-title
+    %span.ba-status.ba-status--member
+      %i.fa-solid.fa-check{ "aria-hidden": "true" }
+      参加中
+    参加者
+    %span.ba-count （#{@members.size}人）
+  %p.ba-note.ba-section-body プロジェクト作成者とコミュニティの運営者は、参加者に含まれていなくても管理できます。アクセス停止は却下と違い、解除するまで再参加できません。
+  - if @members.empty?
+    %p.ba-muted まだ参加者はいません。
+  - else
+    %ul.ba-rows
+      - @members.each do |member|
+        %li.ba-row
+          .ba-row__main
+            .ba-person
+              .ba-person__avatar= customer_avatar_tag(member, class_name: "ba-person__img")
+              .ba-person__text
+                %span.ba-person__name= member.name
+          .ba-row__actions
+            - if @manager_ids.include?(member.id) || member.admin?
+              %span.ba-status.ba-status--manager
+                %i.fa-solid.fa-star{ "aria-hidden": "true" }
+                管理者
+            - else
+              = link_to "アクセス停止", business_project_access_suspensions_path(@project, customer_id: member.id),
+                method: :post, data: { confirm: "#{member.name}さんをプロジェクトから外し、アクセスを停止しますか？（解除するまで再参加できません）" },
+                class: "ba-btn ba-btn--danger ba-btn--sm"
 
-  %section.membership-admin__card#members
-    %h3 参加者（#{@members.size}人）
-    %p.membership-admin__note プロジェクト作成者とコミュニティの運営者は、参加者に含まれていなくても管理できます。
-    - if @members.empty?
-      %p.membership-admin__empty まだ参加者はいません。
-    - else
-      %ul.membership-admin__list
-        - @members.each do |member|
-          %li.membership-admin__row
-            .membership-admin__person
-              = customer_avatar_tag(member, class_name: "membership-admin__avatar")
-              %span.membership-admin__name= member.name
-            .membership-admin__actions
-              - if @manager_ids.include?(member.id) || member.admin?
-                %span.membership-admin__tag 管理者
-              - else
-                = link_to "アクセス停止", business_project_access_suspensions_path(@project, customer_id: member.id),
-                  method: :post, data: { confirm: "#{member.name}さんをプロジェクトから外し、アクセスを停止しますか？（解除するまで再参加できません）" },
-                  class: "btn btn-outline-danger btn-small"
-
-  %section.membership-admin__card#suspensions
-    %h3 アクセス停止中（#{@suspensions.size}人）
-    - if @suspensions.empty?
-      %p.membership-admin__empty アクセス停止中のユーザーはいません。
-    - else
-      %ul.membership-admin__list
-        - @suspensions.each do |suspension|
-          %li.membership-admin__row
-            .membership-admin__person
-              = customer_avatar_tag(suspension.customer, class_name: "membership-admin__avatar")
-              %span.membership-admin__name= customer_display_name(suspension.customer)
-              %span.membership-admin__date 停止：#{l(suspension.created_at, format: :short)}
-            .membership-admin__actions
-              = link_to "停止を解除", business_project_access_suspension_path(@project, suspension),
-                method: :delete, data: { confirm: "停止を解除しますか？（参加するには、本人の再度の参加・申請が必要です）" },
-                class: "btn btn-light btn-small"
+%section.ba-card.ba-anchor-target#suspensions{ "aria-labelledby": "suspensions-title" }
+  %h2.ba-section-title#suspensions-title
+    %span.ba-status.ba-status--suspended
+      %i.fa-solid.fa-ban{ "aria-hidden": "true" }
+      停止中
+    アクセス停止中
+    %span.ba-count （#{@suspensions.size}人）
+  - if @suspensions.empty?
+    %p.ba-muted.ba-section-body アクセス停止中のユーザーはいません。
+  - else
+    %ul.ba-rows
+      - @suspensions.each do |suspension|
+        %li.ba-row
+          .ba-row__main
+            .ba-person
+              .ba-person__avatar= customer_avatar_tag(suspension.customer, class_name: "ba-person__img")
+              .ba-person__text
+                %span.ba-person__name= customer_display_name(suspension.customer)
+                %span.ba-person__meta 停止：#{l(suspension.created_at, format: :short)}
+          .ba-row__actions
+            = link_to "停止を解除", business_project_access_suspension_path(@project, suspension),
+              method: :delete, data: { confirm: "停止を解除しますか？（参加するには、本人の再度の参加・申請が必要です）" },
+              class: "ba-btn ba-btn--secondary ba-btn--sm"

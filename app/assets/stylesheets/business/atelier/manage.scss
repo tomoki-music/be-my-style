@@ -1,0 +1,115 @@
+// Social Atelier: 管理導線(shared/_manage_bar)と、編集・メンバー管理・プロジェクト管理画面。
+// shared/_manage_bar は音楽側と共通のため、見た目の変更は .ba-body 配下だけにする。
+
+.ba-body {
+  // ===== 管理メニュー: 権限のある人だけに出る、コンパクトな「管理」の入口 =====
+  .manage-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ba-space-2);
+    max-width: none;
+    margin: 0 0 var(--ba-space-4);
+    padding: 6px;
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-control);
+    background: var(--ba-surface);
+  }
+
+  .manage-bar__label {
+    padding: 0 var(--ba-space-2);
+    font-size: 13px;
+    color: var(--ba-text-muted);
+  }
+
+  .manage-bar__list {
+    gap: 4px;
+  }
+
+  .manage-bar__link {
+    min-height: 40px;
+    padding: 6px 14px;
+    border: 0;
+    border-radius: var(--ba-radius-small);
+    background: transparent;
+    color: var(--ba-text);
+    font-size: 14px;
+
+    &:hover,
+    &:focus {
+      background: var(--ba-surface-muted);
+      color: var(--ba-text);
+    }
+
+    &.is-current {
+      background: var(--ba-accent-soft);
+      color: var(--ba-accent-strong);
+      box-shadow: inset 0 -2px 0 var(--ba-accent);
+    }
+  }
+
+  .manage-bar__badge {
+    background: var(--ba-danger);
+  }
+
+  // ===== 参加方式のカード(メンバー管理) =====
+  .ba-join-mode {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ba-space-3);
+
+    .ba-label {
+      margin: 0 0 var(--ba-space-1);
+    }
+
+    .ba-note {
+      margin-bottom: var(--ba-space-1);
+    }
+  }
+
+  .ba-join-mode__text {
+    flex: 1 1 260px;
+    min-width: 0;
+  }
+
+  .ba-section-title .ba-status {
+    font-size: 12px;
+  }
+
+  .ba-row__title {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  // ===== お試し設定カード(編集画面) =====
+  .plan-trial-card {
+    max-width: var(--ba-reading-width);
+  }
+
+  .plan-trial-card__status {
+    display: inline-flex;
+    margin: 0 0 var(--ba-space-3);
+    padding: 4px 12px;
+    border-radius: var(--ba-radius-pill);
+    background: var(--ba-surface-muted);
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .plan-trial-card__status.is-on {
+    background: var(--ba-peach);
+    color: var(--ba-peach-text);
+  }
+
+  .plan-trial-card__features {
+    margin: 0 0 var(--ba-space-3);
+    padding-left: 1.2em;
+    font-size: 15px;
+  }
+
+  #project-management {
+    margin-top: var(--ba-space-5);
+  }
+}

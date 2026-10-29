@@ -1,0 +1,26 @@
+-# 投稿一覧・タイムラインの投稿カード。カード全体が詳細へのリンク。画像が無ければ頭文字で代替する。
+- post = local_assigns.fetch(:post)
+= link_to business_post_path(post), class: "ba-post-card" do
+  %span.ba-post-card__media
+    - if post.post_image.attached?
+      = image_tag post.post_image, alt: "", loading: "lazy"
+    - else
+      = business_monogram(post.title.presence || post.body, id: post.id, shape: :rect)
+  %span.ba-post-card__body
+    %span.ba-post-card__author
+      = customer_avatar_tag(post.customer, show_active_status: false)
+      %span
+        %strong= customer_display_name(post.customer)
+        %span.ba-muted= " · #{time_ago_in_words(post.created_at)}前"
+    -# 一覧では書式記号(## や ** など)を見せず、表示される文字だけを抜き出して短くする。
+    %span.ba-post-card__text= truncate(strip_tags(markdown(post.body)).squish, length: 90)
+    - if local_assigns[:stats]
+      %span.ba-post-card__stats
+        %span
+          %i.fa-solid.fa-heart{ "aria-hidden": "true" }
+          %span.sr-only いいね
+          = post.likes.count
+        %span
+          %i.fa-solid.fa-comment{ "aria-hidden": "true" }
+          %span.sr-only コメント
+          = post.messages.count

@@ -1,192 +1,158 @@
-= render "layouts/header_menu_nakama"
-
 -# 運営者にも参加者と同じ画面を出す。設定フォーム・承認・停止は編集 / メンバー管理画面に置き、ここには移動の導線だけを出す。
 -# 運営者でなくても、プロジェクトを作成できる参加者には「プロジェクト管理」だけを出す。
 - if @can_manage || @can_create_project
-  .manage-bar-wrap
-    = render "shared/manage_bar", items: business_community_manage_items(@community, current: :show, pending_count: @pending_permit_count, manage: @can_manage, projects: @can_create_project)
+  = render "shared/manage_bar", items: business_community_manage_items(@community, current: :show, pending_count: @pending_permit_count, manage: @can_manage, projects: @can_create_project)
 - elsif plan_trial_editable?
   -# システム管理者(Admin セッション)で運営者ではない場合、お試し設定は管理画面のコミュニティ詳細で変更する。
-  .manage-bar-wrap
-    = render "shared/manage_bar", items: [{ label: "お試し設定（管理画面）", path: admin_community_path(@community), data: { turbolinks: false } }]
+  = render "shared/manage_bar", items: [{ label: "お試し設定（管理画面）", path: admin_community_path(@community), data: { turbolinks: false } }]
 
-.community-container
-
-  / =========================
-  / ヒーロー
-  / =========================
-  .community-hero
-
+%article.ba-profile
+  .ba-profile__cover{ class: ("ba-profile__cover--empty" unless @community.community_image.attached?) }
     - if @community.community_image.attached?
-      = image_tag @community.community_image, class:"community-cover"
+      = image_tag @community.community_image, class: "ba-profile__cover-image", alt: ""
+  .ba-profile__head
+    .ba-profile__avatar
+      = business_community_avatar(@community, size: :xl)
+    .ba-profile__title-block
+      %h1.ba-profile__name= @community.name
+      %ul.ba-profile__meta
+        %li
+          %i.fa-solid.fa-user-group{ "aria-hidden": "true" }
+          = "#{@community.active_customers.count}人"
+        %li
+          %i.fa-solid.fa-door-open{ "aria-hidden": "true" }
+          参加方式：#{business_join_approval_label(@community)}
 
-    .hero-overlay
-
-      .hero-content
-
-        %h1= @community.name
-
-        .hero-meta
-          👥 #{@community.active_customers.count}人
-
-        - if @community.plan_restrictions_waived?
-          %p.plan-trial-badge 🎁 無料お試し中：このコミュニティ内では有料プランの機能制限が解除されています
-
-        / ===== オーナー =====
-        .hero-owner
-          - if customer_withdrawn?(@community.owner)
-            .owner-info
-              .owner-avatar
-                = customer_avatar_tag(@community.owner, class_name: "owner-img")
-              .owner-meta
-                %span.owner-label オーナー
-                %span.owner-name
-                  = customer_display_name(@community.owner)
-          - else
-            = link_to business_customer_path(@community.owner) do
-              .owner-info
-
-                .owner-avatar
-                  = customer_avatar_tag(@community.owner, class_name: "owner-img")
-
-                .owner-meta
-                  %span.owner-label オーナー
-                  %span.owner-name
-                    = @community.owner.name
-                    %span.owner-badge 👑
-
-        / ===== アクション =====
-        .hero-actions
-
-          - case @join_status
-          - when :member
-
-            %span.btn-joined 参加済み
-
-          - when :manager
-
-            %span.btn-joined 運営者
-
-          - when :suspended
-
-            .permit-status
-              %span.permit-badge アクセス停止中
-              %p.permit-note このコミュニティへのアクセスは運営者により停止されています。
-
-          - when :pending
-
-            .permit-status
-              %span.permit-badge 🟡 承認待ち
-
-              = link_to "申請を取り消す",
-                business_community_permit_path(@community, customer_id: current_customer.id),
-                method: :delete,
-                data: { confirm: "参加申請を取り消しますか？" },
-                class:"permit-cancel"
-
-          - else
-
-            .permit-cta
-
-              = link_to business_join_button_label(@community),
-                business_community_permit_path(@community),
-                method: :post,
-                class:"btn btn-primary btn-cta"
-
-              %p.permit-note
-                = business_join_approval_description(@community)
-                %br
-                参加すると、プロジェクトやタイムラインを閲覧できます。
-
-          %p.hero-join-mode 参加方式：#{business_join_approval_label(@community)}
-
-  / =========================
-  / メイン
-  / =========================
-  .community-body
-
-    / ===== 左 =====
-    .left
-
-      .card
-        %h3 概要
-        .introduction
-          .markdown-body= markdown(@community.introduction)
-
-      - if @can_view_internal
-
-        .card
-          .section-header
-            %h3 プロジェクト
-
-          -# 作成は管理メニューの「プロジェクト管理」から行う。作成できない参加者には、必要なプランの案内だけを文字で出す。
-          - if !@can_create_project && @community.customers.include?(current_customer)
-            %p.project-create-note
-              = feature_gate(:business_project_create)[:message]
-              = link_to feature_upgrade_cta(:business_project_create), feature_upgrade_path(:business_project_create), class: "project-create-note__link"
-
-          .project-grid
-            - @projects.each do |project|
-              = link_to business_project_path(project) do
-                .project-card
-                  %h4= project.title
-                  %p= truncate(project.description.to_s, length: 80)
-
-        .card#timeline
-          %h3 タイムライン
-
-          -# 閲覧・投稿とも参加者(メンバー / 管理権限 / 管理者)だけ。
-          - if feature_available?(:business_community_post_create, community: @community)
-            .business-chat-compose
-              = form_with model: [:business, @community, CommunityPost.new], local: true, html: { class: "business-chat-form" } do |f|
-                = render "business/chat/composer", f: f, placeholder: "投稿する...", submit_label: "投稿"
-              = render "business/chat/stamp_picker", url: business_community_community_posts_path(@community), param_key: :community_post
-
-          - @timeline_posts.each do |post|
-
-            .timeline-item
-
-              .timeline-header
-
-                .user-block
-
-                  .avatar
-                    = customer_avatar_tag(post.customer, class_name: "avatar-img")
-
-                  .user-info
-                    %span.user-name
-                      = customer_display_name(post.customer)
-
-                      - if post.customer == @community.owner && !customer_withdrawn?(post.customer)
-                        %span.owner-tag オーナー
-
-                    %span.time= time_ago_in_words(post.created_at) + "前"
-
-              .timeline-body
-                = render "business/chat/message_content", record: post
-
-          = render "business/chat/lightbox"
-
+  .ba-profile__body
+    .ba-profile__owner
+      - if customer_withdrawn?(@community.owner)
+        .ba-person
+          .ba-person__avatar= customer_avatar_tag(@community.owner, class_name: "ba-person__img")
+          .ba-person__text
+            %span.ba-person__meta オーナー
+            %span.ba-person__name= customer_display_name(@community.owner)
       - else
-        .card.community-locked
-          %h3 🔒 参加者限定
-          %p プロジェクト・タイムライン・メンバーは、コミュニティの参加者のみ閲覧できます。
+        = link_to business_customer_path(@community.owner), class: "ba-person ba-person--link" do
+          .ba-person__avatar= customer_avatar_tag(@community.owner, class_name: "ba-person__img")
+          .ba-person__text
+            %span.ba-person__meta オーナー
+            %span.ba-person__name= @community.owner.name
 
-    / ===== 右 =====
-    .right
+    - if @community.plan_restrictions_waived?
+      %p.ba-trial-badge
+        %i.fa-solid.fa-gift{ "aria-hidden": "true" }
+        無料お試し中：このコミュニティ内では有料プランの機能制限が解除されています
 
-      - if @can_view_internal
-        .card
-          %h3 メンバー
+    .ba-join
+      - case @join_status
+      - when :member
+        %span.ba-status.ba-status--member
+          %i.fa-solid.fa-check{ "aria-hidden": "true" }
+          参加済み
+      - when :manager
+        %span.ba-status.ba-status--manager
+          %i.fa-solid.fa-star{ "aria-hidden": "true" }
+          運営者
+      - when :suspended
+        %span.ba-status.ba-status--suspended
+          %i.fa-solid.fa-ban{ "aria-hidden": "true" }
+          アクセス停止中
+        %p.ba-join__note このコミュニティへのアクセスは運営者により停止されています。
+      - when :pending
+        %span.ba-status.ba-status--pending
+          %i.fa-regular.fa-clock{ "aria-hidden": "true" }
+          承認待ち
+        = link_to "申請を取り消す",
+          business_community_permit_path(@community, customer_id: current_customer.id),
+          method: :delete,
+          data: { confirm: "参加申請を取り消しますか？" },
+          class: "ba-btn ba-btn--secondary ba-btn--sm"
+      - else
+        = link_to business_join_button_label(@community),
+          business_community_permit_path(@community),
+          method: :post,
+          class: "ba-btn ba-btn--primary"
+        %p.ba-join__note
+          = business_join_approval_description(@community)
+          参加すると、プロジェクトやタイムラインを閲覧できます。
 
-          .member-grid
-            - @community.active_customers.each do |customer|
-              = link_to business_customer_path(customer) do
-                .member-card
-                  = customer_avatar_tag(customer, class_name: "member-icon")
+- if @can_view_internal
+  %nav.ba-sectnav{ "aria-label": "このコミュニティの内容" }
+    %ul
+      %li= link_to "概要", "#about"
+      %li= link_to "プロジェクト", "#projects"
+      %li= link_to "タイムライン", "#timeline"
+      %li= link_to "メンバー", "#members"
 
-                  .member-info
-                    %span.member-name= customer.name
+.ba-columns
+  .ba-columns__main
+    %section.ba-card.ba-anchor-target#about{ "aria-labelledby": "community-about-title" }
+      %h2.ba-section-title#community-about-title 概要
+      .ba-section-body
+        .markdown-body= markdown(@community.introduction)
 
-                    - if customer == @community.owner
-                      %span.owner-tag オーナー
+    - if @can_view_internal
+      -# 件数・空判定のたびに問い合わせないよう、先に読み込んでおく。
+      - projects = @projects.to_a
+      - timeline_posts = @timeline_posts.to_a
+      %section.ba-card.ba-anchor-target#projects{ "aria-labelledby": "community-projects-title" }
+        .ba-section-header
+          %h2.ba-section-title#community-projects-title
+            プロジェクト
+            %span.ba-count= "#{projects.size}件"
+
+        -# 作成は管理メニューの「プロジェクト管理」から行う。作成できない参加者には、必要なプランの案内だけを文字で出す。
+        - if !@can_create_project && @community.customers.include?(current_customer)
+          %p.ba-note.ba-project-create-note
+            = feature_gate(:business_project_create)[:message]
+            = link_to feature_upgrade_cta(:business_project_create), feature_upgrade_path(:business_project_create)
+
+        - if projects.empty?
+          %p.ba-muted まだプロジェクトはありません。
+        - else
+          %ul.ba-project-grid
+            - projects.each do |project|
+              %li= render "business/projects/card", project: project, show_community: false, description: project.description
+
+      %section.ba-card.ba-anchor-target#timeline{ "aria-labelledby": "community-timeline-title" }
+        %h2.ba-section-title#community-timeline-title タイムライン
+
+        -# 閲覧・投稿とも参加者(メンバー / 管理権限 / 管理者)だけ。
+        - if feature_available?(:business_community_post_create, community: @community)
+          .business-chat-compose
+            = form_with model: [:business, @community, CommunityPost.new], local: true, html: { class: "business-chat-form" } do |f|
+              = render "business/chat/composer", f: f, placeholder: "投稿する...", submit_label: "投稿"
+            = render "business/chat/stamp_picker", url: business_community_community_posts_path(@community), param_key: :community_post
+
+        - if timeline_posts.empty?
+          %p.ba-muted まだ投稿はありません。
+        - else
+          %ol.ba-feed
+            - timeline_posts.each do |post|
+              %li= render "business/chat/post", record: post, owner: @community.owner
+
+        = render "business/chat/lightbox"
+
+    - else
+      %section.ba-card.ba-locked
+        %h2.ba-section-title
+          %i.fa-solid.fa-lock{ "aria-hidden": "true" }
+          参加者限定
+        %p.ba-muted プロジェクト・タイムライン・メンバーは、コミュニティの参加者のみ閲覧できます。
+
+  - if @can_view_internal
+    %aside.ba-columns__side
+      %section.ba-card.ba-anchor-target#members{ "aria-labelledby": "community-members-title" }
+        - members = @community.active_customers.to_a
+        %h2.ba-section-title#community-members-title
+          メンバー
+          %span.ba-count= "#{members.size}人"
+        %ul.ba-member-list
+          - members.each do |customer|
+            %li
+              = link_to business_customer_path(customer), class: "ba-person ba-person--link" do
+                .ba-person__avatar= customer_avatar_tag(customer, class_name: "ba-person__img")
+                .ba-person__text
+                  %span.ba-person__name= customer.name
+                  - if customer == @community.owner
+                    %span.ba-person__meta オーナー

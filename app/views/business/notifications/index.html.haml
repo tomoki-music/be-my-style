@@ -1,59 +1,54 @@
-= render 'layouts/header_menu_nakama'
+- icons = { "like" => "fa-heart", "message" => "fa-comment", "follow" => "fa-user-plus", "request" => "fa-door-open",
+  "accept" => "fa-circle-check", "project_created" => "fa-layer-group", "project_joined" => "fa-user-group",
+  "project_message" => "fa-comments", "project_request" => "fa-door-open", "project_accept" => "fa-circle-check" }
 
-.container
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title 通知
 
-  %h2 通知
-
-  - @notifications.each do |notification|
-    - link_path = business_notification_path(notification)
-    - content = capture do
-      .notification-card
-        - case notification.action
-        - when "like"
+- if @notifications.empty?
+  .ba-empty
+    %p 通知はまだありません。
+- else
+  %ul.ba-notifications
+    - @notifications.each do |notification|
+      - link_path = business_notification_path(notification)
+      - unread = @unread_ids.include?(notification.id)
+      - content = capture do
+        %span.ba-notification__icon{ "aria-hidden": "true" }
+          %i.fa-solid{ class: icons.fetch(notification.action, "fa-bell") }
+        %span.ba-notification__text
           %p
-            = customer_display_name(notification.visitor)
-            があなたの投稿にいいねしました
-        - when "message"
-          %p
-            = customer_display_name(notification.visitor)
-            があなたの投稿にコメントしました
-        - when "follow"
-          %p
-            = customer_display_name(notification.visitor)
-            がフォローしました
-        - when "request"
-          %p
-            = customer_display_name(notification.visitor)
-            があなたのコミュニティへ参加申請しました
-        - when "accept"
-          %p
-            = customer_display_name(notification.visitor)
-            があなたのコミュニティ参加申請を受理しました
-        - when "project_created"
-          %p
-            = customer_display_name(notification.visitor)
-            が所属コミュニティで新しいプロジェクトを作成しました
-        - when "project_joined"
-          %p
-            = customer_display_name(notification.visitor)
-            がプロジェクトに参加しました
-        - when "project_message"
-          %p
-            = customer_display_name(notification.visitor)
-            がプロジェクトにコメントしました
-        - when "project_request"
-          %p
-            = customer_display_name(notification.visitor)
-            があなたの管理するプロジェクトへ参加申請しました
-        - when "project_accept"
-          %p
-            = customer_display_name(notification.visitor)
-            がプロジェクトへの参加申請を承認しました
+            - case notification.action
+            - when "like"
+              #{customer_display_name(notification.visitor)}があなたの投稿にいいねしました
+            - when "message"
+              #{customer_display_name(notification.visitor)}があなたの投稿にコメントしました
+            - when "follow"
+              #{customer_display_name(notification.visitor)}がフォローしました
+            - when "request"
+              #{customer_display_name(notification.visitor)}があなたのコミュニティへ参加申請しました
+            - when "accept"
+              #{customer_display_name(notification.visitor)}があなたのコミュニティ参加申請を受理しました
+            - when "project_created"
+              #{customer_display_name(notification.visitor)}が所属コミュニティで新しいプロジェクトを作成しました
+            - when "project_joined"
+              #{customer_display_name(notification.visitor)}がプロジェクトに参加しました
+            - when "project_message"
+              #{customer_display_name(notification.visitor)}がプロジェクトにコメントしました
+            - when "project_request"
+              #{customer_display_name(notification.visitor)}があなたの管理するプロジェクトへ参加申請しました
+            - when "project_accept"
+              #{customer_display_name(notification.visitor)}がプロジェクトへの参加申請を承認しました
+            - else
+              新しい通知があります
+          %span.ba-notification__time
+            = l(notification.created_at, format: :short)
+            - if unread
+              %span.ba-unread-label 未読
+      %li
+        - if link_path.present?
+          = link_to link_path, class: ["ba-notification", ("is-unread" if unread)], data: { turbolinks: false } do
+            = content
         - else
-          %p 新しい通知があります
-        %small.text-muted= l(notification.created_at, format: :short)
-    - if link_path.present?
-      = link_to link_path, class: "text-decoration-none text-reset", data: { turbolinks: false } do
-        = content
-    - else
-      = content
+          .ba-notification{ class: ("is-unread" if unread) }= content

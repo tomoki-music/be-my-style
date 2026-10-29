@@ -1,4 +1,6 @@
 class Business::PostsController < ApplicationController
+  layout "business"
+
   before_action :authenticate_customer!
   before_action :set_post, only: [:show, :edit, :update, :destroy]
   before_action :ensure_post_owner!, only: [:edit, :update, :destroy]

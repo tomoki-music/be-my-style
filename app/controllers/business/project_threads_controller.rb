@@ -3,6 +3,8 @@
 class Business::ProjectThreadsController < ApplicationController
   include BusinessAccessControl
 
+  layout "business"
+
   before_action :set_project
   before_action :require_business_project_participant!
   before_action :link_legacy_chats, only: [:index, :show]

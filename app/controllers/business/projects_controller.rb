@@ -1,6 +1,8 @@
 class Business::ProjectsController < ApplicationController
   include BusinessAccessControl
 
+  layout "business"
+
   THREAD_PREVIEW_LIMIT = 5
 
   before_action :set_project, only: [:show, :edit, :update, :join, :leave, :cancel_request, :members]

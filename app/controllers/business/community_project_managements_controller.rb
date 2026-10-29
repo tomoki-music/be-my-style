@@ -3,6 +3,8 @@
 class Business::CommunityProjectManagementsController < ApplicationController
   include BusinessAccessControl
 
+  layout "business"
+
   before_action :set_community
   before_action :authorize_project_creation!
 

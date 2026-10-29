@@ -14,16 +14,18 @@ module Homes
 
     Result = Struct.new(:projects, :statuses, keyword_init: true)
 
-    def self.call(customer, page: nil)
-      new(customer).call(page: page)
+    # with_images: Business ホームのように画像を表示する画面だけ、画像の添付をまとめて読み込む。
+    def self.call(customer, page: nil, with_images: false)
+      new(customer).call(page: page, with_images: with_images)
     end
 
     def initialize(customer)
       @customer = customer
     end
 
-    def call(page: nil)
+    def call(page: nil, with_images: false)
       projects = scope.includes(:community).recently_updated.page(page).per(PER_PAGE)
+      projects = projects.includes(project_image_attachment: :blob) if with_images
       Result.new(projects: projects, statuses: statuses_for(projects.to_a))
     end
 
