@@ -417,6 +417,10 @@ RSpec.describe "Business ヘッダー(ログイン前)とログイン後のナ�
       tap_step("メニューのプロフィール設定へ移動") do
         tap(find("#baMenuSheet a", text: "プロフィール設定"))
         expect(page).to have_current_path(edit_business_customer_path(customer), wait: 10)
+        # Turbolinks は新しい画面を描画する前に URL を変える。前の画面のシートが開いたまま次をタップすると、
+        # 下部ナビと同じ位置にあるシートの「ログアウト」に当たるため、新しい画面の表示を待つ。
+        expect(page).to have_css("button#baMenuToggle.is-current")
+        expect(page).to have_no_css("#baMenuSheet", visible: :visible)
       end
 
       tap_step("下部ナビのプロジェクトへ移動") do
