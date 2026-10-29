@@ -1,0 +1,758 @@
+// Social Atelier: コミュニティ・プロジェクトの通常画面、プロフィール、通知、投稿機能。
+
+.ba-body {
+  // ===== コミュニティ / プロジェクトの見出し部分 =====
+  .ba-profile {
+    margin-bottom: var(--ba-space-4);
+    overflow: hidden;
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-card);
+    background: var(--ba-surface);
+    box-shadow: var(--ba-shadow-card);
+  }
+
+  .ba-profile__cover {
+    height: 120px;
+    background: var(--ba-surface-muted);
+    overflow: hidden;
+  }
+
+  // 画像が無いときは淡いラベンダーとピーチの小さな面で代替する。
+  .ba-profile__cover--empty {
+    height: 72px;
+    background: linear-gradient(120deg, var(--ba-lavender) 0%, var(--ba-peach) 100%);
+  }
+
+  .ba-profile__cover-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ba-profile__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--ba-space-3) var(--ba-space-4);
+    padding: 0 var(--ba-space-5);
+    margin-top: -40px;
+  }
+
+  .ba-profile__avatar {
+    flex: none;
+    padding: 4px;
+    border-radius: 50%;
+    background: var(--ba-surface);
+  }
+
+  .ba-profile__title-block {
+    flex: 1 1 220px;
+    min-width: 0;
+    padding-bottom: var(--ba-space-1);
+  }
+
+  .ba-profile__name {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-profile__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ba-space-1) var(--ba-space-4);
+    margin: var(--ba-space-1) 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+    color: var(--ba-text-muted);
+
+    li {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
+      min-width: 0;
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    i {
+      font-size: 12px;
+    }
+  }
+
+  .ba-profile__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ba-space-3);
+    padding: var(--ba-space-4) var(--ba-space-5) var(--ba-space-5);
+  }
+
+  .ba-profile__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ba-space-1);
+  }
+
+  // プロジェクトは画像付きカードの見た目を引き継ぎ、画像を上に大きめに出す。
+  .ba-profile__cover--project {
+    height: auto;
+    aspect-ratio: 16 / 7;
+    max-height: 280px;
+  }
+
+  .ba-profile--project .ba-profile__name {
+    font-size: 22px;
+  }
+
+  .ba-person--link {
+    align-self: flex-start;
+    padding: var(--ba-space-1) var(--ba-space-3) var(--ba-space-1) var(--ba-space-1);
+    border-radius: var(--ba-radius-pill);
+    text-decoration: none;
+  }
+
+  .ba-person--link:hover {
+    background: var(--ba-surface-muted);
+  }
+
+  .ba-person__img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .ba-trial-badge {
+    display: flex;
+    align-items: baseline;
+    gap: var(--ba-space-2);
+    margin: 0;
+    padding: var(--ba-space-2) var(--ba-space-3);
+    border-radius: var(--ba-radius-control);
+    background: var(--ba-peach);
+    color: var(--ba-peach-text);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .ba-join {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ba-space-2) var(--ba-space-3);
+
+    .ba-status {
+      font-size: 14px;
+      padding: 6px 14px;
+    }
+  }
+
+  .ba-join__note {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 14px;
+    color: var(--ba-text-muted);
+  }
+
+  .ba-goal {
+    padding: var(--ba-space-3) var(--ba-space-4);
+    border-radius: var(--ba-radius-control);
+    background: var(--ba-accent-soft);
+  }
+
+  .ba-goal__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ba-accent-strong);
+  }
+
+  .ba-goal__text {
+    margin: 2px 0 0;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-section-body {
+    margin-top: var(--ba-space-3);
+    max-width: var(--ba-reading-width);
+  }
+
+  .ba-locked {
+    text-align: center;
+
+    .ba-section-title {
+      justify-content: center;
+      align-items: center;
+      margin-bottom: var(--ba-space-2);
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+
+  .ba-project-create-note {
+    margin-bottom: var(--ba-space-4);
+  }
+
+  .ba-leave {
+    margin-top: var(--ba-space-4);
+    padding-top: var(--ba-space-4);
+    border-top: 1px solid var(--ba-border);
+  }
+
+  // ===== 2カラム(PC) =====
+  .ba-columns {
+    display: block;
+  }
+
+  .ba-columns__main,
+  .ba-columns__side {
+    min-width: 0;
+  }
+
+  @media (min-width: 1200px) {
+    .ba-columns {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: var(--ba-space-4);
+      align-items: start;
+    }
+
+    .ba-columns__side {
+      position: sticky;
+      top: calc(var(--ba-tap) + var(--ba-space-4));
+    }
+  }
+
+  // ===== メンバー一覧 =====
+  .ba-member-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ba-space-1);
+    margin: var(--ba-space-3) 0 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      min-width: 0;
+      margin: 0;
+    }
+
+    .ba-person--link {
+      display: flex;
+      width: 100%;
+      border-radius: var(--ba-radius-control);
+    }
+  }
+
+  @media (min-width: 576px) and (max-width: 1199.98px) {
+    .ba-member-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 576px) {
+    .ba-member-list--grid {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+  }
+
+  // ===== 通知 =====
+  .ba-notifications {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow: hidden;
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-card);
+    background: var(--ba-surface);
+    box-shadow: var(--ba-shadow-card);
+
+    > li {
+      margin: 0;
+      border-top: 1px solid var(--ba-border);
+    }
+
+    > li:first-child {
+      border-top: 0;
+    }
+  }
+
+  .ba-notification {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--ba-space-3);
+    padding: var(--ba-space-4);
+    color: var(--ba-text);
+    text-decoration: none;
+  }
+
+  a.ba-notification:hover {
+    background: var(--ba-surface-muted);
+    color: var(--ba-text);
+  }
+
+  .ba-notification.is-unread {
+    background: var(--ba-accent-soft);
+  }
+
+  .ba-notification__icon {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--ba-surface-muted);
+    color: var(--ba-accent);
+  }
+
+  .ba-notification__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+
+    p {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .ba-notification__time {
+    font-size: 13px;
+    color: var(--ba-text-muted);
+  }
+
+  .ba-unread-label {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ba-accent-strong);
+  }
+
+  // ===== ユーザープロフィール =====
+  .ba-user {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ba-space-4);
+  }
+
+  .ba-user__avatar {
+    flex: none;
+
+    img {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  }
+
+  .ba-user__text {
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+
+  .ba-user__job {
+    margin: 2px 0 0;
+    color: var(--ba-text-muted);
+  }
+
+  .ba-user__stats {
+    display: flex;
+    gap: var(--ba-space-4);
+    margin: var(--ba-space-2) 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+    color: var(--ba-text-muted);
+
+    li {
+      margin: 0;
+    }
+
+    strong {
+      color: var(--ba-text);
+      font-size: 16px;
+      margin-right: 4px;
+    }
+  }
+
+  .ba-user__action {
+    flex: none;
+  }
+
+  .ba-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ba-space-2);
+    margin: var(--ba-space-3) 0 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      margin: 0;
+      min-width: 0;
+    }
+  }
+
+  .ba-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    max-width: 100%;
+    padding: 4px 14px;
+    border-radius: var(--ba-radius-pill);
+    background: var(--ba-surface-muted);
+    color: var(--ba-text);
+    font-size: 14px;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  a.ba-chip:hover {
+    background: var(--ba-accent-soft);
+    color: var(--ba-accent-strong);
+  }
+
+  .ba-chip.is-active {
+    background: var(--ba-accent);
+    color: #fff;
+  }
+
+  .ba-simple-list {
+    margin: var(--ba-space-3) 0 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      margin: 0;
+      padding: var(--ba-space-2) 0;
+      border-top: 1px solid var(--ba-border);
+    }
+
+    li:first-child {
+      border-top: 0;
+    }
+
+    p {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    small {
+      color: var(--ba-text-muted);
+    }
+  }
+
+  // ===== 投稿機能(一覧・詳細・作成) =====
+  .ba-search {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ba-space-2);
+    margin-bottom: var(--ba-space-4);
+
+    .ba-search__field {
+      position: relative;
+      flex: 1 1 220px;
+      min-width: 0;
+    }
+
+    .ba-search__icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--ba-text-subtle);
+    }
+
+    .form-control {
+      padding-left: 40px;
+    }
+  }
+
+  .ba-tabs {
+    display: flex;
+    gap: var(--ba-space-1);
+    margin-bottom: var(--ba-space-4);
+    border-bottom: 1px solid var(--ba-border);
+    overflow-x: auto;
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      min-height: var(--ba-tap);
+      padding: 0 var(--ba-space-4);
+      border-bottom: 3px solid transparent;
+      color: var(--ba-text-muted);
+      font-weight: 600;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+
+    a[aria-current] {
+      color: var(--ba-accent-strong);
+      border-bottom-color: var(--ba-accent);
+    }
+  }
+
+  .ba-post-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-card);
+    background: var(--ba-surface);
+    box-shadow: var(--ba-shadow-card);
+    color: var(--ba-text);
+    text-decoration: none;
+  }
+
+  .ba-post-card:hover {
+    color: var(--ba-text);
+    border-color: var(--ba-accent-line);
+  }
+
+  .ba-post-card__media {
+    display: block;
+    aspect-ratio: 16 / 10;
+    background: var(--ba-surface-muted);
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  // 1列になる狭い幅では、プロジェクトカードと同じく画像を左の正方形にする。
+  @media (max-width: 479.98px) {
+    .ba-post-card {
+      flex-direction: row;
+    }
+
+    .ba-post-card__media {
+      flex: none;
+      width: 104px;
+      aspect-ratio: auto;
+      min-height: 104px;
+    }
+
+    .ba-post-card__media .ba-monogram--rect {
+      font-size: 32px;
+    }
+  }
+
+  .ba-post-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ba-space-2);
+    padding: var(--ba-space-3) var(--ba-space-4) var(--ba-space-4);
+    min-width: 0;
+  }
+
+  .ba-post-card__author {
+    display: flex;
+    align-items: center;
+    gap: var(--ba-space-2);
+    font-size: 14px;
+    min-width: 0;
+
+    img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  }
+
+  .ba-post-card__text {
+    font-size: 15px;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-post-card__stats {
+    display: flex;
+    gap: var(--ba-space-3);
+    font-size: 13px;
+    color: var(--ba-text-muted);
+  }
+
+  .ba-article__image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-top: var(--ba-space-4);
+    border-radius: var(--ba-radius-control);
+  }
+
+  .ba-comment-form {
+    display: flex;
+    gap: var(--ba-space-2);
+    margin-top: var(--ba-space-3);
+
+    .form-control {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  .ba-stamp-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ba-space-2);
+    margin-top: var(--ba-space-2);
+
+    form {
+      margin: 0;
+    }
+  }
+}
+
+.ba-body {
+  .ba-article__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ba-space-3);
+    margin-bottom: var(--ba-space-4);
+  }
+
+  .ba-article__title {
+    margin-bottom: var(--ba-space-2);
+  }
+
+  .ba-article__actions {
+    margin-top: var(--ba-space-4);
+    padding-top: var(--ba-space-3);
+    border-top: 1px solid var(--ba-border);
+  }
+
+  .like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: var(--ba-tap);
+    padding: 0 var(--ba-space-4);
+    border-radius: var(--ba-radius-pill);
+    border: 1px solid var(--ba-border-strong);
+    color: var(--ba-text);
+    text-decoration: none;
+  }
+
+  .like-btn.liked {
+    border-color: #f3c3c9;
+    background: var(--ba-danger-soft);
+    color: var(--ba-danger);
+  }
+
+  .comment {
+    display: flex;
+    gap: var(--ba-space-3);
+    padding: var(--ba-space-3) 0;
+    margin: 0;
+    border-top: 1px solid var(--ba-border);
+
+    .user-icon,
+    img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  }
+
+  .comment:first-child {
+    border-top: 0;
+  }
+
+  .comment-body {
+    min-width: 0;
+  }
+
+  .comment-user {
+    font-weight: 700;
+    color: var(--ba-text);
+  }
+
+  .comment-text {
+    margin: 2px 0 0;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-tag-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ba-space-2);
+    min-height: var(--ba-tap);
+    padding: 6px 10px;
+    border: 1px solid var(--ba-border-strong);
+    border-radius: var(--ba-radius-control);
+    background: var(--ba-surface);
+
+    &:focus-within {
+      border-color: var(--ba-accent);
+      box-shadow: var(--ba-focus);
+    }
+
+    #tag-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--ba-space-1);
+    }
+
+    .tag-input {
+      flex: 1;
+      min-width: 120px;
+      border: 0;
+      font-size: 16px;
+      background: transparent;
+    }
+
+    .tag-input:focus-visible {
+      box-shadow: none;
+    }
+
+    .tag-chip {
+      background: var(--ba-accent-soft);
+      color: var(--ba-accent-strong);
+      font-size: 13px;
+    }
+  }
+
+  .ba-tag-filter {
+    margin-bottom: var(--ba-space-4);
+
+    .ba-chip-list {
+      margin-top: var(--ba-space-1);
+    }
+
+    .ba-chip.is-active .ba-count {
+      color: #fff;
+    }
+  }
+
+  .ba-checks {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .ba-break {
+    overflow-wrap: anywhere;
+    word-break: break-all;
+  }
+}

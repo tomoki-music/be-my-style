@@ -13,7 +13,7 @@
   .business-composer__footer
     .business-composer__attach
       %label.business-composer__attach-btn
-        %span{ "aria-hidden" => "true" } 📎
+        %i.fa-solid.fa-paperclip{ "aria-hidden" => "true" }
         %span ファイルを添付
         = f.file_field :attachments, multiple: true, accept: BusinessChatContent.accept_attribute,
             class: "business-composer__file-input"

@@ -5,8 +5,8 @@ module MemberHome
 
   private
 
-  def load_member_home
-    @my_communities = Homes::MyCommunities.call(current_customer, page: params[:community_page])
-    @my_projects = Homes::MyProjects.call(current_customer, page: params[:project_page])
+  def load_member_home(with_images: false)
+    @my_communities = Homes::MyCommunities.call(current_customer, page: params[:community_page], with_images: with_images)
+    @my_projects = Homes::MyProjects.call(current_customer, page: params[:project_page], with_images: with_images)
   end
 end

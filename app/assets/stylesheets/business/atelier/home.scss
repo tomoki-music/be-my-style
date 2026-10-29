@@ -1,0 +1,282 @@
+// Social Atelier: ログイン後ホーム(コミュニティ = 丸い画像、プロジェクト = 画像付きカード)と、共通のカード一覧。
+
+.ba-body {
+  .ba-home__section {
+    margin-bottom: var(--ba-space-6);
+  }
+
+  .ba-home__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--ba-space-4);
+  }
+
+  // ===== コミュニティ: 丸い画像と名前 =====
+  // 名前は省略せず折り返す(長い名前・多数の所属でも欠けない)。
+  .ba-circle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    gap: var(--ba-space-5) var(--ba-space-3);
+    margin: 0;
+    padding: var(--ba-space-5) var(--ba-space-4);
+    list-style: none;
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-card);
+    background: var(--ba-surface);
+    box-shadow: var(--ba-shadow-card);
+  }
+
+  .ba-circle-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    margin: 0;
+    text-align: center;
+  }
+
+  .ba-circle-item__link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--ba-space-2);
+    width: 100%;
+    padding: var(--ba-space-1);
+    border-radius: var(--ba-radius-control);
+    color: var(--ba-text);
+    text-decoration: none;
+  }
+
+  .ba-circle-item__link:hover {
+    color: var(--ba-text);
+
+    .ba-circle-item__media {
+      box-shadow: 0 0 0 2px var(--ba-accent);
+    }
+  }
+
+  .ba-circle-item__media {
+    display: flex;
+    padding: 3px;
+    border-radius: 50%;
+    background: var(--ba-surface);
+    box-shadow: 0 0 0 2px var(--ba-accent-line);
+  }
+
+  // 承認待ちは点線の輪で区別する(状態の文字表示と併用)。
+  .ba-circle-item__media.is-pending {
+    box-shadow: none;
+    outline: 2px dashed var(--ba-border-strong);
+    outline-offset: 0;
+  }
+
+  .ba-circle-item__name {
+    width: 100%;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-circle-item__badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .ba-circle-item__sub {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  // ===== プロジェクト: 画像付きカード =====
+  .ba-project-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ba-space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    > li {
+      display: flex;
+      min-width: 0;
+      margin: 0;
+    }
+  }
+
+  @media (min-width: 480px) {
+    .ba-project-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 768px) {
+    .ba-project-grid {
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+  }
+
+  .ba-project-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-card);
+    background: var(--ba-surface);
+    box-shadow: var(--ba-shadow-card);
+    color: var(--ba-text);
+    text-decoration: none;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+
+  .ba-project-card:hover {
+    color: var(--ba-text);
+    border-color: var(--ba-accent-line);
+    box-shadow: var(--ba-shadow-raised);
+  }
+
+  .ba-project-card__media {
+    display: block;
+    aspect-ratio: 16 / 10;
+    background: var(--ba-surface-muted);
+    overflow: hidden;
+  }
+
+  // 1列になる狭い幅では、画像を左の正方形にして縦に長くなりすぎないようにする。
+  @media (max-width: 479.98px) {
+    .ba-project-card {
+      flex-direction: row;
+    }
+
+    .ba-project-card__media {
+      flex: none;
+      width: 104px;
+      aspect-ratio: auto;
+      min-height: 104px;
+    }
+
+    .ba-project-card__media .ba-monogram--rect {
+      font-size: 32px;
+    }
+  }
+
+  .ba-project-card__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ba-project-card__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: var(--ba-space-3) var(--ba-space-4) var(--ba-space-4);
+    min-width: 0;
+  }
+
+  .ba-project-card__title {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-project-card__community {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--ba-text-muted);
+    overflow-wrap: anywhere;
+
+    i {
+      font-size: 11px;
+    }
+  }
+
+  .ba-project-card__text {
+    font-size: 14px;
+    color: var(--ba-text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .ba-project-card__note {
+    font-size: 13px;
+    color: var(--ba-warning);
+  }
+
+  // ===== コミュニティ一覧(探す) =====
+  .ba-community-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ba-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    > li {
+      display: flex;
+      min-width: 0;
+      margin: 0;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .ba-community-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .ba-community-tile {
+    display: flex;
+    align-items: center;
+    gap: var(--ba-space-4);
+    width: 100%;
+    padding: var(--ba-space-4);
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-card);
+    background: var(--ba-surface);
+    box-shadow: var(--ba-shadow-card);
+    color: var(--ba-text);
+    text-decoration: none;
+  }
+
+  .ba-community-tile:hover {
+    color: var(--ba-text);
+    border-color: var(--ba-accent-line);
+  }
+
+  .ba-community-tile__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .ba-community-tile__name {
+    font-size: 17px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-community-tile__meta {
+    font-size: 13px;
+    color: var(--ba-text-muted);
+  }
+
+  .ba-community-tile__desc {
+    font-size: 14px;
+    color: var(--ba-text-muted);
+    overflow-wrap: anywhere;
+  }
+}

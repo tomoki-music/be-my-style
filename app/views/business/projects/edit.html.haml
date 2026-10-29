@@ -1,23 +1,19 @@
-= render "layouts/header_menu_nakama"
+= render "shared/manage_bar", items: business_project_manage_items(@project, current: :edit, pending_count: @pending_request_count)
 
-.manage-bar-wrap
-  = render "shared/manage_bar", items: business_project_manage_items(@project, current: :edit, pending_count: @pending_request_count)
+%nav.ba-breadcrumb{ "aria-label": "現在地" }
+  %ol
+    %li= link_to @community.name, business_community_path(@community)
+    %li= link_to @project.title_was.presence || @project.title, business_project_path(@project)
+    %li
+      %span{ "aria-current": "page" } 編集
 
-.container.project-edit-container
-  .edit-card
-    %nav.manage-page__breadcrumb{ "aria-label": "現在地" }
-      = link_to @community.name, business_community_path(@community)
-      %span{ "aria-hidden": "true" } ›
-      = link_to @project.title_was.presence || @project.title, business_project_path(@project)
-      %span{ "aria-hidden": "true" } ›
-      %span 編集
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title プロジェクト編集
+    %p.ba-page-lead サービス内容や目的を分かりやすく伝えましょう
 
-    .edit-header
-      %h2 プロジェクト編集
-      %p サービス内容や目的を分かりやすく伝えましょう
-
-    = render "form",
-      project: @project,
-      submit_label: "保存する",
-      cancel_label: "キャンセル",
-      cancel_path: business_project_path(@project)
+= render "form",
+  project: @project,
+  submit_label: "保存する",
+  cancel_label: "キャンセル",
+  cancel_path: business_project_path(@project)

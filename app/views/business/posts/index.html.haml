@@ -1,126 +1,57 @@
-= render 'layouts/header_menu_nakama'
-
-.container.posts-container
-
-  / =========================
-  / ヘッダー
-  / =========================
-  .page-header
-
-    %h2.page-title 投稿一覧
-
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title 投稿
+    %p.ba-page-lead 活動の記録や知見を共有する投稿の一覧です。
+  .ba-page-actions
     - if feature_available?(:business_post_create)
-      = link_to "＋ 投稿",
-        new_business_post_path,
-        class:"btn btn-primary new-btn"
+      = link_to new_business_post_path, class: "ba-btn ba-btn--primary" do
+        %i.fa-solid.fa-plus{ "aria-hidden": "true" }
+        投稿する
+
+- unless feature_available?(:business_post_create)
+  = render "shared/feature_gate",
+    feature_key: :business_post_create,
+    title: "ビジネス投稿を始める",
+    message: "一覧や他の投稿はそのまま見られます。",
+    class_name: "feature-gate--inline"
+
+= form_with url: business_posts_path, method: :get, local: true, class: "ba-search", role: "search" do |f|
+  = hidden_field_tag :user_id, params[:user_id]
+  .ba-search__field
+    %i.fa-solid.fa-magnifying-glass.ba-search__icon{ "aria-hidden": "true" }
+    = f.text_field :keyword, value: params[:keyword], placeholder: "投稿を検索", class: "form-control", "aria-label": "投稿を検索"
+  = f.submit "検索", class: "ba-btn ba-btn--primary"
+  = link_to "クリア", business_posts_path(user_id: params[:user_id]), class: "ba-btn ba-btn--secondary"
+
+- if @popular_tags.present?
+  %section.ba-tag-filter{ "aria-labelledby": "popular-tags-title" }
+    %h2.ba-label#popular-tags-title 人気タグ
+    %ul.ba-chip-list
+      - @popular_tags.each do |tag|
+        - is_active = params[:tag] == tag.name
+        %li
+          = link_to business_posts_path(tag: tag.name, keyword: params[:keyword], user_id: params[:user_id]),
+            class: ["ba-chip", ("is-active" if is_active)], "aria-current": (is_active ? "true" : nil) do
+            = tag.name
+            %span.ba-count= tag.count
+        - if is_active
+          %li
+            = link_to business_posts_path(keyword: params[:keyword], user_id: params[:user_id]), class: "ba-chip", "aria-label": "タグ「#{tag.name}」の絞り込みを解除" do
+              %i.fa-solid.fa-xmark{ "aria-hidden": "true" }
+              解除
+
+- if @posts.present?
+  %ul.ba-project-grid.ba-section-body
+    - @posts.each do |post|
+      %li= render "business/posts/card", post: post, stats: true
+- else
+  .ba-empty.ba-section-body
+    %p.ba-empty__title 投稿がまだありません
+    - if feature_available?(:business_post_create)
+      %p 最初の投稿をしてみましょう
+      = link_to "投稿する", new_business_post_path, class: "ba-btn ba-btn--primary"
     - else
       = render "shared/feature_gate",
         feature_key: :business_post_create,
-        title: "ビジネス投稿を始める",
-        message: "一覧や他の投稿はそのまま見られます。",
+        title: "最初の投稿を始める",
         class_name: "feature-gate--inline"
-
-  / =========================
-  / 検索
-  / =========================
-  .search-box
-
-    = form_with url: business_posts_path, method: :get, local: true, class:"search-form" do |f|
-
-      = hidden_field_tag :user_id, params[:user_id]
-
-      .search-input-wrapper
-        %i.fa.fa-search.search-icon
-
-        = f.text_field :keyword,
-          value: params[:keyword],
-          placeholder:"投稿を検索",
-          class:"search-input"
-
-      .search-actions
-        = f.submit "検索", class:"btn btn-primary"
-
-        = link_to "クリア",
-          business_posts_path(user_id: params[:user_id]),
-          class:"btn btn-light clear-btn"
-
-  / =========================
-  / タグフィルター
-  / =========================
-  .tag-filter
-
-    %h4.tag-title 人気タグ
-
-    - if @popular_tags.present?
-      .tag-list
-
-        - @popular_tags.each do |tag|
-          - is_active = params[:tag] == tag.name
-          - path = business_posts_path(tag: tag.name, keyword: params[:keyword], user_id: params[:user_id])
-
-          .tag-wrapper
-            = link_to path, class: "tag-chip #{'active' if is_active}" do
-              %span.tag-name= tag.name
-              %span.tag-count= tag.count
-
-            - if is_active
-              - clear_path = business_posts_path(keyword: params[:keyword], user_id: params[:user_id])
-              = link_to clear_path, class:"tag-remove" do
-                %i.fa.fa-times
-
-  / =========================
-  / グリッド投稿
-  / =========================
-  - if @posts.present?
-
-    .post-grid
-
-      - @posts.each do |post|
-
-        = link_to business_post_path(post), class:"post-link" do
-
-          .post-card
-
-            / --- 画像 ---
-            .card-image
-              - if post.post_image.attached?
-                = image_tag post.post_image, class:"post-img"
-              - else
-                .no-image
-                  %span No Image
-
-            / --- 本文 ---
-            .card-body
-
-              .post-header
-                .avatar
-                  = customer_avatar_tag(post.customer, class_name: "avatar-img")
-
-                .user-meta
-                  %strong= customer_display_name(post.customer)
-                  %span.time= time_ago_in_words(post.created_at) + "前"
-
-              %p.post-text
-                = truncate(post.body, length:80)
-
-              .post-actions
-                .action-item.like
-                  %i.fa.fa-heart
-                  %span= post.likes.count
-
-                .action-item
-                  %i.fa.fa-comment
-                  %span= post.messages.count
-
-  - else
-
-    .empty-state
-      %h3 投稿がまだありません
-      %p 最初の投稿をしてみましょう🔥
-      - if feature_available?(:business_post_create)
-        = link_to "投稿する", new_business_post_path, class:"btn btn-primary"
-      - else
-        = render "shared/feature_gate",
-          feature_key: :business_post_create,
-          title: "最初の投稿を始める",
-          class_name: "feature-gate--inline"

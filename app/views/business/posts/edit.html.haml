@@ -1,4 +1,12 @@
-= render "layouts/header_menu_nakama"
+%nav.ba-breadcrumb{ "aria-label": "現在地" }
+  %ol
+    %li= link_to "投稿", business_posts_path
+    %li= link_to (@post.title_was.presence || "投稿の詳細"), business_post_path(@post)
+    %li
+      %span{ "aria-current": "page" } 編集
 
-.container.post-create-container
-  = render "form"
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title 投稿編集
+
+= render "form"

@@ -1,103 +1,107 @@
-= render "layouts/header_menu_nakama"
-
 -# 管理者にも参加者と同じ画面を出す。設定フォーム・承認・停止は編集 / メンバー管理画面に置き、ここには移動の導線だけを出す。
 - if @can_manage_project
-  .manage-bar-wrap
-    = render "shared/manage_bar", items: business_project_manage_items(@project, current: :show, pending_count: @pending_request_count)
+  = render "shared/manage_bar", items: business_project_manage_items(@project, current: :show, pending_count: @pending_request_count)
 
-.container.project-show
+%nav.ba-breadcrumb{ "aria-label": "現在地" }
+  %ol
+    %li= link_to @project.community.name, business_community_path(@project.community)
+    %li= link_to "プロジェクト", business_community_path(@project.community, anchor: "projects")
+    %li
+      %span{ "aria-current": "page" }= @project.title
 
-  / =========================
-  / ヘッダー
-  / =========================
-  .project-hero
-
+%article.ba-profile.ba-profile--project
+  .ba-profile__cover.ba-profile__cover--project
     - if @project.project_image.attached?
-      = image_tag @project.project_image, class:"project-cover"
+      = image_tag @project.project_image, class: "ba-profile__cover-image", alt: ""
+    - else
+      = business_monogram(@project.title, id: @project.id, shape: :rect)
+  .ba-profile__body
+    .ba-profile__badges
+      %span.ba-status.ba-status--kind= business_project_status_label(@project)
+    %h1.ba-profile__name= @project.title
+    %ul.ba-profile__meta
+      %li
+        %i.fa-solid.fa-users{ "aria-hidden": "true" }
+        %span.sr-only コミュニティ：
+        = link_to @project.community.name, business_community_path(@project.community)
+      %li
+        %i.fa-solid.fa-user{ "aria-hidden": "true" }
+        作成：#{customer_display_name(@project.customer) || ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL}
+      %li
+        %i.fa-regular.fa-calendar{ "aria-hidden": "true" }
+        締切：#{@project.deadline.present? ? @project.deadline.strftime("%Y/%m/%d") : "未設定"}
+      %li
+        %i.fa-solid.fa-door-open{ "aria-hidden": "true" }
+        参加方式：#{business_join_approval_label(@project)}
 
-    .project-hero-overlay
+    - if @project.goal.present?
+      .ba-goal
+        %span.ba-goal__label
+          %i.fa-solid.fa-flag{ "aria-hidden": "true" }
+          目標
+        %p.ba-goal__text= @project.goal
 
-      .project-hero-content
+    .ba-join
+      - if @can_view_internal
+        %span.ba-status.ba-status--member
+          %i.fa-solid.fa-check{ "aria-hidden": "true" }
+          参加中
+      - else
+        = render "business/projects/join_status"
 
-        %h1.project-title= @project.title
+- if @can_view_internal
+  %nav.ba-sectnav{ "aria-label": "このプロジェクトの内容" }
+    %ul
+      %li= link_to "概要", "#about"
+      %li= link_to "スレッド", "#threads"
+      %li= link_to "メンバー", "#members"
 
-        .project-meta
-          %span 👤 #{customer_display_name(@project.customer) || ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL}
-          %span 🏢 #{@project.community.name}
-          %span 🗓 #{l(@project.created_at, format: :short)}
-
-        .project-actions
-
-          - if @can_view_internal
-            %span.btn.btn-joined.btn-joined--light 参加中
-
-          - else
-            = render "business/projects/join_status"
-
-        %p.project-join-mode
-          参加方式：#{business_join_approval_label(@project)}
-
-        %span.status-badge= @project.status
-
-        .project-goal
-          %span.goal-label 🎯 GOAL
-          %p.goal-text= @project.goal
-
-        - if @project.deadline.present?
-          %p ⏰ 締切：#{l(@project.deadline, format: :short)}
-        - else
-          %p ⏰ 締切：未設定
-
-  / =========================
-  / 本文
-  / =========================
-  .project-section
-    %h3 概要
+%section.ba-card.ba-anchor-target#about{ "aria-labelledby": "project-about-title" }
+  %h2.ba-section-title#project-about-title 概要
+  .ba-section-body
     .markdown-body= markdown(@project.description)
 
-  - if @can_view_internal
+- if @can_view_internal
+  %section.ba-card.ba-anchor-target#threads{ "aria-labelledby": "project-threads-title" }
+    = render "business/project_threads/repair_failed"
+    .ba-section-header
+      %h2.ba-section-title#project-threads-title
+        スレッド
+        %span.ba-count= "#{@thread_count}件"
+      = link_to new_business_project_thread_path(@project), class: "ba-btn ba-btn--soft ba-btn--sm" do
+        %i.fa-solid.fa-plus{ "aria-hidden": "true" }
+        新しいスレッド
 
-    / =========================
-    / スレッド
-    / =========================
-    .project-section#threads
-      = render "business/project_threads/repair_failed"
-      .project-section__header
-        %h3 スレッド
-        = link_to "＋ 新しいスレッド", new_business_project_thread_path(@project), class: "btn btn-primary btn-small"
+    = render "business/project_threads/list", project: @project, threads: @threads, post_counts: @thread_post_counts
 
-      = render "business/project_threads/list", project: @project, threads: @threads, post_counts: @thread_post_counts
+    - if @thread_count > @threads.size
+      .ba-more
+        = link_to "すべてのスレッドを見る（#{@thread_count}件）", business_project_threads_path(@project), class: "ba-btn ba-btn--secondary"
 
-      - if @thread_count > @threads.size
-        .project-thread-more
-          = link_to "すべてのスレッドを見る（#{@thread_count}件）", business_project_threads_path(@project), class: "btn btn-outline-primary"
+  %section.ba-card.ba-anchor-target#members{ "aria-labelledby": "project-members-title" }
+    - members = @project.participating_members.to_a
+    %h2.ba-section-title#project-members-title
+      メンバー
+      %span.ba-count= "#{members.size}人"
+    %ul.ba-member-list.ba-member-list--grid
+      - members.each do |customer|
+        %li
+          = link_to business_customer_path(customer), class: "ba-person ba-person--link" do
+            .ba-person__avatar= customer_avatar_tag(customer, class_name: "ba-person__img")
+            .ba-person__text
+              %span.ba-person__name= customer.name
+              - if customer == @project.customer
+                %span.ba-person__meta オーナー
 
-    / =========================
-    / メンバー
-    / =========================
-    .project-section
-      %h3 メンバー
+    - if @project.project_members.exists?(customer_id: current_customer.id)
+      .ba-leave
+        = link_to "プロジェクトから退出する", leave_business_project_path(@project),
+          method: :delete, data: { confirm: "退出すると、スレッドを閲覧・投稿できなくなります。よろしいですか？" },
+          class: "ba-btn ba-btn--danger ba-btn--sm"
 
-      .member-grid
-        - @project.participating_members.each do |customer|
-          = link_to business_customer_path(customer) do
-            .member-card
-              = customer_avatar_tag(customer, class_name: "member-icon")
-
-              .member-info
-                %span.member-name= customer.name
-
-                - if customer == @project.customer
-                  %span.owner-tag オーナー
-
-      - if @project.project_members.exists?(customer_id: current_customer.id)
-        .project-leave
-          = link_to "プロジェクトから退出する", leave_business_project_path(@project),
-            method: :delete, data: { confirm: "退出すると、スレッドを閲覧・投稿できなくなります。よろしいですか？" },
-            class: "project-leave__link"
-
-  - else
-
-    .project-section
-      .chat-locked
-        %p 🔒 スレッドとメンバーはプロジェクト参加者のみ閲覧できます
+- else
+  %section.ba-card.ba-locked
+    %h2.ba-section-title
+      %i.fa-solid.fa-lock{ "aria-hidden": "true" }
+      参加者限定
+    %p.ba-muted スレッドとメンバーはプロジェクト参加者のみ閲覧できます

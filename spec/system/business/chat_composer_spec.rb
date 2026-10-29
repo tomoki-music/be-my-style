@@ -90,7 +90,7 @@ RSpec.describe "Business チャット入力欄", type: :system, js: true do
       # ブラウザはフォーム送信時に改行を CRLF にする(表示時に LF へそろえる)。
       expect(chat.body.gsub("\r\n", "\n")).to eq body
       expect(chat.attachments.map { |a| a.filename.to_s }).to eq ["photo.png"]
-      within(".chat-body") do
+      within(".ba-post__body") do
         expect(page).to have_css(".business-chat-plain br", count: 2, visible: :all)
         expect(page).to have_text("**画像を共有します**")
         expect(page).to have_text("<b>太字ではない</b> <script>alert(1)</script>")
@@ -126,7 +126,7 @@ RSpec.describe "Business チャット入力欄", type: :system, js: true do
       expect(page).to have_text("投稿しました")
       post = CommunityPost.last
       expect(post).to be_content_format_plain
-      within(".timeline-body", match: :first) do
+      within(".ba-post__body", match: :first) do
         expect(page).to have_css(".business-chat-plain br", count: 1, visible: :all)
         expect(page).to have_link("https://example.com/agenda", href: "https://example.com/agenda")
       end

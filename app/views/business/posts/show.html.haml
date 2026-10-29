@@ -1,76 +1,54 @@
-= render 'layouts/header_menu_nakama'
+%nav.ba-breadcrumb{ "aria-label": "現在地" }
+  %ol
+    %li= link_to "投稿", business_posts_path
+    %li
+      %span{ "aria-current": "page" }= @post.title.presence || "投稿の詳細"
 
-.container.post-show-container
+%article.ba-card.ba-article
+  %header.ba-article__header
+    .ba-person
+      .ba-person__avatar
+        = customer_avatar_link(@post.customer, class_name: "ba-person__img", profile_path: business_customer_path(@post.customer))
+      .ba-person__text
+        = customer_profile_name_link(@post.customer, { class: "ba-person__name" }, profile_path: business_customer_path(@post.customer))
+        %span.ba-person__meta #{time_ago_in_words(@post.created_at)}前
+    - if @post.customer == current_customer
+      .ba-row__actions
+        = link_to edit_business_post_path(@post), class: "ba-btn ba-btn--secondary ba-btn--sm" do
+          %i.fa-solid.fa-pen{ "aria-hidden": "true" }
+          編集
+        = link_to business_post_path(@post), method: :delete, data: { confirm: "削除しますか？" }, class: "ba-btn ba-btn--danger ba-btn--sm" do
+          %i.fa-regular.fa-trash-can{ "aria-hidden": "true" }
+          削除
 
-  .post-card
+  - if @post.title.present?
+    %h1.ba-page-title.ba-article__title= @post.title
 
-    .post-header
+  - if @post.tags.any?
+    %ul.ba-chip-list
+      - @post.tags.each do |tag|
+        %li= link_to "##{tag.name}", business_posts_path(tag: tag.name), class: "ba-chip"
 
-      .post-user-info
+  .ba-section-body
+    .markdown-body= markdown(@post.body)
 
-        = customer_avatar_link(@post.customer, class_name: "user-icon", profile_path: business_customer_path(@post.customer))
+  - if @post.post_image.attached?
+    = image_tag @post.post_image, class: "ba-article__image", alt: ""
 
-        .user-meta
+  .ba-article__actions
+    = render "business/likes/like", post: @post
 
-          = customer_profile_name_link(@post.customer, { class: "user-name" }, profile_path: business_customer_path(@post.customer))
+%section.ba-card.ba-comments{ "aria-labelledby": "post-comments-title" }
+  %h2.ba-section-title#post-comments-title コメント
+  %div{ id: "comments_#{@post.id}", class: "comments-list ba-section-body" }
+    - @post.messages.each do |message|
+      = render "business/messages/message", message: message
 
-          .post-time
-            = time_ago_in_words(@post.created_at)
-            前
-
-    .post-actions
-
-      - if @post.customer == current_customer
-
-        = link_to "編集",
-          edit_business_post_path(@post),
-          class:"btn btn-primary"
-
-        = link_to "削除",
-          business_post_path(@post),
-          method: :delete,
-          data: { confirm: "削除しますか？" },
-          class:"btn btn-danger"
-
-    - if @post.tags.any?
-      .post-tags
-        - @post.tags.each do |tag|
-          = link_to "##{tag.name}",
-            business_posts_path(tag: tag.name),
-            class:"tag"
-
-    .post-body
-      .markdown-body= markdown(@post.body)
-
-    - if @post.post_image.attached?
-      .post-image-wrapper
-        = image_tag @post.post_image, class:"post-image"
-
-    .post-actions
-      = render "business/likes/like", post: @post
-
-
-  .comment-section
-
-    %h3 コメント
-
-    %div{id: "comments_#{@post.id}", class:"comments-list"}
-
-      - @post.messages.each do |message|
-        = render "business/messages/message", message: message
-
-    .comment-form
-
-      = form_with model: [:business, @post, Message.new], remote: true do |f|
-
-        = f.text_field :body,
-          placeholder:"コメントを書く...",
-          id:"comment_body",
-          class:"comment-input"
-
-        = f.submit "送信", class:"comment-submit"
-      .stamp-picker
-        - stamp_options.each do |stamp_type, label|
-          = form_with model: [:business, @post, Message.new], remote: true, html: { class: "stamp-picker-form" } do |f|
-            = f.hidden_field :stamp_type, value: stamp_type
-            = f.submit label, class: "stamp-button"
+  = form_with model: [:business, @post, Message.new], remote: true, class: "ba-comment-form" do |f|
+    = f.text_field :body, placeholder: "コメントを書く...", id: "comment_body", class: "form-control", "aria-label": "コメント"
+    = f.submit "送信", class: "ba-btn ba-btn--primary"
+  .ba-stamp-row
+    - stamp_options.each do |stamp_type, label|
+      = form_with model: [:business, @post, Message.new], remote: true, html: { class: "stamp-picker-form" } do |f|
+        = f.hidden_field :stamp_type, value: stamp_type
+        = f.submit label, class: "ba-btn ba-btn--secondary ba-btn--sm stamp-button"

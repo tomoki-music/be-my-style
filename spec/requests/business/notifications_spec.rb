@@ -37,16 +37,19 @@ RSpec.describe "Business::Notifications", type: :request do
     end
   end
 
-  describe "ヘッダーの通知ベル" do
+  describe "共通ナビの通知" do
     before { sign_in customer }
 
     it "Business の未読件数だけをバッジに出し、通知一覧へリンクする" do
       get business_root_path
 
-      bell = Nokogiri::HTML(response.body).at_css("a.business-header-bell")
-      expect(bell["href"]).to eq business_notifications_path
-      expect(bell.at_css(".business-header-bell__badge").text.strip).to eq "4"
-      expect(bell["aria-label"]).to eq "通知（未読4件）"
+      # PC の左ナビ・SP の下部ナビのどちらにも同じ件数を出す。
+      links = Nokogiri::HTML(response.body).css(%(.ba-sidenav a[href="#{business_notifications_path}"], .ba-bottomnav a[href="#{business_notifications_path}"]))
+      expect(links.size).to eq 2
+      links.each do |link|
+        expect(link.at_css(".ba-nav-badge").text.strip).to eq "4"
+        expect(link["aria-label"]).to eq "通知（未読4件）"
+      end
     end
 
     it "未読がなくてもベルは表示し、バッジは出さない" do
@@ -54,10 +57,10 @@ RSpec.describe "Business::Notifications", type: :request do
 
       get business_root_path
 
-      bell = Nokogiri::HTML(response.body).at_css("a.business-header-bell")
-      expect(bell).to be_present
-      expect(bell.at_css(".business-header-bell__badge")).to be_nil
-      expect(bell["aria-label"]).to eq "通知"
+      link = Nokogiri::HTML(response.body).at_css(%(.ba-sidenav a[href="#{business_notifications_path}"]))
+      expect(link).to be_present
+      expect(link.at_css(".ba-nav-badge")).to be_nil
+      expect(link["aria-label"]).to eq "通知"
     end
 
     it "未ログインでは表示しない" do
@@ -65,7 +68,9 @@ RSpec.describe "Business::Notifications", type: :request do
 
       get business_root_path
 
-      expect(Nokogiri::HTML(response.body).at_css(".business-header-bell")).to be_nil
+      html = Nokogiri::HTML(response.body)
+      expect(html.at_css(".business-header-bell")).to be_nil
+      expect(html.at_css(".ba-sidenav, .ba-bottomnav")).to be_nil
     end
   end
 
@@ -76,7 +81,8 @@ RSpec.describe "Business::Notifications", type: :request do
       get business_notifications_path
 
       html = Nokogiri::HTML(response.body)
-      expect(html.css(".notification-card").size).to eq 4
+      expect(html.css(".ba-notification").size).to eq 4
+      expect(html.css(".ba-notification.is-unread").size).to eq 4
       expect(business_notifications.map { |n| n.reload.checked }).to all(eq true)
       expect(music_notifications.map { |n| n.reload.checked }).to all(eq false)
       expect(others_notification.reload.checked).to eq false
@@ -86,7 +92,7 @@ RSpec.describe "Business::Notifications", type: :request do
       get business_notifications_path
       get business_root_path
 
-      expect(Nokogiri::HTML(response.body).at_css(".business-header-bell__badge")).to be_nil
+      expect(Nokogiri::HTML(response.body).at_css(".ba-nav-badge")).to be_nil
     end
   end
 end

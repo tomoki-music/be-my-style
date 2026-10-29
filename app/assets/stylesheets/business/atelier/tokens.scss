@@ -1,0 +1,268 @@
+// Social Atelier: Business(NAKAMA)ログイン後画面のデザイントークンと基本スタイル。
+// すべて body.ba-body(layouts/business)配下に限定し、音楽側・ログイン前の紹介ページには当てない。
+// 値の一覧と使い分けは docs/business_social_atelier/README.md に記録している。
+
+.ba-body {
+  // 色
+  --ba-accent: #7856b8;
+  --ba-accent-strong: #5f3f9c;
+  --ba-accent-soft: #f2edfa;
+  --ba-accent-line: #d9cdef;
+  --ba-lavender: #ebe4f7;
+  --ba-peach: #fde9dd;
+  --ba-peach-text: #8a4a2b;
+  --ba-text: #25252d;
+  --ba-text-muted: #5c5c6b;
+  --ba-text-subtle: #6b6b7b;
+  --ba-bg: #f8f8fb;
+  --ba-surface: #ffffff;
+  --ba-surface-muted: #f3f3f7;
+  --ba-border: #e6e6ee;
+  --ba-border-strong: #d2d2de;
+  --ba-success: #1d6f48;
+  --ba-success-soft: #e5f3ec;
+  --ba-warning: #855300;
+  --ba-warning-soft: #fff3d6;
+  --ba-danger: #b42335;
+  --ba-danger-soft: #fdecee;
+  --ba-focus: 0 0 0 3px rgba(120, 86, 184, 0.35);
+
+  // 余白(4 / 8 / 12 / 16 / 24 / 32)
+  --ba-space-1: 4px;
+  --ba-space-2: 8px;
+  --ba-space-3: 12px;
+  --ba-space-4: 16px;
+  --ba-space-5: 24px;
+  --ba-space-6: 32px;
+
+  // 角丸・線・影
+  --ba-radius-card: 16px;
+  --ba-radius-control: 12px;
+  --ba-radius-small: 8px;
+  --ba-radius-pill: 999px;
+  --ba-shadow-card: 0 1px 2px rgba(37, 37, 45, 0.05), 0 2px 10px rgba(37, 37, 45, 0.04);
+  --ba-shadow-raised: 0 4px 18px rgba(37, 37, 45, 0.1);
+
+  // 文字
+  --ba-font: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+  --ba-font-size: 16px;
+  --ba-line-height: 1.6;
+
+  // 寸法
+  --ba-tap: 44px;
+  --ba-topbar-height: 56px;
+  --ba-bottomnav-height: 64px;
+  --ba-sidenav-width: 240px;
+  --ba-rail-width: 96px;
+  --ba-content-width: 1040px;
+  --ba-reading-width: 720px;
+
+  margin: 0;
+  background: var(--ba-bg);
+  color: var(--ba-text);
+  font-family: var(--ba-font);
+  font-size: var(--ba-font-size);
+  line-height: var(--ba-line-height);
+  -webkit-text-size-adjust: 100%;
+
+  h1, h2, h3, h4 {
+    color: var(--ba-text);
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+
+  // 色は class の無い本文中のリンクだけに付け、部品(ボタン・添付のダウンロードなど)の配色を上書きしない。
+  // :where で詳細度を上げず、タブ・パンくずなど部品側の指定を優先させる。
+  :where(a:not([class])) {
+    color: var(--ba-accent);
+  }
+
+  :where(a:not([class])):hover {
+    color: var(--ba-accent-strong);
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  summary:focus-visible,
+  [tabindex]:focus-visible {
+    outline: none;
+    box-shadow: var(--ba-focus);
+  }
+
+  .ba-main:focus {
+    outline: none;
+  }
+
+  // フラッシュメッセージ(application レイアウトの .notifications)。
+  // 全体の既定は右上に固定して10秒で消える表示だが、狭い幅ではみ出し、動きを減らす設定では読めないため、
+  // Business では本文の上に通常のお知らせとして出す。
+  .notifications {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    opacity: 1;
+    animation: none;
+    pointer-events: auto;
+    color: var(--ba-text);
+    font-size: 15px;
+    text-align: left;
+
+    > div {
+      margin: var(--ba-space-3) var(--ba-space-4) 0;
+      padding: var(--ba-space-3) var(--ba-space-4);
+      border-radius: var(--ba-radius-control);
+      border: 1px solid var(--ba-accent-line);
+      background: var(--ba-accent-soft);
+      color: var(--ba-text);
+      font-size: 15px;
+    }
+
+    > .alert {
+      border-color: #f3c3c9;
+      background: var(--ba-danger-soft);
+      color: var(--ba-danger);
+    }
+  }
+
+  // ===== Bootstrap 部品の調整(共有パーシャル: feature_gate / subscription_manager / Danger Zone など) =====
+  .btn {
+    min-height: var(--ba-tap);
+    padding: 10px 18px;
+    border-radius: var(--ba-radius-control);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .btn-sm {
+    min-height: 36px;
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+
+  .btn-primary {
+    background: var(--ba-accent);
+    border-color: var(--ba-accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover,
+  .btn-primary:focus {
+    background: var(--ba-accent-strong);
+    border-color: var(--ba-accent-strong);
+    color: #fff;
+  }
+
+  .btn-outline-primary {
+    border-color: var(--ba-accent-line);
+    color: var(--ba-accent);
+    background: var(--ba-surface);
+  }
+
+  .btn-outline-primary:hover {
+    background: var(--ba-accent-soft);
+    color: var(--ba-accent-strong);
+    border-color: var(--ba-accent);
+  }
+
+  .btn-light {
+    background: var(--ba-surface);
+    border: 1px solid var(--ba-border-strong);
+    color: var(--ba-text);
+  }
+
+  .btn-danger {
+    background: var(--ba-danger);
+    border-color: var(--ba-danger);
+    color: #fff;
+    box-shadow: none;
+    transform: none;
+  }
+
+  // 既存の Business 用 SCSS に入力欄の幅を狭める指定があるため、幅はここで揃える。
+  .form-control {
+    width: 100%;
+    max-width: 100%;
+    min-height: var(--ba-tap);
+    border: 1px solid var(--ba-border-strong);
+    border-radius: var(--ba-radius-control);
+    background: var(--ba-surface);
+    color: var(--ba-text);
+    font-size: 16px;
+    padding: 10px 14px;
+  }
+
+  textarea.form-control {
+    line-height: var(--ba-line-height);
+  }
+
+  .form-control:focus {
+    border-color: var(--ba-accent);
+    box-shadow: var(--ba-focus);
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: var(--ba-space-1);
+    justify-content: center;
+    margin: var(--ba-space-5) 0 0;
+
+    .page-link {
+      min-width: var(--ba-tap);
+      min-height: var(--ba-tap);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--ba-radius-small);
+      border: 1px solid var(--ba-border);
+      color: var(--ba-text);
+      margin: 0;
+    }
+
+    .page-item.active .page-link {
+      background: var(--ba-accent);
+      border-color: var(--ba-accent);
+      color: #fff;
+    }
+
+    .page-item.disabled .page-link {
+      color: var(--ba-text-subtle);
+    }
+  }
+
+  .markdown-body {
+    color: var(--ba-text);
+    font-size: 16px;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+
+    p {
+      margin: 0 0 0.75em;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ba-body *,
+  .ba-body *::before,
+  .ba-body *::after {
+    transition-duration: 0.01ms;
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    scroll-behavior: auto;
+  }
+}

@@ -162,7 +162,7 @@ RSpec.describe "Business プロジェクトスレッドの移行・退会・停�
 
       sign_in member
       get business_project_path(creator_project)
-      expect(response.body).to include("👤 退会済みユーザー")
+      expect(response.body).to include("作成：退会済みユーザー")
       get business_project_thread_path(creator_project, topic)
       expect(response.body).to include("参加者の会話")
 

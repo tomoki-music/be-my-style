@@ -1,0 +1,7 @@
+-# Business(NAKAMA)のログイン後画面。application レイアウトの中に、左ナビ(PC)・下部ナビ(SP)付きの枠を入れる。
+-# スタイルは body.ba-body 配下に限定し、音楽側の画面には影響させない(docs/business_social_atelier/README.md)。
+- content_for :body_class, "ba-body"
+- content_for :viewport, "width=device-width,initial-scale=1,viewport-fit=cover"
+- content_for :layout_content do
+  = render "layouts/business_shell"
+= render template: "layouts/application"

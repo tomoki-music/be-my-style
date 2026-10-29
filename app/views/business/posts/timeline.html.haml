@@ -1,121 +1,42 @@
-= render 'layouts/header_menu_nakama'
+- current_tab = params[:tab].presence || "recommended"
 
-.container.timeline-container
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title タイムライン
+    %p.ba-page-lead フォローしている人の「いま起きていること」をチェックしよう
+  .ba-page-actions
+    - if feature_available?(:business_post_create)
+      = link_to new_business_post_path, class: "ba-btn ba-btn--primary" do
+        %i.fa-solid.fa-plus{ "aria-hidden": "true" }
+        投稿する
+    - else
+      = link_to feature_upgrade_cta(:business_post_create), feature_upgrade_path(:business_post_create), class: "ba-btn ba-btn--soft"
 
-  / =========================
-  / ヘッダー
-  / =========================
-  .timeline-header
+= form_with url: business_timeline_path, method: :get, local: true, class: "ba-search", role: "search" do |f|
+  = hidden_field_tag :tab, params[:tab]
+  .ba-search__field
+    %i.fa-solid.fa-magnifying-glass.ba-search__icon{ "aria-hidden": "true" }
+    = f.text_field :keyword, value: params[:keyword], placeholder: "投稿を検索", class: "form-control", "aria-label": "投稿を検索"
+  = f.submit "検索", class: "ba-btn ba-btn--primary"
+  = link_to "クリア", business_timeline_path(tab: params[:tab]), class: "ba-btn ba-btn--secondary"
 
-    .header-left
-      %h2 タイムライン
-      %p.sub フォローしている人の「いま起きていること」をチェックしよう
+%nav.ba-tabs{ "aria-label": "表示する投稿" }
+  - { "recommended" => "おすすめ", "following" => "フォロー", "community" => "コミュニティ" }.each do |tab, label|
+    = link_to label, business_timeline_path(tab: tab), "aria-current": (current_tab == tab ? "page" : nil)
 
-    .header-actions
-      - if feature_available?(:business_post_create)
-        = link_to "＋ 投稿",
-          new_business_post_path,
-          class:"btn btn-primary new-post-btn"
-      - else
-        = link_to feature_upgrade_cta(:business_post_create),
-          feature_upgrade_path(:business_post_create),
-          class:"btn btn-primary new-post-btn menu-btn-locked"
-
-  .search-box
-
-    = form_with url: business_timeline_path, method: :get, local: true, class:"search-form" do |f|
-
-      = hidden_field_tag :tab, params[:tab]
-
-      .search-input-wrapper
-        %i.fa.fa-search.search-icon
-
-        = f.text_field :keyword,
-          value: params[:keyword],
-          placeholder:"投稿を検索",
-          class:"search-input"
-
-      = f.submit "検索", class:"btn btn-primary"
-
-      = link_to "クリア",
-        business_timeline_path(tab: params[:tab]),
-        class:"btn btn-light clear-btn"
-
-  / タブ
-  .timeline-tabs
-
-    = link_to "おすすめ",
-      business_timeline_path(tab: "recommended"),
-      class: "tab #{params[:tab] == "recommended" || params[:tab].blank? ? 'active' : ''}"
-
-    = link_to "フォロー",
-      business_timeline_path(tab: "following"),
-      class: "tab #{params[:tab] == "following" ? 'active' : ''}"
-
-    = link_to "コミュニティ",
-      business_timeline_path(tab: "community"),
-      class: "tab #{params[:tab] == "community" ? 'active' : ''}"
-
-  / ページネーション
+- if @posts.present?
+  %ul.ba-project-grid
+    - @posts.each do |post|
+      %li= render "business/posts/card", post: post
   = paginate @posts
-
-  / =========================
-  / 投稿
-  / =========================
-  - if @posts.present?
-
-    .timeline-grid
-
-      - @posts.each do |post|
-
-        = link_to business_post_path(post), class:"timeline-link" do
-
-          .timeline-card
-
-            / ===== 画像 =====
-            .timeline-image
-              - if post.post_image.attached?
-                = image_tag post.post_image, class:"post-img"
-              - else
-                .no-image
-                  %span No Image
-
-            / ===== 本文 =====
-            .timeline-body
-
-              .timeline-top
-
-                .avatar
-                  = customer_avatar_tag(post.customer, class_name: "avatar-img")
-
-                .meta
-                  %span.name= customer_display_name(post.customer)
-                  %span.time= time_ago_in_words(post.created_at) + "前"
-
-              %p.post-text
-                = truncate(post.body, length: 90)
-
-            / ===== アクション =====
-            .timeline-actions
-
-              .action
-                %i.fa-regular.fa-heart
-                %span いいね
-
-              .action
-                %i.fa-regular.fa-comment
-                %span コメント
-
-    = paginate @posts
-  - else
-
-    .empty-state
-      %h3 投稿がまだありません
-      %p 最初の投稿でコミュニティを盛り上げよう🔥
-      - if feature_available?(:business_post_create)
-        = link_to "投稿する", new_business_post_path, class:"btn btn-primary"
-      - else
-        = render "shared/feature_gate",
-          feature_key: :business_post_create,
-          title: "投稿を始める",
-          class_name: "feature-gate--inline"
+- else
+  .ba-empty
+    %p.ba-empty__title 投稿がまだありません
+    - if feature_available?(:business_post_create)
+      %p 最初の投稿でコミュニティを盛り上げよう
+      = link_to "投稿する", new_business_post_path, class: "ba-btn ba-btn--primary"
+    - else
+      = render "shared/feature_gate",
+        feature_key: :business_post_create,
+        title: "投稿を始める",
+        class_name: "feature-gate--inline"

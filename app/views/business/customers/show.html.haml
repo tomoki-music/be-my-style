@@ -1,101 +1,85 @@
-= render 'layouts/header_menu_nakama'
+%article.ba-card.ba-user
+  .ba-user__avatar
+    = customer_profile_image_tag(@customer)
+  .ba-user__text
+    %h1.ba-page-title= @customer.name
+    - if @customer.job.present?
+      %p.ba-user__job= @customer.job
+    %ul.ba-user__stats
+      %li
+        %strong= @customer.followings.active.count
+        フォロー
+      %li
+        %strong= @customer.followers.active.count
+        フォロワー
+  .ba-user__action
+    - if current_customer == @customer
+      = link_to edit_business_customer_path(@customer), class: "ba-btn ba-btn--secondary" do
+        %i.fa-solid.fa-gear{ "aria-hidden": "true" }
+        プロフィール設定
+    - else
+      %div{ id: "follow_button_#{@customer.id}" }
+        = render "business/relationships/follow_button", customer: @customer
 
-.container.profile-container
-
-  .profile-wrapper
-
-    / =========================
-    / ヘッダー（強化）
-    / =========================
-    .profile-hero
-
-      .profile-avatar
-        = customer_profile_image_tag(@customer, frame_class: "profile-icon")
-
-      .profile-main
-
-        %h2.profile-name= @customer.name
-
-        - if @customer.job.present?
-          %p.profile-job= @customer.job
-
-        .profile-stats
-          .stat
-            %span.number= @customer.followings.active.count
-            %span.label フォロー
-          .stat
-            %span.number= @customer.followers.active.count
-            %span.label フォロワー
-
-      .profile-action
-        - if current_customer == @customer
-          = link_to "編集", edit_business_customer_path(@customer), class:"btn btn-primary"
+.ba-columns
+  .ba-columns__main
+    %section.ba-card{ "aria-labelledby": "profile-intro-title" }
+      %h2.ba-section-title#profile-intro-title 自己紹介
+      .ba-section-body
+        - if @customer.introduction.present?
+          .markdown-body= markdown(@customer.introduction)
         - else
-          %div{id: "follow_button_#{@customer.id}"}
-            = render "business/relationships/follow_button", customer: @customer
+          %p.ba-muted 未設定
 
-    / =========================
-    / メインコンテンツ（2カラム）
-    / =========================
-    .profile-body
-
-      .profile-left
-
-        .card
-          %h3 自己紹介
-          - if @customer.introduction.present?
-            .markdown-body= markdown(@customer.introduction)
+    - if @customer.business_user?
+      %section.ba-card{ "aria-labelledby": "profile-skills-title" }
+        %h2.ba-section-title#profile-skills-title スキル
+        .ba-section-body
+          - if @customer.skills.present?
+            .markdown-body= markdown(@customer.skills)
           - else
-            %p 未設定
+            %p.ba-muted 未設定
 
-        - if @customer.business_user?
+      %section.ba-card{ "aria-labelledby": "profile-achievements-title" }
+        %h2.ba-section-title#profile-achievements-title 実績
+        .ba-section-body
+          - if @customer.achievements.present?
+            .markdown-body= markdown(@customer.achievements)
+          - else
+            %p.ba-muted 未設定
 
-          .card
-            %h3 スキル
-            - if @customer.skills.present?
-              .markdown-body= markdown(@customer.skills)
-            - else
-              %p 未設定
+      %section.ba-card{ "aria-labelledby": "profile-link-title" }
+        %h2.ba-section-title#profile-link-title リンク
+        .ba-section-body
+          - if @customer.url.present?
+            = link_to @customer.url, @customer.url, target: "_blank", rel: "noopener", class: "ba-break"
+          - else
+            %p.ba-muted 未設定
 
-          .card
-            %h3 実績
-            - if @customer.achievements.present?
-              .markdown-body= markdown(@customer.achievements)
-            - else
-              %p 未設定
+  %aside.ba-columns__side
+    %section.ba-card{ "aria-labelledby": "profile-plan-title" }
+      %h2.ba-section-title#profile-plan-title 契約プラン
+      %p.ba-section-body
+        %span{ class: customer_plan_badge_class(@customer) }= customer_plan_label(@customer)
+        %span.ml-2= @customer.subscribed? ? "有効" : "無料プラン"
+      - if current_customer == @customer
+        = render "shared/subscription_manager", customer: @customer, offer_light: false
 
-          .card
-            %h3 リンク
-            - if @customer.url.present?
-              = link_to @customer.url, @customer.url, target:"_blank"
-            - else
-              %p 未設定
-
-      .profile-right
-
-        .card
-          %h3 契約プラン
-          %p
-            %span{ class: customer_plan_badge_class(@customer) }= customer_plan_label(@customer)
-            %span.ml-2
-              = @customer.subscribed? ? "有効" : "無料プラン"
-          - if current_customer == @customer
-            = render "shared/subscription_manager", customer: @customer, offer_light: false
-
-        .card
-          %h3 投稿
-
-          - @customer.posts.order(created_at: :desc).limit(5).each do |post|
-            .post-item
+    %section.ba-card{ "aria-labelledby": "profile-posts-title" }
+      %h2.ba-section-title#profile-posts-title 投稿
+      - posts = @customer.posts.order(created_at: :desc).limit(5)
+      - if posts.empty?
+        %p.ba-muted.ba-section-body まだ投稿はありません。
+      - else
+        %ul.ba-simple-list
+          - posts.each do |post|
+            %li
               %p= truncate(post.body, length: 80)
               %small= l(post.created_at, format: :short)
+      = link_to "もっと見る", business_posts_path(user_id: @customer.id), class: "ba-text-link"
 
-          = link_to "もっと見る", business_posts_path(user_id: @customer.id), class:"link-more"
-
-        .card
-          %h3 参加コミュニティ
-
-          .community-list
-            - @customer.communities.each do |community|
-              = link_to business_community_path(community) do
-                .community-chip= community.name
+    %section.ba-card{ "aria-labelledby": "profile-communities-title" }
+      %h2.ba-section-title#profile-communities-title 参加コミュニティ
+      %ul.ba-chip-list
+        - @customer.communities.each do |community|
+          %li= link_to community.name, business_community_path(community), class: "ba-chip"

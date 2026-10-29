@@ -1,83 +1,50 @@
-.post-create-card
+-# 投稿の作成・編集フォーム。タグ入力(#tag-input / #tag-container / #tag-hidden)と画像の確認表示は business/posts/_form.js が担当する。
+= form_with model: [:business, @post], local: true, html: { class: "post-form ba-form" } do |f|
+  - if @post.errors.any?
+    .ba-errors{ role: "alert" }
+      %ul
+        - @post.errors.full_messages.each do |message|
+          %li= message
 
-  .post-header
-    %h2= @post.persisted? ? "投稿編集" : "投稿作成"
-    %p.sub あなたの活動をシェアしよう
+  %fieldset.ba-fieldset
+    %legend.ba-fieldset__legend 内容
+    .ba-field
+      = f.label :title, "タイトル", class: "ba-label"
+      = f.text_field :title, class: "form-control", placeholder: "例：新しいプロジェクト始めました！"
+    .ba-field
+      = f.label :body, "本文", class: "ba-label"
+      = f.text_area :body, class: "form-control", rows: 8,
+        placeholder: "# 今日の共有\n\n## 学び\n- 商談で刺さったポイント\n\n## 次に試すこと\n- 提案資料を改善する"
+    .ba-field
+      = f.label :post_image, "画像", class: "ba-label", for: "image-input"
+      .ba-image-field
+        - if @post.post_image.attached?
+          = image_tag @post.post_image, id: "preview-image", class: "ba-image-field__preview", alt: "現在の画像"
+        - else
+          = image_tag "no_image", id: "preview-image", class: "ba-image-field__preview", alt: "画像は未設定です"
+        = f.file_field :post_image, id: "image-input", class: "form-control"
 
-  = form_with model: [:business, @post], local: true, html: { class: "post-form" } do |f|
-
-    .form-group
-      %label タイトル
-      = f.text_field :title,
-        class:"form-control",
-        placeholder:"例：新しいプロジェクト始めました！"
-
-    .form-group
-      %label プロジェクト（任意）
+  %fieldset.ba-fieldset
+    %legend.ba-fieldset__legend 分類
+    .ba-field
+      = f.label :project_id, class: "ba-label" do
+        プロジェクト
+        %span.ba-optional 任意
       = f.collection_select :project_id,
         (current_customer.projects + current_customer.joined_projects).uniq,
-        :id,
-        :title,
-        { include_blank: "選択なし" },
-        class:"form-control"
-
-    .form-group
-      %label カテゴリ
-      = f.select :category,
-        Post.categories.keys.map { |k| [k.humanize, k] },
-        {},
-        class:"form-control"
-
-    / =========================
-    / タグ入力（チップ型）
-    / =========================
-    .form-group
-      %label タグ（Enterで追加）
-
-      .tag-input-wrapper
+        :id, :title, { include_blank: "選択なし" }, class: "form-control"
+    .ba-field
+      = f.label :category, "カテゴリ", class: "ba-label"
+      = f.select :category, Post.categories.keys.map { |k| [k.humanize, k] }, {}, class: "form-control"
+    .ba-field
+      %label.ba-label{ for: "tag-input" } タグ
+      .tag-input-wrapper.ba-tag-input
         #tag-container
-
-        %input{
-          type: "text",
-          id: "tag-input",
-          placeholder: "例：エンジニア",
-          class: "tag-input"
-        }
-
+        %input#tag-input.tag-input{ type: "text", placeholder: "例：エンジニア" }
       - safe_tags = @post.tags.pluck(:name)
+      = hidden_field_tag "post[tag_list]", safe_tags.join(" "), id: "tag-hidden", data: { tags: safe_tags.join(" ") }
+      %small.ba-help Enterでタグを追加できます
 
-      = hidden_field_tag "post[tag_list]",
-        safe_tags.join(" "),
-        id: "tag-hidden",
-        data: { tags: safe_tags.join(" ") }
-
-      %small.tag-hint
-        Enterでタグを追加できます
-
-    .form-group
-      %label 本文
-      = f.text_area :body,
-        class:"form-control",
-        rows:8,
-        placeholder:"# 今日の共有\n\n## 学び\n- 商談で刺さったポイント\n\n## 次に試すこと\n- 提案資料を改善する"
-
-    .form-group
-      %label 画像
-
-      .image-upload
-        - if @post.post_image.attached?
-          = image_tag @post.post_image, id:"preview-image", class:"preview-img"
-        - else
-          = image_tag "no_image", id:"preview-image", class:"preview-img"
-
-        = f.file_field :post_image,
-          id:"image-input",
-          class:"file-input"
-
-    .form-actions
-      = link_to "キャンセル",
-        business_timeline_path,
-        class:"btn btn-secondary"
-
-      = f.submit @post.persisted? ? "更新する" : "投稿する",
-        class:"btn btn-primary submit-btn"
+  .ba-form-actions
+    = f.submit @post.persisted? ? "更新する" : "投稿する", class: "ba-btn ba-btn--primary"
+    = link_to "キャンセル", (@post.persisted? ? business_post_path(@post) : business_timeline_path), class: "ba-btn ba-btn--secondary"

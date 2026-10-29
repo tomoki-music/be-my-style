@@ -3,21 +3,26 @@
 - threads = local_assigns.fetch(:threads)
 - post_counts = local_assigns.fetch(:post_counts)
 - if threads.empty?
-  .empty-state
-    %p まだスレッドはありません
-    %span 話題ごとにスレッドを作って会話を整理しましょう
+  .ba-empty
+    %p.ba-empty__title まだスレッドはありません
+    %p 話題ごとにスレッドを作って会話を整理しましょう
 - else
-  %ul.project-thread-list
+  %ul.ba-thread-list
     - threads.each do |thread|
-      %li.project-thread-list__item
-        = link_to business_project_thread_path(project, thread), class: "project-thread-list__link" do
-          .project-thread-list__main
-            %span.project-thread-list__title= thread.title
+      %li.ba-thread-list__item
+        = link_to business_project_thread_path(project, thread), class: "ba-thread-list__link" do
+          %span.ba-thread-list__icon{ "aria-hidden": "true" }
+            %i.fa-regular.fa-comments
+          %span.ba-thread-list__main
+            %span.ba-thread-list__title= thread.title
             - if thread.description.present?
-              %span.project-thread-list__description= truncate(thread.description, length: 80)
-          .project-thread-list__meta
-            %span.project-thread-list__count 💬 #{post_counts.fetch(thread.id, 0)}件
-            %span.project-thread-list__updated
-              最終更新：
-              %time{ datetime: thread.last_posted_at.iso8601 }= l(thread.last_posted_at, format: :short)
-            %span.project-thread-list__author 作成：#{customer_display_name(thread.customer) || ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL}
+              %span.ba-thread-list__description= truncate(thread.description, length: 80)
+            %span.ba-thread-list__meta
+              %span.ba-thread-list__count
+                %i.fa-regular.fa-comment{ "aria-hidden": "true" }
+                投稿#{post_counts.fetch(thread.id, 0)}件
+              %span
+                最終更新：
+                %time{ datetime: thread.last_posted_at.iso8601 }= l(thread.last_posted_at, format: :short)
+              %span 作成：#{customer_display_name(thread.customer) || ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL}
+          %i.fa-solid.fa-chevron-right.ba-thread-list__chevron{ "aria-hidden": "true" }

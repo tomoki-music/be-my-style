@@ -1,9 +1,9 @@
-= render 'layouts/header_menu_nakama'
-
--# ログイン後は紹介(ヒーロー・スライダー・お知らせ)を出さず、/ と同じホーム本文にする。
+-# ログイン後は紹介(ヒーロー・スライダー・お知らせ)を出さず、/ と同じ対象・ページ分割のホーム本文を Business の枠(layouts/business)で出す。
+-# ログイン前の紹介ページは従来のヘッダー・構成のまま。
 - if customer_signed_in?
-  = render "shared/member_home"
+  = render "business/homes/member_home"
 - else
+  = render 'layouts/header_menu_nakama'
   .top-container
     .hero-section
       .hero-content

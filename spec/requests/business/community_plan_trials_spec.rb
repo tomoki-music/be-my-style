@@ -50,7 +50,7 @@ RSpec.describe "Business::CommunityPlanTrials", type: :request do
 
       html = Nokogiri::HTML(response.body)
       card = html.at_css("#plan-trial")
-      expect(card.at_css("h3").text).to eq "有料機能を無料でお試し"
+      expect(card.at_css("h2").text).to eq "有料機能を無料でお試し"
       expect(card.text).to include("ONにすると、このBusinessコミュニティ内で有料プランの対象機能を無料で利用できます。")
       expect(card.at_css(".plan-trial-card__status").text.strip).to eq "現在：OFF"
       expect(card.css(".plan-trial-card__features li").map(&:text)).to eq ["プロジェクト作成（通常はCoreプラン以上）"]
@@ -145,7 +145,7 @@ RSpec.describe "Business::CommunityPlanTrials", type: :request do
 
       html = Nokogiri::HTML(response.body)
       expect(html.at_css("#plan-trial")).to be_nil
-      expect(html.at_css(".plan-trial-badge")).to be_present
+      expect(html.at_css(".ba-trial-badge")).to be_present
     end
   end
 

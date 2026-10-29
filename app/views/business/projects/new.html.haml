@@ -1,25 +1,20 @@
-= render "layouts/header_menu_nakama"
+%nav.ba-breadcrumb{ "aria-label": "現在地" }
+  %ol
+    %li= link_to @community.name, business_community_path(@community)
+    %li= link_to "プロジェクト管理", business_community_project_management_path(@community)
+    %li
+      %span{ "aria-current": "page" } 新しいプロジェクト
 
-.container.project-edit-container
-  .edit-card
-    %nav.manage-page__breadcrumb{ "aria-label": "現在地" }
-      = link_to @community.name, business_community_path(@community)
-      %span{ "aria-hidden": "true" } ›
-      = link_to "プロジェクト管理", business_community_project_management_path(@community)
-      %span{ "aria-hidden": "true" } ›
-      %span 新しいプロジェクト
-
-    .edit-header
-      %h2 プロジェクト作成
-      %p 新しい仲間を募集しよう
-
-    %p.project-new-community
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title プロジェクト作成
+    %p.ba-page-lead.ba-project-community
       所属コミュニティ：
       %strong= @community.name
       %span （作成後は、このコミュニティの参加者が閲覧・参加申請できます）
 
-    = render "form",
-      project: @project,
-      submit_label: "作成する",
-      cancel_label: "キャンセル（プロジェクト管理へ戻る）",
-      cancel_path: business_community_project_management_path(@community)
+= render "form",
+  project: @project,
+  submit_label: "作成する",
+  cancel_label: "キャンセル（プロジェクト管理へ戻る）",
+  cancel_path: business_community_project_management_path(@community)

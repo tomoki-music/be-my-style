@@ -1,4 +1,6 @@
 class Business::CustomersController < ApplicationController
+  layout "business"
+
   before_action :set_customer
   before_action :ensure_correct_customer, only: [:edit, :update]
   before_action :reject_deleted_customer, only: [:show]

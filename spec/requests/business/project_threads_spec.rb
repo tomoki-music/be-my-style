@@ -58,7 +58,7 @@ RSpec.describe "Business::ProjectThreads", type: :request do
       ProjectChat.create!(project: project, project_thread: recent, customer: member, body: "b")
 
       get business_project_path(project)
-      titles = Nokogiri::HTML(response.body).css(".project-thread-list__title").map(&:text)
+      titles = Nokogiri::HTML(response.body).css(".ba-thread-list__title").map(&:text)
       expect(titles.first).to eq "不具合報告"
       expect(titles).to include("要件確認", "全体トーク")
       expect(response.body).to include("最初の要件")
@@ -66,8 +66,9 @@ RSpec.describe "Business::ProjectThreads", type: :request do
       expect(response.body).to include(%(href="#{business_project_thread_path(project, recent)}"))
 
       get business_project_threads_path(project)
-      expect(Nokogiri::HTML(response.body).css(".project-thread-list__item").size).to eq 3
-      expect(response.body).to include("💬 1件")
+      list = Nokogiri::HTML(response.body)
+      expect(list.css(".ba-thread-list__item").size).to eq 3
+      expect(list.css(".ba-thread-list__count").map { |el| el.text.strip }).to include("投稿1件")
     end
 
     it "最新の投稿でスレッドの最終更新日時が更新される" do

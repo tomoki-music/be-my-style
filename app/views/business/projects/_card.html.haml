@@ -1,0 +1,31 @@
+-# 画像付きのプロジェクトカード(ホーム・プロジェクト一覧・コミュニティの通常画面で共通)。カード全体が詳細へのリンク。
+-# 画像が無ければ頭文字で代替する。状態(status_key / status_label)・説明(description)・補足(note)は呼び出し側が渡したときだけ出す。
+- project = local_assigns.fetch(:project)
+- status_key = local_assigns[:status_key]
+- show_community = local_assigns.fetch(:show_community, true)
+= link_to business_project_path(project), class: "ba-project-card" do
+  %span.ba-project-card__media
+    - if project.project_image.attached?
+      = image_tag project.project_image, class: "ba-project-card__image", alt: "", loading: "lazy"
+    - else
+      = business_monogram(project.title, id: project.id, shape: :rect)
+  %span.ba-project-card__body
+    - if status_key
+      %span.ba-status{ class: "ba-status--#{status_key}" }
+        - if status_key == :pending
+          %i.fa-regular.fa-clock{ "aria-hidden": "true" }
+        - elsif %i[manager owner].include?(status_key)
+          %i.fa-solid.fa-star{ "aria-hidden": "true" }
+        - else
+          %i.fa-solid.fa-check{ "aria-hidden": "true" }
+        = local_assigns.fetch(:status_label)
+    %span.ba-project-card__title= project.title
+    - if show_community
+      %span.ba-project-card__community
+        %i.fa-solid.fa-users{ "aria-hidden": "true" }
+        %span.sr-only 所属コミュニティ：
+        = project.community.name
+    - if local_assigns[:description].present?
+      %span.ba-project-card__text= truncate(local_assigns[:description].to_s, length: 70)
+    - if local_assigns[:note].present?
+      %span.ba-project-card__note= local_assigns[:note]

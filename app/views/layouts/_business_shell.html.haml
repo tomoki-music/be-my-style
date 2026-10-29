@@ -1,0 +1,112 @@
+-# Business ログイン後画面の枠。PC(992px 以上)は左ナビ、それより狭い幅は上部バー + 下部ナビ + メニュー。
+-# 未読件数は1回だけ数え、左ナビ・下部ナビの両方で使う。
+- unread_count = business_unread_notification_count
+- items = business_nav_items(unread_count)
+- profile_current = business_nav_section == :account && controller.action_name == "show" && @customer == current_customer
+- settings_current = business_nav_section == :account && controller.action_name == "edit"
+
+%a.ba-skip-link{ href: "#ba-main" } 本文へスキップ
+
+%header.ba-topbar
+  = link_to business_root_path, class: "ba-brand", "aria-label": "NAKAMA ホーム" do
+    -# 画像にロゴ文字(NAKAMA)まで含まれているため、文字は重ねず余白だけ切り抜いて表示する。
+    = image_tag "nakama_logo.jpg", class: "ba-brand__logo", alt: ""
+
+%nav.ba-sidenav{ "aria-label": "メインメニュー" }
+  = link_to business_root_path, class: "ba-brand ba-sidenav__brand", "aria-label": "NAKAMA ホーム" do
+    = image_tag "nakama_logo.jpg", class: "ba-brand__logo", alt: ""
+  %ul.ba-sidenav__list
+    - items.each do |item|
+      - current = business_nav_current?(item[:key])
+      %li
+        = link_to item[:path], class: ["ba-sidenav__link", ("is-current" if current)], data: item[:data],
+          "aria-current": (current ? "page" : nil),
+          "aria-label": "#{item[:label]}#{business_nav_badge_label(item[:badge])}" do
+          %span.ba-sidenav__icon{ "aria-hidden": "true" }
+            %i.fa-solid{ class: item[:icon] }
+            - if item[:badge].to_i.positive?
+              %span.ba-nav-badge= business_unread_badge_label(item[:badge])
+          %span.ba-sidenav__label= item[:label]
+          - if item[:locked]
+            %span.ba-sidenav__lock
+              %i.fa-solid.fa-lock{ "aria-hidden": "true" }
+              %span.sr-only （プラン制限あり）
+
+  .ba-sidenav__account
+    = link_to business_customer_path(current_customer), class: ["ba-sidenav__link", "ba-sidenav__profile", ("is-current" if profile_current)],
+      "aria-current": (profile_current ? "page" : nil), "aria-label": "プロフィール（#{current_customer.name}）" do
+      %span.ba-sidenav__icon{ "aria-hidden": "true" }= business_account_icon(current_customer)
+      %span.ba-sidenav__label
+        %span.ba-sidenav__name= current_customer.name
+        %span.ba-sidenav__sub プロフィール
+    = link_to edit_business_customer_path(current_customer), class: ["ba-sidenav__link", ("is-current" if settings_current)],
+      "aria-current": (settings_current ? "page" : nil), "aria-label": "プロフィール設定" do
+      %span.ba-sidenav__icon{ "aria-hidden": "true" }
+        %i.fa-solid.fa-gear
+      -# 縮約した左ナビ(992〜1199px)では短い表示にする。読み上げ名は aria-label の「プロフィール設定」。
+      %span.ba-sidenav__label.ba-sidenav__label--full プロフィール設定
+      %span.ba-sidenav__label.ba-sidenav__label--short 設定
+    = button_to destroy_customer_session_path, method: :delete, form_class: "ba-sidenav__logout-form",
+      class: "ba-sidenav__link ba-sidenav__logout", "aria-label": "ログアウト" do
+      %span.ba-sidenav__icon{ "aria-hidden": "true" }
+        %i.fa-solid.fa-arrow-right-from-bracket
+      %span.ba-sidenav__label ログアウト
+
+%main#ba-main.ba-main{ tabindex: "-1" }
+  = content_for(:layout)
+
+-# SP の下部ナビ。メニューはタイムライン・投稿・アカウント項目をまとめたシート(business/atelier_nav.js が開閉)。
+- menu_items = business_menu_nav_items(items)
+- menu_current = menu_items.any? { |item| business_nav_current?(item[:key]) } || business_nav_section == :account
+%nav.ba-bottomnav{ "aria-label": "メインメニュー（スマートフォン）" }
+  %ul.ba-bottomnav__list
+    - business_bottom_nav_items(items).each do |item|
+      - current = business_nav_current?(item[:key])
+      %li
+        = link_to item[:path], class: ["ba-bottomnav__link", ("is-current" if current)], data: item[:data],
+          "aria-current": (current ? "page" : nil),
+          "aria-label": "#{item[:label]}#{business_nav_badge_label(item[:badge])}" do
+          %span.ba-bottomnav__icon{ "aria-hidden": "true" }
+            %i.fa-solid{ class: item[:icon] }
+            - if item[:badge].to_i.positive?
+              %span.ba-nav-badge= business_unread_badge_label(item[:badge])
+          %span.ba-bottomnav__label{ "aria-hidden": "true" }= item[:label]
+    %li
+      %button.ba-bottomnav__link#baMenuToggle{ type: "button", class: ("is-current" if menu_current),
+        "aria-expanded": "false", "aria-controls": "baMenuSheet", "aria-haspopup": "dialog" }
+        %span.ba-bottomnav__icon{ "aria-hidden": "true" }
+          %i.fa-solid.fa-bars
+        %span.ba-bottomnav__label メニュー
+
+.ba-sheet#baMenuSheet{ hidden: true, role: "dialog", "aria-modal": "true", "aria-labelledby": "baMenuSheetTitle", data: { "ba-sheet" => "true" } }
+  .ba-sheet__backdrop{ data: { "ba-sheet-close" => "true" } }
+  .ba-sheet__panel
+    .ba-sheet__header
+      %h2.ba-sheet__title#baMenuSheetTitle メニュー
+      %button.ba-sheet__close{ type: "button", data: { "ba-sheet-close" => "true" } }
+        %i.fa-solid.fa-xmark{ "aria-hidden": "true" }
+        閉じる
+    = link_to business_customer_path(current_customer), class: "ba-sheet__profile", "aria-current": (profile_current ? "page" : nil) do
+      %span.ba-sheet__avatar{ "aria-hidden": "true" }= business_account_icon(current_customer)
+      %span.ba-sheet__profile-text
+        %span.ba-sheet__name= current_customer.name
+        %span.ba-sheet__sub プロフィールを見る
+    %ul.ba-sheet__list
+      - menu_items.each do |item|
+        - current = business_nav_current?(item[:key])
+        %li
+          = link_to item[:path], class: ["ba-sheet__link", ("is-current" if current)], data: item[:data], "aria-current": (current ? "page" : nil) do
+            %i.fa-solid{ class: item[:icon], "aria-hidden": "true" }
+            %span= item[:label]
+            - if item[:locked]
+              %span.ba-sheet__note
+                %i.fa-solid.fa-lock{ "aria-hidden": "true" }
+                プラン制限あり
+      %li
+        = link_to edit_business_customer_path(current_customer), class: ["ba-sheet__link", ("is-current" if settings_current)], "aria-current": (settings_current ? "page" : nil) do
+          %i.fa-solid.fa-gear{ "aria-hidden": "true" }
+          %span プロフィール設定
+      %li
+        = button_to destroy_customer_session_path, method: :delete, form_class: "ba-sheet__logout-form", class: "ba-sheet__link ba-sheet__logout" do
+          %i.fa-solid.fa-arrow-right-from-bracket{ "aria-hidden": "true" }
+          %span ログアウト

@@ -1,0 +1,9 @@
+-# スレッド配下の画面のパンくず。current: 最後に出す現在地の名前(リンクにしない)。
+%nav.ba-breadcrumb{ "aria-label": "現在地" }
+  %ol
+    %li= link_to @community.name, business_community_path(@community)
+    %li= link_to @project.title, business_project_path(@project)
+    - if local_assigns[:thread]
+      %li= link_to "スレッド一覧", business_project_threads_path(@project)
+    %li
+      %span{ "aria-current": "page" }= local_assigns.fetch(:current)

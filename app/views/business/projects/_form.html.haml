@@ -1,72 +1,56 @@
-.container.form-container
+-# プロジェクトの作成・編集フォーム。キャンセルは画面を移るだけで、入力中の内容は送信しない。
+= form_with model: [:business, project], local: true, html: { class: "ba-form" } do |f|
+  - if project.errors.any?
+    .ba-errors{ role: "alert" }
+      %ul
+        - project.errors.full_messages.each do |message|
+          %li= message
 
-  .form-card
+  = f.hidden_field :community_id, value: @community.id
 
-    - if project.errors.any?
-      .alert.alert-danger
-        %ul
-          - project.errors.full_messages.each do |message|
-            %li= message
+  %fieldset.ba-fieldset
+    %legend.ba-fieldset__legend 基本情報
+    .ba-field
+      = f.label :title, "プロジェクト名", class: "ba-label"
+      = f.text_field :title, class: "form-control", placeholder: "例）バンドメンバー募集"
+    .ba-field
+      %p.ba-label 所属コミュニティ
+      %p.ba-static= @community.name
+    .ba-field
+      = f.label :goal, "目標", class: "ba-label"
+      = f.text_field :goal, class: "form-control", placeholder: "例）ライブ出演 / 3曲完成 / メンバー5人集める"
+    .ba-field
+      = f.label :description, "説明", class: "ba-label"
+      = f.text_area :description, class: "form-control", rows: 8,
+        placeholder: "# プロジェクト概要\n\n## 目的\n- 新規サービス検証\n\n## 募集したい人\n- デザイナー\n- Railsエンジニア\n\n## 進め方\n1. 要件整理\n2. MVP作成"
 
-    = form_with model: [:business, project], local: true do |f|
+  %fieldset.ba-fieldset
+    %legend.ba-fieldset__legend 進行と参加
+    .ba-field
+      = f.label :status, "ステータス", class: "ba-label"
+      = f.select :status, business_project_status_options, {}, class: "form-control"
+    .ba-field
+      = f.label :join_approval_mode, "参加方式", class: "ba-label"
+      = f.select :join_approval_mode, business_join_approval_options, {}, class: "form-control"
+      %small.ba-help 参加できるのは、開催コミュニティの参加者だけです。変更は、変更後の新しい参加申請から適用されます。
+    .ba-field
+      = f.label :deadline, class: "ba-label" do
+        締切日
+        %span.ba-optional 任意
+      = f.date_field :deadline, class: "form-control"
 
-      = f.hidden_field :community_id, value: @community.id
+  %fieldset.ba-fieldset
+    %legend.ba-fieldset__legend 画像
+    .ba-field
+      = f.label :project_image, "カバー画像", class: "ba-label", for: "image-input"
+      .ba-image-field
+        - if project.project_image.attached?
+          = image_tag project.project_image, id: "preview-image", class: "ba-image-field__preview", alt: "現在の画像"
+        - else
+          = image_tag "no_image", id: "preview-image", class: "ba-image-field__preview", alt: "画像は未設定です"
+        = f.file_field :project_image, accept: "image/*", class: "form-control", id: "image-input"
+      %small.ba-help 画像が無い場合は、プロジェクト名の頭文字で表示されます。
 
-      .form-group
-        %label プロジェクト名
-        = f.text_field :title, class:"form-control", placeholder:"例）バンドメンバー募集"
-
-      .form-group
-        %label 所属コミュニティ
-        %p.form-static= @community.name
-
-      .form-group
-        %label 目標（Goal）
-        = f.text_field :goal,
-          class:"form-control",
-          placeholder:"例）ライブ出演 / 3曲完成 / メンバー5人集める"
-
-      .form-group
-        %label 説明
-        = f.text_area :description,
-          class:"form-control",
-          rows:8,
-          placeholder:"# プロジェクト概要\n\n## 目的\n- 新規サービス検証\n\n## 募集したい人\n- デザイナー\n- Railsエンジニア\n\n## 進め方\n1. 要件整理\n2. MVP作成"
-
-      .form-group
-        %label ステータス
-        = f.select :status,
-          [["募集中", "recruiting"], ["進行中", "active"], ["終了", "completed"]],
-          {},
-          class:"form-control"
-
-      .form-group
-        %label{ for: "project_join_approval_mode" } 参加方式
-        = f.select :join_approval_mode, business_join_approval_options, {}, class:"form-control"
-        %small.form-text.text-muted
-          参加できるのは、開催コミュニティの参加者だけです。変更は、変更後の新しい参加申請から適用されます。
-
-      .form-group
-        %label 締切日
-        = f.date_field :deadline, class:"form-control"
-
-      .form-group
-        %label 画像
-
-        .image-upload-area
-
-          .image-preview
-            - if project.project_image.attached?
-              = image_tag project.project_image, id:"preview-image", class:"preview-img"
-            - else
-              = image_tag "no_image", id:"preview-image", class:"preview-img"
-
-          = f.file_field :project_image,
-            accept: "image/*",
-            class:"form-control",
-            id:"image-input"
-
-      -# キャンセル・戻るは画面を移るだけで、入力中の内容は送信しない。
-      .form-actions.manage-page__actions
-        = f.submit submit_label, class:"btn btn-primary"
-        = link_to cancel_label, cancel_path, class:"btn btn-light"
+  .ba-form-actions
+    = f.submit submit_label, class: "ba-btn ba-btn--primary"
+    = link_to cancel_label, cancel_path, class: "ba-btn ba-btn--secondary"

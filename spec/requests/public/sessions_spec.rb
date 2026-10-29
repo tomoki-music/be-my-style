@@ -178,7 +178,7 @@ RSpec.describe "Sessions", type: :request do
       expect(response).to redirect_to(business_root_path)
 
       follow_redirect!
-      expect(Nokogiri::HTML(response.body).css(".member-home__section").map { |s| s["id"] }).to eq %w[my-communities my-projects]
+      expect(Nokogiri::HTML(response.body).css(".ba-home__section").map { |s| s["id"] }).to eq %w[my-communities my-projects]
     end
   end
 end
