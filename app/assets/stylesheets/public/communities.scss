@@ -607,3 +607,52 @@ input[type="text"] {
     }
   }
 }
+
+// 通常画面・編集画面・メンバー管理画面(375px)で横スクロールを出さないための調整。
+// 共通クラス(.text-container / input[type="text"] など)の固定幅を、この3画面の中でだけ上書きする。
+.community-edit-actions {
+  justify-content: flex-end;
+  .community-edit-btn {
+    position: static;
+    width: auto;
+    min-width: 160px;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 600px) {
+  .community-show-container .customer-index-container .text-container {
+    width: 100%;
+  }
+  .community-edit-container {
+    .community-edit-table {
+      table-layout: fixed;
+      width: 100%;
+      th,
+      td {
+        overflow-wrap: anywhere;
+      }
+      input[type="text"],
+      input[type="file"],
+      textarea,
+      select {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+      }
+    }
+  }
+  .community-permits-container .community-permits-table {
+    table-layout: fixed;
+    width: 100%;
+    .permit-table-body .customer-permit-btn {
+      width: auto;
+      max-width: 100%;
+      white-space: normal;
+    }
+    td,
+    th {
+      overflow-wrap: anywhere;
+    }
+  }
+}

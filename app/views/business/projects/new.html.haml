@@ -8,7 +8,6 @@
 
     = render "form",
       project: @project,
-      url: business_projects_path,
-      method: :post,
       submit_label: "作成する",
-      cancel_path: business_projects_path
+      cancel_label: "戻る",
+      cancel_path: business_community_path(@community)

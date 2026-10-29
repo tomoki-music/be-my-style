@@ -28,7 +28,7 @@ RSpec.describe "Business::CommunityPlanTrials", type: :request do
 
     it "ON / OFF を切り替えられる" do
       toggle(community, "1")
-      expect(response).to redirect_to(business_community_path(community, anchor: "plan-trial"))
+      expect(response).to redirect_to(business_community_path(community))
       expect(flash[:notice]).to eq "「有料機能を無料でお試し」をONにして保存しました。"
       expect(community.reload.plan_restrictions_waived).to eq true
 
@@ -43,8 +43,10 @@ RSpec.describe "Business::CommunityPlanTrials", type: :request do
       expect(other_community.reload.plan_restrictions_waived).to eq false
     end
 
-    it "詳細画面に設定フォーム・現在の状態・解除される機能が表示される" do
-      get business_community_path(community)
+    it "運営者を兼ねる場合、編集画面に設定フォーム・現在の状態・解除される機能が表示される" do
+      sign_in owner
+
+      get edit_business_community_path(community)
 
       html = Nokogiri::HTML(response.body)
       card = html.at_css("#plan-trial")
@@ -53,10 +55,22 @@ RSpec.describe "Business::CommunityPlanTrials", type: :request do
       expect(card.at_css(".plan-trial-card__status").text.strip).to eq "現在：OFF"
       expect(card.css(".plan-trial-card__features li").map(&:text)).to eq ["プロジェクト作成（通常はCoreプラン以上）"]
       expect(card.at_css(%(form[action="#{business_community_plan_trial_path(community)}"] input[type="checkbox"]))).to be_present
+      # 通常の更新フォームの中に入れ子にしない(別々に送信する)。
+      expect(html.at_css(%(form[action="#{business_community_path(community)}"] #plan-trial))).to be_nil
 
       community.update!(plan_restrictions_waived: true)
-      get business_community_path(community)
+      get edit_business_community_path(community)
       expect(Nokogiri::HTML(response.body).at_css("#plan-trial .plan-trial-card__status").text.strip).to eq "現在：ON（無料お試し中）"
+    end
+
+    it "通常画面には設定フォームを出さず、運営者でなければ管理画面のコミュニティ詳細への導線だけを出す" do
+      get business_community_path(community)
+
+      html = Nokogiri::HTML(response.body)
+      expect(html.at_css("#plan-trial")).to be_nil
+      expect(html.at_css(%(form[action="#{business_community_plan_trial_path(community)}"]))).to be_nil
+      expect(html.at_css(%(nav.manage-bar a[href="#{admin_community_path(community)}"])).text).to include("お試し設定")
+      expect(html.at_css(%(nav.manage-bar a[href="#{edit_business_community_path(community)}"]))).to be_nil
     end
   end
 
@@ -79,15 +93,18 @@ RSpec.describe "Business::CommunityPlanTrials", type: :request do
   end
 
   shared_examples "状態だけを表示し操作 UI は出さない" do
-    it "設定フォームが無く、変更できない旨と現在の状態が表示される" do
+    it "編集画面に設定フォームが無く、変更できない旨と現在の状態が表示される(通常画面には出さない)" do
       community.update!(plan_restrictions_waived: true)
 
-      get business_community_path(community)
+      get edit_business_community_path(community)
 
       card = Nokogiri::HTML(response.body).at_css("#plan-trial")
       expect(card.at_css(".plan-trial-card__status").text.strip).to eq "現在：ON（無料お試し中）"
       expect(card.text).to include("この設定はシステム管理者のみ変更できます。")
       expect(card.at_css("form, input[type='checkbox']")).to be_nil
+
+      get business_community_path(community)
+      expect(Nokogiri::HTML(response.body).at_css("#plan-trial")).to be_nil
     end
   end
 

@@ -1,14 +1,23 @@
 = render "layouts/header_menu_nakama"
 
+.manage-bar-wrap
+  = render "shared/manage_bar", items: business_project_manage_items(@project, current: :edit, pending_count: @pending_request_count)
+
 .container.project-edit-container
   .edit-card
+    %nav.manage-page__breadcrumb{ "aria-label": "現在地" }
+      = link_to @community.name, business_community_path(@community)
+      %span{ "aria-hidden": "true" } ›
+      = link_to @project.title_was.presence || @project.title, business_project_path(@project)
+      %span{ "aria-hidden": "true" } ›
+      %span 編集
+
     .edit-header
       %h2 プロジェクト編集
       %p サービス内容や目的を分かりやすく伝えましょう
 
     = render "form",
       project: @project,
-      url: business_project_path(@project),
-      method: :patch,
-      submit_label: "更新する",
+      submit_label: "保存する",
+      cancel_label: "キャンセル",
       cancel_path: business_project_path(@project)

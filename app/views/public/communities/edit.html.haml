@@ -1,6 +1,13 @@
 = render 'layouts/header_menu'
 
+.manage-bar-wrap
+  = render "shared/manage_bar", items: music_community_manage_items(@community, current: :edit, pending_count: @pending_permit_count)
+
 .community-edit-title
+  %nav.manage-page__breadcrumb{ "aria-label": "現在地" }
+    = link_to @community.name_was.presence || @community.name, public_community_path(@community), data: { turbolinks: false }
+    %span{ "aria-hidden": "true" } ›
+    %span 編集
   %h2 コミュニティ編集画面
   - if @community.errors.any?
     .alert
@@ -67,4 +74,14 @@
                 rows: "10",
                 placeholder: "# コミュニティ紹介\n\n## 概要\nこのコミュニティは音楽好きが集まる場所です！\n\n## 活動内容\n- セッション会（月1回）\n- ライブイベント\n- オフ会（BBQ・カラオケなど）\n\n## こんな人におすすめ\n- 音楽仲間が欲しい\n- 初心者だけど参加してみたい\n- バンドを組んでみたい\n\n## 注意事項\n**最低限のマナーを守って楽しみましょう！**\n\n自由に改行して読みやすく書いてね！\n\n---\n\n【Markdown記法の使い方】\n\n# 見出し1\n## 見出し2\n### 見出し3\n\n- リスト\n- リスト\n\n1. 番号リスト\n2. 番号リスト\n\n**太字**\n*斜体*\n\n~~打ち消し~~\n\n[リンク](https://example.com)\n\n> 引用\n\n`コード`\n\n```コードブロック```\n\n---\n\n※改行をうまく使うと、読みやすさがグッと上がります！"
   
-          = f.submit "コミュニティを更新", class: "btn btn-info community-edit-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }
+    -# キャンセルは画面を移るだけで、入力中の内容は送信しない。
+    .manage-page__actions.community-edit-actions
+      = f.submit "保存する", class: "btn btn-info community-edit-btn", data: { confirm: 'こちらの内容で更新します。よろしいですか？' }
+      = link_to "キャンセル", public_community_path(@community), class: "btn btn-light", data: { turbolinks: false }
+
+-# 削除は取り消せないため、編集フォームとは別の枠に置く(オーナーのみ。確認手順は従来どおり DELETE 入力)。
+.community-edit-container.manage-page.px-0.px-sm-0
+  = render "shared/danger_zone_delete",
+    button_text: "コミュニティ削除",
+    path: public_community_path(@community),
+    confirm_message: "コミュニティを削除します。よろしいですか？"

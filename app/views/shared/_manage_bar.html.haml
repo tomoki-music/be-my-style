@@ -1,0 +1,16 @@
+-# 管理できる人だけに出す、通常画面・編集・メンバー管理の切り替え(ManageBarHelper が項目を作る)。
+-# ここは移動だけ。保存・承認・停止・削除などの操作は、それぞれの画面の中に置く。
+%nav.manage-bar{ "aria-label": "管理メニュー" }
+  %span.manage-bar__label
+    %i.fa-solid.fa-gear{ "aria-hidden": "true" }
+    管理メニュー
+  %ul.manage-bar__list
+    - items.each do |item|
+      %li.manage-bar__item
+        - if item[:current]
+          %span.manage-bar__link.is-current{ "aria-current": "page" }= item[:label]
+        - else
+          = link_to item[:path], class: "manage-bar__link", data: item[:data] do
+            = item[:label]
+            - if item[:badge].to_i.positive?
+              %span.manage-bar__badge{ title: "承認待ち#{item[:badge]}件" }= item[:badge]

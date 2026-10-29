@@ -364,17 +364,21 @@ RSpec.describe "Business ヘッダー: アカウントメニューと通知ベ�
     end
   end
 
-  context "コミュニティ詳細(お試し設定カード)" do
+  context "コミュニティの通常画面・編集画面(お試し設定カード)" do
     let(:community) { create(:community, owner: customer, domain: business_domain, plan_restrictions_waived: true) }
 
     before { CommunityCustomer.create!(community: community, customer: customer) }
 
-    it "スマホ幅で横スクロールせず、お試し表示と設定が見える" do
+    it "スマホ幅で横スクロールせず、通常画面にお試し表示、編集画面に設定の状態が見える" do
       sign_in_via_business_form
       set_viewport(375)
       visit business_community_path(community)
 
       expect(page).to have_css(".plan-trial-badge", visible: :visible)
+      expect(page).to have_no_css("#plan-trial")
+      expect(horizontal_overflow).to be <= 0
+
+      visit edit_business_community_path(community)
       expect(page).to have_css("#plan-trial", text: "現在：ON（無料お試し中）", visible: :visible)
       expect(horizontal_overflow).to be <= 0
     end

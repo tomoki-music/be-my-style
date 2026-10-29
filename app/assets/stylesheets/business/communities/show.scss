@@ -13,10 +13,21 @@
 
 .community-hero {
   position:relative;
-  height:220px;
+  min-height:220px;
   border-radius:20px;
   overflow:hidden;
   margin-bottom:20px;
+}
+
+/* 375px で名前が2行になると固定高さ(220px)からはみ出して上下が切れていたため、内容に合わせて伸ばす。 */
+.community-hero .community-cover {
+  position:absolute;
+  inset:0;
+}
+
+.community-hero .hero-overlay {
+  position:relative;
+  min-height:220px;
 }
 
 .community-cover {

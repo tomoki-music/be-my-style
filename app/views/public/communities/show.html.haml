@@ -1,11 +1,15 @@
 = render 'layouts/header_menu'
 
+-# オーナーにも参加者と同じ画面を出す。編集フォーム・承認・削除は編集 / メンバー管理画面に置き、ここには移動の導線だけを出す。
+- if @can_manage
+  .manage-bar-wrap
+    = render "shared/manage_bar", items: music_community_manage_items(@community, current: :show, pending_count: @pending_permit_count)
+
 .community-show-title
   %h2 コミュニティ詳細
   .community-show-follow
-    - if @community.owner_id == current_customer.id
-      = link_to "承認待ち一覧", public_permits_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-info community-show-btn"
-      = link_to '編集する', edit_public_community_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-success community-show-btn"
+    - if @can_manage
+      %span.community-show-owner-note あなたはこのコミュニティのオーナーです
     - elsif @community.customers.include?(current_customer)
       = link_to 'コミュニティを退会', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
       また参加してね!
@@ -39,14 +43,8 @@
                   = customer_profile_name_link(@owner)
             %hr
             %p.card-text
-            - if @community.owner_id == current_customer.id
-              = link_to "承認待ち一覧", public_permits_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-info community-show-btn"
-              = link_to '編集する', edit_public_community_path(@community), data: { 'turbolinks': false }, class: "btn btn-sm btn-success community-show-btn"
-              = render "shared/danger_zone_delete",
-                button_text: "コミュニティ削除",
-                path: public_community_path(@community),
-                confirm_message: "コミュニティを削除します。よろしいですか？"
-
+            - if @can_manage
+              %span.community-show-owner-note オーナーとして運営中
             - elsif @community.customers.include?(current_customer)
               = link_to 'コミュニティを退会', public_community_leave_path(@community), method: :delete, class: "btn btn-sm btn-danger community-show-btn", data: { 'turbolinks': false, confirm: 'こちらのコミュニティを抜けます。よろしいですか？' }
               また参加してね!

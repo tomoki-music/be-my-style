@@ -1,21 +1,27 @@
 class Public::CommunityCustomersController < ApplicationController
   before_action :authenticate_customer!
+  before_action :set_community
+  before_action :ensure_community_owner!
 
+  # 参加申請の承認。メンバー管理(承認待ち一覧)と同じくオーナーだけが、そのコミュニティに出ている申請だけを承認できる。
   def create
-    @community = Community.find(params[:community_id])
-    @permit = Permit.find(params[:permit_id])
+    @permit = @community.permits.find_by(id: params[:permit_id])
+    unless @permit
+      flash[:alert] = "参加申請が見つかりません。"
+      return redirect_to public_permits_path(@community)
+    end
 
     if @permit.customer.is_deleted?
       flash[:alert] = "退会済みのユーザーです。参加を許可できません。"
-      return redirect_back(fallback_location: root_path)
+      return redirect_back(fallback_location: public_permits_path(@community))
     end
 
-    @community_customer = CommunityCustomer.create(customer_id: @permit.customer_id, community_id: params[:community_id])
+    @community_customer = CommunityCustomer.create(customer_id: @permit.customer_id, community_id: @community.id)
     if @community_customer.valid?
       owner = Customer.find_by(id: @community.owner_id)
       chat_room = ChatRoomCustomer.where(customer_id: owner.id, community_id: @community.id)[0].chat_room
       ChatRoomCustomer.create(customer_id: @permit.customer_id, chat_room_id: chat_room.id, community_id: @community.id)
-      
+
       if current_customer != @community_customer.customer
         @community_customer.customer.create_notification_accept(owner, @community.id)
         if @community_customer.customer.confirm_mail
@@ -25,11 +31,23 @@ class Public::CommunityCustomersController < ApplicationController
 
       @permit.destroy
       flash[:notice] = "コミュニティへ参加を許可しました"
-      redirect_back(fallback_location: root_path)
+      redirect_back(fallback_location: public_permits_path(@community))
     else
       flash[:alert] = "参加申請の許可に失敗しました"
-      redirect_back(fallback_location: root_path)
+      redirect_back(fallback_location: public_permits_path(@community))
     end
+  end
+
+  private
+
+  def set_community
+    @community = Community.find_by!(id: params[:community_id], domain_id: @current_domain.id)
+  end
+
+  def ensure_community_owner!
+    return if @community.owner_id == current_customer.id
+
+    redirect_to public_community_path(@community), alert: "参加申請を承認する権限がありません。"
   end
 
 end
