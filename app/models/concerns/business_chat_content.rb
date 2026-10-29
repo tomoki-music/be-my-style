@@ -1,5 +1,5 @@
 # Business のコミュニティ タイムライン(CommunityPost) / プロジェクト チャット(ProjectChat) で共通の
-# 「本文(Markdown) + スタンプ + 添付ファイル」を扱う。
+# 「本文 + スタンプ + 添付ファイル」を扱う。
 #
 # 添付の閲覧は Business::ChatAttachmentsController 経由に限定し、ActiveStorage の
 # 恒久的な blob URL(url_for / rails_blob_path)は画面に出さない。
@@ -78,8 +78,10 @@ module BusinessChatContent
     has_many_attached :attachments
 
     # legacy: この機能以前の投稿。投稿当時と同じ表示方式で描画する。
-    # markdown: Chat::MarkdownRenderer で描画する。
-    enum content_format: { legacy: 0, markdown: 1 }, _prefix: :content_format
+    # markdown: 書式ボタンがあった時期の投稿。Chat::MarkdownRenderer で描画する。
+    # plain: 現在の入力欄(書式なし)の投稿。本文はすべて文字として表示し、改行と URL のリンクだけを付ける。
+    # 過去の投稿は保存し直さず、それぞれの形式のまま表示する。
+    enum content_format: { legacy: 0, markdown: 1, plain: 2 }, _prefix: :content_format
 
     # 送信済みのスタンプは変更されない限り再検証しない(許可リストを見直しても既存投稿は表示・保存できる)。
     validate :stamp_type_allowed_for_business, if: :will_save_change_to_stamp_type?

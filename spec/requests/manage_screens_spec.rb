@@ -152,6 +152,141 @@ RSpec.describe "通常画面・編集画面・メンバー管理画面の分離"
     end
   end
 
+  describe "Business プロジェクトの作成導線(通常画面には置かず、管理側に置く)" do
+    let(:business_domain) { Domain.find_or_create_by!(name: "business") }
+    let(:owner) { create(:customer, domain_name: "business") }
+    let(:community) { create(:community, owner: owner, domain: business_domain) }
+    let(:free_member) { create(:customer, domain_name: "business") }
+    let(:outsider) { create(:customer, domain_name: "business") }
+    let!(:project) { Project.create!(community: community, customer: owner, title: "既存プロジェクト") }
+
+    before do
+      CommunityCustomer.create!(community: community, customer: owner)
+      CommunityCustomer.create!(community: community, customer: free_member)
+    end
+
+    def create_project(target, title: "新しい企画")
+      post business_projects_path, params: { community_id: target.id, project: { title: title, description: "説明", community_id: target.id } }
+    end
+
+    def new_project_link
+      doc.at_css(%(a[href="#{new_business_project_path(community_id: community.id)}"]))
+    end
+
+    context "運営者(オーナー)" do
+      before { sign_in owner }
+
+      it "通常画面に作成ボタンを出さず、既存のプロジェクト一覧は残し、管理メニューにプロジェクト管理を出す" do
+        get business_community_path(community)
+
+        expect(new_project_link).to be_nil
+        expect(response.body).not_to include("＋ 作成")
+        expect(doc.at_css(%(.project-grid a[href="#{business_project_path(project)}"]))).to be_present
+        expect(manage_bar.css("a, [aria-current]").map { |el| el.text.strip.sub(/\d+\z/, "") }).to eq %w[通常画面 編集 メンバー管理 プロジェクト管理]
+      end
+
+      it "編集画面のプロジェクト管理セクションから作成画面へ進め、所属コミュニティと戻り先が表示される" do
+        get edit_business_community_path(community)
+
+        section = doc.at_css("#project-management")
+        expect(section.at_css("h3").text).to eq "プロジェクト管理"
+        expect(section.at_css(%(a[href="#{new_business_project_path(community_id: community.id)}"])).text).to eq "新しいプロジェクトを作成"
+
+        get new_business_project_path(community_id: community.id)
+        expect(response).to have_http_status(:ok)
+        expect(doc.at_css(".project-new-community strong").text).to eq community.name
+        expect(doc.at_css(%(.manage-page__breadcrumb a[href="#{business_community_project_management_path(community)}"]))).to be_present
+        expect(doc.at_css(%(.form-actions a[href="#{business_community_project_management_path(community)}"])).text).to include("キャンセル")
+
+        expect { create_project(community) }.to change(community.projects, :count).by(1)
+        expect(response).to redirect_to(business_community_path(community))
+        expect(flash[:notice]).to eq "プロジェクトを作成しました"
+      end
+
+      it "プロジェクト管理画面に作成ボタンと、プロジェクトごとの管理導線を出す" do
+        get business_community_project_management_path(community)
+
+        expect(response).to have_http_status(:ok)
+        expect(current_tab).to eq "プロジェクト管理"
+        expect(new_project_link.text).to eq "新しいプロジェクトを作成"
+        expect(doc.at_css(%(.project-management__actions a[href="#{edit_business_project_path(project)}"]))).to be_present
+      end
+    end
+
+    context "運営者ではないが、プロジェクトを作成できる参加者(お試し ON)" do
+      before do
+        community.update!(plan_restrictions_waived: true)
+        sign_in free_member
+      end
+
+      it "編集画面は開けないが、通常画面の管理メニューからプロジェクト管理へ進み、作成できる" do
+        get business_community_path(community)
+        expect(new_project_link).to be_nil
+        expect(manage_bar.css("a, [aria-current]").map { |el| el.text.strip }).to eq %w[通常画面 プロジェクト管理]
+
+        get edit_business_community_path(community)
+        expect(response).to redirect_to(business_community_path(community))
+
+        get business_community_project_management_path(community)
+        expect(response).to have_http_status(:ok)
+        expect(new_project_link).to be_present
+        # 自分が作成していないプロジェクトの編集・メンバー管理の導線は出さない。
+        expect(doc.at_css(%(a[href="#{edit_business_project_path(project)}"]))).to be_nil
+
+        expect { create_project(community) }.to change(community.projects, :count).by(1)
+      end
+    end
+
+    [
+      ["作成できない参加者(Free)", :free_member],
+      ["非参加者", :outsider]
+    ].each do |label, role|
+      context label do
+        before { sign_in public_send(role) }
+
+        it "管理メニュー・作成導線が出ず、URL やリクエストを直接送っても作成できない" do
+          get business_community_path(community)
+          expect(manage_bar).to be_nil
+          expect(new_project_link).to be_nil
+
+          get business_community_project_management_path(community)
+          expect(response).to redirect_to(business_community_path(community))
+          expect(flash[:alert]).to eq "このコミュニティでプロジェクトを作成する権限がありません。"
+
+          get new_business_project_path(community_id: community.id)
+          expect(response).to redirect_to(business_community_path(community))
+
+          expect { create_project(community) }.not_to change(Project, :count)
+        end
+      end
+    end
+
+    it "作成できるコミュニティの画面から、所属コミュニティ ID を作成できないコミュニティに書き換えても作成できない" do
+      other_community = create(:community, owner: create(:customer), domain: business_domain)
+      community.update!(plan_restrictions_waived: true)
+      sign_in free_member
+
+      expect {
+        post business_projects_path, params: { project: { title: "書き換え", community_id: other_community.id } }
+      }.not_to change(Project, :count)
+      expect(response).to redirect_to(business_community_path(other_community))
+
+      expect {
+        post business_projects_path, params: { community_id: other_community.id, project: { title: "書き換え", community_id: community.id } }
+      }.not_to change(Project, :count)
+    end
+
+    it "参加者向けのプロジェクト一覧(コミュニティ指定)にも作成ボタンを出さない" do
+      sign_in owner
+
+      get business_projects_path(community_id: community.id)
+
+      expect(response).to have_http_status(:ok)
+      expect(new_project_link).to be_nil
+      expect(manage_bar.at_css(%(a[href="#{business_community_project_management_path(community)}"]))).to be_present
+    end
+  end
+
   describe "Business コミュニティの編集画面" do
     let(:business_domain) { Domain.find_or_create_by!(name: "business") }
     let(:owner) { create(:customer, domain_name: "business") }

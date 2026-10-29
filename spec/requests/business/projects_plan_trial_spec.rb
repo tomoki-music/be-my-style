@@ -23,16 +23,17 @@ RSpec.describe "Business::Projects のお試し設定による制限解除", typ
   end
 
   describe "コミュニティ詳細のプロジェクト案内" do
-    it "お試し OFF では core プランの案内、ON では作成ボタンを表示する" do
+    it "お試し OFF では core プランの案内、ON では管理メニューにプロジェクト管理を表示する(通常画面に作成ボタンは出さない)" do
       get business_community_path(community)
       expect(response.body).to include("coreでプロジェクトを始める")
-      expect(response.body).not_to include(%(href="#{new_business_project_path(community_id: community.id)}"))
+      expect(response.body).not_to include(%(href="#{business_community_project_management_path(community)}"))
 
       community.update!(plan_restrictions_waived: true)
 
       get business_community_path(community)
       expect(response.body).not_to include("coreでプロジェクトを始める")
-      expect(response.body).to include(%(href="#{new_business_project_path(community_id: community.id)}"))
+      expect(response.body).to include(%(href="#{business_community_project_management_path(community)}"))
+      expect(response.body).not_to include(%(href="#{new_business_project_path(community_id: community.id)}"))
 
       get business_community_path(other_community)
       expect(response.body).to include("coreでプロジェクトを始める")

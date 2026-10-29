@@ -90,18 +90,20 @@ RSpec.describe "通常画面・編集画面・メンバー管理画面", type: :
     "project_members" => ->(t) { t.members_business_project_path(t.project) },
     "music_community_show" => ->(t) { t.public_community_path(t.music_community) },
     "music_community_edit" => ->(t) { t.edit_public_community_path(t.music_community) },
-    "music_community_members" => ->(t) { t.public_permits_path(t.music_community) }
+    "music_community_members" => ->(t) { t.public_permits_path(t.music_community) },
+    "project_management" => ->(t) { t.business_community_project_management_path(t.business_community) },
+    "project_new" => ->(t) { t.new_business_project_path(community_id: t.business_community.id) }
   }
 
   [375, 1280].each do |width|
-    it "幅#{width}px: 管理者の9画面がページ全体で横にはみ出さず、管理メニューが画面内で押せる" do
+    it "幅#{width}px: 管理者の11画面がページ全体で横にはみ出さず、管理メニューが画面内で押せる" do
       sign_in_via_form(manager)
       set_viewport(width)
 
       results = pages.to_h do |name, path|
         visit path.call(self)
-        expect(page).to have_css("nav.manage-bar")
-        [name, { "overflow" => page_overflow, "links_inside" => manage_bar_links_inside? }]
+        expect(page).to have_css(name == "project_new" ? ".project-new-community" : "nav.manage-bar")
+        [name, { "overflow" => page_overflow, "links_inside" => name == "project_new" || manage_bar_links_inside? }]
       end
 
       expect(results.values).to all(eq("overflow" => 0, "links_inside" => true))
@@ -118,15 +120,22 @@ RSpec.describe "通常画面・編集画面・メンバー管理画面", type: :
       "manage_project_edit" => [edit_business_project_path(project), [375]],
       "manage_project_members" => [members_business_project_path(project), [375]],
       "manage_music_community_show" => [public_community_path(music_community), [1280, 375]],
-      "manage_music_community_edit" => [edit_public_community_path(music_community), [375]]
+      "manage_music_community_edit" => [edit_public_community_path(music_community), [375]],
+      "manage_project_management" => [business_community_project_management_path(business_community), [1280, 375]],
+      "manage_project_new" => [new_business_project_path(community_id: business_community.id), [375]]
     }.each do |name, (path, widths)|
       widths.each do |width|
         set_viewport(width, width < 600 ? 1600 : 1100)
         visit path
-        expect(page).to have_css("nav.manage-bar")
+        expect(page).to have_css(name == "manage_project_new" ? ".project-new-community" : "nav.manage-bar")
         screenshot!("#{name}_#{width}")
       end
     end
+
+    set_viewport(375, 900)
+    visit edit_business_community_path(business_community)
+    page.execute_script("document.getElementById('project-management').scrollIntoView()")
+    screenshot!("manage_business_community_edit_project_section_375")
 
     Capybara.reset_session!
     sign_in_via_form(member)
@@ -184,6 +193,22 @@ RSpec.describe "通常画面・編集画面・メンバー管理画面", type: :
     expect(page).to have_content("更新しました！")
     expect(page).to have_css("h1", text: "夏祭りステージ運営（確定版）")
     expect(page).to have_link("＋ 新しいスレッド")
+  end
+
+  it "管理メニュー → 編集 → プロジェクト管理セクションから、プロジェクトを作成できる" do
+    sign_in_via_form(manager)
+    visit business_community_path(business_community)
+    expect(page).to have_no_link("＋ 作成")
+
+    within("nav.manage-bar") { click_link "編集" }
+    within("#project-management") { click_link "新しいプロジェクトを作成" }
+    expect(page).to have_css(".project-new-community strong", text: "地域イベント企画ラボ")
+    fill_in "project[title]", with: "秋の収穫祭ブース"
+    click_button "作成する"
+
+    expect(page).to have_current_path(business_community_path(business_community))
+    expect(page).to have_content("プロジェクトを作成しました")
+    expect(page).to have_css(".project-grid", text: "秋の収穫祭ブース")
   end
 
   it "一般参加者は管理メニューが出ず、編集画面の URL を開いても通常画面へ戻される" do

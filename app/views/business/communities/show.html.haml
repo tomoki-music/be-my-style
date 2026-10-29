@@ -1,9 +1,10 @@
 = render "layouts/header_menu_nakama"
 
 -# 運営者にも参加者と同じ画面を出す。設定フォーム・承認・停止は編集 / メンバー管理画面に置き、ここには移動の導線だけを出す。
-- if @can_manage
+-# 運営者でなくても、プロジェクトを作成できる参加者には「プロジェクト管理」だけを出す。
+- if @can_manage || @can_create_project
   .manage-bar-wrap
-    = render "shared/manage_bar", items: business_community_manage_items(@community, current: :show, pending_count: @pending_permit_count)
+    = render "shared/manage_bar", items: business_community_manage_items(@community, current: :show, pending_count: @pending_permit_count, manage: @can_manage, projects: @can_create_project)
 - elsif plan_trial_editable?
   -# システム管理者(Admin セッション)で運営者ではない場合、お試し設定は管理画面のコミュニティ詳細で変更する。
   .manage-bar-wrap
@@ -118,14 +119,11 @@
           .section-header
             %h3 プロジェクト
 
-            - if current_customer.can_create_project_for?(@community)
-              = link_to "＋ 作成",
-                new_business_project_path(community_id: @community.id),
-                class:"btn btn-primary btn-small"
-            - elsif @community.customers.include?(current_customer)
-              = link_to feature_upgrade_cta(:business_project_create),
-                feature_upgrade_path(:business_project_create),
-                class:"btn btn-primary btn-small menu-btn-locked"
+          -# 作成は管理メニューの「プロジェクト管理」から行う。作成できない参加者には、必要なプランの案内だけを文字で出す。
+          - if !@can_create_project && @community.customers.include?(current_customer)
+            %p.project-create-note
+              = feature_gate(:business_project_create)[:message]
+              = link_to feature_upgrade_cta(:business_project_create), feature_upgrade_path(:business_project_create), class: "project-create-note__link"
 
           .project-grid
             - @projects.each do |project|

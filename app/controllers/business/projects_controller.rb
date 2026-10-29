@@ -32,7 +32,7 @@ class Business::ProjectsController < ApplicationController
 
     if @project.save
       notify_project_created!(@project)
-      redirect_to business_community_path(@community)
+      redirect_to business_community_path(@community), notice: "プロジェクトを作成しました"
     else
       render :new
     end

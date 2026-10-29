@@ -143,3 +143,70 @@
   font-weight: 700;
   color: #475569;
 }
+
+.manage-page__note {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #475569;
+}
+
+/* プロジェクト管理画面の一覧 */
+.project-management__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-management__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px solid #f1f5f9;
+}
+
+.project-management__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.project-management__title {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.project-management__meta {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.project-management__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* 通常画面のプロジェクト欄で、作成できない参加者に出すプランの案内 */
+.project-create-note {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* プロジェクト作成画面の所属コミュニティ */
+.project-new-community {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eef2ff;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+
+  span {
+    color: #475569;
+    font-size: 12px;
+  }
+}

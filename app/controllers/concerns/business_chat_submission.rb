@@ -11,7 +11,7 @@ module BusinessChatSubmission
     files = Array(permitted.delete(:attachments)).select { |file| file.respond_to?(:original_filename) }
     return if files.size > BusinessChatContent::MAX_ATTACHMENTS
 
-    permitted.merge(attachments: files, content_format: :markdown)
+    permitted.merge(attachments: files, content_format: :plain)
   end
 
   def business_chat_too_many_files_message

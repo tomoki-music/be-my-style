@@ -13,5 +13,14 @@
 
   = render "form", community: @community, cancel_path: business_community_path(@community)
 
+  -# プロジェクトの作成は通常画面ではなく管理側から行う(運営者は必ず作成できる)。
+  %section.manage-page__section#project-management
+    %h3 プロジェクト管理
+    %p.manage-page__note
+      このコミュニティでプロジェクトを立ち上げます。作成したプロジェクトは通常画面の「プロジェクト」に表示されます。
+    .manage-page__actions
+      = link_to "新しいプロジェクトを作成", new_business_project_path(community_id: @community.id), class: "btn btn-primary"
+      = link_to "プロジェクト管理を開く", business_community_project_management_path(@community), class: "btn btn-light"
+
   -# お試し設定は通常の更新とは別の窓口(システム管理者のみ変更可)なので、フォームを分けて置く。
   = render "plan_trial", community: @community

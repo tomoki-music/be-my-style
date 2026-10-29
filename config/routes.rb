@@ -264,7 +264,6 @@ Rails.application.routes.draw do
 
     # タイムライン / プロジェクトチャットの添付ファイル配信(閲覧権限を確認して短時間有効な URL へ転送)。
     resources :chat_attachments, only: [:show]
-    post "chat_previews" => "chat_previews#create", as: :chat_previews
 
     resources :communities do
       delete "leave" => "communities#leave"
@@ -275,6 +274,9 @@ Rails.application.routes.draw do
       resource :community_customers, only: [:create, :destroy]
       resources :access_suspensions, controller: "community_access_suspensions", only: [:create, :destroy]
       resource :plan_trial, only: [:update], controller: "community_plan_trials"
+      # プロジェクトの作成導線。作成できる人(運営者・Core プラン以上の参加者)はコミュニティの編集権限より広いため、
+      # 編集画面とは別の管理画面にする。
+      resource :project_management, only: [:show], controller: "community_project_managements"
       resources :community_posts
     end
 

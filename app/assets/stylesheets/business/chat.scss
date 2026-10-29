@@ -1,12 +1,29 @@
 // Business のコミュニティ タイムライン / プロジェクト チャット共通の
-// 入力欄(ツールバー・プレビュー・添付)と、本文・添付の表示。
+// 入力欄(書式なしの本文・添付)と、本文・添付の表示。
 // application.css は全画面共通なので、必ず business- 接頭辞のクラス配下に書く。
 
 $business-chat-accent: #6366f1;
 $business-chat-border: #e5e7eb;
 $business-chat-muted: #6b7280;
 
-/* ===== 本文(送信後の表示とプレビューで共通) ===== */
+/* ===== 本文: 現在の投稿(書式なし) ===== */
+.business-chat-plain {
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+
+  p { margin: 0 0 0.5em; }
+
+  p:last-child { margin-bottom: 0; }
+
+  a {
+    color: $business-chat-accent;
+    text-decoration: underline;
+    word-break: break-all;
+  }
+}
+
+/* ===== 本文: 書式ボタンがあった時期の投稿 ===== */
 .business-chat-markdown {
   font-size: 14px;
   line-height: 1.7;
@@ -186,58 +203,6 @@ $business-chat-muted: #6b7280;
   }
 }
 
-.business-composer__bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 6px;
-  border-bottom: 1px solid $business-chat-border;
-  background: #f9fafb;
-  border-radius: 12px 12px 0 0;
-}
-
-.business-composer__toolbar,
-.business-composer__tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.business-composer__tool,
-.business-composer__tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 36px;
-  padding: 6px 10px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  background: transparent;
-  color: #374151;
-  font-size: 13px;
-  cursor: pointer;
-
-  &:hover { background: #eef2ff; }
-
-  &:focus-visible {
-    outline: 2px solid $business-chat-accent;
-    outline-offset: 1px;
-  }
-}
-
-.business-composer__tool-icon {
-  font-weight: bold;
-}
-
-.business-composer__tab.is-active {
-  border-color: $business-chat-border;
-  background: #fff;
-  color: $business-chat-accent;
-  font-weight: bold;
-}
-
 .business-composer__textarea {
   display: block;
   box-sizing: border-box;
@@ -251,17 +216,6 @@ $business-chat-muted: #6b7280;
   resize: vertical;
 
   &:focus { outline: none; }
-}
-
-.business-composer__preview {
-  min-height: 88px;
-  padding: 10px 12px;
-
-  &[hidden] { display: none; }
-}
-
-.business-composer__placeholder {
-  color: $business-chat-muted;
 }
 
 .business-composer__footer {
@@ -436,35 +390,6 @@ $business-chat-muted: #6b7280;
 }
 
 @media (max-width: 768px) {
-  .business-composer__bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .business-composer__toolbar {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .business-composer__tool {
-    flex-direction: column;
-    justify-content: center;
-    gap: 0;
-    min-height: 44px;
-    padding: 4px;
-    font-size: 11px;
-  }
-
-  .business-composer__tabs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .business-composer__tab {
-    justify-content: center;
-    min-height: 40px;
-  }
-
   .business-composer__footer {
     flex-direction: column;
     align-items: stretch;
