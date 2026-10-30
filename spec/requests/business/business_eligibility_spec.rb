@@ -111,6 +111,65 @@ RSpec.describe "Business の利用資格と参加", type: :request do
       expect(response).to redirect_to(business_join_path)
     end
 
+    describe "音楽だけの運営者・プロジェクト管理者の例外は、自分の管理対象だけに効く" do
+      let(:other_owner) { create(:customer, domain_name: "business", onboarding_done: true) }
+      let(:other_community) { create(:community, owner: other_owner, domain: business_domain, join_approval_mode: :auto) }
+      let(:other_project) { Project.create!(community: other_community, customer: other_owner, title: "別コミュニティの企画", join_approval_mode: :auto) }
+
+      before { CommunityCustomer.create!(community: other_community, customer: other_owner) }
+
+      it "運営者: 別コミュニティ・そのプロジェクトは開けず、参加・申請の POST でも行を作らない" do
+        co_operator = create(:customer, domain_name: "music", onboarding_done: true)
+        CommunityOwner.create!(community: community, customer: co_operator)
+        sign_in co_operator
+
+        [business_community_path(other_community), business_project_path(other_project)].each do |path|
+          get path
+          expect(response).to redirect_to(business_join_path), path
+        end
+        expect do
+          post business_community_permit_path(other_community)
+          post join_business_project_path(other_project)
+          # 自分が運営するコミュニティでも、一般の参加申請(参加行の作成)は利用資格が必要。
+          post business_community_permit_path(community)
+        end.not_to change { membership_rows }
+      end
+
+      it "プロジェクト作成者: 自分のプロジェクトだけ開け、同じコミュニティのほかのプロジェクトには参加できない" do
+        creator = create(:customer, domain_name: "music", onboarding_done: true)
+        CommunityCustomer.create!(community: community, customer: creator)
+        own = Project.create!(community: community, customer: creator, title: "自分の企画")
+        sibling = Project.create!(community: community, customer: owner, title: "隣の企画", join_approval_mode: :auto)
+        sign_in creator
+
+        get business_project_path(own)
+        expect(response).to have_http_status(:ok)
+        get business_project_path(sibling)
+        expect(response).to redirect_to(business_join_path)
+        expect { post join_business_project_path(sibling) }.not_to change { membership_rows }
+        # 親コミュニティの画面は運営者ではないため、利用資格が無ければ開けない。
+        get business_community_path(community)
+        expect(response).to redirect_to(business_join_path)
+      end
+
+      it "プロジェクト作成者でも、親コミュニティから外れたり停止されたりすると例外は効かない" do
+        creator = create(:customer, domain_name: "music", onboarding_done: true)
+        CommunityCustomer.create!(community: community, customer: creator)
+        own = Project.create!(community: community, customer: creator, title: "自分の企画")
+        sign_in creator
+
+        Business::Memberships::RevokeCommunityAccess.call(community: community, customer: creator)
+        get business_project_path(own)
+        expect(response).to redirect_to(business_join_path)
+
+        CommunityCustomer.create!(community: community, customer: creator)
+        Business::Memberships::RevokeCommunityAccess.call(community: community, customer: creator, suspend: true, actor: owner)
+        get business_project_path(own)
+        expect(response).to redirect_to(business_join_path)
+        expect(creator.reload.business_project_participant?(own)).to be false
+      end
+    end
+
     it "システム管理者は Business ドメインが無くても従来どおり(運営者としての扱いを変えない)" do
       admin = create(:customer, domain_name: "music", is_owner: :admin, onboarding_done: true)
       sign_in admin
