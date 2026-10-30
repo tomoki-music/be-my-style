@@ -40,4 +40,38 @@ RSpec.describe "Business::Customers", type: :request do
       end
     end
   end
+
+  describe "プロフィール設定の音楽専用項目" do
+    let(:part) { create(:part, name: "ギター") }
+    let(:genre) { Genre.create!(name: "ジャズ") }
+    let(:music_and_business) do
+      create(:customer, domain_name: "music").tap do |c|
+        CustomerDomain.create!(customer: c, domain: Domain.find_or_create_by!(name: "business"))
+        c.parts << part
+        c.genres << genre
+      end
+    end
+
+    before { sign_in music_and_business }
+
+    it "Business のプロフィール設定には音楽登録があってもパート・ジャンル欄を出さない" do
+      get edit_business_customer_path(music_and_business)
+
+      expect(response.body).not_to include("customer[part_ids][]", "customer[genre_ids][]")
+      expect(response.body).not_to include("ギター", "ジャズ")
+    end
+
+    it "Business 側で保存しても音楽のパート・ジャンルは消えず、送られても変更しない" do
+      other_part = create(:part, name: "ベース")
+
+      patch business_customer_path(music_and_business), params: { customer: { name: "新しい名前", job: "デザイナー" } }
+      expect(music_and_business.reload.parts).to eq [part]
+      expect(music_and_business.genres).to eq [genre]
+      expect(music_and_business.name).to eq "新しい名前"
+
+      patch business_customer_path(music_and_business), params: { customer: { name: "新しい名前", part_ids: [other_part.id], genre_ids: [""] } }
+      expect(music_and_business.reload.parts).to eq [part]
+      expect(music_and_business.genres).to eq [genre]
+    end
+  end
 end

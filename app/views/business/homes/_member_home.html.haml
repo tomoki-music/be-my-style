@@ -1,9 +1,9 @@
 -# Business のログイン後ホーム本文。表示対象・状態・ページ分割は shared/_member_home(/ と共通)と同じで、
 -# Homes::MyCommunities / Homes::MyProjects が認可条件で絞った対象だけを出す。承認待ちは名前と状態以外を出さない。
 -# 本文は「コミュニティ」「プロジェクト」の2一覧だけにし、紹介画像・キャッチコピー・料金表などは置かない。
+-# 音楽コミュニティは(両方の利用者でも)出さず、探す導線も Business のコミュニティ一覧だけにする。
 - communities = @my_communities.communities
 - projects = @my_projects.projects
-- community_search_links = member_home_community_search_links
 - project_search_available = member_home_project_search_available?
 
 .ba-home
@@ -15,18 +15,16 @@
         コミュニティ
         - if communities.total_count.positive?
           %span.ba-count= "#{communities.total_count}件"
-      - if communities.total_count.positive? && community_search_links.present?
-        .ba-home__links
-          - community_search_links.each do |label, path|
-            = link_to label, path, class: "ba-text-link", data: { turbolinks: false }
+      - if communities.total_count.positive?
+        = link_to business_communities_path, class: "ba-btn ba-btn--secondary ba-btn--sm" do
+          %i.fa-solid.fa-magnifying-glass{ "aria-hidden": "true" }
+          コミュニティを探す
 
     - if communities.total_count.zero?
       .ba-empty
-        %p 参加しているコミュニティはまだありません。
-        - if community_search_links.present?
-          .ba-empty__actions
-            - community_search_links.each do |label, path|
-              = link_to label, path, class: "ba-btn ba-btn--primary", data: { turbolinks: false }
+        %p 参加しているコミュニティはまだありません。コミュニティを探して、参加を申請しましょう。
+        .ba-empty__actions
+          = link_to "コミュニティを探す", business_communities_path, class: "ba-btn ba-btn--primary"
     - elsif communities.empty?
       .ba-empty
         %p このページに表示するコミュニティはありません。
@@ -35,9 +33,8 @@
       %ul.ba-circle-grid
         - communities.each do |community|
           - status = @my_communities.statuses.fetch(community.id)
-          - kind_label, kind_modifier = member_home_community_kind(community)
           %li.ba-circle-item{ class: "ba-circle-item--#{status}" }
-            = link_to member_home_community_path(community), class: "ba-circle-item__link", data: { turbolinks: false } do
+            = link_to business_community_path(community), class: "ba-circle-item__link" do
               %span.ba-circle-item__media{ class: ("is-pending" if status == :pending) }
                 = business_community_avatar(community, size: :lg)
               %span.ba-circle-item__name= community.name
@@ -50,10 +47,6 @@
                 - else
                   %i.fa-solid.fa-check{ "aria-hidden": "true" }
                 = member_home_community_status_label(status)
-              - unless community.business_domain?
-                %span.ba-status.ba-status--kind= kind_label
-            - unless community.business_domain?
-              = link_to "イベントを見る", public_events_path(community_id: community.id, status: "upcoming"), class: "ba-circle-item__sub", data: { turbolinks: false }, "aria-label": "#{community.name}のイベントを見る"
       = paginate communities, param_name: :community_page, params: { anchor: "my-communities" }
 
   %section.ba-home__section.ba-anchor-target#my-projects{ "aria-labelledby": "my-projects-title" }
@@ -72,7 +65,7 @@
           %p 参加しているプロジェクトはまだありません。Business コミュニティに参加すると、そのコミュニティのプロジェクトへ参加を申請できます。
           .ba-empty__actions
             = link_to "プロジェクトを探す", business_projects_path, class: "ba-btn ba-btn--secondary"
-            = link_to "Businessコミュニティを探す", business_communities_path, class: "ba-btn ba-btn--primary"
+            = link_to "コミュニティを探す", business_communities_path, class: "ba-btn ba-btn--primary"
         - else
           %p プロジェクトは Business（NAKAMA）のコミュニティで利用できる機能です。
           .ba-empty__actions

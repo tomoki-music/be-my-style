@@ -1,0 +1,33 @@
+-# 紹介の近くに出す参加状況と、参加者自身の操作(参加・申請・申請取消)。状態は Business::Memberships::CommunityStatuses。
+-# 承認・停止などの運営操作はメンバー管理画面に置き、ここには出さない。
+.ba-join#community-join
+  - case @join_status
+  - when :none
+    = link_to business_join_button_label(@community),
+      business_community_permit_path(@community),
+      method: :post,
+      data: { disable_with: "送信中…" },
+      class: "ba-btn ba-btn--primary"
+    %p.ba-join__note
+      = business_join_approval_description(@community)
+      参加すると、プロジェクトやタイムラインを閲覧できます。
+  - when :pending
+    = business_join_status_badge(:pending)
+    = link_to "申請を取り消す",
+      business_community_permit_path(@community, customer_id: current_customer.id),
+      method: :delete,
+      data: { confirm: "参加申請を取り消しますか？", disable_with: "送信中…" },
+      class: "ba-btn ba-btn--secondary ba-btn--sm"
+    %p.ba-join__note 運営者が承認すると参加でき、プロジェクトやタイムラインを閲覧できます。
+  - when :member
+    = business_join_status_badge(:member)
+    = link_to "プロジェクトを見る", "#projects", class: "ba-btn ba-btn--secondary ba-btn--sm"
+  - when :suspended
+    = business_join_status_badge(:suspended)
+    %p.ba-join__note 運営者によりアクセスが停止されているため、再参加・再申請はできません。
+  - when :operator
+    = business_join_status_badge(:operator)
+    %p.ba-join__note 運営者のため、参加申請は不要です。
+  - when :admin
+    = business_join_status_badge(:admin)
+    %p.ba-join__note 管理者のため、参加申請なしで閲覧・管理できます。

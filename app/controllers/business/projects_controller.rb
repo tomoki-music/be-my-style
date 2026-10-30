@@ -21,7 +21,8 @@ class Business::ProjectsController < ApplicationController
       @projects = @projects.where(community_id: @community.id)
     end
 
-    @projects = @projects.includes(:community, :customer, project_image_attachment: :blob).recently_updated
+    @projects = @projects.includes(:community, :customer, project_image_attachment: :blob).recently_updated.to_a
+    @join_statuses = Business::Memberships::ProjectStatuses.call(customer: current_customer, projects: @projects)
   end
 
   def new
@@ -45,12 +46,13 @@ class Business::ProjectsController < ApplicationController
   def show
     @community = @project.community
     unless current_customer.business_community_participant?(@community)
-      return redirect_to business_community_path(@community), alert: "このプロジェクトはコミュニティ参加者のみ閲覧できます。"
+      return redirect_to business_community_path(@community), alert: "このプロジェクトに参加するには、先にコミュニティへの参加が必要です。"
     end
 
     @can_view_internal = current_customer.business_project_participant?(@project)
     @can_manage_project = current_customer.business_project_manager?(@project)
-    return set_join_status unless @can_view_internal
+    @join_status = Business::Memberships::ProjectStatuses.for(customer: current_customer, project: @project)
+    return unless @can_view_internal
 
     @thread_repair_failed = !Business::ProjectThreads::LegacyChatBackfill.call_safely(project: @project)
     @threads = @project.project_threads.includes(customer: { profile_image_attachment: :blob }).recently_active.limit(THREAD_PREVIEW_LIMIT).to_a
@@ -122,15 +124,6 @@ class Business::ProjectsController < ApplicationController
       params.dig(:project, :community_id)
 
     @community = find_business_community!(community_id)
-  end
-
-  def set_join_status
-    @join_status =
-      if current_customer.business_project_suspended?(@project) then :suspended
-      elsif current_customer.business_project_pending?(@project) then :pending
-      elsif @project.deadline_passed? then :closed
-      else :none
-      end
   end
 
   # 所属コミュニティは作成時の @community で決め、パラメータでは変更させない(他コミュニティへの移動を防ぐ)。

@@ -279,4 +279,31 @@
     color: var(--ba-text-muted);
     overflow-wrap: anywhere;
   }
+
+  .ba-community-tile__text {
+    flex: 1 1 auto;
+  }
+
+  .ba-community-tile__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ba-space-2);
+    margin-top: var(--ba-space-2);
+  }
+
+  .ba-community-tile__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ba-accent-strong);
+
+    i {
+      font-size: 11px;
+    }
+  }
 }

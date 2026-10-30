@@ -45,15 +45,7 @@
         = f.label :achievements, "実績", class: "ba-label"
         = f.text_area :achievements, class: "form-control", rows: 6, placeholder: "## 実績\n- 2025年に新規事業立ち上げ\n- BtoB営業で月間MVP"
 
-  - if @customer.music_user?
-    %fieldset.ba-fieldset
-      %legend.ba-fieldset__legend 音楽
-      .ba-field
-        %p.ba-label パート
-        .ba-checks= f.collection_check_boxes(:part_ids, Part.all, :id, :name) { |b| b.label(class: "ba-check") { b.check_box + b.text } }
-      .ba-field
-        %p.ba-label ジャンル
-        .ba-checks= f.collection_check_boxes(:genre_ids, Genre.all, :id, :name) { |b| b.label(class: "ba-check") { b.check_box + b.text } }
+  -# パート・ジャンルなど音楽専用の項目は音楽側のプロフィール設定で扱い、Business の画面には出さない。
 
   .ba-form-actions
     = f.submit "更新する", class: "ba-btn ba-btn--primary"

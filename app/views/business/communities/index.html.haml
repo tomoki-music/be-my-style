@@ -15,12 +15,14 @@
     message: "まずは既存コミュニティを見ながら雰囲気を確認できます。premiumで新しい場を作れます。",
     class_name: "feature-gate--inline"
 
+-# カード全体が詳細へのリンク。参加ボタンは詳細(紹介の近く)に置き、ここでは参加状況と「詳細を見る」だけを出す。
 - if @communities.load.empty?
   .ba-empty
     %p コミュニティはまだありません。
 - else
   %ul.ba-community-list
     - @communities.each do |community|
+      - status = @join_statuses.fetch(community.id)
       %li
         = link_to business_community_path(community), class: "ba-community-tile" do
           = business_community_avatar(community, size: :lg)
@@ -28,7 +30,15 @@
             %span.ba-community-tile__name= community.name
             %span.ba-community-tile__meta
               %i.fa-solid.fa-user-group{ "aria-hidden": "true" }
-              = "#{community.customers.count}人"
+              = "#{@member_counts.fetch(community.id, 0)}人"
             - if community.introduction.present?
               %span.ba-community-tile__desc= truncate(community.introduction, length: 70)
+            %span.ba-community-tile__footer
+              - if status == :none
+                %span.ba-status.ba-status--kind= business_join_approval_label(community)
+              - else
+                = business_join_status_badge(status)
+              %span.ba-community-tile__cta
+                = status == :none ? "詳細・参加方法を見る" : "詳細を見る"
+                %i.fa-solid.fa-chevron-right{ "aria-hidden": "true" }
   = paginate @communities

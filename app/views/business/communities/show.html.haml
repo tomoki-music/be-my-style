@@ -43,38 +43,7 @@
         %i.fa-solid.fa-gift{ "aria-hidden": "true" }
         無料お試し中：このコミュニティ内では有料プランの機能制限が解除されています
 
-    .ba-join
-      - case @join_status
-      - when :member
-        %span.ba-status.ba-status--member
-          %i.fa-solid.fa-check{ "aria-hidden": "true" }
-          参加済み
-      - when :manager
-        %span.ba-status.ba-status--manager
-          %i.fa-solid.fa-star{ "aria-hidden": "true" }
-          運営者
-      - when :suspended
-        %span.ba-status.ba-status--suspended
-          %i.fa-solid.fa-ban{ "aria-hidden": "true" }
-          アクセス停止中
-        %p.ba-join__note このコミュニティへのアクセスは運営者により停止されています。
-      - when :pending
-        %span.ba-status.ba-status--pending
-          %i.fa-regular.fa-clock{ "aria-hidden": "true" }
-          承認待ち
-        = link_to "申請を取り消す",
-          business_community_permit_path(@community, customer_id: current_customer.id),
-          method: :delete,
-          data: { confirm: "参加申請を取り消しますか？" },
-          class: "ba-btn ba-btn--secondary ba-btn--sm"
-      - else
-        = link_to business_join_button_label(@community),
-          business_community_permit_path(@community),
-          method: :post,
-          class: "ba-btn ba-btn--primary"
-        %p.ba-join__note
-          = business_join_approval_description(@community)
-          参加すると、プロジェクトやタイムラインを閲覧できます。
+    = render "business/communities/join_panel"
 
 - if @can_view_internal
   %nav.ba-sectnav{ "aria-label": "このコミュニティの内容" }
@@ -112,7 +81,8 @@
         - else
           %ul.ba-project-grid
             - projects.each do |project|
-              %li= render "business/projects/card", project: project, show_community: false, description: project.description
+              %li= render "business/projects/card", project: project, show_community: false, description: project.description,
+                join_status: @project_statuses.fetch(project.id)
 
       %section.ba-card.ba-anchor-target#timeline{ "aria-labelledby": "community-timeline-title" }
         %h2.ba-section-title#community-timeline-title タイムライン
@@ -139,6 +109,8 @@
           %i.fa-solid.fa-lock{ "aria-hidden": "true" }
           参加者限定
         %p.ba-muted プロジェクト・タイムライン・メンバーは、コミュニティの参加者のみ閲覧できます。
+        - if @join_status == :none
+          %p.ba-muted 上の「#{business_join_button_label(@community)}」から参加すると、このコミュニティのプロジェクトを探して参加できます。
 
   - if @can_view_internal
     %aside.ba-columns__side
@@ -156,3 +128,8 @@
                   %span.ba-person__name= customer.name
                   - if customer == @community.owner
                     %span.ba-person__meta オーナー
+        - if @join_status == :member
+          .ba-leave
+            = link_to "コミュニティから退出する", business_community_community_customers_path(@community),
+              method: :delete, data: { confirm: "退出すると、このコミュニティとプロジェクトの内容を閲覧・投稿できなくなります。よろしいですか？" },
+              class: "ba-btn ba-btn--danger ba-btn--sm"

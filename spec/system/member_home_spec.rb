@@ -118,7 +118,10 @@ RSpec.describe "ログイン後ホーム", type: :system, js: true do
 
     expect(page).to have_css("nav.ba-bottomnav", visible: :visible)
     expect(page).to have_no_css(".hero-section, .business-top-slider, .header_container--business")
-    expect(member_home_layout(".ba-home", ".ba-circle-item, .ba-project-card")).to include("overflow" => 0, "overlap" => false, "cards" => 7)
+    # Business のホームには音楽コミュニティ(駅前セッションの会・週末アコースティック部)を出さない。
+    expect(member_home_layout(".ba-home", ".ba-circle-item, .ba-project-card")).to include("overflow" => 0, "overlap" => false, "cards" => 5)
+    expect(page).to have_no_text("駅前セッションの会")
+    expect(page).to have_no_text("週末アコースティック部")
     expect(page.evaluate_script("document.documentElement.scrollWidth - document.documentElement.clientWidth")).to be <= 0
     screenshot!("member_home_business_375")
   end

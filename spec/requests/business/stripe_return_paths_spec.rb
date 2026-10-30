@@ -107,6 +107,6 @@ RSpec.describe "Business の契約関連の戻り先", type: :request do
 
     post business_portal_path
 
-    expect(response).to redirect_to(new_customer_session_path)
+    expect(response).to redirect_to(new_business_customer_session_path)
   end
 end

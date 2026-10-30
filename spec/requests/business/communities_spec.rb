@@ -308,7 +308,7 @@ RSpec.describe "Business::Communities", type: :request do
 
       get business_community_path(community)
 
-      expect(response).to redirect_to(new_customer_session_path)
+      expect(response).to redirect_to(new_business_customer_session_path)
     end
   end
 end

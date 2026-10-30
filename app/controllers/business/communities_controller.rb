@@ -11,25 +11,30 @@ class Business::CommunitiesController < ApplicationController
     require_feature!(:business_community_create, redirect_to_path: business_communities_path)
   end
 
+  # 各カードに参加状況と人数を出す。どちらも表示中のページ分だけをまとめて求める。
   def index
     @communities = Community
       .where(domain_id: @current_domain.id)
       .with_attached_community_image
       .page(params[:page]).per(5)
+    @join_statuses = Business::Memberships::CommunityStatuses.call(customer: current_customer, communities: @communities)
+    @member_counts = CommunityCustomer.where(community_id: @communities.map(&:id))
+      .joins(:customer).merge(Customer.active).group(:community_id).count
   end
 
   # 未参加者には参加申請に必要な名称・紹介だけを見せ、プロジェクト・タイムライン・メンバーは参加者(運営者を含む)に限る。
   # 運営者にも参加者と同じ画面を出し、承認・停止・設定変更はメンバー管理 / 編集画面へ分ける。
   def show
     @can_view_internal = current_customer.business_community_participant?(@community)
-    @join_status = community_join_status
+    @join_status = Business::Memberships::CommunityStatuses.for(customer: current_customer, community: @community)
 
     @can_manage = current_customer.can_manage_community?(@community)
     @can_create_project = current_customer.can_create_project_for?(@community)
     load_pending_permit_count if @can_manage
     return unless @can_view_internal
 
-    @projects = @community.projects.with_attached_project_image.recently_updated
+    @projects = @community.projects.with_attached_project_image.recently_updated.to_a
+    @project_statuses = Business::Memberships::ProjectStatuses.call(customer: current_customer, projects: @projects)
     @timeline_posts = @community.community_posts.includes(customer: { profile_image_attachment: :blob }).with_attached_attachments.order(created_at: :desc)
   end
 
@@ -94,15 +99,6 @@ class Business::CommunitiesController < ApplicationController
   end
 
   private
-
-  def community_join_status
-    return :member if current_customer.business_community_member?(@community)
-    return :manager if current_customer.can_manage_community?(@community)
-    return :suspended if current_customer.business_community_suspended?(@community)
-    return :pending if current_customer.business_community_pending?(@community)
-
-    :none
-  end
 
   def load_pending_permit_count
     @pending_permit_count = pending_permits.count

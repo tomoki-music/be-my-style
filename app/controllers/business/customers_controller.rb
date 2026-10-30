@@ -5,7 +5,9 @@ class Business::CustomersController < ApplicationController
   before_action :ensure_correct_customer, only: [:edit, :update]
   before_action :reject_deleted_customer, only: [:show]
 
+  # 参加コミュニティは Business のものだけを出す(音楽コミュニティの名称・リンクは Business の画面に出さない)。
   def show
+    @business_communities = @customer.communities.joins(:domain).where(domains: { name: "business" }).order(:id)
   end
 
   def edit
@@ -39,6 +41,7 @@ class Business::CustomersController < ApplicationController
     redirect_to business_root_path, alert: "このユーザーのプロフィールは表示できません。"
   end
 
+  # 音楽専用の項目(パート・ジャンル)は受け付けない。Business 側の保存で音楽のデータを変えないため。
   def customer_params
     params.require(:customer).permit(
       :name,
@@ -47,9 +50,7 @@ class Business::CustomersController < ApplicationController
       :job,
       :skills,
       :achievements,
-      :url,
-      part_ids: [],
-      genre_ids: []
+      :url
     )
   end
 

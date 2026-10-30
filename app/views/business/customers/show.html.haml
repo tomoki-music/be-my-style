@@ -80,6 +80,9 @@
 
     %section.ba-card{ "aria-labelledby": "profile-communities-title" }
       %h2.ba-section-title#profile-communities-title 参加コミュニティ
-      %ul.ba-chip-list
-        - @customer.communities.each do |community|
-          %li= link_to community.name, business_community_path(community), class: "ba-chip"
+      - if @business_communities.empty?
+        %p.ba-muted.ba-section-body 参加しているコミュニティはまだありません。
+      - else
+        %ul.ba-chip-list
+          - @business_communities.each do |community|
+            %li= link_to community.name, business_community_path(community), class: "ba-chip"
