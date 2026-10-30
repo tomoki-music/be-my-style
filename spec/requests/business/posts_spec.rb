@@ -20,12 +20,11 @@ RSpec.describe "Business::Posts", type: :request do
       expect(response).to have_http_status(:ok)
 
       expect { create_post }.to change(Post, :count).by(1)
-      expect(response).to redirect_to(business_posts_path)
+      expect(response).to redirect_to(business_post_path(Post.last))
     end
 
-    # タイムライン(posts#timeline)は MySQL 専用関数(UNIX_TIMESTAMP)を使うため、SQLite のテストでは一覧で確認する。
-    it "一覧・ヘッダー・トップに有料プランへの誘導を出さない" do
-      get business_posts_path
+    it "タイムライン・ヘッダー・トップに有料プランへの誘導を出さない" do
+      get business_timeline_path
       expect(response.body).to include(new_business_post_path)
       expect(response.body).not_to include("lightで投稿を始める")
       expect(response.body).not_to include("Lightプラン契約で解放")
@@ -33,7 +32,7 @@ RSpec.describe "Business::Posts", type: :request do
       get business_root_path
       expect(response.body).not_to include("lightで投稿を開始")
       expect(response.body).not_to include(business_checkout_path("light"))
-      expect(response.body).to include(business_posts_path)
+      expect(response.body).to include(business_timeline_path)
     end
   end
 

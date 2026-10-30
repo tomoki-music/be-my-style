@@ -87,9 +87,9 @@ RSpec.describe "Onboardings - オンボーディング活動報告例外", type:
         expect(business_customer.reload.onboarding_done).to be true
       end
 
-      it "作成成功後に business_posts_path へリダイレクトされる" do
+      it "作成成功後に作成した投稿の詳細へリダイレクトされる" do
         post business_posts_path, params: post_params
-        expect(response).to redirect_to(business_posts_path)
+        expect(response).to redirect_to(business_post_path(Post.last))
       end
     end
 

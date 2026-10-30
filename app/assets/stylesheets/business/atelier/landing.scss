@@ -347,58 +347,6 @@
     text-align: center;
   }
 
-  // ===== できること =====
-  .ba-lp-features {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--ba-space-4);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  // 3列で見出しが語の途中で折り返さない幅(992px 以上)だけ横に並べる。
-  @media (min-width: 992px) {
-    .ba-lp-features {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-
-  .ba-lp-feature {
-    padding: var(--ba-space-5);
-    border: 1px solid var(--ba-border);
-    border-radius: var(--ba-radius-card);
-    background: var(--ba-surface);
-    box-shadow: var(--ba-shadow-card);
-  }
-
-  .ba-lp-feature__icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    margin-bottom: var(--ba-space-3);
-    border-radius: 50%;
-    background: var(--ba-accent-soft);
-    color: var(--ba-accent-strong);
-    font-size: 18px;
-  }
-
-  .ba-lp-feature__title {
-    margin: 0 0 var(--ba-space-2);
-    font-size: 18px;
-    word-break: keep-all;
-    overflow-wrap: anywhere;
-  }
-
-  .ba-lp-feature__text {
-    margin: 0;
-    color: var(--ba-text-muted);
-    font-size: 15px;
-    line-height: 1.75;
-  }
-
   // ===== お知らせ =====
   .ba-lp-notices {
     margin: 0;

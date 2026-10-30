@@ -237,6 +237,8 @@ Rails.application.routes.draw do
     end
 
     get "timeline", to: "posts#timeline"
+    # 使い方(ログイン前から閲覧できる。会員データは出さない)
+    get "help", to: "helps#show", as: :help
 
     resources :notifications, only: [:index]
 

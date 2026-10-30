@@ -1,0 +1,722 @@
+// Business の使い方(/business/help)と、利用イメージのイラスト・利用ガイド・ビジネス投稿の公開範囲の注記。
+// 使い方とステップ図はログイン前(body.ba-lp)でも出すため、両方のスコープに当てる。
+
+.ba-body,
+.ba-lp {
+  // ===== イラスト =====
+  // width / height 属性で縦横比を予約し、幅だけを親に合わせる。
+  .ba-illust {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+
+  // ===== 3ステップ(コミュニティ → プロジェクト → スレッド) =====
+  // 文字とアイコンだけのカードを縦に並べ、番号付きの流れとして読ませる。
+  .ba-flow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ba-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ba-flow__step {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--ba-space-4);
+    padding: var(--ba-space-4) var(--ba-space-5);
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-card);
+    background: var(--ba-surface);
+    box-shadow: var(--ba-shadow-card);
+  }
+
+  .ba-flow__icon {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--ba-accent-soft);
+    color: var(--ba-accent-strong);
+    font-size: 20px;
+  }
+
+  .ba-flow__body {
+    min-width: 0;
+  }
+
+  .ba-flow__number {
+    margin: 0 0 2px;
+    color: var(--ba-accent-strong);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .ba-flow__title {
+    margin: 0 0 var(--ba-space-1);
+    font-size: 18px;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-flow__text {
+    margin: 0;
+    color: var(--ba-text-muted);
+    font-size: 15px;
+    line-height: 1.75;
+  }
+
+  @media (max-width: 359.98px) {
+    .ba-flow__step {
+      gap: var(--ba-space-3);
+      padding: var(--ba-space-3) var(--ba-space-4);
+    }
+
+    .ba-flow__icon {
+      width: 40px;
+      height: 40px;
+      font-size: 17px;
+    }
+  }
+
+  // ===== ビジネス投稿の公開範囲 =====
+  .ba-visibility {
+    display: flex;
+    gap: var(--ba-space-3);
+    margin: 0 0 var(--ba-space-4);
+    padding: var(--ba-space-3) var(--ba-space-4);
+    border: 1px solid var(--ba-accent-line);
+    border-radius: var(--ba-radius-control);
+    background: var(--ba-accent-soft);
+    font-size: 14px;
+
+    p {
+      margin: 0;
+    }
+
+    p + p {
+      margin-top: var(--ba-space-1);
+      color: var(--ba-text-muted);
+    }
+  }
+
+  .ba-visibility__icon {
+    flex: none;
+    margin-top: 4px;
+    color: var(--ba-accent-strong);
+  }
+
+  .ba-visibility__text {
+    min-width: 0;
+  }
+
+  .ba-visibility__link {
+    font-weight: 600;
+    color: var(--ba-accent-strong);
+    text-decoration: underline;
+  }
+
+  // 狭い幅では3つのタブを横スクロールなしで並べ、長いラベルは「コミュニティの／仲間」の位置でだけ折り返す。
+  @media (max-width: 479.98px) {
+    .ba-tabs.ba-timeline__tabs a {
+      flex: 1 1 auto;
+      justify-content: center;
+      padding: var(--ba-space-1) 6px;
+      font-size: 15px;
+      line-height: 1.3;
+      text-align: center;
+      white-space: normal;
+      word-break: keep-all;
+    }
+  }
+
+  .ba-timeline__tab-note {
+    margin-top: calc(var(--ba-space-2) * -1);
+  }
+
+  .ba-timeline__filters {
+    margin-bottom: var(--ba-space-4);
+
+    .ba-chip {
+      gap: 6px;
+    }
+  }
+
+  .ba-status--neutral {
+    background: var(--ba-surface-muted);
+    color: var(--ba-text-muted);
+  }
+
+  // ===== 使い方ページ =====
+  .ba-help {
+    max-width: var(--ba-reading-width);
+    margin: 0 auto;
+  }
+
+  .ba-help__header {
+    flex-wrap: wrap;
+  }
+
+  .ba-help-toc {
+    margin: 0 0 var(--ba-space-6);
+    padding: var(--ba-space-4) var(--ba-space-5);
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-card);
+    background: var(--ba-surface);
+    box-shadow: var(--ba-shadow-card);
+  }
+
+  .ba-help-toc__title {
+    margin: 0 0 var(--ba-space-2);
+    font-size: 16px;
+  }
+
+  .ba-help-toc__list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 768px) {
+    .ba-help-toc__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--ba-space-5);
+    }
+  }
+
+  .ba-help-toc__link {
+    display: flex;
+    align-items: center;
+    gap: var(--ba-space-3);
+    min-height: var(--ba-tap);
+    border-radius: var(--ba-radius-small);
+    color: var(--ba-text);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .ba-help-toc__link:hover {
+    color: var(--ba-accent-strong);
+  }
+
+  .ba-help-toc__link:focus-visible {
+    outline: none;
+    box-shadow: var(--ba-focus);
+  }
+
+  .ba-help-toc__number,
+  .ba-help-section__number {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--ba-accent-soft);
+    color: var(--ba-accent-strong);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .ba-help-section {
+    margin: 0 0 var(--ba-space-6);
+    padding: var(--ba-space-5);
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-card);
+    background: var(--ba-surface);
+    box-shadow: var(--ba-shadow-card);
+
+    > p {
+      margin: 0 0 var(--ba-space-3);
+    }
+  }
+
+  // 狭い幅では枠の内側の余白を詰め、表や図の幅を確保する。
+  @media (max-width: 479.98px) {
+    .ba-help-section,
+    .ba-help-toc {
+      padding: var(--ba-space-4);
+    }
+  }
+
+  .ba-help-section__title {
+    display: flex;
+    align-items: center;
+    gap: var(--ba-space-3);
+    margin: 0 0 var(--ba-space-4);
+    font-size: 20px;
+  }
+
+  .ba-help-section__subtitle {
+    margin: var(--ba-space-5) 0 var(--ba-space-3);
+    font-size: 17px;
+  }
+
+  .ba-help-section .ba-flow {
+    margin-bottom: var(--ba-space-4);
+  }
+
+  .ba-help-steps {
+    margin: 0 0 var(--ba-space-3);
+    padding: 0;
+    list-style: none;
+    counter-reset: ba-help-step;
+
+    > li {
+      position: relative;
+      margin: 0 0 var(--ba-space-3);
+      padding-left: 40px;
+      counter-increment: ba-help-step;
+      line-height: 1.7;
+    }
+
+    > li::before {
+      content: counter(ba-help-step);
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--ba-accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+    }
+  }
+
+  .ba-help-sublist {
+    margin: var(--ba-space-2) 0 0;
+    padding-left: 1.2em;
+    color: var(--ba-text-muted);
+    font-size: 15px;
+  }
+
+  // 入れ子の関係図。中に進むほど色を濃くして「見られる人が限られる」ことを表す。
+  .ba-help-map {
+    display: grid;
+    gap: var(--ba-space-3);
+    margin: 0;
+  }
+
+  .ba-help-map__box,
+  .ba-help-map__aside {
+    padding: var(--ba-space-3) var(--ba-space-4);
+    border: 1px solid var(--ba-accent-line);
+    border-radius: var(--ba-radius-control);
+
+    p {
+      margin: 0 0 var(--ba-space-2);
+    }
+  }
+
+  .ba-help-map__box--community {
+    background: var(--ba-sky-soft);
+  }
+
+  .ba-help-map__box--project {
+    margin-top: var(--ba-space-3);
+    background: var(--ba-accent-soft);
+  }
+
+  .ba-help-map__box--thread {
+    margin-top: var(--ba-space-3);
+    border-color: var(--ba-accent);
+    background: var(--ba-surface);
+  }
+
+  .ba-help-map__aside {
+    border-style: dashed;
+    border-color: var(--ba-border-strong);
+    background: var(--ba-surface-muted);
+  }
+
+  .ba-help-map__name {
+    display: flex;
+    align-items: center;
+    gap: var(--ba-space-2);
+    font-weight: 700;
+    color: var(--ba-accent-strong);
+  }
+
+  .ba-help-map__who {
+    color: var(--ba-text-muted);
+    font-size: 14px;
+  }
+
+  .ba-help-map__item {
+    display: flex;
+    align-items: center;
+    gap: var(--ba-space-2);
+    font-size: 14px;
+  }
+
+  .ba-help-table-wrap {
+    margin: 0 0 var(--ba-space-3);
+    overflow-x: auto;
+  }
+
+  .ba-help-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+
+    th,
+    td {
+      padding: var(--ba-space-2) var(--ba-space-3);
+      border-bottom: 1px solid var(--ba-border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    thead th {
+      background: var(--ba-surface-muted);
+      color: var(--ba-text-muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    tbody th {
+      color: var(--ba-text);
+    }
+  }
+
+  // スマホでは表を行ごとのカードにして、横スクロールなしで読めるようにする。
+  @media (max-width: 599.98px) {
+    .ba-help-table {
+      thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+      }
+
+      tr {
+        display: block;
+        margin-bottom: var(--ba-space-3);
+        border: 1px solid var(--ba-border);
+        border-radius: var(--ba-radius-control);
+      }
+
+      th,
+      td {
+        display: block;
+        border-bottom: 0;
+      }
+
+      tbody th {
+        background: var(--ba-surface-muted);
+        border-radius: var(--ba-radius-control) var(--ba-radius-control) 0 0;
+      }
+
+      td::before {
+        content: attr(data-label);
+        display: block;
+        color: var(--ba-text-muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+    }
+  }
+
+  .ba-help-status {
+    margin: 0;
+  }
+
+  .ba-help-status__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ba-space-2);
+    padding: var(--ba-space-3) 0;
+    border-bottom: 1px solid var(--ba-border);
+
+    dt {
+      margin: 0;
+    }
+
+    dd {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.75;
+    }
+  }
+
+  .ba-help-status__row:last-child {
+    border-bottom: 0;
+  }
+
+  @media (min-width: 600px) {
+    .ba-help-status__row {
+      grid-template-columns: 150px minmax(0, 1fr);
+    }
+  }
+
+  .ba-help-audience {
+    display: flex;
+    align-items: center;
+    gap: var(--ba-space-2);
+    padding: var(--ba-space-2) var(--ba-space-3);
+    border-radius: var(--ba-radius-small);
+    background: var(--ba-peach);
+    color: var(--ba-peach-text);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .ba-help-checklist {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      gap: var(--ba-space-2);
+      margin: 0 0 var(--ba-space-3);
+      line-height: 1.7;
+    }
+
+    i {
+      flex: none;
+      margin-top: 5px;
+    }
+
+    .is-yes i {
+      color: var(--ba-success);
+    }
+
+    .is-no i {
+      color: var(--ba-danger);
+    }
+  }
+
+  .ba-help-faq__item {
+    border-bottom: 1px solid var(--ba-border);
+
+    summary {
+      display: flex;
+      align-items: center;
+      min-height: var(--ba-tap);
+      padding: var(--ba-space-2) 0;
+      border-radius: var(--ba-radius-small);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    summary:focus-visible {
+      outline: none;
+      box-shadow: var(--ba-focus);
+    }
+
+    p {
+      margin: 0 0 var(--ba-space-3);
+      color: var(--ba-text-muted);
+      line-height: 1.75;
+    }
+  }
+
+  .ba-help-faq__item:last-child {
+    border-bottom: 0;
+  }
+
+  .ba-help-cta {
+    margin: 0 0 var(--ba-space-6);
+    text-align: center;
+  }
+
+  .ba-help-cta__text {
+    margin: 0 0 var(--ba-space-3);
+  }
+}
+
+// ===== ログイン前の使い方・紹介ページ(body.ba-lp) =====
+.ba-lp {
+  .ba-help-lp {
+    padding: var(--ba-space-6) 0;
+  }
+
+  .ba-lp-section__lead {
+    margin: calc(var(--ba-space-5) * -1 + var(--ba-space-2)) 0 var(--ba-space-5);
+    color: var(--ba-text-muted);
+    text-align: center;
+  }
+
+  // 利用イメージの絵(1枚)と3ステップ。PC は絵を左・ステップを右、狭い幅は絵を上にして縦に並べる。
+  .ba-lp-flow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ba-space-5);
+    align-items: center;
+  }
+
+  .ba-lp-flow__visual {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+
+    // 白背景の絵が薄い背景の上で四角く浮かないよう、カードと同じ角丸と線で囲む。
+    .ba-illust {
+      border: 1px solid var(--ba-border);
+      border-radius: var(--ba-radius-card);
+    }
+  }
+
+  @media (min-width: 992px) {
+    .ba-lp-flow {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--ba-space-6);
+    }
+
+    .ba-lp-flow__visual {
+      max-width: none;
+    }
+  }
+
+  .ba-lp-flow__more {
+    margin: var(--ba-space-5) 0 0;
+    text-align: center;
+  }
+
+  .ba-lp-hero__help {
+    margin: var(--ba-space-2) 0 0;
+  }
+
+  // ヘッダーの「使い方」は、ボタン2つと並べても収まる幅だけ出す(狭い幅ではヒーロー直下とフッターにある)。
+  .ba-lp-header__help {
+    display: none;
+    align-items: center;
+    min-height: var(--ba-tap);
+    padding: 0 var(--ba-space-2);
+    border-radius: var(--ba-radius-small);
+    color: var(--ba-text);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  @media (min-width: 600px) {
+    .ba-lp-header__help {
+      display: inline-flex;
+    }
+  }
+}
+
+// ===== ログイン後ホームの利用ガイド(body.ba-body) =====
+.ba-body {
+  .ba-empty--guide {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ba-space-4);
+    align-items: center;
+    text-align: left;
+  }
+
+  // 一覧や操作ボタンを押し下げないよう、絵は小さく添える(SP 最大 180px、PC は 200px の列)。
+  .ba-empty-guide__media {
+    width: 100%;
+    max-width: 180px;
+    margin: 0 auto;
+  }
+
+  @media (min-width: 768px) {
+    .ba-empty--guide {
+      grid-template-columns: 200px minmax(0, 1fr);
+    }
+
+    .ba-empty-guide__media {
+      max-width: none;
+    }
+  }
+
+  .ba-empty--guide .ba-empty__title {
+    color: var(--ba-text);
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  // 文字を左揃えにしているので、ボタンも左に揃える。
+  .ba-empty--guide .ba-empty__actions {
+    justify-content: flex-start;
+  }
+
+  .ba-guide-steps {
+    margin: 0 0 var(--ba-space-4);
+    padding-left: 1.4em;
+    color: var(--ba-text);
+
+    li {
+      margin-bottom: var(--ba-space-1);
+    }
+  }
+
+  .ba-home-guide {
+    display: flex;
+    align-items: center;
+    gap: var(--ba-space-4);
+    margin-top: var(--ba-space-6);
+    padding: var(--ba-space-3) var(--ba-space-4);
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-card);
+    background: var(--ba-surface);
+  }
+
+  .ba-home-guide__media {
+    flex: none;
+    width: 96px;
+  }
+
+  @media (min-width: 768px) {
+    .ba-home-guide__media {
+      width: 132px;
+    }
+  }
+
+  .ba-home-guide__body {
+    min-width: 0;
+
+    .ba-text-link {
+      gap: 6px;
+    }
+  }
+
+  .ba-home-guide__title {
+    margin: 0 0 var(--ba-space-1);
+    font-size: 16px;
+  }
+
+  .ba-home-guide__steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px var(--ba-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--ba-text-muted);
+    font-size: 14px;
+
+    li + li::before {
+      content: "→";
+      margin-right: var(--ba-space-2);
+      color: var(--ba-brand-blue);
+    }
+  }
+
+  // 320px 付近ではイラストを外し、文字と導線だけにする。
+  @media (max-width: 359.98px) {
+    .ba-home-guide__media {
+      display: none;
+    }
+  }
+}

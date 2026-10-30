@@ -1,0 +1,12 @@
+-# 「コミュニティに参加 → プロジェクトで協力 → スレッドで話す」の3ステップ。ログイン前トップと使い方ページで共用する。
+-# 説明は文字とアイコンだけで伝える(利用イメージの絵は置く側のページで1枚だけ出す)。
+- heading = local_assigns.fetch(:heading_tag, :h3)
+%ol.ba-flow
+  - Business::HelpHelper::FLOW_STEPS.each.with_index(1) do |step, number|
+    %li.ba-flow__step
+      %span.ba-flow__icon{ "aria-hidden": "true" }
+        %i.fa-solid{ class: step[:icon] }
+      .ba-flow__body
+        %p.ba-flow__number STEP #{number}
+        = content_tag heading, step[:title], class: "ba-flow__title"
+        %p.ba-flow__text= step[:text]

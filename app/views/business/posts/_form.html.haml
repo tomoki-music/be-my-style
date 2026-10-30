@@ -6,6 +6,8 @@
         - @post.errors.full_messages.each do |message|
           %li= message
 
+  = render "business/posts/visibility_note"
+
   %fieldset.ba-fieldset
     %legend.ba-fieldset__legend 内容
     .ba-field
