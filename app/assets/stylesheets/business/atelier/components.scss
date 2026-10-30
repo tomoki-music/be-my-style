@@ -1,6 +1,8 @@
 // Social Atelier: 共通コンポーネント。画面ごとの差は pages.scss / home.scss / chat.scss / manage.scss に置く。
+// ボタン・状態表示・頭文字などはログイン前の紹介ページ(body.ba-lp、landing.scss)でも使う。
 
-.ba-body {
+.ba-body,
+.ba-lp {
   .sr-only {
     position: absolute;
     width: 1px;

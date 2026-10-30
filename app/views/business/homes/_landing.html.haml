@@ -1,0 +1,122 @@
+-# Business(NAKAMA)のログイン前の紹介ページ。ログイン後と同じ Social Atelier のトークン・部品を body.ba-lp で使う(landing.scss)。
+-# 未ログインでは通知・プロジェクトなど実データを一切取得しない。画面イメージの内容はすべて架空の例。
+- content_for :body_class, "ba-lp"
+- content_for :title, "NAKAMA｜仲間と活動を育てるビジネスコミュニティ"
+- content_for :og_description, "コミュニティでつながり、プロジェクトで形にする。NAKAMAは、仲間との活動を育てるビジネスプラットフォームです。"
+- sign_up_path = new_business_customer_registration_path
+- sign_in_path = new_business_customer_session_path
+
+%a.ba-lp-skip{ href: "#ba-lp-main" } 本文へスキップ
+
+%header.ba-lp-header
+  .ba-lp-container.ba-lp-header__inner
+    = link_to business_root_path, class: "ba-lp-brand", "aria-label": "NAKAMA トップ" do
+      -# 画像にロゴ文字(NAKAMA)まで含まれているため、文字は重ねず余白だけ切り抜いて表示する。
+      = image_tag "nakama_logo.jpg", class: "ba-lp-brand__logo", alt: ""
+    %nav.ba-lp-header__nav{ "aria-label": "アカウント" }
+      = link_to "ログイン", sign_in_path, class: "ba-btn ba-btn--secondary ba-btn--sm ba-lp-header__login"
+      = link_to "無料で始める", sign_up_path, class: "ba-btn ba-btn--primary ba-btn--sm ba-lp-header__signup", data: { turbolinks: false }
+
+%main#ba-lp-main.ba-lp-main{ tabindex: "-1" }
+  %section.ba-lp-hero{ "aria-labelledby": "ba-lp-title" }
+    .ba-lp-container.ba-lp-hero__grid
+      .ba-lp-hero__copy
+        %p.ba-lp-eyebrow ビジネスコミュニティ NAKAMA
+        %h1.ba-lp-hero__title#ba-lp-title 出会いを、いっしょに動く力へ。
+        -# 日本語の文の間に空白が入らないよう、行ごとの span の前後の空白を取り除く(>)。
+        %p.ba-lp-hero__lead
+          %span.ba-lp-hero__lead-line> コミュニティでつながり、プロジェクトで形にする。
+          %span.ba-lp-hero__lead-line> NAKAMAは、仲間との活動を育てるビジネスプラットフォームです。
+        .ba-lp-actions
+          = link_to "無料で始める", sign_up_path, class: "ba-btn ba-btn--primary ba-lp-actions__primary", data: { turbolinks: false }
+          = link_to "ログイン", sign_in_path, class: "ba-btn ba-btn--secondary"
+        -# 作成はプラン(Core / Premium)が基本だが、お試し中のコミュニティや運営者は例外があるため「条件」と書く。
+        %p.ba-lp-note 無料で登録・参加できます。プロジェクトやコミュニティの作成には、有料プランなどの条件があります。
+
+      %figure.ba-lp-preview
+        %figcaption.ba-lp-preview__caption
+          %i.fa-regular.fa-image{ "aria-hidden": "true" }
+          画面イメージ（架空の例）
+        -# 架空のサンプルを実データと読み違えないよう、読み上げでは説明だけを伝える。
+        .ba-lp-preview__body{ "aria-hidden": "true" }
+          .ba-lp-preview__panel
+            %p.ba-lp-preview__label コミュニティ
+            %ul.ba-lp-preview__circles
+              %li
+                = business_monogram("デザイン部", id: 0, size: :lg)
+                %span デザイン部
+              %li
+                = business_monogram("起業ラボ", id: 1, size: :lg)
+                %span 起業ラボ
+              %li
+                = business_monogram("地域企画", id: 2, size: :lg)
+                %span 地域企画
+          .ba-lp-preview__panel.ba-lp-preview__project
+            %span.ba-lp-preview__thumb= business_monogram("新サービス", id: 3, shape: :rect)
+            %span.ba-lp-preview__project-body
+              %span.ba-status.ba-status--kind 募集中
+              %span.ba-lp-preview__project-title 新サービスのβテスト
+              %span.ba-lp-preview__project-meta
+                %i.fa-solid.fa-users
+                起業ラボ
+          .ba-lp-preview__panel.ba-lp-preview__thread
+            %p.ba-lp-preview__label
+              %i.fa-regular.fa-comments
+              スレッド
+            %p.ba-lp-preview__bubble 来週のレビュー資料を共有しました。
+            %p.ba-lp-preview__bubble.ba-lp-preview__bubble--mine ありがとうございます。確認しておきます！
+
+  %section.ba-lp-section{ "aria-labelledby": "ba-lp-features-title" }
+    .ba-lp-container
+      %h2.ba-lp-section__title#ba-lp-features-title NAKAMAでできること
+      %ul.ba-lp-features
+        %li.ba-lp-feature
+          %span.ba-lp-feature__icon{ "aria-hidden": "true" }
+            %i.fa-solid.fa-users
+          %h3.ba-lp-feature__title コミュニティでつながる
+          %p.ba-lp-feature__text 関心の近いコミュニティを探して参加し、タイムラインで近況や知見を共有できます。
+        %li.ba-lp-feature
+          %span.ba-lp-feature__icon{ "aria-hidden": "true" }
+            %i.fa-solid.fa-layer-group
+          %h3.ba-lp-feature__title プロジェクトで進める
+          %p.ba-lp-feature__text コミュニティの中でプロジェクトを立ち上げ、目標や締切を共有して仲間を募れます。
+        %li.ba-lp-feature
+          %span.ba-lp-feature__icon{ "aria-hidden": "true" }
+            %i.fa-regular.fa-comments
+          %h3.ba-lp-feature__title スレッドで話す
+          %p.ba-lp-feature__text 話題ごとにスレッドを分けて、画像やファイルを添えながら話し合えます。
+
+  %section.ba-lp-section.ba-lp-section--muted{ "aria-labelledby": "ba-lp-notice-title" }
+    .ba-lp-container.ba-lp-container--narrow
+      %h2.ba-lp-section__title#ba-lp-notice-title お知らせ
+      %ul.ba-lp-notices
+        %li
+          %time{ datetime: "2026-03-05" } 2026年3月5日
+          %span コミュニティ機能を追加しました。
+        %li
+          %time{ datetime: "2026-03-01" } 2026年3月1日
+          %span NAKAMA ビジネスコミュニティを公開しました。
+
+  -# 未ログインでは実際のコミュニティ・プロジェクトを出さず(内容は参加者限定)、登録・ログインへの案内だけを置く。
+  %section.ba-lp-section#ba-lp-start{ "aria-labelledby": "ba-lp-start-title" }
+    .ba-lp-container.ba-lp-container--narrow
+      .ba-lp-start
+        %h2.ba-lp-start__title#ba-lp-start-title さっそく始めましょう
+        -# 参加者限定なのはコミュニティ内の会話とプロジェクトのスレッド(ビジネス投稿はログインした全員が見られる)。
+        %p.ba-lp-start__text コミュニティ内の会話やプロジェクトのスレッドは、参加したメンバーが見られます。登録またはログインすると、参加先を探して参加・申請できます。
+        .ba-lp-actions.ba-lp-actions--center
+          = link_to "無料で始める", sign_up_path, class: "ba-btn ba-btn--primary ba-lp-actions__primary", data: { turbolinks: false }
+          = link_to "ログイン", sign_in_path, class: "ba-btn ba-btn--secondary"
+
+%footer.ba-lp-footer
+  .ba-lp-container.ba-lp-footer__inner
+    = link_to business_root_path, class: "ba-lp-brand ba-lp-brand--footer", "aria-label": "NAKAMA トップ" do
+      = image_tag "nakama_logo.jpg", class: "ba-lp-brand__logo", alt: ""
+    %nav{ "aria-label": "フッター" }
+      %ul.ba-lp-footer__links
+        %li= link_to "ログイン", sign_in_path
+        %li= link_to "新規登録", sign_up_path, data: { turbolinks: false }
+        %li= link_to "利用規約", public_terms_path
+        %li= link_to "プライバシーポリシー", public_privacy_path
+        %li= link_to "特定商取引法に基づく表記", public_legal_path
+    %p.ba-lp-footer__copy © BeMyStyle

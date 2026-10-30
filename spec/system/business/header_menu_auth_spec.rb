@@ -1,49 +1,12 @@
 require "rails_helper"
 
-# Business(NAKAMA)ヘッダー右上のアカウントメニュー(ログイン / ログアウト)と通知ベルを実ブラウザで確認する。
-RSpec.describe "Business ヘッダー(ログイン前)とログイン後のナビゲーション", type: :system, js: true do
+# Business(NAKAMA)のログイン後の枠(左ナビ・下部ナビ・メニュー)を実ブラウザで確認する。ログイン前の紹介ページは landing_spec.rb。
+RSpec.describe "Business のログイン後のナビゲーション", type: :system, js: true do
   let!(:business_domain) { Domain.find_or_create_by!(name: "business") }
   let(:customer) { create(:customer, name: "NAKAMA確認ユーザー", domain_name: "business", onboarding_done: true) }
 
-  let(:toggle_selector) { "#businessAccountMenuToggle" }
-  let(:panel_selector) { ".business-account-menu__panel" }
-
   def horizontal_overflow
     page.evaluate_script("document.documentElement.scrollWidth - document.documentElement.clientWidth")
-  end
-
-  # Business トップはスライダー(slick)の矢印が既存で数px はみ出すため、ヘッダー内の要素だけを測る。
-  # 全画面オーバーレイの SP メニュー(position: fixed)と、閉じているドロップダウンは対象外。
-  def header_overflow
-    page.evaluate_script(<<~JS)
-      (function () {
-        var width = document.documentElement.clientWidth;
-        var max = 0;
-        document.querySelectorAll(".header_container *").forEach(function (el) {
-          if (el.closest(".customer-menu-sp")) return;
-          var rect = el.getBoundingClientRect();
-          if (rect.width === 0 && rect.height === 0) return;
-          max = Math.max(max, rect.right - width, -rect.left);
-        });
-        return Math.ceil(max);
-      })()
-    JS
-  end
-
-  # ロゴ・キャッチコピーと右上アイコン群が重なっていないこと。
-  def header_items_overlap?
-    page.evaluate_script(<<~JS)
-      (function () {
-        var logo = document.querySelector(".header_container .top-message").getBoundingClientRect();
-        var utils = document.querySelector(".business-header-utils").children;
-        for (var i = 0; i < utils.length; i++) {
-          var r = utils[i].getBoundingClientRect();
-          if (r.width === 0) continue;
-          if (r.left < logo.right && r.right > logo.left && r.top < logo.bottom && r.bottom > logo.top) return true;
-        }
-        return false;
-      })()
-    JS
   end
 
   def sign_in_via_business_form
@@ -52,17 +15,6 @@ RSpec.describe "Business ヘッダー(ログイン前)とログイン後のナ�
     fill_in "customer_password", with: "password"
     click_button "ログインする"
     expect(page).to have_current_path(business_root_path, wait: 10)
-  end
-
-  def open_account_menu
-    find(toggle_selector).click
-    expect(page).to have_css(panel_selector, visible: :visible)
-    expect(find(toggle_selector)["aria-expanded"]).to eq "true"
-  end
-
-  def expect_account_menu_closed
-    expect(page).to have_no_css(panel_selector, visible: :visible)
-    expect(find(toggle_selector)["aria-expanded"]).to eq "false"
   end
 
   def set_viewport(width)
@@ -152,91 +104,8 @@ RSpec.describe "Business ヘッダー(ログイン前)とログイン後のナ�
     RSpec.configuration.reporter.message("[タップ操作の診断記録] 記録できませんでした: #{e.class}: #{e.message}")
   end
 
-  def open_sp_menu
-    find("button#open").click
-    expect(page).to have_css("#businessSpMenu.show", visible: :visible)
-    expect(find("button#open", visible: :all)["aria-expanded"]).to eq "true"
-  end
-
-  def expect_sp_menu_closed
-    expect(page).to have_no_css("#businessSpMenu.show")
-    expect(find("button#open")["aria-expanded"]).to eq "false"
-  end
-
   def active_element_text
     page.evaluate_script("document.activeElement.textContent.trim()")
-  end
-
-  context "未ログイン" do
-    it "PC: 汎用アイコンのドロップダウンからログイン画面へ進め、ベルは出ない" do
-      visit business_root_path
-      set_viewport(1280)
-      visit business_root_path
-
-      expect(page).to have_no_css(".business-header-bell")
-      expect(page).to have_no_css("button#open", visible: :visible)
-      within(toggle_selector) { expect(page).to have_css("i.fa-circle-user") }
-      expect(header_overflow).to be <= 0
-      expect(header_items_overlap?).to eq false
-
-      open_account_menu
-      within(panel_selector) do
-        expect(page).to have_no_button("ログアウト")
-        click_link "ログイン"
-      end
-
-      expect(page).to have_current_path(new_business_customer_session_path, wait: 10)
-    end
-
-    it "スマホ: 汎用アイコンはドロップダウンを開かずログイン画面へのリンクになる" do
-      visit business_root_path
-      set_viewport(375)
-      visit business_root_path
-
-      expect(page).to have_no_css(".business-header-bell")
-      expect(page).to have_no_css(toggle_selector, visible: :visible)
-      expect(header_overflow).to be <= 0
-      expect(header_items_overlap?).to eq false
-
-      find("a.business-account-link").click
-      expect(page).to have_current_path(new_business_customer_session_path, wait: 10)
-    end
-
-    it "スマホ: ☰からログイン・新規登録へ進める" do
-      visit business_root_path
-      set_viewport(375)
-      visit business_root_path
-
-      open_sp_menu
-      within("#businessSpMenu") do
-        expect(page).to have_no_button("ログアウト")
-        expect(page).to have_link("新規登録", href: new_business_customer_registration_path)
-      end
-      within("#businessSpMenu") { click_link "ログイン" }
-      expect(page).to have_current_path(new_business_customer_session_path, wait: 10)
-    end
-
-    it "外側クリック・Escape で閉じ、キーボードだけで開いて項目へ移動できる" do
-      visit business_root_path
-      set_viewport(1280)
-      visit business_root_path
-
-      open_account_menu
-      find(".top-message h1").click
-      expect_account_menu_closed
-
-      open_account_menu
-      find(toggle_selector).send_keys(:escape)
-      expect_account_menu_closed
-
-      find(toggle_selector).send_keys(:enter)
-      expect(page).to have_css(panel_selector, visible: :visible)
-      find(toggle_selector).send_keys(:down)
-      expect(page.evaluate_script("document.activeElement.textContent.trim()")).to eq "ログイン"
-      page.send_keys(:escape)
-      expect_account_menu_closed
-      expect(page.evaluate_script("document.activeElement.id")).to eq "businessAccountMenuToggle"
-    end
   end
 
   # ログイン後は Business の枠(layouts/business): PC は左ナビ、SP・タブレットは下部ナビ + メニューシート。
@@ -317,7 +186,7 @@ RSpec.describe "Business ヘッダー(ログイン前)とログイン後のナ�
       expect(page).to have_current_path(new_business_customer_session_path, wait: 10)
       visit business_root_path
       expect(page).to have_no_css(".ba-sidenav")
-      expect(page).to have_css(".hero-section")
+      expect(page).to have_css(".ba-lp-hero")
     end
 
     it "スマホ: メニューにタイムライン・投稿・アカウント項目がまとまり、そこからログアウトできる" do
@@ -440,32 +309,6 @@ RSpec.describe "Business ヘッダー(ログイン前)とログイン後のナ�
     ensure
       stop_tap_diagnostics
       page.driver.browser.execute_cdp("Emulation.setTouchEmulationEnabled", enabled: false)
-    end
-  end
-
-  context "トップのスライダー" do
-    [375, 768, 1280].each do |width|
-      it "幅#{width}px: 矢印が画面内に収まり、ページ全体が横にはみ出さない" do
-        visit business_root_path
-        set_viewport(width)
-        visit business_root_path
-        expect(page).to have_css(".business-top-slider.slick-initialized .slick-next", visible: :visible)
-
-        arrows = page.evaluate_script(<<~JS)
-          (function () {
-            var width = document.documentElement.clientWidth;
-            return Array.from(document.querySelectorAll(".business-top-slider .slick-arrow")).map(function (el) {
-              var r = el.getBoundingClientRect();
-              return r.left >= 0 && r.right <= width;
-            });
-          })()
-        JS
-        expect(arrows).to eq [true, true]
-        expect(horizontal_overflow).to be <= 0
-        expect(page.evaluate_script("getComputedStyle(document.body).overflowX")).to eq "visible"
-        page.execute_script("document.querySelector('.business-top-slider').scrollIntoView()")
-        page.save_screenshot(Rails.root.join("tmp/screenshots/business_top_slider_#{width}.png").to_s)
-      end
     end
   end
 
