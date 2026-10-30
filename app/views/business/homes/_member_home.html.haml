@@ -1,6 +1,7 @@
 -# Business のログイン後ホーム本文。表示対象・状態・ページ分割は shared/_member_home(/ と共通)と同じで、
 -# Homes::MyCommunities / Homes::MyProjects が認可条件で絞った対象だけを出す。承認待ちは名前と状態以外を出さない。
--# 本文は「コミュニティ」「プロジェクト」の2一覧だけにし、紹介画像・キャッチコピー・料金表などは置かない。
+-# 本文は「コミュニティ」「プロジェクト」の2一覧が主役。紹介ヒーロー・キャッチコピー・料金表は置かず、
+-# 末尾に小さな利用ガイド(使い方への導線)だけを置く。所属0件では空状態の案内がその役目を兼ねる。
 -# 音楽コミュニティは(両方の利用者でも)出さず、探す導線も Business のコミュニティ一覧だけにする。
 - communities = @my_communities.communities
 - projects = @my_projects.projects
@@ -21,10 +22,20 @@
           コミュニティを探す
 
     - if communities.total_count.zero?
-      .ba-empty
-        %p 参加しているコミュニティはまだありません。コミュニティを探して、参加を申請しましょう。
-        .ba-empty__actions
-          = link_to "コミュニティを探す", business_communities_path, class: "ba-btn ba-btn--primary"
+      -# 所属0件では、最初にすること(コミュニティへの参加)とその先の流れを番号付きで示す。
+      .ba-empty.ba-empty--guide
+        .ba-empty-guide__media
+          = business_illustration(:ribbon_small, loading: "eager")
+        .ba-empty-guide__body
+          %p.ba-empty__title まずはコミュニティに参加しましょう
+          %p 参加しているコミュニティはまだありません。コミュニティを探して、参加を申請しましょう。
+          %ol.ba-guide-steps
+            %li 「コミュニティを探す」から、気になるコミュニティを選びます。
+            %li 「参加する」または「参加を申請する」を押します。
+            %li 参加したら、プロジェクトに参加してスレッドで話せます。
+          .ba-empty__actions
+            = link_to "コミュニティを探す", business_communities_path, class: "ba-btn ba-btn--primary"
+            = link_to "使い方を見る", business_help_path, class: "ba-btn ba-btn--secondary"
     - elsif communities.empty?
       .ba-empty
         %p このページに表示するコミュニティはありません。
@@ -83,3 +94,17 @@
               status_key: status, status_label: member_home_project_status_label(status),
               note: (status == :pending ? "承認されるとスレッドや投稿を見られます。" : nil)
       = paginate projects, param_name: :project_page, params: { anchor: "my-projects" }
+
+  - if communities.total_count.positive?
+    %aside.ba-home-guide{ "aria-labelledby": "home-guide-title" }
+      .ba-home-guide__media
+        = business_illustration(:ribbon_small)
+      .ba-home-guide__body
+        %h2.ba-home-guide__title#home-guide-title 利用ガイド
+        %ol.ba-home-guide__steps
+          %li コミュニティに参加
+          %li プロジェクトで協力
+          %li スレッドで話す
+        = link_to business_help_path, class: "ba-text-link" do
+          使い方を見る
+          %i.fa-solid.fa-arrow-right{ "aria-hidden": "true" }

@@ -1,0 +1,14 @@
+-# Business のログイン前ページ(紹介ページ・使い方)の共通ヘッダー。
+- sign_up_path = new_business_customer_registration_path
+- sign_in_path = new_business_customer_session_path
+%a.ba-lp-skip{ href: "#ba-lp-main" } 本文へスキップ
+
+%header.ba-lp-header
+  .ba-lp-container.ba-lp-header__inner
+    = link_to business_root_path, class: "ba-lp-brand", "aria-label": "NAKAMA トップ" do
+      -# ロゴ画像に文字(NAKAMA)まで含まれているため、文字は重ねない。
+      = image_tag "business/nakama-logo.svg", class: "ba-lp-brand__logo", alt: "", width: 109, height: 24
+    %nav.ba-lp-header__nav{ "aria-label": "アカウント" }
+      = link_to "使い方", business_help_path, class: "ba-lp-header__help"
+      = link_to "ログイン", sign_in_path, class: "ba-btn ba-btn--secondary ba-btn--sm ba-lp-header__login"
+      = link_to "無料で始める", sign_up_path, class: "ba-btn ba-btn--primary ba-btn--sm ba-lp-header__signup", data: { turbolinks: false }

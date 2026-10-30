@@ -1,0 +1,16 @@
+-# Business のログイン前ページ(紹介ページ・使い方)の共通フッター。
+- sign_up_path = new_business_customer_registration_path
+- sign_in_path = new_business_customer_session_path
+%footer.ba-lp-footer
+  .ba-lp-container.ba-lp-footer__inner
+    = link_to business_root_path, class: "ba-lp-brand ba-lp-brand--footer", "aria-label": "NAKAMA トップ" do
+      = image_tag "business/nakama-logo.svg", class: "ba-lp-brand__logo", alt: "", width: 109, height: 24
+    %nav{ "aria-label": "フッター" }
+      %ul.ba-lp-footer__links
+        %li= link_to "使い方", business_help_path
+        %li= link_to "ログイン", sign_in_path
+        %li= link_to "新規登録", sign_up_path, data: { turbolinks: false }
+        %li= link_to "利用規約", public_terms_path
+        %li= link_to "プライバシーポリシー", public_privacy_path
+        %li= link_to "特定商取引法に基づく表記", public_legal_path
+    %p.ba-lp-footer__copy © BeMyStyle

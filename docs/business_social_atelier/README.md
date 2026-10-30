@@ -10,6 +10,7 @@ Business（NAKAMA）のログイン後画面を「Social Atelier」という方�
 - 追加改修: `feature/business-login-join-flow`（2026-10-30）で、ログインの案内・音楽コミュニティ導線の除去・参加導線を整理した（[9 章](#9-実機確認を受けた追加改修2026-10-30)）
 - 追加改修: `feature/business-landing-atelier`（2026-10-30）で、ログイン前の紹介ページ（`/business` 未ログイン）も Social Atelier に揃えた（[10 章](#10-ログイン前の紹介ページ2026-10-30)）
 - 追加改修: `feature/business-blue-brand`（2026-10-30）で、ロゴを NAKAMA の青いロゴに差し替え、配色を紫から青に統一した（[11 章](#11-nakama-の青いロゴと配色2026-10-30)）。1・2 章の色は改修後の値
+- 追加改修: `feature/business-help-and-timeline`（2026-10-30）で、利用イメージのイラスト・使い方ページ（`/business/help`）を追加し、ビジネス投稿の一覧をタイムラインに統一した（[12 章](#12-利用イメージのイラスト使い方ページタイムラインの整理2026-10-30)）
 
 ---
 
@@ -749,3 +750,186 @@ Business ホーム ─「コミュニティを探す」→ コミュニティ一
 | スレッド（添付・スタンプ、SP） | ![](screenshots/brand_thread_attachments_375.png) |
 | スレッドの入力中（下部ナビが隠れる、SP） | ![](screenshots/brand_thread_typing_375.png) |
 | スタンプ選択を開いた状態（下部ナビは表示、SP） | ![](screenshots/brand_thread_stamp_375.png) |
+
+---
+
+## 12. 利用イメージのイラスト・使い方ページ・タイムラインの整理（2026-10-30）
+
+ブランチ `feature/business-help-and-timeline`。公開範囲・権限・料金判定・DB は変えていない（マイグレーションなし、既存データの削除なし）。音楽・歌声・Learning の画面は変えていない。
+
+### 12.1 タイムラインと「投稿」の調査結果
+
+| 観点 | `/business/timeline`（タイムライン） | `/business/posts`（投稿一覧） |
+|------|------|------|
+| コントローラー | `Business::PostsController#timeline` | `Business::PostsController#index` |
+| データ | `Post`（ビジネス投稿） | 同じ `Post` |
+| 閲覧範囲 | ログインした全員（`Post.all` を基に絞り込み） | 同じ |
+| 投稿できる人 | `business_post_create`（free / light / core / premium＝全プラン） | 同じ |
+| 並び順 | いいね×3＋コメント×2＋作成時刻の点数順 | 新しい順 |
+| 絞り込み | タブ「おすすめ（全件）／フォロー（自分＋フォロー先）／コミュニティ（同じコミュニティの参加者）」、キーワード | キーワード、人気タグ、投稿者（`user_id`） |
+| ページ分割 | あり | `per(12)` だけで**ページ送りの表示が無く、13件目以降に到達できなかった** |
+| ナビ | 「タイムライン」 | 「投稿」（鍵アイコンの判定付き） |
+| 既存リンク | ナビ、投稿フォームの「キャンセル」 | ナビ、投稿詳細・作成・編集のパンくず、詳細のタグ、プロフィールの「もっと見る」（`user_id`）、作成・削除後の戻り先 |
+
+- 詳細・作成・編集・削除（`/business/posts/:id` など）は両方の一覧から共通で使う画面。通知（いいね・コメント）とメールのリンクは**詳細** `/business/posts/:id` を指しており、一覧は指していない。
+- **コミュニティ内の会話**（`CommunityPost`）は別のデータで、コミュニティ詳細の中だけに表示され、閲覧・投稿ともコミュニティの参加者（承認済み参加者・運営者）だけ（`BusinessAccess#business_community_participant?`）。削除の機能はない。改修前はこの欄の見出しも「タイムライン」で、全体向けのタイムラインと名前が重なっていた。
+- **プロジェクトのスレッド**（`ProjectChat`）はプロジェクトの参加者だけが閲覧・投稿でき、メッセージの削除は書いた本人だけ。スレッド自体の削除はプロジェクト管理者（全体トークを除く）。
+- 結論: 2つの一覧は**同じ投稿を別の並べ方で出しているだけ**で、独立した役割はなかった。
+
+### 12.2 タイムラインの最終的な役割と変更点
+
+| 項目 | 改修後 |
+|------|--------|
+| 一覧の入口 | 「タイムライン」1つ。ナビの「投稿」を外した（PC 左ナビ・スマホのメニューとも） |
+| 旧一覧 `/business/posts` | `keyword` / `tag` / `user_id` / `page` のうち**文字列の値だけ**を引き継いで `/business/timeline` へ 301 転送（配列・ハッシュの値やその他のパラメーターは捨てる）。転送先はルートヘルパーで作る同じホストのパスだけなので、外部 URL へは転送されない。未ログインは従来どおり Business ログインへ戻り、ログイン後は元の条件のまま旧 URL → タイムラインの順に表示される。存在しない投稿者を指定した場合は、全件ではなく該当なし（旧一覧と同じ） |
+| タイムラインの機能 | 旧一覧の人気タグ・投稿者の絞り込みを統合し、絞り込み中の条件を「解除」できるチップで表示。タブは「おすすめ／フォロー中／コミュニティの仲間」（「コミュニティ」は会話と紛れるため改名）と、選択中のタブの説明文 |
+| 投稿導線 | 見出し横の「投稿する」と空状態の「投稿する」 |
+| 見える範囲の説明 | タイムラインと投稿フォームに「ビジネス投稿は、NAKAMAにログインしている全員が見られます。参加者だけに共有したい内容は…」と使い方ページ（見える範囲の表）へのリンク |
+| 作成後 | 作成した投稿の詳細へ（「投稿しました。NAKAMAにログインしている全員が見られます。」）。オンボーディング中は従来どおり step3 へ |
+| 削除後・コメント削除の戻り先 | タイムライン |
+| パンくず・タグ・プロフィール | 「タイムライン」へ。プロフィールの「もっと見る」は「投稿をすべて見る」（`/business/timeline?user_id=…`） |
+| ナビの現在地 | 投稿の詳細・作成・編集もタイムラインを現在地にする |
+| コミュニティ内の会話 | コミュニティ詳細の見出し・ページ内リンク・参加案内を「タイムライン」→「コミュニティ内の会話」に改名し、「このコミュニティの参加者だけが見られます。タイムラインには表示されません。」を追加。アンカー `#timeline` は既存リンクのため維持 |
+
+不具合の修正（同じ一覧に統合するため）:
+
+- キーワード検索をすると点数順の並びとページ分割が外れていた（`@posts = posts.where(...)` で点数付きの問い合わせを上書き）。絞り込みを点数付けの前に適用するよう修正。
+- 「コミュニティ」タブは参加者の結合で同じ投稿が重複し得た（キーワード時）。サブクエリで投稿者を絞る形に変更（対象の人は同じ）。
+- 一覧の「いいね・コメント数」は1件ずつ数えていたため、`preload` で先読みし `size` で数える（投稿者アイコン・投稿画像も先読み）。
+- 並び替えの時刻の数値化は MySQL では従来どおり `UNIX_TIMESTAMP`、テスト環境（SQLite）では `strftime('%s')` を使う。これでタイムラインを通常のテストで確認できるようになった。
+
+### 12.3 使い方ページ（`/business/help`）
+
+- ルート: `get "help", to: "helps#show"`（`/business/help` は既存ルートと衝突しないことを確認）。`Business::HelpsController` は認証を外し、会員データを一切読み込まない。
+- レイアウト: ログイン前は紹介ページと同じヘッダー・フッター（`body.ba-lp`、ヘッダー・フッターは `business/homes/_lp_header` / `_lp_footer` に切り出して共用）、ログイン後は Business の枠（`body.ba-body`、左ナビ・下部ナビ）。
+- 本文（`business/helps/_content`）: 目次（番号付き・ページ内リンク・PC 2列／スマホ 1列）と 8 セクション。
+
+| # | セクション | 内容 |
+|---|-----------|------|
+| 1 | NAKAMAでできること | 文字とアイコンの3ステップ（紹介ページと共用。使い方ページには利用イメージの絵を置かない）と、全体向けのタイムラインの補足 |
+| 2 | 関係 | コミュニティ ⊃ プロジェクト ⊃ スレッド ⊃ メッセージの入れ子図（HTML）。それぞれ「見られる人」を併記し、タイムラインは外側の別枠 |
+| 3 | コミュニティを探す・参加する | 番号付き手順。「参加する」（自動承認）と「参加を申請する」（承認制）の違い、「コミュニティから退出する」 |
+| 4 | プロジェクトとスレッド | コミュニティ参加が前提、「参加する／参加を申請する」、「全体トーク」、「送信」「新しいスレッド」、締切、「プロジェクトから退出する」 |
+| 5 | 投稿・添付・スタンプ | 会話・スレッドの「ファイルを添付」（`BusinessChatContent.limits_description` をそのまま表示）、「スタンプを送る」（シンプル／動物）、ビジネス投稿の手順。**書く場所ごとの「見られる人・書ける人・削除」の表**（`#help-visibility`、スマホでは行ごとのカード表示） |
+| 6 | 承認待ち・却下・アクセス停止 | 実画面と同じ状態バッジで説明。却下＝申請が消え未参加に戻り再申請可、停止＝再参加・再申請不可でコミュニティ停止は配下プロジェクトにも及ぶ |
+| 7 | 運営者向け | 作成条件の表、管理メニュー（「通常画面」「編集」「メンバー管理」「プロジェクト管理」）、「承認」「却下」「アクセス停止」「停止を解除」（解除しても自動では参加者に戻らない）、投稿の種類ごとの編集・削除できる人（`#help-delete`）と、スレッド・プロジェクト・コミュニティそのものの編集・削除 |
+| 8 | よくある質問 | `details` / `summary`（キーボードの Enter で開閉） |
+
+権限・料金との照合（`Customer::FEATURE_RULES`、`Community::PLAN_RESTRICTION_WAIVABLE_FEATURES`、`BusinessAccess`、各コントローラー）:
+
+- 無料: 登録、参加、ビジネス投稿（`business_post_create` は全プラン）、コミュニティ内の会話（`business_community_post_create` は全プラン）、スレッド。参加にプラン条件はない。
+- コミュニティ作成: Premium（`business_community_create`）。
+- プロジェクト作成: コミュニティの運営者、または Core 以上の参加者。お試し中のコミュニティでは参加者がプランに関係なく作成できる（`can_create_project_for?`）。
+- 削除・編集（2026-10-30 PR 前の確認で、投稿の種類ごと・対象そのものとの区別に書き直し。使い方の `#help-delete`）:
+
+| 対象 | 編集 | 削除 | サーバー側の根拠 |
+|------|------|------|------------------|
+| ビジネス投稿 | 投稿者本人だけ | 投稿者本人だけ | `PostsController#ensure_post_owner!`（運営者・システム管理者 `is_owner: admin` の例外なし） |
+| ビジネス投稿へのコメント | なし | なし（投稿の削除で一緒に消える） | `MessagesController` は `create` だけ（ルートの `destroy` は未実装）、`Post has_many :messages, dependent: :destroy` |
+| コミュニティ内の会話 | なし | なし（本人・運営者とも） | `CommunityPostsController` は `create` だけ |
+| スレッド内のメッセージ | なし | 書いた本人だけ（プロジェクト参加中） | `ProjectChatsController#destroy`（本人以外は何もしない）＋`require_business_project_participant!` |
+| スレッド | 作成者・プロジェクト管理者（タイトル・説明） | プロジェクト管理者だけ。中のメッセージも消える。全体トーク不可 | `can_edit_project_thread?` / `can_destroy_project_thread?` |
+| プロジェクト | プロジェクト管理者 | 画面に操作なし | `ProjectsController` に `destroy` なし |
+| コミュニティ | 運営者 | Business の画面に操作なし | `CommunitiesController#destroy`（オーナー・システム管理者）はあるが、画面にリンクが無い。システム管理画面の削除は別 |
+
+  `spec/requests/business/help_permissions_spec.rb`（13件）で、上の各行を実際のリクエスト（運営者・システム管理者・スレッド作成者・本人）で確かめ、使い方の表の文言とも照合している。
+- `spec/requests/business/helps_spec.rb` で、作成条件の文言とプラン判定の値を同じテストで確認している（判定が変わるとテストが落ちる）。
+
+ページ遷移:
+
+```
+ログイン前トップ /business ─┬─ ヘッダー「使い方」（600px 以上）
+                           ├─ ヒーロー「はじめての方へ：NAKAMAの使い方」
+                           ├─ 3ステップの「使い方を詳しく見る」
+                           └─ フッター「使い方」
+                                   ↓
+                           /business/help（ログイン前: 登録・ログインの案内付き）
+
+ログイン後 ─┬─ PC 左ナビ「使い方」（現在地表示あり）
+           ├─ スマホのメニュー（下部ナビ「メニュー」→「使い方」）
+           ├─ ホームの利用ガイド「使い方を見る」（所属あり）
+           ├─ ホームの空状態「使い方を見る」（所属0件）
+           └─ タイムライン・投稿フォームの「見える範囲の違い」→ /business/help#help-visibility
+```
+
+### 12.4 利用イメージの絵の配置と意図
+
+採用画像は、白背景に立体的な青いリボンが交わり、オンラインでつながる様子を表す抽象的な絵1枚（ユーザー提供、1536×1024・PNG 約 2.0MB）。人物・仕事の場面を固定する絵は使わない（2026-10-30 の方針変更で、先に生成した人物中心の5枚は今回の変更から外した）。
+
+| ファイル | 大きさ・容量 | 用途 |
+|----------|-------------|------|
+| `docs/business_social_atelier/illustrations/nakama-ribbon-original.png` | 1536×1024・2,074KB | 原本の保管（配信しない。`app/assets` に置かないのでプリコンパイルの対象外） |
+| `app/assets/images/business/illustrations/ribbon.webp` | 1200×800・77KB（WebP 品質 80） | ログイン前トップ「NAKAMAの使い方」 |
+| `app/assets/images/business/illustrations/ribbon-small.webp` | 480×320・17KB（WebP 品質 80） | ログイン後ホームの空状態・利用ガイド |
+
+- 原本の縦横比 3:2 のまま縮小しただけで、切り取りはしていない（リボンの主要部分はすべて残る）。
+- 説明はすべて HTML の文字で書き、絵は装飾として `alt=""`。`business_illustration` ヘルパーが必ず `width` / `height` を付けるので、読み込み前から 3:2 の場所が確保される。
+
+| 画面 | 配置 | 表示の大きさ |
+|------|------|-------------|
+| ログイン前トップ | 「NAKAMAの使い方」に1枚。PC（992px 以上）は左に絵・右に3ステップ、それより狭い幅は絵を上に置き、その下に3ステップ。白背景の絵が薄い背景で四角く浮かないよう、カードと同じ角丸と線で囲む。画面外なので `loading="lazy"` | PC 約 480px 幅、SP 最大 520px（375px 幅で 343px） |
+| 使い方ページ | 置かない。3ステップは文字とアイコン（同じ絵を繰り返さない） | — |
+| ホーム・所属0件 | 空状態の案内の横（PC）／上（SP）。最初の画面に出るので `loading="eager"` | PC 200px、SP 最大 180px |
+| ホーム・所属あり | 一覧の下の小さな「利用ガイド」 | PC 132px、SP 96px（360px 未満は非表示） |
+
+- 3ステップ（コミュニティに参加 → プロジェクトで協力 → スレッドで話す）は、番号・アイコン・見出し・本文の HTML カード（`business/helps/_flow`）。ログイン前トップと使い方ページで共用する。
+- ヒーローの HTML 製「画面イメージ」が画面の見た目、リボンの絵がつながりの雰囲気を担当し、同じ内容を2回並べない。登録・ログインのボタンの位置は変えていない。
+- ログイン後ホームは一覧（コミュニティ・プロジェクト）が主役のまま。大きな紹介ヒーローは置かない。所属0件は「まずはコミュニティに参加しましょう」＋番号付きの次の操作＋「コミュニティを探す」「使い方を見る」（このときは利用ガイドを重ねて出さない）。
+
+### 12.5 改修前後の画面
+
+架空データ。タイムラインを含むため、改修前（`origin/main` 5c93da96）・改修後とも使い捨ての MySQL データベースで撮影した。画像は 256 色に減色している。
+
+| 画面 | 改修前 | 改修後 |
+|------|--------|--------|
+| ログイン前トップ（PC 1280px） | ![](screenshots/guide_before_landing_1280.png) | ![](screenshots/guide_after_landing_1280.png) |
+| ログイン前トップ（SP 375px） | ![](screenshots/guide_before_landing_375.png) | ![](screenshots/guide_after_landing_375.png) |
+| ホーム・所属0件（PC） | ![](screenshots/guide_before_home_empty_1280.png) | ![](screenshots/guide_after_home_empty_1280.png) |
+| ホーム・所属0件（SP） | ![](screenshots/guide_before_home_empty_375.png) | ![](screenshots/guide_after_home_empty_375.png) |
+| ホーム・所属あり（PC） | ![](screenshots/guide_before_home_member_1280.png) | ![](screenshots/guide_after_home_member_1280.png) |
+| ホーム・所属あり（SP） | ![](screenshots/guide_before_home_member_375.png) | ![](screenshots/guide_after_home_member_375.png) |
+| タイムライン（PC） | ![](screenshots/guide_before_timeline_1280.png) | ![](screenshots/guide_after_timeline_1280.png) |
+| タイムライン（SP） | ![](screenshots/guide_before_timeline_375.png) | ![](screenshots/guide_after_timeline_375.png) |
+| 旧「投稿」一覧 `/business/posts`（PC） | ![](screenshots/guide_before_posts_1280.png) | タイムラインへ転送（上の画像） |
+| 旧「投稿」一覧（SP） | ![](screenshots/guide_before_posts_375.png) | 同上 |
+| スマホのメニュー | ![](screenshots/guide_before_menu_375.png) | ![](screenshots/guide_after_menu_375.png) |
+| コミュニティ詳細（会話の欄、SP） | ![](screenshots/guide_before_community_375.png) | ![](screenshots/guide_after_community_375.png) |
+
+| 使い方ページ | 画像 |
+|--------------|------|
+| ログイン前（PC 1280px） | ![](screenshots/guide_help_guest_1280.png) |
+| ログイン前（タブレット 768px） | ![](screenshots/guide_help_guest_768.png) |
+| ログイン前（SP 375px） | ![](screenshots/guide_help_guest_375.png) |
+| ログイン前（SP 320px） | ![](screenshots/guide_help_guest_320.png) |
+| ログイン後（PC 1280px） | ![](screenshots/guide_help_member_1280.png) |
+| ログイン後（SP 375px） | ![](screenshots/guide_help_member_375.png) |
+
+### 12.6 検証
+
+| 確認 | 結果 |
+|------|------|
+| 新規 request spec `spec/requests/business/timeline_spec.rb`（17件） | タブごとの対象、点数順、キーワード・タグ・投稿者の絞り込みと解除、旧一覧の 301 転送（条件の引き継ぎ・不要なパラメーターの除去）と、転送後に検索語・タグ・投稿者・ページ番号が実際に適用されること、未ログイン→ログイン後も条件が保たれること、外部 URL へ転送されないこと、配列などの値で 500 にならないこと、存在しない投稿者は該当なし、投稿詳細（通知・メールのリンク先）とパンくず、作成フォームの公開範囲の説明、削除後の戻り先、ナビ（「投稿」なし・現在地）、未ログイン時の転送、コミュニティ内の会話が混ざらないこと |
+| 新規 request spec `spec/requests/business/helps_spec.rb`（8件） | ログイン前に開ける・目次と8セクションのアンカー・会員データを読まない、ログイン後は Business の枠で現在地表示、作成条件の文言とプラン判定の一致、ログイン前トップの導線・3ステップが文字とアイコンで画像なし・絵は1枚だけ（`ribbon.webp`、alt 空、1200×800）、使い方ページに絵が無い、ホームの空状態（所属0件）と利用ガイド（所属あり）の出し分け・順序・`ribbon-small.webp` |
+| 新規 request spec `spec/requests/business/help_permissions_spec.rb`（13件） | 12.3 の削除・編集の表を、運営者・システム管理者・スレッド作成者・本人の実際のリクエストで確認し、使い方の表の文言とも照合 |
+| 新規 system spec `spec/system/business/help_guide_spec.rb`（12件、headless Chrome） | 320 / 375 / 768 / 1280px で、ログイン前の使い方・トップ、ログイン後のホーム（所属0件・所属あり）・使い方・タイムラインが横にはみ出さない。絵が読み込まれ縦横比が属性どおり、読み込みの前後でセクションの高さが変わらない。絵の読み込みを止めても 3:2 の場所が確保され、読み込み後も高さが同じ（レイアウトずれなし）。ホームの絵は空状態で 200px 以下・「コミュニティを探す」が最初の画面に収まる、利用ガイドで 132px 以下。タイムラインの3タブが横スクロールなしで見える。目次リンクを Enter で選ぶと該当セクションへ移動し、見出しが固定ヘッダーに隠れない。フォーカスリングが出る。よくある質問を Enter で開閉。スマホのメニュー→「使い方」、PC 左ナビの現在地。タイムラインの「投稿する」→作成→編集→削除→タイムライン |
+| 既存 spec の更新 | 作成後の戻り先（投稿詳細へ）、スマホのメニューの項目（「投稿」→「使い方」）、ログイン前トップのキーボード順（ロゴ → 使い方 → ログイン → 無料で始める）と3ステップの見出しの改行判定 |
+| MySQL（使い捨て DB） | ローカル MySQL 9.6 に `bemystyle_help_tmp` を作り、**コミット済み**の `db/schema.rb`（作業ツリーの未コミット変更は使わない）を読み込んで、テスト環境の接続先だけを `DATABASE_URL` で切り替えた。`DISABLE_SPRING=1` で実行し、接続先が `Mysql2` / `bemystyle_help_tmp` であることを先に確認。timeline / posts / helps の request spec 23件が成功し、ログで `UNIX_TIMESTAMP(posts.created_at)` の並び替えが使われたことを確認。12.5 のタイムラインの画面もこの DB で撮影。確認後に DB を削除 |
+| Business の request spec 一式＋オンボーディング＋音楽ホーム | 611件中失敗1件（歌声のヘルパー。main でも失敗する既存の失敗） |
+| Business の system spec 一式＋音楽ホーム（`member_home_spec`） | 72件すべて成功 |
+| 全体 `bundle exec rspec` | 7,098件・失敗36件・保留21件。失敗36件は歌声・音楽・管理画面などで Business 関連は 0 件。同じ36件を `origin/main` の別ワークツリーで実行し、36件とも main でも失敗することを確認（既存の失敗と同じ） |
+| 本番用プリコンパイル | `RAILS_ENV=production rails assets:precompile`（SECRET_KEY_BASE はダミー）が成功。CSS に `.ba-help-toc` `.ba-flow__step` `.ba-home-guide` `.ba-visibility` `.ba-timeline__tabs` `.ba-lp-header__help`、`.ba-lp-flow` などの規則と、`ribbon.webp`（77KB）・`ribbon-small.webp`（17KB）がダイジェスト付きで出力されることを確認（絵の差し替え後に再実行）。原本 PNG は `app/assets` に無いため出力されない。実行前に `public/assets` を退避・`public/packs` を複製し、確認後に生成物を削除して元に戻した |
+| 古い public/assets | 画面確認・system spec の前に `public/assets` をリポジトリ外へ退避し、最新の SCSS がその場でコンパイルされる状態で確認した（終了後に戻した） |
+| 音楽・歌声・Learning への影響 | 変更したスタイルはすべて `.ba-body` / `.ba-lp` 配下。共用レイアウト（`layouts/application`）は変更なし（`layouts/_business_shell` はコメントだけ）。音楽ホーム（`/`）の request / system spec は成功。全体テストで音楽・歌声・Learning の新しい失敗なし |
+
+### 12.7 未確認事項・残課題
+
+| 項目 | 内容 |
+|------|------|
+| 実機 | iPhone Safari・Android Chrome での表示は未確認（headless Chrome の 320 / 375 / 768 / 1280px で確認） |
+| 本番データでの見え方 | 本番のタイムライン（投稿件数・タグの多さ）での表示は未確認 |
+| 旧 `/business/posts` の 301 | ブラウザが転送を記憶するため、将来この URL に一覧を戻す場合は注意（詳細 `/business/posts/:id` は対象外） |
+| `business_post_create` が使えない場合の表示 | 現在は全プランで使えるため、ナビの鍵表示（旧「投稿」項目だけにあった）は無くなった。タイムラインの見出しの導線と空状態は従来どおりプラン判定で出し分けている |
+| コミュニティ内の会話の削除 | 機能がない（運営者も削除できない）。使い方にはそのまま「画面からは削除できません」と書いた。削除機能の要否は別途判断 |
+| 却下の通知 | 申請を却下しても本人への通知は無い（既存仕様）。使い方では「ふたたび参加ボタンが表示され」と画面の変化で説明した |
+| 投稿のコメントの削除 | ビジネス投稿のコメント（`Message`）は画面から削除できない（既存仕様、今回は変更なし） |
+| 絵の差し替え | 原本（`docs/business_social_atelier/illustrations/`）から同じ 3:2 のまま `ribbon.webp`（1200×800）・`ribbon-small.webp`（480×320）を作り直す。比率を変える場合は `Business::IllustrationHelper::ILLUSTRATIONS` の `width` / `height` も合わせる |

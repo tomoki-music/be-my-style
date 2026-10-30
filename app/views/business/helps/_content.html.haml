@@ -1,0 +1,301 @@
+-# 使い方の本文。ボタン名・見える範囲・作成条件は実際の画面と権限判定(BusinessAccess / Customer::FEATURE_RULES)に合わせる。
+-# ここでは会員データを一切読まない(ログイン前でも同じ内容)。
+.ba-help
+  .ba-page-header.ba-help__header
+    .ba-page-header__text
+      %h1.ba-page-title NAKAMAの使い方
+      %p.ba-page-lead 参加のしかたから、投稿の見える範囲、運営者の操作までをまとめています。
+    - unless customer_signed_in?
+      .ba-page-actions
+        = link_to "無料で始める", new_business_customer_registration_path, class: "ba-btn ba-btn--primary", data: { turbolinks: false }
+        = link_to "ログイン", new_business_customer_session_path, class: "ba-btn ba-btn--secondary"
+
+  %nav.ba-help-toc{ "aria-labelledby": "help-toc-title" }
+    %h2.ba-help-toc__title#help-toc-title 目次
+    %ol.ba-help-toc__list
+      - Business::HelpHelper::HELP_SECTIONS.each.with_index(1) do |(id, title), number|
+        %li
+          = link_to "##{id}", class: "ba-help-toc__link" do
+            %span.ba-help-toc__number{ "aria-hidden": "true" }= number
+            %span= title
+
+  -# 1. できること
+  %section.ba-help-section.ba-anchor-target#help-about{ "aria-labelledby": "help-about-title" }
+    %h2.ba-help-section__title#help-about-title
+      %span.ba-help-section__number 1
+      NAKAMAでできること
+    %p NAKAMAは、仲間と出会い、いっしょに活動を進めるためのビジネスコミュニティです。
+    = render "business/helps/flow", heading_tag: :h3
+    %p.ba-note ほかに、活動の記録や知見をNAKAMA全体へ共有する「タイムライン」（ビジネス投稿）があります。
+
+  -# 2. 関係
+  %section.ba-help-section.ba-anchor-target#help-structure{ "aria-labelledby": "help-structure-title" }
+    %h2.ba-help-section__title#help-structure-title
+      %span.ba-help-section__number 2
+      コミュニティ・プロジェクト・スレッドの関係
+    %p コミュニティの中にプロジェクトがあり、プロジェクトの中にスレッドがあります。中へ進むほど、見られる人が限られます。
+    %figure.ba-help-map
+      %figcaption.sr-only コミュニティ、プロジェクト、スレッド、会話の入れ子の関係
+      .ba-help-map__box.ba-help-map__box--community
+        %p.ba-help-map__name
+          %i.fa-solid.fa-users{ "aria-hidden": "true" }
+          コミュニティ
+        %p.ba-help-map__who 見られる人：コミュニティの参加者
+        %p.ba-help-map__item
+          %i.fa-regular.fa-comment{ "aria-hidden": "true" }
+          コミュニティ内の会話
+        .ba-help-map__box.ba-help-map__box--project
+          %p.ba-help-map__name
+            %i.fa-solid.fa-layer-group{ "aria-hidden": "true" }
+            プロジェクト
+          %p.ba-help-map__who 見られる人：プロジェクトの参加者
+          .ba-help-map__box.ba-help-map__box--thread
+            %p.ba-help-map__name
+              %i.fa-regular.fa-comments{ "aria-hidden": "true" }
+              スレッド
+            %p.ba-help-map__who 「全体トーク」と、話題ごとのスレッド
+            %p.ba-help-map__item
+              %i.fa-regular.fa-message{ "aria-hidden": "true" }
+              メッセージ・添付・スタンプ
+      .ba-help-map__aside
+        %p.ba-help-map__name
+          %i.fa-solid.fa-stream{ "aria-hidden": "true" }
+          タイムライン（ビジネス投稿）
+        %p.ba-help-map__who 見られる人：NAKAMAにログインしている全員
+        %p.ba-help-map__item コミュニティやプロジェクトの外にある、全体向けの投稿です。
+
+  -# 3. コミュニティ
+  %section.ba-help-section.ba-anchor-target#help-community{ "aria-labelledby": "help-community-title" }
+    %h2.ba-help-section__title#help-community-title
+      %span.ba-help-section__number 3
+      コミュニティを探す・参加する
+    %ol.ba-help-steps
+      %li メニューの「コミュニティ」を開き、気になるコミュニティを選びます。
+      %li
+        コミュニティのページで「参加する」または「参加を申請する」を押します。
+        %ul.ba-help-sublist
+          %li 自動承認のコミュニティ：「参加する」を押すとすぐに参加できます。
+          %li 承認制のコミュニティ：「参加を申請する」を押し、運営者の承認を待ちます。
+      %li 参加すると、コミュニティのプロジェクト・コミュニティ内の会話・メンバーが見られるようになります。
+    %p.ba-note 参加をやめるときは、コミュニティのページのメンバー欄にある「コミュニティから退出する」を押します。退出すると、そのコミュニティのプロジェクトにも参加していない状態になります。
+
+  -# 4. プロジェクトとスレッド
+  %section.ba-help-section.ba-anchor-target#help-project{ "aria-labelledby": "help-project-title" }
+    %h2.ba-help-section__title#help-project-title
+      %span.ba-help-section__number 4
+      プロジェクトに参加し、スレッドで話す
+    %p プロジェクトに参加できるのは、そのコミュニティの参加者です。先にコミュニティへ参加してください。
+    %ol.ba-help-steps
+      %li コミュニティのページの「プロジェクト」欄、またはメニューの「プロジェクト」から、プロジェクトを選びます。
+      %li 「参加する」または「参加を申請する」を押します。承認制のプロジェクトは、プロジェクトの管理者が承認すると参加できます。
+      %li 参加すると「スレッド」欄が見られます。「全体トーク」か、話題ごとのスレッドを開きます。
+      %li 入力欄にメッセージを書いて「送信」を押します。新しい話題は「新しいスレッド」から作れます。
+    %p.ba-note 締切を過ぎたプロジェクトには、新しく参加できません。参加をやめるときは「プロジェクトから退出する」を押します。
+
+  -# 5. 投稿・添付・スタンプ
+  %section.ba-help-section.ba-anchor-target#help-posting{ "aria-labelledby": "help-posting-title" }
+    %h2.ba-help-section__title#help-posting-title
+      %span.ba-help-section__number 5
+      投稿・添付・スタンプの使い方
+
+    %h3.ba-help-section__subtitle コミュニティ内の会話・スレッドに書く
+    %ol.ba-help-steps
+      %li 入力欄に本文を書きます。改行はそのまま表示されます。
+      %li 画像や資料を付けるときは「ファイルを添付」を押して選びます。
+      %li 「投稿」（コミュニティ内の会話）または「送信」（スレッド）を押します。
+    %p.ba-note
+      添付できるファイル：#{BusinessChatContent.limits_description}
+    %p スタンプは「スタンプを送る」を押し、「シンプル」「動物」のタブから選んでタップすると、その場で送信されます。
+    %p 自分が書いたスレッドのメッセージは「削除」で消せます。コミュニティ内の会話は、書いた本人も運営者も削除できません。
+
+    %h3.ba-help-section__subtitle タイムラインに投稿する（ビジネス投稿）
+    %ol.ba-help-steps
+      %li メニューの「タイムライン」を開き、「投稿する」を押します。
+      %li タイトル・本文・画像・カテゴリ・タグを入力し、「投稿する」を押します。
+      %li 投稿の詳細画面では「いいね」やコメント、スタンプで反応できます。
+    %p 自分の投稿は、詳細画面の「編集」「削除」で直せます。ほかの人の投稿は編集・削除できません。
+
+    %h3.ba-help-section__subtitle.ba-anchor-target#help-visibility 書く場所と見える範囲
+    .ba-help-table-wrap
+      %table.ba-help-table
+        %caption.sr-only 書く場所ごとの、見られる人・書ける人・削除できる人
+        %thead
+          %tr
+            %th{ scope: "col" } 書く場所
+            %th{ scope: "col" } 見られる人
+            %th{ scope: "col" } 書ける人
+            %th{ scope: "col" } 1件ずつの削除
+        %tbody
+          %tr
+            %th{ scope: "row" } タイムライン（ビジネス投稿）
+            %td{ data: { label: "見られる人" } } NAKAMAにログインしている全員
+            %td{ data: { label: "書ける人" } } ログインしている人（無料プランで可）
+            %td{ data: { label: "1件ずつの削除" } } 投稿した本人だけ
+          %tr
+            %th{ scope: "row" } コミュニティ内の会話
+            %td{ data: { label: "見られる人" } } そのコミュニティの参加者・運営者
+            %td{ data: { label: "書ける人" } } 見られる人と同じ
+            %td{ data: { label: "1件ずつの削除" } } できません（本人・運営者とも）
+          %tr
+            %th{ scope: "row" } プロジェクトのスレッド
+            %td{ data: { label: "見られる人" } } そのプロジェクトの参加者・管理者
+            %td{ data: { label: "書ける人" } } 見られる人と同じ
+            %td{ data: { label: "1件ずつの削除" } } 書いた本人だけ
+    %p.ba-note 参加者だけに共有したい内容は、タイムラインではなく、コミュニティ内の会話やスレッドに書いてください。運営者・管理者の削除権限は「#{link_to "削除・編集できる人", "#help-delete"}」にまとめています。
+
+  -# 6. 状態の違い
+  %section.ba-help-section.ba-anchor-target#help-status{ "aria-labelledby": "help-status-title" }
+    %h2.ba-help-section__title#help-status-title
+      %span.ba-help-section__number 6
+      承認待ち・却下・アクセス停止の違い
+    %dl.ba-help-status
+      .ba-help-status__row
+        %dt
+          = business_join_status_badge(:pending)
+        %dd
+          参加を申請し、運営者・管理者の承認を待っている状態です。紹介は見られますが、会話やスレッドなどの中身はまだ見られません。
+          「申請を取り消す」で取り消せます。
+      .ba-help-status__row
+        %dt
+          %span.ba-status.ba-status--neutral
+            %i.fa-solid.fa-rotate-left{ "aria-hidden": "true" }
+            却下
+        %dd
+          申請が見送られた状態です。申請は取り消され、参加していない状態に戻ります。
+          ふたたび参加ボタンが表示され、もう一度申請できます。
+      .ba-help-status__row
+        %dt
+          = business_join_status_badge(:suspended)
+        %dd
+          運営者・管理者がアクセスを停止した状態です。中身は見られず、再参加・再申請もできません。
+          コミュニティを停止されると、そのコミュニティのプロジェクトにも参加できなくなります。
+
+  -# 7. 運営者
+  %section.ba-help-section.ba-anchor-target#help-operator{ "aria-labelledby": "help-operator-title" }
+    %h2.ba-help-section__title#help-operator-title
+      %span.ba-help-section__number 7
+      運営者向け：作成・編集・メンバー管理
+    %p.ba-help-audience
+      %i.fa-solid.fa-star{ "aria-hidden": "true" }
+      ここは、コミュニティの運営者とプロジェクトの管理者向けの説明です。
+
+    %h3.ba-help-section__subtitle 作成できる人
+    .ba-help-table-wrap
+      %table.ba-help-table
+        %caption.sr-only 作成できるものと条件
+        %thead
+          %tr
+            %th{ scope: "col" } 作るもの
+            %th{ scope: "col" } 条件
+            %th{ scope: "col" } 操作
+        %tbody
+          %tr
+            %th{ scope: "row" } コミュニティ
+            %td{ data: { label: "条件" } } Premiumプラン
+            %td{ data: { label: "操作" } } 「コミュニティ」画面の「コミュニティを作成」
+          %tr
+            %th{ scope: "row" } プロジェクト
+            %td{ data: { label: "条件" } }
+              コミュニティの運営者、またはCoreプラン以上の参加者。
+              無料お試し中のコミュニティでは、プランに関係なく参加者が作成できます。
+            %td{ data: { label: "操作" } } コミュニティのページの「プロジェクト管理」→「新しいプロジェクトを作成」
+          %tr
+            %th{ scope: "row" } スレッド
+            %td{ data: { label: "条件" } } プロジェクトの参加者
+            %td{ data: { label: "操作" } } プロジェクトのページの「新しいスレッド」
+
+    %h3.ba-help-section__subtitle 管理メニュー
+    %p 運営者・管理者には、ページの上に「通常画面」「編集」「メンバー管理」などの管理メニューが表示されます。
+    %ol.ba-help-steps
+      %li 「編集」：コミュニティは名前・紹介・画像、プロジェクトはタイトル・目標・説明・状態・締切・画像を変更します。参加方式（承認制／自動承認）もここで選びます。
+      %li
+        「メンバー管理」：参加申請を「承認」「却下」します。参加者を「アクセス停止」にしたり、「停止を解除」したりできます。
+        %ul.ba-help-sublist
+          %li 停止を解除しても、自動では参加者に戻りません。本人がもう一度参加・申請します。
+
+    -# 認可の根拠: Business::PostsController#ensure_post_owner!、CommunityPostsController(create のみ)、
+    -# MessagesController(create のみ)、ProjectChatsController#destroy(本人のみ)、BusinessAccess#can_edit_project_thread? /
+    -# can_destroy_project_thread?、ProjectsController(destroy なし)。spec/requests/business/help_permissions_spec.rb で照合する。
+    %h3.ba-help-section__subtitle.ba-anchor-target#help-delete 削除・編集できる人（投稿1件ずつ）
+    %p プロジェクトの管理者・コミュニティの運営者でも、ほかの人が書いた投稿を1件ずつ編集・削除することはできません。
+    .ba-help-table-wrap
+      %table.ba-help-table
+        %caption.sr-only 投稿の種類ごとの、1件ずつの編集・削除ができる人
+        %thead
+          %tr
+            %th{ scope: "col" } 投稿の種類
+            %th{ scope: "col" } 編集
+            %th{ scope: "col" } 削除
+        %tbody
+          %tr
+            %th{ scope: "row" } ビジネス投稿（タイムライン）
+            %td{ data: { label: "編集" } } 投稿した本人だけ
+            %td{ data: { label: "削除" } } 投稿した本人だけ
+          %tr
+            %th{ scope: "row" } ビジネス投稿へのコメント
+            %td{ data: { label: "編集" } } できません
+            %td{ data: { label: "削除" } } できません（投稿が削除されると一緒に消えます）
+          %tr
+            %th{ scope: "row" } コミュニティ内の会話
+            %td{ data: { label: "編集" } } できません
+            %td{ data: { label: "削除" } } できません（本人・運営者とも）
+          %tr
+            %th{ scope: "row" } スレッド内のメッセージ
+            %td{ data: { label: "編集" } } できません
+            %td{ data: { label: "削除" } } 書いた本人だけ（プロジェクトに参加している間）
+
+    %h3.ba-help-section__subtitle スレッド・プロジェクト・コミュニティそのもの
+    .ba-help-table-wrap
+      %table.ba-help-table
+        %caption.sr-only スレッド・プロジェクト・コミュニティの編集・削除ができる人
+        %thead
+          %tr
+            %th{ scope: "col" } 対象
+            %th{ scope: "col" } 編集
+            %th{ scope: "col" } 削除
+        %tbody
+          %tr
+            %th{ scope: "row" } スレッド
+            %td{ data: { label: "編集" } } タイトル・説明を、スレッドを作った人とプロジェクトの管理者が編集できます
+            %td{ data: { label: "削除" } } プロジェクトの管理者だけ（スレッドを作った人でも、管理者でなければ削除できません）。中のメッセージもすべて消えます。「全体トーク」は削除できません
+          %tr
+            %th{ scope: "row" } プロジェクト
+            %td{ data: { label: "編集" } } プロジェクトの管理者
+            %td{ data: { label: "削除" } } 画面から削除する操作はありません
+          %tr
+            %th{ scope: "row" } コミュニティ
+            %td{ data: { label: "編集" } } コミュニティの運営者
+            %td{ data: { label: "削除" } } NAKAMAの画面には削除の操作はありません
+    %p.ba-note プロジェクトの管理者は、コミュニティの運営者と、プロジェクトを作成した参加者です。
+
+  -# 8. FAQ
+  %section.ba-help-section.ba-anchor-target#help-faq{ "aria-labelledby": "help-faq-title" }
+    %h2.ba-help-section__title#help-faq-title
+      %span.ba-help-section__number 8
+      よくある質問
+    .ba-help-faq
+      %details.ba-help-faq__item
+        %summary 無料で使えますか？
+        %p 登録、コミュニティ・プロジェクトへの参加、タイムラインへの投稿、コミュニティ内の会話、スレッドは無料プランで使えます。コミュニティやプロジェクトの作成には、上の「作成できる人」の条件があります。
+      %details.ba-help-faq__item
+        %summary 参加を申請したのに、中身が見られません。
+        %p 承認制の場合は、運営者・管理者が承認するまで「承認待ち」になります。承認されると見られるようになります。
+      %details.ba-help-faq__item
+        %summary タイムラインの「おすすめ」「フォロー中」「コミュニティの仲間」は何が違いますか？
+        %p どれも同じビジネス投稿を、誰の投稿かで絞り込んで表示しています。「おすすめ」はすべての投稿、「フォロー中」はあなたとフォローしている人の投稿、「コミュニティの仲間」は同じコミュニティに参加している人の投稿です。見られる人はどれもログインしている全員です。
+      %details.ba-help-faq__item
+        %summary コミュニティ内の会話は、タイムラインにも出ますか？
+        %p 出ません。コミュニティ内の会話はそのコミュニティのページだけに表示され、参加者だけが見られます。
+      %details.ba-help-faq__item
+        %summary 間違えて書いてしまいました。
+        %p ビジネス投稿は詳細画面の「編集」「削除」、スレッドのメッセージは自分のメッセージの「削除」で直せます。
+      %details.ba-help-faq__item
+        %summary 通知はどこで見られますか？
+        %p メニューの「通知」で、いいね・コメント・フォロー、参加申請や承認、プロジェクトのメッセージなどを確認できます。
+
+  - unless customer_signed_in?
+    .ba-help-cta
+      %p.ba-help-cta__text 登録すると、コミュニティを探して参加・申請できます。
+      .ba-lp-actions.ba-lp-actions--center
+        = link_to "無料で始める", new_business_customer_registration_path, class: "ba-btn ba-btn--primary", data: { turbolinks: false }
+        = link_to "ログイン", new_business_customer_session_path, class: "ba-btn ba-btn--secondary"

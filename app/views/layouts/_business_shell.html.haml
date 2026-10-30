@@ -57,7 +57,7 @@
 %main#ba-main.ba-main{ tabindex: "-1" }
   = content_for(:layout)
 
--# SP の下部ナビ。メニューはタイムライン・投稿・アカウント項目をまとめたシート(business/atelier_nav.js が開閉)。
+-# SP の下部ナビ。メニューはタイムライン・使い方・アカウント項目をまとめたシート(business/atelier_nav.js が開閉)。
 - menu_items = business_menu_nav_items(items)
 - menu_current = menu_items.any? { |item| business_nav_current?(item[:key]) } || business_nav_section == :account
 %nav.ba-bottomnav{ "aria-label": "メインメニュー（スマートフォン）" }

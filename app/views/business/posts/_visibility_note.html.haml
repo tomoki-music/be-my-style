@@ -1,0 +1,9 @@
+-# ビジネス投稿の公開範囲の説明。タイムラインと投稿フォームに出し、参加者限定の会話・スレッドと混同しないようにする。
+.ba-visibility{ role: "note" }
+  %i.fa-solid.fa-earth-asia.ba-visibility__icon{ "aria-hidden": "true" }
+  .ba-visibility__text
+    %p
+      %strong ビジネス投稿は、NAKAMAにログインしている全員が見られます。
+    %p
+      参加者だけに共有したい内容は、コミュニティのページの「コミュニティ内の会話」や、プロジェクトのスレッドに書いてください。
+      = link_to "見える範囲の違い", business_help_path(anchor: "help-visibility"), class: "ba-visibility__link"

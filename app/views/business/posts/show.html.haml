@@ -1,6 +1,6 @@
 %nav.ba-breadcrumb{ "aria-label": "現在地" }
   %ol
-    %li= link_to "投稿", business_posts_path
+    %li= link_to "タイムライン", business_timeline_path
     %li
       %span{ "aria-current": "page" }= @post.title.presence || "投稿の詳細"
 
@@ -27,7 +27,7 @@
   - if @post.tags.any?
     %ul.ba-chip-list
       - @post.tags.each do |tag|
-        %li= link_to "##{tag.name}", business_posts_path(tag: tag.name), class: "ba-chip"
+        %li= link_to "##{tag.name}", business_timeline_path(tag: tag.name), class: "ba-chip"
 
   .ba-section-body
     .markdown-body= markdown(@post.body)

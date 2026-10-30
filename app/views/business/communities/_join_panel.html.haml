@@ -10,7 +10,7 @@
       class: "ba-btn ba-btn--primary"
     %p.ba-join__note
       = business_join_approval_description(@community)
-      参加すると、プロジェクトやタイムラインを閲覧できます。
+      参加すると、プロジェクトやコミュニティ内の会話を閲覧できます。
   - when :pending
     = business_join_status_badge(:pending)
     = link_to "申請を取り消す",
@@ -18,7 +18,7 @@
       method: :delete,
       data: { confirm: "参加申請を取り消しますか？", disable_with: "送信中…" },
       class: "ba-btn ba-btn--secondary ba-btn--sm"
-    %p.ba-join__note 運営者が承認すると参加でき、プロジェクトやタイムラインを閲覧できます。
+    %p.ba-join__note 運営者が承認すると参加でき、プロジェクトやコミュニティ内の会話を閲覧できます。
   - when :member
     = business_join_status_badge(:member)
     = link_to "プロジェクトを見る", "#projects", class: "ba-btn ba-btn--secondary ba-btn--sm"

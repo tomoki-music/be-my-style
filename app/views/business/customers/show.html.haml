@@ -76,7 +76,7 @@
             %li
               %p= truncate(post.body, length: 80)
               %small= l(post.created_at, format: :short)
-      = link_to "もっと見る", business_posts_path(user_id: @customer.id), class: "ba-text-link"
+      = link_to "投稿をすべて見る", business_timeline_path(user_id: @customer.id), class: "ba-text-link"
 
     %section.ba-card{ "aria-labelledby": "profile-communities-title" }
       %h2.ba-section-title#profile-communities-title 参加コミュニティ

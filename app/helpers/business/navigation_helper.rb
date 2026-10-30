@@ -7,15 +7,15 @@ module Business
         { key: :home, label: "ホーム", icon: "fa-house", path: business_root_path },
         { key: :communities, label: "コミュニティ", icon: "fa-users", path: business_communities_path },
         { key: :projects, label: "プロジェクト", icon: "fa-layer-group", path: business_projects_path },
+        # ビジネス投稿の一覧はタイムラインだけ(旧「投稿」一覧は転送)。作成・詳細・編集もタイムラインに含める。
         { key: :timeline, label: "タイムライン", icon: "fa-stream", path: business_timeline_path },
-        { key: :posts, label: "投稿", icon: "fa-pen-to-square", path: business_posts_path,
-          locked: !feature_available?(:business_post_create) },
         { key: :notifications, label: "通知", icon: "fa-bell", path: business_notifications_path,
-          badge: unread_count, data: { turbolinks: false } }
+          badge: unread_count, data: { turbolinks: false } },
+        { key: :help, label: "使い方", icon: "fa-circle-question", path: business_help_path }
       ]
     end
 
-    # SP の下部ナビに常時出す項目。残り(タイムライン・投稿・アカウント)は「メニュー」にまとめる。
+    # SP の下部ナビに常時出す項目。残り(タイムライン・使い方・アカウント)は「メニュー」にまとめる。
     BOTTOM_NAV_KEYS = %i[home communities projects notifications].freeze
 
     def business_bottom_nav_items(items)
@@ -32,7 +32,8 @@ module Business
       when "homes" then :home
       when "communities", "community_project_managements" then :communities
       when "projects", "project_threads" then :projects
-      when "posts" then action_name == "timeline" ? :timeline : :posts
+      when "posts" then :timeline
+      when "helps" then :help
       when "notifications" then :notifications
       when "customers" then :account
       end

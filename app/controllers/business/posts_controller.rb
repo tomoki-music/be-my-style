@@ -1,43 +1,24 @@
 class Business::PostsController < ApplicationController
   layout "business"
 
+  TIMELINE_TABS = %w[recommended following community].freeze
+  # タイムラインの絞り込み条件。旧一覧からの転送でも、この4つだけを文字列として引き継ぐ。
+  TIMELINE_FILTER_KEYS = %w[keyword tag user_id page].freeze
+
   before_action :authenticate_customer!
   before_action :set_post, only: [:show, :edit, :update, :destroy]
   before_action :ensure_post_owner!, only: [:edit, :update, :destroy]
   before_action only: [:new, :create] do
     unless onboarding_activity_exception?(:business)
-      require_feature!(:business_post_create, redirect_to_path: business_posts_path)
+      require_feature!(:business_post_create, redirect_to_path: business_timeline_path)
     end
   end
 
+  # 投稿の一覧はタイムラインに統一した。旧一覧の URL(プロフィールの「もっと見る」・タグのリンク・ブックマーク)は
+  # 絞り込み条件ごとタイムラインへ転送する。
   def index
-
-    @posts = Post.all
-
-    # ユーザー絞り込み
-    if params[:user_id].present?
-      @posts = @posts.where(customer_id: params[:user_id])
-    end
-
-    # キーワード検索
-    if params[:keyword].present?
-      @posts = @posts.where("body LIKE ?", "%#{params[:keyword]}%")
-    end
-
-    # 人気タグ（常に表示）
-    @popular_tags = Post.tag_counts_on(:tags).order(count: :desc).limit(10)
-
-    # タグ検索
-    if params[:tag].present?
-      @posts = Post.tagged_with(params[:tag])
-    end
-
-    # 並び順
-    @posts = @posts.order(created_at: :desc)
-
-    # ページネーション
-    @posts = @posts.page(params[:page]).per(12)
-
+    redirect_to business_timeline_path(TIMELINE_FILTER_KEYS.index_with { |key| timeline_filter(key) }.compact),
+      status: :moved_permanently
   end
 
   def show
@@ -60,7 +41,7 @@ class Business::PostsController < ApplicationController
       complete_onboarding_if_pending!
 
       if current_customer.onboarding_done?
-        redirect_to business_posts_path
+        redirect_to business_post_path(@post), notice: "投稿しました。NAKAMAにログインしている全員が見られます。"
       else
         redirect_to onboarding_step3_path
       end
@@ -87,51 +68,58 @@ class Business::PostsController < ApplicationController
 
   def destroy
     @post.destroy
-    redirect_to business_posts_path
+    redirect_to business_timeline_path, notice: "投稿を削除しました"
   end
 
+  # ビジネス投稿(Post)の唯一の一覧。投稿はログインした全員が見られ、タブは「誰の投稿か」で絞り込むだけ。
+  # コミュニティ内の会話(CommunityPost)・プロジェクトのスレッド(ProjectChat)は含めない。
   def timeline
+    @tab = TIMELINE_TABS.include?(params[:tab]) ? params[:tab] : "recommended"
+    @filters = { keyword: timeline_filter("keyword"), tag: timeline_filter("tag"), user_id: timeline_filter("user_id") }
+    @filter_customer = Customer.find_by(id: @filters[:user_id]) if @filters[:user_id]
 
-    tab = params[:tab] || "recommended"
+    posts = timeline_scope(@tab)
+    # 存在しない投稿者を指定されたときは、全件ではなく該当なしにする(旧一覧と同じ)。
+    posts = posts.where(customer_id: @filter_customer&.id) if @filters[:user_id]
+    posts = posts.where("posts.body LIKE ?", "%#{Post.sanitize_sql_like(@filters[:keyword])}%") if @filters[:keyword]
+    posts = posts.where(id: Post.tagged_with(@filters[:tag]).select(:id)) if @filters[:tag]
 
-    case tab
-
-    when "following"
-      following_ids = current_customer.followings.pluck(:id)
-      posts = Post.where(customer_id: following_ids + [current_customer.id])
-
-    when "community"
-      community_ids = current_customer.communities.pluck(:id)
-
-      posts = Post.joins(:customer)
-                  .joins("INNER JOIN community_customers ON community_customers.customer_id = customers.id")
-                  .where(community_customers: { community_id: community_ids })
-
-    else # recommended
-
-      posts = Post.all
-
-    end
-
-    # スコアリング
-    @posts = posts
-      .left_joins(:likes, :messages)
-      .select("posts.*, 
-        COUNT(DISTINCT likes.id) * 3 +
-        COUNT(DISTINCT messages.id) * 2 +
-        (UNIX_TIMESTAMP(posts.created_at) / 10000) as score
-      ")
-      .group("posts.id")
-      .order("score DESC")
-
-    if params[:keyword].present?
-      @posts = posts.where("body LIKE ?", "%#{params[:keyword]}%")
-    end
-
-    @posts = @posts.page(params[:page]).per(12)
+    @popular_tags = Post.tag_counts_on(:tags).order(count: :desc).limit(10)
+    @posts = scored(posts)
+      .preload(:likes, :messages, post_image_attachment: :blob, customer: { profile_image_attachment: :blob })
+      .page(timeline_filter("page")).per(12)
   end
 
   private
+
+  # 配列・ハッシュなど文字列以外の値は無視する(検索条件として扱えず、表示も崩れるため)。
+  def timeline_filter(key)
+    value = params[key]
+    value.is_a?(String) ? value.strip.presence : nil
+  end
+
+  def timeline_scope(tab)
+    case tab
+    when "following"
+      Post.where(customer_id: current_customer.followings.select(:id)).or(Post.where(customer_id: current_customer.id))
+    when "community"
+      # 同じコミュニティに参加している人の投稿。投稿自体の公開範囲(ログインした全員)は変わらない。
+      Post.where(customer_id: CommunityCustomer.where(community_id: current_customer.communities.select(:id)).select(:customer_id))
+    else
+      Post.all
+    end
+  end
+
+  # いいね・コメントの多さと新しさで並べる。テスト環境(SQLite)でも同じ並びを確かめられるよう、時刻の数値化だけ DB ごとに書き分ける。
+  def scored(posts)
+    epoch = ActiveRecord::Base.connection.adapter_name.match?(/mysql/i) ? "UNIX_TIMESTAMP(posts.created_at)" : "CAST(strftime('%s', posts.created_at) AS REAL)"
+
+    posts
+      .left_joins(:likes, :messages)
+      .select("posts.*, COUNT(DISTINCT likes.id) * 3 + COUNT(DISTINCT messages.id) * 2 + (#{epoch} / 10000) AS score")
+      .group("posts.id")
+      .order("score DESC", "posts.id DESC")
+  end
 
   def set_post
     @post = Post.find(params[:id])

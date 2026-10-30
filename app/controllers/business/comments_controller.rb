@@ -24,7 +24,7 @@ class Business::CommentsController < ApplicationController
     comment = Comment.find(params[:id])
     comment.destroy
 
-    redirect_back(fallback_location: business_posts_path)
+    redirect_back(fallback_location: business_timeline_path)
   end
 
   private

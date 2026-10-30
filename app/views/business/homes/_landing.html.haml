@@ -7,16 +7,7 @@
 - sign_up_path = new_business_customer_registration_path
 - sign_in_path = new_business_customer_session_path
 
-%a.ba-lp-skip{ href: "#ba-lp-main" } 本文へスキップ
-
-%header.ba-lp-header
-  .ba-lp-container.ba-lp-header__inner
-    = link_to business_root_path, class: "ba-lp-brand", "aria-label": "NAKAMA トップ" do
-      -# ロゴ画像に文字(NAKAMA)まで含まれているため、文字は重ねない。
-      = image_tag "business/nakama-logo.svg", class: "ba-lp-brand__logo", alt: "", width: 109, height: 24
-    %nav.ba-lp-header__nav{ "aria-label": "アカウント" }
-      = link_to "ログイン", sign_in_path, class: "ba-btn ba-btn--secondary ba-btn--sm ba-lp-header__login"
-      = link_to "無料で始める", sign_up_path, class: "ba-btn ba-btn--primary ba-btn--sm ba-lp-header__signup", data: { turbolinks: false }
+= render "business/homes/lp_header"
 
 %main#ba-lp-main.ba-lp-main{ tabindex: "-1" }
   %section.ba-lp-hero{ "aria-labelledby": "ba-lp-title" }
@@ -31,6 +22,8 @@
         .ba-lp-actions
           = link_to "無料で始める", sign_up_path, class: "ba-btn ba-btn--primary ba-lp-actions__primary", data: { turbolinks: false }
           = link_to "ログイン", sign_in_path, class: "ba-btn ba-btn--secondary"
+        %p.ba-lp-hero__help
+          = link_to "はじめての方へ：NAKAMAの使い方", business_help_path, class: "ba-text-link"
         -# 作成はプラン(Core / Premium)が基本だが、お試し中のコミュニティや運営者は例外があるため「条件」と書く。
         %p.ba-lp-note 無料で登録・参加できます。プロジェクトやコミュニティの作成には、有料プランなどの条件があります。
 
@@ -67,25 +60,20 @@
             %p.ba-lp-preview__bubble 来週のレビュー資料を共有しました。
             %p.ba-lp-preview__bubble.ba-lp-preview__bubble--mine ありがとうございます。確認しておきます！
 
-  %section.ba-lp-section{ "aria-labelledby": "ba-lp-features-title" }
+  -# 利用の流れは文字とアイコンの3ステップで伝え、横に利用イメージの絵(装飾)を1枚だけ置く。
+  -# 画面そのものの見た目はヒーローの画面イメージが担当する。
+  %section.ba-lp-section{ "aria-labelledby": "ba-lp-flow-title" }
     .ba-lp-container
-      %h2.ba-lp-section__title#ba-lp-features-title NAKAMAでできること
-      %ul.ba-lp-features
-        %li.ba-lp-feature
-          %span.ba-lp-feature__icon{ "aria-hidden": "true" }
-            %i.fa-solid.fa-users
-          %h3.ba-lp-feature__title コミュニティでつながる
-          %p.ba-lp-feature__text 関心の近いコミュニティを探して参加し、タイムラインで近況や知見を共有できます。
-        %li.ba-lp-feature
-          %span.ba-lp-feature__icon{ "aria-hidden": "true" }
-            %i.fa-solid.fa-layer-group
-          %h3.ba-lp-feature__title プロジェクトで進める
-          %p.ba-lp-feature__text コミュニティの中でプロジェクトを立ち上げ、目標や締切を共有して仲間を募れます。
-        %li.ba-lp-feature
-          %span.ba-lp-feature__icon{ "aria-hidden": "true" }
-            %i.fa-regular.fa-comments
-          %h3.ba-lp-feature__title スレッドで話す
-          %p.ba-lp-feature__text 話題ごとにスレッドを分けて、画像やファイルを添えながら話し合えます。
+      %h2.ba-lp-section__title#ba-lp-flow-title NAKAMAの使い方
+      %p.ba-lp-section__lead 3つのステップで、仲間との活動が始まります。
+      .ba-lp-flow
+        .ba-lp-flow__visual
+          = business_illustration(:ribbon)
+        = render "business/helps/flow"
+      %p.ba-lp-flow__more
+        = link_to business_help_path, class: "ba-btn ba-btn--secondary" do
+          %i.fa-regular.fa-circle-question{ "aria-hidden": "true" }
+          使い方を詳しく見る
 
   %section.ba-lp-section.ba-lp-section--muted{ "aria-labelledby": "ba-lp-notice-title" }
     .ba-lp-container.ba-lp-container--narrow
@@ -109,15 +97,4 @@
           = link_to "無料で始める", sign_up_path, class: "ba-btn ba-btn--primary ba-lp-actions__primary", data: { turbolinks: false }
           = link_to "ログイン", sign_in_path, class: "ba-btn ba-btn--secondary"
 
-%footer.ba-lp-footer
-  .ba-lp-container.ba-lp-footer__inner
-    = link_to business_root_path, class: "ba-lp-brand ba-lp-brand--footer", "aria-label": "NAKAMA トップ" do
-      = image_tag "business/nakama-logo.svg", class: "ba-lp-brand__logo", alt: "", width: 109, height: 24
-    %nav{ "aria-label": "フッター" }
-      %ul.ba-lp-footer__links
-        %li= link_to "ログイン", sign_in_path
-        %li= link_to "新規登録", sign_up_path, data: { turbolinks: false }
-        %li= link_to "利用規約", public_terms_path
-        %li= link_to "プライバシーポリシー", public_privacy_path
-        %li= link_to "特定商取引法に基づく表記", public_legal_path
-    %p.ba-lp-footer__copy © BeMyStyle
+= render "business/homes/lp_footer"

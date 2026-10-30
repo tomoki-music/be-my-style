@@ -55,8 +55,8 @@ RSpec.describe "Business のログイン前の紹介ページ", type: :system, j
       expect(horizontal_overflow).to be <= 0
       expect(heading_breaks(".ba-lp-hero__title")).to all(end_with("、"))
       %w[.ba-lp-start__title .ba-lp-section__title].each { |selector| expect(heading_breaks(selector)).to eq([]), selector }
-      all(".ba-lp-feature__title").each_with_index do |_, index|
-        expect(heading_breaks(".ba-lp-feature:nth-child(#{index + 1}) .ba-lp-feature__title")).to eq []
+      all(".ba-flow__title").each_with_index do |_, index|
+        expect(heading_breaks(".ba-flow__step:nth-child(#{index + 1}) .ba-flow__title")).to eq []
       end
 
       font_size = page.evaluate_script("parseFloat(getComputedStyle(document.querySelector('.ba-lp-hero__title')).fontSize)")
@@ -99,7 +99,7 @@ RSpec.describe "Business のログイン前の紹介ページ", type: :system, j
     expect(page).to have_no_css(".ba-lp-hero")
   end
 
-  it "キーボードだけで本文へのスキップ・ロゴ・ログイン・無料で始めるの順に移動でき、フォーカスが見える" do
+  it "キーボードだけで本文へのスキップ・ロゴ・使い方・ログイン・無料で始めるの順に移動でき、フォーカスが見える" do
     visit_landing(1280)
 
     page.send_keys(:tab)
@@ -108,6 +108,8 @@ RSpec.describe "Business のログイン前の紹介ページ", type: :system, j
 
     page.send_keys(:tab)
     expect(page.evaluate_script("document.activeElement.getAttribute('aria-label')")).to eq "NAKAMA トップ"
+    page.send_keys(:tab)
+    expect(page.evaluate_script("document.activeElement.textContent.trim()")).to eq "使い方"
     page.send_keys(:tab)
     expect(page.evaluate_script("document.activeElement.textContent.trim()")).to eq "ログイン"
     page.send_keys(:tab)

@@ -50,7 +50,7 @@
     %ul
       %li= link_to "概要", "#about"
       %li= link_to "プロジェクト", "#projects"
-      %li= link_to "タイムライン", "#timeline"
+      %li= link_to "コミュニティ内の会話", "#timeline"
       %li= link_to "メンバー", "#members"
 
 .ba-columns
@@ -85,7 +85,11 @@
                 join_status: @project_statuses.fetch(project.id)
 
       %section.ba-card.ba-anchor-target#timeline{ "aria-labelledby": "community-timeline-title" }
-        %h2.ba-section-title#community-timeline-title タイムライン
+        -# 全体向けのタイムライン(ビジネス投稿)と区別するため「コミュニティ内の会話」と呼ぶ。アンカー(#timeline)は従来のまま。
+        %h2.ba-section-title#community-timeline-title コミュニティ内の会話
+        %p.ba-note
+          %i.fa-solid.fa-lock{ "aria-hidden": "true" }
+          このコミュニティの参加者だけが見られます。タイムラインには表示されません。
 
         -# 閲覧・投稿とも参加者(メンバー / 管理権限 / 管理者)だけ。
         - if feature_available?(:business_community_post_create, community: @community)
@@ -108,7 +112,7 @@
         %h2.ba-section-title
           %i.fa-solid.fa-lock{ "aria-hidden": "true" }
           参加者限定
-        %p.ba-muted プロジェクト・タイムライン・メンバーは、コミュニティの参加者のみ閲覧できます。
+        %p.ba-muted プロジェクト・コミュニティ内の会話・メンバーは、コミュニティの参加者のみ閲覧できます。
         - if @join_status == :none
           %p.ba-muted 上の「#{business_join_button_label(@community)}」から参加すると、このコミュニティのプロジェクトを探して参加できます。
 

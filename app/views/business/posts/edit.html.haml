@@ -1,6 +1,6 @@
 %nav.ba-breadcrumb{ "aria-label": "現在地" }
   %ol
-    %li= link_to "投稿", business_posts_path
+    %li= link_to "タイムライン", business_timeline_path
     %li= link_to (@post.title_was.presence || "投稿の詳細"), business_post_path(@post)
     %li
       %span{ "aria-current": "page" } 編集
