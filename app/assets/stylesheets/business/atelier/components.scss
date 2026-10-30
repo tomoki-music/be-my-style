@@ -178,6 +178,10 @@
     color: #fff;
   }
 
+  .ba-btn--primary:active {
+    background: var(--ba-accent-pressed);
+  }
+
   .ba-btn--secondary {
     background: var(--ba-surface);
     border-color: var(--ba-border-strong);
@@ -195,8 +199,12 @@
   }
 
   .ba-btn--soft:hover {
-    background: var(--ba-lavender);
+    background: var(--ba-accent-tint);
     color: var(--ba-accent-strong);
+  }
+
+  .ba-btn--soft:active {
+    background: var(--ba-accent-line);
   }
 
   .ba-btn--danger {
@@ -334,8 +342,8 @@
     border-radius: 0;
   }
 
-  .ba-monogram--violet {
-    background: linear-gradient(135deg, #ece4fa 0%, #d8c8f2 100%);
+  .ba-monogram--blue {
+    background: linear-gradient(135deg, #e6eefc 0%, #cbdcf7 100%);
   }
 
   .ba-monogram--peach {
@@ -343,8 +351,8 @@
     color: var(--ba-peach-text);
   }
 
-  .ba-monogram--lavender {
-    background: linear-gradient(135deg, #f1edfb 0%, #e2dcf6 100%);
+  .ba-monogram--sky {
+    background: linear-gradient(135deg, #eaf7fd 0%, #cdeaf8 100%);
   }
 
   .ba-monogram--mist {

@@ -9,12 +9,14 @@
 
 %header.ba-topbar
   = link_to business_root_path, class: "ba-brand", "aria-label": "NAKAMA ホーム" do
-    -# 画像にロゴ文字(NAKAMA)まで含まれているため、文字は重ねず余白だけ切り抜いて表示する。
-    = image_tag "nakama_logo.jpg", class: "ba-brand__logo", alt: ""
+    -# ロゴ画像に文字(NAKAMA)まで含まれているため、文字は重ねない。
+    = image_tag "business/nakama-logo.svg", class: "ba-brand__logo", alt: "", width: 127, height: 28
 
 %nav.ba-sidenav{ "aria-label": "メインメニュー" }
   = link_to business_root_path, class: "ba-brand ba-sidenav__brand", "aria-label": "NAKAMA ホーム" do
-    = image_tag "nakama_logo.jpg", class: "ba-brand__logo", alt: ""
+    -# 幅を縮めた左ナビ(992〜1199px)ではシンボルだけを出す。
+    = image_tag "business/nakama-logo.svg", class: "ba-brand__logo", alt: "", width: 145, height: 32
+    = image_tag "business/nakama-symbol.svg", class: "ba-brand__symbol", alt: "", width: 38, height: 36
   %ul.ba-sidenav__list
     - items.each do |item|
       - current = business_nav_current?(item[:key])

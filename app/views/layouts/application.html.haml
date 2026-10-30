@@ -12,7 +12,11 @@
     %meta{ property: "og:description", content: page_description }/
     - if content_for?(:og_image)
       %meta{ property: "og:image", content: yield(:og_image) }/
-    = favicon_link_tag'favicon.ico'
+    -# Business は NAKAMA のアイコンに差し替える(layouts/_business_icons)。指定の無い画面は従来どおり共通の favicon。
+    - if content_for?(:head_icons)
+      = yield(:head_icons)
+    - else
+      = favicon_link_tag'favicon.ico'
     = csrf_meta_tags
     = csp_meta_tag
     = include_gon

@@ -240,50 +240,69 @@
   color: #1e3a5f;
 }
 
+// Business は NAKAMA のブランドブルー(#2864D9)を基準にする(docs/business_social_atelier/README.md の 11 章)。
 .domain-auth--business {
-  background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 24%),
-    linear-gradient(180deg, #f6f9ff 0%, #eef4ff 100%);
+  background: linear-gradient(180deg, #f7f9fc 0%, #edf3fd 100%);
 }
 
 .domain-auth--business .domain-auth__domain {
-  background: #eff6ff;
-  border-color: #93c5fd;
-  color: #1e40af;
+  background: #edf3fd;
+  border-color: #c5d7f5;
+  color: #1d4fb3;
 }
 
 .domain-auth--business .domain-auth__input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  border-color: #2864d9;
+  box-shadow: 0 0 0 3px rgba(40, 100, 217, 0.25);
   outline: none;
 }
 
+// 共通の .domain-auth__submit の白文字は、後から読み込まれる Bootstrap の .btn(#212529)に負けるため、ここで明示する。
 .domain-auth--business .domain-auth__submit {
-  background: #1e40af;
+  background: #2864d9;
+  color: #fff;
 }
 
 .domain-auth--business .domain-auth__submit:hover {
-  background: #1d4ed8;
+  background: #1d4fb3;
+  color: #fff;
 }
 
+.domain-auth--business .domain-auth__submit:active {
+  background: #173f8f;
+}
+
+.domain-auth--business .domain-auth__submit:focus-visible {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #2864d9;
+  outline: none;
+}
+
+// リンクは色だけで区別しないよう下線を付け、戻るリンクは白背景で 4.5:1 以上の灰色にする。
 .domain-auth--business .domain-auth__sub-link {
-  color: #2563eb;
+  color: #2864d9;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.domain-auth--business .domain-auth__back-link {
+  color: #545c6b;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .domain-auth--business .domain-auth__back-link:hover,
 .domain-auth--business .domain-auth__sub-link:hover {
-  color: #1d4ed8;
-  text-decoration: underline;
+  color: #1d4fb3;
 }
 
 .domain-auth--business .domain-join__features {
-  background: #eef4ff;
-  border: 1px solid #bfdbfe;
+  background: #edf3fd;
+  border: 1px solid #c5d7f5;
 }
 
 .domain-auth--business .domain-join__feature-text,
 .domain-auth--business .domain-join__feature-icon {
-  color: #1e3a8a;
+  color: #1d4fb3;
 }
 
 .domain-auth--learning {

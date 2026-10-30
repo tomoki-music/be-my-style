@@ -4,29 +4,35 @@
 
 .ba-body,
 .ba-lp {
-  // 色
-  --ba-accent: #7856b8;
-  --ba-accent-strong: #5f3f9c;
-  --ba-accent-soft: #f2edfa;
-  --ba-accent-line: #d9cdef;
-  --ba-lavender: #ebe4f7;
+  // 色。ブランド色は NAKAMA ロゴの青(#2864D9)とスカイブルー(#55BCEB)。
+  // スカイブルーは白背景で 2.2:1 しかないため、文字には使わずロゴ・装飾・淡い面だけに使う。
+  --ba-brand-blue: #2864d9;
+  --ba-brand-sky: #55bceb;
+  --ba-accent: var(--ba-brand-blue);
+  --ba-accent-strong: #1d4fb3;
+  --ba-accent-pressed: #173f8f;
+  --ba-accent-soft: #edf3fd;
+  --ba-accent-tint: #dfe9fb;
+  --ba-accent-line: #c5d7f5;
+  --ba-sky-soft: #e6f5fc;
   --ba-peach: #fde9dd;
   --ba-peach-text: #8a4a2b;
-  --ba-text: #25252d;
-  --ba-text-muted: #5c5c6b;
-  --ba-text-subtle: #6b6b7b;
-  --ba-bg: #f8f8fb;
+  --ba-text: #1f2633;
+  --ba-text-muted: #545c6b;
+  --ba-text-subtle: #636b7a;
+  --ba-bg: #f7f9fc;
   --ba-surface: #ffffff;
-  --ba-surface-muted: #f3f3f7;
-  --ba-border: #e6e6ee;
-  --ba-border-strong: #d2d2de;
+  --ba-surface-muted: #f1f4f8;
+  --ba-border: #e2e7ef;
+  --ba-border-strong: #cbd3df;
   --ba-success: #1d6f48;
   --ba-success-soft: #e5f3ec;
   --ba-warning: #855300;
   --ba-warning-soft: #fff3d6;
   --ba-danger: #b42335;
   --ba-danger-soft: #fdecee;
-  --ba-focus: 0 0 0 3px rgba(120, 86, 184, 0.35);
+  // 淡い色の輪では白背景との差が 2:1 未満になるため、白の隙間 + ブランドブルーの実線(5.4:1)にする。
+  --ba-focus: 0 0 0 2px var(--ba-surface), 0 0 0 4px var(--ba-accent);
 
   // 余白(4 / 8 / 12 / 16 / 24 / 32)
   --ba-space-1: 4px;
@@ -75,8 +81,11 @@
 
   // 色は class の無い本文中のリンクだけに付け、部品(ボタン・添付のダウンロードなど)の配色を上書きしない。
   // :where で詳細度を上げず、タブ・パンくずなど部品側の指定を優先させる。
+  // 本文中のリンクは色だけで区別しないよう下線も付ける。
   :where(a:not([class])) {
     color: var(--ba-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 
   :where(a:not([class])):hover {
