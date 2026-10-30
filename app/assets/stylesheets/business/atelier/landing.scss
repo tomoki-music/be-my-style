@@ -67,12 +67,18 @@
     border-radius: var(--ba-radius-small);
   }
 
-  // 元画像(1600x896)は上下の余白が大きいので、ログイン後の上部バーと同じく横長の枠に cover で収める。
+  // ロゴ(SVG)は余白なしで書き出しているので、高さだけ決めて縦横比を保つ。
+  // 幅 400px 未満はヘッダーにボタンが2つ並ぶため、ロゴを一段小さくする。
   .ba-lp-brand__logo {
     display: block;
-    width: 112px;
-    height: 36px;
-    object-fit: cover;
+    width: auto;
+    height: 24px;
+  }
+
+  @media (min-width: 400px) {
+    .ba-lp-header .ba-lp-brand__logo {
+      height: 28px;
+    }
   }
 
   .ba-lp-header__nav {
@@ -321,7 +327,7 @@
   .ba-lp-preview__bubble--mine {
     margin: 0 0 0 auto;
     border-radius: 14px 14px 4px 14px;
-    background: var(--ba-lavender);
+    background: var(--ba-accent-soft);
   }
 
   // ===== セクション共通 =====

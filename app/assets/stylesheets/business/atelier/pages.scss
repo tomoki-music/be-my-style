@@ -17,10 +17,10 @@
     overflow: hidden;
   }
 
-  // 画像が無いときは淡いラベンダーとピーチの小さな面で代替する。
+  // 画像が無いときはロゴの青とスカイブルーを淡くした小さな面で代替する。
   .ba-profile__cover--empty {
     height: 72px;
-    background: linear-gradient(120deg, var(--ba-lavender) 0%, var(--ba-peach) 100%);
+    background: linear-gradient(120deg, var(--ba-accent-soft) 0%, var(--ba-sky-soft) 100%);
   }
 
   .ba-profile__cover-image {

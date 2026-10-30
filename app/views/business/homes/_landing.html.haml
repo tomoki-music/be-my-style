@@ -1,6 +1,7 @@
 -# Business(NAKAMA)のログイン前の紹介ページ。ログイン後と同じ Social Atelier のトークン・部品を body.ba-lp で使う(landing.scss)。
 -# 未ログインでは通知・プロジェクトなど実データを一切取得しない。画面イメージの内容はすべて架空の例。
 - content_for :body_class, "ba-lp"
+- content_for :head_icons, render("layouts/business_icons")
 - content_for :title, "NAKAMA｜仲間と活動を育てるビジネスコミュニティ"
 - content_for :og_description, "コミュニティでつながり、プロジェクトで形にする。NAKAMAは、仲間との活動を育てるビジネスプラットフォームです。"
 - sign_up_path = new_business_customer_registration_path
@@ -11,8 +12,8 @@
 %header.ba-lp-header
   .ba-lp-container.ba-lp-header__inner
     = link_to business_root_path, class: "ba-lp-brand", "aria-label": "NAKAMA トップ" do
-      -# 画像にロゴ文字(NAKAMA)まで含まれているため、文字は重ねず余白だけ切り抜いて表示する。
-      = image_tag "nakama_logo.jpg", class: "ba-lp-brand__logo", alt: ""
+      -# ロゴ画像に文字(NAKAMA)まで含まれているため、文字は重ねない。
+      = image_tag "business/nakama-logo.svg", class: "ba-lp-brand__logo", alt: "", width: 109, height: 24
     %nav.ba-lp-header__nav{ "aria-label": "アカウント" }
       = link_to "ログイン", sign_in_path, class: "ba-btn ba-btn--secondary ba-btn--sm ba-lp-header__login"
       = link_to "無料で始める", sign_up_path, class: "ba-btn ba-btn--primary ba-btn--sm ba-lp-header__signup", data: { turbolinks: false }
@@ -111,7 +112,7 @@
 %footer.ba-lp-footer
   .ba-lp-container.ba-lp-footer__inner
     = link_to business_root_path, class: "ba-lp-brand ba-lp-brand--footer", "aria-label": "NAKAMA トップ" do
-      = image_tag "nakama_logo.jpg", class: "ba-lp-brand__logo", alt: ""
+      = image_tag "business/nakama-logo.svg", class: "ba-lp-brand__logo", alt: "", width: 109, height: 24
     %nav{ "aria-label": "フッター" }
       %ul.ba-lp-footer__links
         %li= link_to "ログイン", sign_in_path

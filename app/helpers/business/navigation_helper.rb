@@ -47,7 +47,7 @@ module Business
     end
 
     # 画像が無いコミュニティ・プロジェクトの代替表示に使う頭文字と色。色は id から決め、表示のたびに変わらないようにする。
-    MONOGRAM_TONES = %w[violet peach lavender mist].freeze
+    MONOGRAM_TONES = %w[blue peach sky mist].freeze
 
     def business_monogram(name, id: nil, size: nil, shape: :circle)
       initial = name.to_s.strip[0].presence || "?"

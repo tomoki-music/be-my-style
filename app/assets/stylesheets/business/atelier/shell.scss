@@ -29,12 +29,16 @@
     text-decoration: none;
   }
 
-  // 元画像(1600x896)は上下の余白が大きいので、横長の枠に cover で収めて余白を切り落とす。
-  .ba-brand__logo {
+  // ロゴ(SVG)は余白なしで書き出しているので、高さだけ決めて縦横比を保つ。
+  .ba-brand__logo,
+  .ba-brand__symbol {
     display: block;
-    width: 128px;
-    height: 40px;
-    object-fit: cover;
+    width: auto;
+    height: 28px;
+  }
+
+  .ba-brand__symbol {
+    display: none;
   }
 
   // ===== 上部バー(SP / タブレット) =====
@@ -375,8 +379,12 @@
       margin-bottom: var(--ba-space-4);
 
       .ba-brand__logo {
-        width: 72px;
-        height: 28px;
+        display: none;
+      }
+
+      .ba-brand__symbol {
+        display: block;
+        height: 36px;
       }
     }
 
@@ -507,8 +515,12 @@
       padding: 0 var(--ba-space-1);
 
       .ba-brand__logo {
-        width: 144px;
-        height: 44px;
+        display: block;
+        height: 32px;
+      }
+
+      .ba-brand__symbol {
+        display: none;
       }
     }
 
