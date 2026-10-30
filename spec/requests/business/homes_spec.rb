@@ -9,22 +9,18 @@ RSpec.describe "Business::Homes", type: :request do
 
   describe "GET /business のユーザーメニュー" do
     context "未ログイン" do
-      it "汎用ユーザーアイコンのメニュー内にログイン導線を出し、ログアウト・ベルは出さない" do
+      it "ログイン済みに見えるアカウントアイコン・通知ベル・ログアウトを出さず、ヘッダーにログインと新規登録を出す" do
         get business_root_path
 
         html = Nokogiri::HTML(response.body)
-        menu = account_menu(html)
-        toggle = menu.at_css("button.business-account-menu__toggle")
+        header = html.at_css("header.ba-lp-header")
 
         expect(response).to have_http_status(:ok)
-        expect(toggle["data-toggle"]).to eq "dropdown"
-        expect(toggle["aria-haspopup"]).to eq "true"
-        expect(toggle["aria-expanded"]).to eq "false"
-        expect(toggle.at_css("i.fa-circle-user")).to be_present
-        expect(menu.at_css(%(.dropdown-menu a[href="#{new_business_customer_session_path}"])).text).to eq "ログイン"
+        expect(header.at_css(%(a[href="#{new_business_customer_session_path}"])).text.strip).to eq "ログイン"
+        expect(header.at_css(%(a[href="#{new_business_customer_registration_path}"])).text.strip).to eq "無料で始める"
+        expect(html.at_css(".business-account-menu, .business-account-link, .business-header-bell, i.fa-circle-user")).to be_nil
         expect(response.body).not_to include("ログアウト")
-        expect(html.at_css(".business-header-bell")).to be_nil
-        expect(html.at_css("button#open.header-menu-toggle")).to be_present
+        expect(html.at_css(".header_container--business")).to be_nil
       end
     end
 
@@ -144,20 +140,52 @@ RSpec.describe "Business::Homes", type: :request do
     end
 
     context "未ログイン" do
-      it "紹介ページのまま、プロジェクトを取得・表示せずログイン導線を出す" do
+      it "紹介ページを出し、実際のコミュニティ・プロジェクトを取得・表示せず登録・ログインへ案内する" do
         Project.create!(community: community, customer: owner, title: "非公開になり得る企画")
 
         get business_root_path
 
         expect(response).to have_http_status(:ok)
-        expect(doc.at_css(".hero-section")).to be_present
-        expect(doc.at_css(".member-home")).to be_nil
+        expect(doc.at_css("body.ba-lp")).to be_present
+        expect(doc.at_css("body.ba-body, .ba-home, .ba-sidenav, .ba-bottomnav")).to be_nil
+        expect(doc.at_css("h1").text).to eq "出会いを、いっしょに動く力へ。"
         expect(response.body).not_to include("非公開になり得る企画")
         expect(response.body).not_to include("企画コミュニティ")
-        section = doc.at_css("#top-projects")
-        expect(section.text).to include("プロジェクトはログインすると閲覧できます。")
-        expect(section.at_css(%(a[href="#{new_business_customer_session_path}"]))).to be_present
-        expect(section.at_css(%(a[href="#{new_business_customer_registration_path}"]))).to be_present
+        start = doc.at_css("#ba-lp-start")
+        expect(start.text).to include("コミュニティ内の会話やプロジェクトのスレッドは、参加したメンバーが見られます")
+        expect(start.at_css(%(a[href="#{new_business_customer_session_path}"]))).to be_present
+        expect(start.at_css(%(a[href="#{new_business_customer_registration_path}"]))).to be_present
+      end
+
+      it "画面イメージは架空の例と明記し、読み上げでは中身を実データとして読ませない" do
+        get business_root_path
+
+        preview = doc.at_css("figure.ba-lp-preview")
+        expect(preview.at_css("figcaption").text).to include("画面イメージ（架空の例）")
+        expect(preview.at_css(".ba-lp-preview__body")["aria-hidden"]).to eq "true"
+        expect(preview.css(".ba-nav-badge, .ba-count")).to be_empty
+      end
+
+      it "無料の範囲を誤解させない注記を添え、音楽側への案内を出さない" do
+        get business_root_path
+
+        expect(doc.at_css(".ba-lp-note").text).to include("無料で登録・参加できます", "作成には、有料プランなどの条件があります")
+        hrefs = doc.css("a").map { |a| a["href"].to_s }
+        expect(hrefs).not_to include("/")
+        expect(hrefs.grep(%r{\A/(singing|public/(communities|events|lp))})).to eq []
+        expect(response.body).not_to include("音楽")
+      end
+
+      it "フッターの法務ページ・ログイン・新規登録のリンクが実在するページを指す" do
+        get business_root_path
+
+        links = doc.css(".ba-lp-footer a[href^='/']").map { |a| a["href"] }.uniq
+        expect(links).to include(public_terms_path, public_privacy_path, public_legal_path,
+                                 new_business_customer_session_path, new_business_customer_registration_path)
+        links.each do |href|
+          get href
+          expect(response).to have_http_status(:ok), href
+        end
       end
     end
 
@@ -240,21 +268,7 @@ RSpec.describe "Business::Homes", type: :request do
     end
   end
 
-  describe "ヘッダー(SP の☰メニュー)" do
-    def sp_menu
-      Nokogiri::HTML(response.body).at_css("#businessSpMenu")
-    end
-
-    it "未ログイン: ☰にログイン・新規登録をまとめ、アイコンはログイン画面へのリンク" do
-      get business_root_path
-
-      html = Nokogiri::HTML(response.body)
-      expect(html.at_css("button#open")["aria-controls"]).to eq "businessSpMenu"
-      expect(html.at_css("button#open")["aria-expanded"]).to eq "false"
-      expect(html.at_css(%(a.business-account-link[href="#{new_business_customer_session_path}"]))).to be_present
-      expect(sp_menu.css("a").map { |a| a.text.strip }).to eq %w[HOME ログイン 新規登録]
-    end
-
+  describe "ヘッダー(ログイン後の下部ナビ・メニュー)" do
     it "ログイン済み: 下部ナビとメニューに移動項目・アカウント項目を重複なくまとめる" do
       customer = create(:customer, domain_name: "business", onboarding_done: true)
       sign_in customer

@@ -1,8 +1,9 @@
-// Social Atelier: Business(NAKAMA)ログイン後画面のデザイントークンと基本スタイル。
-// すべて body.ba-body(layouts/business)配下に限定し、音楽側・ログイン前の紹介ページには当てない。
+// Social Atelier: Business(NAKAMA)のデザイントークンと基本スタイル。
+// body.ba-body(ログイン後の layouts/business)と body.ba-lp(ログイン前の紹介ページ /business)に限定し、音楽側には当てない。
 // 値の一覧と使い分けは docs/business_social_atelier/README.md に記録している。
 
-.ba-body {
+.ba-body,
+.ba-lp {
   // 色
   --ba-accent: #7856b8;
   --ba-accent-strong: #5f3f9c;
@@ -259,7 +260,10 @@
 @media (prefers-reduced-motion: reduce) {
   .ba-body *,
   .ba-body *::before,
-  .ba-body *::after {
+  .ba-body *::after,
+  .ba-lp *,
+  .ba-lp *::before,
+  .ba-lp *::after {
     transition-duration: 0.01ms;
     animation-duration: 0.01ms;
     animation-iteration-count: 1;

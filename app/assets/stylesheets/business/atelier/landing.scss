@@ -1,0 +1,511 @@
+// Social Atelier: Business のログイン前の紹介ページ(/business、body.ba-lp)。
+// 色・文字・角丸・ボタン・状態表示・頭文字は tokens.scss / components.scss を共有し、ここにはページ固有の配置だけを置く。
+// 文字サイズは SassC が解釈できない CSS の min() / max() を使わず、画面幅ごとに指定する。
+
+.ba-lp {
+  background: var(--ba-surface);
+
+  .ba-lp-container {
+    width: 100%;
+    max-width: var(--ba-content-width);
+    margin: 0 auto;
+    padding: 0 var(--ba-space-4);
+  }
+
+  .ba-lp-container--narrow {
+    max-width: var(--ba-reading-width);
+  }
+
+  .ba-lp-skip {
+    position: absolute;
+    top: -100px;
+    left: var(--ba-space-4);
+    z-index: 1100;
+    padding: var(--ba-space-2) var(--ba-space-4);
+    border-radius: var(--ba-radius-small);
+    background: var(--ba-accent);
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .ba-lp-skip:focus {
+    top: var(--ba-space-2);
+  }
+
+  // 「本文へスキップ」で移動したとき、固定ヘッダーの下に本文の先頭が隠れないようにする。
+  .ba-lp-main {
+    scroll-margin-top: 64px;
+  }
+
+  .ba-lp-main:focus {
+    outline: none;
+  }
+
+  // ===== ヘッダー =====
+  .ba-lp-header {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    border-bottom: 1px solid var(--ba-border);
+    background: rgba(255, 255, 255, 0.96);
+  }
+
+  .ba-lp-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ba-space-3);
+    min-height: 64px;
+  }
+
+  .ba-lp-brand {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    min-height: var(--ba-tap);
+    border-radius: var(--ba-radius-small);
+  }
+
+  // 元画像(1600x896)は上下の余白が大きいので、ログイン後の上部バーと同じく横長の枠に cover で収める。
+  .ba-lp-brand__logo {
+    display: block;
+    width: 112px;
+    height: 36px;
+    object-fit: cover;
+  }
+
+  .ba-lp-header__nav {
+    display: flex;
+    align-items: center;
+    gap: var(--ba-space-2);
+  }
+
+  .ba-lp-header__nav .ba-btn {
+    min-height: var(--ba-tap);
+    white-space: nowrap;
+  }
+
+  // 狭い幅ではヘッダーはログインだけにする(「無料で始める」はすぐ下のヒーローにある)。
+  .ba-lp-header__signup {
+    display: none;
+  }
+
+  @media (min-width: 360px) {
+    .ba-lp-header__signup {
+      display: inline-flex;
+    }
+  }
+
+  // ===== ヒーロー =====
+  .ba-lp-hero {
+    padding: var(--ba-space-6) 0;
+    border-bottom: 1px solid var(--ba-border);
+    background: linear-gradient(180deg, var(--ba-surface) 0%, var(--ba-bg) 100%);
+  }
+
+  .ba-lp-hero__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ba-space-6);
+    align-items: center;
+  }
+
+  .ba-lp-eyebrow {
+    display: inline-block;
+    margin: 0 0 var(--ba-space-3);
+    padding: 4px 12px;
+    border-radius: var(--ba-radius-pill);
+    background: var(--ba-accent-soft);
+    color: var(--ba-accent-strong);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  // 読点の位置でだけ改行し、「コミュニティ」などの語の途中で折り返さない(長すぎる場合だけ折り返す)。
+  .ba-lp-hero__title {
+    margin: 0 0 var(--ba-space-4);
+    font-size: 28px;
+    line-height: 1.35;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-lp-hero__lead {
+    max-width: 34em;
+    margin: 0 0 var(--ba-space-5);
+    color: var(--ba-text-muted);
+    font-size: 16px;
+    line-height: 1.8;
+    line-break: strict;
+  }
+
+  .ba-lp-hero__lead-line {
+    display: block;
+  }
+
+  .ba-lp-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ba-space-3);
+  }
+
+  .ba-lp-actions .ba-btn {
+    min-height: 48px;
+    padding: 12px 22px;
+    font-size: 16px;
+  }
+
+  .ba-lp-actions--center {
+    justify-content: center;
+  }
+
+  .ba-lp-note {
+    margin: var(--ba-space-3) 0 0;
+    color: var(--ba-text-subtle);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  @media (max-width: 399px) {
+    .ba-lp-actions .ba-btn {
+      flex: 1 1 100%;
+    }
+  }
+
+  @media (min-width: 400px) {
+    .ba-lp-hero__title {
+      font-size: 32px;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .ba-lp-hero {
+      padding: 56px 0;
+    }
+
+    .ba-lp-hero__title {
+      font-size: 38px;
+    }
+  }
+
+  @media (min-width: 992px) {
+    .ba-lp-hero__grid {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: 48px;
+    }
+
+    .ba-lp-hero__title {
+      font-size: 44px;
+    }
+  }
+
+  // ===== 画面イメージ(架空の例) =====
+  // 1列表示(タブレット以下)では横に広がりすぎないよう幅を抑えて中央に置く。
+  .ba-lp-preview {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: var(--ba-space-4);
+    border: 1px solid var(--ba-accent-line);
+    border-radius: 20px;
+    background: var(--ba-accent-soft);
+  }
+
+  .ba-lp-preview__caption {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: var(--ba-space-3);
+    color: var(--ba-text-muted);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .ba-lp-preview__body {
+    display: grid;
+    gap: var(--ba-space-3);
+  }
+
+  .ba-lp-preview__panel {
+    padding: var(--ba-space-3) var(--ba-space-4);
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-card);
+    background: var(--ba-surface);
+    box-shadow: var(--ba-shadow-card);
+  }
+
+  .ba-lp-preview__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 var(--ba-space-2);
+    color: var(--ba-text-muted);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .ba-lp-preview__circles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--ba-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .ba-lp-preview__project {
+    display: flex;
+    align-items: stretch;
+    gap: var(--ba-space-3);
+    padding: var(--ba-space-3);
+  }
+
+  .ba-lp-preview__thumb {
+    display: flex;
+    flex: none;
+    width: 72px;
+    min-height: 72px;
+    overflow: hidden;
+    border-radius: var(--ba-radius-control);
+
+    .ba-monogram--rect {
+      font-size: 28px;
+    }
+  }
+
+  .ba-lp-preview__project-body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .ba-lp-preview__project-title {
+    font-size: 15px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-lp-preview__project-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ba-text-muted);
+    font-size: 12px;
+  }
+
+  .ba-lp-preview__bubble {
+    max-width: 85%;
+    margin: 0 0 var(--ba-space-2);
+    padding: var(--ba-space-2) var(--ba-space-3);
+    border-radius: 14px 14px 14px 4px;
+    background: var(--ba-surface-muted);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .ba-lp-preview__bubble--mine {
+    margin: 0 0 0 auto;
+    border-radius: 14px 14px 4px 14px;
+    background: var(--ba-lavender);
+  }
+
+  // ===== セクション共通 =====
+  .ba-lp-section {
+    padding: 40px 0;
+  }
+
+  .ba-lp-section--muted {
+    border-top: 1px solid var(--ba-border);
+    border-bottom: 1px solid var(--ba-border);
+    background: var(--ba-bg);
+  }
+
+  .ba-lp-section__title {
+    margin: 0 0 var(--ba-space-5);
+    font-size: 22px;
+    text-align: center;
+  }
+
+  // ===== できること =====
+  .ba-lp-features {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ba-space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  // 3列で見出しが語の途中で折り返さない幅(992px 以上)だけ横に並べる。
+  @media (min-width: 992px) {
+    .ba-lp-features {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .ba-lp-feature {
+    padding: var(--ba-space-5);
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-card);
+    background: var(--ba-surface);
+    box-shadow: var(--ba-shadow-card);
+  }
+
+  .ba-lp-feature__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-bottom: var(--ba-space-3);
+    border-radius: 50%;
+    background: var(--ba-accent-soft);
+    color: var(--ba-accent-strong);
+    font-size: 18px;
+  }
+
+  .ba-lp-feature__title {
+    margin: 0 0 var(--ba-space-2);
+    font-size: 18px;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-lp-feature__text {
+    margin: 0;
+    color: var(--ba-text-muted);
+    font-size: 15px;
+    line-height: 1.75;
+  }
+
+  // ===== お知らせ =====
+  .ba-lp-notices {
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-card);
+    background: var(--ba-surface);
+    list-style: none;
+
+    li {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px var(--ba-space-4);
+      padding: var(--ba-space-3) var(--ba-space-4);
+      font-size: 15px;
+    }
+
+    li + li {
+      border-top: 1px solid var(--ba-border);
+    }
+
+    time {
+      color: var(--ba-text-muted);
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+  }
+
+  // ===== 開始の案内 =====
+  .ba-lp-start {
+    padding: var(--ba-space-6) var(--ba-space-5);
+    border: 1px solid var(--ba-accent-line);
+    border-radius: 20px;
+    background: var(--ba-accent-soft);
+    text-align: center;
+  }
+
+  .ba-lp-start__title {
+    margin: 0 0 var(--ba-space-3);
+    font-size: 20px;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-lp-start__text {
+    margin: 0 0 var(--ba-space-5);
+    color: var(--ba-text-muted);
+    font-size: 15px;
+    line-height: 1.8;
+    text-align: left;
+  }
+
+  @media (min-width: 768px) {
+    .ba-lp-start__text {
+      text-align: center;
+    }
+  }
+
+  // ===== フッター =====
+  // ロゴ画像の背景(白)と揃える。
+  .ba-lp-footer {
+    padding: var(--ba-space-6) 0;
+    border-top: 1px solid var(--ba-border);
+    background: var(--ba-surface);
+  }
+
+  .ba-lp-footer__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--ba-space-3);
+    text-align: center;
+  }
+
+  .ba-lp-footer__links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0 var(--ba-space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      min-height: var(--ba-tap);
+      color: var(--ba-text-muted);
+      font-size: 14px;
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: var(--ba-accent-strong);
+      text-decoration: underline;
+    }
+  }
+
+  .ba-lp-footer__copy {
+    margin: 0;
+    color: var(--ba-text-subtle);
+    font-size: 13px;
+  }
+}
+
+// 副ボタン(ログイン)は既定の枠線(#d2d2de)だと白背景との差が小さいため、紹介ページではバイオレットの枠と文字にする。
+.ba-lp .ba-btn--secondary {
+  border-color: var(--ba-accent);
+  color: var(--ba-accent-strong);
+}
+
+.ba-lp .ba-btn--secondary:hover {
+  background: var(--ba-accent-soft);
+  color: var(--ba-accent-strong);
+}
