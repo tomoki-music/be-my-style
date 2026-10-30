@@ -29,8 +29,9 @@
   .ba-empty
     %p プロジェクトはまだありません。
     .ba-empty__actions
-      = link_to "Businessコミュニティを探す", business_communities_path, class: "ba-btn ba-btn--secondary"
+      = link_to "コミュニティを探す", business_communities_path, class: "ba-btn ba-btn--secondary"
 - else
   %ul.ba-project-grid
     - @projects.each do |project|
-      %li= render "business/projects/card", project: project, show_community: @community.blank?, description: project.description
+      %li= render "business/projects/card", project: project, show_community: @community.blank?, description: project.description,
+        join_status: @join_statuses.fetch(project.id)

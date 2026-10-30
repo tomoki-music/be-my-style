@@ -1,7 +1,9 @@
 -# 画像付きのプロジェクトカード(ホーム・プロジェクト一覧・コミュニティの通常画面で共通)。カード全体が詳細へのリンク。
 -# 画像が無ければ頭文字で代替する。状態(status_key / status_label)・説明(description)・補足(note)は呼び出し側が渡したときだけ出す。
+-# join_status は Business::Memberships::ProjectStatuses の状態で、未参加(:none)ならバッジの代わりに参加方式を出す。
 - project = local_assigns.fetch(:project)
 - status_key = local_assigns[:status_key]
+- join_status = local_assigns[:join_status]
 - show_community = local_assigns.fetch(:show_community, true)
 = link_to business_project_path(project), class: "ba-project-card" do
   %span.ba-project-card__media
@@ -10,7 +12,11 @@
     - else
       = business_monogram(project.title, id: project.id, shape: :rect)
   %span.ba-project-card__body
-    - if status_key
+    - if join_status == :none
+      %span.ba-status.ba-status--kind= business_join_approval_label(project)
+    - elsif join_status
+      = business_join_status_badge(join_status)
+    - elsif status_key
       %span.ba-status{ class: "ba-status--#{status_key}" }
         - if status_key == :pending
           %i.fa-regular.fa-clock{ "aria-hidden": "true" }

@@ -51,7 +51,7 @@ RSpec.describe "Business の参加申請とアクセス管理", type: :request d
       sign_in applicant
       get business_community_path(community)
       expect(response.body).to include("内部のお知らせ")
-      expect(response.body).to include("参加済み")
+      expect(response.body).to include("参加中")
     end
 
     it "連打しても申請は1件だけ" do
@@ -271,7 +271,7 @@ RSpec.describe "Business の参加申請とアクセス管理", type: :request d
     it "親コミュニティに参加していないと申請できない" do
       expect { join_project }.not_to change(ProjectJoinRequest, :count)
       expect(response).to redirect_to(business_community_path(community))
-      expect(flash[:alert]).to eq "コミュニティへの参加が必要です"
+      expect(flash[:alert]).to eq "プロジェクトに参加するには、先にコミュニティへ参加してください"
     end
 
     it "親コミュニティの承認待ちでもプロジェクトを閲覧・申請できない" do

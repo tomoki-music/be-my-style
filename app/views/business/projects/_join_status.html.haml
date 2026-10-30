@@ -1,22 +1,32 @@
--# コミュニティ参加者向けの、プロジェクト参加ボタンと状態表示(@join_status は ProjectsController#show で決める)。
+-# 概要の近くに出す参加状況と、参加者自身の操作(参加・申請・申請取消)。状態は Business::Memberships::ProjectStatuses。
+-# 承認・停止などの管理操作はメンバー管理画面に置き、ここには出さない。
 - case @join_status
-- when :suspended
-  %span.ba-status.ba-status--suspended
-    %i.fa-solid.fa-ban{ "aria-hidden": "true" }
-    アクセス停止中
-  %p.ba-join__note このプロジェクトへのアクセスは管理者により停止されています。
-- when :pending
-  %span.ba-status.ba-status--pending
-    %i.fa-regular.fa-clock{ "aria-hidden": "true" }
-    承認待ち
-  = link_to "申請を取り消す", cancel_request_business_project_path(@project),
-    method: :delete, data: { confirm: "参加申請を取り消しますか？" }, class: "ba-btn ba-btn--secondary ba-btn--sm"
-  %p.ba-join__note 管理者が承認すると、スレッドを閲覧・投稿できます。
-- when :closed
-  %span.ba-status
-    %i.fa-solid.fa-circle-minus{ "aria-hidden": "true" }
-    募集終了
-- else
+- when :none
   = link_to business_join_button_label(@project), join_business_project_path(@project),
-    method: :post, class: "ba-btn ba-btn--primary"
-  %p.ba-join__note= business_join_approval_description(@project)
+    method: :post, data: { disable_with: "送信中…" }, class: "ba-btn ba-btn--primary"
+  %p.ba-join__note
+    = business_join_approval_description(@project)
+    参加すると、スレッドを閲覧・投稿できます。
+- when :pending
+  = business_join_status_badge(:pending)
+  = link_to "申請を取り消す", cancel_request_business_project_path(@project),
+    method: :delete, data: { confirm: "参加申請を取り消しますか？", disable_with: "送信中…" }, class: "ba-btn ba-btn--secondary ba-btn--sm"
+  %p.ba-join__note 管理者が承認すると、スレッドを閲覧・投稿できます。
+- when :member
+  = business_join_status_badge(:member)
+  = link_to "スレッドを見る", "#threads", class: "ba-btn ba-btn--secondary ba-btn--sm"
+- when :suspended
+  = business_join_status_badge(:suspended)
+  %p.ba-join__note 管理者によりアクセスが停止されているため、再参加・再申請はできません。
+- when :closed
+  = business_join_status_badge(:closed)
+  %p.ba-join__note 締切を過ぎたため、新しく参加できません。
+- when :operator
+  = business_join_status_badge(:operator)
+  %p.ba-join__note コミュニティの運営者のため、参加申請は不要です。
+- when :owner
+  = business_join_status_badge(:owner)
+  %p.ba-join__note このプロジェクトの作成者のため、参加申請は不要です。
+- when :admin
+  = business_join_status_badge(:admin)
+  %p.ba-join__note 管理者のため、参加申請なしで閲覧・管理できます。

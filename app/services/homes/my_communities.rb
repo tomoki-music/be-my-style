@@ -10,12 +10,14 @@ module Homes
     Result = Struct.new(:communities, :statuses, keyword_init: true)
 
     # with_images: Business ホームのように画像を表示する画面だけ、画像の添付をまとめて読み込む。
-    def self.call(customer, page: nil, with_images: false)
-      new(customer).call(page: page, with_images: with_images)
+    # business_only: Business ホームでは音楽コミュニティを(両方の利用者でも)件数・ページ分割の前に除く。
+    def self.call(customer, page: nil, with_images: false, business_only: false)
+      new(customer, business_only: business_only).call(page: page, with_images: with_images)
     end
 
-    def initialize(customer)
+    def initialize(customer, business_only: false)
       @customer = customer
+      @business_only = business_only
     end
 
     def call(page: nil, with_images: false)
@@ -30,6 +32,8 @@ module Homes
     # 弾かれるものは一覧にも出さない。
     def domain_names
       names = ["business"]
+      return names if @business_only
+
       names << "music" if @customer.admin? || @customer.music_user?
       names
     end

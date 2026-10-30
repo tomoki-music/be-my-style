@@ -41,13 +41,8 @@
           目標
         %p.ba-goal__text= @project.goal
 
-    .ba-join
-      - if @can_view_internal
-        %span.ba-status.ba-status--member
-          %i.fa-solid.fa-check{ "aria-hidden": "true" }
-          参加中
-      - else
-        = render "business/projects/join_status"
+    .ba-join#project-join
+      = render "business/projects/join_status"
 
 - if @can_view_internal
   %nav.ba-sectnav{ "aria-label": "このプロジェクトの内容" }

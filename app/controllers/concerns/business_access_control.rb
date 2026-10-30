@@ -18,7 +18,7 @@ module BusinessAccessControl
     already_member: [:notice, "すでにプロジェクトに参加しています"],
     already_requested: [:notice, "参加申請は承認待ちです"],
     suspended: [:alert, "このプロジェクトへのアクセスは停止されています"],
-    community_required: [:alert, "コミュニティへの参加が必要です"],
+    community_required: [:alert, "プロジェクトに参加するには、先にコミュニティへ参加してください"],
     closed: [:alert, "このプロジェクトは募集終了しています"],
     unavailable: [:alert, "このプロジェクトには参加できません"]
   }.freeze
