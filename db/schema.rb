@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_10_27_000300) do
+ActiveRecord::Schema.define(version: 2026_10_30_000000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -1023,6 +1023,7 @@ ActiveRecord::Schema.define(version: 2026_10_27_000300) do
     t.datetime "deadline"
     t.string "goal"
     t.integer "join_approval_mode", default: 0, null: false
+    t.string "theme", limit: 100
     t.index ["community_id"], name: "index_projects_on_community_id"
     t.index ["customer_id"], name: "index_projects_on_customer_id"
   end

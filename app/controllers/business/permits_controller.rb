@@ -2,6 +2,7 @@ class Business::PermitsController < ApplicationController
   include BusinessAccessControl
 
   before_action :set_community
+  before_action -> { require_business_eligibility!(business_community_path(@community)) }, only: [:create]
 
   # 「参加する(自動承認) / 参加を申請する(手動承認)」。承認方式の判定と重複防止は JoinCommunity で行う。
   def create

@@ -23,6 +23,14 @@ class Project < ApplicationRecord
   # 参加方式。既存プロジェクトは移行で自動承認、新規作成の既定は手動承認。
   enum join_approval_mode: { manual: 0, auto: 1 }, _prefix: :join
 
+  # どんな話題・活動のプロジェクトかを1行で伝える任意項目。前後の空白は落とし、空欄は未設定(NULL)として保存する。
+  THEME_MAX_LENGTH = 100
+
+  # goal(目標)・deadline(締切)は入力・表示・参加判定のいずれにも使わない。列とデータは残している。
+
+  before_validation :normalize_theme
+  validates :theme, length: { maximum: THEME_MAX_LENGTH }
+
   after_create :create_default_thread
 
   enum status: {
@@ -53,11 +61,12 @@ class Project < ApplicationRecord
     active_members.where(id: community.community_customers.select(:customer_id))
   end
 
-  def deadline_passed?
-    deadline.present? && deadline < Time.current
-  end
-
   private
+
+  # 1行の項目なので、改行や連続した空白は1つの空白にまとめる。
+  def normalize_theme
+    self.theme = theme.to_s.squish.presence
+  end
 
   def create_default_thread
     ProjectThread.general_for!(self)

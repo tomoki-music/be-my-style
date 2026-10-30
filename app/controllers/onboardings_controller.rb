@@ -1,4 +1,6 @@
 class OnboardingsController < ApplicationController
+  include BusinessReturnPath
+
   before_action :authenticate_customer!
   before_action :set_domain
 
@@ -24,7 +26,8 @@ class OnboardingsController < ApplicationController
     current_customer.update(onboarding_done: true)
 
     if current_customer.business_user?
-      redirect_to business_root_path
+      # ログイン前に開こうとした Business の画面(共有URLなど)があれば、そこへ戻す。
+      redirect_to take_business_return_path_after_onboarding || business_root_path
     else
       redirect_to root_path
     end

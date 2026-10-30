@@ -1,0 +1,20 @@
+-# 通常画面の「招待用URL」。URL は常に表示して、コピーできない環境でも選択して手動でコピーできるようにする。
+-# コピーのボタンは business/share_link.js が表示する(JavaScript が無ければ URL 欄だけが残る)。コピーで参加・申請は起きない。
+- record = local_assigns.fetch(:record)
+- key = "#{record.model_name.singular}-#{record.id}"
+- url = business_share_url(record)
+%section.ba-share{ "aria-labelledby": "share-title-#{key}" }
+  %h2.ba-share__title{ id: "share-title-#{key}" }
+    %i.fa-solid.fa-link{ "aria-hidden": "true" }
+    招待用URL
+  %p.ba-share__lead LINEやメールでこのURLを送ると、まだNAKAMAに登録していない人も誘えます。
+  .ba-share__row
+    %label.sr-only{ for: "share-url-#{key}" } 招待用URL
+    %input.form-control.ba-share__url{ type: "text", id: "share-url-#{key}", value: url, readonly: true,
+      autocomplete: "off", spellcheck: "false", data: { share_url: true } }
+    %button.ba-btn.ba-btn--secondary.ba-btn--sm.ba-share__copy{ type: "button", hidden: true,
+      data: { share_copy: "share-url-#{key}", share_status: "share-status-#{key}" } }
+      %i.fa-regular.fa-copy{ "aria-hidden": "true" }
+      URLをコピー
+  %p.ba-share__status{ id: "share-status-#{key}", role: "status", "aria-live": "polite" }
+  %p.ba-share__note= business_share_note(record)

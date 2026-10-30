@@ -103,8 +103,12 @@
         %h2.ba-home-guide__title#home-guide-title 利用ガイド
         %ol.ba-home-guide__steps
           %li コミュニティに参加
-          %li プロジェクトで協力
+          %li プロジェクトに参加
           %li スレッドで話す
-        = link_to business_help_path, class: "ba-text-link" do
-          使い方を見る
-          %i.fa-solid.fa-arrow-right{ "aria-hidden": "true" }
+        %p.ba-home-guide__links
+          = link_to business_help_path, class: "ba-text-link" do
+            使い方を見る
+            %i.fa-solid.fa-arrow-right{ "aria-hidden": "true" }
+          = link_to business_help_audience_path("admin"), class: "ba-text-link" do
+            管理者向けの使い方
+            %i.fa-solid.fa-arrow-right{ "aria-hidden": "true" }

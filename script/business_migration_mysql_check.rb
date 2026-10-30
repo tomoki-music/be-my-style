@@ -1,4 +1,5 @@
-# Business スレッド・参加承認のマイグレーション(20261027000000〜000300)を、使い捨ての MySQL で検証する。
+# Business スレッド・参加承認のマイグレーション(20261027000000〜000300)と、プロジェクトのテーマ追加(20261030000000)を、
+# 使い捨ての MySQL で検証する。
 # 本番・開発の DB には使わない。指定したサーバーに専用の DB を2つ作り、終了時に削除する。
 #
 #   CHECK_MYSQL_HOST=127.0.0.1 CHECK_MYSQL_PORT=3307 CHECK_MYSQL_USER=root CONFIRM_DISPOSABLE=yes \
@@ -16,7 +17,9 @@ module BusinessMigrationMysqlCheck
   DB = "bms_migration_check_tmp".freeze
   REF_DB = "bms_migration_check_ref_tmp".freeze
   MIGRATIONS = Rails.root.join("db/migrate").to_s
-  VERSIONS = %w[20261027000000 20261027000100 20261027000200 20261027000300].freeze
+  VERSIONS = %w[20261027000000 20261027000100 20261027000200 20261027000300 20261030000000].freeze
+  # テーマ追加の直前(スレッド・参加承認の4本まで)。本番はこの状態から 5本目だけを適用する。
+  BEFORE_THEME = "20261027000300".freeze
 
   class InjectedFailure < StandardError; end
 
@@ -70,6 +73,7 @@ module BusinessMigrationMysqlCheck
     "3本目: project_threads の作成後、(project_id, general) 一意索引で失敗" => [:add_index, :project_threads, %i[project_id general]],
     "3本目: project_chats の列追加後、索引作成で失敗" => [:add_index, :project_chats, [:project_thread_id]],
     "3本目: project_chats の列・索引追加後、外部キー作成で失敗" => [:add_foreign_key, :project_chats, :project_threads],
+    "5本目: 4本の適用後、projects.theme の追加で失敗" => [:add_column, :projects, :theme],
   }.freeze
 
   module_function
@@ -99,10 +103,13 @@ module BusinessMigrationMysqlCheck
     session_before = session_timeouts
     error, = try_migrate
     baseline = snapshot
-    check.call("通常移行: 4本とも成功", error.nil? && applied == VERSIONS, error && describe(error))
+    check.call("通常移行: #{VERSIONS.size}本とも成功", error.nil? && applied == VERSIONS, error && describe(error))
     check.call("通常移行: 実行中だけロック待ち上限 5秒/10秒、終了後は元の値", Hooks.seen == [5, 10] && session_timeouts == session_before, "#{Hooks.seen.inspect} 後=#{session_timeouts.inspect}")
     check.call("通常移行: 全体トークが各プロジェクトに1つ・既存チャットは全件紐づけ", baseline[:threads].map(&:first) == [1, 2, 3] && baseline[:chats].all? { |_, linked| linked == 1 })
     check.call("通常移行: 参加方式 既存コミュニティ=手動(0)・既存プロジェクト=自動(1)", baseline[:modes] == [["c", 1, 0], ["p", 1, 1], ["p", 2, 1], ["p", 3, 1]], baseline[:modes].inspect)
+    check.call("通常移行: テーマは varchar(100)・NULL 許容で、既存プロジェクトは未設定(NULL)・目標と締切の値はそのまま",
+               theme_column == ["varchar(100)", "YES", nil] && baseline[:legacy] == LEGACY_PROJECT_VALUES,
+               "#{theme_column.inspect} #{baseline[:legacy].inspect}")
 
     # 2. スキーマ一致(同じサーバーで db/schema.rb を読み込んだ DB と比べる)
     check.call("スキーマ: マイグレーション結果が db/schema.rb と一致", baseline[:schema] == reference_schema, "差分は #{DB}.schema / #{REF_DB}.schema を SchemaDumper で比較")
@@ -132,6 +139,18 @@ module BusinessMigrationMysqlCheck
     check.call("途中失敗→再実行: 3本目: 全体トーク1件作成後、2件目で失敗", first.is_a?(InjectedFailure) && partial == 1 && rerun.nil? && snapshot == baseline, "失敗時点の全体トーク #{partial} 件")
 
     # 5. ロック待ちの時間切れ → 再実行
+    # 5本目(テーマ追加)は、本番と同じく 4本の適用後に単独で実行し、projects を読むトランザクションが残る場合を見る。
+    fresh_db!
+    migrate_to(BEFORE_THEME)
+    Hooks.seen = nil
+    blocker = hold_lock("SELECT * FROM projects LIMIT 1")
+    first, elapsed = try_migrate
+    lock_ok = lock_timeout?(first) && elapsed.between?(4, 10) && applied == VERSIONS.first(4) &&
+      !connection.column_exists?(:projects, :theme) && Hooks.seen == [5, 10] && session_timeouts == session_before
+    blocker.query("ROLLBACK")
+    rerun, = try_migrate
+    check.call("ロック待ち: 5本目 projects を読むトランザクションが残る → 約5秒で失敗(上限 5秒/10秒)、解消後の再実行で一致", lock_ok && rerun.nil? && snapshot == baseline, format("%.1f秒", elapsed))
+
     fresh_db!
     blocker = hold_lock("SELECT * FROM communities LIMIT 1")
     first, elapsed = try_migrate
@@ -233,6 +252,7 @@ module BusinessMigrationMysqlCheck
     c.execute("INSERT INTO communities (id, domain_id, name, created_at, updated_at) VALUES (1, 1, 'c', #{now}, #{now})")
     [1, 2, 3].each { |id| c.execute("INSERT INTO customers (id, email, joined_on, created_at, updated_at) VALUES (#{id}, 'u#{id}@example.com', '2026-01-01', #{now}, #{now})") }
     [1, 2, 3].each { |id| c.execute("INSERT INTO projects (id, community_id, customer_id, title, created_at, updated_at) VALUES (#{id}, 1, #{id}, 'p#{id}', #{now}, #{now})") }
+    c.execute("UPDATE projects SET goal = '既存の目標', deadline = '2026-03-01 00:00:00' WHERE id = 1")
     [[1, 1], [2, 1], [3, 2], [4, 2], [5, 2]].each do |id, project_id|
       c.execute("INSERT INTO project_chats (id, project_id, customer_id, body, created_at, updated_at) VALUES (#{id}, #{project_id}, 1, 'b', '2026-02-0#{id} 00:00:00', #{now})")
     end
@@ -247,6 +267,20 @@ module BusinessMigrationMysqlCheck
     dump = dump_schema
     use_database(DB)
     dump
+  end
+
+  # 取りやめた目標・締切の既存データ(テーマへ転記しない)。[id, goal, deadline, theme]
+  LEGACY_PROJECT_VALUES = [[1, "既存の目標", "2026-03-01 00:00:00", nil], [2, nil, nil, nil], [3, nil, nil, nil]].freeze
+
+  def theme_column
+    connection.select_rows(<<~SQL).first
+      SELECT COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'projects' AND COLUMN_NAME = 'theme'
+    SQL
+  end
+
+  def migrate_to(version)
+    ActiveRecord::Migration.suppress_messages { ActiveRecord::MigrationContext.new(MIGRATIONS, ActiveRecord::SchemaMigration).up(version.to_i) }
   end
 
   def load_migration_classes
@@ -277,7 +311,7 @@ module BusinessMigrationMysqlCheck
   end
 
   def applied
-    connection.select_values("SELECT version FROM schema_migrations WHERE version LIKE '20261027%' ORDER BY version")
+    connection.select_values("SELECT version FROM schema_migrations WHERE version IN (#{VERSIONS.map { |v| "'#{v}'" }.join(', ')}) ORDER BY version")
   end
 
   def session_timeouts
@@ -301,7 +335,8 @@ module BusinessMigrationMysqlCheck
       pending: ActiveRecord::MigrationContext.new(MIGRATIONS, ActiveRecord::SchemaMigration).needs_migration?,
       threads: c.select_rows("SELECT project_id, title, general, last_posted_at FROM project_threads ORDER BY project_id, id"),
       chats: c.select_rows("SELECT id, project_thread_id IS NOT NULL FROM project_chats ORDER BY id"),
-      modes: c.select_rows("SELECT 'c', id, join_approval_mode FROM communities UNION ALL SELECT 'p', id, join_approval_mode FROM projects ORDER BY 1, 2")
+      modes: c.select_rows("SELECT 'c', id, join_approval_mode FROM communities UNION ALL SELECT 'p', id, join_approval_mode FROM projects ORDER BY 1, 2"),
+      legacy: c.column_exists?(:projects, :theme) ? c.select_rows("SELECT id, goal, DATE_FORMAT(deadline, '%Y-%m-%d %H:%i:%s'), theme FROM projects ORDER BY id") : nil
     }
   end
 
@@ -340,6 +375,9 @@ module BusinessMigrationMysqlCheck
       "存在しないプロジェクトへの参加申請は外部キーで拒否" => rejected.call(ActiveRecord::InvalidForeignKey, ["INSERT INTO project_join_requests (project_id, customer_id, created_at, updated_at) VALUES (999, 2, #{now}, #{now})"]),
       "存在しないスレッドへのチャットは外部キーで拒否" => rejected.call(ActiveRecord::InvalidForeignKey, ["INSERT INTO project_chats (project_id, customer_id, body, project_thread_id, created_at, updated_at) VALUES (1, 1, 'x', 999, #{now}, #{now})"]),
       "全体トークがあるプロジェクトは削除できない(外部キー)" => rejected.call(ActiveRecord::InvalidForeignKey, ["DELETE FROM projects WHERE id = 3"]),
+      "テーマは100文字まで保存でき、101文字は拒否" =>
+        accepted.call(["UPDATE projects SET theme = REPEAT('あ', 100) WHERE id = 1"]) { connection.select_value("SELECT CHAR_LENGTH(theme) FROM projects WHERE id = 1").to_i == 100 } &&
+        rejected.call(ActiveRecord::ValueTooLong, ["UPDATE projects SET theme = REPEAT('あ', 101) WHERE id = 1"]),
       "作成者なし(customer_id NULL)のプロジェクト・スレッドを保存できる" => accepted.call(["INSERT INTO projects (community_id, customer_id, title, created_at, updated_at) VALUES (1, NULL, 'x', #{now}, #{now})", thread.call("NULL")]),
       "旧コード相当の書き込み(スレッド未指定のチャット)を保存でき、新規プロジェクトの既定は手動承認(0)" => accepted.call([
         "INSERT INTO project_chats (project_id, customer_id, body, created_at, updated_at) VALUES (1, 1, 'old', #{now}, #{now})",

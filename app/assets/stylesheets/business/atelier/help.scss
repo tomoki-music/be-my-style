@@ -164,6 +164,65 @@
     flex-wrap: wrap;
   }
 
+  // 「一般ユーザー向け」「管理者向け」の切り替え(通常のリンク)。選択中は枠・太字に加え、チェックと「表示中」の文字でも示す。
+  .ba-help-switch {
+    margin: 0 0 var(--ba-space-4);
+  }
+
+  .ba-help-switch__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ba-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ba-help-switch__link {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 2px 6px;
+    min-height: var(--ba-tap);
+    height: 100%;
+    padding: var(--ba-space-2) var(--ba-space-3);
+    border: 2px solid var(--ba-border-strong);
+    border-radius: var(--ba-radius-control);
+    background: var(--ba-surface);
+    color: var(--ba-text);
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+
+    &:hover {
+      border-color: var(--ba-accent);
+      color: var(--ba-accent-strong);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: var(--ba-focus);
+    }
+
+    &.is-current {
+      border-color: var(--ba-accent-strong);
+      background: var(--ba-accent-soft);
+      color: var(--ba-accent-strong);
+      font-weight: 700;
+    }
+  }
+
+  .ba-help-switch__state {
+    font-size: 13px;
+  }
+
+  .ba-help-switch__note {
+    margin: var(--ba-space-2) 0 0;
+    font-size: 14px;
+    color: var(--ba-text-muted);
+  }
+
   .ba-help-toc {
     margin: 0 0 var(--ba-space-6);
     padding: var(--ba-space-4) var(--ba-space-5);
@@ -586,6 +645,10 @@
   }
 
   .ba-lp-flow__more {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--ba-space-3);
     margin: var(--ba-space-5) 0 0;
     text-align: center;
   }
@@ -689,6 +752,13 @@
     .ba-text-link {
       gap: 6px;
     }
+  }
+
+  .ba-home-guide__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ba-space-1) var(--ba-space-4);
+    margin: var(--ba-space-1) 0 0;
   }
 
   .ba-home-guide__title {

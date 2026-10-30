@@ -100,10 +100,10 @@ RSpec.describe "Business 使い方の削除・編集権限とサーバー側の�
   end
 
   it "使い方ページの説明が上の認可と同じ内容になっている" do
-    get business_help_path
+    get business_help_path(audience: "admin")
 
     html = Nokogiri::HTML(response.body)
-    table = html.css("#help-operator table").find { |node| node.at_css("caption").text.include?("1件ずつ") }
+    table = html.css("#help-delete table").find { |node| node.at_css("caption").text.include?("1件ずつ") }
     rows = table.css("tbody tr").to_h do |tr|
       [tr.at_css("th").text.strip, tr.css("td").map { |td| td.text.strip }]
     end
@@ -111,6 +111,6 @@ RSpec.describe "Business 使い方の削除・編集権限とサーバー側の�
     expect(rows["ビジネス投稿へのコメント"].first).to eq "できません"
     expect(rows["コミュニティ内の会話"]).to eq ["できません", "できません（本人・運営者とも）"]
     expect(rows["スレッド内のメッセージ"]).to eq ["できません", "書いた本人だけ（プロジェクトに参加している間）"]
-    expect(html.at_css("#help-operator").text).to include("ほかの人が書いた投稿を1件ずつ編集・削除することはできません")
+    expect(html.at_css("#help-delete").text).to include("ほかの人が書いた投稿を1件ずつ編集・削除することはできません")
   end
 end

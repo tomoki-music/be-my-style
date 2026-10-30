@@ -6,6 +6,7 @@ class Business::ProjectsController < ApplicationController
   THREAD_PREVIEW_LIMIT = 5
 
   before_action :set_project, only: [:show, :edit, :update, :join, :leave, :cancel_request, :members]
+  before_action -> { require_business_eligibility!(business_project_path(@project), manager: current_customer.business_project_manager?(@project)) }, only: [:show, :join]
   before_action :set_community, only: [:new, :create]
   before_action :authorize_project_creation!, only: [:new, :create]
   before_action :require_business_project_manager!, only: [:edit, :update, :members]
@@ -127,14 +128,14 @@ class Business::ProjectsController < ApplicationController
   end
 
   # 所属コミュニティは作成時の @community で決め、パラメータでは変更させない(他コミュニティへの移動を防ぐ)。
+  # 取りやめた goal(目標)・deadline(締切)は、直接送られても受け付けない(保存済みの値はそのまま残る)。
   def project_params
     params.require(:project).permit(
       :title,
+      :theme,
       :description,
       :project_image,
       :status,
-      :deadline,
-      :goal,
       :join_approval_mode
     )
   end

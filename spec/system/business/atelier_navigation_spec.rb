@@ -60,14 +60,19 @@ RSpec.describe "Business の固定ナビと画面の行き来", type: :system, j
       find("#project_status").select("募集中")
       expect_bottomnav_shown
 
-      find("#project_goal").click
+      find("#project_theme").click
       expect_bottomnav_hidden
-      find("#project_deadline").click
+      find("#project_join_approval_mode").click
       expect_bottomnav_shown
 
       find("#project_title").click
       expect_bottomnav_hidden
       page.execute_script("document.getElementById('image-input').focus()")
+      expect_bottomnav_shown
+
+      # 読み取り専用の招待用URL欄はキーボードが出ないため、選択しても下部ナビを隠さない。
+      visit business_project_path(project)
+      find("[data-share-url]").click
       expect_bottomnav_shown
 
       visit business_project_thread_path(project, ProjectThread.default_for(project))

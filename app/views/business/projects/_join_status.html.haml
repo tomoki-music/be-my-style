@@ -18,9 +18,6 @@
 - when :suspended
   = business_join_status_badge(:suspended)
   %p.ba-join__note 管理者によりアクセスが停止されているため、再参加・再申請はできません。
-- when :closed
-  = business_join_status_badge(:closed)
-  %p.ba-join__note 締切を過ぎたため、新しく参加できません。
 - when :operator
   = business_join_status_badge(:operator)
   %p.ba-join__note コミュニティの運営者のため、参加申請は不要です。

@@ -104,8 +104,9 @@
     }
   });
 
+  // 読み取り専用の欄(招待用URLなど)はキーボードが出ないため対象外。
   function isTypingTarget(el) {
-    return el && el.matches && el.matches(TYPING_TARGET) && el.closest('.ba-main');
+    return el && el.matches && el.matches(TYPING_TARGET) && !el.readOnly && el.closest('.ba-main');
   }
 
   document.addEventListener('focusin', function (event) {
