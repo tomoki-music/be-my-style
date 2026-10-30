@@ -170,7 +170,7 @@ RSpec.describe "Business::CommunityPlanTrials", type: :request do
     it "変更できない" do
       toggle(community, "1")
 
-      expect(response).to redirect_to(new_customer_session_path)
+      expect(response).to redirect_to(new_business_customer_session_path)
       expect(community.reload.plan_restrictions_waived).to eq false
     end
   end

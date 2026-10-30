@@ -102,7 +102,7 @@ RSpec.describe "Business::Homes", type: :request do
         expect(response).to redirect_to(new_business_customer_session_path)
 
         get business_timeline_path
-        expect(response).to redirect_to(new_customer_session_path)
+        expect(response).to redirect_to(new_business_customer_session_path)
       end
     end
   end

@@ -208,7 +208,7 @@ RSpec.describe "Business チャットの添付・スタンプ", type: :request d
     it "未ログインではアクセスできない" do
       get business_chat_attachment_path(image)
 
-      expect(response).to redirect_to(new_customer_session_path)
+      expect(response).to redirect_to(new_business_customer_session_path)
     end
 
     it "チャット以外の添付(プロフィール画像など)はこの窓口から取得できない" do

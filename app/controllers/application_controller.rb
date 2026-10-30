@@ -165,6 +165,12 @@ class ApplicationController < ActionController::Base
     new_customer_session_path
   end
 
+  # 音楽・歌声を使わず Business だけを利用している人。音楽トップ(/)を経由させると上の案内が出るため、
+  # 音楽のログイン画面から入っても Business へ直接進める(行き先は non_music_domain_home_path と同じ)。
+  def business_only_customer?(customer)
+    customer.business_user? && !customer.music_user? && !customer.singing_user? && !customer.admin?
+  end
+
   def admin_only!
     redirect_to root_path, alert: "管理者のみ操作可能です。" unless current_customer&.admin?
   end

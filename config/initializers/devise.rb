@@ -281,6 +281,10 @@ Devise.setup do |config|
   #   manager.intercept_401 = false
   #   manager.default_strategies(scope: :user).unshift :some_external_strategy
   # end
+  require Rails.root.join("lib/customer_auth_failure_app").to_s
+  config.warden do |manager|
+    manager.failure_app = CustomerAuthFailureApp
+  end
 
   # ==> Mountable engine configurations
   # When using Devise inside an engine, let's call it `MyEngine`, and this engine
