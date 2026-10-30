@@ -157,13 +157,13 @@
     color: var(--ba-text-muted);
   }
 
-  .ba-goal {
+  .ba-theme {
     padding: var(--ba-space-3) var(--ba-space-4);
     border-radius: var(--ba-radius-control);
     background: var(--ba-accent-soft);
   }
 
-  .ba-goal__label {
+  .ba-theme__label {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -172,9 +172,66 @@
     color: var(--ba-accent-strong);
   }
 
-  .ba-goal__text {
+  .ba-theme__text {
     margin: 2px 0 0;
     overflow-wrap: anywhere;
+  }
+
+  // 通常画面の「招待用URL」(business/shared/_share_link)。
+  .ba-share {
+    padding-top: var(--ba-space-3);
+    border-top: 1px solid var(--ba-border);
+  }
+
+  .ba-share__title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .ba-share__lead,
+  .ba-share__note {
+    margin: var(--ba-space-1) 0 0;
+    font-size: 13px;
+    color: var(--ba-text-muted);
+  }
+
+  .ba-share__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ba-space-2);
+    margin-top: var(--ba-space-2);
+  }
+
+  .ba-share__url {
+    flex: 1 1 240px;
+    min-width: 0;
+    // 16px 未満だと iPhone Safari が入力欄のフォーカス時に画面を拡大する。
+    font-size: 16px;
+    background: var(--ba-surface-muted);
+  }
+
+  .ba-share__copy {
+    flex: 0 0 auto;
+    min-height: var(--ba-tap);
+  }
+
+  .ba-share__status {
+    margin: var(--ba-space-1) 0 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ba-success);
+
+    &:empty {
+      display: none;
+    }
+
+    &.is-error {
+      color: var(--ba-danger);
+    }
   }
 
   .ba-section-body {

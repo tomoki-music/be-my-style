@@ -251,6 +251,8 @@ class ApplicationController < ActionController::Base
     return unless session[:onboarding_activity_pending]
 
     session.delete(:onboarding_activity_pending)
+    # 投稿で完了した場合は投稿画面へ進むため、オンボーディング後の戻り先(BusinessReturnPath)は使わずに捨てる。
+    session.delete(BusinessReturnPath::ONBOARDING_RETURN_KEY)
     current_customer.update!(onboarding_done: true)
   end
 

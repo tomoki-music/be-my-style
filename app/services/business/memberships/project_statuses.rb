@@ -9,7 +9,6 @@ module Business
     #   :member    参加中
     #   :suspended アクセス停止中(再参加・再申請できない)
     #   :pending   承認待ち
-    #   :closed    募集終了(締切を過ぎた未参加のプロジェクト)
     #   :none      未参加(参加する / 参加を申請する)
     class ProjectStatuses
       def self.call(customer:, projects:)
@@ -45,7 +44,6 @@ module Business
             elsif in_community && joined.include?(project.id) then :member
             elsif suspended.include?(project.id) then :suspended
             elsif pending.include?(project.id) then :pending
-            elsif project.deadline_passed? then :closed
             else :none
             end
           [project.id, status]

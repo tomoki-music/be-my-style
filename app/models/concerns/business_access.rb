@@ -11,6 +11,12 @@
 module BusinessAccess
   extend ActiveSupport::Concern
 
+  # Business(NAKAMA)の利用資格。Business ドメインの登録(利用開始)が必要で、システム管理者だけは例外。
+  # 音楽・歌声だけの会員は、/business/join で利用開始するまでコミュニティ・プロジェクトに参加できない。
+  def business_eligible?
+    admin? || business_user?
+  end
+
   # Business コミュニティのタイムライン投稿・閲覧など、参加者向け機能を使えるか。
   def business_community_participant?(community)
     return false if community.blank? || !community.business_domain?

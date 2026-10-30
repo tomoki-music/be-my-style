@@ -28,21 +28,19 @@
         %i.fa-solid.fa-user{ "aria-hidden": "true" }
         作成：#{customer_display_name(@project.customer) || ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL}
       %li
-        %i.fa-regular.fa-calendar{ "aria-hidden": "true" }
-        締切：#{@project.deadline.present? ? @project.deadline.strftime("%Y/%m/%d") : "未設定"}
-      %li
         %i.fa-solid.fa-door-open{ "aria-hidden": "true" }
         参加方式：#{business_join_approval_label(@project)}
 
-    - if @project.goal.present?
-      .ba-goal
-        %span.ba-goal__label
-          %i.fa-solid.fa-flag{ "aria-hidden": "true" }
-          目標
-        %p.ba-goal__text= @project.goal
+    - if @project.theme.present?
+      .ba-theme
+        %span.ba-theme__label
+          %i.fa-solid.fa-tag{ "aria-hidden": "true" }
+          テーマ
+        %p.ba-theme__text= @project.theme
 
     .ba-join#project-join
       = render "business/projects/join_status"
+    = render "business/shared/share_link", record: @project
 
 - if @can_view_internal
   %nav.ba-sectnav{ "aria-label": "このプロジェクトの内容" }

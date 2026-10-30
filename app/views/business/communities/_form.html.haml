@@ -32,7 +32,7 @@
     %legend.ba-fieldset__legend 参加方式
     .ba-field
       = f.label :join_approval_mode, "参加方式", class: "ba-label"
-      = f.select :join_approval_mode, business_join_approval_options, {}, class: "form-control"
+      = f.select :join_approval_mode, business_join_approval_options(community), {}, class: "form-control"
       %small.ba-help 変更は、変更後の新しい参加申請から適用されます。承認待ちの申請と参加済みのメンバーはそのままです。
 
   .ba-form-actions

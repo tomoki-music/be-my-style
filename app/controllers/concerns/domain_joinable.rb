@@ -14,10 +14,14 @@ module DomainJoinable
   def create
     domain = Domain.find_by!(name: auth_domain_name)
     CustomerDomain.find_or_create_by!(customer: current_customer, domain: domain)
-    redirect_to auth_root_path, notice: domain_auth_config[:join_notice]
+    redirect_to after_domain_join_path, notice: domain_auth_config[:join_notice]
   end
 
   private
+
+  def after_domain_join_path
+    auth_root_path
+  end
 
   def authenticate_customer_for_domain_join!
     return if customer_signed_in?

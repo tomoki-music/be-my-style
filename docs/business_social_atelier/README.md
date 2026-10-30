@@ -11,6 +11,7 @@ Business（NAKAMA）のログイン後画面を「Social Atelier」という方�
 - 追加改修: `feature/business-landing-atelier`（2026-10-30）で、ログイン前の紹介ページ（`/business` 未ログイン）も Social Atelier に揃えた（[10 章](#10-ログイン前の紹介ページ2026-10-30)）
 - 追加改修: `feature/business-blue-brand`（2026-10-30）で、ロゴを NAKAMA の青いロゴに差し替え、配色を紫から青に統一した（[11 章](#11-nakama-の青いロゴと配色2026-10-30)）。1・2 章の色は改修後の値
 - 追加改修: `feature/business-help-and-timeline`（2026-10-30）で、利用イメージのイラスト・使い方ページ（`/business/help`）を追加し、ビジネス投稿の一覧をタイムラインに統一した（[12 章](#12-利用イメージのイラスト使い方ページタイムラインの整理2026-10-30)）
+- 追加改修: `feature/business-join-theme-share-help`（2026-10-30）で、プロジェクトの参加表現の統一・「目標」「締切」の取りやめと「テーマ」の追加・招待用URLのコピー・使い方の「一般ユーザー向け／管理者向け」の切り替えを行った（[13 章](#13-参加表現テーマ招待用url使い方の切り替え2026-10-30)）
 
 ---
 
@@ -933,3 +934,211 @@ Business ホーム ─「コミュニティを探す」→ コミュニティ一
 | 却下の通知 | 申請を却下しても本人への通知は無い（既存仕様）。使い方では「ふたたび参加ボタンが表示され」と画面の変化で説明した |
 | 投稿のコメントの削除 | ビジネス投稿のコメント（`Message`）は画面から削除できない（既存仕様、今回は変更なし） |
 | 絵の差し替え | 原本（`docs/business_social_atelier/illustrations/`）から同じ 3:2 のまま `ribbon.webp`（1200×800）・`ribbon-small.webp`（480×320）を作り直す。比率を変える場合は `Business::IllustrationHelper::ILLUSTRATIONS` の `width` / `height` も合わせる |
+
+---
+
+## 13. 参加表現・テーマ・招待用URL・使い方の切り替え（2026-10-30）
+
+ブランチ `feature/business-join-theme-share-help`（`origin/main` 94afda95 から作成）。青いブランドと Social Atelier のデザインはそのまま。認可・参加方式・アクセス停止の扱いは変えていない（締切による「募集終了」だけは、ユーザー確認のうえ参加可否の判定から外した。13.2 参照）。
+
+### 13.1 プロジェクトは「参加する」に統一
+
+調査の結果、ボタン・状態表示・通知はすでに「参加する／参加を申請する／承認待ち／申請を取り消す／参加中」で、「賛同」はどこにも無かった。プロジェクトへの加入を「協力」と表していたのは次の3か所で、「プロジェクトに参加」へ変えた。一般的な文章（ご意見BOXの「ご協力ありがとうございます」など）は対象外。
+
+| 場所 | 改修前 | 改修後 |
+|------|--------|--------|
+| 3ステップの見出し（ログイン前トップ・使い方で共用、`Business::HelpHelper::FLOW_STEPS`） | プロジェクトで協力 | プロジェクトに参加 |
+| 同じ説明文 | …参加し、目標や締切を共有して一緒に進めます。 | コミュニティの中から、テーマに関心のあるプロジェクトに参加します。承認制のプロジェクトは、管理者が承認すると参加できます。 |
+| ログイン後ホームの利用ガイド | プロジェクトで協力 | プロジェクトに参加 |
+| 参加方式の説明（プロジェクトの参加欄・メンバー管理・編集画面の選択肢） | 参加申請を運営者が承認すると参加できます。 | 参加申請をプロジェクトの管理者が承認すると参加できます。（承認できるのは運営者とプロジェクト作成者のため。コミュニティは従来どおり「運営者」） |
+
+参加方式ごとのボタンと状態表示（変更なし。`spec/requests/business/join_flow_spec.rb` で確認）:
+
+| 参加方式 | 未参加 | 押したあと | 承認後 |
+|----------|--------|-----------|--------|
+| 自動承認 | 「参加する」 | 「参加中」 | — |
+| 承認制 | 「参加を申請する」 | 「承認待ち」＋「申請を取り消す」 | 「参加中」 |
+| アクセス停止中 | ボタンなし・「アクセス停止中」 | — | — |
+
+### 13.2 「目標」「締切」の取りやめと「テーマ」の追加
+
+改修前の使われ方（調査結果）:
+
+| 項目 | DB | フォーム | 表示 | 検索・並び替え | 通知・メール | 参加判定 |
+|------|----|---------|------|---------------|-------------|---------|
+| `goal`（目標） | `projects.goal` string | 作成・編集 | 詳細画面の「目標」枠 | なし | なし | なし |
+| `deadline`（締切） | `projects.deadline` datetime | 作成・編集（任意の日付） | 詳細画面「締切：YYYY/MM/DD／未設定」 | なし | なし | **あり**：過ぎた未参加プロジェクトは「募集終了」になり、`JoinProject` が `:closed` で参加・申請を拒否 |
+
+締切は参加可否にも使われていたため、入力欄を外すと管理者が解除できない「募集終了」が残ることをユーザーに確認し、**判定にも使わない**方針にした。
+
+- 作成・編集フォームから「目標」「締切日」を外し、`project_params` からも `:goal` `:deadline` を外した（直接送っても保存されない。既存の値はそのまま残る）。
+- 詳細画面の「締切」「目標」表示、`ProjectStatuses` の `:closed`、`JoinProject` の締切チェック、`Project#deadline_passed?`、「募集終了」バッジ・文言、Help の締切の説明を削除。
+- 列とデータは削除せず、テーマへの転記もしない。
+- 同じ意味で使える既存項目を調べた（`projects` の列、タグ（`acts_as_taggable` は `Post` のみ）、`status`）。`goal`（目標）は意味が違い、流用すると既存の目標が自動的にテーマとして表示される（転記と同じ）ため使わず、`theme` 列を新設した。
+
+テーマ:
+
+| 項目 | 内容 |
+|------|------|
+| 列 | `projects.theme` string(100)、NULL 許容、既定値なし（`db/migrate/20261030000000_add_theme_to_projects.rb`） |
+| 検証 | `Project::THEME_MAX_LENGTH = 100`、`validates :theme, length: { maximum: 100 }`。保存前に改行・連続空白を1つの空白にまとめ（`squish`）、空なら NULL |
+| フォーム | プロジェクト名の次に「テーマ（任意）」1行入力、`maxlength=100`、例「地域のお店の魅力発信」「AIを使った仕事の改善」を説明に表示。エラー時は入力内容を残して再表示（`テーマは100文字以内で入力してください`） |
+| 表示 | 詳細画面で、設定されていればタイトル下に「テーマ」枠（旧「目標」枠のデザインを `.ba-theme` として再利用）。未設定なら枠ごと出さない |
+| マイグレーション | 列の有無を確認してから追加（途中失敗後の再実行可）、`MigrationLockWaitTimeout` で ALTER のロック待ちを短くする（既存方針） |
+
+### 13.3 招待用URL（共有リンク）
+
+| 項目 | 実装 |
+|------|------|
+| 置き場所 | コミュニティ・プロジェクトの**通常画面**の紹介欄（参加ボタンの下）。編集・メンバー管理の画面には出さない。そのページを見られる人なら誰でも表示・コピーできる（新しい招待権限は追加していない） |
+| URL | `Business::ShareHelper#business_share_url` で、通常画面のパスだけを `config.x.business_share_url_options` のホストで組み立てる。本番は `https://be-my-style.com`（メール本文と同じ正規ホスト）、それ以外は `http://localhost:3000`。リクエストの Host・検索条件・会員ID・認証情報・招待トークンは含めない |
+| コピー | `business/share_link.js`。Clipboard API → 失敗・非対応なら `execCommand('copy')` → それも失敗なら URL 欄を全選択し「コピーできませんでした。選択されたURLを長押し（PCは Ctrl+C / ⌘+C）してコピーしてください。」。成功時は「URLをコピーしました」。結果は `role="status"`（`aria-live="polite"`）の欄に出す（同じ文言を続けても読み上げるよう、一度空にしてから書き込む） |
+| JavaScript なし | ボタンは `hidden` で出力し、JS が動くときだけ表示。URL 欄（読み取り専用・ラベル付き）は常に表示され、選択して手動でコピーできる |
+| スマホ | URL 欄は 16px（iPhone Safari のフォーカス時の拡大を防ぐ）、ボタンは高さ 44px 以上。読み取り専用の欄では下部ナビを隠さない（`atelier_nav.js` の判定に `readOnly` 除外を追加） |
+| 説明 | ボタンの下に参加方式に合わせた短い説明（例: コミュニティ・承認制「開いた人はNAKAMAへのログイン（未登録なら新規登録）が必要です。参加には運営者の承認が必要です。コミュニティ内の会話やメンバーは、参加した人だけが見られます。」） |
+| 副作用 | コピーはブラウザ内の操作だけで、サーバーへは何も送らない（参加・申請・データ変更なし） |
+
+共有先での実際の遷移（request spec で実測。同じブラウザ＝同じセッションでの結果）:
+
+```
+未ログインで共有URLを開く
+ └→ Devise が戻り先（/business/communities/:id など）をセッションに保存 → /business/sign_in
+     ├ ログイン（Business 利用者・オンボーディング済み） → 元のページ
+     ├ ログイン（オンボーディング未完了）
+     │     → /onboarding/step1 → step2 → step3 →「準備完了！」→ 元のページ
+     │       （step3 で投稿して完了した場合は投稿詳細へ。戻り先は捨てる）
+     ├ ログイン（Business 未登録＝音楽・歌声だけの人）
+     │     → /business/join「利用を開始」→ 元のページ（利用開始だけでは参加・申請しない）
+     └ 新規登録 → 確認メール送信の案内（/business/sign_in）
+           ├ 同じブラウザで確認リンク → 自動ログイン → 元のページ
+           └ 別のブラウザ・アプリで確認リンク → そのブラウザでは Business ホーム（戻り先を持たない）
+                 → 元のブラウザ（共有URLを開いたほう）に戻ってログイン
+                    → オンボーディング → 完了後に元のページ
+
+ログイン済みで Business 未登録（音楽・歌声だけ）の人が共有URLを開く
+ └→ /business/join「利用を開始」（「参加するには、NAKAMA（Business）の利用開始が必要です。」）→ 元のページ
+
+元のページがプロジェクトで、親コミュニティに未参加
+ └→ 親コミュニティの通常画面へ転送し「先にコミュニティへの参加が必要です」＋参加ボタン（従来どおり）
+```
+
+- 戻り先の判定は `BusinessReturnPath`（新規 concern）にまとめ、ログイン（`Public::SessionsController`、既存処理を移しただけ）・確認メール（`Public::ConfirmationsController`）・利用開始（`Business::JoinsController`）・オンボーディング完了（`OnboardingsController#complete`）で再利用。使うのは Devise が保存した戻り先だけで、URL パラメータからは受け取らない。`/business` 配下のパスのみ、`//`・`\`・ログイン/登録/パスワード/利用開始の画面は除外（外部転送・ループ防止）。オンボーディング中は専用のセッションキーに1回だけ預け、使ったら消す。
+- 参加・閲覧の条件は変えていない。未参加・承認待ち・停止中の人にはコミュニティの紹介と状態だけを出し、会話・プロジェクト・メンバー・スレッド・添付は出さない（request spec で本文・名前が含まれないことを確認）。
+- 今回は未ログイン向けの公開プレビュー・OGP への会員データ掲載は追加していない（未ログインはログイン画面へ転送）。
+
+戻り先を保持できない経路（制約。新しいトークンなどは追加していない）:
+
+| 経路 | 結果 | 理由 |
+|------|------|------|
+| 確認メールを別のブラウザ・アプリ（LINE 内ブラウザで登録 → メールアプリから Safari など）で開く | そのブラウザでは Business ホーム。元のブラウザでログインし直せば元のページへ戻る | 戻り先は登録したブラウザのセッション（Cookie）にだけある |
+| 登録後にブラウザを閉じてから確認・ログインする | Business ホームになる場合がある | `session_store` は Rails 既定（有効期限なしのセッション Cookie）。閉じると消えるかはブラウザ次第（スマホは復元することが多い）で、実機では未確認 |
+| オンボーディング step3 で投稿して完了する | 投稿の詳細画面 | 投稿を見せる既存の流れを優先し、預かった戻り先は捨てる |
+| 戻り先が Business 以外・外部・ログイン系の画面 | Business ホーム | 外部転送・ループ防止のため使わない |
+
+### 13.3.1 Business 利用資格の確認（追加修正）
+
+調査結果: Business の利用資格の判定は `Customer#business_user?`（Business ドメインの登録の有無）だけで、使われていたのは Business のログイン画面（`DomainScopedSession` が未登録者を `/business/join` へ案内）だけだった。ログイン済みのまま `/business/communities/:id` などを開くと、音楽・歌声だけの会員でも紹介が見え、参加申請・自動参加（`POST /business/communities/:id/permit`、`POST /business/projects/:id/join`）もできた。共有URLで起きやすくなるため、次のように直した。
+
+| 対象 | 変更 |
+|------|------|
+| 判定 | `BusinessAccess#business_eligible?`（`admin? \|\| business_user?`）を追加。システム管理者は従来どおり全コミュニティを管理できるよう例外 |
+| 既存の運営者 | システム管理者が管理権限を付けた運営者（`CommunityOwner`）や、親コミュニティに参加中のプロジェクト作成者は、Business ドメインが無くても運営・管理している画面を従来どおり開ける（`can_manage_community?` / `business_project_manager?` の人は確認の対象外） |
+| 画面 | コミュニティ・プロジェクトの通常画面（`show`）は、資格が無ければ `/business/join` へ転送し「参加するには、NAKAMA（Business）の利用開始が必要です。」を表示。利用開始後は Devise の戻り先として保存した通常画面へ戻す |
+| 直接のリクエスト | `PermitsController#create`、`ProjectsController#join` でも同じ確認（画面を通らない POST でも参加・申請しない）。戻り先は POST ではなく通常画面（GET）にするため、利用開始しただけでは参加・申請は起きない |
+| サービス | `JoinCommunity` / `JoinProject` の最初で確認し、`:business_required` を返す（ほかの呼び出し口ができても参加行を作らない） |
+| 変えないもの | 親コミュニティの参加条件、停止中の扱い、承認方式、音楽・歌声側の資格と所属データ（`/business/join` は Business ドメインを追加するだけ） |
+
+### 13.4 使い方の「一般ユーザー向け／管理者向け」
+
+| 項目 | 実装 |
+|------|------|
+| URL | 一般ユーザー向け `/business/help`（初期表示）、管理者向け `/business/help?audience=admin`。知らない値は一般ユーザー向け。ページ内リンクは `?audience=admin#help-delete` のように組み合わせられる |
+| 切り替え | 通常のリンク（JS 不要）。再読み込み・戻る・直接リンクで同じ表示。選択中は `aria-current="page"`、チェックの印、「（表示中）」の文字、太字・枠で示す（色だけに頼らない） |
+| 目次 | 表示ごとに見出し「目次（一般ユーザー向け）」と番号付きのページ内リンク。表示していない側の本文は出さない |
+| 権限 | 説明の出し分けだけ。ログイン前でも両方読める。会員データは読まない |
+| 共通 | タイトルに表示名を入れる（例「使い方（管理者向け）｜NAKAMA」）。PC 左ナビ・スマホのメニューの現在地はどちらでも「使い方」 |
+
+| 一般ユーザー向け | 管理者向け |
+|------------------|-----------|
+| 1 NAKAMAでできること / 2 関係 / 3 コミュニティを探す・参加する / 4 プロジェクトに参加する（参加方式ごとのボタンと表示の表） / 5 承認待ち・却下・アクセス停止 / 6 投稿・添付・スタンプ（`#help-visibility`） / 7 通知を確認する / 8 退出する / 9 招待用URLを受け取ったとき / 10 よくある質問 | 1 この説明での「管理者」とは（運営者・プロジェクトの管理者・システム管理者の違いの表） / 2 作成する（プラン条件） / 3 編集する / 4 参加方式を選ぶ / 5 参加申請を承認・却下する / 6 アクセスを停止する・解除する / 7 スレッドを管理する / 8 招待用URLで誘う / 9 削除・編集できる人（`#help-delete`） |
+
+権限とプラン条件（管理者向けに書いた内容と根拠）:
+
+| 操作 | できる人 | プラン条件 | 根拠 |
+|------|---------|-----------|------|
+| コミュニティ作成 | 誰でも | Premium | `require_feature!(:business_community_create)` |
+| プロジェクト作成 | 運営者（プラン不問）、Core 以上の参加者、お試し中コミュニティの参加者 | 左のとおり | `can_create_project_for?` |
+| スレッド作成 | プロジェクト参加者 | なし | `require_business_project_participant!` |
+| コミュニティ編集・申請の承認/却下・停止 | 運営者（オーナー＋システム管理者が管理権限を付けた人）、システム管理者 | なし | `can_manage_community?` |
+| プロジェクト編集・申請の承認/却下・停止・スレッド削除 | プロジェクト管理者（運営者＋親コミュニティ参加中の作成者）、システム管理者 | なし | `business_project_manager?` |
+| 無料お試しの設定 | システム管理者（Admin セッション）だけ | — | `CommunityPlanTrialsController#ensure_system_admin!` |
+| 申請通知の宛先 | コミュニティ＝オーナー、プロジェクト＝プロジェクト管理者 | — | `PermitsController#notify_owner_of_request!`、`ProjectsController#project_manager_recipients` |
+| 却下・停止の通知 | なし | — | 各コントローラー |
+
+ログイン前トップの「使い方を詳しく見る」の下と、ログイン後ホームの利用ガイドに「管理者向けの使い方」へのリンクを追加した。旧 `#help-operator` のアンカーは無くなった（`#help-visibility` は一般ユーザー向けに、`#help-delete` は管理者向けに残る）。
+
+### 13.5 変更したファイル
+
+| 種類 | ファイル |
+|------|---------|
+| マイグレーション・スキーマ | `db/migrate/20261030000000_add_theme_to_projects.rb`、`db/schema.rb`（`theme` 1行とバージョンのみ。作業ツリーの caption_videos 関係の未コミット変更とは別の worktree で作成） |
+| モデル・サービス | `app/models/project.rb`、`app/services/business/memberships/project_statuses.rb`、`join_project.rb` |
+| コントローラー | `business/projects_controller.rb`、`business/helps_controller.rb`、`business/joins_controller.rb`、`concerns/business_return_path.rb`（新規）、`concerns/domain_joinable.rb`、`concerns/business_access_control.rb`、`public/sessions_controller.rb`、`public/confirmations_controller.rb`、`onboardings_controller.rb`、`application_controller.rb` |
+| ビュー・ヘルパー | `business/projects/_form` `show` `_join_status`、`business/communities/show`、`business/shared/_share_link`（新規）、`business/helps/_content` `_member`（新規）`_admin`（新規）`_flow` `show`、`business/homes/_landing` `_member_home`、`helpers/business/help_helper.rb` `membership_helper.rb` `share_helper.rb`（新規） |
+| JS・CSS | `business/share_link.js`（新規）、`business/atelier_nav.js`、`stylesheets/business/atelier/pages.scss` `help.scss` |
+| 設定 | `config/initializers/business_share_url.rb`（新規）、`config/locales/ja.yml`（Project の属性名） |
+
+### 13.6 改修前後の画面
+
+架空データ。改修前は `origin/main`（94afda95）の別 worktree、改修後は本ブランチで、どちらも headless Chrome・`public/assets` なし（最新の SCSS をその場でコンパイル）で撮影。256 色に減色。
+
+| 画面 | 改修前 | 改修後 |
+|------|--------|--------|
+| プロジェクト詳細（SP 375px） | ![](screenshots/jts_before_project_375.png) | ![](screenshots/jts_after_share_project_375.png) |
+| プロジェクト詳細（PC 1280px） | ![](screenshots/jts_before_project_1280.png) | ![](screenshots/jts_after_share_project_1280.png) |
+| プロジェクト編集（SP） | ![](screenshots/jts_before_project_edit_375.png) | ![](screenshots/jts_after_project_edit_375.png) |
+| プロジェクト編集（PC） | ![](screenshots/jts_before_project_edit_1280.png) | ![](screenshots/jts_after_project_edit_1280.png) |
+| コミュニティ詳細（SP） | ![](screenshots/jts_before_community_375.png) | ![](screenshots/jts_after_share_community_375.png) |
+| コミュニティ詳細（PC） | ![](screenshots/jts_before_community_1280.png) | ![](screenshots/jts_after_share_community_1280.png) |
+| 使い方（ログイン後・SP） | ![](screenshots/guide_help_member_375.png)（12 章） | 一般: ![](screenshots/jts_after_help_member_375.png) 管理者: ![](screenshots/jts_after_help_admin_375.png) |
+| 使い方（ログイン後・PC） | ![](screenshots/guide_help_member_1280.png)（12 章） | 一般: ![](screenshots/jts_after_help_member_1280.png) 管理者: ![](screenshots/jts_after_help_admin_1280.png) |
+
+| その他の幅・状態 | 画像 |
+|------------------|------|
+| プロジェクト詳細 320px / 768px | ![](screenshots/jts_after_share_project_320.png) ![](screenshots/jts_after_share_project_768.png) |
+| コミュニティ詳細 320px / 768px | ![](screenshots/jts_after_share_community_320.png) ![](screenshots/jts_after_share_community_768.png) |
+| テーマが101文字のときのエラー（SP） | ![](screenshots/jts_after_project_theme_error_375.png) |
+| 使い方・ログイン前 320px（一般）/ 768px（管理者） | ![](screenshots/jts_after_help_guest_320.png) ![](screenshots/jts_after_help_guest_admin_768.png) |
+
+### 13.7 検証
+
+| 確認 | 結果 |
+|------|------|
+| マイグレーション（使い捨て MySQL） | ローカル MySQL 9.6 に `bms_theme_tmp` を作り、**コミット済み**の `db/schema.rb` を読み込んでから実行（接続先が `Mysql2 / bms_theme_tmp` であることを先に確認。development は credentials が必要なため test 環境＋`DATABASE_URL`）。目標・締切が入った既存行を入れてロールバック→再適用しても既存の値は残り、`theme` は NULL。`schema_migrations` の行だけ消して列が残った状態（途中失敗の再現）から再実行しても成功。`theme` は `varchar(100)` で、101文字の UPDATE は `Data too long` で拒否。ダンプされた `schema.rb` の差分は `theme` 1行とバージョンだけ。確認後に DB を削除 |
+| MySQL 8.4.8 の CI 検証 | `script/business_migration_mysql_check.rb` は以前の4本（`20261027*`）だけを確認対象にしていたため、テーマ追加（`20261030000000`）を5本目として追加: 5本とも成功、`theme` が `varchar(100)`・NULL 許容・既存行は NULL で目標・締切の値は不変、100文字可・101文字拒否、4本適用後に theme 追加で失敗→再実行、4本適用後に projects を読むトランザクションが残る状態で theme の ALTER が約5秒（接続単位の上限 5秒/10秒）で失敗→再実行で一致。ローカル MySQL 9.6（`ALLOW_NON_84=1`）で 31項目 ALL OK。8.4.8 の結果は PR の CI（`Business migrations (MySQL 8.4.8)`）で確認 |
+| MySQL での request spec | テーマ・招待用URL・利用資格・参加導線・コミュニティ・参加サービスの 97件が成功 |
+| 新規 `spec/requests/business/project_theme_spec.rb`（8件） | フォームにテーマ（maxlength 100・例・任意）があり目標・締切が無い、保存時の空白整理、空欄は NULL、100文字は保存・101文字はエラーで入力保持（作成・編集）、更新・削除、**目標・締切を直接送っても作成・更新とも保存されず既存値が残る**、詳細の表示・未設定時は枠なし、過去の締切があっても表示しない |
+| 新規 `spec/requests/business/share_link_spec.rb`（18件） | 戻り先を使う4画面（ログイン・確認メール・利用開始・オンボーディング）で `//evil`・`https://evil`・`/business//…`・`\\`・Business 以外・ログイン系を拒否。Business 未登録の案内がループしない（利用開始画面は表示、利用開始後は元の画面を表示、再度の利用開始画面はホームへ）。以下も確認: |
+| 〃 | 通常画面に通常画面のURLだけ（検索条件・会員IDなし）、JS 前はボタン非表示でラベル付きURL欄、**偽の Host（evil.example:8080）でも正規ホスト https://be-my-style.com**、編集・メンバー管理には出さない、参加方式別の説明、未ログイン→ログインへ・中身なし、未参加・承認待ち・停止中は紹介と状態だけ（会話・プロジェクト・メンバー名なし）、親コミュニティ未参加はコミュニティの参加案内へ、プロジェクト未参加・承認待ち・停止中でスレッド・メンバーなし、GET で参加行が増えない、ログイン後・オンボーディング後・利用開始後・確認メール（同じブラウザ）後に元のページ、**別ブラウザの確認はホームで、元のブラウザでログインすればオンボーディング後に元のページ** |
+| 新規 `spec/requests/business/business_eligibility_spec.rb`（12件） | 管理権限を付けられた音楽だけの運営者は運営中の画面を従来どおり開ける（運営していない画面は利用開始へ）。音楽だけの会員: 画面は利用開始へ転送し紹介を出さない、利用開始で元の画面に戻るが参加行は増えない、プロジェクトは利用開始後も親コミュニティの条件どおり、承認制・自動承認のコミュニティとプロジェクト（親の参加行があっても）への **直接 POST で行が作られない**、サービスが `:business_required`、システム管理者は従来どおり、Business 利用者は申請・自動参加できる、停止中は従来どおり拒否、音楽側のドメイン・所属は不変 |
+| Help の request spec（`helps_spec` 14件・`help_permissions_spec` 13件） | 初期表示は一般ユーザー向け、`?audience=admin` の直接表示、目次と本文の対応、表示していない側の本文が無い、切り替えリンクの `aria-current`・「（表示中）」・印、未知の値は一般向け（値は出力しない）、「管理者」の定義とシステム管理者の区別、プラン条件、権限表とサーバー側の認可の照合、ログイン前トップ・ホームの3ステップ（「協力」が無い）と管理者向けへの導線 |
+| 既存 spec の更新 | 締切の「募集終了」を前提にした3件を「過去の締切でも参加・申請できる」に変更（`join_flow_spec` / `join_and_revoke_spec` / `statuses_spec`）。`communities_spec` の閲覧者を Business 利用者として作成（利用資格の確認を入れたため）。下部ナビの spec の入力欄を目標・締切からテーマ・参加方式へ変更 |
+| system spec（headless Chrome） | 新規 `spec/system/business/share_link_spec.rb`（10件）: クリップボードに正しいURLが入り「URLをコピーしました」が `role=status` に出る・参加行が増えない、Tab→Enter でコピー、**Clipboard API が失敗し古い命令も失敗するとURL欄を全選択して手動コピーを案内**、**Clipboard API が無い環境では古い命令でコピー**、URL欄のクリックで全選択・下部ナビは隠れない、320/375/768/1280px で横はみ出しなし・ボタン 44px 以上で URL 欄と重ならない、テーマ101文字のエラー表示と入力保持。`help_guide_spec`: 4幅で管理者向けもはみ出しなし、キーボードで切り替え・再読み込み・戻る・直接リンク（`#help-delete`）、選択中が太さ・印・文字で区別できる。Business の system spec 一式＋音楽ホーム・管理画面の分離（162件）すべて成功 |
+| 全体 `bundle exec rspec` | 7,171件・失敗36件・保留21件。`origin/main`（94afda95）の別 worktree では 7,119件・失敗36件で、**失敗した36件は行番号まで同一**（改修による新しい失敗 0）。なお2本を並行実行した1回目は `atelier_navigation_spec.rb:213`（戻る・進む）が1件だけ多く失敗したが、単独で3回とも成功し、2回目の全体実行（単独）でも成功 |
+| 本番用プリコンパイル | `RAILS_ENV=production` で実行。worktree には鍵が無い（master.key はコピーしない）ため、使い捨てのスクリプトでメール設定の credentials 参照だけを空にして `assets:precompile` を呼んだ。Node は CI・本番と同じ 16.20.2（手元既定の Node 24 では webpack 4 が `ERR_OSSL` で失敗するため）。終了コード 0・エラー 0。CSS に `.ba-share__copy` `.ba-share__status` `.ba-help-switch__link` `.ba-theme__text` `.ba-home-guide__links`、JS に `data-share-copy` と `readOnly` の判定を確認。生成物（`public/assets` `public/packs`）は確認後に削除 |
+| 古いアセット | worktree には最初から `public/assets` `public/packs` が無く、画面確認・system spec はその場でコンパイルした最新の SCSS/JS で実施 |
+| 音楽・歌声・Learning への影響 | スタイルは `.ba-body` / `.ba-lp` 配下だけ。共用の変更は戻り先の判定（`Public::SessionsController` から concern へ移しただけ）、確認メール後の行き先（Business ドメインの人で Business の戻り先がある場合だけ）、`DomainJoinable` の行き先メソッド化（歌声・Learning は従来どおり各ルート）、`complete_onboarding_if_pending!` のセッションキー削除。全体テストで音楽・歌声・Learning の新しい失敗なし |
+
+### 13.8 未確認事項・残課題
+
+| 項目 | 内容 |
+|------|------|
+| 実機 | iPhone Safari・Android Chrome の実機は未確認。Clipboard API・古いコピー命令・手動コピーの各経路は headless Chrome で再現して確認した |
+| 確認メールを別ブラウザで開く | セッションが引き継がれないため、そのブラウザでは元のページへ戻れない（Business ホーム）。元のブラウザでログインし直せば戻る。トークン等の新しい仕組みは追加していない |
+| ブラウザを閉じた後 | 戻り先はセッション Cookie にあるため、閉じると消えるかはブラウザ次第（実機未確認） |
+| オンボーディングで投稿して完了 | 投稿詳細へ進み、共有先には戻らない（既存の流れを優先） |
+| ログイン後の本番画面 | 本番での確認は未実施（PR・デプロイ前） |
+| 取りやめた列 | `projects.goal` / `deadline` はデータごと残している。削除する場合は別のマイグレーションで行う |
+| 旧アンカー | `/business/help#help-operator` は無くなった（一般ユーザー向けの先頭が表示される） |
+| 音楽だけの会員の Business 一覧画面 | 今回確認を入れたのはコミュニティ・プロジェクトの通常画面と参加の操作。コミュニティ一覧（名前と紹介だけ）・ホームなどは従来どおり開ける（ホームには「NAKAMAの利用を始める」導線がある） |
+| 本番 MySQL のバージョン | 移行の確認はローカル MySQL 9.6。本番は 8.4.8（`ADD COLUMN` の NULL 許容 varchar のため差は無い見込みだが未実測） |

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Public::SessionsController < Devise::SessionsController
+  include BusinessReturnPath
+
   before_action :configure_permitted_parameters, if: :devise_controller?
 
   # 未ログイン時に保存された戻り先は、どのドメインでログインしても1回で取り出して捨てる。
@@ -34,22 +36,15 @@ class Public::SessionsController < Devise::SessionsController
 
   private
 
-  # ログイン・登録・パスワード再設定・利用開始の画面へ戻すとループするため、戻り先にしない。
-  BUSINESS_AUTH_PATHS = %w[/business/sign_in /business/sign_up /business/password /business/join].freeze
-
   # 未ログインで開こうとした Business の画面があれば、ログイン後にそこへ戻す(Business 以外の保存先は使わない)。
+  # オンボーディングが未完了なら先にそちらへ進め、戻り先は完了後(OnboardingsController#complete)まで預かる。
   def business_after_sign_in_path(resource, stored_path)
-    return onboarding_step1_path if resource.business_user? && !resource.onboarding_done
+    if resource.business_user? && !resource.onboarding_done
+      keep_business_return_path_for_onboarding(stored_path)
+      return onboarding_step1_path
+    end
 
     restorable_business_path?(stored_path) ? stored_path : business_root_path
-  end
-
-  # アプリ内の Business の画面(パスのみ)に限る。"//host" のような外部へ向かう形は受け付けない。
-  def restorable_business_path?(path)
-    return false unless path == "/business" || path.start_with?("/business/", "/business?")
-    return false if path.include?("//") || path.include?("\\")
-
-    BUSINESS_AUTH_PATHS.none? { |auth_path| path == auth_path || path.start_with?("#{auth_path}/", "#{auth_path}?") }
   end
 
   def detect_login_domain

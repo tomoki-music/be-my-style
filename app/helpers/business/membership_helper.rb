@@ -6,21 +6,23 @@ module Business
       "auto" => "自動承認"
     }.freeze
 
+    # 承認するのは、コミュニティは運営者、プロジェクトはプロジェクトの管理者(運営者と作成者)。
     JOIN_APPROVAL_DESCRIPTIONS = {
       "manual" => "参加申請を運営者が承認すると参加できます。",
       "auto" => "「参加する」を押すとすぐに参加できます。"
     }.freeze
+    PROJECT_MANUAL_APPROVAL_DESCRIPTION = "参加申請をプロジェクトの管理者が承認すると参加できます。".freeze
 
     def business_join_approval_label(record)
       JOIN_APPROVAL_LABELS.fetch(record.join_approval_mode)
     end
 
     def business_join_approval_description(record)
-      JOIN_APPROVAL_DESCRIPTIONS.fetch(record.join_approval_mode)
+      join_approval_description_for(record, record.join_approval_mode)
     end
 
-    def business_join_approval_options
-      JOIN_APPROVAL_LABELS.map { |mode, label| ["#{label}（#{JOIN_APPROVAL_DESCRIPTIONS[mode]}）", mode] }
+    def business_join_approval_options(record)
+      JOIN_APPROVAL_LABELS.map { |mode, label| ["#{label}（#{join_approval_description_for(record, mode)}）", mode] }
     end
 
     def business_join_button_label(record)
@@ -35,9 +37,14 @@ module Business
       admin: ["管理権限あり", "fa-solid fa-shield-halved", "manager"],
       member: ["参加中", "fa-solid fa-check", "member"],
       suspended: ["アクセス停止中", "fa-solid fa-ban", "suspended"],
-      pending: ["承認待ち", "fa-regular fa-clock", "pending"],
-      closed: ["募集終了", "fa-solid fa-circle-minus", nil]
+      pending: ["承認待ち", "fa-regular fa-clock", "pending"]
     }.freeze
+
+    def join_approval_description_for(record, mode)
+      return PROJECT_MANUAL_APPROVAL_DESCRIPTION if record.is_a?(Project) && mode == "manual"
+
+      JOIN_APPROVAL_DESCRIPTIONS.fetch(mode)
+    end
 
     def business_join_status_badge(status)
       label, icon, modifier = JOIN_STATUS_BADGES.fetch(status)

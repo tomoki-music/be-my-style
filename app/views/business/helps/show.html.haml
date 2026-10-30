@@ -1,14 +1,14 @@
 -# NAKAMA の使い方。ログイン前は紹介ページと同じヘッダー・フッター(body.ba-lp)、ログイン後は Business の枠の中に出す。
 -# 本文(_content)は会員データを使わず、画面例もすべて架空の内容にする。
-- content_for :title, "使い方｜NAKAMA"
-- content_for :og_description, "NAKAMAの使い方。コミュニティ・プロジェクト・スレッドの関係、参加の手順、投稿の見える範囲、運営者の操作をまとめています。"
+- content_for :title, "使い方（#{Business::HelpHelper::HELP_AUDIENCES.fetch(@audience)}）｜NAKAMA"
+- content_for :og_description, "NAKAMAの使い方。一般ユーザー向けに参加の手順と投稿の見える範囲を、管理者向けに作成・承認・アクセス停止などの操作をまとめています。"
 - if customer_signed_in?
-  = render "business/helps/content"
+  = render "business/helps/content", audience: @audience
 - else
   - content_for :body_class, "ba-lp"
   - content_for :head_icons, render("layouts/business_icons")
   = render "business/homes/lp_header"
   %main#ba-lp-main.ba-lp-main.ba-help-lp{ tabindex: "-1" }
     .ba-lp-container
-      = render "business/helps/content"
+      = render "business/helps/content", audience: @audience
   = render "business/homes/lp_footer"

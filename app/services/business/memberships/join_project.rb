@@ -4,7 +4,7 @@ module Business
     # 承認済みの親コミュニティ参加が前提。自動承認なら即参加、手動承認なら承認待ちを作る。
     #
     # 戻り値: :joined / :requested / :already_member / :already_requested / :suspended /
-    #         :community_required / :closed / :unavailable
+    #         :community_required / :business_required / :unavailable
     class JoinProject
       def self.call(project:, customer:)
         new(project, customer).call
@@ -17,6 +17,7 @@ module Business
 
       def call
         return :unavailable if @customer.is_deleted?
+        return :business_required unless @customer.business_eligible?
         return :already_member if @customer.business_project_participant?(@project)
         return :community_required unless @customer.business_community_member?(@project.community)
 
@@ -24,7 +25,6 @@ module Business
           next :suspended if @customer.business_project_suspended?(@project)
           next :already_member if @customer.business_project_participant?(@project)
           next :already_requested if @customer.business_project_pending?(@project)
-          next :closed if @project.deadline_passed?
 
           if @project.join_auto?
             ProjectMember.create!(project: @project, customer: @customer)

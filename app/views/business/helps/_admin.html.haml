@@ -1,0 +1,186 @@
+-# 使い方「管理者向け」。目次(HelpHelper::HELP_SECTIONS["admin"])と同じ順・同じ id で並べる。
+-# 権限の根拠: Customer#can_manage_community? / #can_create_project_for?、BusinessAccess#business_project_manager? /
+-# can_edit_project_thread? / can_destroy_project_thread?、Customer::FEATURE_RULES、Community::PLAN_RESTRICTION_WAIVABLE_FEATURES。
+-# spec/requests/business/help_permissions_spec.rb でサーバー側の認可と照合する。
+- numbers = local_assigns.fetch(:numbers)
+
+%section.ba-help-section.ba-anchor-target#help-roles{ "aria-labelledby": "help-roles-title" }
+  %h2.ba-help-section__title#help-roles-title
+    %span.ba-help-section__number= numbers.fetch("help-roles")
+    この説明での「管理者」とは
+  %p.ba-help-audience
+    %i.fa-solid.fa-star{ "aria-hidden": "true" }
+    ここでの「管理者」は、コミュニティの運営者と、プロジェクトの管理者のことです。できる範囲はそれぞれ違います。
+  .ba-help-table-wrap
+    %table.ba-help-table
+      %caption.sr-only 運営者・プロジェクトの管理者・システム管理者の違い
+      %thead
+        %tr
+          %th{ scope: "col" } 役割
+          %th{ scope: "col" } 誰がなるか
+          %th{ scope: "col" } 管理できる範囲
+      %tbody
+        %tr
+          %th{ scope: "row" } コミュニティの運営者
+          %td{ data: { label: "誰がなるか" } } コミュニティを作成したオーナーと、システム管理者がそのコミュニティの管理権限を付けた人
+          %td{ data: { label: "管理できる範囲" } } そのコミュニティの編集・参加申請の承認と却下・アクセス停止。そのコミュニティのすべてのプロジェクトも管理できます
+        %tr
+          %th{ scope: "row" } プロジェクトの管理者
+          %td{ data: { label: "誰がなるか" } } そのコミュニティの運営者と、プロジェクトを作成した人（そのコミュニティに参加している間だけ）
+          %td{ data: { label: "管理できる範囲" } } そのプロジェクトの編集・参加申請の承認と却下・アクセス停止・スレッドの削除。コミュニティの管理はできません
+        %tr
+          %th{ scope: "row" } システム管理者
+          %td{ data: { label: "誰がなるか" } } NAKAMAを運営する側のアカウント
+          %td{ data: { label: "管理できる範囲" } } すべてのコミュニティ・プロジェクト。「無料お試し」の設定はシステム管理者だけが変更できます。運営者やプロジェクトの管理者になっても、この権限は付きません
+  %p.ba-note このページを「管理者向け」に切り替えても、できる操作（権限）は変わりません。管理できるページでは、ページの上に「通常画面」「編集」「メンバー管理」などの管理メニューが表示されます。
+
+%section.ba-help-section.ba-anchor-target#help-create{ "aria-labelledby": "help-create-title" }
+  %h2.ba-help-section__title#help-create-title
+    %span.ba-help-section__number= numbers.fetch("help-create")
+    コミュニティ・プロジェクトを作成する
+  .ba-help-table-wrap
+    %table.ba-help-table
+      %caption.sr-only 作成できるものと条件
+      %thead
+        %tr
+          %th{ scope: "col" } 作るもの
+          %th{ scope: "col" } 条件
+          %th{ scope: "col" } 操作
+      %tbody
+        %tr
+          %th{ scope: "row" } コミュニティ
+          %td{ data: { label: "条件" } } Premiumプラン。作成した人がそのコミュニティのオーナー（運営者）になります
+          %td{ data: { label: "操作" } } 「コミュニティ」画面の「コミュニティを作成」
+        %tr
+          %th{ scope: "row" } プロジェクト
+          %td{ data: { label: "条件" } }
+            コミュニティの運営者（プランに関係なく作成できます）、またはCoreプラン以上の参加者。
+            無料お試し中のコミュニティでは、プランに関係なく参加者が作成できます。
+          %td{ data: { label: "操作" } } コミュニティのページの「プロジェクト管理」→「新しいプロジェクトを作成」
+        %tr
+          %th{ scope: "row" } スレッド
+          %td{ data: { label: "条件" } } プロジェクトの参加者（プランの条件はありません）
+          %td{ data: { label: "操作" } } プロジェクトのページの「新しいスレッド」
+
+%section.ba-help-section.ba-anchor-target#help-edit{ "aria-labelledby": "help-edit-title" }
+  %h2.ba-help-section__title#help-edit-title
+    %span.ba-help-section__number= numbers.fetch("help-edit")
+    コミュニティ・プロジェクトを編集する
+  %p 管理メニューの「編集」から変更します。編集にプランの条件はありません。
+  %ul.ba-help-sublist
+    %li コミュニティ（運営者）：コミュニティ名・紹介文・カバー画像・参加方式
+    %li プロジェクト（プロジェクトの管理者）：プロジェクト名・テーマ・説明・ステータス・参加方式・カバー画像
+  %p.ba-note 「テーマ」は、どんな話題・活動のプロジェクトかを1行（100文字以内）で伝える任意の項目です。ステータス（募集中／進行中／終了）は表示だけで、参加の受け付けには影響しません。
+
+%section.ba-help-section.ba-anchor-target#help-join-mode{ "aria-labelledby": "help-join-mode-title" }
+  %h2.ba-help-section__title#help-join-mode-title
+    %span.ba-help-section__number= numbers.fetch("help-join-mode")
+    参加方式を選ぶ
+  %ul.ba-help-sublist
+    %li 自動承認：参加者は「参加する」を押すとすぐに参加できます。
+    %li 承認制：参加者は「参加を申請する」を押し、運営者・管理者が承認すると参加できます。新しく作るコミュニティ・プロジェクトは承認制から始まります。
+  %p.ba-note 方式の変更は、変更後の新しい申請から適用されます。すでに「承認待ち」の申請は、自動承認に変えても承認待ちのまま残るので、メンバー管理で承認・却下してください。プロジェクトに参加できるのは、そのコミュニティの参加者だけです。
+
+%section.ba-help-section.ba-anchor-target#help-requests{ "aria-labelledby": "help-requests-title" }
+  %h2.ba-help-section__title#help-requests-title
+    %span.ba-help-section__number= numbers.fetch("help-requests")
+    参加申請を承認・却下する
+  %ol.ba-help-steps
+    %li 管理メニューの「メンバー管理」を開きます（コミュニティは運営者、プロジェクトはプロジェクトの管理者）。
+    %li 申請ごとに「承認」または「却下」を押します。
+  %ul.ba-help-sublist
+    %li 承認すると、申請した人に通知が届き、中身が見られるようになります。
+    %li 却下は申請を取り消すだけで、通知は届きません。申請した人は、もう一度申請できます。
+    %li コミュニティへの申請の通知はオーナーに届きます。プロジェクトへの申請の通知は、プロジェクトの管理者に届きます。
+  %p.ba-note アクセス停止中の人や、コミュニティに参加していない人の申請は承認できず、申請は取り消されます。
+
+%section.ba-help-section.ba-anchor-target#help-suspend{ "aria-labelledby": "help-suspend-title" }
+  %h2.ba-help-section__title#help-suspend-title
+    %span.ba-help-section__number= numbers.fetch("help-suspend")
+    アクセスを停止する・解除する
+  %ul.ba-help-sublist
+    %li 「メンバー管理」の参加者一覧で「アクセス停止」を押すと、その人は中身を見られなくなり、再参加・再申請もできなくなります。停止したことは本人に通知されません。
+    %li コミュニティで停止すると、そのコミュニティのプロジェクトにも参加できなくなります。
+    %li 「停止を解除」しても、自動では参加者に戻りません。本人がもう一度参加・申請します。
+    %li コミュニティでは、運営者とシステム管理者は停止できません。プロジェクトでは、プロジェクトの管理者（運営者と、プロジェクトを作成した参加者）とシステム管理者は停止できません。
+  %p.ba-note 却下と違い、停止は解除するまで再申請できません。
+
+%section.ba-help-section.ba-anchor-target#help-threads{ "aria-labelledby": "help-threads-title" }
+  %h2.ba-help-section__title#help-threads-title
+    %span.ba-help-section__number= numbers.fetch("help-threads")
+    スレッドを管理する
+  %ul.ba-help-sublist
+    %li 作成：プロジェクトの参加者なら誰でも「新しいスレッド」から作れます。
+    %li 編集：タイトル・説明を、スレッドを作った人とプロジェクトの管理者が編集できます。
+    %li 削除：プロジェクトの管理者だけができます（スレッドを作った人でも、管理者でなければ削除できません）。中のメッセージもすべて消えます。「全体トーク」は削除できません。
+
+%section.ba-help-section.ba-anchor-target#help-share{ "aria-labelledby": "help-share-title" }
+  %h2.ba-help-section__title#help-share-title
+    %span.ba-help-section__number= numbers.fetch("help-share")
+    招待用URLで誘う
+  %ol.ba-help-steps
+    %li コミュニティまたはプロジェクトの通常画面にある「招待用URL」の「URLをコピー」を押します。
+    %li 「URLをコピーしました」と表示されたら、LINEやメールに貼り付けて送ります。コピーできないときは、表示されたURLを長押し（PCは選択）してコピーします。
+  %ul.ba-help-sublist
+    %li 共有されるのは、そのページの通常画面のURLだけです。編集・メンバー管理の画面や、会員の情報は含まれません。
+    %li URLを知っていても、参加の条件は変わりません。開いた人はログイン（未登録なら新規登録）が必要で、承認制なら承認が必要です。プロジェクトは、先にそのコミュニティへの参加が必要です。
+    %li コミュニティ内の会話・スレッド・メンバー・添付は、参加した人だけが見られます。
+    %li 招待用URLは管理者だけでなく、そのページを見られる参加者も表示・コピーできます。コピーしても、参加や申請は起きません。
+
+-# 認可の根拠: Business::PostsController#ensure_post_owner!、CommunityPostsController(create のみ)、
+-# MessagesController(create のみ)、ProjectChatsController#destroy(本人のみ)、BusinessAccess#can_edit_project_thread? /
+-# can_destroy_project_thread?、ProjectsController(destroy なし)。
+%section.ba-help-section.ba-anchor-target#help-delete{ "aria-labelledby": "help-delete-title" }
+  %h2.ba-help-section__title#help-delete-title
+    %span.ba-help-section__number= numbers.fetch("help-delete")
+    削除・編集できる人
+  %p プロジェクトの管理者・コミュニティの運営者でも、ほかの人が書いた投稿を1件ずつ編集・削除することはできません。
+  %h3.ba-help-section__subtitle 投稿1件ずつ
+  .ba-help-table-wrap
+    %table.ba-help-table
+      %caption.sr-only 投稿の種類ごとの、1件ずつの編集・削除ができる人
+      %thead
+        %tr
+          %th{ scope: "col" } 投稿の種類
+          %th{ scope: "col" } 編集
+          %th{ scope: "col" } 削除
+      %tbody
+        %tr
+          %th{ scope: "row" } ビジネス投稿（タイムライン）
+          %td{ data: { label: "編集" } } 投稿した本人だけ
+          %td{ data: { label: "削除" } } 投稿した本人だけ
+        %tr
+          %th{ scope: "row" } ビジネス投稿へのコメント
+          %td{ data: { label: "編集" } } できません
+          %td{ data: { label: "削除" } } できません（投稿が削除されると一緒に消えます）
+        %tr
+          %th{ scope: "row" } コミュニティ内の会話
+          %td{ data: { label: "編集" } } できません
+          %td{ data: { label: "削除" } } できません（本人・運営者とも）
+        %tr
+          %th{ scope: "row" } スレッド内のメッセージ
+          %td{ data: { label: "編集" } } できません
+          %td{ data: { label: "削除" } } 書いた本人だけ（プロジェクトに参加している間）
+
+  %h3.ba-help-section__subtitle スレッド・プロジェクト・コミュニティそのもの
+  .ba-help-table-wrap
+    %table.ba-help-table
+      %caption.sr-only スレッド・プロジェクト・コミュニティの編集・削除ができる人
+      %thead
+        %tr
+          %th{ scope: "col" } 対象
+          %th{ scope: "col" } 編集
+          %th{ scope: "col" } 削除
+      %tbody
+        %tr
+          %th{ scope: "row" } スレッド
+          %td{ data: { label: "編集" } } タイトル・説明を、スレッドを作った人とプロジェクトの管理者が編集できます
+          %td{ data: { label: "削除" } } プロジェクトの管理者だけ。「全体トーク」は削除できません
+        %tr
+          %th{ scope: "row" } プロジェクト
+          %td{ data: { label: "編集" } } プロジェクトの管理者
+          %td{ data: { label: "削除" } } 画面から削除する操作はありません
+        %tr
+          %th{ scope: "row" } コミュニティ
+          %td{ data: { label: "編集" } } コミュニティの運営者
+          %td{ data: { label: "削除" } } NAKAMAの画面には削除の操作はありません

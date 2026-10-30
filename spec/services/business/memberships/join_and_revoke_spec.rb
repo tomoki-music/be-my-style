@@ -71,10 +71,13 @@ RSpec.describe "Business::Memberships" do
       expect(ProjectMember.where(project: auto, customer: customer).count).to eq 1
     end
 
-    it "募集終了後は参加・申請できない" do
-      project.update!(deadline: 1.day.ago)
+    it "取りやめた締切(既存データ)が過去日でも、参加・申請の可否には使わない" do
+      project.update_columns(deadline: 1.day.ago)
+      auto = Project.create!(community: community, customer: owner, title: "自動", join_approval_mode: :auto)
+      auto.update_columns(deadline: 1.day.ago)
 
-      expect(described_class.call(project: project, customer: customer)).to eq :closed
+      expect(described_class.call(project: project, customer: customer)).to eq :requested
+      expect(described_class.call(project: auto, customer: customer)).to eq :joined
     end
 
     it "同時に挿入されても DB の一意制約で重複しない" do

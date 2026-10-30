@@ -17,8 +17,13 @@
       %p.ba-label 所属コミュニティ
       %p.ba-static= @community.name
     .ba-field
-      = f.label :goal, "目標", class: "ba-label"
-      = f.text_field :goal, class: "form-control", placeholder: "例）ライブ出演 / 3曲完成 / メンバー5人集める"
+      = f.label :theme, class: "ba-label" do
+        テーマ
+        %span.ba-optional 任意
+      = f.text_field :theme, class: "form-control", maxlength: Project::THEME_MAX_LENGTH,
+        placeholder: "例）地域のお店の魅力発信", "aria-describedby": "project-theme-help"
+      %small.ba-help#project-theme-help
+        どんな話題・活動のプロジェクトかを1行で伝えます（#{Project::THEME_MAX_LENGTH}文字以内）。例：「地域のお店の魅力発信」「AIを使った仕事の改善」
     .ba-field
       = f.label :description, "説明", class: "ba-label"
       = f.text_area :description, class: "form-control", rows: 8,
@@ -31,13 +36,8 @@
       = f.select :status, business_project_status_options, {}, class: "form-control"
     .ba-field
       = f.label :join_approval_mode, "参加方式", class: "ba-label"
-      = f.select :join_approval_mode, business_join_approval_options, {}, class: "form-control"
+      = f.select :join_approval_mode, business_join_approval_options(project), {}, class: "form-control"
       %small.ba-help 参加できるのは、開催コミュニティの参加者だけです。変更は、変更後の新しい参加申請から適用されます。
-    .ba-field
-      = f.label :deadline, class: "ba-label" do
-        締切日
-        %span.ba-optional 任意
-      = f.date_field :deadline, class: "form-control"
 
   %fieldset.ba-fieldset
     %legend.ba-fieldset__legend 画像

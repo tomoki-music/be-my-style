@@ -1,6 +1,7 @@
 name: Business migrations on MySQL 8.4
 
-# Business スレッド・参加承認のマイグレーション(20261027000000〜000300)を、本番 RDS と同じ MySQL 8.4.8 で検証する。
+# Business スレッド・参加承認のマイグレーション(20261027000000〜000300)とプロジェクトのテーマ追加(20261030000000)を、
+# 本番 RDS と同じ MySQL 8.4.8 で検証する。
 # ランナー上の使い捨て MySQL(service コンテナ)だけを使い、本番の認証情報・データ・Secrets は使わない。
 # 検証内容は script/business_migration_mysql_check.rb(通常移行・スキーマ一致・制約・途中失敗後の再実行・ロック待ち)。
 on:

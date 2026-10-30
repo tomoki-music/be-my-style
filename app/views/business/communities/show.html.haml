@@ -44,6 +44,7 @@
         無料お試し中：このコミュニティ内では有料プランの機能制限が解除されています
 
     = render "business/communities/join_panel"
+    = render "business/shared/share_link", record: @community
 
 - if @can_view_internal
   %nav.ba-sectnav{ "aria-label": "このコミュニティの内容" }

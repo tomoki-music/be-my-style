@@ -9,6 +9,7 @@ module BusinessAccessControl
     already_member: [:notice, "すでにコミュニティに参加しています"],
     already_requested: [:notice, "参加申請は承認待ちです"],
     suspended: [:alert, "このコミュニティへのアクセスは停止されています"],
+    business_required: [:alert, "参加するには、NAKAMA（Business）の利用開始が必要です。"],
     unavailable: [:alert, "このコミュニティには参加できません"]
   }.freeze
 
@@ -19,11 +20,22 @@ module BusinessAccessControl
     already_requested: [:notice, "参加申請は承認待ちです"],
     suspended: [:alert, "このプロジェクトへのアクセスは停止されています"],
     community_required: [:alert, "プロジェクトに参加するには、先にコミュニティへ参加してください"],
-    closed: [:alert, "このプロジェクトは募集終了しています"],
+    business_required: [:alert, "参加するには、NAKAMA（Business）の利用開始が必要です。"],
     unavailable: [:alert, "このプロジェクトには参加できません"]
   }.freeze
 
   private
+
+  # Business の利用資格(BusinessAccess#business_eligible?)が無ければ、利用開始(/business/join)へ案内する。
+  # 利用開始の後は return_path(コミュニティ・プロジェクトの通常画面)へ戻す(Business::JoinsController)。
+  # 参加・申請の POST から来た場合も戻り先は画面(GET)にし、利用開始だけで参加・申請が起きないようにする。
+  # 運営者・プロジェクト管理者(manager: true)は、システム管理者が付けた権限を含めて従来どおり通す。
+  def require_business_eligibility!(return_path, manager: false)
+    return if manager || current_customer.business_eligible?
+
+    store_location_for(:customer, return_path)
+    redirect_to business_join_path, alert: COMMUNITY_JOIN_MESSAGES.fetch(:business_required).last
+  end
 
   def find_business_community!(id)
     Community.find_by!(id: id, domain_id: @current_domain.id)

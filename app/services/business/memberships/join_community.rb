@@ -3,7 +3,7 @@ module Business
     # 会員が「参加する / 参加を申請する」を押したときの処理。
     # 自動承認なら即参加、手動承認なら承認待ち(Permit)を作る。ページを見ただけでは呼ばない。
     #
-    # 戻り値: :joined / :requested / :already_member / :already_requested / :suspended / :unavailable
+    # 戻り値: :joined / :requested / :already_member / :already_requested / :suspended / :business_required / :unavailable
     class JoinCommunity
       def self.call(community:, customer:)
         new(community, customer).call
@@ -16,6 +16,7 @@ module Business
 
       def call
         return :unavailable if @customer.is_deleted? || !@community.business_domain?
+        return :business_required unless @customer.business_eligible?
 
         # 同じコミュニティへの申請・参加を直列化し、連打・同時リクエストでも行を重複させない。
         @community.with_lock do

@@ -4,6 +4,7 @@ class Business::CommunitiesController < ApplicationController
   layout "business"
 
   before_action :set_community, only: [:show, :edit, :update, :destroy, :permits]
+  before_action -> { require_business_eligibility!(business_community_path(@community), manager: current_customer.can_manage_community?(@community)) }, only: [:show]
   before_action :ensure_community_manager!, only: [:edit, :update, :permits]
   before_action :ensure_community_owner!, only: [:destroy]
   before_action :load_pending_permit_count, only: [:edit, :update]

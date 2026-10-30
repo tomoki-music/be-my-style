@@ -78,6 +78,12 @@ RSpec.describe "Business の使い方・利用ガイド・タイムライン", t
       expect(page).to have_no_css("img.ba-illust")
       shot("help_guest_#{width}")
 
+      visit business_help_path(audience: "admin")
+      expect(page).to have_css(".ba-help-switch a[aria-current='page']", text: "管理者向け")
+      expect(page).to have_css("#help-roles")
+      expect(horizontal_overflow).to be <= 0
+      shot("help_guest_admin_#{width}")
+
       visit business_root_path
       expect(page).to have_css(".ba-flow__step", count: 3)
       expect(horizontal_overflow).to be <= 0
@@ -117,6 +123,11 @@ RSpec.describe "Business の使い方・利用ガイド・タイムライン", t
       expect(page).to have_css("body.ba-body h1", text: "NAKAMAの使い方")
       expect(horizontal_overflow).to be <= 0
       shot("help_member_#{width}")
+
+      visit business_help_path(audience: "admin")
+      expect(page).to have_css("body.ba-body #help-roles")
+      expect(horizontal_overflow).to be <= 0
+      shot("help_admin_#{width}")
 
       Post.create!(customer: author, title: "商店街イベントの振り返り", body: "来場者アンケートから分かったことを共有します。", category: "free_post", tag_list: ["イベント"])
       Post.create!(customer: author, title: "提案資料の型", body: "最初の1枚で課題を言い切ると伝わりやすかったです。", category: "free_post")
@@ -174,6 +185,48 @@ RSpec.describe "Business の使い方・利用ガイド・タイムライン", t
     expect(page).to have_no_css("#help-faq details[open]")
   end
 
+  it "表示の切り替えはキーボードで操作でき、再読み込み・戻る・直接リンクでも同じ表示になる" do
+    visit_at(business_help_path, 375)
+    expect(page).to have_css(".ba-help-switch a[aria-current='page']", text: "一般ユーザー向け")
+    expect(page).to have_css("#help-invited")
+
+    admin_link = find(".ba-help-switch a", text: "管理者向け")
+    page.execute_script("arguments[0].focus()", admin_link)
+    expect(page.evaluate_script("getComputedStyle(document.activeElement).boxShadow")).not_to eq "none"
+    page.send_keys(:enter)
+    expect(page).to have_current_path(business_help_path(audience: "admin"))
+    expect(page).to have_css(".ba-help-switch a[aria-current='page']", text: /管理者向け\s*（表示中）/)
+    expect(page).to have_css("#help-roles")
+    expect(page).to have_no_css("#help-invited")
+
+    # 選択中は色以外(太さ・枠・チェックの印・「表示中」の文字)でも区別できる。
+    styles = page.evaluate_script(<<~JS)
+      Array.from(document.querySelectorAll('.ba-help-switch a')).map(function (a) {
+        var s = getComputedStyle(a);
+        return [s.fontWeight, !!a.querySelector('.fa-circle-check'), a.textContent.indexOf('表示中') >= 0];
+      })
+    JS
+    expect(styles).to eq [["600", false, false], ["700", true, true]]
+
+    page.refresh
+    expect(page).to have_css("#help-roles")
+
+    find(".ba-help-toc a[href='#help-share']").click
+    expect(page).to have_current_path(/audience=admin#help-share\z/, url: true)
+
+    page.go_back
+    page.go_back
+    expect(page).to have_current_path(business_help_path)
+    expect(page).to have_css("#help-invited")
+    expect(page).to have_css(".ba-help-switch a[aria-current='page']", text: "一般ユーザー向け")
+
+    visit business_help_path(audience: "admin", anchor: "help-delete")
+    expect(page).to have_css("#help-delete")
+    title_top = page.evaluate_script("document.querySelector('#help-delete-title').getBoundingClientRect().top")
+    header_bottom = page.evaluate_script("document.querySelector('.ba-lp-header').getBoundingClientRect().bottom")
+    expect(title_top).to be >= header_bottom
+  end
+
   it "スマホのメニューから使い方を開け、PC の左ナビでは現在地になる" do
     sign_in_as(customer)
     set_viewport(375, 812)
@@ -186,6 +239,8 @@ RSpec.describe "Business の使い方・利用ガイド・タイムライン", t
 
     set_viewport(1280)
     visit business_help_path
+    expect(page).to have_css(".ba-sidenav a[aria-current='page']", text: "使い方")
+    visit business_help_path(audience: "admin")
     expect(page).to have_css(".ba-sidenav a[aria-current='page']", text: "使い方")
   end
 

@@ -5,6 +5,8 @@ class Business::HelpsController < ApplicationController
   # ログイン後は左ナビ・下部ナビ付きの Business の枠、ログイン前は紹介ページと同じヘッダー・フッターで出す。
   layout -> { customer_signed_in? ? "business" : "application" }
 
+  # 「一般ユーザー向け」「管理者向け」は説明の出し分けだけで、どちらもログイン前から誰でも読める(権限は変えない)。
   def show
+    @audience = helpers.business_help_audience(params[:audience])
   end
 end

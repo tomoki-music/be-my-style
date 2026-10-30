@@ -47,17 +47,17 @@ RSpec.describe "Business::Memberships の参加状況" do
       Project.create!(community: community, customer: customer, title: title, description: "説明", **attrs)
     end
 
-    it "運営・主催・管理権限・参加中・停止中・承認待ち・募集終了・未参加を見分ける" do
+    it "運営・主催・管理権限・参加中・停止中・承認待ち・未参加を見分ける(取りやめた締切は使わない)" do
       CommunityCustomer.create!(community: community, customer: viewer)
       own = project!("主催", customer: viewer)
       joined = project!("参加").tap { |p| ProjectMember.create!(project: p, customer: viewer) }
       suspended = project!("停止").tap { |p| ProjectAccessSuspension.create!(project: p, customer: viewer) }
       pending = project!("申請").tap { |p| ProjectJoinRequest.create!(project: p, customer: viewer) }
-      closed = project!("終了").tap { |p| p.update_columns(deadline: 1.day.ago) }
+      past_deadline = project!("締切が過去日").tap { |p| p.update_columns(deadline: 1.day.ago) }
       none = project!("未参加")
 
-      expect(described_class.call(customer: viewer, projects: [own, joined, suspended, pending, closed, none]).values)
-        .to eq %i[owner member suspended pending closed none]
+      expect(described_class.call(customer: viewer, projects: [own, joined, suspended, pending, past_deadline, none]).values)
+        .to eq %i[owner member suspended pending none none]
       expect(described_class.for(customer: owner, project: none)).to eq :operator
     end
 

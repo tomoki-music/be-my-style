@@ -2,9 +2,9 @@ require 'rails_helper'
 
 RSpec.describe "Business::Communities", type: :request do
   let(:business_domain) { Domain.find_or_create_by!(name: "business") }
-  let(:owner) { create(:customer) }
+  let(:owner) { create(:customer, domain_name: "business") }
   let(:community) { create(:community, owner: owner, domain: business_domain) }
-  let(:customer) { create(:customer) }
+  let(:customer) { create(:customer, domain_name: "business") }
 
   before do
     CommunityCustomer.find_or_create_by!(customer: owner, community: community)
@@ -13,7 +13,7 @@ RSpec.describe "Business::Communities", type: :request do
   end
 
   describe "GET /business/communities/:id (show) の退会済みメンバー表示" do
-    let(:withdrawn_member) { create(:customer, name: "退会済み次郎", is_deleted: true) }
+    let(:withdrawn_member) { create(:customer, domain_name: "business", name: "退会済み次郎", is_deleted: true) }
 
     before do
       CommunityCustomer.find_or_create_by!(customer: withdrawn_member, community: community)
@@ -53,8 +53,8 @@ RSpec.describe "Business::Communities", type: :request do
   end
 
   describe "GET /business/communities/:id/permits (承認待ち一覧)" do
-    let(:applicant) { create(:customer, name: "申請太郎") }
-    let(:withdrawn_applicant) { create(:customer, name: "退会済み申請花子", is_deleted: true) }
+    let(:applicant) { create(:customer, domain_name: "business", name: "申請太郎") }
+    let(:withdrawn_applicant) { create(:customer, domain_name: "business", name: "退会済み申請花子", is_deleted: true) }
     let!(:active_permit) { create(:permit, community: community, customer: applicant) }
     let!(:withdrawn_permit) { create(:permit, community: community, customer: withdrawn_applicant) }
 
@@ -69,8 +69,8 @@ RSpec.describe "Business::Communities", type: :request do
   end
 
   describe "通常画面とメンバー管理画面の分離(参加申請)" do
-    let(:applicant) { create(:customer, name: "申請太郎") }
-    let(:withdrawn_applicant) { create(:customer, name: "退会済み申請花子", is_deleted: true) }
+    let(:applicant) { create(:customer, domain_name: "business", name: "申請太郎") }
+    let(:withdrawn_applicant) { create(:customer, domain_name: "business", name: "退会済み申請花子", is_deleted: true) }
 
     def doc
       Nokogiri::HTML(response.body)
@@ -141,7 +141,7 @@ RSpec.describe "Business::Communities", type: :request do
 
     context "管理権限を付与された CommunityOwner" do
       before do
-        co_owner = create(:customer)
+        co_owner = create(:customer, domain_name: "business")
         CommunityOwner.create!(community: community, customer: co_owner)
         sign_in co_owner
       end
@@ -150,7 +150,7 @@ RSpec.describe "Business::Communities", type: :request do
     end
 
     context "Customer の is_owner が admin" do
-      before { sign_in create(:customer, is_owner: :admin) }
+      before { sign_in create(:customer, domain_name: "business", is_owner: :admin) }
 
       include_examples "通常画面には導線だけを出し、承認・拒否はメンバー管理画面で行う"
     end
@@ -160,7 +160,7 @@ RSpec.describe "Business::Communities", type: :request do
     end
 
     context "非参加者" do
-      before { sign_in create(:customer) }
+      before { sign_in create(:customer, domain_name: "business") }
 
       include_examples "管理メニューも申請者情報も表示しない"
     end
@@ -170,7 +170,7 @@ RSpec.describe "Business::Communities", type: :request do
 
       it "申請中の表示と申請取消の操作を残し、他の申請者の情報は出さない" do
         create(:permit, community: community, customer: applicant)
-        create(:permit, community: community, customer: create(:customer, name: "別の申請者"))
+        create(:permit, community: community, customer: create(:customer, domain_name: "business", name: "別の申請者"))
 
         get business_community_path(community)
 
@@ -184,9 +184,9 @@ RSpec.describe "Business::Communities", type: :request do
   end
 
   describe "編集・更新・削除の権限" do
-    let(:co_owner) { create(:customer) }
-    let(:admin_customer) { create(:customer, is_owner: :admin) }
-    let(:outsider) { create(:customer) }
+    let(:co_owner) { create(:customer, domain_name: "business") }
+    let(:admin_customer) { create(:customer, domain_name: "business", is_owner: :admin) }
+    let(:outsider) { create(:customer, domain_name: "business") }
 
     before { CommunityOwner.create!(community: community, customer: co_owner) }
 
@@ -281,7 +281,7 @@ RSpec.describe "Business::Communities", type: :request do
     before { CommunityPost.create!(community: community, customer: owner, body: "参加者向けタイムラインの投稿") }
 
     it "非参加者には本文も投稿フォームも出さず、名称・紹介と参加導線だけを出す" do
-      sign_in create(:customer)
+      sign_in create(:customer, domain_name: "business")
 
       get business_community_path(community)
 
@@ -294,7 +294,7 @@ RSpec.describe "Business::Communities", type: :request do
     end
 
     it "参加者は閲覧できる" do
-      member = create(:customer)
+      member = create(:customer, domain_name: "business")
       CommunityCustomer.create!(customer: member, community: community)
       sign_in member
 
