@@ -13,6 +13,13 @@ module NotificationsHelper
       business_community_path(notification.community_id) if notification.community_id.present?
     when "follow"
       business_customer_path(notification.visitor_id) if notification.visitor_id.present?
+    when "project_message"
+      chat = notification.project_chat
+      if chat&.project_thread_id
+        business_project_thread_path(chat.project_id, chat.project_thread_id, anchor: "post-project_chat-#{chat.id}")
+      elsif notification.project_id.present?
+        business_project_path(notification.project_id)
+      end
     when *Notification::BUSINESS_PROJECT_ACTIONS
       business_project_path(notification.project_id) if notification.project_id.present?
     end

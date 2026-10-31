@@ -25,6 +25,22 @@
     min-width: 0;
   }
 
+  // 通知から開いた投稿(#post-project_chat-ID)。固定の上部バーに隠れない位置で止め、目印を付ける。
+  .ba-post:target {
+    scroll-margin-top: calc(var(--ba-topbar-height) + var(--ba-space-4));
+    margin: 0 calc(var(--ba-space-2) * -1);
+    padding-left: var(--ba-space-2);
+    padding-right: var(--ba-space-2);
+    border-radius: var(--ba-radius-card);
+    background: var(--ba-accent-soft);
+  }
+
+  @media (min-width: 992px) {
+    .ba-post:target {
+      scroll-margin-top: var(--ba-space-4);
+    }
+  }
+
   .ba-post__avatar {
     flex: none;
     width: 40px;

@@ -383,6 +383,12 @@
     }
   }
 
+  .ba-notification__context {
+    font-size: 13px;
+    color: var(--ba-text-muted);
+    overflow-wrap: anywhere;
+  }
+
   .ba-notification__time {
     font-size: 13px;
     color: var(--ba-text-muted);

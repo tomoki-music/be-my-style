@@ -12,7 +12,8 @@
 - else
   %ul.ba-notifications
     - @notifications.each do |notification|
-      - link_path = business_notification_path(notification)
+      - hidden = notification.action == "project_message" && !@viewable_project_ids.include?(notification.project_id)
+      - link_path = hidden ? nil : business_notification_path(notification)
       - unread = @unread_ids.include?(notification.id)
       - content = capture do
         %span.ba-notification__icon{ "aria-hidden": "true" }
@@ -35,13 +36,22 @@
             - when "project_joined"
               #{customer_display_name(notification.visitor)}がプロジェクトに参加しました
             - when "project_message"
-              #{customer_display_name(notification.visitor)}がプロジェクトにコメントしました
+              - post_thread = notification.project_chat&.project_thread
+              - if hidden
+                閲覧できなくなったプロジェクトの通知です
+              - elsif post_thread
+                #{customer_display_name(notification.visitor)}がスレッドに投稿しました
+              - else
+                #{customer_display_name(notification.visitor)}がプロジェクトにコメントしました
             - when "project_request"
               #{customer_display_name(notification.visitor)}があなたの管理するプロジェクトへ参加申請しました
             - when "project_accept"
               #{customer_display_name(notification.visitor)}がプロジェクトへの参加申請を承認しました
             - else
               新しい通知があります
+          - if notification.action == "project_message" && !hidden && notification.project
+            %span.ba-notification__context
+              = [notification.project.community&.name, notification.project.title, post_thread&.title].compact.join(" / ")
           %span.ba-notification__time
             = l(notification.created_at, format: :short)
             - if unread

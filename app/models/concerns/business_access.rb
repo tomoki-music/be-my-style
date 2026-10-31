@@ -60,6 +60,17 @@ module BusinessAccess
     project.present? && project_access_suspensions.exists?(project_id: project.id)
   end
 
+  # スレッド投稿の通知を受け取る「参加者」。内部を閲覧できる人(business_project_participant?)のうち、
+  # 承認済みの参加者と主催(コミュニティ参加資格のある作成者)に限る。運営者・システム管理者でも、
+  # 参加していなければ管理権限だけでは届かない。退会済み・アクセス停止中は、行が残っていても除く。
+  def business_project_notification_recipient?(project)
+    return false if is_deleted? || project.blank?
+    return false unless business_project_participant?(project)
+    return false if business_project_suspended?(project) || business_community_suspended?(project.community)
+
+    project.customer_id == id || project_members.exists?(project_id: project.id)
+  end
+
   # 名称・紹介を見せてよいプロジェクト(一覧・件数・トップ)。内部を閲覧できるコミュニティのものに限る。
   def business_visible_projects(domain)
     projects = Project.in_domain(domain)

@@ -128,15 +128,16 @@ class CustomerMailer < ApplicationMailer
     mail to: @ps_customer.email, subject: 'プロジェクトに新しい参加メンバーが加わりました！'
   end
 
+  # 新しい投稿の通知メールは BusinessProjectChatMailer(通知 ID だけを渡す)。これは更新前に登録されたジョブを
+  # 送るために残している。送信までにアクセス停止・退出・退会・受信設定オフになった人へは本文を送らない。
   def business_project_chat_mail
     @project = params[:project]
     @project_chat = params[:project_chat]
-    # deliver_later のため、送信までにアクセス停止・退出・退会した人へは本文を送らない。
-    return if @ps_customer.is_deleted? || !@ps_customer.business_project_participant?(@project)
+    return unless @ps_customer.confirm_mail && @ps_customer.business_project_notification_recipient?(@project)
 
     @project_thread = @project_chat.project_thread
     @project_url = "https://be-my-style.com/business/projects/#{@project.id}"
-    @project_url = "#{@project_url}/threads/#{@project_thread.id}" if @project_thread
+    @project_url = "#{@project_url}/threads/#{@project_thread.id}#post-project_chat-#{@project_chat.id}" if @project_thread
     mail to: @ps_customer.email, subject: '参加中のプロジェクトに新しいコメントが届きました！'
   end
 
