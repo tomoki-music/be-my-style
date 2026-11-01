@@ -56,6 +56,16 @@ class Project < ApplicationRecord
     Customer.active.where(id: ids.uniq)
   end
 
+  # スレッド投稿の通知先。判定は BusinessAccess#business_project_notification_recipient?(1人ずつ同じ条件で確認する)。
+  def thread_post_notification_recipients(except: nil)
+    ids = project_members.pluck(:customer_id)
+    ids << customer_id if customer_id
+    candidates = Customer.active.where(id: ids.uniq)
+    candidates = candidates.where.not(id: except.id) if except
+
+    candidates.to_a.select { |customer| customer.business_project_notification_recipient?(self) }
+  end
+
   # メンバー一覧の表示用。コミュニティ参加資格を失った人(旧データ)は表示しない。
   def participating_members
     active_members.where(id: community.community_customers.select(:customer_id))

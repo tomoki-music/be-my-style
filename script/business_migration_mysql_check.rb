@@ -1,4 +1,5 @@
-# Business スレッド・参加承認のマイグレーション(20261027000000〜000300)と、プロジェクトのテーマ追加(20261030000000)を、
+# Business スレッド・参加承認のマイグレーション(20261027000000〜000300)と、プロジェクトのテーマ追加(20261030000000)、
+# スレッド投稿通知の投稿ID(20261101000000)を、
 # 使い捨ての MySQL で検証する。
 # 本番・開発の DB には使わない。指定したサーバーに専用の DB を2つ作り、終了時に削除する。
 #
@@ -6,7 +7,8 @@
 #     RAILS_ENV=test bundle exec rails runner script/business_migration_mysql_check.rb
 #
 # 確認内容: 通常移行(本番と同じ main 時点のスキーマ + 旧データから) / db/schema.rb とのスキーマ一致 /
-# 一意制約・外部キー・NULL 許容 / 途中失敗(7か所)後の再実行 / ロック待ちの時間切れと再実行 / サーバー全体の設定が不変。
+# 一意制約・外部キー・NULL 許容 / 途中失敗(8か所)後の再実行 / ロック待ちの時間切れと再実行 / サーバー全体の設定が不変 /
+# 通知の DDL の方式(ALGORITHM / LOCK)と既存通知の不変 / 同じ投稿の通知処理の同時実行。
 # MySQL 8.4 以外では止まる(ALLOW_NON_84=1 で手順そのものの確認用に実行できる)。
 require "open3"
 require "stringio"
@@ -17,15 +19,28 @@ module BusinessMigrationMysqlCheck
   DB = "bms_migration_check_tmp".freeze
   REF_DB = "bms_migration_check_ref_tmp".freeze
   MIGRATIONS = Rails.root.join("db/migrate").to_s
-  VERSIONS = %w[20261027000000 20261027000100 20261027000200 20261027000300 20261030000000].freeze
+  VERSIONS = %w[20261027000000 20261027000100 20261027000200 20261027000300 20261030000000 20261101000000].freeze
   # テーマ追加の直前(スレッド・参加承認の4本まで)。本番はこの状態から 5本目だけを適用する。
   BEFORE_THEME = "20261027000300".freeze
+  # 通知の投稿ID追加の直前(本番適用済みの5本まで)。本番はこの状態から 6本目だけを適用する。
+  BEFORE_NOTIFICATION = "20261030000000".freeze
+  NOTIFICATION_INDEX = "index_notifications_on_project_chat_id_and_visited_id".freeze
 
   class InjectedFailure < StandardError; end
 
   module Hooks
     class << self
-      attr_accessor :fail_at, :seen, :before_chats_column, :after_chats_fk
+      attr_accessor :fail_at, :seen, :before_chats_column, :after_chats_fk, :notification_ddl
+    end
+
+    # 6本目は方式(ALGORITHM / LOCK)を明示するため、DDL を execute で直接実行する。
+    def execute(sql, name = nil)
+      if sql.to_s.match?(/\AALTER TABLE notifications /)
+        Hooks.seen ||= select_rows("SELECT @@SESSION.lock_wait_timeout, @@SESSION.innodb_lock_wait_timeout").first.map(&:to_i)
+        (Hooks.notification_ddl ||= []) << sql
+        raise InjectedFailure if Hooks.fail_at.is_a?(Array) && Hooks.fail_at.first == :execute && sql.match?(Hooks.fail_at.last)
+      end
+      super
     end
 
     def add_column(table, column, type, **options)
@@ -74,6 +89,7 @@ module BusinessMigrationMysqlCheck
     "3本目: project_chats の列追加後、索引作成で失敗" => [:add_index, :project_chats, [:project_thread_id]],
     "3本目: project_chats の列・索引追加後、外部キー作成で失敗" => [:add_foreign_key, :project_chats, :project_threads],
     "5本目: 4本の適用後、projects.theme の追加で失敗" => [:add_column, :projects, :theme],
+    "6本目: notifications.project_chat_id の追加後、一意索引で失敗" => [:execute, /ADD UNIQUE INDEX/],
   }.freeze
 
   module_function
@@ -101,6 +117,8 @@ module BusinessMigrationMysqlCheck
     # 1. 通常移行
     fresh_db!
     session_before = session_timeouts
+    row_versions_before = notification_row_versions
+    Hooks.notification_ddl = nil
     error, = try_migrate
     baseline = snapshot
     check.call("通常移行: #{VERSIONS.size}本とも成功", error.nil? && applied == VERSIONS, error && describe(error))
@@ -111,11 +129,27 @@ module BusinessMigrationMysqlCheck
                theme_column == ["varchar(100)", "YES", nil] && baseline[:legacy] == LEGACY_PROJECT_VALUES,
                "#{theme_column.inspect} #{baseline[:legacy].inspect}")
 
+    check.call("通常移行: 通知の投稿IDは bigint・NULL 許容で、既存の通知は全列そのまま・投稿ID未設定(NULL)",
+               notification_column == ["bigint", "YES", nil] && baseline[:notifications] == LEGACY_NOTIFICATIONS &&
+                 connection.select_values("SELECT project_chat_id FROM notifications").compact.empty?,
+               "#{notification_column.inspect} #{baseline[:notifications].inspect}")
+    ddl = Array(Hooks.notification_ddl)
+    check.call("通常移行: 6本目は列追加 ALGORITHM=INSTANT・一意索引 ALGORITHM=INPLACE, LOCK=NONE を指定し、サーバーが受け付けた",
+               ddl.size == 2 && ddl[0].include?("ADD COLUMN project_chat_id bigint NULL, ALGORITHM=INSTANT") &&
+                 ddl[1].include?("ADD UNIQUE INDEX #{NOTIFICATION_INDEX} (project_chat_id, visited_id), ALGORITHM=INPLACE, LOCK=NONE"),
+               ddl.map { |sql| sql[/ALGORITHM=.*/] }.inspect)
+    row_versions_after = notification_row_versions
+    check.call("通常移行: 列追加は表を作り直していない(INSTANT で行バージョンが1つ増える)",
+               row_versions_after == row_versions_before + 1, "TOTAL_ROW_VERSIONS #{row_versions_before} → #{row_versions_after}")
+
     # 2. スキーマ一致(同じサーバーで db/schema.rb を読み込んだ DB と比べる)
     check.call("スキーマ: マイグレーション結果が db/schema.rb と一致", baseline[:schema] == reference_schema, "差分は #{DB}.schema / #{REF_DB}.schema を SchemaDumper で比較")
 
     # 3. 制約
     constraint_checks.each { |name, ok| check.call("制約: #{name}", ok) }
+
+    # 同じ投稿の通知処理を同時に実行する(アプリのコードを、別々の接続から同時に動かす)
+    concurrent_notify_checks.each { |name, ok, detail| check.call("同時実行: #{name}", ok, detail) }
 
     # 4. 途中失敗 → 再実行
     FAILURE_POINTS.each do |label, point|
@@ -150,6 +184,27 @@ module BusinessMigrationMysqlCheck
     blocker.query("ROLLBACK")
     rerun, = try_migrate
     check.call("ロック待ち: 5本目 projects を読むトランザクションが残る → 約5秒で失敗(上限 5秒/10秒)、解消後の再実行で一致", lock_ok && rerun.nil? && snapshot == baseline, format("%.1f秒", elapsed))
+
+    # 6本目(通知の投稿ID)も、本番と同じく 5本の適用後に単独で実行する。
+    fresh_db!
+    migrate_to(BEFORE_NOTIFICATION)
+    Hooks.seen = nil
+    blocker = hold_lock("SELECT * FROM notifications LIMIT 1")
+    first, elapsed = try_migrate
+    lock_ok = lock_timeout?(first) && elapsed.between?(4, 10) && applied == VERSIONS.first(5) &&
+      !connection.column_exists?(:notifications, :project_chat_id) && Hooks.seen == [5, 10] && session_timeouts == session_before
+    blocker.query("ROLLBACK")
+    rerun, = try_migrate
+    check.call("ロック待ち: 6本目 notifications を読むトランザクションが残る → 約5秒で失敗(上限 5秒/10秒)、解消後の再実行で一致", lock_ok && rerun.nil? && snapshot == baseline, format("%.1f秒", elapsed))
+
+    # 列・索引の追加までは終わったが schema_migrations に記録される前に止まった場合(手動適用も同じ状態)。
+    fresh_db!
+    migrate_to(BEFORE_NOTIFICATION)
+    connection.execute("ALTER TABLE notifications ADD COLUMN project_chat_id bigint NULL, ALGORITHM=INSTANT")
+    connection.execute("ALTER TABLE notifications ADD UNIQUE INDEX #{NOTIFICATION_INDEX} (project_chat_id, visited_id), ALGORITHM=INPLACE, LOCK=NONE")
+    Hooks.notification_ddl = nil
+    rerun, = try_migrate
+    check.call("途中適用済み(列・索引あり、未記録)からの 6本目の再実行は DDL を実行せずに一致", rerun.nil? && Hooks.notification_ddl.nil? && snapshot == baseline, rerun && describe(rerun))
 
     fresh_db!
     blocker = hold_lock("SELECT * FROM communities LIMIT 1")
@@ -210,7 +265,7 @@ module BusinessMigrationMysqlCheck
       adapter: "mysql2", encoding: "utf8mb4", collation: "utf8mb4_general_ci",
       host: ENV["CHECK_MYSQL_HOST"], port: ENV.fetch("CHECK_MYSQL_PORT", 3306).to_i,
       username: ENV.fetch("CHECK_MYSQL_USER", "root"), password: ENV["CHECK_MYSQL_PASSWORD"],
-      database: database
+      database: database, pool: CONCURRENT_WORKERS + 2
     }.compact
   end
 
@@ -256,6 +311,9 @@ module BusinessMigrationMysqlCheck
     [[1, 1], [2, 1], [3, 2], [4, 2], [5, 2]].each do |id, project_id|
       c.execute("INSERT INTO project_chats (id, project_id, customer_id, body, created_at, updated_at) VALUES (#{id}, #{project_id}, 1, 'b', '2026-02-0#{id} 00:00:00', #{now})")
     end
+    LEGACY_NOTIFICATION_ROWS.each do |id, visited_id, action, project_id|
+      c.execute("INSERT INTO notifications (id, visitor_id, visited_id, action, project_id, created_at, updated_at) VALUES (#{id}, 1, #{visited_id}, '#{action}', #{project_id || 'NULL'}, #{now}, #{now})")
+    end
     c.execute("SET FOREIGN_KEY_CHECKS=1")
     abort "起点のスキーマに対象のマイグレーションが含まれています" if applied.any?
     Hooks.seen = nil
@@ -271,6 +329,71 @@ module BusinessMigrationMysqlCheck
 
   # 取りやめた目標・締切の既存データ(テーマへ転記しない)。[id, goal, deadline, theme]
   LEGACY_PROJECT_VALUES = [[1, "既存の目標", "2026-03-01 00:00:00", nil], [2, nil, nil, nil], [3, nil, nil, nil]].freeze
+
+  # 既存の通知(同じ宛先・同じプロジェクトの project_message が複数ある)。[id, visited_id, action, project_id]
+  LEGACY_NOTIFICATION_ROWS = [[1, 2, "project_message", 1], [2, 2, "project_message", 1], [3, 3, "follow", nil]].freeze
+  # 移行後の比較用(移行前の全列)。[id, visitor_id, visited_id, action, checked, project_id, created_at, updated_at]
+  LEGACY_NOTIFICATIONS = LEGACY_NOTIFICATION_ROWS.map do |id, visited_id, action, project_id|
+    [id, 1, visited_id, action, 0, project_id, "2026-01-01 00:00:00", "2026-01-01 00:00:00"]
+  end.freeze
+  CONCURRENT_WORKERS = 8
+
+  # INSTANT の列追加だけが増やす行バージョン数(表を作り直すと 0 に戻る)。
+  def notification_row_versions
+    connection.select_value(<<~SQL).to_i
+      SELECT TOTAL_ROW_VERSIONS FROM information_schema.INNODB_TABLES WHERE NAME = CONCAT(DATABASE(), '/notifications')
+    SQL
+  end
+
+  # 移行後の DB に参加者を入れ、同じ投稿の NotifyPost を別々の接続から同時に実行する。
+  # 会員 1 = プロジェクト1の作成者で投稿者(全体トークの既存チャット id=1)。4〜9 が参加者で、偶数だけメール受信を許可。
+  def concurrent_notify_checks
+    c = connection
+    recipients = (4..9).to_a
+    mail_on = recipients.select(&:even?)
+    recipients.each do |id|
+      c.execute("INSERT INTO customers (id, email, joined_on, confirm_mail, created_at, updated_at) VALUES (#{id}, 'u#{id}@example.com', '2026-01-01', #{mail_on.include?(id) ? 1 : 0}, NOW(), NOW())")
+      c.execute("INSERT INTO project_members (project_id, customer_id, created_at, updated_at) VALUES (1, #{id}, NOW(), NOW())")
+    end
+    ([1] + recipients).each { |id| c.execute("INSERT INTO community_customers (community_id, customer_id, created_at, updated_at) VALUES (1, #{id}, NOW(), NOW())") }
+
+    Rails.application.eager_load!
+    adapter = ActiveJob::Base.queue_adapter
+    adapter.enqueued_jobs.clear
+    gate = Queue.new
+    workers = Array.new(CONCURRENT_WORKERS) do
+      Thread.new do
+        gate.pop
+        ActiveRecord::Base.connection_pool.with_connection { Business::ProjectThreads::NotifyPost.call(ProjectChat.find(1)).map(&:id) }
+      end
+    end
+    CONCURRENT_WORKERS.times { gate << true }
+    per_worker = workers.map(&:value)
+    returned = per_worker.flatten
+
+    counts = c.select_rows("SELECT visited_id, COUNT(*) FROM notifications WHERE project_chat_id = 1 GROUP BY visited_id ORDER BY visited_id")
+    mail_ids = adapter.enqueued_jobs.select { |job| job[:args]&.first == "BusinessProjectChatMailer" }
+                      .map { |job| job[:args].last["params"]["notification_id"] }
+    mail_targets = c.select_values("SELECT visited_id FROM notifications WHERE id IN (#{(mail_ids + [0]).join(',')}) ORDER BY visited_id")
+    rerun = Business::ProjectThreads::NotifyPost.call(ProjectChat.find(1))
+    total_after_rerun = c.select_value("SELECT COUNT(*) FROM notifications WHERE project_chat_id = 1").to_i
+
+    [
+      ["#{CONCURRENT_WORKERS}本同時でも宛先ごとに通知は1件(投稿者・非参加者には無し)", counts == recipients.map { |id| [id, 1] }, counts.inspect],
+      ["新しく通知した宛先は全体で1回ずつ(どの実行が作ったかは問わない)", returned.sort == recipients, "実行ごとの作成数 #{per_worker.map(&:size).inspect}"],
+      ["メールの登録は受信許可の宛先に1件ずつ", mail_ids.uniq.size == mail_ids.size && mail_targets == mail_on, "#{mail_ids.size}件 #{mail_targets.inspect}"],
+      ["同時実行の後の再実行では何も増えない", rerun.empty? && total_after_rerun == recipients.size, "#{total_after_rerun}件"]
+    ]
+  ensure
+    adapter&.enqueued_jobs&.clear
+  end
+
+  def notification_column
+    connection.select_rows(<<~SQL).first
+      SELECT DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'notifications' AND COLUMN_NAME = 'project_chat_id'
+    SQL
+  end
 
   def theme_column
     connection.select_rows(<<~SQL).first
@@ -336,7 +459,12 @@ module BusinessMigrationMysqlCheck
       threads: c.select_rows("SELECT project_id, title, general, last_posted_at FROM project_threads ORDER BY project_id, id"),
       chats: c.select_rows("SELECT id, project_thread_id IS NOT NULL FROM project_chats ORDER BY id"),
       modes: c.select_rows("SELECT 'c', id, join_approval_mode FROM communities UNION ALL SELECT 'p', id, join_approval_mode FROM projects ORDER BY 1, 2"),
-      legacy: c.column_exists?(:projects, :theme) ? c.select_rows("SELECT id, goal, DATE_FORMAT(deadline, '%Y-%m-%d %H:%i:%s'), theme FROM projects ORDER BY id") : nil
+      legacy: c.column_exists?(:projects, :theme) ? c.select_rows("SELECT id, goal, DATE_FORMAT(deadline, '%Y-%m-%d %H:%i:%s'), theme FROM projects ORDER BY id") : nil,
+      notifications: c.select_rows(<<~SQL)
+        SELECT id, visitor_id, visited_id, action, checked, project_id,
+               DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s'), DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i:%s')
+        FROM notifications WHERE id <= 3 ORDER BY id
+      SQL
     }
   end
 
@@ -364,6 +492,7 @@ module BusinessMigrationMysqlCheck
     end
     thread = ->(general) { "INSERT INTO project_threads (project_id, title, general, last_posted_at, created_at, updated_at) VALUES (1, 't', #{general}, #{now}, #{now}, #{now})" }
     request = "INSERT INTO project_join_requests (project_id, customer_id, created_at, updated_at) VALUES (1, 2, #{now}, #{now})"
+    notification = ->(chat_id, visited_id) { "INSERT INTO notifications (visitor_id, visited_id, action, project_chat_id, created_at, updated_at) VALUES (1, #{visited_id}, 'project_message', #{chat_id}, #{now}, #{now})" }
     suspension = ->(table, target) { "INSERT INTO #{table} (#{target}_id, customer_id, created_at, updated_at) VALUES (1, 2, #{now}, #{now})" }
 
     {
@@ -375,6 +504,8 @@ module BusinessMigrationMysqlCheck
       "存在しないプロジェクトへの参加申請は外部キーで拒否" => rejected.call(ActiveRecord::InvalidForeignKey, ["INSERT INTO project_join_requests (project_id, customer_id, created_at, updated_at) VALUES (999, 2, #{now}, #{now})"]),
       "存在しないスレッドへのチャットは外部キーで拒否" => rejected.call(ActiveRecord::InvalidForeignKey, ["INSERT INTO project_chats (project_id, customer_id, body, project_thread_id, created_at, updated_at) VALUES (1, 1, 'x', 999, #{now}, #{now})"]),
       "全体トークがあるプロジェクトは削除できない(外部キー)" => rejected.call(ActiveRecord::InvalidForeignKey, ["DELETE FROM projects WHERE id = 3"]),
+      "スレッド投稿の通知は同じ投稿・同じ宛先で重複できない" => rejected.call(ActiveRecord::RecordNotUnique, [notification.call(1, 2)] * 2),
+      "同じ投稿の別の宛先・投稿IDの無い通知は重ねて保存できる" => accepted.call([notification.call(1, 2), notification.call(1, 3), notification.call("NULL", 2), notification.call("NULL", 2)]),
       "テーマは100文字まで保存でき、101文字は拒否" =>
         accepted.call(["UPDATE projects SET theme = REPEAT('あ', 100) WHERE id = 1"]) { connection.select_value("SELECT CHAR_LENGTH(theme) FROM projects WHERE id = 1").to_i == 100 } &&
         rejected.call(ActiveRecord::ValueTooLong, ["UPDATE projects SET theme = REPEAT('あ', 101) WHERE id = 1"]),

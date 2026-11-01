@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_10_30_000000) do
+ActiveRecord::Schema.define(version: 2026_11_01_000000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -902,10 +902,12 @@ ActiveRecord::Schema.define(version: 2026_10_30_000000) do
     t.integer "post_id"
     t.integer "project_id"
     t.bigint "chat_message_id"
+    t.bigint "project_chat_id"
     t.index ["chat_message_id"], name: "index_notifications_on_chat_message_id"
     t.index ["comment_id"], name: "index_notifications_on_comment_id"
     t.index ["event_id"], name: "index_notifications_on_event_id"
     t.index ["post_id"], name: "index_notifications_on_post_id"
+    t.index ["project_chat_id", "visited_id"], name: "index_notifications_on_project_chat_id_and_visited_id", unique: true
     t.index ["project_id"], name: "index_notifications_on_project_id"
     t.index ["visited_id"], name: "index_notifications_on_visited_id"
     t.index ["visitor_id"], name: "index_notifications_on_visitor_id"

@@ -13,6 +13,13 @@ class Notification < ApplicationRecord
   belongs_to :post, optional: true
   belongs_to :project, optional: true
   belongs_to :chat_message, optional: true
+  # Business スレッドへの投稿の通知(project_message)。旧データは NULL(プロジェクト単位の通知)。
+  belongs_to :project_chat, optional: true
+
+  # Business::ProjectThreads::NotifyPost が立てる。この通知の保存がコミットされた後にだけメールを登録する
+  # (巻き戻った通知・一意制約で弾かれた重複ではメールを登録しない)。
+  attr_accessor :deliver_project_chat_mail
+  after_create_commit :enqueue_project_chat_mail, if: :deliver_project_chat_mail
 
   belongs_to :visitor, class_name: 'Customer', foreign_key: 'visitor_id', optional: true
   belongs_to :visited, class_name: 'Customer', foreign_key: 'visited_id', optional: true
@@ -31,5 +38,15 @@ class Notification < ApplicationRecord
       .or(where(action: "follow"))
       .or(where(action: BUSINESS_COMMUNITY_ACTIONS, community_id: business_community_ids))
       .or(where(action: BUSINESS_PROJECT_ACTIONS).where.not(project_id: nil))
+  end
+
+  private
+
+  # メールの登録に失敗しても、投稿と画面内の通知は保存済みのまま残す(投稿した人の画面をエラーにしない)。
+  # 再実行しても通知は作り直さないため、このメールは送られない。調査できるよう通知 ID を記録する。
+  def enqueue_project_chat_mail
+    BusinessProjectChatMailer.with(notification_id: id).thread_post_mail.deliver_later
+  rescue StandardError => e
+    Rails.logger.error("[BusinessProjectChatMailer] enqueue failed notification_id=#{id} #{e.class}: #{e.message}")
   end
 end
