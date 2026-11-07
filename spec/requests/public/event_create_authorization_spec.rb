@@ -97,11 +97,35 @@ RSpec.describe "イベント新規作成の主催コミュニティの認可", t
       expect(Nokogiri::HTML(response.body).css("[name='event[community_id]']").first["value"].to_i).to eq managed.id
     end
 
-    it "保存前プレビューも本文の主催で認可する" do
-      post "/public/events/deadline_reminder_preview?community_id=#{managed.id}",
-        params: { event: { community_id: unmanaged.id }, reminder: { kind: "entry" } }, as: :json
+    context "保存前プレビュー" do
+      let(:json_headers) { { "ACCEPT" => "application/json" } }
 
-      expect(response.status).to eq 403
+      def preview(query_community, body_community)
+        post deadline_reminder_preview_public_events_path(community_id: query_community.id),
+          params: { event: { community_id: body_community.id }, reminder: { kind: "entry" } }, headers: json_headers
+      end
+
+      it "クエリに権限のあるコミュニティを指定しても、本文の権限の無いコミュニティでは権限エラーにする" do
+        expect(EventDeadlineReminders::FormPreview).not_to receive(:new)
+
+        preview(managed, unmanaged)
+
+        expect(response.status).to eq 403
+        expect(JSON.parse(response.body)["error"]).to eq "イベントを作成する権限がありません。"
+      end
+
+      it "認可した本文の主催をプレビューに使い、クエリのコミュニティは使わない" do
+        used_community = nil
+        allow(EventDeadlineReminders::FormPreview).to receive(:new).and_wrap_original do |original, **arguments|
+          used_community = arguments[:event].community
+          original.call(**arguments)
+        end
+
+        preview(unmanaged, managed)
+
+        expect(response.status).to eq 200
+        expect(used_community).to eq managed
+      end
     end
   end
 

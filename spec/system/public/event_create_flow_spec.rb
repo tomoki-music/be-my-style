@@ -58,4 +58,35 @@ RSpec.describe "イベント新規作成の正規フロー", type: :system do
 
     expect(Event.find_by!(event_name: "画面から作成").community).to eq managed
   end
+
+  it "コピー画面の実際のフォームから保存すると、コピー元の主催で作成され、プレビューも同じ主催で動く" do
+    source = create(:event, :event_with_songs,
+      customer: manager, community: managed, event_name: "コピー元",
+      event_start_time: 30.days.from_now, event_end_time: 30.days.from_now + 2.hours, event_entry_deadline: 20.days.from_now)
+
+    visit copy_public_event_path(source)
+    page.execute_script(<<~JS)
+      window.__previewStatuses = [];
+      const originalFetch = window.fetch;
+      window.fetch = function (url) {
+        const result = originalFetch.apply(this, arguments);
+        if (String(url).includes("deadline_reminder_preview")) {
+          result.then(function (response) { window.__previewStatuses.push(response.status); });
+        }
+        return result;
+      };
+    JS
+    reminder_checkbox = first("input[type=checkbox][name*='deadline_reminders_attributes'][name*='enabled']", visible: :all)
+    page.execute_script("arguments[0].click()", reminder_checkbox)
+    expect(page).to have_css(".deadline-reminder-settings", wait: 10)
+    Timeout.timeout(10) { sleep 0.1 until page.evaluate_script("window.__previewStatuses.length").positive? }
+    expect(page.evaluate_script("window.__previewStatuses")).to all(eq(200))
+
+    accept_confirm { click_button "イベントを登録" }
+    expect(page).to have_content("イベントを投稿しました", wait: 15)
+
+    created = Event.find_by!(event_name: "コピー元（コピー）")
+    expect(created.community).to eq managed
+    expect(created.customer).to eq manager
+  end
 end
