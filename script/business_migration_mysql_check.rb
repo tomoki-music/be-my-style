@@ -1,5 +1,5 @@
 # Business スレッド・参加承認のマイグレーション(20261027000000〜000300)と、プロジェクトのテーマ追加(20261030000000)、
-# スレッド投稿通知の投稿ID(20261101000000)を、
+# スレッド投稿通知の投稿ID(20261101000000)、イベントの開催コミュニティ(20261107000000)を、
 # 使い捨ての MySQL で検証する。
 # 本番・開発の DB には使わない。指定したサーバーに専用の DB を2つ作り、終了時に削除する。
 #
@@ -8,7 +8,8 @@
 #
 # 確認内容: 通常移行(本番と同じ main 時点のスキーマ + 旧データから) / db/schema.rb とのスキーマ一致 /
 # 一意制約・外部キー・NULL 許容 / 途中失敗(8か所)後の再実行 / ロック待ちの時間切れと再実行 / サーバー全体の設定が不変 /
-# 通知の DDL の方式(ALGORITHM / LOCK)と既存通知の不変 / 同じ投稿の通知処理の同時実行。
+# 通知の DDL の方式(ALGORITHM / LOCK)と既存通知の不変 / 同じ投稿の通知処理の同時実行 /
+# 移行前のイベントの主催コミュニティの引き継ぎ。
 # MySQL 8.4 以外では止まる(ALLOW_NON_84=1 で手順そのものの確認用に実行できる)。
 require "open3"
 require "stringio"
@@ -19,12 +20,16 @@ module BusinessMigrationMysqlCheck
   DB = "bms_migration_check_tmp".freeze
   REF_DB = "bms_migration_check_ref_tmp".freeze
   MIGRATIONS = Rails.root.join("db/migrate").to_s
-  VERSIONS = %w[20261027000000 20261027000100 20261027000200 20261027000300 20261030000000 20261101000000].freeze
+  VERSIONS = %w[20261027000000 20261027000100 20261027000200 20261027000300 20261030000000 20261101000000 20261107000000].freeze
   # テーマ追加の直前(スレッド・参加承認の4本まで)。本番はこの状態から 5本目だけを適用する。
   BEFORE_THEME = "20261027000300".freeze
   # 通知の投稿ID追加の直前(本番適用済みの5本まで)。本番はこの状態から 6本目だけを適用する。
   BEFORE_NOTIFICATION = "20261030000000".freeze
   NOTIFICATION_INDEX = "index_notifications_on_project_chat_id_and_visited_id".freeze
+  # 開催コミュニティの直前(本番適用済みの6本まで)。本番はこの状態から 7本目だけを適用する。
+  BEFORE_EVENT_COMMUNITIES = "20261101000000".freeze
+  # 移行前のイベント。[id, 主催コミュニティの id]
+  LEGACY_EVENTS = [[1, 1], [2, 1], [3, 2]].freeze
 
   class InjectedFailure < StandardError; end
 
@@ -90,6 +95,9 @@ module BusinessMigrationMysqlCheck
     "3本目: project_chats の列・索引追加後、外部キー作成で失敗" => [:add_foreign_key, :project_chats, :project_threads],
     "5本目: 4本の適用後、projects.theme の追加で失敗" => [:add_column, :projects, :theme],
     "6本目: notifications.project_chat_id の追加後、一意索引で失敗" => [:execute, /ADD UNIQUE INDEX/],
+    "7本目: event_communities の作成後、一意索引で失敗" => [:add_index, :event_communities, %i[event_id community_id]],
+    "7本目: 索引の作成後、外部キー(events)で失敗" => [:add_foreign_key, :event_communities, :events],
+    "7本目: 外部キー(events)の作成後、外部キー(communities)で失敗" => [:add_foreign_key, :event_communities, :communities],
   }.freeze
 
   module_function
@@ -124,7 +132,7 @@ module BusinessMigrationMysqlCheck
     check.call("通常移行: #{VERSIONS.size}本とも成功", error.nil? && applied == VERSIONS, error && describe(error))
     check.call("通常移行: 実行中だけロック待ち上限 5秒/10秒、終了後は元の値", Hooks.seen == [5, 10] && session_timeouts == session_before, "#{Hooks.seen.inspect} 後=#{session_timeouts.inspect}")
     check.call("通常移行: 全体トークが各プロジェクトに1つ・既存チャットは全件紐づけ", baseline[:threads].map(&:first) == [1, 2, 3] && baseline[:chats].all? { |_, linked| linked == 1 })
-    check.call("通常移行: 参加方式 既存コミュニティ=手動(0)・既存プロジェクト=自動(1)", baseline[:modes] == [["c", 1, 0], ["p", 1, 1], ["p", 2, 1], ["p", 3, 1]], baseline[:modes].inspect)
+    check.call("通常移行: 参加方式 既存コミュニティ=手動(0)・既存プロジェクト=自動(1)", baseline[:modes] == [["c", 1, 0], ["c", 2, 0], ["p", 1, 1], ["p", 2, 1], ["p", 3, 1]], baseline[:modes].inspect)
     check.call("通常移行: テーマは varchar(100)・NULL 許容で、既存プロジェクトは未設定(NULL)・目標と締切の値はそのまま",
                theme_column == ["varchar(100)", "YES", nil] && baseline[:legacy] == LEGACY_PROJECT_VALUES,
                "#{theme_column.inspect} #{baseline[:legacy].inspect}")
@@ -133,6 +141,15 @@ module BusinessMigrationMysqlCheck
                notification_column == ["bigint", "YES", nil] && baseline[:notifications] == LEGACY_NOTIFICATIONS &&
                  connection.select_values("SELECT project_chat_id FROM notifications").compact.empty?,
                "#{notification_column.inspect} #{baseline[:notifications].inspect}")
+    check.call("通常移行: 移行前のイベントの主催コミュニティを開催コミュニティへ1件ずつ引き継ぐ",
+               baseline[:event_communities] == LEGACY_EVENTS, baseline[:event_communities].inspect)
+    check.call("通常移行: events の主催コミュニティ・更新日時は変わらない",
+               baseline[:events] == LEGACY_EVENTS.map { |id, community_id| [id, community_id, "2026-01-01 00:00:00"] }, baseline[:events].inspect)
+    event_rows = LEGACY_EVENTS.map { |id, community_id| event = Event.find(id); [event.id, event.community_id, event.all_hosting_community_ids] }
+    check.call("通常移行: アプリのコードからも移行前のイベントの主催を開催コミュニティとして読める",
+               event_rows == LEGACY_EVENTS.map { |id, community_id| [id, community_id, [community_id]] } &&
+                 Event.hosted_by(1).order(:id).pluck(:id) == [1, 2] && Event.hosted_by(2).pluck(:id) == [3],
+               event_rows.inspect)
     ddl = Array(Hooks.notification_ddl)
     check.call("通常移行: 6本目は列追加 ALGORITHM=INSTANT・一意索引 ALGORITHM=INPLACE, LOCK=NONE を指定し、サーバーが受け付けた",
                ddl.size == 2 && ddl[0].include?("ADD COLUMN project_chat_id bigint NULL, ALGORITHM=INSTANT") &&
@@ -196,6 +213,17 @@ module BusinessMigrationMysqlCheck
     blocker.query("ROLLBACK")
     rerun, = try_migrate
     check.call("ロック待ち: 6本目 notifications を読むトランザクションが残る → 約5秒で失敗(上限 5秒/10秒)、解消後の再実行で一致", lock_ok && rerun.nil? && snapshot == baseline, format("%.1f秒", elapsed))
+
+    # 7本目(開催コミュニティ)も、本番と同じく 6本の適用後に単独で実行する。外部キーの作成は参照先の
+    # events への書き込み中のトランザクションを待つ。
+    fresh_db!
+    migrate_to(BEFORE_EVENT_COMMUNITIES)
+    blocker = hold_lock("UPDATE events SET place = place WHERE id = 1")
+    first, elapsed = try_migrate
+    lock_ok = lock_timeout?(first) && applied == VERSIONS.first(6) && session_timeouts == session_before
+    blocker.query("ROLLBACK")
+    rerun, = try_migrate
+    check.call("ロック待ち: 7本目 events を更新中のトランザクションが残る → 時間切れで失敗、解消後の再実行で一致", lock_ok && rerun.nil? && snapshot == baseline, format("%.1f秒", elapsed))
 
     # 列・索引の追加までは終わったが schema_migrations に記録される前に止まった場合(手動適用も同じ状態)。
     fresh_db!
@@ -304,7 +332,7 @@ module BusinessMigrationMysqlCheck
     c.execute("SET FOREIGN_KEY_CHECKS=0")
     now = "'2026-01-01 00:00:00'"
     c.execute("INSERT INTO domains (id, name, created_at, updated_at) VALUES (1, 'business', #{now}, #{now})")
-    c.execute("INSERT INTO communities (id, domain_id, name, created_at, updated_at) VALUES (1, 1, 'c', #{now}, #{now})")
+    c.execute("INSERT INTO communities (id, domain_id, name, created_at, updated_at) VALUES (1, 1, 'c', #{now}, #{now}), (2, 1, 'c2', #{now}, #{now})")
     [1, 2, 3].each { |id| c.execute("INSERT INTO customers (id, email, joined_on, created_at, updated_at) VALUES (#{id}, 'u#{id}@example.com', '2026-01-01', #{now}, #{now})") }
     [1, 2, 3].each { |id| c.execute("INSERT INTO projects (id, community_id, customer_id, title, created_at, updated_at) VALUES (#{id}, 1, #{id}, 'p#{id}', #{now}, #{now})") }
     c.execute("UPDATE projects SET goal = '既存の目標', deadline = '2026-03-01 00:00:00' WHERE id = 1")
@@ -313,6 +341,9 @@ module BusinessMigrationMysqlCheck
     end
     LEGACY_NOTIFICATION_ROWS.each do |id, visited_id, action, project_id|
       c.execute("INSERT INTO notifications (id, visitor_id, visited_id, action, project_id, created_at, updated_at) VALUES (#{id}, 1, #{visited_id}, '#{action}', #{project_id || 'NULL'}, #{now}, #{now})")
+    end
+    LEGACY_EVENTS.each do |id, community_id|
+      c.execute("INSERT INTO events (id, customer_id, community_id, event_name, event_start_time, event_end_time, event_entry_deadline, entrance_fee, place, address, created_at, updated_at) VALUES (#{id}, 1, #{community_id}, 'e#{id}', #{now}, #{now}, #{now}, 0, 'p', 'a', #{now}, #{now})")
     end
     c.execute("SET FOREIGN_KEY_CHECKS=1")
     abort "起点のスキーマに対象のマイグレーションが含まれています" if applied.any?
@@ -459,6 +490,8 @@ module BusinessMigrationMysqlCheck
       threads: c.select_rows("SELECT project_id, title, general, last_posted_at FROM project_threads ORDER BY project_id, id"),
       chats: c.select_rows("SELECT id, project_thread_id IS NOT NULL FROM project_chats ORDER BY id"),
       modes: c.select_rows("SELECT 'c', id, join_approval_mode FROM communities UNION ALL SELECT 'p', id, join_approval_mode FROM projects ORDER BY 1, 2"),
+      events: c.select_rows("SELECT id, community_id, DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i:%s') FROM events ORDER BY id"),
+      event_communities: c.table_exists?(:event_communities) ? c.select_rows("SELECT event_id, community_id FROM event_communities ORDER BY event_id, community_id") : nil,
       legacy: c.column_exists?(:projects, :theme) ? c.select_rows("SELECT id, goal, DATE_FORMAT(deadline, '%Y-%m-%d %H:%i:%s'), theme FROM projects ORDER BY id") : nil,
       notifications: c.select_rows(<<~SQL)
         SELECT id, visitor_id, visited_id, action, checked, project_id,
@@ -493,6 +526,7 @@ module BusinessMigrationMysqlCheck
     thread = ->(general) { "INSERT INTO project_threads (project_id, title, general, last_posted_at, created_at, updated_at) VALUES (1, 't', #{general}, #{now}, #{now}, #{now})" }
     request = "INSERT INTO project_join_requests (project_id, customer_id, created_at, updated_at) VALUES (1, 2, #{now}, #{now})"
     notification = ->(chat_id, visited_id) { "INSERT INTO notifications (visitor_id, visited_id, action, project_chat_id, created_at, updated_at) VALUES (1, #{visited_id}, 'project_message', #{chat_id}, #{now}, #{now})" }
+    event_community = ->(event_id, community_id) { "INSERT INTO event_communities (event_id, community_id, created_at, updated_at) VALUES (#{event_id}, #{community_id}, #{now}, #{now})" }
     suspension = ->(table, target) { "INSERT INTO #{table} (#{target}_id, customer_id, created_at, updated_at) VALUES (1, 2, #{now}, #{now})" }
 
     {
@@ -506,6 +540,11 @@ module BusinessMigrationMysqlCheck
       "全体トークがあるプロジェクトは削除できない(外部キー)" => rejected.call(ActiveRecord::InvalidForeignKey, ["DELETE FROM projects WHERE id = 3"]),
       "スレッド投稿の通知は同じ投稿・同じ宛先で重複できない" => rejected.call(ActiveRecord::RecordNotUnique, [notification.call(1, 2)] * 2),
       "同じ投稿の別の宛先・投稿IDの無い通知は重ねて保存できる" => accepted.call([notification.call(1, 2), notification.call(1, 3), notification.call("NULL", 2), notification.call("NULL", 2)]),
+      "開催コミュニティは同じイベント・同じコミュニティで重複できない" => rejected.call(ActiveRecord::RecordNotUnique, [event_community.call(1, 1)]),
+      "開催コミュニティは存在しないイベント・コミュニティを外部キーで拒否" =>
+        rejected.call(ActiveRecord::InvalidForeignKey, [event_community.call(999, 1)]) &&
+        rejected.call(ActiveRecord::InvalidForeignKey, [event_community.call(1, 999)]),
+      "イベントを直接削除すると開催コミュニティの行も消える" => accepted.call(["DELETE FROM events WHERE id = 3"]) { connection.select_value("SELECT COUNT(*) FROM event_communities WHERE event_id = 3").to_i.zero? },
       "テーマは100文字まで保存でき、101文字は拒否" =>
         accepted.call(["UPDATE projects SET theme = REPEAT('あ', 100) WHERE id = 1"]) { connection.select_value("SELECT CHAR_LENGTH(theme) FROM projects WHERE id = 1").to_i == 100 } &&
         rejected.call(ActiveRecord::ValueTooLong, ["UPDATE projects SET theme = REPEAT('あ', 101) WHERE id = 1"]),

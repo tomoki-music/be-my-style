@@ -9,7 +9,7 @@
       %span.link-preview-card-status-badge{ class: "link-preview-card-status-badge--#{event.status_key}" }
         = event.status_label
       .link-preview-card-title= event.event_name
-      .link-preview-card-author= event.community.name
+      .link-preview-card-author= event.hosting_community_names
       .link-preview-card-meta
         %span.link-preview-card-meta-item
           = l event.event_start_time, format: :short

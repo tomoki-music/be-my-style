@@ -12,19 +12,24 @@ class Public::EventsController < ApplicationController
   before_action :set_requested_by_customer_candidates, only: [:new, :create, :edit, :update]
 
   def index
-    events = Event.left_joins(:community, songs: { join_parts: :join_part_customers }).distinct
+    events = Event.left_joins(:community, songs: { join_parts: :join_part_customers })
+                  .preload(:community, event_communities: :community)
+                  .distinct
 
     if params[:keyword].present?
       keyword = "%#{params[:keyword].strip}%"
       events = events.where(
         "events.event_name LIKE :keyword OR events.place LIKE :keyword OR "\
-        "events.address LIKE :keyword OR communities.name LIKE :keyword OR songs.song_name LIKE :keyword",
+        "events.address LIKE :keyword OR communities.name LIKE :keyword OR songs.song_name LIKE :keyword OR "\
+        "events.id IN (SELECT event_communities.event_id FROM event_communities "\
+        "INNER JOIN communities hosting_communities ON hosting_communities.id = event_communities.community_id "\
+        "WHERE hosting_communities.name LIKE :keyword)",
         keyword: keyword
       )
     end
 
     if params[:community_id].present?
-      events = events.where(community_id: params[:community_id])
+      events = events.hosted_by(params[:community_id])
     end
 
     events =
@@ -58,7 +63,7 @@ class Public::EventsController < ApplicationController
 
   def show
     @owner = Customer.find(@event.customer.id)
-    @community = Community.find(@event.community_id)
+    @hosting_communities = @event.all_hosting_communities
     @request = Request.new
 
     #参加人数(退会ユーザーは一般・公開画面上は現役参加者として数えない)
@@ -179,7 +184,6 @@ class Public::EventsController < ApplicationController
   end
 
   def edit
-    @community_id = params[:community_id]
     @latitude = @event.latitude
     @longitude = @event.longitude
     @address = @event.address
@@ -389,10 +393,13 @@ class Public::EventsController < ApplicationController
       :url,
       :url_comment,
     ]
-    attributes += [:customer_id, :community_id] if can_reassign_event_ownership?
+    attributes << :customer_id if can_reassign_event_ownership?
+    attributes << :community_id if @event.blank?
+    hosting_attributes = can_edit_hosting_communities? ? { selected_cohost_community_ids: [] } : {}
 
     params.require(:event).permit(
       *attributes,
+      **hosting_attributes,
       join_part_ids:[],
       part_ids:[],
       songs_attributes: [:id, :event_id, :song_name, :artist_name, :performance_time, :performance_start_time, :youtube_url,
@@ -404,12 +411,18 @@ class Public::EventsController < ApplicationController
     )
   end
 
-  # community_id/customer_idは「イベント編集者には変更させない」項目。
+  # customer_idは「イベント編集者には変更させない」項目。
   # createでは@event未設定の時点でこのメソッドが呼ばれ(その後createアクション内で
-  # customer_id/community_idを明示的に上書きするため無害)、update/copyでは@event.communityを
+  # customer_idを明示的に上書きするため無害)、updateでは@event.communityを
   # 基準に、削除権限と同じ範囲(管理者/投稿者本人/コミュニティ管理者)のみ許可する。
   def can_reassign_event_ownership?
     @event.blank? || current_customer.can_destroy_event?(@event)
+  end
+
+  # 共催先を変えられるのはサイト管理者だけ。主催(community_id)はこの画面の更新では受け付けず
+  # (新規作成時のみ)、変更は管理画面の主催セレクトに限る。
+  def can_edit_hosting_communities?
+    @event&.persisted? && current_customer.can_manage_event_hosting_communities?
   end
 
   def set_event
@@ -504,7 +517,9 @@ class Public::EventsController < ApplicationController
   # 「リクエストした人」欄はView側で選択不可にする。
   def set_requested_by_customer_candidates
     @requested_by_customer_candidates =
-      if @template_community
+      if @event&.persisted?
+        @event.hosting_community_members.order(:name)
+      elsif @template_community
         @template_community.active_customers.distinct.order(:name)
       else
         Customer.none

@@ -1,0 +1,23 @@
+-# サイト管理者専用の入力欄。受け付けるかどうかはコントローラーの permit でも判定している。
+.event-hosting-communities
+  .event-hosting-communities__primary
+    %span.badge.badge-primary 主催
+    = event.primary_community_in_database&.name
+    %small.text-muted= local_assigns[:primary_change_available] ? "（現在の主催）" : "（固定）"
+  .event-hosting-communities__label 共催先
+  .event-hosting-communities__options
+    - options = event.cohost_community_options
+    - if options.empty?
+      %small.text-muted 追加できるコミュニティはありません。
+    - else
+      = f.collection_check_boxes :selected_cohost_community_ids, options, :id, :name do |option|
+        .form-check
+          = option.check_box class: "form-check-input"
+          = option.label class: "form-check-label"
+  %small.form-text.text-muted
+    主催と共催先のいずれかに所属するメンバーが参加できます。
+    編集権限と自動リマインドの送信先は主催が基準で、共催先を追加しても増えません。
+    - if local_assigns[:primary_change_available]
+      主催を変更するには、上の「主催コミュニティ」を変更してください。
+    - else
+      主催の変更は管理画面の「主催コミュニティ」で行います。

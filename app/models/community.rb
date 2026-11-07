@@ -1,4 +1,6 @@
 class Community < ApplicationRecord
+  BLOCKED_EVENTS_PER_PAGE = 20
+
   EVENT_CREATION_REQUIRED_PLANS = %w[core premium].freeze
   # 「有料プラン制限を解除する（無料お試し）」ON で解除する機能。
   # コミュニティ内で完結する機能だけに限定し、コミュニティ作成やコミュニティ外の
@@ -25,6 +27,9 @@ class Community < ApplicationRecord
   has_many :chat_rooms, through: :chat_room_customers, dependent: :destroy
   has_many :chat_room_members, through: :chat_room_customers, source: :customer
   has_many :chat_messages, dependent: :destroy
+  # dependent: :destroy より先に止めるため prepend する(主催イベントは events の dependent で一緒に消える)。
+  before_destroy :prevent_destroy_with_primary_cohosted_events, prepend: true
+  has_many :event_communities, dependent: :destroy
   has_many :events, dependent: :destroy
   has_many :song_templates, dependent: :destroy
   belongs_to :owner, class_name: "Customer", optional: true
@@ -56,6 +61,16 @@ class Community < ApplicationRecord
     tightly: 2,
   }, _prefix: true
 
+  # このコミュニティが開催コミュニティに含まれるイベント(events は主催イベントだけを指す)。
+  def hosted_events
+    Event.hosted_by(id)
+  end
+
+  # このコミュニティが主催で、ほかに共催先があるイベント。
+  def primary_cohosted_events
+    events.where(id: EventCommunity.where.not(community_id: id).select(:event_id))
+  end
+
   def premium_event_creation_required?
     required_plan_for_event_creation == "premium"
   end
@@ -76,6 +91,15 @@ class Community < ApplicationRecord
   # CommunityCustomerレコード自体は削除しないため、ここでの絞り込みは表示専用。
   def active_customers
     customers.active
+  end
+
+  private
+
+  def prevent_destroy_with_primary_cohosted_events
+    return unless primary_cohosted_events.exists?
+
+    errors.add(:base, "このコミュニティが主催する共催イベントがあるため削除できません。先に対象イベントの主催コミュニティを変更してください。")
+    throw :abort
   end
 
 end

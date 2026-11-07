@@ -3,8 +3,8 @@ class Public::CommunitiesController < ApplicationController
   # 4件目の有無で「すべて見る」リンクの要否を追加クエリなしに判定する。
   UPCOMING_EVENTS_DISPLAY_LIMIT = 3
 
-  before_action :set_community, only: [:show, :edit, :update, :destroy, :leave, :new_mail, :send_mail, :permits]
-  before_action :ensure_correct_customer, only: [:edit, :update, :destroy, :permits]
+  before_action :set_community, only: [:show, :edit, :update, :destroy, :destroy_blocked, :leave, :new_mail, :send_mail, :permits]
+  before_action :ensure_correct_customer, only: [:edit, :update, :destroy, :destroy_blocked, :permits]
   before_action :check_mail, only: [:send_mail]
   before_action :load_pending_permit_count, only: [:edit, :update]
   before_action only: [:new, :create] do
@@ -61,7 +61,7 @@ class Public::CommunitiesController < ApplicationController
     @can_manage = @community.owner_id == current_customer.id
     load_pending_permit_count if @can_manage
 
-    upcoming_events = @community.events
+    upcoming_events = @community.hosted_events
       .upcoming_or_ongoing
       .order(:event_start_time, :id)
       .with_attached_event_image
@@ -126,8 +126,19 @@ class Public::CommunitiesController < ApplicationController
   end
 
   def destroy
-    @community.destroy
-    redirect_to public_communities_path, alert: "コミュニティを削除しました!"
+    if @community.destroy
+      redirect_to public_communities_path, alert: "コミュニティを削除しました!"
+    else
+      redirect_to destroy_blocked_public_community_path(@community)
+    end
+  end
+
+  # 削除を止めた理由と対象イベント。トーストでは読み切れないため、消えないページで案内する。
+  def destroy_blocked
+    @blocked_events = @community.primary_cohosted_events.order(:id).page(params[:page]).per(Community::BLOCKED_EVENTS_PER_PAGE)
+    return if @blocked_events.total_count.positive?
+
+    redirect_to public_community_path(@community), notice: "削除を止めている共催イベントはありません。"
   end
 
   def leave

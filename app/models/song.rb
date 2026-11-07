@@ -122,7 +122,7 @@ class Song < ApplicationRecord
   def requested_by_customer_must_be_eligible_member
     return if event.blank? || event.community.blank?
 
-    eligible = event.community.active_customers.exists?(id: requested_by_customer_id)
+    eligible = event.resulting_hosting_community_members.exists?(id: requested_by_customer_id)
     errors.add(:requested_by_customer, "は対象コミュニティの有効なメンバーではありません") unless eligible
   end
 
