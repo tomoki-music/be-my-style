@@ -152,7 +152,8 @@ class Public::EventsController < ApplicationController
   def create
     @event = Event.new(event_params)
     @event.customer_id = current_customer.id
-    @event.community_id = params[:event][:community_id].to_i
+    # authorize_event_creation! で権限を確認したコミュニティだけを主催にする。
+    @event.community = @creation_community
     if @event.save
       if current_customer.communities.present?
         community_ids = current_customer.communities.pluck(:id)
@@ -177,7 +178,7 @@ class Public::EventsController < ApplicationController
       end
       redirect_to public_event_path(@event), notice: "イベントを投稿しました！"
     else
-      @community_id = params[:event][:community_id].to_i
+      @community_id = @creation_community&.id
       render :new, alert: "登録できませんでした。お手数ですが、入力内容をご確認のうえ再度お試しください"
     end
   end
@@ -203,7 +204,7 @@ class Public::EventsController < ApplicationController
 
   # 締め切り自動リマインドの保存前プレビュー(作成中のイベント)。保存・送信はしない。
   def new_deadline_reminder_preview
-    render_deadline_reminder_preview(Event.new(community_id: params.dig(:event, :community_id)))
+    render_deadline_reminder_preview(Event.new(community: @creation_community))
   end
 
   def copy
@@ -503,8 +504,7 @@ class Public::EventsController < ApplicationController
       if @event&.persisted?
         @event.community
       else
-        community_id = params[:community_id] || params.dig(:event, :community_id)
-        Community.find_by(id: community_id, domain_id: @current_domain.id) if community_id.present?
+        @creation_community
       end
 
     @song_templates = @template_community ? @template_community.song_templates.order(:song_name) : SongTemplate.none
@@ -527,21 +527,30 @@ class Public::EventsController < ApplicationController
   end
 
   def authorize_event_creation!
-    community_param_present = params[:community_id].present? || params.dig(:event, :community_id).present?
-    community =
-      if params[:community_id].present?
-        Community.find_by(id: params[:community_id], domain_id: @current_domain.id)
-      elsif params.dig(:event, :community_id).present?
-        Community.find_by(id: params[:event][:community_id], domain_id: @current_domain.id)
-      end
+    community_param = event_creation_community_param
+    community = find_event_creation_community(community_param)
+    @creation_community = community
 
-    if community_param_present && community.blank?
+    if community_param.present? && community.blank?
       deny_event_access(public_events_path, "イベントを作成するコミュニティを確認してください。")
     elsif community&.premium_event_creation_required? && !current_customer.premium? && !current_customer.admin? && !current_customer.can_manage_community?(community)
       deny_event_access(public_community_path(community), premium_event_creation_required_message)
     elsif !current_customer.can_create_event?(community)
       deny_event_access(public_events_path, "イベントを作成する権限がありません。")
     end
+  end
+
+  # 保存・プレビューの対象は常にフォームの event[community_id] で、クエリの community_id は見ない
+  # (認可と保存で別の値を見ると、権限の無いコミュニティを主催にできてしまうため)。
+  # クエリを使うのは、コミュニティを選んで新規作成画面を開く new だけ。
+  def event_creation_community_param
+    action_name == "new" ? params[:community_id] : params.dig(:event, :community_id)
+  end
+
+  def find_event_creation_community(community_param)
+    return unless community_param.is_a?(String) && community_param.match?(/\A[1-9]\d*\z/)
+
+    Community.find_by(id: community_param, domain_id: @current_domain.id)
   end
 
   def premium_event_creation_required_message
