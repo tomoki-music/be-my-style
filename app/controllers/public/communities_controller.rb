@@ -126,8 +126,11 @@ class Public::CommunitiesController < ApplicationController
   end
 
   def destroy
-    @community.destroy
-    redirect_to public_communities_path, alert: "コミュニティを削除しました!"
+    if @community.destroy
+      redirect_to public_communities_path, alert: "コミュニティを削除しました!"
+    else
+      redirect_to public_community_path(@community), alert: @community.errors.full_messages.join
+    end
   end
 
   def leave

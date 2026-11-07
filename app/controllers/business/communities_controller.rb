@@ -86,8 +86,11 @@ class Business::CommunitiesController < ApplicationController
   end
 
   def destroy
-    @community.destroy
-    redirect_to business_communities_path
+    if @community.destroy
+      redirect_to business_communities_path
+    else
+      redirect_to business_community_path(@community), alert: @community.errors.full_messages.join
+    end
   end
 
   # メンバー管理: 参加申請の承認・却下、参加者のアクセス停止・解除。

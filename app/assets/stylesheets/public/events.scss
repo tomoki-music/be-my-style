@@ -1802,6 +1802,15 @@ input[type="text"] {
 }
 
 // 開催コミュニティの選択欄(公開画面・管理画面のイベント編集で共用)
+.event-hosting-communities__primary,
+.event-hosting-communities__label {
+  margin-bottom: 8px;
+}
+
+.event-hosting-communities__label {
+  font-weight: bold;
+}
+
 .event-hosting-communities__options {
   max-height: 240px;
   padding: 8px 12px;

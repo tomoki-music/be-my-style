@@ -32,7 +32,7 @@ RSpec.describe CreateEventCommunities do
 
   it "主催以外の追加済みの行があっても再実行で消さない" do
     other = FactoryBot.create(:community)
-    first_event.update!(selected_hosting_community_ids: [community.id, other.id])
+    first_event.update!(selected_cohost_community_ids: [other.id])
 
     expect { migrate(:up) }.not_to change(EventCommunity, :count)
     expect(first_event.reload.all_hosting_community_ids).to eq [community.id, other.id]

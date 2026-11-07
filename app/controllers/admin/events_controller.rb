@@ -53,7 +53,7 @@ class Admin::EventsController < ApplicationController
 
   def update
     if @event.update(event_params)
-      redirect_to admin_event_path(@event), notice: "イベントを更新しました。"
+      redirect_to admin_event_path(@event), notice: ["イベントを更新しました。", primary_change_notice].compact.join
     else
       ensure_song_presence
       render :edit
@@ -94,9 +94,10 @@ class Admin::EventsController < ApplicationController
       :event_image,
       :url,
       :url_comment,
+      :keep_previous_primary_as_cohost,
       song_ids:[],
       part_ids:[],
-      selected_hosting_community_ids: [],
+      selected_cohost_community_ids: [],
       songs_attributes: [
         :id, :event_id, :song_name, :artist_name, :performance_time, :performance_start_time,
         :youtube_url, :chord_sheet_url, :tab_sheet_url, :musical_key, :capo, :chord_sheet_note,
@@ -106,6 +107,14 @@ class Admin::EventsController < ApplicationController
       ],
       deadline_reminders_attributes: [:id, :kind, :enabled, :channel, :lead_hours, :custom_message],
     )
+  end
+
+  def primary_change_notice
+    return unless @event.saved_change_to_community_id?
+
+    previous = Community.find_by(id: @event.community_id_before_last_save)
+    kept = previous && @event.all_hosting_community_ids.include?(previous.id)
+    "主催を「#{previous&.name}」から「#{@event.community.name}」に変更し、「#{previous&.name}」は#{kept ? '共催先に残しました' : '共催先から外しました'}。"
   end
 
   def set_event

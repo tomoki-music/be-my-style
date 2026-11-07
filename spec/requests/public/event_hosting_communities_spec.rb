@@ -21,7 +21,7 @@ RSpec.describe "イベントの開催コミュニティ(公開画面)", type: :r
   end
 
   def host_both
-    event.update!(selected_hosting_community_ids: [western.id, japanese.id])
+    event.update!(selected_cohost_community_ids: [japanese.id])
   end
 
   def join(part)
@@ -29,7 +29,7 @@ RSpec.describe "イベントの開催コミュニティ(公開画面)", type: :r
   end
 
   describe "編集画面" do
-    it "サイト管理者には開催コミュニティの選択欄を既存の設定で初期選択して表示する" do
+    it "サイト管理者には主催を固定表示し、共催先だけを既存の設定で初期選択して表示する" do
       host_both
       jazz
       sign_in FactoryBot.create(:customer, is_owner: :admin)
@@ -37,21 +37,23 @@ RSpec.describe "イベントの開催コミュニティ(公開画面)", type: :r
       get edit_public_event_path(event)
 
       page = Nokogiri::HTML(response.body)
-      checked = page.css("input[type=checkbox][name='event[selected_hosting_community_ids][]']").select { |box| box["checked"] }
-      expect(checked.map { |box| box["value"].to_i }).to contain_exactly(western.id, japanese.id)
-      expect(page.css("input[type=checkbox][value='#{jazz.id}']").size).to eq 1
+      boxes = page.css("input[type=checkbox][name='event[selected_cohost_community_ids][]']")
+      expect(boxes.map { |box| box["value"].to_i }).to contain_exactly(japanese.id, jazz.id)
+      expect(boxes.select { |box| box["checked"] }.map { |box| box["value"].to_i }).to eq [japanese.id]
+      expect(page.css(".event-hosting-communities__primary").text).to include("主催", "洋楽セッション", "固定")
+      expect(page.css("[name='event[community_id]']")).to be_empty
     end
 
-    it "イベント作成者には選択欄を出さず、開催コミュニティ名だけを表示する" do
+    it "イベント作成者には選択欄を出さず、主催と共催を区別して名前だけを表示する" do
       host_both
       sign_in organizer
 
       get edit_public_event_path(event)
 
       page = Nokogiri::HTML(response.body)
-      expect(page.css("[name='event[selected_hosting_community_ids][]']")).to be_empty
+      expect(page.css("[name='event[selected_cohost_community_ids][]']")).to be_empty
       expect(page.css("[name='event[community_id]']")).to be_empty
-      expect(response.body).to include("洋楽セッション / 邦楽セッション")
+      expect(response.body).to include("主催", "共催", "洋楽セッション", "邦楽セッション")
     end
   end
 
@@ -60,6 +62,8 @@ RSpec.describe "イベントの開催コミュニティ(公開画面)", type: :r
       {
         event_name: "名前だけ変更",
         community_id: jazz.id,
+        selected_cohost_community_ids: [jazz.id],
+        keep_previous_primary_as_cohost: "0",
         selected_hosting_community_ids: [jazz.id],
         event_community_ids: [jazz.id],
         hosting_community_ids: [jazz.id],
@@ -67,45 +71,56 @@ RSpec.describe "イベントの開催コミュニティ(公開画面)", type: :r
       }
     end
 
-    it "サイト管理者は複数設定でき、解除もできる" do
+    it "サイト管理者は共催先を複数設定でき、解除もできる" do
       sign_in FactoryBot.create(:customer, is_owner: :admin)
 
-      patch public_event_path(event), params: { event: { selected_hosting_community_ids: ["", western.id, japanese.id, jazz.id] } }
+      patch public_event_path(event), params: { event: { selected_cohost_community_ids: ["", japanese.id, jazz.id] } }
       expect(response).to redirect_to(public_event_path(event))
       expect(event.reload.all_hosting_community_ids).to eq [western.id, japanese.id, jazz.id]
 
-      patch public_event_path(event), params: { event: { selected_hosting_community_ids: ["", western.id, jazz.id] } }
+      patch public_event_path(event), params: { event: { selected_cohost_community_ids: ["", jazz.id] } }
       expect(event.reload.all_hosting_community_ids).to eq [western.id, jazz.id]
     end
 
-    it "サイト管理者が全て外すとエラーで再表示し、設定を保持する" do
+    it "サイト管理者が共催先を全て外しても主催は残る" do
       host_both
       sign_in FactoryBot.create(:customer, is_owner: :admin)
 
-      patch public_event_path(event), params: { event: { selected_hosting_community_ids: [""] } }
+      patch public_event_path(event), params: { event: { selected_cohost_community_ids: [""] } }
 
-      expect(response.status).to eq 200
-      expect(response.body).to include("開催コミュニティを1つ以上選択してください")
-      expect(Event.find(event.id).all_hosting_community_ids).to eq [western.id, japanese.id]
+      expect(response).to redirect_to(public_event_path(event))
+      expect(Event.find(event.id).all_hosting_community_ids).to eq [western.id]
+    end
+
+    it "サイト管理者が主催を外す直接リクエストを送っても、主催の解除も自動切り替えも起きない" do
+      host_both
+      sign_in FactoryBot.create(:customer, is_owner: :admin)
+
+      patch public_event_path(event), params: { event: { selected_cohost_community_ids: [jazz.id], selected_hosting_community_ids: [jazz.id] } }
+
+      fresh = Event.find(event.id)
+      expect(fresh.community_id).to eq western.id
+      expect(fresh.all_hosting_community_ids).to eq [western.id, jazz.id]
+      expect(fresh.event_communities.pluck(:community_id)).to include(western.id)
     end
 
     it "サイト管理者が存在しないIDや不正な値を送るとエラーにする" do
       sign_in FactoryBot.create(:customer, is_owner: :admin)
 
-      patch public_event_path(event), params: { event: { selected_hosting_community_ids: [western.id, 999_999_999] } }
+      patch public_event_path(event), params: { event: { selected_cohost_community_ids: [japanese.id, 999_999_999] } }
       expect(response.status).to eq 200
       expect(response.body).to include("存在しないコミュニティ")
 
-      patch public_event_path(event), params: { event: { selected_hosting_community_ids: ["abc"] } }
+      patch public_event_path(event), params: { event: { selected_cohost_community_ids: ["abc"] } }
       expect(response.status).to eq 200
-      expect(response.body).to include("開催コミュニティの指定が正しくありません")
+      expect(response.body).to include("共催先の指定が正しくありません")
       expect(Event.find(event.id).all_hosting_community_ids).to eq [western.id]
     end
 
-    it "サイト管理者でもこの画面の community_id では主催を変更できない" do
+    it "サイト管理者でも公開画面からは主催を変更できない(旧主催を残す指定も無視する)" do
       sign_in FactoryBot.create(:customer, is_owner: :admin)
 
-      patch public_event_path(event), params: { event: { community_id: jazz.id } }
+      patch public_event_path(event), params: { event: { community_id: jazz.id, keep_previous_primary_as_cohost: "1" } }
 
       expect(event.reload.community_id).to eq western.id
       expect(event.all_hosting_community_ids).to eq [western.id]
@@ -205,7 +220,7 @@ RSpec.describe "イベントの開催コミュニティ(公開画面)", type: :r
           entrance_fee: 1000,
           place: "スタジオ",
           address: "埼玉県さいたま市",
-          selected_hosting_community_ids: [western.id, jazz.id],
+          selected_cohost_community_ids: [jazz.id],
           songs_attributes: { "0" => { song_name: "曲", artist_name: "アーティスト", join_parts_attributes: { "0" => { join_part_name: "ボーカル" } } } }
         }
       }
@@ -228,7 +243,7 @@ RSpec.describe "イベントの開催コミュニティ(公開画面)", type: :r
       get new_public_event_path(community_id: western.id)
 
       expect(response.body).to include("所属コミュニティ")
-      expect(Nokogiri::HTML(response.body).css("[name='event[selected_hosting_community_ids][]']")).to be_empty
+      expect(Nokogiri::HTML(response.body).css("[name='event[selected_cohost_community_ids][]']")).to be_empty
     end
 
     it "コピーでは主催コミュニティだけを引き継ぐ(追加の開催コミュニティは複製しない)" do
@@ -288,7 +303,7 @@ RSpec.describe "イベントの開催コミュニティ(公開画面)", type: :r
     it "追加された開催コミュニティの所属者へ通知は増やさない" do
       japanese_member = member_of(japanese)
 
-      expect { event.update!(selected_hosting_community_ids: [western.id, japanese.id, jazz.id]) }.not_to change(Notification, :count)
+      expect { event.update!(selected_cohost_community_ids: [japanese.id, jazz.id]) }.not_to change(Notification, :count)
       expect(japanese_member.passive_notifications).to be_empty
     end
   end
@@ -377,6 +392,39 @@ RSpec.describe "イベントの開催コミュニティ(公開画面)", type: :r
       get public_community_path(japanese)
 
       expect(response.body).to include("合同セッション")
+    end
+  end
+
+  describe "コミュニティの削除" do
+    let(:owner) { FactoryBot.create(:customer, is_owner: :community_owner) }
+
+    it "共催イベントの主催コミュニティはオーナーでも削除できず、対象イベントを案内する" do
+      host_both
+      CommunityOwner.create!(customer: owner, community: western)
+      western.update!(owner_id: owner.id)
+      sign_in owner
+
+      expect { delete public_community_path(western) }.not_to change(Community, :count)
+
+      expect(response).to redirect_to(public_community_path(western))
+      follow_redirect!
+      expect(response.body).to include("先に対象イベントの主催コミュニティを変更してください")
+      expect(response.body).to include("「合同セッション」(ID: #{event.id})")
+    end
+
+    it "共催先としてのみ設定されたコミュニティは削除でき、イベントと参加記録は残る" do
+      host_both
+      CommunityOwner.create!(customer: owner, community: japanese)
+      japanese.update!(owner_id: owner.id)
+      participant = member_of(japanese)
+      JoinPartCustomer.create!(customer: participant, join_part: vocal)
+      sign_in owner
+
+      expect { delete public_community_path(japanese) }.to change(Community, :count).by(-1)
+
+      fresh = Event.find(event.id)
+      expect(fresh.all_hosting_community_ids).to eq [western.id]
+      expect(JoinPartCustomer.exists?(customer: participant, join_part: vocal)).to eq true
     end
   end
 

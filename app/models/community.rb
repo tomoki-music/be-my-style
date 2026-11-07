@@ -8,6 +8,8 @@ class Community < ApplicationRecord
     business_project_create
   ].freeze
 
+  COHOSTED_EVENT_NOTICE_LIMIT = 10
+
   extend ActiveHash::Associations::ActiveRecordExtensions
   belongs_to :prefecture
 
@@ -25,6 +27,8 @@ class Community < ApplicationRecord
   has_many :chat_rooms, through: :chat_room_customers, dependent: :destroy
   has_many :chat_room_members, through: :chat_room_customers, source: :customer
   has_many :chat_messages, dependent: :destroy
+  # dependent: :destroy より先に止めるため prepend する(主催イベントは events の dependent で一緒に消える)。
+  before_destroy :prevent_destroy_with_primary_cohosted_events, prepend: true
   has_many :event_communities, dependent: :destroy
   has_many :events, dependent: :destroy
   has_many :song_templates, dependent: :destroy
@@ -62,6 +66,11 @@ class Community < ApplicationRecord
     Event.hosted_by(id)
   end
 
+  # このコミュニティが主催で、ほかに共催先があるイベント。
+  def primary_cohosted_events
+    events.where(id: EventCommunity.where.not(community_id: id).select(:event_id))
+  end
+
   def premium_event_creation_required?
     required_plan_for_event_creation == "premium"
   end
@@ -82,6 +91,23 @@ class Community < ApplicationRecord
   # CommunityCustomerレコード自体は削除しないため、ここでの絞り込みは表示専用。
   def active_customers
     customers.active
+  end
+
+  private
+
+  def prevent_destroy_with_primary_cohosted_events
+    targets = primary_cohosted_events.order(:id).pluck(:id, :event_name)
+    return if targets.empty?
+
+    # フラッシュ(Cookie セッション)に載せるため件数と長さを抑える。
+    labels = targets.first(COHOSTED_EVENT_NOTICE_LIMIT).map { |event_id, name| "「#{name.truncate(30)}」(ID: #{event_id})" }
+    labels << "ほか#{targets.size - COHOSTED_EVENT_NOTICE_LIMIT}件" if targets.size > COHOSTED_EVENT_NOTICE_LIMIT
+    errors.add(
+      :base,
+      "このコミュニティが主催する共催イベントがあるため削除できません。先に対象イベントの主催コミュニティを変更してください" \
+      "(変更はサイト管理者が管理画面で行います)。対象イベント: #{labels.join('、')}"
+    )
+    throw :abort
   end
 
 end

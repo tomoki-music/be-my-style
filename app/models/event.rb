@@ -64,9 +64,8 @@ class Event < ApplicationRecord
   # 巻き込んで保存不能にしないため(退会後も履歴として表示し続ける方針)。
   validate :customer_must_be_active, if: :will_save_change_to_customer_id?
   validate :enabled_deadline_reminders_require_deadline
-  validate :selected_hosting_communities_must_be_valid
+  validate :selected_cohost_communities_must_be_valid
 
-  before_save :promote_primary_community_if_deselected
   after_save :sync_event_communities
 
   # autosave(nested attributes)によるリマインド保存の後に走らせるため、
@@ -75,51 +74,46 @@ class Event < ApplicationRecord
 
   private
 
-  def selected_hosting_communities_must_be_valid
-    return if @selected_hosting_community_ids.nil?
+  def selected_cohost_communities_must_be_valid
+    return if @selected_cohost_community_ids.nil? && !keep_previous_primary_on_change?
 
-    if @selected_hosting_community_ids_malformed
-      errors.add(:base, "開催コミュニティの指定が正しくありません")
+    if @selected_cohost_community_ids_malformed
+      errors.add(:base, "共催先の指定が正しくありません")
       return
     end
 
-    primary_id = community_id
-    final_ids = @selected_hosting_community_ids.dup
-    final_ids |= [primary_id] if will_save_change_to_community_id? && primary_id.present?
-    if final_ids.empty?
-      errors.add(:base, "開催コミュニティを1つ以上選択してください")
-      return
-    end
-
-    domain_id_by_community = Community.where(id: final_ids | [primary_id].compact).pluck(:id, :domain_id).to_h
-    if (final_ids - domain_id_by_community.keys).any?
-      errors.add(:base, "存在しないコミュニティが開催コミュニティに含まれています")
+    requested_ids = Array(@selected_cohost_community_ids)
+    requested_ids |= [community_id_in_database] if keep_previous_primary_on_change?
+    domain_id_by_community = Community.where(id: requested_ids | [community_id].compact).pluck(:id, :domain_id).to_h
+    if (requested_ids - domain_id_by_community.keys).any?
+      errors.add(:base, "存在しないコミュニティが共催先に含まれています")
     elsif domain_id_by_community.values.uniq.size > 1
-      errors.add(:base, "異なるサービスのコミュニティは開催コミュニティにできません")
+      errors.add(:base, "異なるサービスのコミュニティは共催先にできません")
     end
   end
 
-  # 主催コミュニティだけを解除した場合、残りのうち最初に追加されたものへ主催を移す。
-  # events.community_id は NOT NULL で、開催コミュニティは必ず主催を含むという前提をここで保つ。
-  def promote_primary_community_if_deselected
-    selected = @selected_hosting_community_ids
-    return if selected.blank? || selected.include?(community_id) || will_save_change_to_community_id?
-
-    self.community_id = (event_communities.map(&:community_id) & selected).first || selected.first
+  def keep_previous_primary_on_change?
+    @keep_previous_primary_as_cohost == true && persisted? && will_save_change_to_community_id?
   end
 
   # 保存と同じトランザクションで反映する(has_many の *_ids= は保存前に即時反映されてしまうため使わない)。
+  # 主催は community_id だけで決まり、共催先の指定内容で解除も切り替えもされない。
+  # 主催を変更したときの旧主催は、keep_previous_primary_as_cohost で明示した場合だけ共催先に残す。
   def sync_event_communities
-    selected = @selected_hosting_community_ids
+    selected = @selected_cohost_community_ids
     return if selected.nil? && !saved_change_to_community_id?
 
     current = EventCommunity.where(event_id: id).pluck(:community_id)
-    desired = (selected || (current - [community_id_before_last_save])) | [community_id]
+    previous_primary = community_id_before_last_save if saved_change_to_community_id?
+    cohosts = (selected || current) - [previous_primary, community_id]
+    cohosts |= [previous_primary] if previous_primary && @keep_previous_primary_as_cohost == true
+    desired = [community_id] | cohosts
 
     EventCommunity.where(event_id: id, community_id: current - desired).delete_all
     (desired - current).each { |hosting_id| add_event_community(hosting_id) }
 
-    @selected_hosting_community_ids = nil
+    @selected_cohost_community_ids = nil
+    @keep_previous_primary_as_cohost = nil
     association(:event_communities).reset
   end
 
@@ -168,24 +162,45 @@ class Event < ApplicationRecord
     all_hosting_communities.map(&:name).join(separator)
   end
 
-  # 編集フォームの開催コミュニティ欄の選択状態。入力エラーで再表示するときは入力値を優先する。
-  def selected_hosting_community_ids
-    @selected_hosting_community_ids || all_hosting_community_ids
+  # 主催を除いた開催コミュニティ。
+  def cohost_communities
+    all_hosting_communities - [community]
+  end
+
+  # 保存済みの主催。管理画面で主催の変更がエラーになり再表示するときも、変更前の主催を指す。
+  def primary_community_in_database
+    community_id_changed? ? Community.find_by(id: community_id_in_database) : community
+  end
+
+  # 編集フォームの共催先欄の選択状態。入力エラーで再表示するときは入力値を優先する。
+  def selected_cohost_community_ids
+    @selected_cohost_community_ids || (all_hosting_community_ids - [community_id_in_database])
   end
 
   # 値を受け取るだけで、反映は save の検証を通った後に行う。呼び出してよいのはサイト管理者の操作のみ
   # (Customer#can_manage_event_hosting_communities? で許可されたときだけ permit する)。
-  def selected_hosting_community_ids=(values)
+  # 主催の ID が含まれていても無視するので、この値で主催が外れたり変わったりすることはない。
+  def selected_cohost_community_ids=(values)
     raw_ids = Array(values).map { |value| value.to_s.strip }.reject(&:blank?)
-    @selected_hosting_community_ids_malformed = raw_ids.any? { |value| !value.match?(HOSTING_COMMUNITY_ID_FORMAT) }
-    @selected_hosting_community_ids = raw_ids.grep(HOSTING_COMMUNITY_ID_FORMAT).map(&:to_i).uniq
+    @selected_cohost_community_ids_malformed = raw_ids.any? { |value| !value.match?(HOSTING_COMMUNITY_ID_FORMAT) }
+    @selected_cohost_community_ids = raw_ids.grep(HOSTING_COMMUNITY_ID_FORMAT).map(&:to_i).uniq
   end
 
-  # 開催コミュニティに選べる候補。主催コミュニティと同じドメイン(music など)に限る。
-  def hosting_community_options
-    return Community.none if community.blank?
+  # 管理画面の主催変更用。フォームの初期値は「残す」だが、指定が無いリクエストでは残さない。
+  def keep_previous_primary_as_cohost
+    @keep_previous_primary_as_cohost.nil? ? true : @keep_previous_primary_as_cohost
+  end
 
-    Community.where(domain_id: community.domain_id).order(:name)
+  def keep_previous_primary_as_cohost=(value)
+    @keep_previous_primary_as_cohost = ActiveModel::Type::Boolean.new.cast(value)
+  end
+
+  # 共催先に選べる候補。主催と同じドメイン(music など)に限り、主催は含めない。
+  def cohost_community_options
+    primary = primary_community_in_database
+    return Community.none if primary.blank?
+
+    Community.where(domain_id: primary.domain_id).where.not(id: primary.id).order(:name)
   end
 
   # 開催コミュニティのいずれかに所属する有効メンバー(複数所属でも重複しない)。

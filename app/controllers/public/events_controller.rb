@@ -394,7 +394,7 @@ class Public::EventsController < ApplicationController
     ]
     attributes << :customer_id if can_reassign_event_ownership?
     attributes << :community_id if @event.blank?
-    hosting_attributes = can_edit_hosting_communities? ? { selected_hosting_community_ids: [] } : {}
+    hosting_attributes = can_edit_hosting_communities? ? { selected_cohost_community_ids: [] } : {}
 
     params.require(:event).permit(
       *attributes,
@@ -418,8 +418,8 @@ class Public::EventsController < ApplicationController
     @event.blank? || current_customer.can_destroy_event?(@event)
   end
 
-  # 既存イベントの開催コミュニティを変えられるのはサイト管理者だけ。community_id はこの画面の
-  # 更新では受け付けず(新規作成時のみ)、変更は selected_hosting_community_ids に一本化する。
+  # 共催先を変えられるのはサイト管理者だけ。主催(community_id)はこの画面の更新では受け付けず
+  # (新規作成時のみ)、変更は管理画面の主催セレクトに限る。
   def can_edit_hosting_communities?
     @event&.persisted? && current_customer.can_manage_event_hosting_communities?
   end

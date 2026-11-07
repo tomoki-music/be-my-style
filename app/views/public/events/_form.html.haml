@@ -32,7 +32,12 @@
                 - if current_customer.can_manage_event_hosting_communities?
                   = render "shared/event_hosting_communities_fields", f: f, event: event
                 - else
-                  = event.hosting_community_names
+                  %span.badge.badge-primary 主催
+                  = event.community.name
+                  - if event.cohost_communities.any?
+                    .mt-1
+                      %span.badge.badge-secondary 共催
+                      = event.cohost_communities.map(&:name).join(" / ")
           - else
             %tr
               %th{scope:"row"}

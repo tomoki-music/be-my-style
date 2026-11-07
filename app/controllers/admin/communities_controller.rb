@@ -37,8 +37,11 @@ class Admin::CommunitiesController < ApplicationController
   end
 
   def destroy
-    @community.destroy
-    redirect_to admin_communities_path, alert: "コミュニティを削除しました。"
+    if @community.destroy
+      redirect_to admin_communities_path, alert: "コミュニティを削除しました。"
+    else
+      redirect_to admin_community_path(@community), alert: @community.errors.full_messages.join
+    end
   end
 
   private
