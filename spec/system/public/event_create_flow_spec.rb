@@ -81,6 +81,8 @@ RSpec.describe "イベント新規作成の正規フロー", type: :system do
     expect(page).to have_css(".deadline-reminder-settings", wait: 10)
     Timeout.timeout(10) { sleep 0.1 until page.evaluate_script("window.__previewStatuses.length").positive? }
     expect(page.evaluate_script("window.__previewStatuses")).to all(eq(200))
+    # 曲リクエスト締切が未設定だと有効にしたまま保存できないので、プレビューの確認後に戻す。
+    page.execute_script("arguments[0].click()", reminder_checkbox)
 
     accept_confirm { click_button "イベントを登録" }
     expect(page).to have_content("イベントを投稿しました", wait: 15)
