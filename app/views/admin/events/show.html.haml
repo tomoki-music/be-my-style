@@ -14,8 +14,10 @@
         %dd.col-sm-9= @event.id
         %dt.col-sm-3 イベント名
         %dd.col-sm-9= @event.event_name
-        %dt.col-sm-3 コミュニティ
+        %dt.col-sm-3 主催コミュニティ
         %dd.col-sm-9= @event.community&.name
+        %dt.col-sm-3 開催コミュニティ
+        %dd.col-sm-9= @event.hosting_community_names
         %dt.col-sm-3 主催者
         %dd.col-sm-9= @event.customer&.name
         %dt.col-sm-3 参加人数

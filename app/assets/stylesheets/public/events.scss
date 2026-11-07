@@ -1800,3 +1800,13 @@ input[type="text"] {
     margin-top: 12px;
   }
 }
+
+// 開催コミュニティの選択欄(公開画面・管理画面のイベント編集で共用)
+.event-hosting-communities__options {
+  max-height: 240px;
+  padding: 8px 12px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}

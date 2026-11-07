@@ -1,0 +1,14 @@
+-# サイト管理者専用の入力欄。受け付けるかどうかはコントローラーの permit でも判定している。
+.event-hosting-communities
+  .event-hosting-communities__options
+    = f.collection_check_boxes :selected_hosting_community_ids, event.hosting_community_options, :id, :name do |option|
+      .form-check
+        = option.check_box class: "form-check-input"
+        = option.label class: "form-check-label" do
+          = option.text
+          - if option.value == event.community_id
+            %span.badge.badge-secondary 主催
+  %small.form-text.text-muted
+    1つ以上選択してください。いずれかのコミュニティのメンバーが参加できます。
+    編集権限と自動リマインドの送信先は主催コミュニティが基準で、追加しても増えません。
+    主催を解除すると、残りのうち最初に追加されたものが主催になり、編集権限と送信先も移ります。

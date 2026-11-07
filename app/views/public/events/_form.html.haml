@@ -25,17 +25,26 @@
             %th{scope:"row"} URLの説明
             %td
               = f.text_field :url_comment, placeholder: "URLの説明を記入します", class: 'form-control'
-          %tr
-            %th{scope:"row"}
-              所属コミュニティ
-              %i.text-red
-                (必須)
-            %td
-              - if @community_id.present? && @community_id.to_i > 0
-                = f.hidden_field :community_id, value: @community_id
-                = Community.find(@community_id).name
-              - else
-                = f.collection_select :community_id, current_customer.available_communities_for_event, :id, :name
+          - if event.persisted?
+            %tr
+              %th{scope:"row"} 開催コミュニティ
+              %td
+                - if current_customer.can_manage_event_hosting_communities?
+                  = render "shared/event_hosting_communities_fields", f: f, event: event
+                - else
+                  = event.hosting_community_names
+          - else
+            %tr
+              %th{scope:"row"}
+                所属コミュニティ
+                %i.text-red
+                  (必須)
+              %td
+                - if @community_id.present? && @community_id.to_i > 0
+                  = f.hidden_field :community_id, value: @community_id
+                  = Community.find(@community_id).name
+                - else
+                  = f.collection_select :community_id, current_customer.available_communities_for_event, :id, :name
           %tr
             %th{scope:"row"}
               開催日(開始時間)

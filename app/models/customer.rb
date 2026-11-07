@@ -485,7 +485,7 @@ class Customer < ApplicationRecord
   # 「曲が所属するイベント・コミュニティとの関係」をサーバー側で検証するため、
   # 自分が所属するコミュニティのイベントに紐づくSongのみに絞る。
   def eligible_songs_for_song_part
-    Song.where(event_id: Event.where(community_id: communities.select(:id)).select(:id))
+    Song.where(event_id: Event.hosted_by(communities.select(:id)).select(:id))
   end
 
   # 退会機能
@@ -577,6 +577,11 @@ class Customer < ApplicationRecord
     return false unless has_feature?(:business_project_create, community: community)
 
     community.present? && communities.exists?(id: community.id)
+  end
+
+  # サイト管理者だけ。イベント作成者・コミュニティ運営者・イベント編集者には許可しない。
+  def can_manage_event_hosting_communities?
+    admin?
   end
 
   def can_edit_event?(event)

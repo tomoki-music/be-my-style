@@ -45,7 +45,7 @@
               %p.card-text
               - if current_customer.can_edit_event?(@event)
                 .mt-2
-                  = link_to 'イベントの編集', edit_public_event_path(@event, community_id: @event.community_id), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
+                  = link_to 'イベントの編集', edit_public_event_path(@event), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
                   - if current_customer.can_destroy_event?(@event)
                     = link_to "コピーして新規作成", copy_public_event_path(@event), class: "btn btn-sm btn-info event-show-btn"
 
@@ -70,9 +70,15 @@
                 %tr
                   %th{scope:"row"} 開催コミュニティ
                   %td
-                    = @community.name
+                    - @hosting_communities.each_with_index do |hosting_community, index|
+                      - if index.positive?
+                        \/
+                      = link_to hosting_community.name, public_community_path(hosting_community), data: { turbolinks: false }
                     .text-red
-                      ※このイベントは【#{@community.name}】に参加している必要があります。
+                      - if @hosting_communities.one?
+                        ※このイベントは【#{@hosting_communities.first.name}】に参加している必要があります。
+                      - else
+                        ※このイベントは【#{@hosting_communities.map(&:name).join("】【")}】のいずれかに参加している必要があります。
                 %tr
                   %th{scope:"row"} イベント名
                   %td

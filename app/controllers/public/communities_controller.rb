@@ -61,7 +61,7 @@ class Public::CommunitiesController < ApplicationController
     @can_manage = @community.owner_id == current_customer.id
     load_pending_permit_count if @can_manage
 
-    upcoming_events = @community.events
+    upcoming_events = @community.hosted_events
       .upcoming_or_ongoing
       .order(:event_start_time, :id)
       .with_attached_event_image

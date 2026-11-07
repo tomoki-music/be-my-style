@@ -9,7 +9,7 @@ class Admin::EventsController < ApplicationController
   before_action :set_requested_by_customer_candidates, only: [:new, :create, :edit, :update]
 
   def index
-    @events = Event.includes(:community, :customer).order(created_at: :desc)
+    @events = Event.includes(:community, :customer, event_communities: :community).order(created_at: :desc)
   end
 
   def show
@@ -96,6 +96,7 @@ class Admin::EventsController < ApplicationController
       :url_comment,
       song_ids:[],
       part_ids:[],
+      selected_hosting_community_ids: [],
       songs_attributes: [
         :id, :event_id, :song_name, :artist_name, :performance_time, :performance_start_time,
         :youtube_url, :chord_sheet_url, :tab_sheet_url, :musical_key, :capo, :chord_sheet_note,
@@ -128,7 +129,9 @@ class Admin::EventsController < ApplicationController
   # @requested_by_customer_candidatesを用意する(未用意だとcollection_select描画時にnilエラーになる)。
   def set_requested_by_customer_candidates
     @requested_by_customer_candidates =
-      if @template_community
+      if @event&.persisted?
+        @event.hosting_community_members.order(:name)
+      elsif @template_community
         @template_community.customers.where(is_deleted: false).distinct.order(:name)
       else
         Customer.none

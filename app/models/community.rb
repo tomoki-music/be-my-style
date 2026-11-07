@@ -25,6 +25,7 @@ class Community < ApplicationRecord
   has_many :chat_rooms, through: :chat_room_customers, dependent: :destroy
   has_many :chat_room_members, through: :chat_room_customers, source: :customer
   has_many :chat_messages, dependent: :destroy
+  has_many :event_communities, dependent: :destroy
   has_many :events, dependent: :destroy
   has_many :song_templates, dependent: :destroy
   belongs_to :owner, class_name: "Customer", optional: true
@@ -55,6 +56,11 @@ class Community < ApplicationRecord
     mypace: 1,
     tightly: 2,
   }, _prefix: true
+
+  # このコミュニティが開催コミュニティに含まれるイベント(events は主催イベントだけを指す)。
+  def hosted_events
+    Event.hosted_by(id)
+  end
 
   def premium_event_creation_required?
     required_plan_for_event_creation == "premium"

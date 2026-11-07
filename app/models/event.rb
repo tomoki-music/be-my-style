@@ -12,6 +12,8 @@ class Event < ApplicationRecord
   # 楽曲表の「削除」ボタン表示とPublic::EventsController#deleteの両方がこの判定を使う。
   JOIN_CANCELLATION_DEADLINE = 7.days
 
+  HOSTING_COMMUNITY_ID_FORMAT = /\A[1-9]\d*\z/
+
   has_one_attached :event_image
   has_many :songs, -> { order(position: :asc) }, dependent: :destroy, inverse_of: :event
   # Event -> Song -> JoinPart。join/join_confirmで送信されたjoin_part_idが
@@ -20,7 +22,10 @@ class Event < ApplicationRecord
   has_many :join_parts, through: :songs
   has_many :requests, dependent: :destroy
   belongs_to :customer
+  # 主催コミュニティ。編集権限・リマインド送信先・テンプレート・ランキングなどの基準はここだけを見る。
+  # 開催コミュニティ(event_communities)を追加しても、それらの基準は広がらない。
   belongs_to :community
+  has_many :event_communities, -> { order(:id) }, dependent: :destroy, inverse_of: :event
   has_many :deadline_reminders, class_name: "EventDeadlineReminder", dependent: :destroy, inverse_of: :event
 
   accepts_nested_attributes_for :songs, allow_destroy: true, reject_if: :all_blank
@@ -29,6 +34,16 @@ class Event < ApplicationRecord
   # 「終了していない」イベント(開催中を含む)。#status_keyの:ended判定
   # (event_end_time <= now)と揃え、event_end_time > nowを終了していない条件とする。
   scope :upcoming_or_ongoing, ->(now = Time.current) { where("events.event_end_time > ?", now) }
+
+  # 指定コミュニティが開催コミュニティに含まれるイベント。JOIN しないので、複数のコミュニティに
+  # 該当しても同じイベントは1件だけ返る。旧コードが作成した行の無いイベントも主催コミュニティで拾う。
+  scope :hosted_by, lambda { |community_ids|
+    where(
+      id: Event.unscoped.where(community_id: community_ids)
+        .or(Event.unscoped.where(id: EventCommunity.where(community_id: community_ids).select(:event_id)))
+        .select(:id)
+    )
+  }
 
   geocoded_by :address
   after_validation :geocode, if: :address_changed?
@@ -49,12 +64,70 @@ class Event < ApplicationRecord
   # 巻き込んで保存不能にしないため(退会後も履歴として表示し続ける方針)。
   validate :customer_must_be_active, if: :will_save_change_to_customer_id?
   validate :enabled_deadline_reminders_require_deadline
+  validate :selected_hosting_communities_must_be_valid
+
+  before_save :promote_primary_community_if_deselected
+  after_save :sync_event_communities
 
   # autosave(nested attributes)によるリマインド保存の後に走らせるため、
   # has_many/accepts_nested_attributes_for より後ろで after_save として宣言する。
   after_save :sync_deadline_reminder_arming
 
   private
+
+  def selected_hosting_communities_must_be_valid
+    return if @selected_hosting_community_ids.nil?
+
+    if @selected_hosting_community_ids_malformed
+      errors.add(:base, "開催コミュニティの指定が正しくありません")
+      return
+    end
+
+    primary_id = community_id
+    final_ids = @selected_hosting_community_ids.dup
+    final_ids |= [primary_id] if will_save_change_to_community_id? && primary_id.present?
+    if final_ids.empty?
+      errors.add(:base, "開催コミュニティを1つ以上選択してください")
+      return
+    end
+
+    domain_id_by_community = Community.where(id: final_ids | [primary_id].compact).pluck(:id, :domain_id).to_h
+    if (final_ids - domain_id_by_community.keys).any?
+      errors.add(:base, "存在しないコミュニティが開催コミュニティに含まれています")
+    elsif domain_id_by_community.values.uniq.size > 1
+      errors.add(:base, "異なるサービスのコミュニティは開催コミュニティにできません")
+    end
+  end
+
+  # 主催コミュニティだけを解除した場合、残りのうち最初に追加されたものへ主催を移す。
+  # events.community_id は NOT NULL で、開催コミュニティは必ず主催を含むという前提をここで保つ。
+  def promote_primary_community_if_deselected
+    selected = @selected_hosting_community_ids
+    return if selected.blank? || selected.include?(community_id) || will_save_change_to_community_id?
+
+    self.community_id = (event_communities.map(&:community_id) & selected).first || selected.first
+  end
+
+  # 保存と同じトランザクションで反映する(has_many の *_ids= は保存前に即時反映されてしまうため使わない)。
+  def sync_event_communities
+    selected = @selected_hosting_community_ids
+    return if selected.nil? && !saved_change_to_community_id?
+
+    current = EventCommunity.where(event_id: id).pluck(:community_id)
+    desired = (selected || (current - [community_id_before_last_save])) | [community_id]
+
+    EventCommunity.where(event_id: id, community_id: current - desired).delete_all
+    (desired - current).each { |hosting_id| add_event_community(hosting_id) }
+
+    @selected_hosting_community_ids = nil
+    association(:event_communities).reset
+  end
+
+  def add_event_community(hosting_id)
+    EventCommunity.transaction(requires_new: true) { EventCommunity.create!(event_id: id, community_id: hosting_id) }
+  rescue ActiveRecord::RecordNotUnique
+    nil # 同時更新で先に同じ行が作られた場合は、目的の状態になっているので何もしない
+  end
 
   def enabled_deadline_reminders_require_deadline
     deadline_reminders.each do |reminder|
@@ -80,6 +153,45 @@ class Event < ApplicationRecord
   end
 
   public
+
+  # 主催コミュニティを先頭にした開催コミュニティの一覧。主催は event_communities の行の有無に
+  # 関わらず含める(マイグレーション後〜Puma 再起動前に旧コードが作ったイベントにも対応するため)。
+  def all_hosting_communities
+    ([community] + event_communities.map(&:community)).compact.uniq
+  end
+
+  def all_hosting_community_ids
+    ([community_id] + event_communities.map(&:community_id)).compact.uniq
+  end
+
+  def hosting_community_names(separator = " / ")
+    all_hosting_communities.map(&:name).join(separator)
+  end
+
+  # 編集フォームの開催コミュニティ欄の選択状態。入力エラーで再表示するときは入力値を優先する。
+  def selected_hosting_community_ids
+    @selected_hosting_community_ids || all_hosting_community_ids
+  end
+
+  # 値を受け取るだけで、反映は save の検証を通った後に行う。呼び出してよいのはサイト管理者の操作のみ
+  # (Customer#can_manage_event_hosting_communities? で許可されたときだけ permit する)。
+  def selected_hosting_community_ids=(values)
+    raw_ids = Array(values).map { |value| value.to_s.strip }.reject(&:blank?)
+    @selected_hosting_community_ids_malformed = raw_ids.any? { |value| !value.match?(HOSTING_COMMUNITY_ID_FORMAT) }
+    @selected_hosting_community_ids = raw_ids.grep(HOSTING_COMMUNITY_ID_FORMAT).map(&:to_i).uniq
+  end
+
+  # 開催コミュニティに選べる候補。主催コミュニティと同じドメイン(music など)に限る。
+  def hosting_community_options
+    return Community.none if community.blank?
+
+    Community.where(domain_id: community.domain_id).order(:name)
+  end
+
+  # 開催コミュニティのいずれかに所属する有効メンバー(複数所属でも重複しない)。
+  def hosting_community_members
+    Customer.active.where(id: CommunityCustomer.where(community_id: all_hosting_community_ids).select(:customer_id))
+  end
 
   # 作成・編集フォーム用に、締め切り種別ごとのリマインド設定を(未作成なら未保存で)揃えて返す。
   def deadline_reminders_for_form
@@ -133,15 +245,14 @@ class Event < ApplicationRecord
     community.active_customers.distinct
   end
 
-  # 開催コミュニティの所属者かどうか。Public::EventsController#join が参加登録時に
-  # 使う判定基準と同じもの(community.customersに存在するか)を1箇所に集約し、
-  # 楽曲詳細ページ等の表示制御からも同じ基準を参照できるようにする。
+  # 開催コミュニティのいずれかの所属者かどうか(OR 条件)。Public::EventsController#join が
+  # 参加登録時に使う判定基準を1箇所に集約し、楽曲詳細ページ等の表示制御からも同じ基準を参照できるようにする。
   # 注記: このメソッドはUI表示制御(導線を出す/出さない)にのみ使う。実際の登録可否は
   # 従来どおりjoinアクション側が独立して再検証する(view側の判定だけに依存しない)。
   def community_member?(customer)
-    return false if community.blank? || customer.blank?
+    return false if customer.blank?
 
-    community.customers.exists?(id: customer.id)
+    CommunityCustomer.exists?(community_id: all_hosting_community_ids, customer_id: customer.id)
   end
 
   def session_credit_applied_for?(customer)
