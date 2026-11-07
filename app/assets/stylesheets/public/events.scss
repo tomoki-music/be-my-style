@@ -1819,3 +1819,50 @@ input[type="text"] {
   border: 1px solid #dee2e6;
   border-radius: 4px;
 }
+
+// コミュニティの削除を止めたときの案内(公開・管理・Business で共用)
+.community-destroy-blocked {
+  max-width: 800px;
+  margin: 24px auto;
+  padding: 0 16px;
+  overflow-wrap: anywhere;
+}
+
+.community-destroy-blocked__reason {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  color: #721c24;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+}
+
+.community-destroy-blocked__steps {
+  margin-bottom: 20px;
+  padding-left: 20px;
+}
+
+.community-destroy-blocked__list {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.community-destroy-blocked__item {
+  margin-bottom: 8px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+.community-destroy-blocked__event-name {
+  font-weight: bold;
+}
+
+.community-destroy-blocked__event-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}

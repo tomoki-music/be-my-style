@@ -99,14 +99,79 @@ RSpec.describe "イベントの開催コミュニティ(管理画面)", type: :r
       expect(Event.find(event.id).community_id).to eq western.id
     end
 
-    it "共催イベントを主催するコミュニティは管理画面でも削除できず、対象イベントを案内する" do
+    it "共催イベントを主催するコミュニティは管理画面でも削除できず、案内ページに管理画面のリンクを出す" do
       event.update!(selected_cohost_community_ids: [japanese.id])
       sign_in FactoryBot.create(:customer, is_owner: :admin)
 
       expect { delete admin_community_path(western) }.not_to change(Community, :count)
 
-      expect(response).to redirect_to(admin_community_path(western))
-      expect(flash[:alert]).to include("先に対象イベントの主催コミュニティを変更してください", "(ID: #{event.id})")
+      expect(response).to redirect_to(destroy_blocked_admin_community_path(western))
+      follow_redirect!
+      expect(response.status).to eq 200
+      expect(response.body).to include("先に管理画面で主催を変更します", event.event_name, edit_admin_event_path(event))
+      expect(response.body).not_to include("サイト管理者へ依頼")
+    end
+
+    it "共催先の指定を省いて別ドメインへ主催だけを変える直接 PATCH は、主催も共催先も変更しない" do
+      event.update!(selected_cohost_community_ids: [japanese.id])
+      business = FactoryBot.create(:community, domain: Domain.find_or_create_by!(name: "business"))
+
+      patch admin_event_path(event), params: { event: { community_id: business.id } }
+
+      expect(response.status).to eq 200
+      expect(response.body).to include("異なるサービスのコミュニティは共催先にできません")
+      fresh = Event.find(event.id)
+      expect(fresh.community_id).to eq western.id
+      expect(fresh.event_communities.pluck(:community_id)).to contain_exactly(western.id, japanese.id)
+    end
+
+    context "リクエスト者" do
+      let(:song) { event.songs.first }
+
+      def member_of(community)
+        FactoryBot.create(:customer).tap { |customer| CommunityCustomer.create!(customer: customer, community: community) }
+      end
+
+      it "旧主催を残さない主催変更でも、登録済みのリクエスト者を保持してフォームに表示する" do
+        requester = member_of(western)
+        song.update!(requested_by_customer_id: requester.id)
+
+        patch admin_event_path(event), params: {
+          event: { community_id: jazz.id, keep_previous_primary_as_cohost: "0", songs_attributes: { "0" => { id: song.id, requested_by_customer_id: requester.id } } }
+        }
+
+        expect(response).to redirect_to(admin_event_path(event))
+        expect(Song.find(song.id).requested_by_customer_id).to eq requester.id
+        expect(Event.find(event.id).all_hosting_community_ids).to eq [jazz.id]
+
+        get edit_admin_event_path(event)
+        selected = Nokogiri::HTML(response.body).css("select[name*='requested_by_customer_id'] option[selected]")
+        expect(selected.map { |option| option["value"].to_i }).to eq [requester.id]
+        expect(selected.text).to include("（現在の設定）")
+      end
+
+      it "残さない旧主催のメンバーを同じ送信で新たに指定すると、更新全体をエラーにする" do
+        patch admin_event_path(event), params: {
+          event: { community_id: jazz.id, keep_previous_primary_as_cohost: "0", songs_attributes: { "0" => { id: song.id, requested_by_customer_id: member_of(western).id } } }
+        }
+
+        expect(response.status).to eq 200
+        expect(response.body).to include("有効なメンバーではありません")
+        expect(Event.find(event.id).community_id).to eq western.id
+        expect(Song.find(song.id).requested_by_customer_id).to be_nil
+      end
+
+      it "同じ送信で外す共催先のメンバーを新たに指定すると、更新全体をエラーにする" do
+        event.update!(selected_cohost_community_ids: [japanese.id])
+
+        patch admin_event_path(event), params: {
+          event: { community_id: western.id, selected_cohost_community_ids: [""], songs_attributes: { "0" => { id: song.id, requested_by_customer_id: member_of(japanese).id } } }
+        }
+
+        expect(response.status).to eq 200
+        expect(Event.find(event.id).all_hosting_community_ids).to eq [western.id, japanese.id]
+        expect(Song.find(song.id).requested_by_customer_id).to be_nil
+      end
     end
 
     it "管理画面で主催を変更した後は旧主催を削除でき、イベントは残る" do

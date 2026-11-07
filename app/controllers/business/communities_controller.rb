@@ -3,10 +3,10 @@ class Business::CommunitiesController < ApplicationController
 
   layout "business"
 
-  before_action :set_community, only: [:show, :edit, :update, :destroy, :permits]
+  before_action :set_community, only: [:show, :edit, :update, :destroy, :destroy_blocked, :permits]
   before_action -> { require_business_eligibility!(business_community_path(@community), manager: current_customer.can_manage_community?(@community)) }, only: [:show]
   before_action :ensure_community_manager!, only: [:edit, :update, :permits]
-  before_action :ensure_community_owner!, only: [:destroy]
+  before_action :ensure_community_owner!, only: [:destroy, :destroy_blocked]
   before_action :load_pending_permit_count, only: [:edit, :update]
   before_action only: [:new, :create] do
     require_feature!(:business_community_create, redirect_to_path: business_communities_path)
@@ -89,8 +89,16 @@ class Business::CommunitiesController < ApplicationController
     if @community.destroy
       redirect_to business_communities_path
     else
-      redirect_to business_community_path(@community), alert: @community.errors.full_messages.join
+      redirect_to destroy_blocked_business_community_path(@community)
     end
+  end
+
+  # 削除を止めた理由と対象イベント。トーストでは読み切れないため、消えないページで案内する。
+  def destroy_blocked
+    @blocked_events = @community.primary_cohosted_events.order(:id).page(params[:page]).per(Community::BLOCKED_EVENTS_PER_PAGE)
+    return if @blocked_events.total_count.positive?
+
+    redirect_to business_community_path(@community), notice: "削除を止めている共催イベントはありません。"
   end
 
   # メンバー管理: 参加申請の承認・却下、参加者のアクセス停止・解除。

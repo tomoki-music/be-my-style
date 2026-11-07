@@ -428,6 +428,15 @@ ActiveRecord::Schema.define(version: 2026_11_07_000000) do
     t.index ["song_id"], name: "index_entry_invitations_on_song_id"
   end
 
+  create_table "event_communities", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.bigint "community_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["community_id"], name: "index_event_communities_on_community_id"
+    t.index ["event_id", "community_id"], name: "index_event_communities_on_event_id_and_community_id", unique: true
+  end
+
   create_table "event_deadline_reminder_deliveries", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "event_deadline_reminder_id", null: false
     t.bigint "customer_id", null: false
@@ -465,15 +474,6 @@ ActiveRecord::Schema.define(version: 2026_11_07_000000) do
     t.index ["chat_message_id"], name: "index_event_deadline_reminders_on_chat_message_id"
     t.index ["enabled", "status", "armed_deadline"], name: "index_event_deadline_reminders_on_dispatch"
     t.index ["event_id", "kind"], name: "index_event_deadline_reminders_on_event_id_and_kind", unique: true
-  end
-
-  create_table "event_communities", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "event_id", null: false
-    t.bigint "community_id", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["community_id"], name: "index_event_communities_on_community_id"
-    t.index ["event_id", "community_id"], name: "index_event_communities_on_event_id_and_community_id", unique: true
   end
 
   create_table "events", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1512,12 +1512,12 @@ ActiveRecord::Schema.define(version: 2026_11_07_000000) do
   add_foreign_key "entry_invitations", "events"
   add_foreign_key "entry_invitations", "join_parts"
   add_foreign_key "entry_invitations", "songs"
+  add_foreign_key "event_communities", "communities", on_delete: :cascade
+  add_foreign_key "event_communities", "events", on_delete: :cascade
   add_foreign_key "event_deadline_reminder_deliveries", "customers", on_delete: :cascade
   add_foreign_key "event_deadline_reminder_deliveries", "event_deadline_reminders"
   add_foreign_key "event_deadline_reminders", "chat_messages", on_delete: :nullify
   add_foreign_key "event_deadline_reminders", "events"
-  add_foreign_key "event_communities", "communities", on_delete: :cascade
-  add_foreign_key "event_communities", "events", on_delete: :cascade
   add_foreign_key "events", "communities"
   add_foreign_key "events", "customers"
   add_foreign_key "favorites", "activities"

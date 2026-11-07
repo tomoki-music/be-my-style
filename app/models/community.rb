@@ -1,4 +1,6 @@
 class Community < ApplicationRecord
+  BLOCKED_EVENTS_PER_PAGE = 20
+
   EVENT_CREATION_REQUIRED_PLANS = %w[core premium].freeze
   # 「有料プラン制限を解除する（無料お試し）」ON で解除する機能。
   # コミュニティ内で完結する機能だけに限定し、コミュニティ作成やコミュニティ外の
@@ -7,8 +9,6 @@ class Community < ApplicationRecord
     business_community_post_create
     business_project_create
   ].freeze
-
-  COHOSTED_EVENT_NOTICE_LIMIT = 10
 
   extend ActiveHash::Associations::ActiveRecordExtensions
   belongs_to :prefecture
@@ -96,17 +96,9 @@ class Community < ApplicationRecord
   private
 
   def prevent_destroy_with_primary_cohosted_events
-    targets = primary_cohosted_events.order(:id).pluck(:id, :event_name)
-    return if targets.empty?
+    return unless primary_cohosted_events.exists?
 
-    # フラッシュ(Cookie セッション)に載せるため件数と長さを抑える。
-    labels = targets.first(COHOSTED_EVENT_NOTICE_LIMIT).map { |event_id, name| "「#{name.truncate(30)}」(ID: #{event_id})" }
-    labels << "ほか#{targets.size - COHOSTED_EVENT_NOTICE_LIMIT}件" if targets.size > COHOSTED_EVENT_NOTICE_LIMIT
-    errors.add(
-      :base,
-      "このコミュニティが主催する共催イベントがあるため削除できません。先に対象イベントの主催コミュニティを変更してください" \
-      "(変更はサイト管理者が管理画面で行います)。対象イベント: #{labels.join('、')}"
-    )
+    errors.add(:base, "このコミュニティが主催する共催イベントがあるため削除できません。先に対象イベントの主催コミュニティを変更してください。")
     throw :abort
   end
 

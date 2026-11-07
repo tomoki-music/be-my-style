@@ -139,6 +139,130 @@ RSpec.describe "Event の開催コミュニティ", type: :model do
     end
   end
 
+  describe "主催と共催先のドメイン" do
+    let(:business) { FactoryBot.create(:community, domain: Domain.find_or_create_by!(name: "business")) }
+
+    before { set_cohosts(japanese) }
+
+    def expect_unchanged
+      fresh = Event.find(event.id)
+      expect(fresh.community_id).to eq western.id
+      expect(fresh.event_communities.pluck(:community_id)).to contain_exactly(western.id, japanese.id)
+    end
+
+    it "共催先の指定を省いて別ドメインへ主催だけを変えると、主催も共催先も変わらない" do
+      expect(Event.find(event.id).update(community_id: business.id)).to eq false
+      expect_unchanged
+    end
+
+    it "旧主催を残さない指定でも、残る共催先が別ドメインならエラーにする" do
+      expect(Event.find(event.id).update(community_id: business.id, keep_previous_primary_as_cohost: "0")).to eq false
+      expect_unchanged
+    end
+
+    it "共催先を全て外した指定なら、別ドメインの主催へ変更できる" do
+      expect(Event.find(event.id).update(community_id: business.id, keep_previous_primary_as_cohost: "0", selected_cohost_community_ids: [""])).to eq true
+      expect(Event.find(event.id).all_hosting_community_ids).to eq [business.id]
+    end
+
+    it "共催先の無いイベントは、従来どおり別ドメインの主催へ変更できる" do
+      solo = FactoryBot.create(:event, :event_with_songs, community: jazz)
+
+      expect(Event.find(solo.id).update(community_id: business.id)).to eq true
+      expect(Event.find(solo.id).all_hosting_community_ids).to eq [business.id]
+    end
+  end
+
+  describe "リクエスト者" do
+    let(:song) { event.songs.first }
+    let(:reloaded_event) { Event.find(event.id) }
+
+    def update_with_song(event_attributes, requested_by_customer_id)
+      reloaded_event.update(event_attributes.merge(
+        songs_attributes: { "0" => { id: song.id, requested_by_customer_id: requested_by_customer_id } }
+      ))
+    end
+
+    before { set_cohosts(japanese) }
+
+    it "登録済みの人は、共催先を解除してもそのまま保持する" do
+      requester = member_of(japanese)
+      song.update!(requested_by_customer_id: requester.id)
+
+      expect(reloaded_event.update(selected_cohost_community_ids: [""])).to eq true
+
+      expect(Song.find(song.id).requested_by_customer_id).to eq requester.id
+    end
+
+    it "登録済みの人は、旧主催を残さない主催変更でもそのまま保持する" do
+      requester = member_of(western)
+      song.update!(requested_by_customer_id: requester.id)
+
+      expect(reloaded_event.update(community_id: jazz.id, keep_previous_primary_as_cohost: "0")).to eq true
+
+      expect(reloaded_event.reload.all_hosting_community_ids).not_to include(western.id)
+      expect(Song.find(song.id).requested_by_customer_id).to eq requester.id
+    end
+
+    it "所属外になった人を同じ値で送っても保持し、他の項目も保存できる" do
+      requester = member_of(japanese)
+      song.update!(requested_by_customer_id: requester.id)
+      reloaded_event.update!(selected_cohost_community_ids: [""])
+
+      expect(Event.find(event.id).update(place: "新会場", songs_attributes: { "0" => { id: song.id, requested_by_customer_id: requester.id.to_s } })).to eq true
+
+      expect(Event.find(event.id).place).to eq "新会場"
+      expect(Song.find(song.id).requested_by_customer_id).to eq requester.id
+    end
+
+    it "項目を送らなければ変更せず、空で送れば明示的に解除する" do
+      requester = member_of(japanese)
+      song.update!(requested_by_customer_id: requester.id)
+
+      Event.find(event.id).update!(songs_attributes: { "0" => { id: song.id, song_name: "曲名変更" } })
+      expect(Song.find(song.id).requested_by_customer_id).to eq requester.id
+
+      Event.find(event.id).update!(songs_attributes: { "0" => { id: song.id, requested_by_customer_id: "" } })
+      expect(Song.find(song.id).requested_by_customer_id).to be_nil
+    end
+
+    it "同じ送信で外す共催先のメンバーを新たに指定すると、更新全体をエラーにする" do
+      expect(update_with_song({ place: "新会場", selected_cohost_community_ids: [""] }, member_of(japanese).id)).to eq false
+
+      fresh = Event.find(event.id)
+      expect(fresh.place).not_to eq "新会場"
+      expect(fresh.all_hosting_community_ids).to eq [western.id, japanese.id]
+      expect(Song.find(song.id).requested_by_customer_id).to be_nil
+    end
+
+    it "残さない旧主催のメンバーを同じ送信で新たに指定すると、更新全体をエラーにする" do
+      expect(update_with_song({ community_id: jazz.id, keep_previous_primary_as_cohost: "0" }, member_of(western).id)).to eq false
+
+      fresh = Event.find(event.id)
+      expect(fresh.community_id).to eq western.id
+      expect(fresh.all_hosting_community_ids).to eq [western.id, japanese.id]
+      expect(Song.find(song.id).requested_by_customer_id).to be_nil
+    end
+
+    it "残す旧主催のメンバーは同じ送信で新たに指定できる" do
+      requester = member_of(western)
+
+      expect(update_with_song({ community_id: jazz.id, keep_previous_primary_as_cohost: "1" }, requester.id)).to eq true
+      expect(Song.find(song.id).requested_by_customer_id).to eq requester.id
+    end
+
+    it "同じ送信で主催・共催先に加わるコミュニティのメンバーは新たに指定できる" do
+      new_primary_member = member_of(jazz)
+      expect(update_with_song({ community_id: jazz.id, keep_previous_primary_as_cohost: "1" }, new_primary_member.id)).to eq true
+      expect(Song.find(song.id).requested_by_customer_id).to eq new_primary_member.id
+
+      blues = FactoryBot.create(:community)
+      new_cohost_member = member_of(blues)
+      expect(Event.find(event.id).update(selected_cohost_community_ids: [blues.id], songs_attributes: { "0" => { id: song.id, requested_by_customer_id: new_cohost_member.id } })).to eq true
+      expect(Song.find(song.id).requested_by_customer_id).to eq new_cohost_member.id
+    end
+  end
+
   describe "#community_member?" do
     before { set_cohosts(japanese) }
 
@@ -272,9 +396,8 @@ RSpec.describe "Event の開催コミュニティ", type: :model do
 
       expect(Community.exists?(western.id)).to eq true
       expect(Event.exists?(event.id)).to eq true
-      message = western.errors.full_messages.join
-      expect(message).to include("先に対象イベントの主催コミュニティを変更してください")
-      expect(message).to include("「#{event.event_name}」(ID: #{event.id})")
+      expect(western.errors.full_messages.join).to include("先に対象イベントの主催コミュニティを変更してください")
+      expect(western.primary_cohosted_events).to contain_exactly(event)
     end
 
     it "拒否されたときはメンバーなどの関連も消さない" do
@@ -298,15 +421,6 @@ RSpec.describe "Event の開催コミュニティ", type: :model do
 
       expect(solo_community.destroy).to be_truthy
       expect(Event.exists?(solo_event.id)).to eq false
-    end
-
-    it "案内する対象イベントは10件までで、残りは件数で示す" do
-      11.times do
-        FactoryBot.create(:event, :event_with_songs, community: jazz).update!(selected_cohost_community_ids: [japanese.id])
-      end
-
-      expect(jazz.destroy).to eq false
-      expect(jazz.errors.full_messages.join).to include("ほか1件")
     end
 
     it "イベントを削除すると中間テーブルの行も消える" do

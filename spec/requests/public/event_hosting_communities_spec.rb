@@ -14,8 +14,8 @@ RSpec.describe "イベントの開催コミュニティ(公開画面)", type: :r
   let!(:vocal) { FactoryBot.create(:join_part, song: song, join_part_name: "ボーカル") }
   let!(:guitar) { FactoryBot.create(:join_part, song: song, join_part_name: "ギター") }
 
-  def member_of(*communities)
-    FactoryBot.create(:customer).tap do |customer|
+  def member_of(*communities, **attributes)
+    FactoryBot.create(:customer, **attributes).tap do |customer|
       communities.each { |community| CommunityCustomer.create!(customer: customer, community: community) }
     end
   end
@@ -395,21 +395,137 @@ RSpec.describe "イベントの開催コミュニティ(公開画面)", type: :r
     end
   end
 
+  describe "編集フォームのリクエスト者" do
+    let(:requester) { member_of(japanese, name: "共催メンバーさん") }
+
+    def requester_select(body)
+      Nokogiri::HTML(body).css("select[name*='requested_by_customer_id']").first
+    end
+
+    before do
+      host_both
+      song.update!(requested_by_customer_id: requester.id)
+      Event.find(event.id).update!(selected_cohost_community_ids: [""])
+      sign_in organizer
+    end
+
+    it "所属外になった登録済みの人も現在の設定として選択状態で表示する" do
+      get edit_public_event_path(event)
+
+      selected = requester_select(response.body).css("option[selected]")
+      expect(selected.map { |option| option["value"].to_i }).to eq [requester.id]
+      expect(selected.text).to include("共催メンバーさん（現在の設定）")
+    end
+
+    it "フォームの選択値のまま保存しても記録は消えず、「指定なし」を選ぶと解除される" do
+      get edit_public_event_path(event)
+      selected_value = requester_select(response.body).css("option[selected]").first["value"]
+
+      patch public_event_path(event), params: { event: { place: "新会場", songs_attributes: { "0" => { id: song.id, requested_by_customer_id: selected_value } } } }
+      expect(response).to redirect_to(public_event_path(event))
+      expect(Song.find(song.id).requested_by_customer_id).to eq requester.id
+
+      patch public_event_path(event), params: { event: { songs_attributes: { "0" => { id: song.id, requested_by_customer_id: "" } } } }
+      expect(Song.find(song.id).requested_by_customer_id).to be_nil
+    end
+
+    it "別の所属外の人へ変更すると更新全体をエラーにし、入力値を見える状態で再表示する" do
+      other = member_of(japanese, name: "別の所属外さん")
+
+      patch public_event_path(event), params: { event: { place: "新会場", songs_attributes: { "0" => { id: song.id, requested_by_customer_id: other.id } } } }
+
+      expect(response.status).to eq 200
+      expect(response.body).to include("有効なメンバーではありません")
+      expect(requester_select(response.body).css("option[selected]").map { |option| option["value"].to_i }).to eq [other.id]
+      expect(Event.find(event.id).place).not_to eq "新会場"
+      expect(Song.find(song.id).requested_by_customer_id).to eq requester.id
+    end
+  end
+
   describe "コミュニティの削除" do
     let(:owner) { FactoryBot.create(:customer, is_owner: :community_owner) }
 
-    it "共催イベントの主催コミュニティはオーナーでも削除できず、対象イベントを案内する" do
-      host_both
+    def own_western
       CommunityOwner.create!(customer: owner, community: western)
       western.update!(owner_id: owner.id)
       sign_in owner
+    end
+
+    def blocked_list_names(body)
+      Nokogiri::HTML(body).css(".community-destroy-blocked__event-name").map(&:text)
+    end
+
+    it "共催イベントの主催コミュニティは削除できず、消えない案内ページへ移動する" do
+      host_both
+      own_western
 
       expect { delete public_community_path(western) }.not_to change(Community, :count)
 
-      expect(response).to redirect_to(public_community_path(western))
+      expect(response).to redirect_to(destroy_blocked_public_community_path(western))
+      expect(flash[:alert]).to be_blank
       follow_redirect!
-      expect(response.body).to include("先に対象イベントの主催コミュニティを変更してください")
-      expect(response.body).to include("「合同セッション」(ID: #{event.id})")
+      expect(response.status).to eq 200
+      expect(response.body).to include("削除を止めました", "先に管理画面で主催を変更します", "サイト管理者へ依頼")
+      expect(blocked_list_names(response.body)).to eq ["合同セッション"]
+
+      # フラッシュではないので、開き直しても同じ内容が読める。
+      get destroy_blocked_public_community_path(western)
+      expect(blocked_list_names(response.body)).to eq ["合同セッション"]
+    end
+
+    it "オーナーには開ける公開画面のリンクだけを出し、管理画面のリンクは出さない" do
+      host_both
+      own_western
+
+      get destroy_blocked_public_community_path(western)
+
+      expect(response.body).to include(public_event_path(event), edit_public_event_path(event))
+      expect(response.body).not_to include(edit_admin_event_path(event))
+    end
+
+    it "件数が多くても全ページをたどれば全件を確認できる" do
+      own_western
+      expected = 25.times.map do |i|
+        FactoryBot.create(:event, :event_with_songs, community: western, event_name: "共催回#{i}").tap do |target|
+          target.update!(selected_cohost_community_ids: [japanese.id])
+        end.event_name
+      end
+
+      get destroy_blocked_public_community_path(western)
+      first_page = blocked_list_names(response.body)
+      expect(first_page.size).to eq Community::BLOCKED_EVENTS_PER_PAGE
+      expect(response.body).to include("全 25 件")
+      expect(Nokogiri::HTML(response.body).css("a[href*='page=2']")).not_to be_empty
+
+      get destroy_blocked_public_community_path(western, page: 2)
+      expect(first_page + blocked_list_names(response.body)).to match_array(expected)
+    end
+
+    it "イベント名はエスケープして表示する" do
+      event.update!(event_name: "<script>alert(1)</script>", selected_cohost_community_ids: [japanese.id])
+      own_western
+
+      get destroy_blocked_public_community_path(western)
+
+      expect(response.body).not_to include("<script>alert(1)</script>")
+      expect(blocked_list_names(response.body)).to eq ["<script>alert(1)</script>"]
+    end
+
+    it "オーナー以外は案内ページを開けない" do
+      host_both
+      sign_in member_of(western)
+
+      get destroy_blocked_public_community_path(western)
+
+      expect(response).to redirect_to(public_communities_path)
+    end
+
+    it "対象イベントが無くなれば案内ページからコミュニティへ戻す" do
+      own_western
+
+      get destroy_blocked_public_community_path(western)
+
+      expect(response).to redirect_to(public_community_path(western))
     end
 
     it "共催先としてのみ設定されたコミュニティは削除でき、イベントと参加記録は残る" do

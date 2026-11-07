@@ -1,0 +1,25 @@
+.community-destroy-blocked
+  %h2 コミュニティを削除できませんでした
+  .community-destroy-blocked__reason{ role: "alert" }
+    「#{community.name}」が主催する共催イベントが #{events.total_count} 件あるため、削除を止めました。コミュニティのデータは削除していません。
+  %h3 次の操作
+  %ol.community-destroy-blocked__steps
+    - if admin_signed_in?
+      %li 先に管理画面で主催を変更します。下の各イベントの「管理画面で主催を変更」から、別のコミュニティを主催にしてください。
+    - else
+      %li 先に管理画面で主催を変更します。主催を変更できるのはサイト管理者だけなので、下のイベントの変更をサイト管理者へ依頼してください。
+    %li 全てのイベントの主催を変更したら、もう一度コミュニティを削除してください。
+  %h3 対象イベント（全 #{events.total_count} 件）
+  %ul.community-destroy-blocked__list
+    - events.each do |event|
+      %li.community-destroy-blocked__item
+        .community-destroy-blocked__event-name= event.event_name
+        %small.text-muted
+          = "ID: #{event.id} / 開始: #{l(event.event_start_time, format: :short)}"
+        - links = community_destroy_blocked_event_links(event)
+        - if links.any?
+          .community-destroy-blocked__event-links
+            - links.each do |label, path|
+              = link_to label, path, class: "btn btn-sm btn-outline-info", data: { turbolinks: false }
+  = paginate events
+  = link_to "コミュニティへ戻る", back_path, class: "btn btn-secondary", data: { turbolinks: false }

@@ -12,10 +12,23 @@ RSpec.describe "Business コミュニティの削除と共催イベント", type
     sign_in owner
   end
 
-  it "共催イベントを主催していると削除できず、対象イベントを案内する" do
+  it "共催イベントを主催していると削除できず、消えない案内ページへ移動する" do
     expect { delete business_community_path(community) }.not_to change(Community, :count)
 
+    expect(response).to redirect_to(destroy_blocked_business_community_path(community))
+    follow_redirect!
+    expect(response.status).to eq 200
+    expect(response.body).to include("先に管理画面で主催を変更します", "合同企画", business_community_path(community))
+    # Business だけの会員は開けない公開画面へのリンクを出さない。
+    expect(response.body).not_to include(public_event_path(event))
+    expect(response.body).not_to include(edit_admin_event_path(event))
+  end
+
+  it "オーナー以外は案内ページを開けない" do
+    sign_in FactoryBot.create(:customer, domain_name: "business")
+
+    get destroy_blocked_business_community_path(community)
+
     expect(response).to redirect_to(business_community_path(community))
-    expect(flash[:alert]).to include("先に対象イベントの主催コミュニティを変更してください", "「合同企画」(ID: #{event.id})")
   end
 end

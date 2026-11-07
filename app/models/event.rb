@@ -64,7 +64,7 @@ class Event < ApplicationRecord
   # 巻き込んで保存不能にしないため(退会後も履歴として表示し続ける方針)。
   validate :customer_must_be_active, if: :will_save_change_to_customer_id?
   validate :enabled_deadline_reminders_require_deadline
-  validate :selected_cohost_communities_must_be_valid
+  validate :hosting_communities_must_be_consistent
 
   after_save :sync_event_communities
 
@@ -74,40 +74,39 @@ class Event < ApplicationRecord
 
   private
 
-  def selected_cohost_communities_must_be_valid
-    return if @selected_cohost_community_ids.nil? && !keep_previous_primary_on_change?
+  # 保存後の組み合わせで検証する。共催先の指定を省いて主催だけを変える更新も対象にする。
+  def hosting_communities_must_be_consistent
+    return if @selected_cohost_community_ids.nil? && !will_save_change_to_community_id?
 
     if @selected_cohost_community_ids_malformed
       errors.add(:base, "共催先の指定が正しくありません")
       return
     end
 
-    requested_ids = Array(@selected_cohost_community_ids)
-    requested_ids |= [community_id_in_database] if keep_previous_primary_on_change?
-    domain_id_by_community = Community.where(id: requested_ids | [community_id].compact).pluck(:id, :domain_id).to_h
-    if (requested_ids - domain_id_by_community.keys).any?
+    final_ids = resulting_hosting_community_ids
+    domain_id_by_community = Community.where(id: final_ids).pluck(:id, :domain_id).to_h
+    if (final_ids - [community_id] - domain_id_by_community.keys).any?
       errors.add(:base, "存在しないコミュニティが共催先に含まれています")
     elsif domain_id_by_community.values.uniq.size > 1
       errors.add(:base, "異なるサービスのコミュニティは共催先にできません")
     end
   end
 
-  def keep_previous_primary_on_change?
-    @keep_previous_primary_as_cohost == true && persisted? && will_save_change_to_community_id?
+  # 主催は community_id だけで決まり、共催先の指定内容で解除も切り替えもされない。
+  # 主催を変更したときの旧主催は、keep_previous_primary_as_cohost で明示した場合だけ共催先に残す。
+  def calculate_hosting_community_ids(current:, previous_primary:)
+    cohosts = (@selected_cohost_community_ids || current) - [previous_primary, community_id]
+    cohosts |= [previous_primary] if previous_primary && @keep_previous_primary_as_cohost == true
+    [community_id].compact | cohosts
   end
 
   # 保存と同じトランザクションで反映する(has_many の *_ids= は保存前に即時反映されてしまうため使わない)。
-  # 主催は community_id だけで決まり、共催先の指定内容で解除も切り替えもされない。
-  # 主催を変更したときの旧主催は、keep_previous_primary_as_cohost で明示した場合だけ共催先に残す。
   def sync_event_communities
-    selected = @selected_cohost_community_ids
-    return if selected.nil? && !saved_change_to_community_id?
+    return if @selected_cohost_community_ids.nil? && !saved_change_to_community_id?
 
     current = EventCommunity.where(event_id: id).pluck(:community_id)
     previous_primary = community_id_before_last_save if saved_change_to_community_id?
-    cohosts = (selected || current) - [previous_primary, community_id]
-    cohosts |= [previous_primary] if previous_primary && @keep_previous_primary_as_cohost == true
-    desired = [community_id] | cohosts
+    desired = calculate_hosting_community_ids(current: current, previous_primary: previous_primary)
 
     EventCommunity.where(event_id: id, community_id: current - desired).delete_all
     (desired - current).each { |hosting_id| add_event_community(hosting_id) }
@@ -201,6 +200,18 @@ class Event < ApplicationRecord
     return Community.none if primary.blank?
 
     Community.where(domain_id: primary.domain_id).where.not(id: primary.id).order(:name)
+  end
+
+  # この保存で確定する開催コミュニティ。未保存の共催先・主催の指定を反映する。
+  def resulting_hosting_community_ids
+    previous_primary = community_id_in_database if will_save_change_to_community_id?
+    calculate_hosting_community_ids(current: event_communities.map(&:community_id), previous_primary: previous_primary)
+  end
+
+  # この保存で確定する開催コミュニティのいずれかに所属する有効メンバー。
+  # リクエスト者を新たに指定するときの検証に使う(同じ送信で外すコミュニティのメンバーは対象外)。
+  def resulting_hosting_community_members
+    Customer.active.where(id: CommunityCustomer.where(community_id: resulting_hosting_community_ids).select(:customer_id))
   end
 
   # 開催コミュニティのいずれかに所属する有効メンバー(複数所属でも重複しない)。

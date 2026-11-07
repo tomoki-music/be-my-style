@@ -27,6 +27,7 @@ Rails.application.routes.draw do
     resources :customers, only: [:edit, :update]
 
     resources :communities do
+      get :destroy_blocked, on: :member
       # 「有料機能を無料でお試し」。Businessコミュニティ専用で、コミュニティ詳細画面から操作する。
       resource :plan_trial, only: [:update], controller: "community_plan_trials"
     end
@@ -171,6 +172,7 @@ Rails.application.routes.draw do
 
     # コミュニティ機能
     resources :communities do
+      get :destroy_blocked, on: :member
       delete "leave" => "communities#leave"
       get "new/mail" => "communities#new_mail"
       get "send/mail" => "communities#send_mail"
@@ -268,6 +270,7 @@ Rails.application.routes.draw do
     resources :chat_attachments, only: [:show]
 
     resources :communities do
+      get :destroy_blocked, on: :member
       delete "leave" => "communities#leave"
 
       get "new/mail" => "communities#new_mail"
