@@ -135,7 +135,7 @@ class CustomerMailer < ApplicationMailer
   def business_project_chat_mail
     @project = params[:project]
     @project_chat = params[:project_chat]
-    return unless @ps_customer.confirm_mail && @ps_customer.business_project_notification_recipient?(@project)
+    return unless @ps_customer.business_email_notifications_enabled? && @ps_customer.business_project_notification_recipient?(@project)
 
     @project_thread = @project_chat.project_thread
     @project_url = "https://be-my-style.com/business/projects/#{@project.id}"
@@ -147,7 +147,11 @@ class CustomerMailer < ApplicationMailer
 
   # ビジネス通知の表示名は常に NAKAMA。送信元アドレスと経路は SenderConfig が有効なときだけ切り替える
   # (無効時・設定不足時は従来のアドレス・送信経路)。
+  # 受信設定は送信時点の値で判断する(キューに入った後でメール通知をオフにした人へは送らない)。
+  # 後から送るジョブでは @ps_customer が送信時に読み直されるため、最新の設定が反映される。
   def business_mail(**headers)
+    return unless @ps_customer.business_email_notifications_enabled?
+
     mail(**headers.merge(from: MailFrom.business).merge(BusinessMail::SenderConfig.mail_options))
   end
 

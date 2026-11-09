@@ -40,6 +40,10 @@ class Notification < ApplicationRecord
       .or(where(action: BUSINESS_PROJECT_ACTIONS).where.not(project_id: nil))
   end
 
+  # Business の「画面内の通知」をオフにしていた間の通知(hidden_in_app)は、ベル・通知一覧に出さない。
+  # オンに戻しても、オフの間の通知は出さない(オンに戻す前からある通知は従来どおり出る)。
+  scope :shown_in_app, -> { where(hidden_in_app: false) }
+
   private
 
   # メールの登録に失敗しても、投稿と画面内の通知は保存済みのまま残す(投稿した人の画面をエラーにしない)。

@@ -59,7 +59,7 @@ class Business::PermitsController < ApplicationController
     return if owner.blank? || owner.is_deleted?
 
     owner.business_notification_request(current_customer, @community.id)
-    return unless owner.confirm_mail
+    return unless owner.business_email_notifications_enabled?
 
     CustomerMailer.with(ac_customer: current_customer, ps_customer: owner, community: @community).business_request_mail.deliver_later
   end

@@ -35,7 +35,7 @@ module Business
       when "posts" then :timeline
       when "helps" then :help
       when "notifications" then :notifications
-      when "customers" then :account
+      when "customers", "notification_settings" then :account
       end
     end
 

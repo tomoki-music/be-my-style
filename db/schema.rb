@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_11_07_000000) do
+ActiveRecord::Schema.define(version: 2026_11_09_000001) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -118,6 +118,15 @@ ActiveRecord::Schema.define(version: 2026_11_07_000000) do
     t.datetime "updated_at", precision: 6, null: false
     t.index ["email"], name: "index_admins_on_email", unique: true
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
+  end
+
+  create_table "business_notification_settings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.boolean "email_enabled", default: true, null: false
+    t.boolean "in_app_enabled", default: true, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_business_notification_settings_on_customer_id", unique: true
   end
 
   create_table "chat_mentions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -912,6 +921,7 @@ ActiveRecord::Schema.define(version: 2026_11_07_000000) do
     t.integer "project_id"
     t.bigint "chat_message_id"
     t.bigint "project_chat_id"
+    t.boolean "hidden_in_app", default: false, null: false
     t.index ["chat_message_id"], name: "index_notifications_on_chat_message_id"
     t.index ["comment_id"], name: "index_notifications_on_comment_id"
     t.index ["event_id"], name: "index_notifications_on_event_id"
@@ -1466,6 +1476,7 @@ ActiveRecord::Schema.define(version: 2026_11_07_000000) do
   add_foreign_key "activity_reactions", "customers"
   add_foreign_key "admin_notifications", "admins"
   add_foreign_key "admin_notifications", "customers"
+  add_foreign_key "business_notification_settings", "customers"
   add_foreign_key "chat_mentions", "chat_messages"
   add_foreign_key "chat_mentions", "customers", column: "mentioned_customer_id"
   add_foreign_key "chat_message_link_previews", "chat_messages"

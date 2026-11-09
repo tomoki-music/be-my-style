@@ -5,6 +5,9 @@
 .ba-page-header
   .ba-page-header__text
     %h1.ba-page-title 通知
+  = link_to business_notification_setting_path, class: "ba-text-link" do
+    %i.fa-solid.fa-gear{ "aria-hidden": "true" }
+    通知設定
 
 - if @notifications.empty?
   .ba-empty

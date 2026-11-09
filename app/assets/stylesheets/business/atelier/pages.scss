@@ -452,7 +452,10 @@
   }
 
   .ba-user__action {
+    display: flex;
     flex: none;
+    flex-wrap: wrap;
+    gap: var(--ba-space-2);
   }
 
   .ba-chip-list {
@@ -817,5 +820,27 @@
   .ba-break {
     overflow-wrap: anywhere;
     word-break: break-all;
+  }
+
+  .notification-settings__status {
+    margin: 0 0 var(--ba-space-2);
+    font-size: 14px;
+  }
+
+  .notification-settings__scope {
+    margin-bottom: var(--ba-space-4);
+    padding: var(--ba-space-3) var(--ba-space-4);
+    border: 1px solid var(--ba-accent-line);
+    border-radius: var(--ba-radius-control);
+    background: var(--ba-accent-soft);
+    font-size: 14px;
+
+    p {
+      margin: 0;
+    }
+
+    p + p {
+      margin-top: var(--ba-space-1);
+    }
   }
 }
