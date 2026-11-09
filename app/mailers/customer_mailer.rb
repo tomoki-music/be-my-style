@@ -88,44 +88,44 @@ class CustomerMailer < ApplicationMailer
   def like_post_mail
     @post = params[:post]
     @post_url = "https://be-my-style.com/business/posts/#{@post.id}"
-    mail to: @ps_customer.email, subject: 'あなたの投稿がいいねされました！'
+    business_mail to: @ps_customer.email, subject: 'あなたの投稿がいいねされました！'
   end
 
   def comment_post_mail
     @post = params[:post]
     @message = params[:message]
     @post_url = "https://be-my-style.com/business/posts/#{@post.id}"
-    mail to: @ps_customer.email, subject: 'あなたの投稿にコメントが付きました！'
+    business_mail to: @ps_customer.email, subject: 'あなたの投稿にコメントが付きました！'
   end
 
   def business_follow_mail
     @follower_url = "https://be-my-style.com/business/customers/#{@ac_customer.id}"
-    mail to: @ps_customer.email, subject: 'あなたのアカウントが「フォロー」されました！'
+    business_mail to: @ps_customer.email, subject: 'あなたのアカウントが「フォロー」されました！'
   end
 
   # コミュニティ申請通知、許可通知
   def business_request_mail
     @community = params[:community]
     @community_url = "https://be-my-style.com/business/communities/#{@community.id}"
-    mail to: @ps_customer.email, subject: 'あなたの企画した「コミュニティ」へ参加申請が届きました！'
+    business_mail to: @ps_customer.email, subject: 'あなたの企画した「コミュニティ」へ参加申請が届きました！'
   end
 
   def business_accept_mail
     @community = params[:community]
     @community_url = "https://be-my-style.com/business/communities/#{@community.id}"
-    mail to: @ps_customer.email, subject: '参加申請した「コミュニティ」への参加が受理されました！'
+    business_mail to: @ps_customer.email, subject: '参加申請した「コミュニティ」への参加が受理されました！'
   end
 
   def business_project_created_mail
     @project = params[:project]
     @project_url = "https://be-my-style.com/business/projects/#{@project.id}"
-    mail to: @ps_customer.email, subject: '所属コミュニティで新しいプロジェクトが作成されました！'
+    business_mail to: @ps_customer.email, subject: '所属コミュニティで新しいプロジェクトが作成されました！'
   end
 
   def business_project_joined_mail
     @project = params[:project]
     @project_url = "https://be-my-style.com/business/projects/#{@project.id}"
-    mail to: @ps_customer.email, subject: 'プロジェクトに新しい参加メンバーが加わりました！'
+    business_mail to: @ps_customer.email, subject: 'プロジェクトに新しい参加メンバーが加わりました！'
   end
 
   # 新しい投稿の通知メールは BusinessProjectChatMailer(通知 ID だけを渡す)。これは更新前に登録されたジョブを
@@ -138,10 +138,15 @@ class CustomerMailer < ApplicationMailer
     @project_thread = @project_chat.project_thread
     @project_url = "https://be-my-style.com/business/projects/#{@project.id}"
     @project_url = "#{@project_url}/threads/#{@project_thread.id}#post-project_chat-#{@project_chat.id}" if @project_thread
-    mail to: @ps_customer.email, subject: '参加中のプロジェクトに新しいコメントが届きました！'
+    business_mail to: @ps_customer.email, subject: '参加中のプロジェクトに新しいコメントが届きました！'
   end
 
   private
+
+  # ビジネス通知だけ送信元を切り替える。無効時・設定不足時は mail と同じ(従来の From・送信経路)。
+  def business_mail(**headers)
+    mail(**headers.merge(BusinessMail::SenderConfig.mail_options))
+  end
 
   def set_default_params
     @ac_customer = params[:ac_customer]
