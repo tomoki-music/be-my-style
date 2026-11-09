@@ -1,0 +1,49 @@
+#!/bin/bash
+# 本番の状態を固定形式で返す。秘密値・ファイル内容・ログ本文は出力しない（件数・有無・権限のみ）。
+set -u
+PATH=/usr/sbin:/usr/bin:/bin
+umask 077
+[ "$(id -u)" = 0 ] || { echo "must run via sudo" >&2; exit 1; }
+ENVF=/etc/be-my-style/puma.env
+APP=/home/ec2-user/be-my-style
+KEYS="DB_HOST DB_DATABASE DB_USERNAME DB_PASSWORD OPENAI_API_KEY LINE_CHANNEL_SECRET LINE_CHANNEL_ACCESS_TOKEN BUSINESS_MAIL_SENDER_ENABLED BUSINESS_SMTP_ADDRESS BUSINESS_SMTP_PORT BUSINESS_SMTP_USER_NAME BUSINESS_SMTP_PASSWORD"
+has_key() { grep -q "^$1=." "$ENVF" 2>/dev/null && echo set || echo unset; }
+mode_of() { [ -e "$1" ] && stat -c '%a %U:%G' "$1" || echo missing; }
+http() { curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$1" || echo ERR; }
+do_status() {
+  echo "format=bms-status/1"
+  echo "checked_at=$(date -u +%FT%TZ)"
+  echo "puma_active=$(systemctl is-active puma)"
+  echo "puma_since=$(systemctl show puma -p ActiveEnterTimestamp --value)"
+  echo "puma_nrestarts=$(systemctl show puma -p NRestarts --value)"
+  local pid; pid=$(systemctl show puma -p MainPID --value)
+  echo "puma_workers=$(pgrep -P "$pid" 2>/dev/null | wc -l)"
+  echo "nginx_active=$(systemctl is-active nginx)"
+  echo "singing_analyzer_active=$(systemctl is-active singing-analyzer)"
+  echo "http_root=$(http https://be-my-style.com/)"
+  echo "http_business=$(http https://be-my-style.com/business)"
+  echo "deploy_head=$(runuser -u ec2-user -- git -C "$APP" rev-parse --short=8 HEAD 2>/dev/null || echo unknown)"
+  echo "disk_root_used_pct=$(df --output=pcent / | tail -1 | tr -dc 0-9)"
+  echo "puma_error_lines_60m=$(journalctl -u puma --since -60min --no-pager -q 2>/dev/null | grep -cE 'ERROR|FATAL')"
+  for k in $KEYS; do echo "config.$k=$(has_key "$k")"; done
+  [ "$(grep -E '^BUSINESS_MAIL_SENDER_ENABLED=' "$ENVF" 2>/dev/null | cut -d= -f2-)" = "true" ] \
+    && echo "business_mail_sender=enabled" || echo "business_mail_sender=disabled"
+  echo "perm.puma_env=$(mode_of "$ENVF")"
+  echo "perm.dotenv=$(mode_of "$APP/.env")"
+  echo "perm.secrets_dir=$(mode_of /etc/be-my-style)"
+  echo "dropins_with_secret_names=$(grep -lE '^Environment=.*(PASSWORD|SECRET|TOKEN|API_KEY)' /etc/systemd/system/puma.service /etc/systemd/system/puma.service.d/*.conf 2>/dev/null | wc -l)"
+  echo "unit_environment_keys=$(systemctl show puma -p Environment --value | grep -oE '(^| )[A-Z_]+=' | tr -d '= ' | sort | paste -sd, -)"
+}
+# Rails のログは journal ではなく log/ 配下のファイルにある（config/puma.rb の stdout_redirect と production.rb の logger）。
+# ログは ec2-user の権限で読む（root では読まない）。読むファイルは bms-mail-log-count に固定してあり、引数は渡さない。
+do_mail() {
+  echo "format=bms-mail/2"
+  runuser -u ec2-user -- /usr/bin/env -i PATH=/usr/bin:/bin LANG=C.UTF-8 /usr/bin/python3 -I /usr/local/libexec/bms-mail-log-count \
+    || echo "mail_log_status=unavailable reason=counter_failed"
+}
+case "${1:-}" in
+  status) do_status ;;
+  mail) do_mail ;;
+  connectivity) echo "format=bms-connectivity/1"; /usr/local/sbin/bms-verify-secrets ;;
+  *) echo "usage: status | mail | connectivity" >&2; exit 2 ;;
+esac

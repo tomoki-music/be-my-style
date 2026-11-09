@@ -18,6 +18,7 @@
 - `config/credentials.yml.enc` / `config/master.key` / `.env` / `*.env.*` は**絶対に編集・コミット・内容参照しない。**
 - 環境変数の値をログや出力に含めない。キー名のみ記載する。
 - Stripe シークレットキー・OpenAI API キーの値はどのファイルにも書かない。
+- **秘密値を含み得る設定・環境変数を丸ごと表示しない**（systemd の Unit 全体・`Environment`、`/proc/<pid>/environ`、`env`/`printenv`、`.env`、`/etc/be-my-style/`）。値を伏せる（`sed` で消す）のではなく、**許可した項目の状態（有無・長さ・件数・権限）だけ**を出す。詳細は [.claude/rules/secrets_rules.md](.claude/rules/secrets_rules.md)。
 
 ### アセット
 
@@ -26,7 +27,8 @@
 
 ### 本番サーバー
 
-- EC2 本番サーバーへの直接操作（SSH・コマンド実行）は**事前確認必須。**
+- Claude Code が本番に対して行うのは、確認専用の `ssh bms-check status` / `mail` / `connectivity` / `help` だけ（固定形式で状態を返す）。
+- 管理用キー・`ec2-user` での SSH、秘密値の登録・変更、Puma 再起動、DB 変更は**利用者が自分のターミナルで行う**。Claude Code は手順を案内する。詳細は [docs/handover/production_access.md](docs/handover/production_access.md)。
 - systemd サービスの restart / stop は必ずユーザーに確認してから行う。
 
 ### Stripe 変更
@@ -90,18 +92,17 @@ fix/<kebab-case-description>
    - `AsyncAdapter` のため、Job は Puma ワーカープロセス内で実行される。
    - systemd の環境変数設定ミスは Puma 再起動後まで反映されない。
 
-3. **確認コマンド（本番サーバー上）:**
+3. **確認コマンド（値は出さない）:**
    ```bash
-   # systemd の環境変数確認
-   sudo systemctl show puma --property=Environment
+   # Claude Code（Mac）: Puma が読む設定に値があるか（空文字は unset と表示される）
+   ssh bms-check status        # config.OPENAI_API_KEY=set|unset
+   ssh bms-check connectivity  # openai: ... GET /v1/models -> 200
 
-   # Puma プロセスの環境変数確認
-   sudo cat /proc/$(puma-pid)/environ | tr '\0' '\n' | grep OPENAI
-
-   # Rails console で length チェック
-   DISABLE_SPRING=1 bundle exec rails runner \
-     'key = ENV["OPENAI_API_KEY"]; puts "exists=#{key.present?} length=#{key.to_s.length}"'
+   # 利用者が本番サーバー上で確認する場合も同じ出力を使う
+   sudo /usr/local/libexec/bms-status-root status
    ```
+   - 秘密値は `/etc/be-my-style/puma.env`（root 600、`EnvironmentFile`）にあり、変更は利用者が `sudo bms-set-secret <KEY> --restart` で行う。
+   - SSH で入って実行する `rails runner` は `.env` の ENV を使うため、Puma の ENV とは一致しない。
 
 ---
 
@@ -142,6 +143,8 @@ fix/<kebab-case-description>
 - [デプロイ手順](docs/handover/deployment.md)
 - [歌声診断機能](docs/handover/singing.md)
 - [AIコメント障害と対処](docs/handover/ai_comment_debug.md)
+- [本番アクセスの分離（bms-check）](docs/handover/production_access.md)
+- [秘密値・本番アクセスのルール](.claude/rules/secrets_rules.md)
 - [Stripe 注意事項](docs/handover/stripe_notes.md)
 - [ビジネス通知メールの送信元切り替え](docs/handover/business_mail_sender.md)
 - [band診断デプロイメモ](docs/band_diagnosis_deploy_notes.md)

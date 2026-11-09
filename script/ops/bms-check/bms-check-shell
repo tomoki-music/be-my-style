@@ -1,0 +1,11 @@
+#!/bin/bash
+# bms-check ユーザーの SSH 強制コマンド。許可した確認だけを実行する（汎用シェルにはしない）。
+set -u
+PATH=/usr/sbin:/usr/bin
+cmd="${SSH_ORIGINAL_COMMAND:-status}"
+case "$cmd" in
+  status|mail|connectivity) exec sudo -n /usr/local/libexec/bms-status-root "$cmd" ;;
+  help) echo "allowed: status | mail | connectivity | help"; exit 0 ;;
+  *) logger -t bms-check "denied command (length ${#cmd})"
+     echo "denied: only status | mail | connectivity | help are allowed" >&2; exit 1 ;;
+esac

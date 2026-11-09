@@ -1,0 +1,3 @@
+# Claude Code 用の確認専用ユーザー。引数まで固定した確認コマンドだけを許可する。
+Defaults:bms-check !requiretty, env_reset
+bms-check ALL=(root) NOPASSWD: /usr/local/libexec/bms-status-root status, /usr/local/libexec/bms-status-root mail, /usr/local/libexec/bms-status-root connectivity

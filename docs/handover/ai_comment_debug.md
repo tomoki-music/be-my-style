@@ -22,44 +22,27 @@ Environment=OPENAI_API_KEY=
 
 ## 正しい確認方法
 
-### 1. systemd の設定確認
+> 2026-11-09 以降、秘密値は `/etc/be-my-style/puma.env`（root 600、`EnvironmentFile`）にあります。
+> systemd の `Environment` や `/proc/<pid>/environ` を表示すると秘密値がそのまま出るため、**表示しません**（[production_access.md](production_access.md)）。
+
+### 1. Puma が読む設定に値があるか（値は出さない）
 
 ```bash
-sudo systemctl show puma --property=Environment
+# Claude Code（Mac）。利用者が本番サーバー上で行う場合は sudo /usr/local/libexec/bms-status-root status
+ssh bms-check status
 ```
 
-出力例（正常）:
-```
-Environment=OPENAI_API_KEY=sk-xxxx...
-```
+- `config.OPENAI_API_KEY=set` → 1 文字以上の値がある
+- `config.OPENAI_API_KEY=unset` → 未設定または**空文字**（今回の障害の状態）
 
-出力例（異常 — 空文字）:
-```
-Environment=OPENAI_API_KEY=
-```
-
-### 2. Puma ワーカーの実環境変数を確認
+### 2. キーが有効か
 
 ```bash
-# Puma の PID を取得
-puma_pid=$(sudo systemctl show puma --property=MainPID --value)
-
-# /proc から環境変数を確認
-sudo cat /proc/$puma_pid/environ | tr '\0' '\n' | grep OPENAI
+ssh bms-check connectivity
 ```
 
-**ここで空文字が見えたら根本原因が確定。**
-
-### 3. Rails runner で length チェック（推奨）
-
-```bash
-DISABLE_SPRING=1 bundle exec rails runner \
-  'key = ENV["OPENAI_API_KEY"]; puts "exists=#{key.present?} length=#{key.to_s.length}"'
-```
-
-- `exists=true length=0` → 空文字セット（異常）
-- `exists=false length=0` → キー未設定（異常）
-- `exists=true length=XX` → 正常（XX > 0 であること）
+- `openai: key_length=NN GET /v1/models -> 200` → 有効
+- `-> 401` → キーが無効（失効・誤り）
 
 ### 4. AsyncAdapter の確認（本番で Sidekiq を使っていない場合）
 
@@ -108,13 +91,12 @@ diagnosis.result_payload["ai_comment_debug"]
 
 ## 修正手順
 
-1. `/etc/systemd/system/puma.service` を正しい値に修正
-2. systemd リロード + Puma 再起動:
+1. 利用者が本番サーバー上でキーを登録し直し、Puma を再起動する（入力は画面・引数・履歴に残らない）:
    ```bash
-   sudo systemctl daemon-reload
-   sudo systemctl restart puma
+   sudo bms-set-secret OPENAI_API_KEY --restart
    ```
-3. 上記の確認コマンドで length > 0 であることを確認
+2. `ssh bms-check status` で `config.OPENAI_API_KEY=set`、`ssh bms-check connectivity` で 200 を確認
+3. `ssh bms-check status` で `puma_active=active`・`http_root=200` を確認
 4. Rails console で失敗した診断に対して Job を再実行:
    ```ruby
    SingingDiagnoses::GenerateAiCommentJob.perform_later(diagnosis.id)
@@ -139,7 +121,7 @@ diagnosis.result_payload["ai_comment_debug"]
 
 ## 再発防止チェックリスト
 
-- [ ] `systemctl show puma --property=Environment` で `OPENAI_API_KEY` の length を確認
-- [ ] `rails runner` で `key.to_s.length > 0` を確認
+- [ ] `ssh bms-check status` で `config.OPENAI_API_KEY=set`（空文字は unset）を確認
+- [ ] `ssh bms-check connectivity` で OpenAI が 200 を返すことを確認
 - [ ] Puma 再起動後に確認コマンドを再実行
 - [ ] 本番 AI コメント生成テストを1件実施して `ai_comment_status: completed` になることを確認

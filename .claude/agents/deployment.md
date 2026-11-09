@@ -71,13 +71,12 @@ DISABLE_SPRING=1 RAILS_ENV=production bundle exec rails runner \
 ### 環境変数確認
 
 ```bash
-# systemd Unit の Environment
-sudo systemctl show puma --property=Environment
-
-# Puma ワーカーの実 ENV
-puma_pid=$(sudo systemctl show puma --property=MainPID --value)
-sudo cat /proc/$puma_pid/environ | tr '\0' '\n' | grep -E "OPENAI|STRIPE|REDIS|RAILS_ENV"
+# 値は出さず、設定の有無・権限・デプロイ済みコミットだけを確認する
+ssh bms-check status
 ```
+
+systemd の Unit 全体・`Environment`・`/proc/<pid>/environ` は表示しない。
+秘密値の変更は利用者が `sudo bms-set-secret <KEY> --restart` で行う（[.claude/rules/secrets_rules.md](../rules/secrets_rules.md)）。
 
 ---
 

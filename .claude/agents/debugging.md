@@ -41,13 +41,13 @@ customer.subscription&.plan_type
 DISABLE_SPRING=1 bundle exec rails runner \
   'key = ENV["OPENAI_API_KEY"]; puts "present=#{key.present?} length=#{key.to_s.length}"'
 
-# systemd 環境変数
-sudo systemctl show puma --property=Environment
-
-# Puma ワーカープロセスの実 ENV（最も確実）
-puma_pid=$(sudo systemctl show puma --property=MainPID --value)
-sudo cat /proc/$puma_pid/environ | tr '\0' '\n' | grep -E "OPENAI|STRIPE|REDIS"
+# Puma が読む設定に値があるか（値は出さない。空文字は unset）
+ssh bms-check status        # config.<KEY>=set|unset、perm.*、dropins_with_secret_names
+ssh bms-check connectivity  # OpenAI・LINE の疎通
 ```
+
+systemd の Unit 全体・`Environment`・`/proc/<pid>/environ` は表示しない（秘密値がそのまま出る）。
+→ [.claude/rules/secrets_rules.md](../rules/secrets_rules.md)
 
 ### ログ確認
 
@@ -76,11 +76,11 @@ DISABLE_SPRING=1 RAILS_ENV=production bundle exec rails runner \
 
 | 実行コンテキスト | ENV の取得元 |
 |-----------------|-------------|
-| `rails runner` (SSH直接) | SSH セッションの ENV |
-| Puma ワーカー内 Job | systemd Unit の Environment |
+| `rails runner` (SSH直接) | SSH セッションの ENV と `.env` |
+| Puma ワーカー内 Job | `/etc/be-my-style/puma.env`（`EnvironmentFile`） |
 
 「runner では動くが本番 Job では動かない」の原因はほぼここ。
-**必ず Puma プロセスの `/proc/$pid/environ` を確認する。**
+**Puma 側の状態は `ssh bms-check status` で確認する。**
 
 ---
 
@@ -88,8 +88,8 @@ DISABLE_SPRING=1 RAILS_ENV=production bundle exec rails runner \
 
 - [ ] `ai_comment_debug["category"]` を確認した
 - [ ] `OPENAI_API_KEY` の `length` を確認した（`present?` だけでは不十分）
-- [ ] `systemctl show puma --property=Environment` で空文字でないことを確認した
-- [ ] Puma プロセスの `/proc/$pid/environ` を確認した
+- [ ] `ssh bms-check status` で `config.OPENAI_API_KEY=set` を確認した（空文字は unset）
+- [ ] `ssh bms-check connectivity` で OpenAI が 200 を返すことを確認した
 - [ ] `queue_adapter` が `AsyncAdapter` であることを確認した
 - [ ] Puma 再起動が必要かどうか判断した
 

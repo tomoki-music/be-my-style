@@ -1,5 +1,7 @@
 # 本番サーバー移行Wiki: Amazon Linux 2 → Amazon Linux 2023
 
+> **2026-11-09 追記（秘密値の扱い）**: このWikiの環境変数確認手順（systemd の `Environment`・`/proc/<pid>/environ` を表示するもの）は移行当時の記録です。現在は秘密値を `/etc/be-my-style/puma.env`（root 600、`EnvironmentFile`）に置き、値を表示せずに `ssh bms-check status` で有無だけを確認します。手順は [production_access.md](production_access.md) と [.claude/rules/secrets_rules.md](../../.claude/rules/secrets_rules.md) に従ってください。
+
 このドキュメントは、BeMyStyle本番環境をAmazon Linux 2(旧EC2)からAmazon Linux 2023(新EC2)へ移行した際の作業内容をまとめたものです。**このWikiだけで同じ環境をゼロから再構築できること**を目的としています。
 
 > **表記について**: 実際のホスト名・IPアドレス・APIキー・パスワード等の機密情報は本ドキュメントに一切含めていません。`<...>` はプレースホルダーです。実際の値は `config/credentials.yml.enc` / systemd の Environment設定 / AWS Secrets等、正規の方法で管理してください。
