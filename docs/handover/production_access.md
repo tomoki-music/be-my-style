@@ -188,6 +188,20 @@ systemctl is-active puma
 最後に Claude Code が `ssh bms-check status` と `ssh bms-check connectivity` で、Puma 稼働・`perm.puma_env=600 root:root`・疎通が変わっていないことを確認します。
 EBS スナップショットや AMI に旧い値が残っている可能性はありますが、旧い値はすべて無効化済みのため、ここでは削除しません。
 
+### 2026-11-09 の実施記録
+
+| 手順 | 実行したスクリプト（コミット） | 結果 |
+|------|-----------------------------|------|
+| 取得・照合 | `rotation_db_compare.py` / `rotation_old_check.py` / `rotation_line_revoke.py`（`91e7e4be` 以降で内容は同じ） | ハッシュ 3 本とも OK |
+| DB 比較 | `rotation_db_compare.py` | 4 項目 same、`bms_app` で新規接続成功 |
+| 旧い値の確認 | `rotation_old_check.py` | 旧 OpenAI 401。現用 LINE は bot/info 200・設定ファイル＝稼働中 Puma・旧と異なる。旧 LINE は verify 400 |
+| 旧 LINE の分類 | `rotation_line_old_classify.py`（`2df4977b`） | `OLD_INVALID`。失効操作（`rotation_line_revoke.py`）は実行していない |
+| 後片付け | 4-1・4-2a・4-2b | `dotenv` の 3 条件を満たし、5 ファイルと `backup-20261109` を削除 |
+| 削除後 | `ssh bms-check status` / `connectivity` | Puma active、HTTP 200、`perm.puma_env=600 root:root`、OpenAI 200、LINE 200・verify 200、Webhook 200/401 |
+
+- 退避ディレクトリは削除済みのため、`rotation_*` のスクリプトはこのままでは再実行できません（退避先 `backup-20261109` を固定で読む）。次にローテーションするときは、新しい退避先に合わせてパスを変える PR を作ってから使います。
+- `rotation_old_check.py` の表示「400=失効済み」は、実際には形式不正でも 400 になるため不正確です。400 のときは `rotation_line_old_classify.py` で分類してください（実行済みのスクリプトとハッシュを一致させるため、表示は直していません）。
+
 ## 2026-11-09 の検証結果
 
 - 許可した 4 操作は固定形式で応答した。

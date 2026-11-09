@@ -84,6 +84,9 @@ DISABLE_SPRING=1 bundle exec rails runner \
 本番の状態は、確認専用の `ssh bms-check status` / `connectivity` で調べる（設定の有無・権限・疎通だけを固定形式で返す。空文字は `unset`）。
 systemd の `Environment`・`/proc/<pid>/environ`・`env` などを丸ごと表示しない。秘密値の登録・変更、管理用キーでの SSH は利用者が行う。
 詳細は [.claude/rules/secrets_rules.md](.claude/rules/secrets_rules.md) と [docs/handover/production_access.md](docs/handover/production_access.md)。
+
+あわせて次の観点も確認する。
+
 - `ActiveJob::Base.queue_adapter.class.name`
 - `ai_comment_debug`
 - Puma journal log

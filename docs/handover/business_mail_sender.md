@@ -114,10 +114,11 @@ sudo journalctl -u puma -n 300 --no-pager | grep -i "BusinessMail::SenderConfig\
 コードを戻す必要はありません。
 
 ```bash
-sudo vi /etc/be-my-style/business_mail.env   # BUSINESS_MAIL_SENDER_ENABLED を削除、または false に
-sudo systemctl restart puma
-sudo journalctl -u puma -n 50 --no-pager
+# 本番サーバー上。false を貼り付ける（true 以外なら切り替えは無効）
+sudo bms-set-secret BUSINESS_MAIL_SENDER_ENABLED --restart
 ```
+
+Claude Code が `ssh bms-check status` で `business_mail_sender=disabled`・`puma_active=active` を確認します。
 
 再起動後のビジネス通知は従来の Gmail 経路に戻ります。再起動前に積まれていた `deliver_later` のジョブは、`:async` のため Puma 再起動で失われます（従来と同じ制約）。DNS（SPF/DKIM）の設定は残しても Gmail 経路には影響しません。
 
@@ -126,7 +127,7 @@ sudo journalctl -u puma -n 50 --no-pager
 - `info@be-my-style.jp` のメールボックスが作成済みか、パスワード、XServer の送信数上限。
 - 実際の SMTP ホスト名（SPF に `sv16724.xserver.jp` があるので同じサーバーと推定）。
 - DKIM 署名が実際に付くか（DNS に公開鍵はある）。
-- 本番 Puma の systemd Unit で、既存の ENV をどの方法（`Environment=` か `EnvironmentFile=`）で渡しているか。上の手順は drop-in で追加する前提。
+- （2026-11-09 解決）本番 Puma の秘密値は `/etc/be-my-style/puma.env` を `EnvironmentFile=` で読む。ビジネス通知の設定も同じファイルに `bms-set-secret` で入れる（drop-in は追加しない）。
 - 本番 EC2 から `sv16724.xserver.jp:465` へ外向きに接続できるか（AWS は通常 25 番だけを制限。セキュリティグループ・NACL の outbound で要確認）。
   確認コマンド（ログインはしない）: `echo QUIT | openssl s_client -connect sv16724.xserver.jp:465 -verify_return_error 2>&1 | grep "Verify return code"`
 - 旧 Gmail アドレスは Devise・音楽通知などで引き続き使われます。歌声の登録画面のお問い合わせ先文言も旧アドレスのままです。
