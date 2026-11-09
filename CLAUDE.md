@@ -143,5 +143,6 @@ fix/<kebab-case-description>
 - [歌声診断機能](docs/handover/singing.md)
 - [AIコメント障害と対処](docs/handover/ai_comment_debug.md)
 - [Stripe 注意事項](docs/handover/stripe_notes.md)
+- [ビジネス通知メールの送信元切り替え](docs/handover/business_mail_sender.md)
 - [band診断デプロイメモ](docs/band_diagnosis_deploy_notes.md)
 - [band診断リリースチェック](docs/band_diagnosis_release_checklist.md)
