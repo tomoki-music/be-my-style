@@ -50,6 +50,7 @@ RSpec.describe "Business 通知設定", type: :request do
     it "未保存の会員は、従来のメール受信設定(confirm_mail)と画面内オンを引き継いで表示する" do
       sign_in me
       expect(status_texts).to eq %w[オン オン]
+      expect(page.at_css(".notification-settings__scope").text).to include("NAKAMA の通知だけ")
 
       quiet = create(:customer, domain_name: "business", confirm_mail: false)
       sign_out me
@@ -219,6 +220,43 @@ RSpec.describe "Business 通知設定", type: :request do
       save_setting(email: false, in_app: true)
 
       expect { perform_enqueued_jobs }.not_to change { mails_to_me.size }
+    end
+  end
+
+  describe "キューに入った後でメール通知をオフにした場合" do
+    let(:my_post) { Post.create!(customer: me, title: "私の投稿", body: "本文", category: "free_post") }
+
+    def mails_to_me
+      ActionMailer::Base.deliveries.count { |mail| mail.to.include?(me.email) }
+    end
+
+    def turn_off_email
+      sign_in me
+      save_setting(email: false, in_app: true)
+      sign_out me
+    end
+
+    it "フォローのメールは送信時点の設定で判断し、オフなら送らない" do
+      expect { follow_me_as(follower) }.to have_enqueued_mail(CustomerMailer, :business_follow_mail)
+      turn_off_email
+
+      expect { perform_enqueued_jobs }.not_to change { mails_to_me }
+    end
+
+    it "コメントのメールも送信時点でオフなら送らない" do
+      sign_in follower
+      expect { post business_post_messages_path(my_post), params: { message: { body: "いいですね" } } }
+        .to have_enqueued_mail(CustomerMailer, :comment_post_mail)
+      sign_out follower
+      turn_off_email
+
+      expect { perform_enqueued_jobs }.not_to change { mails_to_me }
+    end
+
+    it "オンのままなら、キューに入ったメールは送られる" do
+      follow_me_as(follower)
+
+      expect { perform_enqueued_jobs }.to change { mails_to_me }.by(1)
     end
   end
 

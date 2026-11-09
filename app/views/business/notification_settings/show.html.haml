@@ -7,7 +7,7 @@
 .ba-page-header
   .ba-page-header__text
     %h1.ba-page-title 通知設定
-    %p.ba-note NAKAMA の通知を、メールと画面内（ベル・通知一覧）それぞれでオン・オフできます。音楽側（BeMyStyle）の設定は変わりません。
+    %p.ba-note NAKAMA の通知を、メールと画面内（ベル・通知一覧）それぞれでオン・オフできます。
 
 = form_with model: @setting, url: business_notification_setting_path, method: :patch, local: true, html: { class: "ba-form notification-settings" } do |f|
   - if @setting.errors.any?
@@ -15,6 +15,11 @@
       %ul
         - @setting.errors.full_messages.each do |message|
           %li= message
+
+  .notification-settings__scope{ role: "note" }
+    %p
+      %strong この設定の対象は NAKAMA の通知だけです。
+    %p 音楽（BeMyStyle）側の通知・メール受信設定は変わりません。音楽側で受け取った通知（音楽側からのフォローなど）は、この設定に関係なく NAKAMA のベルに表示されることがあります。
 
   %fieldset.ba-fieldset
     %legend.ba-fieldset__legend メール通知
