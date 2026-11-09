@@ -26,8 +26,8 @@ class OnboardingsController < ApplicationController
     current_customer.update(onboarding_done: true)
 
     if current_customer.business_user?
-      # ログイン前に開こうとした Business の画面(共有URLなど)があれば、そこへ戻す。
-      redirect_to take_business_return_path_after_onboarding || business_root_path
+      # 招待用URLから登録した人は招待先へ、ログイン前に開こうとした Business の画面があればそこへ戻す。
+      redirect_to business_path_after_onboarding(current_customer)
     else
       redirect_to root_path
     end

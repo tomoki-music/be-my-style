@@ -1,9 +1,10 @@
--# 通常画面の「招待用URL」。URL は常に表示して、コピーできない環境でも選択して手動でコピーできるようにする。
+-# 詳細画面の最下部に補足として出す「招待用URL」。URL は常に表示して、コピーできない環境でも選択して手動でコピーできるようにする。
+-# 上部の「招待用URLをコピー」(business/shared/_share_button)もこの欄の値をコピーする。
 -# コピーのボタンは business/share_link.js が表示する(JavaScript が無ければ URL 欄だけが残る)。コピーで参加・申請は起きない。
 - record = local_assigns.fetch(:record)
 - key = "#{record.model_name.singular}-#{record.id}"
 - url = business_share_url(record)
-%section.ba-share{ "aria-labelledby": "share-title-#{key}" }
+%section.ba-share.ba-anchor-target{ id: "share-#{key}", "aria-labelledby": "share-title-#{key}" }
   %h2.ba-share__title{ id: "share-title-#{key}" }
     %i.fa-solid.fa-link{ "aria-hidden": "true" }
     招待用URL

@@ -245,15 +245,17 @@ class ApplicationController < ActionController::Base
     current_customer.has_domain?(domain_name.to_s)
   end
 
-  # オンボーディング導線からの投稿成功時にオンボーディングを完了扱いにする。
+  # オンボーディング導線からの投稿成功時にオンボーディングを完了扱いにする。完了させたら true。
   def complete_onboarding_if_pending!
-    return if current_customer.onboarding_done?
-    return unless session[:onboarding_activity_pending]
+    return false if current_customer.onboarding_done?
+    return false unless session[:onboarding_activity_pending]
 
     session.delete(:onboarding_activity_pending)
     # 投稿で完了した場合は投稿画面へ進むため、オンボーディング後の戻り先(BusinessReturnPath)は使わずに捨てる。
+    # 招待用URLから登録した人の招待先は、呼び出し側(Business::PostsController#create)で案内する。
     session.delete(BusinessReturnPath::ONBOARDING_RETURN_KEY)
     current_customer.update!(onboarding_done: true)
+    true
   end
 
 end

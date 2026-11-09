@@ -9,6 +9,10 @@ module BusinessReturnPath
   # オンボーディングを挟む間だけ、Devise の保存先から移しておくセッションのキー。
   ONBOARDING_RETURN_KEY = :business_return_to_after_onboarding
 
+  # 招待先(Business::SignupInvitations)が期限切れ・削除済みだったときの案内。
+  INVITATION_UNAVAILABLE_MESSAGE =
+    "招待されたコミュニティ・プロジェクトを開けませんでした（削除されたか、招待の有効期限が切れています）。ホームから探してください。".freeze
+
   private
 
   # アプリ内の Business の画面(パスのみ)に限る。"//host" のような外部へ向かう形は受け付けない。
@@ -33,5 +37,22 @@ module BusinessReturnPath
   def take_business_return_path_after_onboarding
     path = session.delete(ONBOARDING_RETURN_KEY).to_s
     restorable_business_path?(path) ? path : nil
+  end
+
+  # オンボーディング完了後の Business の遷移先。招待用URLから登録した人の招待先(会員に記録)を優先し、
+  # 無ければ従来どおりセッションで預かった戻り先、それも無ければ Business ホーム。
+  # 招待先が期限切れ・削除済みなら、案内を出して Business ホームへ戻す。招待先・戻り先はどちらも1回で消費する。
+  def business_path_after_onboarding(customer)
+    return_path = take_business_return_path_after_onboarding
+    invitation = Business::SignupInvitations::Take.call(customer)
+
+    case invitation.status
+    when :ok then invitation.path
+    when :invalid
+      flash[:alert] = INVITATION_UNAVAILABLE_MESSAGE
+      business_root_path
+    else
+      return_path || business_root_path
+    end
   end
 end
