@@ -1,4 +1,6 @@
 class CustomerMailer < ApplicationMailer
+  # 音楽の通知の表示名。ビジネス通知は business_mail で上書きする。
+  default from: MailFrom.music
   before_action :set_default_params
 
   def join_event_mail
@@ -143,9 +145,10 @@ class CustomerMailer < ApplicationMailer
 
   private
 
-  # ビジネス通知だけ送信元を切り替える。無効時・設定不足時は mail と同じ(従来の From・送信経路)。
+  # ビジネス通知の表示名は常に NAKAMA。送信元アドレスと経路は SenderConfig が有効なときだけ切り替える
+  # (無効時・設定不足時は従来のアドレス・送信経路)。
   def business_mail(**headers)
-    mail(**headers.merge(BusinessMail::SenderConfig.mail_options))
+    mail(**headers.merge(from: MailFrom.business).merge(BusinessMail::SenderConfig.mail_options))
   end
 
   def set_default_params

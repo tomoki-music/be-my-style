@@ -50,7 +50,7 @@ RSpec.describe "ビジネス通知メールの送信元切り替え", type: :mai
     it "ビジネス通知の From が info@be-my-style.jp になり、XServer へ 465番の TLS で送ること" do
       business_mails.each do |name, mail|
         expect(mail.from).to eq(["info@be-my-style.jp"]), name.to_s
-        expect(mail[:from].display_names).to eq(["管理人より"]), name.to_s
+        expect(mail[:from].display_names).to eq(["NAKAMA運営事務局"]), name.to_s
         expect(mail.reply_to).to be_nil, name.to_s
         expect(mail.delivery_method.settings).to include(
           address: "sv00000.xserver.jp", port: 465, tls: true, openssl_verify_mode: "peer"
