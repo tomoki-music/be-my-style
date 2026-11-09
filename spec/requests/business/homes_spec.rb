@@ -204,14 +204,17 @@ RSpec.describe "Business::Homes", type: :request do
         expect(doc.at_css(".header_container--business")).to be_nil
       end
 
-      it "0件ならBusinessコミュニティ・プロジェクトを探す導線を出す" do
+      it "未参加でもBusinessコミュニティを出し、参加中の一覧・プロジェクトを探す導線を出す" do
+        community
+
         get business_root_path
 
-        expect(doc.at_css("#my-communities").text).to include("参加しているコミュニティはまだありません。")
-        expect(doc.at_css(%(#my-communities a[href="#{business_communities_path}"]))).to be_present
+        expect(doc.css("#my-communities .ba-circle-item__name").map(&:text)).to eq ["企画コミュニティ"]
+        expect(doc.at_css(%(#my-communities a[href="#{business_communities_path}"])).text.strip).to eq "参加中のコミュニティ"
         expect(doc.at_css(%(#my-communities a[href="#{public_communities_path}"]))).to be_nil
         expect(doc.at_css(%(#my-projects a[href="#{business_projects_path}"]))).to be_present
-        expect(doc.at_css(%(#my-projects a[href="#{business_communities_path}"]))).to be_present
+        # 未参加のコミュニティはホームに並ぶため、「コミュニティを探す」はホームのコミュニティ欄へ戻す。
+        expect(doc.at_css(%(#my-projects a[href="#{business_root_path(anchor: "my-communities")}"]))).to be_present
       end
 
       it "参加中・主催・承認待ちのプロジェクトだけを出し、参加していないものは出さない" do
@@ -244,15 +247,18 @@ RSpec.describe "Business::Homes", type: :request do
         expect(response).to have_http_status(:redirect)
       end
 
-      it "コミュニティのアクセス停止後は、そのコミュニティとプロジェクトを一覧に出さない" do
+      it "コミュニティのアクセス停止後は、コミュニティを停止中として出し、プロジェクトは出さない" do
         CommunityCustomer.create!(community: community, customer: viewer)
         Project.create!(community: community, customer: owner, title: "参加企画").tap { |p| p.members << viewer }
         Business::Memberships::RevokeCommunityAccess.call(community: community, customer: viewer, suspend: true, actor: owner)
 
         get business_root_path
 
-        expect(response.body).not_to include("企画コミュニティ")
+        expect(doc.at_css("#my-communities .ba-status").text.strip).to eq "アクセス停止中"
         expect(response.body).not_to include("参加企画")
+
+        get business_communities_path
+        expect(response.body).not_to include("企画コミュニティ")
       end
 
       it "コミュニティ運営者には運営・管理として出す" do

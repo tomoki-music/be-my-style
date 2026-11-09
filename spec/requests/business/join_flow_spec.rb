@@ -43,20 +43,19 @@ RSpec.describe "Business のコミュニティ・プロジェクト参加導線"
   end
 
   describe "コミュニティ一覧" do
-    it "各カードが詳細へのリンクで、参加状況(未参加は参加方式)と「詳細」の導線を出す" do
+    it "参加済みのカードだけを詳細へのリンクで出し、参加状況・人数・「詳細」の導線を出す(承認待ちは出さない)" do
       Permit.create!(community: manual_community, customer: general)
+      CommunityCustomer.create!(community: auto_community, customer: general)
       sign_in general
 
       get business_communities_path
 
-      manual = tile_for("デザイン勉強会")
       auto = tile_for("スタートアップ交流会")
-      expect(manual["href"]).to eq business_community_path(manual_community)
-      expect(manual.at_css(".ba-status").text.strip).to eq "承認待ち"
-      expect(manual.at_css(".ba-community-tile__cta").text.strip).to eq "詳細を見る"
-      expect(auto.at_css(".ba-status").text.strip).to eq "自動承認"
-      expect(auto.at_css(".ba-community-tile__cta").text.strip).to eq "詳細・参加方法を見る"
-      expect(auto.at_css(".ba-community-tile__meta").text).to include("1人")
+      expect(auto["href"]).to eq business_community_path(auto_community)
+      expect(auto.at_css(".ba-status").text.strip).to eq "参加中"
+      expect(auto.at_css(".ba-community-tile__cta").text.strip).to eq "詳細を見る"
+      expect(auto.at_css(".ba-community-tile__meta").text).to include("2人")
+      expect(tile_for("デザイン勉強会")).to be_nil
     end
   end
 

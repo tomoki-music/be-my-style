@@ -1,14 +1,16 @@
 class Business::HomesController < ApplicationController
-  include MemberHome
-
   skip_before_action :authenticate_customer!, only: [:top]
 
   # ログイン前は紹介ページ(従来のヘッダー)のまま、ログイン後だけ Business の枠を使う。
   layout -> { customer_signed_in? ? "business" : "application" }
 
   # 未ログインでは紹介ページを出し、プロジェクトの名前・件数を含め何も取得しない。
-  # Business の画面では音楽コミュニティを案内しないため、一覧は Business コミュニティだけにする。
+  # コミュニティは参加済み・未参加を問わず Business コミュニティ全件(音楽コミュニティは出さない)、
+  # プロジェクトは本人の参加先だけを出す。参加済みだけの一覧はメニューの「コミュニティ」(communities#index)。
   def top
-    load_member_home(with_images: true, business_only: true) if customer_signed_in?
+    return unless customer_signed_in?
+
+    @home_communities = Business::CommunityDirectory.browsable(current_customer, page: params[:community_page], per: Homes::MyCommunities::PER_PAGE)
+    @my_projects = Homes::MyProjects.call(current_customer, page: params[:project_page], with_images: true)
   end
 end

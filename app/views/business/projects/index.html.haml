@@ -29,7 +29,7 @@
   .ba-empty
     %p プロジェクトはまだありません。
     .ba-empty__actions
-      = link_to "コミュニティを探す", business_communities_path, class: "ba-btn ba-btn--secondary"
+      = link_to "コミュニティを探す", business_root_path(anchor: "my-communities"), class: "ba-btn ba-btn--secondary"
 - else
   %ul.ba-project-grid
     - @projects.each do |project|

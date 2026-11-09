@@ -1,7 +1,7 @@
 .ba-page-header
   .ba-page-header__text
     %h1.ba-page-title コミュニティ
-    %p.ba-page-lead Business コミュニティを探して、参加を申請できます。
+    %p.ba-page-lead 参加中のコミュニティです。ほかのコミュニティはホームから探して参加できます。
   .ba-page-actions
     - if feature_available?(:business_community_create)
       = link_to new_business_community_path, class: "ba-btn ba-btn--primary" do
@@ -15,10 +15,17 @@
     message: "まずは既存コミュニティを見ながら雰囲気を確認できます。premiumで新しい場を作れます。",
     class_name: "feature-gate--inline"
 
--# カード全体が詳細へのリンク。参加ボタンは詳細(紹介の近く)に置き、ここでは参加状況と「詳細を見る」だけを出す。
-- if @communities.load.empty?
+-# 参加済みのコミュニティだけ(Business::CommunityDirectory.joined)。カード全体が詳細へのリンク。
+-# 未参加はホームに並び、参加ボタンは詳細(紹介の近く)に置く。
+- if @communities.total_count.zero?
   .ba-empty
-    %p コミュニティはまだありません。
+    %p 参加中のコミュニティはありません
+    .ba-empty__actions
+      = link_to "コミュニティを探す", business_root_path(anchor: "my-communities"), class: "ba-btn ba-btn--primary"
+- elsif @communities.empty?
+  .ba-empty
+    %p このページに表示するコミュニティはありません。
+    = link_to "最初のページへ", business_communities_path, class: "ba-btn ba-btn--secondary"
 - else
   %ul.ba-community-list
     - @communities.each do |community|
@@ -34,11 +41,8 @@
             - if community.introduction.present?
               %span.ba-community-tile__desc= truncate(community.introduction, length: 70)
             %span.ba-community-tile__footer
-              - if status == :none
-                %span.ba-status.ba-status--kind= business_join_approval_label(community)
-              - else
-                = business_join_status_badge(status)
+              = business_join_status_badge(status)
               %span.ba-community-tile__cta
-                = status == :none ? "詳細・参加方法を見る" : "詳細を見る"
+                詳細を見る
                 %i.fa-solid.fa-chevron-right{ "aria-hidden": "true" }
   = paginate @communities

@@ -67,7 +67,7 @@
           %p.member-home__empty-text 参加しているプロジェクトはまだありません。Business コミュニティに参加すると、そのコミュニティのプロジェクトへ参加を申請できます。
           .member-home__empty-actions
             = link_to "プロジェクトを探す", business_projects_path, class: "btn btn-outline-primary btn-sm"
-            = link_to "Businessコミュニティを探す", business_communities_path, class: "btn btn-outline-primary btn-sm"
+            = link_to "Businessコミュニティを探す", business_root_path(anchor: "my-communities"), class: "btn btn-outline-primary btn-sm"
         - else
           %p.member-home__empty-text プロジェクトは Business（NAKAMA）のコミュニティで利用できる機能です。
           .member-home__empty-actions
