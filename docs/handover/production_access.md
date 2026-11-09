@@ -58,6 +58,52 @@ sudo bms-set-secret OPENAI_API_KEY --restart
 sudo /usr/local/libexec/bms-status-root status
 ```
 
+## 認証情報ローテーション後の確認（利用者が実施）
+
+旧い値と新しい値を比べる確認は、旧い値が root だけが読める退避ファイルにあるため、確認用の `bms-check` ではできません。
+`script/ops/rotation/` の 3 本を、利用者が本番サーバー上で root として実行します。どれも秘密値は出力しません。
+
+| スクリプト | 内容 | 書き込み・外部変更 |
+|-----------|------|-------------------|
+| `rotation_db_compare.py` | `puma.env` と `.env` の DB 設定 4 項目を、両側に 1 件ずつあり空でないことを確かめてから比較 | なし |
+| `rotation_old_check.py` | 旧 OpenAI キー・旧 LINE トークンの有効性、現用の値（設定ファイル・稼働中 Puma）との一致 | なし |
+| `rotation_line_revoke.py` | 前提 7 条件（旧・設定ファイル・稼働中 Puma の各 1 件特定、旧≠現用×2、設定ファイル＝稼働中 Puma、現用の疎通、旧がまだ有効）をすべて満たすときだけ旧 LINE トークンを失効 | LINE の旧トークン失効のみ |
+
+- 試験: `python3 -I script/ops/rotation/test_rotation_scripts.py`（ダミー値のみ。現用トークンが失効 API に渡らないことを全ケースで確認する）。
+- 実行するのは、**レビュー済みのコミットにある内容と SHA-256 が一致するコピー**だけ。
+
+```bash
+# 本番サーバー上（ec2-user）。C はレビュー済みコミットの 40 桁 SHA、ハッシュは PR に記載のレビュー済みの値を入れる。
+C=<レビュー済みコミットの SHA>
+T=$(sudo mktemp -d /root/bms-rotation.XXXXXX)
+sudo stat -c '%a %U:%G' "$T"          # 700 root:root であること
+
+# 1. 取得して root 所有・読み取り専用でコピーする
+for f in rotation_db_compare.py rotation_old_check.py rotation_line_revoke.py; do
+  curl -fsSL "https://raw.githubusercontent.com/tomoki-music/be-my-style/$C/script/ops/rotation/$f" \
+    | sudo install -m 400 -o root -g root /dev/stdin "$T/$f"
+done
+
+# 2. レビュー済みのハッシュを root 所有の照合ファイルに書く（ダウンロードした物から計算しない）
+sudo install -m 400 -o root -g root /dev/stdin "$T/SHA256SUMS" <<'SUMS'
+<rotation_db_compare.py の SHA-256>  rotation_db_compare.py
+<rotation_old_check.py の SHA-256>  rotation_old_check.py
+<rotation_line_revoke.py の SHA-256>  rotation_line_revoke.py
+SUMS
+
+# 3. コピーを照合する（3 行とも OK であること。1 つでも FAILED なら実行しない）
+sudo sh -c 'cd "$1" && sha256sum -c --strict SHA256SUMS' _ "$T"
+
+# 4. 実行のたびに照合し、通ったときだけそのコピーを実行する
+run_verified() { sudo sh -c 'cd "$1" && sha256sum -c --strict --quiet SHA256SUMS && exec python3 -I "$1/$2"' _ "$T" "$1"; }
+run_verified rotation_db_compare.py
+run_verified rotation_old_check.py
+run_verified rotation_line_revoke.py   # old_check で旧 LINE トークンが「まだ有効」のときだけ
+
+# 5. 後片付け
+sudo rm -rf "$T"
+```
+
 ## 2026-11-09 の検証結果
 
 - 許可した 4 操作は固定形式で応答した。
