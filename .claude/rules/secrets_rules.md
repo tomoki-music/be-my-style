@@ -34,8 +34,9 @@
 | 秘密値が設定されているか（**空文字は unset 扱い**） | `status` | `config.OPENAI_API_KEY=set` |
 | 秘密値ファイルの権限、drop-in に秘密値が残っていないか | `status` | `perm.puma_env=600 root:root` / `dropins_with_secret_names=0` |
 | OpenAI・LINE の疎通、Webhook 署名 | `connectivity` | `GET /v1/models -> 200` |
-| ビジネス通知の送信件数・SMTP エラー件数（直近 120 分） | `mail` | `performed.business_follow_mail=1` / `smtp_error_lines=0` |
+| ビジネス通知の送信成功・失敗の件数（直近 120 分、Rails のログを ec2-user 権限で集計） | `mail` | `mail_log_status=ok` / `sent.business_follow_mail=1` / `failed.business_follow_mail=0` |
 
+- `mail` は `mail_log_status=ok` のときだけ件数を信用する。`partial` はログの一部しか期間をカバーしていない、`unavailable` はログを読めず判定できない（件数は `unknown`）。`0` と `unknown` は別物として扱う。
 - `config.<KEY>=set` は「値が 1 文字以上ある」ことを意味する。`OPENAI_API_KEY` の空文字トラップ（キーはあるが値が空）は `unset` として検出できる。
 - 管理者が自分で確認するときも、同じ出力を使う: `sudo /usr/local/libexec/bms-status-root status`
 - 値そのものが正しいかを確かめたいときは、値を出さずに**長さ**や**疎通結果**で判断する。

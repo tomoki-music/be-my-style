@@ -15,6 +15,7 @@ Claude Code などの AI エージェントが本番の秘密値に触れない�
 | `/home/bms-check/.ssh/authorized_keys` | root 644（ディレクトリは root 755） | `restrict,command="/usr/local/sbin/bms-check-shell"` 付きで確認用公開鍵を 1 本だけ登録。シェル・PTY・転送・エージェント転送は不可 |
 | `/usr/local/sbin/bms-check-shell` | root 755 | 強制コマンド。`SSH_ORIGINAL_COMMAND` が許可語と完全一致したときだけ実行。それ以外は拒否して `logger -t bms-check` に「拒否（文字数）」だけ記録 |
 | `/usr/local/libexec/bms-status-root` | root 755 | root で状態を集め、固定形式で出力。ファイルの中身・ログ本文・秘密値は出さない |
+| `/usr/local/libexec/bms-mail-log-count` | root 755 | `mail` の集計。`bms-status-root` が **ec2-user の権限**で実行し、固定の 2 ファイル（`log/production.log`・`log/puma.stdout.log`）だけを読む。引数は受け付けず、リンク・通常ファイル以外は読まない。件数と集計状態だけを出す |
 | `/etc/sudoers.d/90-bms-check` | root 440 | `bms-status-root status` / `mail` / `connectivity` の 3 つだけを引数まで固定で許可 |
 | `/usr/local/sbin/bms-set-secret` | root 755 | 利用者が秘密値を登録する入力専用スクリプト |
 | `/usr/local/sbin/bms-verify-secrets` | root 755 | OpenAI・LINE の疎通を状態コードだけで確認 |
@@ -50,13 +51,77 @@ Claude Code などの AI エージェントが本番の秘密値に触れない�
 ```bash
 # Claude Code（Mac）
 ssh bms-check status        # 稼働・HTTP・デプロイ済みコミット・設定の有無・権限
-ssh bms-check mail          # 直近 120 分のメール送信件数・エラー件数
+ssh bms-check mail          # 直近 120 分のメール送信の成功・失敗件数（mail_log_status=ok のときだけ件数を信用する）
 ssh bms-check connectivity  # OpenAI・LINE の疎通、Webhook 署名の正誤
 
 # 利用者（本番サーバー上）
 sudo bms-set-secret OPENAI_API_KEY --restart
 sudo /usr/local/libexec/bms-status-root status
 ```
+
+## メール送信件数の集計（`bms-check mail`）
+
+### 集計元
+
+Rails のログは journal には出ません。`config/puma.rb` の `stdout_redirect` で Puma の出力は `log/puma.stdout.log` に向き、`RAILS_LOG_TO_STDOUT` が無ければ Rails は `log/production.log` に書きます（`config/environments/production.rb`）。
+`format=bms-mail/1`（2026-11-09 まで）は `journalctl -u puma` を数えていたため、送信があっても常に 0 でした。さらに、メール名を「Performed」の行で探していましたが、その行にはメール名が入らないため、メール別の件数も常に 0 でした。
+
+`bms-mail/2` は `bms-mail-log-count` が次の方法で数えます。
+
+- 読むのは `log/production.log` と `log/puma.stdout.log` の末尾（最大 64 MiB）だけ。ローテーション済みのファイルは読みません。
+- 成功は `Performed ActionMailer::MailDeliveryJob`、失敗は `Error performing ActionMailer::MailDeliveryJob`。メール名は同じ Job ID の `Performing … with arguments: "<Mailer>", "<メール名>"` から引きます。
+- `Delivered mail` は送信に失敗しても出るため、成功の判定には使いません。
+
+| 出力 | 意味 |
+|------|------|
+| `source.<名前>=ok coverage=full` | 読めて、期間（直近 120 分）の始まりより前の行まである |
+| `source.<名前>=ok coverage=partial` | 読めたが、ログが期間の途中から始まる（ローテーション直後など） |
+| `source.<名前>=missing` / `unreadable` / `not_regular` / `empty` / `no_rails_lines` | 無い／ec2-user が読めない／リンクや通常ファイル以外／空／Rails のログ行が無い |
+| `mail_log_status=ok` | 期間全体を集計できた。件数の `0` は「該当なし」 |
+| `mail_log_status=partial` | 件数は出すが、期間の一部しか見ていない |
+| `mail_log_status=unavailable` | ログを取得できず判定できない。件数はすべて `unknown` |
+| `sent.<メール名>` / `failed.<メール名>` | ビジネス通知 8 種とスレッド投稿通知（`thread_post_mail`）の成功・失敗件数 |
+| `jobs_sent_total` / `jobs_failed_total` | 音楽側を含むすべてのメール送信ジョブの成功・失敗件数 |
+| `jobs_unknown_mailer` | 結果の行はあるが、開始の行が期間外でメール名が分からない件数（合計には含む） |
+| `sender_config_fallback_warnings` / `smtp_error_lines` | 設定不足で従来経路に戻った警告の行数／SMTP・TLS 系の例外名を含む行数 |
+
+- ログは **ec2-user の権限**で読みます（`runuser -u ec2-user`）。root では読まないため、ログの場所にリンクを置いても root だけが読めるファイルは読めません。読むファイルは固定で、`bms-check` からも `bms-status-root` からも引数で指定できません。
+- 出すのは件数と集計状態だけです。ログ本文・宛先・メッセージ ID・Job ID は出しません。
+- 試験: `python3 -I script/ops/bms-check/test_bms_mail_log_count.py`（ダミーのログだけ。成功 1 件・失敗 1 件・該当 0 件・ログ取得失敗を確認）。
+
+### 設置（利用者が本番サーバー上で実施）
+
+`bms-status-root` と `bms-mail-log-count` の 2 本を、レビュー済みのハッシュと照合してから置きます。sudoers（`90-bms-check`）は変わりません。
+
+```bash
+# 本番サーバー上（ec2-user）。C はレビュー済みコミットの 40 桁 SHA、ハッシュは PR に記載の値を入れる。
+C=<レビュー済みコミットの SHA>
+T=$(sudo mktemp -d /root/bms-install.XXXXXX)
+for f in bms-status-root bms-mail-log-count; do
+  curl -fsSL "https://raw.githubusercontent.com/tomoki-music/be-my-style/$C/script/ops/bms-check/$f" \
+    | sudo install -m 400 -o root -g root /dev/stdin "$T/$f"
+done
+sudo install -m 400 -o root -g root /dev/stdin "$T/SHA256SUMS" <<'SUMS'
+<bms-status-root の SHA-256>  bms-status-root
+<bms-mail-log-count の SHA-256>  bms-mail-log-count
+SUMS
+sudo sh -c 'cd "$1" && sha256sum -c --strict SHA256SUMS' _ "$T"     # 2 行とも OK でなければ止める
+
+sudo install -m 700 -o root -g root /usr/local/libexec/bms-status-root "$T/bms-status-root.prev"   # 切り戻し用
+sudo install -m 755 -o root -g root "$T/bms-mail-log-count" /usr/local/libexec/bms-mail-log-count
+sudo install -m 755 -o root -g root "$T/bms-status-root" /usr/local/libexec/bms-status-root
+sudo stat -c '%a %U:%G %n' /usr/local/libexec/bms-status-root /usr/local/libexec/bms-mail-log-count   # 755 root:root
+sudo /usr/local/libexec/bms-status-root mail | head -4    # format=bms-mail/2、mail_log_status=ok を確認
+```
+
+切り戻しは `sudo install -m 755 -o root -g root "$T/bms-status-root.prev" /usr/local/libexec/bms-status-root`。問題がなければ `sudo rm -rf "$T"`。
+
+### 設置後の確認（既知のテスト通知 1 通）
+
+1. Claude Code が `ssh bms-check mail` で `mail_log_status=ok`・`source.production_log=ok coverage=full` と、`sent.business_follow_mail` の現在値を控える。
+2. 利用者が Business のテストアカウント A から B を 1 回フォローし（フォロー済みなら外してから）、時刻を控える。
+3. 数分後に Claude Code が `ssh bms-check mail` を実行し、`sent.business_follow_mail` が 1 増え、`failed.business_follow_mail` と `smtp_error_lines` が増えていないことを確認する。
+4. B の受信トレイに 1 通届いていることを、利用者が確認する。
 
 ## 認証情報ローテーション後の確認（利用者が実施）
 

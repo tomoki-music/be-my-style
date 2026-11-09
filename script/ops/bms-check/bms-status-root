@@ -7,7 +7,6 @@ umask 077
 ENVF=/etc/be-my-style/puma.env
 APP=/home/ec2-user/be-my-style
 KEYS="DB_HOST DB_DATABASE DB_USERNAME DB_PASSWORD OPENAI_API_KEY LINE_CHANNEL_SECRET LINE_CHANNEL_ACCESS_TOKEN BUSINESS_MAIL_SENDER_ENABLED BUSINESS_SMTP_ADDRESS BUSINESS_SMTP_PORT BUSINESS_SMTP_USER_NAME BUSINESS_SMTP_PASSWORD"
-MAILERS="like_post_mail comment_post_mail business_follow_mail business_request_mail business_accept_mail business_project_created_mail business_project_joined_mail business_project_chat_mail"
 has_key() { grep -q "^$1=." "$ENVF" 2>/dev/null && echo set || echo unset; }
 mode_of() { [ -e "$1" ] && stat -c '%a %U:%G' "$1" || echo missing; }
 http() { curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$1" || echo ERR; }
@@ -35,16 +34,12 @@ do_status() {
   echo "dropins_with_secret_names=$(grep -lE '^Environment=.*(PASSWORD|SECRET|TOKEN|API_KEY)' /etc/systemd/system/puma.service /etc/systemd/system/puma.service.d/*.conf 2>/dev/null | wc -l)"
   echo "unit_environment_keys=$(systemctl show puma -p Environment --value | grep -oE '(^| )[A-Z_]+=' | tr -d '= ' | sort | paste -sd, -)"
 }
+# Rails のログは journal ではなく log/ 配下のファイルにある（config/puma.rb の stdout_redirect と production.rb の logger）。
+# ログは ec2-user の権限で読む（root では読まない）。読むファイルは bms-mail-log-count に固定してあり、引数は渡さない。
 do_mail() {
-  local j; j=$(journalctl -u puma --since -120min --no-pager -q 2>/dev/null)
-  echo "format=bms-mail/1"; echo "window=120m"
-  for m in $MAILERS; do
-    echo "performed.$m=$(grep 'Performed ActionMailer::MailDeliveryJob' <<<"$j" | grep -c "\"$m\"")"
-  done
-  echo "delivered_total=$(grep -c 'Delivered mail' <<<"$j")"
-  echo "mail_job_errors=$(grep -c 'Error performing ActionMailer::MailDeliveryJob' <<<"$j")"
-  echo "sender_config_fallback_warnings=$(grep -c 'BusinessMail::SenderConfig' <<<"$j")"
-  echo "smtp_error_lines=$(grep -cE 'Net::SMTP|Net::ReadTimeout|Net::OpenTimeout|OpenSSL::SSL::SSLError|Errno::ECONNREFUSED' <<<"$j")"
+  echo "format=bms-mail/2"
+  runuser -u ec2-user -- /usr/bin/env -i PATH=/usr/bin:/bin LANG=C.UTF-8 /usr/bin/python3 -I /usr/local/libexec/bms-mail-log-count \
+    || echo "mail_log_status=unavailable reason=counter_failed"
 }
 case "${1:-}" in
   status) do_status ;;

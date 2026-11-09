@@ -1,0 +1,165 @@
+#!/usr/bin/python3 -I
+# ビジネス通知メールの送信結果を Rails のログから件数だけで数える。ログ本文・宛先・メッセージ ID は出さない。
+# bms-status-root mail から ec2-user の権限で実行する（root ではログを読まない）。読むファイルは固定で、引数は受け付けない。
+#
+# Rails 6.1 のログの形（Logger::Formatter + TaggedLogging。2026-11-09 にテスト環境で確認）:
+#   I, [2026-11-09T13:13:01.123456 #123]  INFO -- : [ActiveJob] [ActionMailer::MailDeliveryJob] [<id>] Performing ActionMailer::MailDeliveryJob (Job ID: <id>) ... with arguments: "CustomerMailer", "business_follow_mail", ...
+#   I, [...]  INFO -- : [ActiveJob] [ActionMailer::MailDeliveryJob] [<id>] Performed ActionMailer::MailDeliveryJob (Job ID: <id>) ...
+#   E, [...] ERROR -- : [ActiveJob] [ActionMailer::MailDeliveryJob] [<id>] Error performing ActionMailer::MailDeliveryJob (Job ID: <id>) ...
+# 「Delivered mail」は送信に失敗しても出るため、成功・失敗はジョブの Performed / Error performing で判定する。
+# Performed / Error の行にはメール名が無いので、同じ Job ID の Performing 行からメール名を引く。
+import datetime, errno, os, re, stat, sys
+
+LOG_DIR = "/home/ec2-user/be-my-style/log/"
+SOURCES = (("production_log", "production.log"), ("puma_stdout_log", "puma.stdout.log"))
+WINDOW_MINUTES = 120
+MAX_BYTES = 64 * 1024 * 1024
+MAILS = (
+    ("CustomerMailer", "like_post_mail"),
+    ("CustomerMailer", "comment_post_mail"),
+    ("CustomerMailer", "business_follow_mail"),
+    ("CustomerMailer", "business_request_mail"),
+    ("CustomerMailer", "business_accept_mail"),
+    ("CustomerMailer", "business_project_created_mail"),
+    ("CustomerMailer", "business_project_joined_mail"),
+    ("CustomerMailer", "business_project_chat_mail"),
+    ("BusinessProjectChatMailer", "thread_post_mail"),
+)
+
+LINE_RE = re.compile(r"^[DIWEFA], \[(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(?:\.\d+)? #\d+\] +[A-Z]+ -- : (.*)$")
+JOB = r"ActionMailer::MailDeliveryJob \(Job ID: ([0-9A-Za-z-]+)\)"
+PERFORMING_RE = re.compile(r"\bPerforming " + JOB + r".* with arguments: \"([A-Za-z0-9_:]+)\", \"([a-z0-9_]+)\"")
+PERFORMED_RE = re.compile(r"\bPerformed " + JOB)
+ERROR_RE = re.compile(r"\bError performing " + JOB)
+SMTP_ERROR_RE = re.compile(r"Net::SMTP\w*Error|Net::ReadTimeout|Net::OpenTimeout|OpenSSL::SSL::SSLError|Errno::ECONNREFUSED")
+FALLBACK = "[BusinessMail::SenderConfig]"
+
+
+def read_tail(path):
+    """(status, text, truncated)。リンクと通常ファイル以外は読まない。"""
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            return "missing", None, False
+        if e.errno == errno.ELOOP:
+            return "not_regular", None, False
+        return "unreadable", None, False
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode):
+            return "not_regular", None, False
+        start = max(0, st.st_size - MAX_BYTES)
+        os.lseek(fd, start, os.SEEK_SET)
+        chunks = []
+        while True:
+            b = os.read(fd, 1024 * 1024)
+            if not b:
+                break
+            chunks.append(b)
+        data = b"".join(chunks)
+    except OSError:
+        return "unreadable", None, False
+    finally:
+        os.close(fd)
+    if start > 0:
+        nl = data.find(b"\n")
+        data = data[nl + 1:] if nl >= 0 else b""
+    return "ok", data.decode("utf-8", errors="replace"), start > 0
+
+
+def scan(text, since):
+    """1 ファイル分を集計する。(status, coverage, counts)"""
+    performing, done = {}, []
+    smtp = fallback = parsed = 0
+    oldest = None
+    for line in text.splitlines():
+        m = LINE_RE.match(line)
+        if not m:
+            continue
+        parsed += 1
+        try:
+            ts = datetime.datetime.strptime(m.group(1), "%Y-%m-%dT%H:%M:%S")
+        except ValueError:
+            continue
+        if oldest is None or ts < oldest:
+            oldest = ts
+        if ts < since:
+            continue
+        body = m.group(2)
+        p = PERFORMING_RE.search(body)
+        if p:
+            performing[p.group(1)] = (p.group(2), p.group(3))
+            continue
+        ok = PERFORMED_RE.search(body)
+        ng = None if ok else ERROR_RE.search(body)
+        if ok or ng:
+            done.append(((ok or ng).group(1), "sent" if ok else "failed"))
+        if SMTP_ERROR_RE.search(body):
+            smtp += 1
+        if FALLBACK in body:
+            fallback += 1
+    if parsed == 0:
+        return "no_rails_lines", None, None
+    counts = {"sent": {}, "failed": {}, "unknown_mailer": 0, "smtp": smtp, "fallback": fallback}
+    for job_id, result in done:
+        key = performing.get(job_id)
+        if key is None:
+            counts["unknown_mailer"] += 1
+            key = ("?", "?")
+        counts[result][key] = counts[result].get(key, 0) + 1
+    return "ok", oldest, counts
+
+
+def run(log_dir=LOG_DIR, now=None, out=print):
+    now = now or datetime.datetime.now()
+    since = now - datetime.timedelta(minutes=WINDOW_MINUTES)
+    out(f"window={WINDOW_MINUTES}m")
+    merged, statuses = [], []
+    for name, filename in SOURCES:
+        status, text, truncated = read_tail(log_dir + filename)
+        coverage = "-"
+        if status == "ok":
+            if not text:
+                status = "empty"
+            else:
+                status, oldest, counts = scan(text, since)
+                if status == "ok":
+                    coverage = "full" if oldest <= since else "partial"
+                    if truncated and coverage == "partial":
+                        coverage = "partial_size_cap"
+                    merged.append(counts)
+        statuses.append((status, coverage))
+        out(f"source.{name}={status} coverage={coverage}")
+    if not merged:
+        out("mail_log_status=unavailable")
+        for _, method in MAILS:
+            out(f"sent.{method}=unknown")
+            out(f"failed.{method}=unknown")
+        for key in ("jobs_sent_total", "jobs_failed_total", "jobs_unknown_mailer", "sender_config_fallback_warnings", "smtp_error_lines"):
+            out(f"{key}=unknown")
+        return "unavailable"
+    complete = any(st == "ok" and cov == "full" for st, cov in statuses)
+    out(f"mail_log_status={'ok' if complete else 'partial'}")
+
+    def total(result, key=None):
+        return sum((c[result].get(key, 0) if key else sum(c[result].values())) for c in merged)
+    for mailer, method in MAILS:
+        out(f"sent.{method}={total('sent', (mailer, method))}")
+        out(f"failed.{method}={total('failed', (mailer, method))}")
+    out(f"jobs_sent_total={total('sent')}")
+    out(f"jobs_failed_total={total('failed')}")
+    out(f"jobs_unknown_mailer={sum(c['unknown_mailer'] for c in merged)}")
+    out(f"sender_config_fallback_warnings={sum(c['fallback'] for c in merged)}")
+    out(f"smtp_error_lines={sum(c['smtp'] for c in merged)}")
+    return "ok" if complete else "partial"
+
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        print("mail_log_status=unavailable reason=arguments_not_accepted")
+        sys.exit(2)
+    if os.geteuid() == 0:
+        print("mail_log_status=unavailable reason=must_not_run_as_root")
+        sys.exit(2)
+    run()
