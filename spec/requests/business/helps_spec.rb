@@ -174,13 +174,11 @@ RSpec.describe "Business::Helps", type: :request do
 
     before { sign_in customer }
 
-    it "所属0件では、空状態に次の操作(番号付き)・コミュニティを探す・使い方を出し、下の利用ガイドは重ねない" do
+    it "コミュニティが0件では、空状態に使い方への導線を出し、下の利用ガイドは重ねない" do
       get business_root_path
 
       empty = doc.at_css("#my-communities .ba-empty--guide")
-      expect(empty.at_css(".ba-empty__title").text).to eq "まずはコミュニティに参加しましょう"
-      expect(empty.css(".ba-guide-steps li").size).to eq 3
-      expect(empty.at_css(%(a[href="#{business_communities_path}"]))).to be_present
+      expect(empty.at_css(".ba-empty__title").text).to eq "コミュニティはまだありません"
       expect(empty.at_css(%(a[href="#{business_help_path}"]))).to be_present
       img = empty.at_css("img.ba-illust")
       expect(img["alt"]).to eq ""
@@ -190,9 +188,8 @@ RSpec.describe "Business::Helps", type: :request do
       expect(doc.at_css(".ba-lp-hero, .ba-flow")).to be_nil
     end
 
-    it "所属がある場合は、一覧の後ろに小さな利用ガイドと使い方への導線を出す" do
-      community = create(:community, domain: business_domain)
-      CommunityCustomer.create!(community: community, customer: customer)
+    it "コミュニティがある場合は(未参加でも)、一覧の後ろに小さな利用ガイドと使い方への導線を出す" do
+      create(:community, domain: business_domain)
 
       get business_root_path
 

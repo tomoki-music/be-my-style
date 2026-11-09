@@ -227,9 +227,10 @@ RSpec.describe "ログイン後ホーム", type: :system, js: true do
       expect(page).to have_css("#my-projects .member-home__empty")
       screenshot!("member_home_persona_admin_1280")
 
+      # Business のコミュニティ一覧は参加済みだけなので、未参加も並ぶ Business ホームへ進む。
       find("#my-communities .member-home__header-link", text: "Businessコミュニティを探す").click
-      expect(page).to have_current_path(business_communities_path, wait: 10)
-      expect(page).to have_text("地域イベント企画ラボ")
+      expect(page).to have_current_path(business_root_path, wait: 10)
+      expect(page).to have_css("#my-communities .ba-circle-item__name", text: "地域イベント企画ラボ")
 
       visit business_community_path(planning_lab)
       expect(page).to have_link("メンバー管理", href: business_permits_path(planning_lab))

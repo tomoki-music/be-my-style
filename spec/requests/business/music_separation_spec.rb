@@ -44,7 +44,7 @@ RSpec.describe "Business の画面と音楽コミュニティの分離", type: :
     expect(section.css(".ba-circle-item__name").map(&:text)).to eq ["デザイン勉強会"]
     expect(section.at_css(".ba-count").text).to eq "1件"
     expect(response.body).not_to include("駅前ジャズセッション", "週末アコースティック部", "音楽コミュニティを探す", "イベントを見る")
-    expect(section.at_css(%(a[href="#{business_communities_path}"])).text.strip).to eq "コミュニティを探す"
+    expect(section.at_css(%(a[href="#{business_communities_path}"])).text.strip).to eq "参加中のコミュニティ"
   end
 
   it "Business ホームのページ分割も Business コミュニティだけで数える(音楽コミュニティでページが埋まらない)" do

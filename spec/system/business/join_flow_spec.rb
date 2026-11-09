@@ -1,6 +1,7 @@
 require "rails_helper"
 
-# 一般の Business 利用者が、ホーム → コミュニティを探す → 詳細で参加 → プロジェクト詳細で参加 → スレッド
+# 一般の Business 利用者が、ホーム(未参加のコミュニティも並ぶ) → 詳細で参加 → メニューの「コミュニティ」(参加済みだけ)
+# → プロジェクト詳細で参加 → スレッド
 # と実ブラウザで進めること。参加ボタンが固定ナビ(SP の下部ナビ)に隠れず、最初の表示で見えることも確かめる。
 RSpec.describe "Business の参加導線(実ブラウザ)", type: :system, js: true do
   let!(:business_domain) { Domain.find_or_create_by!(name: "business") }
@@ -61,14 +62,18 @@ RSpec.describe "Business の参加導線(実ブラウザ)", type: :system, js: t
     sign_in_as(general)
     use_mobile_viewport(width: 375, height: 812)
     visit business_root_path
-    screenshot!("sp_home_empty")
-
-    click_link "コミュニティを探す", match: :first
-    expect(page).to have_css(".ba-community-tile", count: 2)
+    expect(page).to have_css("#my-communities .ba-circle-item", count: 2)
     expect_no_horizontal_overflow
-    screenshot!("sp_communities")
+    screenshot!("sp_home_communities")
 
-    find(".ba-community-tile", text: "スタートアップ交流会").click
+    # メニューの「コミュニティ」は参加済みだけなので、参加前は空。
+    find(%(.ba-bottomnav a[href="#{business_communities_path}"])).click
+    expect(page).to have_text("参加中のコミュニティはありません")
+    expect(page).to have_no_css(".ba-community-tile")
+    screenshot!("sp_communities_empty")
+
+    click_link "コミュニティを探す"
+    find("#my-communities .ba-circle-item__link", text: "スタートアップ交流会").click
     expect(page).to have_css("#community-join a", text: "参加する")
     expect_visible_without_scroll("#community-join a.ba-btn--primary")
     expect_no_horizontal_overflow
@@ -78,6 +83,12 @@ RSpec.describe "Business の参加導線(実ブラウザ)", type: :system, js: t
     expect(page).to have_css("#community-join .ba-status", text: "参加中")
     screenshot!("sp_community_member")
 
+    find(%(.ba-bottomnav a[href="#{business_communities_path}"])).click
+    expect(page).to have_css(".ba-community-tile", count: 1)
+    expect(page).to have_css(".ba-community-tile", text: "スタートアップ交流会")
+    screenshot!("sp_communities_joined")
+
+    find(".ba-community-tile", text: "スタートアップ交流会").click
     click_link "プロジェクトを見る"
     find(".ba-project-card", text: "ピッチ練習会").click
     expect(page).to have_css("#project-join a", text: "参加する")
@@ -117,14 +128,14 @@ RSpec.describe "Business の参加導線(実ブラウザ)", type: :system, js: t
     screenshot!("sp_community_suspended")
   end
 
-  it "PC(1280px): 一覧カードの導線と、運営者・管理者の状態表示" do
+  it "PC(1280px): ホームの未参加カードから参加案内へ進み、運営者・管理者の状態表示" do
     sign_in_as(general)
     use_desktop_viewport
-    visit business_communities_path
-    expect(page).to have_css(".ba-community-tile__cta", text: "詳細・参加方法を見る", count: 2)
-    screenshot!("pc_communities")
+    visit business_root_path
+    expect(page).to have_css("#my-communities .ba-status--kind", text: "承認制", count: 1)
+    screenshot!("pc_home_communities")
 
-    find(".ba-community-tile", text: "デザイン勉強会").click
+    find("#my-communities .ba-circle-item__link", text: "デザイン勉強会").click
     expect(page).to have_css("#community-join a", text: "参加を申請する")
     expect_visible_without_scroll("#community-join a.ba-btn--primary")
     screenshot!("pc_community_none_manual")

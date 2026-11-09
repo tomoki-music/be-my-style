@@ -12,13 +12,12 @@ class Business::CommunitiesController < ApplicationController
     require_feature!(:business_community_create, redirect_to_path: business_communities_path)
   end
 
+  # メニューの「コミュニティ」。ログイン中の本人が参加済みのコミュニティだけを出す(未参加はホームで探す)。
   # 各カードに参加状況と人数を出す。どちらも表示中のページ分だけをまとめて求める。
   def index
-    @communities = Community
-      .where(domain_id: @current_domain.id)
-      .with_attached_community_image
-      .page(params[:page]).per(5)
-    @join_statuses = Business::Memberships::CommunityStatuses.call(customer: current_customer, communities: @communities)
+    directory = Business::CommunityDirectory.joined(current_customer, page: params[:page], per: 5)
+    @communities = directory.communities
+    @join_statuses = directory.statuses
     @member_counts = CommunityCustomer.where(community_id: @communities.map(&:id))
       .joins(:customer).merge(Customer.active).group(:community_id).count
   end

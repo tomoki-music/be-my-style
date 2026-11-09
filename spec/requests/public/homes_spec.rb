@@ -225,9 +225,10 @@ RSpec.describe "Public::Homes", type: :request do
 
       get root_path
       expect(doc.at_css(%(#my-communities a[href="#{public_communities_path}"]))).to be_present
-      expect(doc.at_css(%(#my-communities a[href="#{business_communities_path}"]))).to be_present
+      # Business のコミュニティ一覧は参加済みだけなので、未参加も並ぶ Business ホームへ案内する。
+      expect(doc.at_css(%(#my-communities a[href="#{business_root_path(anchor: "my-communities")}"]))).to be_present
       expect(doc.at_css(%(#my-projects a[href="#{business_projects_path}"]))).to be_present
-      expect(doc.at_css(%(#my-projects a[href="#{business_communities_path}"]))).to be_present
+      expect(doc.at_css(%(#my-projects a[href="#{business_root_path(anchor: "my-communities")}"]))).to be_present
 
       get public_community_path(music)
       expect(response).to have_http_status(:ok)
