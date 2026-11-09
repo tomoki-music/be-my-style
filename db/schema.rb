@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_11_09_000001) do
+ActiveRecord::Schema.define(version: 2026_11_10_000000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -127,6 +127,16 @@ ActiveRecord::Schema.define(version: 2026_11_09_000001) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["customer_id"], name: "index_business_notification_settings_on_customer_id", unique: true
+  end
+
+  create_table "business_signup_invitations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "target_type", limit: 20, null: false
+    t.bigint "target_id", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_business_signup_invitations_on_customer_id", unique: true
   end
 
   create_table "chat_mentions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1477,6 +1487,7 @@ ActiveRecord::Schema.define(version: 2026_11_09_000001) do
   add_foreign_key "admin_notifications", "admins"
   add_foreign_key "admin_notifications", "customers"
   add_foreign_key "business_notification_settings", "customers"
+  add_foreign_key "business_signup_invitations", "customers"
   add_foreign_key "chat_mentions", "chat_messages"
   add_foreign_key "chat_mentions", "customers", column: "mentioned_customer_id"
   add_foreign_key "chat_message_link_previews", "chat_messages"

@@ -39,8 +39,11 @@ RSpec.describe "Business 招待用URL", type: :request do
       get business_community_path(community, keyword: "検索語", customer_id: member.id)
       expect(share_url_field["value"]).to eq "http://localhost:3000/business/communities/#{community.id}"
       expect(share_url_field.key?("readonly")).to be true
-      expect(doc.at_css("[data-share-copy]").text.strip).to eq "URLをコピー"
-      expect(doc.at_css(".ba-share__status")["role"]).to eq "status"
+      # 上部の「招待用URLをコピー」と最下部の「URLをコピー」は、どちらも同じ URL 欄をコピーする。
+      copy_buttons = doc.css("[data-share-copy]")
+      expect(copy_buttons.map { |button| button.text.strip }).to eq %w[招待用URLをコピー URLをコピー]
+      expect(copy_buttons.map { |button| button["data-share-copy"] }.uniq).to eq [share_url_field["id"]]
+      expect(doc.css(".ba-share__status").map { |status| status["role"] }.uniq).to eq ["status"]
 
       get business_project_path(project)
       expect(share_url_field["value"]).to eq "http://localhost:3000/business/projects/#{project.id}"
@@ -237,43 +240,6 @@ RSpec.describe "Business 招待用URL", type: :request do
       expect(music_only.reload.business_user?).to be true
     end
 
-    it "新規登録して同じブラウザで確認メールのリンクを開くと、元のページへ戻る" do
-      get business_project_path(project)
-      expect do
-        post business_customer_registration_path, params: {
-          customer: { email: "share-newcomer@example.com", password: "password", password_confirmation: "password", name: "新しい人" }
-        }
-      end.to change(Customer, :count).by(1)
-      expect(response).to redirect_to(new_business_customer_session_path)
-
-      newcomer = Customer.find_by!(email: "share-newcomer@example.com")
-      expect(newcomer.business_user?).to be true
-      get customer_confirmation_path(confirmation_token: newcomer.confirmation_token)
-
-      expect(response).to redirect_to(business_project_path(project))
-      follow_redirect!
-      # 親コミュニティ未参加なので、プロジェクトの中身ではなくコミュニティの参加案内になる。
-      expect(response).to redirect_to(business_community_path(community))
-    end
-
-    it "確認メールのリンクを別のブラウザで開くと、そのブラウザでは Business ホームへ進む(戻り先はセッションに無い)" do
-      get business_project_path(project)
-      post business_customer_registration_path, params: {
-        customer: { email: "other-browser@example.com", password: "password", password_confirmation: "password", name: "別ブラウザの人" }
-      }
-      token = Customer.find_by!(email: "other-browser@example.com").confirmation_token
-
-      # 別のブラウザ(LINE 内ブラウザ → メールアプリ → Safari など)は、Cookie(セッション)を持たない別のセッションになる。
-      other_browser = open_session
-      other_browser.get customer_confirmation_path(confirmation_token: token)
-      expect(other_browser.response).to have_http_status(:found)
-      expect(URI.parse(other_browser.response.location).path).to eq business_root_path
-
-      # 元のブラウザ(共有URLを開いたブラウザ)に戻ってログインすると、オンボーディングの後に元のページへ戻る。
-      sign_in_via(business_customer_session_path, Customer.find_by!(email: "other-browser@example.com"))
-      expect(response).to redirect_to(onboarding_step1_path)
-      patch onboarding_complete_path
-      expect(response).to redirect_to(business_project_path(project))
-    end
+    # 招待用URLから新規登録した人の流れは spec/requests/business/signup_invitations_spec.rb で確認する。
   end
 end

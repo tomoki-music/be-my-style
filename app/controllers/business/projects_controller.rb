@@ -49,6 +49,8 @@ class Business::ProjectsController < ApplicationController
     unless current_customer.business_community_participant?(@community)
       return redirect_to business_community_path(@community), alert: "このプロジェクトに参加するには、先にコミュニティへの参加が必要です。"
     end
+    # 招待先のこのプロジェクトに到達したら、招待先の記録を消す(次回以降のログインで再び転送しない)。
+    BusinessSignupInvitation.where(customer_id: current_customer.id, target_type: "Project", target_id: @project.id).delete_all
 
     @can_view_internal = current_customer.business_project_participant?(@project)
     @can_manage_project = current_customer.business_project_manager?(@project)

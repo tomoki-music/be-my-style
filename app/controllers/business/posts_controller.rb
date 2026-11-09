@@ -1,4 +1,5 @@
 class Business::PostsController < ApplicationController
+  include BusinessReturnPath
   layout "business"
 
   TIMELINE_TABS = %w[recommended following community].freeze
@@ -38,10 +39,17 @@ class Business::PostsController < ApplicationController
     @post = current_customer.posts.new(post_params.merge(tag_list: tags))
 
     if @post.save
-      complete_onboarding_if_pending!
+      onboarding_completed = complete_onboarding_if_pending!
+      # 招待用URLから登録した人は、投稿でオンボーディングを終えたときも招待先へ案内する(招待先は1回で消費する)。
+      invitation = onboarding_completed ? Business::SignupInvitations::Take.call(current_customer) : nil
+      notice = "投稿しました。NAKAMAにログインしている全員が見られます。"
 
-      if current_customer.onboarding_done?
-        redirect_to business_post_path(@post), notice: "投稿しました。NAKAMAにログインしている全員が見られます。"
+      if invitation&.status == :ok
+        redirect_to invitation.path, notice: notice
+      elsif invitation&.status == :awaiting
+        redirect_to invitation.path, notice: "#{notice}#{business_invitation_awaiting_message(invitation.record)}"
+      elsif current_customer.onboarding_done?
+        redirect_to business_post_path(@post), notice: notice
       else
         redirect_to onboarding_step3_path
       end

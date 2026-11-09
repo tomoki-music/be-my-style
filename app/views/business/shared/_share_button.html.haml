@@ -1,0 +1,11 @@
+-# 詳細画面の上部に置く「招待する」操作。コピーするのは最下部の招待用URL欄(business/shared/_share_link)の値で、
+-# コピーのボタンは business/share_link.js が表示する。JavaScript が無いときも、最下部の URL 欄へ移動するリンクは残る。
+- record = local_assigns.fetch(:record)
+- key = "#{record.model_name.singular}-#{record.id}"
+.ba-invite
+  %button.ba-btn.ba-btn--secondary.ba-btn--sm.ba-invite__copy{ type: "button", hidden: true,
+    data: { share_copy: "share-url-#{key}", share_status: "share-status-top-#{key}" } }
+    %i.fa-solid.fa-user-plus{ "aria-hidden": "true" }
+    招待用URLをコピー
+  = link_to "招待用URLを表示", "#share-#{key}", class: "ba-invite__link"
+  %p.ba-share__status{ id: "share-status-top-#{key}", role: "status", "aria-live": "polite" }

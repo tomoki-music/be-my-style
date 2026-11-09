@@ -76,7 +76,7 @@ RSpec.describe "Business 招待用URLのコピーとテーマ表示", type: :sys
     visit business_community_path(community)
     grant_clipboard!
 
-    button = find("[data-share-copy]", text: "URLをコピー")
+    button = find(".ba-share [data-share-copy]", text: "URLをコピー")
     expect do
       button.click
       expect(page).to have_css(".ba-share__status[role='status']", text: "URLをコピーしました")
@@ -85,6 +85,34 @@ RSpec.describe "Business 招待用URLのコピーとテーマ表示", type: :sys
     copied = page.evaluate_async_script("var done = arguments[0]; navigator.clipboard.readText().then(done, function (e) { done('ERR ' + e); });")
     expect(copied).to eq share_url
     expect(copied).to eq "http://localhost:3000/business/communities/#{community.id}"
+  end
+
+  it "上部の「招待用URLをコピー」でも同じURLをコピーでき、URL欄はコンテンツの最下部にある" do
+    sign_in_as(owner)
+    set_viewport(375, 812)
+    grant_clipboard!
+
+    [[business_community_path(community), "http://localhost:3000/business/communities/#{community.id}"],
+     [business_project_path(project), "http://localhost:3000/business/projects/#{project.id}"]].each do |path, url|
+      visit path
+      grant_clipboard!
+      find(".ba-invite [data-share-copy]", text: "招待用URLをコピー").click
+      expect(page).to have_css(".ba-invite .ba-share__status[role='status']", text: "URLをコピーしました")
+      copied = page.evaluate_async_script("var done = arguments[0]; navigator.clipboard.readText().then(done, function (e) { done('ERR ' + e); });")
+      expect(copied).to eq url
+
+      # URL欄(.ba-share)は本文の最後の要素で、上部の招待ボタンより下にある。
+      layout = page.evaluate_script(<<~JS)
+        (function () {
+          var main = document.querySelector('#ba-main');
+          var share = document.querySelector('.ba-share');
+          var invite = document.querySelector('.ba-invite');
+          return [main.lastElementChild === share, invite.getBoundingClientRect().top < share.getBoundingClientRect().top];
+        })()
+      JS
+      expect(layout).to eq [true, true]
+      expect(horizontal_overflow).to be <= 0
+    end
   end
 
   it "キーボード(Tab で移動して Enter)でもコピーできる" do
@@ -109,7 +137,7 @@ RSpec.describe "Business 招待用URLのコピーとテーマ表示", type: :sys
       document.execCommand = function () { return false; };
     JS
 
-    find("[data-share-copy]").click
+    find(".ba-share [data-share-copy]").click
 
     expect(page).to have_css(".ba-share__status.is-error", text: "コピーできませんでした。選択されたURLを長押し")
     expect(selection_covers_url?).to be true
@@ -124,7 +152,7 @@ RSpec.describe "Business 招待用URLのコピーとテーマ表示", type: :sys
       document.execCommand = function (name) { window.__copied = window.getSelection().toString() || document.activeElement.value.substring(document.activeElement.selectionStart, document.activeElement.selectionEnd); return name === 'copy'; };
     JS
 
-    find("[data-share-copy]").click
+    find(".ba-share [data-share-copy]").click
 
     expect(page).to have_css(".ba-share__status", text: "URLをコピーしました")
     expect(page.evaluate_script("window.__copied")).to eq share_url
@@ -159,7 +187,7 @@ RSpec.describe "Business 招待用URLのコピーとテーマ表示", type: :sys
       # コピーのボタンは押しやすい大きさ(44px 以上)で、URL欄と重ならない。
       sizes = page.evaluate_script(<<~JS)
         (function () {
-          var b = document.querySelector('[data-share-copy]').getBoundingClientRect();
+          var b = document.querySelector('.ba-share [data-share-copy]').getBoundingClientRect();
           var i = document.querySelector('[data-share-url]').getBoundingClientRect();
           var overlap = !(b.right <= i.left || b.left >= i.right || b.bottom <= i.top || b.top >= i.bottom);
           return [b.height, overlap];

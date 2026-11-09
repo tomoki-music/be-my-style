@@ -40,7 +40,7 @@
 
     .ba-join#project-join
       = render "business/projects/join_status"
-    = render "business/shared/share_link", record: @project
+    = render "business/shared/share_button", record: @project
 
 - if @can_view_internal
   %nav.ba-sectnav{ "aria-label": "このプロジェクトの内容" }
@@ -98,3 +98,6 @@
       %i.fa-solid.fa-lock{ "aria-hidden": "true" }
       参加者限定
     %p.ba-muted スレッドとメンバーはプロジェクト参加者のみ閲覧できます
+
+-# 招待用URLは補足として、コンテンツの最下部に控えめに出す(上部の「招待用URLをコピー」もこの欄をコピーする)。
+= render "business/shared/share_link", record: @project

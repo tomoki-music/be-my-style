@@ -177,10 +177,35 @@
     overflow-wrap: anywhere;
   }
 
-  // 通常画面の「招待用URL」(business/shared/_share_link)。
+  // 詳細画面の上部の「招待用URLをコピー」(business/shared/_share_button)。
+  .ba-invite {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ba-space-1) var(--ba-space-3);
+
+    .ba-share__status {
+      flex-basis: 100%;
+    }
+  }
+
+  .ba-invite__copy {
+    min-height: var(--ba-tap);
+  }
+
+  .ba-invite__link {
+    font-size: 14px;
+    color: var(--ba-text-muted);
+    text-decoration: underline;
+  }
+
+  // 詳細画面の最下部に補足として出す「招待用URL」(business/shared/_share_link)。本文より控えめにする。
   .ba-share {
+    max-width: var(--ba-reading-width);
+    margin-top: var(--ba-space-6);
     padding-top: var(--ba-space-3);
-    border-top: 1px solid var(--ba-border);
+    border-top: 1px dashed var(--ba-border);
+    color: var(--ba-text-muted);
   }
 
   .ba-share__title {
@@ -188,8 +213,8 @@
     align-items: center;
     gap: 6px;
     margin: 0;
-    font-size: 15px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
   }
 
   .ba-share__lead,

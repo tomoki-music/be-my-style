@@ -80,6 +80,7 @@ class Customer < ApplicationRecord
   has_many :active_notifications, class_name: 'Notification', foreign_key: 'visitor_id', dependent: :destroy
   has_many :passive_notifications, class_name: 'Notification', foreign_key: 'visited_id', dependent: :destroy
   has_one :business_notification_setting, dependent: :destroy
+  has_one :business_signup_invitation, dependent: :delete
   has_many :chat_room_customers, dependent: :destroy
   has_many :chat_rooms, through: :chat_room_customers, dependent: :destroy
   has_many :communities, through: :chat_room_customers, dependent: :destroy
