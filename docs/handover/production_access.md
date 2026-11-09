@@ -141,8 +141,16 @@ sudo rm -rf "$T"
 
 | 対象 | 中身 |
 |------|------|
-| `/etc/be-my-style/backup-20261109/env.conf` `openai.conf` `override.conf` とそのディレクトリ | 旧い値の退避 |
+| `/etc/be-my-style/backup-20261109/env.conf` `openai.conf` `override.conf` | puma の drop-in から秘密値を移したときの旧ファイルの退避 |
+| `/etc/be-my-style/backup-20261109/dotenv` | DB をアプリ専用の `bms_app` に切り替える直前（2026-11-09 07:58 UTC ごろ）に、`~/be-my-style/.env` をそのまま写した退避。切り替えで書き換えたのは `DB_USERNAME` と `DB_PASSWORD` だけなので、他に失うものは旧 DB マスターの接続情報だけ。どのスクリプト・アプリ・デプロイからも参照されない |
+| `/etc/be-my-style/backup-20261109/`（空になったディレクトリ） | — |
 | `/etc/be-my-style/puma.env.prev` | `bms-set-secret` が残した 1 つ前の `puma.env`（ローテーション前の値を含みうる） |
+
+`dotenv` は、次の 3 点を満たすときだけ消します。1 つでも違えば残します（中身は出さず、日時・一致の真偽・件数だけを見ます）。
+
+- 最終更新が 2026-11-09（切り替え作業の日）
+- 現在の `~/be-my-style/.env` と内容が異なる（切り替え後の `.env` の写しではない）
+- `DB_USERNAME=bms_app` の行が `dotenv` に 0 件、現在の `.env` に 1 件（切り替え前の内容である）
 
 `puma.env`・`selftest.env`（ダミー値のみ）・`~/be-my-style/.env`・systemd の設定は消しません。
 
@@ -151,18 +159,29 @@ sudo rm -rf "$T"
 B=/etc/be-my-style/backup-20261109
 
 # 4-1. 削除前の確認（名前・種類・権限だけを出す）
-sudo find "$B" -mindepth 1 -printf '%y %m %u:%g %f\n'          # f 600 root:root の env.conf / openai.conf / override.conf の 3 行だけであること
+sudo find "$B" -mindepth 1 -printf '%y %m %u:%g %f\n'          # f 600 root:root の dotenv / env.conf / openai.conf / override.conf の 4 行だけであること
 sudo find /etc/be-my-style -maxdepth 1 -printf '%y %m %u:%g %f\n'
 # 想定と違う名前・種類（l=リンク など）があれば、ここで止めて名前を共有する
 
-# 4-2. 削除（通常ファイルのときだけ消す）
-for p in "$B/env.conf" "$B/openai.conf" "$B/override.conf" /etc/be-my-style/puma.env.prev; do
+# 4-2a. dotenv を消してよいかの確認（中身は出さない）
+D="$B/dotenv"; E=/home/ec2-user/be-my-style/.env
+d_date=$(sudo date -u -r "$D" +%F 2>/dev/null || echo unknown)
+sudo cmp -s -- "$D" "$E" && d_diff=no || d_diff=yes
+d_new=$(sudo grep -cE '^(export )?DB_USERNAME=.?bms_app.?$' "$D"); e_new=$(sudo grep -cE '^(export )?DB_USERNAME=.?bms_app.?$' "$E")
+echo "dotenv: mtime_utc=$d_date differs_from_current=$d_diff bms_app_lines=$d_new current_bms_app_lines=$e_new"
+if [ "$d_date" = 2026-11-09 ] && [ "$d_diff" = yes ] && [ "$d_new" = 0 ] && [ "$e_new" = 1 ]; then DEL_DOTENV=yes; else DEL_DOTENV=no; fi
+echo "DEL_DOTENV=$DEL_DOTENV"   # no のときは dotenv を残す（下のループで自動的に除外）
+
+# 4-2b. 削除（名前を決めた通常ファイルだけ）
+targets=("$B/env.conf" "$B/openai.conf" "$B/override.conf" /etc/be-my-style/puma.env.prev)
+[ "$DEL_DOTENV" = yes ] && targets+=("$D")
+for p in "${targets[@]}"; do
   if sudo test -f "$p" && ! sudo test -L "$p"; then sudo rm -f -- "$p" && echo "deleted: $p"; else echo "skipped: $p"; fi
 done
-sudo rmdir -- "$B" && echo "removed: $B" || echo "STOP: $B に他のファイルが残っています（名前だけ確認して共有）"
+sudo rmdir -- "$B" && echo "removed: $B" || echo "kept: $B（残っているファイル名: $(sudo find "$B" -mindepth 1 -printf '%f ')）"
 
 # 4-3. 削除後の確認
-sudo find /etc/be-my-style -maxdepth 1 -printf '%y %m %u:%g %f\n'   # be-my-style(700)・puma.env(600)・selftest.env だけ
+sudo find /etc/be-my-style -maxdepth 1 -printf '%y %m %u:%g %f\n'   # be-my-style(700)・puma.env(600)・（あれば）selftest.env。dotenv を残したときは backup-20261109 も
 systemctl is-active puma
 ```
 
