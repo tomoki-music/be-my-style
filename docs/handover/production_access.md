@@ -61,13 +61,14 @@ sudo /usr/local/libexec/bms-status-root status
 ## 認証情報ローテーション後の確認（利用者が実施）
 
 旧い値と新しい値を比べる確認は、旧い値が root だけが読める退避ファイルにあるため、確認用の `bms-check` ではできません。
-`script/ops/rotation/` の 3 本を、利用者が本番サーバー上で root として実行します。どれも秘密値は出力しません。
+`script/ops/rotation/` の 4 本を、利用者が本番サーバー上で root として実行します。どれも秘密値は出力しません。
 
 | スクリプト | 内容 | 書き込み・外部変更 |
 |-----------|------|-------------------|
 | `rotation_db_compare.py` | `puma.env` と `.env` の DB 設定 4 項目を、両側に 1 件ずつあり空でないことを確かめてから比較 | なし |
 | `rotation_old_check.py` | 旧 OpenAI キー・旧 LINE トークンの有効性、現用の値（設定ファイル・稼働中 Puma）との一致 | なし |
 | `rotation_line_revoke.py` | 前提 7 条件（旧・設定ファイル・稼働中 Puma の各 1 件特定、旧≠現用×2、設定ファイル＝稼働中 Puma、現用の疎通、旧がまだ有効）をすべて満たすときだけ旧 LINE トークンを失効 | LINE の旧トークン失効のみ |
+| `rotation_line_old_diagnose.py` | 旧 LINE トークンの verify が 400 のとき、現用（200 になるはず）・その場で作った実在しないトークン（400 になるはず）と同じ形の要求で比べ、旧が無効または期限切れかを判定（応答本文は出さず、説明文の一致も真偽だけ） | なし |
 
 - 試験: `python3 -I script/ops/rotation/test_rotation_scripts.py`（ダミー値のみ。現用トークンが失効 API に渡らないことを全ケースで確認する）。
 - 実行するのは、**レビュー済みのコミットにある内容と SHA-256 が一致するコピー**だけ。
@@ -79,7 +80,7 @@ T=$(sudo mktemp -d /root/bms-rotation.XXXXXX)
 sudo stat -c '%a %U:%G' "$T"          # 700 root:root であること
 
 # 1. 取得して root 所有・読み取り専用でコピーする
-for f in rotation_db_compare.py rotation_old_check.py rotation_line_revoke.py; do
+for f in rotation_db_compare.py rotation_old_check.py rotation_line_revoke.py rotation_line_old_diagnose.py; do
   curl -fsSL "https://raw.githubusercontent.com/tomoki-music/be-my-style/$C/script/ops/rotation/$f" \
     | sudo install -m 400 -o root -g root /dev/stdin "$T/$f"
 done
@@ -89,20 +90,80 @@ sudo install -m 400 -o root -g root /dev/stdin "$T/SHA256SUMS" <<'SUMS'
 <rotation_db_compare.py の SHA-256>  rotation_db_compare.py
 <rotation_old_check.py の SHA-256>  rotation_old_check.py
 <rotation_line_revoke.py の SHA-256>  rotation_line_revoke.py
+<rotation_line_old_diagnose.py の SHA-256>  rotation_line_old_diagnose.py
 SUMS
 
-# 3. コピーを照合する（3 行とも OK であること。1 つでも FAILED なら実行しない）
+# 3. コピーを照合する（すべての行が OK であること。1 つでも FAILED なら実行しない）
 sudo sh -c 'cd "$1" && sha256sum -c --strict SHA256SUMS' _ "$T"
 
 # 4. 実行のたびに照合し、通ったときだけそのコピーを実行する
 run_verified() { sudo sh -c 'cd "$1" && sha256sum -c --strict --quiet SHA256SUMS && exec python3 -I "$1/$2"' _ "$T" "$1"; }
 run_verified rotation_db_compare.py
 run_verified rotation_old_check.py
-run_verified rotation_line_revoke.py   # old_check で旧 LINE トークンが「まだ有効」のときだけ
+run_verified rotation_line_old_diagnose.py   # old_check で旧 LINE の verify が 400 のとき
+run_verified rotation_line_revoke.py   # 旧 LINE トークンが「まだ有効」（verify 200 または diagnose が OLD_STILL_VALID）のときだけ
 
-# 5. 後片付け
+# 5. 後片付け（中身はスクリプトの控えと照合ファイルだけ）
 sudo rm -rf "$T"
 ```
+
+### 旧 LINE トークンの verify が 400 だったとき
+
+`/v2/oauth/verify` の 400 は「トークンが無効・期限切れ」のほか、要求の形が誤っている場合にも返ります。
+そこで `rotation_line_old_diagnose.py` は、同じ関数で 3 本のトークンを試して比べます。
+
+| 試すトークン | 期待 | 意味 |
+|-------------|------|------|
+| 現用（`puma.env`） | verify 200・bot/info 200 | 要求の形が正しい |
+| その場で作った実在しないトークン | verify 400 | 「無効なトークン」の応答の見本 |
+| 旧（退避ファイル） | verify 400・bot/info 401、応答が見本と同じ | 旧トークンは API に使えない |
+
+- 出力は状態コード、`error` 欄の固定の分類名（`invalid_request` などの既知の語以外は `other`）、説明文が見本と同じかの真偽だけです。応答本文と秘密値は出しません。
+- `RESULT: OLD_UNUSABLE` なら失効操作は不要です。LINE は「期限切れ」と「失効済み」を区別できる形で返さないため、どちらかは判定しません（どちらでも旧トークンは使えません）。
+- `RESULT: OLD_STILL_VALID` なら `rotation_line_revoke.py` を実行します。`INCONCLUSIVE` なら削除には進まず、NG の行を共有します。
+
+### 後片付け（旧い値の退避ファイルの削除）
+
+退避ファイル `/etc/be-my-style/backup-20261109/` には露出した旧い値（DB マスター、OpenAI、LINE）が入っています。
+次の**前提をすべて満たしてから**削除します。削除は元に戻せません。
+
+1. `rotation_db_compare.py` が `RESULT: OK`（DB 設定 4 項目が same、`DB_USERNAME` が `bms_app`）
+2. 旧 OpenAI キーが 401
+3. 旧 LINE トークンが `OLD_UNUSABLE`（または `rotation_line_revoke.py` で失効済み）
+4. RDS マスターのパスワード変更が済み、コンソールの状態が「利用可能」に戻っている
+5. 直前に `ssh bms-check connectivity` で OpenAI 200、LINE bot/info 200・verify 200、Webhook 正署名 200・誤署名 401
+
+削除するのは次だけです。ディレクトリごとの `rm -r` は使わず、名前を決めたファイルを消してから `rmdir` します（他のファイルが残っていれば `rmdir` が失敗して止まります）。
+
+| 対象 | 中身 |
+|------|------|
+| `/etc/be-my-style/backup-20261109/env.conf` `openai.conf` `override.conf` とそのディレクトリ | 旧い値の退避 |
+| `/etc/be-my-style/puma.env.prev` | `bms-set-secret` が残した 1 つ前の `puma.env`（ローテーション前の値を含みうる） |
+
+`puma.env`・`selftest.env`（ダミー値のみ）・`~/be-my-style/.env`・systemd の設定は消しません。
+
+```bash
+# 本番サーバー上（ec2-user）
+B=/etc/be-my-style/backup-20261109
+
+# 4-1. 削除前の確認（名前・種類・権限だけを出す）
+sudo find "$B" -mindepth 1 -printf '%y %m %u:%g %f\n'          # f 600 root:root の env.conf / openai.conf / override.conf の 3 行だけであること
+sudo find /etc/be-my-style -maxdepth 1 -printf '%y %m %u:%g %f\n'
+# 想定と違う名前・種類（l=リンク など）があれば、ここで止めて名前を共有する
+
+# 4-2. 削除（通常ファイルのときだけ消す）
+for p in "$B/env.conf" "$B/openai.conf" "$B/override.conf" /etc/be-my-style/puma.env.prev; do
+  if sudo test -f "$p" && ! sudo test -L "$p"; then sudo rm -f -- "$p" && echo "deleted: $p"; else echo "skipped: $p"; fi
+done
+sudo rmdir -- "$B" && echo "removed: $B" || echo "STOP: $B に他のファイルが残っています（名前だけ確認して共有）"
+
+# 4-3. 削除後の確認
+sudo find /etc/be-my-style -maxdepth 1 -printf '%y %m %u:%g %f\n'   # be-my-style(700)・puma.env(600)・selftest.env だけ
+systemctl is-active puma
+```
+
+最後に Claude Code が `ssh bms-check status` と `ssh bms-check connectivity` で、Puma 稼働・`perm.puma_env=600 root:root`・疎通が変わっていないことを確認します。
+EBS スナップショットや AMI に旧い値が残っている可能性はありますが、旧い値はすべて無効化済みのため、ここでは削除しません。
 
 ## 2026-11-09 の検証結果
 

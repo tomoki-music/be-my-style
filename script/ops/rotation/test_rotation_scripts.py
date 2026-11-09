@@ -114,5 +114,50 @@ lines = []
 ok = db["run"]({"puma_env": d + "/missing", "dotenv": write(d, "dotenv.txt", base)}, out=lines.append)
 check("db[puma_env unreadable] not ok", ok is False and any("NOT_COMPARED" in l for l in lines))
 
+# ---------- old LINE diagnose (read-only) ----------
+dg = load("rotation_line_old_diagnose.py")
+INVALID_BODY = b'{"error":"invalid_request","error_description":"access token expired"}'
+
+def dg_stub(old_verify=400, old_body=INVALID_BODY, old_bot=401, cur_verify=200, cur_bot=200):
+    calls = []
+    def req(url, data=None, headers=None):
+        tok = (data or {}).get("access_token") or (headers or {}).get("Authorization", "").replace("Bearer ", "")
+        calls.append((url.rsplit("/", 1)[-1], tok))
+        if url.endswith("/revoke"):
+            return 200, b""
+        if tok == NEW:
+            return (cur_verify, b'{"scope":"x","expires_in":1}') if url.endswith("/verify") else (cur_bot, b"{}")
+        if tok == OLD:
+            return (old_verify, old_body) if url.endswith("/verify") else (old_bot, b"{}")
+        return (400, INVALID_BODY) if url.endswith("/verify") else (401, b"{}")
+    return req, calls
+
+def dgcase(name, expect, backup=std_backup, file_text=f"{K}={NEW}\n", **kw):
+    d = tempfile.mkdtemp()
+    write(d, "override.conf", backup)
+    pe = write(d, "puma_env.txt", file_text)
+    req, calls = dg_stub(**kw)
+    lines = []
+    res = dg["run"]({"puma_env": pe, "backup_dir": d + "/"}, req=req, out=lines.append)
+    joined = "\n".join(lines)
+    check(f"diagnose[{name}] result={res} expected={expect}", res == expect)
+    check(f"diagnose[{name}] never calls revoke", all(u != "revoke" for u, _ in calls))
+    check(f"diagnose[{name}] output has no token values or body", OLD not in joined and NEW not in joined and "expired" not in joined)
+    return lines, calls
+
+lines, calls = dgcase("old invalid like random", "unusable")
+check("diagnose[old invalid] probes a third random token", len({t for _, t in calls} - {OLD, NEW}) == 1)
+print("    sample output:", " | ".join(lines))
+dgcase("old still valid", "still_valid", old_verify=200, old_body=b'{"expires_in":1}', old_bot=200)
+dgcase("old verify 400 but bot/info 200", "still_valid", old_bot=200)
+dgcase("old 400 with different description", "inconclusive", old_body=b'{"error":"invalid_request","error_description":"other reason"}')
+dgcase("old 400 with unparsable body", "inconclusive", old_body=b"<html>")
+dgcase("current verify fails (request shape wrong)", "inconclusive", cur_verify=400)
+dgcase("old bot/info network error", "inconclusive", old_bot="ERR:URLError")
+lines, calls = dgcase("old equals current", "inconclusive", backup=f'Environment="{K}={NEW}"\n')
+check("diagnose[old equals current] makes no API calls", calls == [])
+lines, calls = dgcase("old missing", "inconclusive", backup='[Service]\nEnvironment="LINE_CHANNEL_SECRET=x"\n')
+check("diagnose[old missing] makes no API calls", calls == [])
+
 print(f"\nTOTAL FAILS: {fails}")
 raise SystemExit(1 if fails else 0)
