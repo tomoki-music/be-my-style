@@ -452,7 +452,10 @@
   }
 
   .ba-user__action {
+    display: flex;
     flex: none;
+    flex-wrap: wrap;
+    gap: var(--ba-space-2);
   }
 
   .ba-chip-list {
@@ -817,5 +820,10 @@
   .ba-break {
     overflow-wrap: anywhere;
     word-break: break-all;
+  }
+
+  .notification-settings__status {
+    margin: 0 0 var(--ba-space-2);
+    font-size: 14px;
   }
 }

@@ -79,6 +79,7 @@ class Customer < ApplicationRecord
   has_many :followers, through: :reverse_of_relationships, source: :follower, dependent: :destroy
   has_many :active_notifications, class_name: 'Notification', foreign_key: 'visitor_id', dependent: :destroy
   has_many :passive_notifications, class_name: 'Notification', foreign_key: 'visited_id', dependent: :destroy
+  has_one :business_notification_setting, dependent: :destroy
   has_many :chat_room_customers, dependent: :destroy
   has_many :chat_rooms, through: :chat_room_customers, dependent: :destroy
   has_many :communities, through: :chat_room_customers, dependent: :destroy
@@ -651,6 +652,7 @@ class Customer < ApplicationRecord
       notification = current_customer.active_notifications.new(
         visited_id: id,
         action: 'follow',
+        hidden_in_app: !business_in_app_notifications_enabled?
       )
       notification.save if notification.valid?
     end
@@ -906,6 +908,22 @@ class Customer < ApplicationRecord
     end
   end
 
+  # ビジネス（NAKAMA）の通知設定。設定を保存していない会員は、従来どおり共通のメール受信設定(confirm_mail)と
+  # 画面内の通知オンで扱う(既存会員の受信挙動を変えない)。保存後は Business 側の設定だけに従い、音楽側の
+  # confirm_mail の変更は影響しない(逆に Business 側の保存も confirm_mail を変えない)。
+  def business_notification_setting_or_default
+    business_notification_setting ||
+      BusinessNotificationSetting.new(customer: self, email_enabled: confirm_mail == true, in_app_enabled: true)
+  end
+
+  def business_email_notifications_enabled?
+    business_notification_setting_or_default.email_enabled?
+  end
+
+  def business_in_app_notifications_enabled?
+    business_notification_setting_or_default.in_app_enabled?
+  end
+
   # ビジネス（NAKAMA）
   def business_notification_request(current_customer, community_id)
     return if current_customer.id == id
@@ -914,6 +932,7 @@ class Customer < ApplicationRecord
       visited_id: id,
       action: 'request',
       community_id: community_id,
+      hidden_in_app: !business_in_app_notifications_enabled?
     )
     notification.save if notification.valid?
   end
@@ -925,6 +944,7 @@ class Customer < ApplicationRecord
       visited_id: id,
       action: 'accept',
       community_id: community_id,
+      hidden_in_app: !business_in_app_notifications_enabled?
     )
     notification.save if notification.valid?
   end
@@ -936,7 +956,8 @@ class Customer < ApplicationRecord
       visited_id: id,
       action: 'project_created',
       community_id: project.community_id,
-      project_id: project.id
+      project_id: project.id,
+      hidden_in_app: !business_in_app_notifications_enabled?
     )
     notification.save if notification.valid?
   end
@@ -948,7 +969,8 @@ class Customer < ApplicationRecord
       visited_id: id,
       action: 'project_joined',
       community_id: project.community_id,
-      project_id: project.id
+      project_id: project.id,
+      hidden_in_app: !business_in_app_notifications_enabled?
     )
     notification.save if notification.valid?
   end
@@ -960,7 +982,8 @@ class Customer < ApplicationRecord
       visited_id: id,
       action: 'project_request',
       community_id: project.community_id,
-      project_id: project.id
+      project_id: project.id,
+      hidden_in_app: !business_in_app_notifications_enabled?
     )
     notification.save if notification.valid?
   end
@@ -972,7 +995,8 @@ class Customer < ApplicationRecord
       visited_id: id,
       action: 'project_accept',
       community_id: project.community_id,
-      project_id: project.id
+      project_id: project.id,
+      hidden_in_app: !business_in_app_notifications_enabled?
     )
     notification.save if notification.valid?
   end

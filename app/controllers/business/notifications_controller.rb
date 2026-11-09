@@ -7,6 +7,7 @@ class Business::NotificationsController < ApplicationController
       current_customer
       .passive_notifications
       .for_business
+      .shown_in_app
       .includes(:visitor, project: :community, project_chat: :project_thread)
       .order(created_at: :desc)
     @viewable_project_ids = viewable_project_ids(@notifications)

@@ -17,7 +17,7 @@ class Business::RelationshipsController < ApplicationController
     customer.business_notification_follow(current_customer)
 
     if current_customer != customer
-      if customer.confirm_mail
+      if customer.business_email_notifications_enabled?
         CustomerMailer.with(ac_customer: current_customer, ps_customer: customer).business_follow_mail.deliver_later
       end
     end

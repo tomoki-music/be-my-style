@@ -141,10 +141,10 @@ class Business::ProjectsController < ApplicationController
   end
 
   def notify_project_created!(project)
-    recipients = project.community.active_customers.where.not(id: current_customer.id)
+    recipients = project.community.active_customers.includes(:business_notification_setting).where.not(id: current_customer.id)
     recipients.find_each do |customer|
       customer.business_notification_project_created(current_customer, project)
-      next unless customer.confirm_mail
+      next unless customer.business_email_notifications_enabled?
 
       CustomerMailer.with(
         ac_customer: current_customer,
@@ -155,9 +155,9 @@ class Business::ProjectsController < ApplicationController
   end
 
   def notify_project_joined!(project)
-    project.accessible_customers.where.not(id: current_customer.id).find_each do |customer|
+    project.accessible_customers.includes(:business_notification_setting).where.not(id: current_customer.id).find_each do |customer|
       customer.business_notification_project_joined(current_customer, project)
-      next unless customer.confirm_mail
+      next unless customer.business_email_notifications_enabled?
 
       CustomerMailer.with(
         ac_customer: current_customer,

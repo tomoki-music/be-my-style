@@ -5,7 +5,7 @@ module Business
     def business_unread_notification_count(customer = current_customer)
       return 0 if customer.blank?
 
-      customer.passive_notifications.for_business.where(checked: false).count
+      customer.passive_notifications.for_business.shown_in_app.where(checked: false).count
     end
 
     def business_unread_badge_label(count)

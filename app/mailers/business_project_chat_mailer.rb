@@ -13,7 +13,7 @@ class BusinessProjectChatMailer < ApplicationMailer
     @recipient = notification&.visited
     @poster = notification&.visitor
     return if [@project_chat, @project_thread, @project, @recipient, @poster].any?(&:nil?)
-    return unless @recipient.confirm_mail && @recipient.business_project_notification_recipient?(@project)
+    return unless @recipient.business_email_notifications_enabled? && @recipient.business_project_notification_recipient?(@project)
 
     url_options = Rails.application.config.x.business_share_url_options
     @poster_name = @poster.is_deleted? ? ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL : @poster.name

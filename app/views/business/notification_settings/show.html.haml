@@ -1,0 +1,42 @@
+%nav.ba-breadcrumb{ "aria-label": "現在地" }
+  %ol
+    %li= link_to "プロフィール", business_customer_path(current_customer)
+    %li
+      %span{ "aria-current": "page" } 通知設定
+
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title 通知設定
+    %p.ba-note NAKAMA の通知を、メールと画面内（ベル・通知一覧）それぞれでオン・オフできます。音楽側（BeMyStyle）の設定は変わりません。
+
+= form_with model: @setting, url: business_notification_setting_path, method: :patch, local: true, html: { class: "ba-form notification-settings" } do |f|
+  - if @setting.errors.any?
+    .ba-errors{ role: "alert" }
+      %ul
+        - @setting.errors.full_messages.each do |message|
+          %li= message
+
+  %fieldset.ba-fieldset
+    %legend.ba-fieldset__legend メール通知
+    %p.notification-settings__status{ id: "email-status" }
+      現在：
+      %strong= @saved_email_enabled ? "オン" : "オフ"
+    %label.ba-check
+      = f.check_box :email_enabled, "aria-describedby": "email-status"
+      %span メールで受け取る
+    %p.ba-note オフにすると、フォロー・いいね・コメント・コミュニティの参加申請／承認・プロジェクトの作成／参加・スレッドへの投稿のお知らせメールが届かなくなります。ログイン・パスワード再設定などのメールは届きます。
+
+  %fieldset.ba-fieldset
+    %legend.ba-fieldset__legend 画面内の通知
+    %p.notification-settings__status{ id: "in-app-status" }
+      現在：
+      %strong= @saved_in_app_enabled ? "オン" : "オフ"
+    %label.ba-check
+      = f.check_box :in_app_enabled, "aria-describedby": "in-app-status"
+      %span ベル・通知一覧に表示する
+    %p.ba-note オフにすると、上と同じ種類の新しい通知をベルの件数・通知一覧に出しません。これまでの通知はそのまま残ります（オフの間に届いた通知は、オンに戻しても表示されません）。
+
+  %p.ba-note 参加申請・承認などの操作そのものは、設定に関係なく行われます。
+
+  .ba-form-actions
+    = f.submit "保存する", class: "ba-btn ba-btn--primary"

@@ -243,6 +243,8 @@ Rails.application.routes.draw do
     get "help", to: "helps#show", as: :help
 
     resources :notifications, only: [:index]
+    # 本人の通知設定(メール・画面内)。URL に会員 ID を含めず、常にログイン中の本人の設定を読み書きする。
+    resource :notification_setting, only: [:show, :update]
 
     resources :projects do
       member do

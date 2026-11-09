@@ -60,7 +60,7 @@ class Project < ApplicationRecord
   def thread_post_notification_recipients(except: nil)
     ids = project_members.pluck(:customer_id)
     ids << customer_id if customer_id
-    candidates = Customer.active.where(id: ids.uniq)
+    candidates = Customer.active.includes(:business_notification_setting).where(id: ids.uniq)
     candidates = candidates.where.not(id: except.id) if except
 
     candidates.to_a.select { |customer| customer.business_project_notification_recipient?(self) }

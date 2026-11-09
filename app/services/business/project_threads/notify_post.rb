@@ -38,9 +38,11 @@ module Business
           action: ACTION,
           community_id: @project.community_id,
           project_id: @project.id,
-          project_chat_id: @chat.id
+          project_chat_id: @chat.id,
+          hidden_in_app: !customer.business_in_app_notifications_enabled?
         )
-        notification.deliver_project_chat_mail = customer.confirm_mail
+        # 画面内の通知をオフにしていても通知のレコードは作る(メールはこの通知の保存を起点に送るため)。
+        notification.deliver_project_chat_mail = customer.business_email_notifications_enabled?
         Notification.transaction(requires_new: true) { notification.save! }
         true
       rescue ActiveRecord::RecordNotUnique

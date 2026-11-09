@@ -135,7 +135,7 @@ class CustomerMailer < ApplicationMailer
   def business_project_chat_mail
     @project = params[:project]
     @project_chat = params[:project_chat]
-    return unless @ps_customer.confirm_mail && @ps_customer.business_project_notification_recipient?(@project)
+    return unless @ps_customer.business_email_notifications_enabled? && @ps_customer.business_project_notification_recipient?(@project)
 
     @project_thread = @project_chat.project_thread
     @project_url = "https://be-my-style.com/business/projects/#{@project.id}"
