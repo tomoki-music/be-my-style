@@ -68,7 +68,7 @@ sudo /usr/local/libexec/bms-status-root status
 | `rotation_db_compare.py` | `puma.env` と `.env` の DB 設定 4 項目を、両側に 1 件ずつあり空でないことを確かめてから比較 | なし |
 | `rotation_old_check.py` | 旧 OpenAI キー・旧 LINE トークンの有効性、現用の値（設定ファイル・稼働中 Puma）との一致 | なし |
 | `rotation_line_revoke.py` | 前提 7 条件（旧・設定ファイル・稼働中 Puma の各 1 件特定、旧≠現用×2、設定ファイル＝稼働中 Puma、現用の疎通、旧がまだ有効）をすべて満たすときだけ旧 LINE トークンを失効 | LINE の旧トークン失効のみ |
-| `rotation_line_old_diagnose.py` | 旧 LINE トークンの verify が 400 のとき、現用（200 になるはず）・その場で作った実在しないトークン（400 になるはず）と同じ形の要求で比べ、旧が無効または期限切れかを判定（応答本文は出さず、説明文の一致も真偽だけ） | なし |
+| `rotation_line_old_classify.py` | 旧 LINE トークンの verify 応答を LINE 公式リファレンスの記載に沿って「無効」「期限切れ」「形式不正」「不明」に分類。あわせて退避ファイルからの取り出し方の特徴（行数・書式・長さ・文字種）を出す（応答本文・値は出さない） | なし |
 
 - 試験: `python3 -I script/ops/rotation/test_rotation_scripts.py`（ダミー値のみ。現用トークンが失効 API に渡らないことを全ケースで確認する）。
 - 実行するのは、**レビュー済みのコミットにある内容と SHA-256 が一致するコピー**だけ。
@@ -80,7 +80,7 @@ T=$(sudo mktemp -d /root/bms-rotation.XXXXXX)
 sudo stat -c '%a %U:%G' "$T"          # 700 root:root であること
 
 # 1. 取得して root 所有・読み取り専用でコピーする
-for f in rotation_db_compare.py rotation_old_check.py rotation_line_revoke.py rotation_line_old_diagnose.py; do
+for f in rotation_db_compare.py rotation_old_check.py rotation_line_revoke.py rotation_line_old_classify.py; do
   curl -fsSL "https://raw.githubusercontent.com/tomoki-music/be-my-style/$C/script/ops/rotation/$f" \
     | sudo install -m 400 -o root -g root /dev/stdin "$T/$f"
 done
@@ -90,7 +90,7 @@ sudo install -m 400 -o root -g root /dev/stdin "$T/SHA256SUMS" <<'SUMS'
 <rotation_db_compare.py の SHA-256>  rotation_db_compare.py
 <rotation_old_check.py の SHA-256>  rotation_old_check.py
 <rotation_line_revoke.py の SHA-256>  rotation_line_revoke.py
-<rotation_line_old_diagnose.py の SHA-256>  rotation_line_old_diagnose.py
+<rotation_line_old_classify.py の SHA-256>  rotation_line_old_classify.py
 SUMS
 
 # 3. コピーを照合する（すべての行が OK であること。1 つでも FAILED なら実行しない）
@@ -100,8 +100,8 @@ sudo sh -c 'cd "$1" && sha256sum -c --strict SHA256SUMS' _ "$T"
 run_verified() { sudo sh -c 'cd "$1" && sha256sum -c --strict --quiet SHA256SUMS && exec python3 -I "$1/$2"' _ "$T" "$1"; }
 run_verified rotation_db_compare.py
 run_verified rotation_old_check.py
-run_verified rotation_line_old_diagnose.py   # old_check で旧 LINE の verify が 400 のとき
-run_verified rotation_line_revoke.py   # 旧 LINE トークンが「まだ有効」（verify 200 または diagnose が OLD_STILL_VALID）のときだけ
+run_verified rotation_line_old_classify.py   # old_check で旧 LINE の verify が 400 のとき
+run_verified rotation_line_revoke.py   # 旧 LINE トークンが「まだ有効」（verify 200 または classify が OLD_STILL_VALID）のときだけ
 
 # 5. 後片付け（中身はスクリプトの控えと照合ファイルだけ）
 sudo rm -rf "$T"
@@ -109,18 +109,22 @@ sudo rm -rf "$T"
 
 ### 旧 LINE トークンの verify が 400 だったとき
 
-`/v2/oauth/verify` の 400 は「トークンが無効・期限切れ」のほか、要求の形が誤っている場合にも返ります。
-そこで `rotation_line_old_diagnose.py` は、同じ関数で 3 本のトークンを試して比べます。
+`rotation_line_old_classify.py` が、LINE 公式リファレンスの記載に沿って旧トークンの応答を分類します。
+現用トークンも同じ要求で確かめ、verify 200・bot/info 200 でなければ「不明」にします（要求の形が正しいことの確認）。
 
-| 試すトークン | 期待 | 意味 |
-|-------------|------|------|
-| 現用（`puma.env`） | verify 200・bot/info 200 | 要求の形が正しい |
-| その場で作った実在しないトークン | verify 400 | 「無効なトークン」の応答の見本 |
-| 旧（退避ファイル） | verify 400・bot/info 401、応答が見本と同じ | 旧トークンは API に使えない |
+| 旧トークンの応答 | 分類 | 根拠 |
+|----------------|------|------|
+| verify 200 または bot/info 200 | 有効 `OLD_STILL_VALID` | まだ使える。`rotation_line_revoke.py` で失効させる |
+| 400、`error=invalid_request`、説明文 `access_token invalid`、かつ bot/info 401 | 無効 `OLD_INVALID` | `POST /v2/oauth/verify` の記載 |
+| 400、`error=invalid_request`、説明文に `expired` を含む、かつ bot/info 401 | 期限切れ `OLD_EXPIRED` | v2.1 の verify の記載（`The access token expired`） |
+| 400、`error=invalid_request`、説明文 `access_token in invalid format` | 形式不正 `OLD_MALFORMED` | `POST /v2/oauth/verify` の記載 |
+| 上のどれでもない（他の状態コード・本文が JSON でない・未知の説明文・通信エラー） | 不明 `OLD_UNKNOWN` | — |
 
-- 出力は状態コード、`error` 欄の固定の分類名（`invalid_request` などの既知の語以外は `other`）、説明文が見本と同じかの真偽だけです。応答本文と秘密値は出しません。
-- `RESULT: OLD_UNUSABLE` なら失効操作は不要です。LINE は「期限切れ」と「失効済み」を区別できる形で返さないため、どちらかは判定しません（どちらでも旧トークンは使えません）。
-- `RESULT: OLD_STILL_VALID` なら `rotation_line_revoke.py` を実行します。`INCONCLUSIVE` なら削除には進まず、NG の行を共有します。
+- 説明文は大文字小文字と空白の違いだけ無視して完全一致で比べます。出力は分類名と状態コードだけで、応答本文・説明文・値は出しません。
+- `extract:` の行は、退避ファイルからの取り出し方の特徴です。退避ディレクトリの各ファイルについて、キーを含む行数・書式（`environment_quoted` / `environment_unquoted` / `multiple_assignments` など）・CR の有無、旧と現用の長さ・文字種（`token_shape_ok`）・`Bearer` で始まるか・`%` を含むかを出します。
+- **形式不正のとき**は、トークンそのものより取り出し方の誤りを先に疑います。`extract:` の行を共有し、削除には進みません。
+- **無効・期限切れのとき**は失効操作は不要です。下の「後片付け」の 4-1 に進みます。
+- 不明のときも削除には進まず、`current:` `old:` `RESULT:` の行を共有します。
 
 ### 後片付け（旧い値の退避ファイルの削除）
 
@@ -129,7 +133,7 @@ sudo rm -rf "$T"
 
 1. `rotation_db_compare.py` が `RESULT: OK`（DB 設定 4 項目が same、`DB_USERNAME` が `bms_app`）
 2. 旧 OpenAI キーが 401
-3. 旧 LINE トークンが `OLD_UNUSABLE`（または `rotation_line_revoke.py` で失効済み）
+3. 旧 LINE トークンが `OLD_INVALID` か `OLD_EXPIRED`（または `rotation_line_revoke.py` で失効済み）
 4. RDS マスターのパスワード変更が済み、コンソールの状態が「利用可能」に戻っている
 5. 直前に `ssh bms-check connectivity` で OpenAI 200、LINE bot/info 200・verify 200、Webhook 正署名 200・誤署名 401
 
