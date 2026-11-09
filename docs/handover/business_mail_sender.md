@@ -7,7 +7,7 @@
 
 | 区分 | メール | 送信元・経路 |
 |------|--------|--------------|
-| 対象 | `CustomerMailer` の `like_post_mail` / `comment_post_mail` / `business_follow_mail` / `business_request_mail` / `business_accept_mail` / `business_project_created_mail` / `business_project_joined_mail` / `business_project_chat_mail` | 有効化後は `管理人より <info@be-my-style.jp>`、XServer SMTP |
+| 対象 | `CustomerMailer` の `like_post_mail` / `comment_post_mail` / `business_follow_mail` / `business_request_mail` / `business_accept_mail` / `business_project_created_mail` / `business_project_joined_mail` / `business_project_chat_mail` | 有効化後は `NAKAMA運営事務局 <info@be-my-style.jp>`、XServer SMTP（無効時も表示名は NAKAMA運営事務局） |
 | 対象外 | Devise（ログイン認証・パスワード再設定・確認メール）、音楽（MMM）のイベント・コミュニティ通知、締め切りリマインド、エントリー依頼、学習、管理者通知、`ContactMailer` | 従来どおり（共通の Gmail SMTP 設定） |
 
 - 実装: `app/services/business_mail/sender_config.rb`、`CustomerMailer#business_mail`。
@@ -17,7 +17,7 @@
 ## 現状の送信経路（調査結果）
 
 - 本番の ActionMailer: `config/environments/production.rb` で `smtp.gmail.com:587`（STARTTLS、`openssl_verify_mode: 'none'`）を使用。認証情報は `Rails.application.credentials.gmail[:user_name]` / `[:password]`。
-- `ApplicationMailer` の `default from` は `管理人より<from@example.com>`。Gmail SMTP は From を認証アカウントのアドレスに書き換えるため、受信者には Gmail アドレスが送信元として表示されていると考えられます。
+- `ApplicationMailer` の `default from` は `管理人より<from@example.com>`（Devise 以外の共通・学習・管理者向けメールが使う）。音楽の通知は `BeMyStyle運営事務局`、ビジネスの通知は `NAKAMA運営事務局` の表示名にしている（`app/mailers/mail_from.rb`）。Gmail SMTP は From を認証アカウントのアドレスに書き換えるため、受信者には Gmail アドレスが送信元として表示されていると考えられます。
 - Devise の `mailer_sender` も `credentials.gmail[:user_name]`。
 - 旧 Gmail アドレスの用途: SMTP 認証ユーザー（credentials 経由）、Devise の送信元（同じ値）、Gmail による書き換え後の実質的な From。コードに直接書かれているのは、歌声の登録画面のお問い合わせ先の文言（`app/controllers/singing/registrations_controller.rb`）だけで、通知の宛先には使われていません（管理者通知の宛先は DB の `Admin#email`）。
 - ジョブ: 本番の `queue_adapter` は未設定（Rails 既定の `:async`）。ビジネス通知はすべて `deliver_later` で、Puma ワーカー内で送信されます。そのため ENV は Puma プロセスの値を使い、変更後は Puma の再起動が必要です。
@@ -109,7 +109,7 @@ done
 受信側（Gmail の場合）で確認すること:
 
 1. メールを開き「︙」→「メッセージのソースを表示」。
-2. `From: 管理人より <info@be-my-style.jp>`（日本語の表示名はエンコードされて表示される）。
+2. `From: NAKAMA運営事務局 <info@be-my-style.jp>`（日本語の表示名はエンコードされて表示される）。
 3. 「SPF: PASS」「DKIM: 'PASS'（ドメイン be-my-style.jp）」「DMARC: 'PASS'」（DMARC 未設定なら表示なし）。
 4. `Authentication-Results:` ヘッダーに `spf=pass smtp.mailfrom=be-my-style.jp`、`dkim=pass header.i=@be-my-style.jp`、（設定後は）`dmarc=pass` があること。
 5. 迷惑メールフォルダに入っていないこと。

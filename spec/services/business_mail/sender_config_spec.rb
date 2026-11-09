@@ -24,7 +24,7 @@ RSpec.describe BusinessMail::SenderConfig do
     it "設定がそろっていれば From を info@be-my-style.jp にし、465番は接続開始時から TLS にすること" do
       options = described_class.mail_options(complete_env)
 
-      expect(options[:from]).to eq("管理人より <info@be-my-style.jp>")
+      expect(options[:from]).to eq("NAKAMA運営事務局 <info@be-my-style.jp>")
       expect(options[:delivery_method_options]).to include(
         address: "sv00000.xserver.jp",
         port: 465,

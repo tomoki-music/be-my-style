@@ -16,8 +16,7 @@ module BusinessMail
     REQUIRED_KEYS = [ADDRESS_KEY, USER_NAME_KEY, PASSWORD_KEY].freeze
 
     FROM_ADDRESS = "info@be-my-style.jp".freeze
-    # 表示名は既存の ApplicationMailer の default from に合わせる。
-    FROM = "管理人より <#{FROM_ADDRESS}>".freeze
+    FROM = MailFrom.business(FROM_ADDRESS).freeze
     HELO_DOMAIN = "be-my-style.jp".freeze
     DEFAULT_PORT = 465
     LOG_TAG = "[BusinessMail::SenderConfig]".freeze

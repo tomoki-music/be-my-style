@@ -2,6 +2,9 @@
 # 後から送るため、引数は通知 ID だけにして送信時に読み直す。通知は投稿・スレッド・プロジェクト・宛先・投稿者の
 # 削除と一緒に消えるので、見つからなければ送らない(例外にしない)。宛先の参加資格・メール受信設定も送信時に確かめ直す。
 class BusinessProjectChatMailer < ApplicationMailer
+  # 表示名だけビジネス用にする。送信元アドレスと経路は従来どおり（SenderConfig の切り替え対象外）。
+  default from: MailFrom.business
+
   def thread_post_mail
     notification = Notification.unscoped.find_by(id: params[:notification_id], action: "project_message")
     @project_chat = notification&.project_chat
