@@ -41,22 +41,19 @@ DISABLE_SPRING=1 bundle exec rails runner \
 
 **注意:** `present?` だけでは空文字を検出できない。必ず `length` を確認する。
 
-#### Step 3: systemd 環境変数確認
+#### Step 3: Puma が読む設定に値があるか（値は出さない）
 
 ```bash
-sudo systemctl show puma --property=Environment | grep OPENAI
+# Claude Code（Mac）
+ssh bms-check status        # config.OPENAI_API_KEY=set|unset（空文字は unset）
+ssh bms-check connectivity  # openai: ... GET /v1/models -> 200 / 401
 ```
 
-出力に `OPENAI_API_KEY=` （値が空）が見えたら根本原因。
+- `config.OPENAI_API_KEY=unset` → 未設定または空文字。**根本原因。**
+- `set` なのに `connectivity` が 401 → キーが無効（失効・誤り）。
 
-#### Step 4: Puma ワーカープロセスの実環境変数確認
-
-```bash
-puma_pid=$(sudo systemctl show puma --property=MainPID --value)
-sudo cat /proc/$puma_pid/environ | tr '\0' '\n' | grep OPENAI
-```
-
-**ここで空文字が確認できれば原因確定。**
+systemd の Unit 全体・`Environment`・`/proc/<pid>/environ` を表示して確かめることはしない（秘密値がそのまま出る）。
+値の登録・変更は利用者が本番サーバー上で `sudo bms-set-secret OPENAI_API_KEY --restart` を実行する。
 
 #### Step 5: AsyncAdapter = Puma ワーカー内実行の確認
 
@@ -74,11 +71,11 @@ DISABLE_SPRING=1 RAILS_ENV=production bundle exec rails runner \
 
 | 実行方法 | 環境変数の取得元 |
 |----------|----------------|
-| `rails runner` (SSH 直接) | SSH セッションの ENV |
-| Puma ワーカー内 Job | systemd Unit の Environment |
+| `rails runner` (SSH 直接) | SSH セッションの ENV と `.env`（dotenv-rails） |
+| Puma ワーカー内 Job | `/etc/be-my-style/puma.env`（`EnvironmentFile`）と systemd の drop-in |
 
 この差異が「runner では動くが本番 Job では動かない」という事象を引き起こす。
-**必ず Puma プロセスの ENV を直接確認する（Step 4）。**
+**Puma 側の状態は `ssh bms-check status` で確認する（Step 3）。**
 
 ---
 

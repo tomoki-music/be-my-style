@@ -96,7 +96,7 @@ RAILS_ENV=production bundle exec rails db:rollback STEP=1
 
 ## 本番変更時の全体注意事項
 
-- 本番サーバーへの SSH・コマンド実行は**事前確認必須**。
+- 本番サーバーへの SSH・コマンド実行は**事前確認必須**。Claude Code が使えるのは `ssh bms-check status|mail|connectivity|help` だけ（[secrets_rules.md](secrets_rules.md)）。
 - systemd サービスの stop / restart は確認なしに実行しない。
-- 環境変数の変更（systemd Unit ファイル）は `daemon-reload` + Puma 再起動が必要。
+- 秘密値の変更は利用者が `sudo bms-set-secret <KEY> --restart` で行う（`/etc/be-my-style/puma.env` に書き、Puma を再起動する）。systemd の drop-in に秘密値を書かない。
 - Stripe / OpenAI / S3 の設定変更は特に慎重に扱う。

@@ -35,8 +35,8 @@
 
 ## 本番に入れる設定（値はここに書かない）
 
-既存の本番シークレットのうち、ENV で渡しているもの（`OPENAI_API_KEY` など）と同じく、Puma の systemd で渡します。
-パスワードは `systemctl show` で他のユーザーから見えないよう、権限 600 の `EnvironmentFile` に置くことを推奨します。
+ほかの本番シークレット（`OPENAI_API_KEY` など）と同じく、root 所有・権限 600 の `/etc/be-my-style/puma.env`（Puma は `EnvironmentFile` で読む）に置きます。
+登録は利用者が `sudo bms-set-secret <KEY>` で行います（入力は画面・引数・履歴に残らない。[production_access.md](production_access.md)）。
 
 | 設定名 | 用途 | 必須 |
 |--------|------|------|
@@ -71,35 +71,19 @@
 ### 3. 本番設定の追加（ユーザーが実施）
 
 ```bash
-# 本番サーバー上。値は対話的に入力し、コマンド履歴に残さない。
-sudo install -d -m 700 -o root -g root /etc/be-my-style
-sudo install -m 600 -o root -g root /dev/null /etc/be-my-style/business_mail.env
-sudo vi /etc/be-my-style/business_mail.env
-#   BUSINESS_MAIL_SENDER_ENABLED=true
-#   BUSINESS_SMTP_ADDRESS=<サーバーパネルのホスト名>
-#   BUSINESS_SMTP_PORT=465
-#   BUSINESS_SMTP_USER_NAME=<メールアカウント>
-#   BUSINESS_SMTP_PASSWORD=<パスワード>
-
-# Puma の Unit に EnvironmentFile を追加（drop-in）
-sudo systemctl edit puma
-#   [Service]
-#   EnvironmentFile=/etc/be-my-style/business_mail.env
-
-sudo systemctl daemon-reload
-sudo systemctl restart puma
-sudo systemctl status puma
-sudo journalctl -u puma -n 50 --no-pager
+# 本番サーバー上。1 項目ずつ貼り付ける（画面・引数・履歴に残らない）。有効化のフラグは最後に入れる。
+sudo bms-set-secret BUSINESS_SMTP_ADDRESS        # サーバーパネルのホスト名
+sudo bms-set-secret BUSINESS_SMTP_PORT           # 465
+sudo bms-set-secret BUSINESS_SMTP_USER_NAME      # メールアカウント
+sudo bms-set-secret BUSINESS_SMTP_PASSWORD       # パスワード
+sudo bms-set-secret BUSINESS_MAIL_SENDER_ENABLED --restart   # true を入れて Puma を再起動
 ```
 
-値が入っているかは長さだけで確認する（値は出さない）:
+値が入っているかは有無だけで確認する（値は出さない）:
 
 ```bash
-puma_pid=$(sudo systemctl show puma --property=MainPID --value)
-for k in BUSINESS_MAIL_SENDER_ENABLED BUSINESS_SMTP_ADDRESS BUSINESS_SMTP_PORT BUSINESS_SMTP_USER_NAME BUSINESS_SMTP_PASSWORD; do
-  v=$(sudo cat /proc/$puma_pid/environ | tr '\0' '\n' | grep "^$k=" | cut -d= -f2-)
-  echo "$k length=${#v}"
-done
+ssh bms-check status   # Claude Code（Mac）: config.BUSINESS_SMTP_*=set、business_mail_sender=enabled
+sudo /usr/local/libexec/bms-status-root status   # 利用者が本番サーバー上で確認する場合
 ```
 
 ### 4. 自分宛てに 1 通送って確認

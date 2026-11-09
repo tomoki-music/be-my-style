@@ -45,26 +45,23 @@ DISABLE_SPRING=1 bundle exec rails runner \
 
 ---
 
-## 3. systemd 環境変数確認（本番サーバー上）
+## 3. Puma が読む設定の確認（値は出さない）
 
 ```bash
-# systemd Unit の Environment 設定を確認
-sudo systemctl show puma --property=Environment | grep OPENAI
+# Claude Code（Mac）
+ssh bms-check status        # config.OPENAI_API_KEY=set|unset
+ssh bms-check connectivity  # openai: ... GET /v1/models -> 200
 ```
 
 **確認ポイント:**
-- `OPENAI_API_KEY=sk-...` → 正常
-- `OPENAI_API_KEY=` （値が空） → **根本原因**
-
-```bash
-# Puma ワーカープロセスの実環境変数を確認（より確実）
-puma_pid=$(sudo systemctl show puma --property=MainPID --value)
-sudo cat /proc/$puma_pid/environ | tr '\0' '\n' | grep OPENAI
-```
+- `config.OPENAI_API_KEY=set` かつ `connectivity` が 200 → 正常
+- `config.OPENAI_API_KEY=unset` → 未設定または空文字 → **根本原因**
+- `set` なのに 401 → キーが無効
 
 **危険ポイント:**
-- `rails runner` は SSH セッションの ENV を使う。Puma は systemd の ENV を使う。
-- 両者が異なる場合があるため、必ず Puma プロセスの ENV を直接確認する。
+- `rails runner` は SSH セッションの ENV と `.env` を使う。Puma は `/etc/be-my-style/puma.env` を使う。
+- systemd の Unit 全体・`Environment`・`/proc/<pid>/environ` は表示しない（秘密値がそのまま出る）。
+- 値の登録・変更は利用者が `sudo bms-set-secret OPENAI_API_KEY --restart` で行う。
 
 ---
 

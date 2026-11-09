@@ -113,14 +113,17 @@ sudo systemctl reload nginx
 ## 環境変数の確認（本番）
 
 ```bash
-# systemd で設定された環境変数一覧
-sudo systemctl show puma --property=Environment
+# Claude Code（Mac）: 設定の有無・権限だけ（値は出さない。空文字は unset）
+ssh bms-check status
 
-# 特定の変数が空文字でないか確認
-sudo journalctl -u puma -n 50 --no-pager
+# 利用者が本番サーバー上で確認する場合
+sudo /usr/local/libexec/bms-status-root status
 ```
 
-**注意:** systemd の環境変数変更は Puma 再起動後に反映される。
+- 秘密値は `/etc/be-my-style/puma.env`（root 600、`EnvironmentFile`）。変更は `sudo bms-set-secret <KEY> --restart`。
+- systemd の Unit 全体・`Environment`・`/proc/<pid>/environ` は表示しない（[production_access.md](production_access.md)）。
+
+**注意:** 環境変数の変更は Puma 再起動後に反映される。
 
 ## ログ確認
 
