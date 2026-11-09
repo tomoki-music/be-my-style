@@ -1,4 +1,5 @@
 class Business::PostsController < ApplicationController
+  include BusinessReturnPath
   layout "business"
 
   TIMELINE_TABS = %w[recommended following community].freeze
@@ -45,6 +46,8 @@ class Business::PostsController < ApplicationController
 
       if invitation&.status == :ok
         redirect_to invitation.path, notice: notice
+      elsif invitation&.status == :awaiting
+        redirect_to invitation.path, notice: "#{notice}#{business_invitation_awaiting_message(invitation.record)}"
       elsif current_customer.onboarding_done?
         redirect_to business_post_path(@post), notice: notice
       else

@@ -12,6 +12,9 @@ module BusinessReturnPath
   # 招待先(Business::SignupInvitations)が期限切れ・削除済みだったときの案内。
   INVITATION_UNAVAILABLE_MESSAGE =
     "招待されたコミュニティ・プロジェクトを開けませんでした（削除されたか、招待の有効期限が切れています）。ホームから探してください。".freeze
+  # 招待先のプロジェクトを開くには、先に親コミュニティへの参加が必要なときの案内。
+  INVITATION_AWAITING_COMMUNITY_MESSAGE =
+    "招待されたプロジェクト「%<title>s」を開くには、先にこのコミュニティへの参加が必要です。参加が成立すると、プロジェクトへご案内します。".freeze
 
   private
 
@@ -48,11 +51,18 @@ module BusinessReturnPath
 
     case invitation.status
     when :ok then invitation.path
+    when :awaiting
+      flash[:notice] = business_invitation_awaiting_message(invitation.record)
+      invitation.path
     when :invalid
       flash[:alert] = INVITATION_UNAVAILABLE_MESSAGE
       business_root_path
     else
       return_path || business_root_path
     end
+  end
+
+  def business_invitation_awaiting_message(project)
+    format(INVITATION_AWAITING_COMMUNITY_MESSAGE, title: project.title)
   end
 end

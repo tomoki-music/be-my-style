@@ -16,19 +16,31 @@ module Business
         [TYPES_BY_SEGMENT.fetch(match[1]), match[2].to_i]
       end
 
-      # いまも存在する Business のコミュニティ・プロジェクトなら、その詳細画面のパス。削除済み・Business 以外は nil。
-      # 開いた人が中身を見られるかは詳細画面側の判定(参加・承認・停止)に任せる。
-      def path_for(type, id)
-        routes = Rails.application.routes.url_helpers
-
+      # いまも存在する Business のコミュニティ・プロジェクト。削除済み・Business 以外は nil。
+      def find(type, id)
         case type
-        when "Community"
-          community = business_communities.find_by(id: id)
-          community && routes.business_community_path(community)
-        when "Project"
-          project = Project.where(community_id: business_communities.select(:id)).find_by(id: id)
-          project && routes.business_project_path(project)
+        when "Community" then business_communities.find_by(id: id)
+        when "Project" then Project.where(community_id: business_communities.select(:id)).find_by(id: id)
         end
+      end
+
+      def path_for(type, id)
+        record = find(type, id)
+        record && path_of(record)
+      end
+
+      def path_of(record)
+        routes = Rails.application.routes.url_helpers
+        record.is_a?(Project) ? routes.business_project_path(record) : routes.business_community_path(record)
+      end
+
+      # 招待先の詳細画面を開ける(参加・申請の案内を含めて表示できる)か。
+      # コミュニティはいつでも開ける。プロジェクトは親コミュニティの参加者でないと開けず、コミュニティの参加案内へ移る
+      # (Business::ProjectsController#show)。中身(スレッド・メンバー)を見られるかは詳細画面側の判定に任せる。
+      def openable?(customer, record)
+        return true if record.is_a?(Community)
+
+        customer.business_community_participant?(record.community)
       end
 
       def business_communities

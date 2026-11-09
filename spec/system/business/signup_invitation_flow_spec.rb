@@ -84,6 +84,69 @@ RSpec.describe "Business 招待用URLからの新規登録(ブラウザ)", type:
     expect(page).to have_current_path(business_root_path, wait: 10)
   end
 
+  def log_in(customer)
+    Capybara.reset_session!
+    visit new_business_customer_session_path
+    fill_in "customer_email", with: customer.email
+    fill_in "customer_password", with: "password"
+    click_button "ログインする"
+  end
+
+  # 親コミュニティに参加しないままオンボーディングを終え、コミュニティの参加案内に着くまで。
+  def arrive_at_community_guidance(email)
+    newcomer = sign_up_from_invite(business_project_path(project), email)
+    confirm_in_other_browser(newcomer)
+    finish_onboarding(newcomer)
+
+    expect(page).to have_current_path(business_community_path(community), wait: 10)
+    expect(page).to have_text("招待されたプロジェクト「商店街の魅力発信」を開くには、先にこのコミュニティへの参加が必要です")
+    newcomer
+  end
+
+  it "親コミュニティ未参加(自動承認): 参加案内から参加すると、元の招待プロジェクトへ進み、次回ログインでは転送しない" do
+    visit new_business_customer_session_path
+    use_mobile_viewport
+
+    newcomer = arrive_at_community_guidance("guidance-auto@example.com")
+    within("#community-join") { click_link "参加する" }
+
+    expect(page).to have_current_path(business_project_path(project), wait: 10)
+    expect(page).to have_css("h1", text: "商店街の魅力発信")
+    expect(page).to have_text("コミュニティに参加しました")
+
+    log_in(newcomer)
+    expect(page).to have_current_path(business_root_path, wait: 10)
+  end
+
+  it "親コミュニティ未参加(承認制): 申請 → 運営者の承認 → ログインで元の招待プロジェクトへ進み、その後のログインでは転送しない" do
+    community.update!(join_approval_mode: :manual)
+    visit new_business_customer_session_path
+    use_desktop_viewport
+
+    newcomer = arrive_at_community_guidance("guidance-manual@example.com")
+    within("#community-join") { click_link "参加を申請する" }
+    expect(page).to have_text("コミュニティへ参加申請しました", wait: 10)
+    expect(page).to have_current_path(business_community_path(community))
+
+    # 承認前のログインでは転送しない。
+    log_in(newcomer)
+    expect(page).to have_current_path(business_root_path, wait: 10)
+
+    # 運営者がメンバー管理画面で承認する(既存の承認フロー)。
+    log_in(owner)
+    expect(page).to have_current_path(business_root_path, wait: 10)
+    visit business_permits_path(community)
+    within(".ba-row", text: "招待された人") { click_link "承認" }
+    expect(page).to have_text("コミュニティへ参加を許可しました", wait: 10)
+
+    log_in(newcomer)
+    expect(page).to have_current_path(business_project_path(project), wait: 10)
+    expect(page).to have_css("h1", text: "商店街の魅力発信")
+
+    log_in(newcomer)
+    expect(page).to have_current_path(business_root_path, wait: 10)
+  end
+
   it "招待用URLを経由しない新規登録は、従来どおり確認後に Business ホームへ進む" do
     visit new_business_customer_session_path
     click_link "新規登録はこちら"

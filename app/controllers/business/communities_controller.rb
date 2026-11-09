@@ -26,6 +26,10 @@ class Business::CommunitiesController < ApplicationController
   # 未参加者には参加申請に必要な名称・紹介だけを見せ、プロジェクト・タイムライン・メンバーは参加者(運営者を含む)に限る。
   # 運営者にも参加者と同じ画面を出し、承認・停止・設定変更はメンバー管理 / 編集画面へ分ける。
   def show
+    # 招待先のプロジェクトの親コミュニティへの参加を待っていた人が、承認後にこの画面を開いたら(承認メールのリンクなど)、プロジェクトへ進める。
+    invitation_path = Business::SignupInvitations::Resume.call(current_customer, community: @community)
+    return redirect_to(invitation_path, notice: "コミュニティに参加できたため、招待されたプロジェクトへご案内しました。") if invitation_path
+
     @can_view_internal = current_customer.business_community_participant?(@community)
     @join_status = Business::Memberships::CommunityStatuses.for(customer: current_customer, community: @community)
 

@@ -3,6 +3,8 @@
 class BusinessSignupInvitation < ApplicationRecord
   # 登録から確認メール(有効期限は Devise の confirm_within)・オンボーディングまでを見込んだ期限。
   TTL = 7.days
+  # オンボーディング後、招待先のプロジェクトの親コミュニティへの参加(承認待ちを含む)を待つ間の期限。
+  AWAITING_TTL = 30.days
   TARGET_TYPES = %w[Community Project].freeze
 
   belongs_to :customer

@@ -10,6 +10,10 @@ class Business::PermitsController < ApplicationController
     notify_owner_of_request! if result == :requested
 
     flash_membership_result(COMMUNITY_JOIN_MESSAGES, result)
+    # 招待用URLから登録した人が、招待先プロジェクトの親コミュニティに参加できたら、そのプロジェクトへ進める。
+    invitation_path = Business::SignupInvitations::Resume.call(current_customer, community: @community) if result == :joined
+    return redirect_to(invitation_path) if invitation_path
+
     redirect_after_action
   end
 

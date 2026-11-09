@@ -86,7 +86,7 @@ RSpec.describe "Business 招待用URLからの新規登録", type: :request do
   end
 
   describe "プロジェクトの招待" do
-    it "確認メールを別のブラウザで開いても引き継ぎ、オンボーディング完了でプロジェクトの詳細画面へ転送する" do
+    it "確認メールを別のブラウザで開いても引き継ぎ、親コミュニティ未参加ならオンボーディング完了後にコミュニティの参加案内へ進む" do
       get business_project_path(project)
       newcomer = register("project-invite@example.com")
       expect(newcomer.business_signup_invitation).to have_attributes(target_type: "Project", target_id: project.id)
@@ -97,11 +97,11 @@ RSpec.describe "Business 招待用URLからの新規登録", type: :request do
       expect(redirected_path(other_browser)).to eq onboarding_step1_path
 
       go_through_onboarding(other_browser)
-      expect(redirected_path(other_browser)).to eq business_project_path(project)
-
-      # 閲覧権限は従来どおり: 親コミュニティ未参加なら、プロジェクトからコミュニティの参加案内へ移る。
-      other_browser.follow_redirect!
+      # 閲覧権限は従来どおり: 親コミュニティ未参加ではプロジェクトを開けないため、コミュニティの参加案内へ進める。
       expect(redirected_path(other_browser)).to eq business_community_path(community)
+      expect(other_browser.flash[:notice]).to include("招待されたプロジェクト「招待テスト企画」を開くには、先にこのコミュニティへの参加が必要です")
+      # 参加が成立するまで招待先は残す。
+      expect(BusinessSignupInvitation.find_by(customer_id: newcomer.id)).to have_attributes(target_type: "Project", target_id: project.id)
     end
 
     it "オンボーディング中にコミュニティへ参加していれば、プロジェクトの詳細画面がそのまま開く" do
@@ -122,15 +122,127 @@ RSpec.describe "Business 招待用URLからの新規登録", type: :request do
       expect(response.body).to include("招待テスト企画")
     end
 
-    it "元のブラウザに戻ってログインした場合も、オンボーディング後にプロジェクトへ案内する" do
+    it "元のブラウザに戻ってログインした場合も、オンボーディング後に招待先へ案内する(親コミュニティ参加済みならプロジェクト)" do
       get business_project_path(project)
       newcomer = register("same-browser-login@example.com")
       newcomer.confirm
+      CommunityCustomer.create!(community: community, customer: newcomer)
 
       sign_in_via_form(self, newcomer)
       expect(response).to redirect_to(onboarding_step1_path)
       patch onboarding_complete_path
       expect(response).to redirect_to(business_project_path(project))
+      expect(BusinessSignupInvitation.exists?(customer_id: newcomer.id)).to be false
+    end
+  end
+
+  describe "親コミュニティ未参加のプロジェクト招待: 参加が成立してからプロジェクトへ進める" do
+    # 招待URL → 新規登録 → 確認メール → オンボーディング完了 → コミュニティの参加案内、まで進めた新規会員。
+    def arrive_at_community_guidance(email)
+      get business_project_path(project)
+      newcomer = register(email)
+      get customer_confirmation_path(confirmation_token: newcomer.confirmation_token)
+      expect(response).to redirect_to(onboarding_step1_path)
+      go_through_onboarding
+      expect(response).to redirect_to(business_community_path(community))
+      follow_redirect!
+      expect(response).to have_http_status(:ok)
+      newcomer
+    end
+
+    def log_out_and_in(customer)
+      delete destroy_customer_session_path
+      sign_in_via_form(self, customer)
+    end
+
+    it "自動承認: 参加案内から参加すると、そのままプロジェクトの詳細画面へ進み、次回ログインでは転送しない" do
+      community.update!(join_approval_mode: :auto)
+      newcomer = arrive_at_community_guidance("auto-join@example.com")
+      expect(response.body).to include("参加する")
+
+      post business_community_permit_path(community)
+      expect(response).to redirect_to(business_project_path(project))
+      follow_redirect!
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("招待テスト企画")
+      expect(BusinessSignupInvitation.exists?(customer_id: newcomer.id)).to be false
+
+      log_out_and_in(newcomer)
+      expect(response).to redirect_to(business_root_path)
+    end
+
+    it "承認制: 申請中は招待先を残し、承認後のログインでプロジェクトへ進む。到達後のログインでは転送しない" do
+      newcomer = arrive_at_community_guidance("manual-login@example.com")
+
+      post business_community_permit_path(community)
+      expect(response).to redirect_to(business_community_path(community))
+      expect(Permit.exists?(community: community, customer: newcomer)).to be true
+
+      # 承認前のログインでは転送しない(招待先は残る)。
+      log_out_and_in(newcomer)
+      expect(response).to redirect_to(business_root_path)
+      expect(BusinessSignupInvitation.exists?(customer_id: newcomer.id)).to be true
+
+      # 運営者が既存の承認フローで承認する。
+      delete destroy_customer_session_path
+      sign_in owner
+      post business_community_community_customers_path(community, customer_id: newcomer.id)
+      expect(CommunityCustomer.exists?(community: community, customer: newcomer)).to be true
+      sign_out owner
+
+      sign_in_via_form(self, newcomer)
+      expect(response).to redirect_to(business_project_path(project))
+      follow_redirect!
+      expect(response).to have_http_status(:ok)
+
+      log_out_and_in(newcomer)
+      expect(response).to redirect_to(business_root_path)
+    end
+
+    it "承認制: ログインしたまま承認され、コミュニティを開く(承認メールのリンクなど)とプロジェクトへ進む。2回目は転送しない" do
+      newcomer = arrive_at_community_guidance("manual-open@example.com")
+      post business_community_permit_path(community)
+
+      get business_community_path(community)
+      expect(response).to have_http_status(:ok)
+
+      Business::Memberships::ApproveCommunityRequest.call(community: community, customer_id: newcomer.id)
+
+      get business_community_path(community)
+      expect(response).to redirect_to(business_project_path(project))
+      expect(flash[:notice]).to include("招待されたプロジェクトへご案内しました")
+
+      get business_community_path(community)
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "参加後に自分でプロジェクトを開いた場合も、到達として招待先を消す" do
+      newcomer = arrive_at_community_guidance("self-open@example.com")
+      CommunityCustomer.create!(community: community, customer: newcomer)
+
+      get business_project_path(project)
+      expect(response).to have_http_status(:ok)
+      expect(BusinessSignupInvitation.exists?(customer_id: newcomer.id)).to be false
+    end
+
+    it "参加待ちの期限(#{BusinessSignupInvitation::AWAITING_TTL.inspect})を過ぎたら招待先を消し、通常の遷移に戻す" do
+      newcomer = arrive_at_community_guidance("awaiting-expired@example.com")
+      CommunityCustomer.create!(community: community, customer: newcomer)
+
+      travel(BusinessSignupInvitation::AWAITING_TTL + 1.minute) do
+        log_out_and_in(newcomer)
+        expect(response).to redirect_to(business_root_path)
+      end
+      expect(BusinessSignupInvitation.exists?(customer_id: newcomer.id)).to be false
+    end
+
+    it "参加を申請しただけ・別のコミュニティに参加しただけでは、プロジェクトへ転送しない" do
+      other = create(:community, owner: owner, domain: business_domain, join_approval_mode: :auto)
+      newcomer = arrive_at_community_guidance("other-community@example.com")
+
+      post business_community_permit_path(other)
+      expect(response).to redirect_to(business_community_path(other))
+      expect(BusinessSignupInvitation.exists?(customer_id: newcomer.id)).to be true
     end
   end
 
