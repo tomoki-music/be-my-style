@@ -164,7 +164,8 @@ Devise.setup do |config|
 
   # ==> Configuration for :rememberable
   # The time the user will be remembered without asking for credentials again.
-  # config.remember_for = 2.weeks
+  # 音楽・ビジネスとも、ログインから約30日はブラウザを閉じてもログインを保つ（延長はしない）。
+  config.remember_for = 30.days
 
   # Invalidates all the remember me tokens when the user signs out.
   config.expire_all_remember_me_on_sign_out = true
@@ -174,7 +175,7 @@ Devise.setup do |config|
 
   # Options to be passed to the created cookie. For instance, you can set
   # secure: true in order to force SSL only cookies.
-  # config.rememberable_options = {}
+  config.rememberable_options = { secure: Rails.env.production? }
 
   # ==> Configuration for :validatable
   # Range for password length.

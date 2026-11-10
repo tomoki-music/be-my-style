@@ -25,8 +25,8 @@
 
       - if devise_mapping.rememberable?
         .domain-auth__remember
-          = f.check_box :remember_me, class: "domain-auth__checkbox"
-          = f.label :remember_me, "ログイン状態を保存する"
+          = f.check_box :remember_me, checked: true, class: "domain-auth__checkbox"
+          = f.label :remember_me, "ログイン状態を30日間保存する"
 
       = f.submit "ログインする", class: "domain-auth__submit btn"
 
