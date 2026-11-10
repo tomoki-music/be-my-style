@@ -1,6 +1,6 @@
 -# 使い方「管理者向け」。目次(HelpHelper::HELP_SECTIONS["admin"])と同じ順・同じ id で並べる。
 -# 権限の根拠: Customer#can_manage_community? / #can_create_project_for?、BusinessAccess#business_project_manager? /
--# can_edit_project_thread? / can_destroy_project_thread?、Customer::FEATURE_RULES、Community::PLAN_RESTRICTION_WAIVABLE_FEATURES。
+-# can_edit_project_thread? / can_destroy_project_thread? / can_destroy_business_project?、Customer#can_destroy_community?、Customer::FEATURE_RULES、Community::PLAN_RESTRICTION_WAIVABLE_FEATURES。
 -# spec/requests/business/help_permissions_spec.rb でサーバー側の認可と照合する。
 - numbers = local_assigns.fetch(:numbers)
 
@@ -179,8 +179,8 @@
         %tr
           %th{ scope: "row" } プロジェクト
           %td{ data: { label: "編集" } } プロジェクトの管理者
-          %td{ data: { label: "削除" } } 画面から削除する操作はありません
+          %td{ data: { label: "削除" } } システム管理者と、そのコミュニティのオーナー本人だけ（編集画面の最下部から）。作った人・運営者・プロジェクトの管理者はできません
         %tr
           %th{ scope: "row" } コミュニティ
           %td{ data: { label: "編集" } } コミュニティの運営者
-          %td{ data: { label: "削除" } } NAKAMAの画面には削除の操作はありません
+          %td{ data: { label: "削除" } } システム管理者と、コミュニティのオーナー本人だけ（編集画面の最下部から）。管理権限を付けた運営者はできません

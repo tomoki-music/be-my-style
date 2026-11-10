@@ -248,6 +248,7 @@ Rails.application.routes.draw do
 
     resources :projects do
       member do
+        get :destroy_confirmation
         post :join
         delete :leave
         delete :cancel_request

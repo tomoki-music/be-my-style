@@ -5,11 +5,12 @@ class Business::ProjectsController < ApplicationController
 
   THREAD_PREVIEW_LIMIT = 5
 
-  before_action :set_project, only: [:show, :edit, :update, :join, :leave, :cancel_request, :members]
+  before_action :set_project, only: [:show, :edit, :update, :destroy, :destroy_confirmation, :join, :leave, :cancel_request, :members]
   before_action -> { require_business_eligibility!(business_project_path(@project), manager: current_customer.business_project_manager?(@project)) }, only: [:show, :join]
   before_action :set_community, only: [:new, :create]
   before_action :authorize_project_creation!, only: [:new, :create]
   before_action :require_business_project_manager!, only: [:edit, :update, :members]
+  before_action :require_business_project_destroyer!, only: [:destroy, :destroy_confirmation]
 
   # 一覧に出すのは、内部を閲覧できるコミュニティ(参加済み・運営中)のプロジェクトだけ。
   def index
@@ -79,6 +80,20 @@ class Business::ProjectsController < ApplicationController
     end
   end
 
+  def destroy_confirmation
+    @community = @project.community
+    @deletion_impact = Business::ProjectDeletionImpact.call(@project)
+  end
+
+  def destroy
+    community = @project.community
+    if @project.destroy
+      redirect_to business_community_path(community), notice: "プロジェクト「#{@project.title}」を削除しました。"
+    else
+      redirect_to edit_business_project_path(@project), alert: "プロジェクトを削除できませんでした。"
+    end
+  end
+
   # 自動承認なら即参加、手動承認なら承認待ちにする(ページを開いただけでは参加しない)。
   def join
     result = Business::Memberships::JoinProject.call(project: @project, customer: current_customer)
@@ -119,6 +134,13 @@ class Business::ProjectsController < ApplicationController
 
   def set_project
     @project = find_business_project!(params[:id])
+  end
+
+  # 編集画面の削除ボタンの表示と同じ判定(Customer#can_destroy_business_project?)。
+  def require_business_project_destroyer!
+    return if current_customer.can_destroy_business_project?(@project)
+
+    redirect_to business_project_path(@project), alert: "このプロジェクトを削除する権限がありません。"
   end
 
   def set_community
