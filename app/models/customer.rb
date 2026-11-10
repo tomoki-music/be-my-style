@@ -469,6 +469,13 @@ class Customer < ApplicationRecord
     owned_communities.exists?(id: community.id)
   end
 
+  # 削除は取り消せないため、管理権限(CommunityOwner)の付与だけでは許可せずオーナー本人と管理者に限る。
+  def can_destroy_community?(community)
+    return false if community.blank?
+
+    admin? || community.owner_id == id
+  end
+
   # 公開画面の自己申告制イベント編集者(一般メンバーへの個別付与)は廃止したため、
   # CommunityEventEditorレコードは「管理画面がis_owner: managerへ設定した正式な
   # マネージャー役職」の担当コミュニティ判定にのみ使用する。manager?でない場合は

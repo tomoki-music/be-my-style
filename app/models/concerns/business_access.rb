@@ -45,6 +45,14 @@ module BusinessAccess
     project.customer_id == id && business_community_member?(community)
   end
 
+  # 削除は取り消せないため、作成者・運営者(編集権限)では許可せず、管理者と親コミュニティのオーナー本人に限る。
+  def can_destroy_business_project?(project)
+    community = project&.community
+    return false if community.blank? || !community.business_domain?
+
+    can_destroy_community?(community)
+  end
+
   def business_project_participant?(project)
     return false if project.blank?
     return true if business_project_manager?(project)

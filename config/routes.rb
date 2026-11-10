@@ -248,6 +248,7 @@ Rails.application.routes.draw do
 
     resources :projects do
       member do
+        get :destroy_confirmation
         post :join
         delete :leave
         delete :cancel_request
@@ -272,6 +273,7 @@ Rails.application.routes.draw do
     resources :chat_attachments, only: [:show]
 
     resources :communities do
+      get :destroy_confirmation, on: :member
       get :destroy_blocked, on: :member
       delete "leave" => "communities#leave"
 

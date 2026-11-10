@@ -3,10 +3,10 @@ class Business::CommunitiesController < ApplicationController
 
   layout "business"
 
-  before_action :set_community, only: [:show, :edit, :update, :destroy, :destroy_blocked, :permits]
+  before_action :set_community, only: [:show, :edit, :update, :destroy, :destroy_confirmation, :destroy_blocked, :permits]
   before_action -> { require_business_eligibility!(business_community_path(@community), manager: current_customer.can_manage_community?(@community)) }, only: [:show]
   before_action :ensure_community_manager!, only: [:edit, :update, :permits]
-  before_action :ensure_community_owner!, only: [:destroy, :destroy_blocked]
+  before_action :ensure_community_owner!, only: [:destroy, :destroy_confirmation, :destroy_blocked]
   before_action :load_pending_permit_count, only: [:edit, :update]
   before_action only: [:new, :create] do
     require_feature!(:business_community_create, redirect_to_path: business_communities_path)
@@ -88,9 +88,16 @@ class Business::CommunitiesController < ApplicationController
     end
   end
 
+  # 削除前の確認画面。削除の可否(共催イベントの主催)は destroy と同じモデルの判定に任せ、ここでは止まると分かれば先に案内する。
+  def destroy_confirmation
+    return redirect_to(destroy_blocked_business_community_path(@community)) if @community.primary_cohosted_events.exists?
+
+    @deletion_impact = Business::CommunityDeletionImpact.call(@community)
+  end
+
   def destroy
     if @community.destroy
-      redirect_to business_communities_path
+      redirect_to business_communities_path, notice: "コミュニティ「#{@community.name}」を削除しました。"
     else
       redirect_to destroy_blocked_business_community_path(@community)
     end
@@ -134,9 +141,9 @@ class Business::CommunitiesController < ApplicationController
     redirect_to business_community_path(@community), alert: "このコミュニティを編集する権限がありません。"
   end
 
-  # 削除は取り消せないため、管理権限の付与だけでは許可せずオーナー本人と管理者に限定する。
+  # 編集画面の削除ボタンの表示と同じ判定(Customer#can_destroy_community?)。
   def ensure_community_owner!
-    return if current_customer.admin? || @community.owner_id == current_customer.id
+    return if current_customer.can_destroy_community?(@community)
 
     redirect_to business_community_path(@community), alert: "このコミュニティを削除する権限がありません。"
   end
