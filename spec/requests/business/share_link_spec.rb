@@ -138,7 +138,7 @@ RSpec.describe "Business 招待用URL", type: :request do
       sign_in outsider
 
       get business_project_path(project)
-      expect(doc.at_css("#project-join a[data-method='post']").text.strip).to eq "参加を申請する"
+      expect(doc.at_css("#project-join summary").text.strip).to eq "参加を申請する"
       expect(response.body).not_to include("内部スレッドの題名", "内部メッセージ本文", "参加者さん")
 
       ProjectJoinRequest.create!(project: project, customer: outsider)

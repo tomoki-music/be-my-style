@@ -157,6 +157,53 @@
     color: var(--ba-text-muted);
   }
 
+  .ba-join-request {
+    flex-basis: 100%;
+  }
+
+  .ba-join-request__toggle {
+    list-style: none;
+    cursor: pointer;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+
+  // 開いた後は送信ボタンと並ぶ主ボタンが2つにならないよう、閉じるための控えめな見た目にする。
+  .ba-join-request[open] .ba-join-request__toggle {
+    margin-bottom: var(--ba-space-3);
+    border-color: var(--ba-border);
+    background: var(--ba-surface);
+    color: var(--ba-text);
+  }
+
+  .ba-join-request__form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--ba-space-2);
+    max-width: 640px;
+    padding: var(--ba-space-4);
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-control);
+    background: var(--ba-surface-muted);
+
+    .form-control {
+      width: 100%;
+    }
+
+    .ba-label {
+      margin-bottom: 0;
+    }
+  }
+
+  .ba-join-request__hint {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ba-text-muted);
+  }
+
   .ba-theme {
     padding: var(--ba-space-3) var(--ba-space-4);
     border-radius: var(--ba-radius-control);

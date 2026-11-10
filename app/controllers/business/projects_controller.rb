@@ -96,7 +96,7 @@ class Business::ProjectsController < ApplicationController
 
   # 自動承認なら即参加、手動承認なら承認待ちにする(ページを開いただけでは参加しない)。
   def join
-    result = Business::Memberships::JoinProject.call(project: @project, customer: current_customer)
+    result = Business::Memberships::JoinProject.call(project: @project, customer: current_customer, message: join_request_message)
     case result
     when :joined then notify_project_joined!(@project)
     when :requested then notify_project_requested!(@project)
@@ -134,6 +134,12 @@ class Business::ProjectsController < ApplicationController
 
   def set_project
     @project = find_business_project!(params[:id])
+  end
+
+  def join_request_message
+    request_params = params[:project_join_request]
+    message = request_params[:message] if request_params.is_a?(ActionController::Parameters)
+    message if message.is_a?(String)
   end
 
   # 編集画面の削除ボタンの表示と同じ判定(Customer#can_destroy_business_project?)。
