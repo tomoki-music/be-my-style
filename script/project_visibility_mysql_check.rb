@@ -143,8 +143,10 @@ module ProjectVisibilityMysqlCheck
     ActiveRecord::Migration.suppress_messages { context.up(VERSION.to_i) }
   end
 
+  # 対象より後に追加されたマイグレーションは、この検証の対象外にする(後の PR で増えても判定が変わらないように)。
   def pending_versions
-    context.migrations.map { |m| m.version.to_s } - connection.select_values("SELECT version FROM schema_migrations").map(&:to_s)
+    targets = context.migrations.select { |m| m.version <= VERSION.to_i }.map { |m| m.version.to_s }
+    targets - connection.select_values("SELECT version FROM schema_migrations").map(&:to_s)
   end
 
   def base_schema
