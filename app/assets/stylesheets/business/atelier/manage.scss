@@ -113,3 +113,50 @@
     margin-top: var(--ba-space-5);
   }
 }
+
+// ===== 削除(コミュニティ編集画面の下部と、削除の確認画面) =====
+.ba-body {
+  .ba-danger-zone {
+    border-color: #efb8bf;
+
+    .ba-fieldset__legend {
+      color: var(--ba-danger);
+    }
+  }
+
+  .ba-danger-zone__warning {
+    margin: 0 0 var(--ba-space-3);
+    padding: var(--ba-space-3) var(--ba-space-4);
+    border-radius: var(--ba-radius-control);
+    background: var(--ba-danger-soft);
+    color: var(--ba-danger);
+    font-weight: 600;
+  }
+
+  .ba-danger-zone__list {
+    margin: 0 0 var(--ba-space-3);
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--ba-space-3);
+      padding: var(--ba-space-2) 0;
+      border-bottom: 1px solid var(--ba-border);
+    }
+  }
+
+  .ba-btn--danger-solid {
+    background: var(--ba-danger);
+    border-color: var(--ba-danger);
+    color: #fff;
+  }
+
+  .ba-btn--danger-solid:hover,
+  .ba-btn--danger-solid:focus {
+    background: #8f1b2a;
+    border-color: #8f1b2a;
+    color: #fff;
+  }
+}

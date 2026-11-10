@@ -272,6 +272,7 @@ Rails.application.routes.draw do
     resources :chat_attachments, only: [:show]
 
     resources :communities do
+      get :destroy_confirmation, on: :member
       get :destroy_blocked, on: :member
       delete "leave" => "communities#leave"
 
