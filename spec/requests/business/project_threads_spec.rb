@@ -24,8 +24,9 @@ RSpec.describe "Business::ProjectThreads", type: :request do
   describe "スレッドの作成と投稿の分離" do
     before { sign_in member }
 
-    it "新規プロジェクトには「全体トーク」があり、参加者は複数のスレッドを作成できる" do
+    it "新規プロジェクトには「全体トーク」があり、参加メンバー全員が作れる設定なら参加者は複数のスレッドを作成できる" do
       expect(project.project_threads.pluck(:title)).to eq ["全体トーク"]
+      project.update!(thread_creation_policy: :all_members)
 
       expect { create_thread("デザイン相談", description: "配色やレイアウト") }.to change(ProjectThread, :count).by(1)
       thread = ProjectThread.last

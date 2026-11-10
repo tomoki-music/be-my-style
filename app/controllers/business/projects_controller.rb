@@ -169,11 +169,21 @@ class Business::ProjectsController < ApplicationController
       :project_image_position_y,
       :status,
       :join_approval_mode,
-      :visibility
+      :visibility,
+      :thread_creation_policy
     )
     # 選択肢にない公開範囲は enum が例外を出すため、受け付けずに保存済みの値を残す。
     permitted.delete(:visibility) unless Project.visibilities.key?(permitted[:visibility].to_s)
+    permitted.delete(:thread_creation_policy) unless thread_creation_policy_changeable?(permitted[:thread_creation_policy])
     permitted
+  end
+
+  # スレッドを作成できる人は、編集画面からシステム管理者・親コミュニティのオーナー本人だけが変えられる。
+  # 新規作成時と権限の無い人からの送信は無視する(既定値・保存済みの値のまま)。
+  def thread_creation_policy_changeable?(value)
+    action_name == "update" &&
+      current_customer.can_change_project_thread_creation_policy?(@project) &&
+      Project.thread_creation_policies.key?(value.to_s)
   end
 
   def notify_project_created!(project)
