@@ -12,9 +12,9 @@ class Business::ProjectsController < ApplicationController
   before_action :require_business_project_manager!, only: [:edit, :update, :members]
   before_action :require_business_project_destroyer!, only: [:destroy, :destroy_confirmation]
 
-  # 一覧に出すのは、内部を閲覧できるコミュニティ(参加済み・運営中)のプロジェクトだけ。
+  # 一覧に出すのは、内部を閲覧できるコミュニティ(参加済み・運営中)の通常公開のプロジェクトだけ。
   def index
-    @projects = current_customer.business_visible_projects(@current_domain)
+    @projects = current_customer.business_visible_projects(@current_domain).listed
 
     if params[:community_id]
       @community = find_business_community!(params[:community_id])
@@ -160,7 +160,7 @@ class Business::ProjectsController < ApplicationController
   # 所属コミュニティは作成時の @community で決め、パラメータでは変更させない(他コミュニティへの移動を防ぐ)。
   # 取りやめた goal(目標)・deadline(締切)は、直接送られても受け付けない(保存済みの値はそのまま残る)。
   def project_params
-    params.require(:project).permit(
+    permitted = params.require(:project).permit(
       :title,
       :theme,
       :description,
@@ -168,8 +168,12 @@ class Business::ProjectsController < ApplicationController
       :project_image_position_x,
       :project_image_position_y,
       :status,
-      :join_approval_mode
+      :join_approval_mode,
+      :visibility
     )
+    # 選択肢にない公開範囲は enum が例外を出すため、受け付けずに保存済みの値を残す。
+    permitted.delete(:visibility) unless Project.visibilities.key?(permitted[:visibility].to_s)
+    permitted
   end
 
   def notify_project_created!(project)

@@ -22,6 +22,13 @@ class Project < ApplicationRecord
   # 新しく更新されたものから。同時刻は新しく作られた順にして並びを安定させる。
   scope :recently_updated, -> { order(updated_at: :desc, id: :desc) }
 
+  # 公開範囲。限定公開は一覧・検索(listed スコープを通す画面)に出さないだけで、
+  # 詳細の閲覧・参加申請・承認の条件(BusinessAccess)は通常公開と同じ。既存のプロジェクトは通常公開。
+  enum visibility: { listed: 0, unlisted: 1 }, _prefix: :visibility
+
+  # 一覧・検索に出してよいプロジェクト(通常公開)。管理画面の一覧には限定公開も出す。
+  scope :listed, -> { where(visibility: visibilities[:listed]) }
+
   # 参加方式。既存プロジェクトは移行で自動承認、新規作成の既定は手動承認。
   enum join_approval_mode: { manual: 0, auto: 1 }, _prefix: :join
 

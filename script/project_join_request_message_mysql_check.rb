@@ -6,7 +6,7 @@
 #
 # 確認内容: 本番適用済みのスキーマ(BASE_COMMIT)+既存の申請データから適用 / 列の型・NULL 許容 /
 # 既存の申請は全列そのまま・メッセージなし(NULL) / アプリのコードからもメッセージなしとして読める /
-# 表を作り直さない(INSTANT) / db/schema.rb とのスキーマ一致 / 一意制約の維持 / 再実行・戻し・再適用。
+# 表を作り直さない(INSTANT) / db/schema.rb(REF_COMMIT 時点)とのスキーマ一致 / 一意制約の維持 / 再実行・戻し・再適用。
 # MySQL 8.4 以外では止まる(ALLOW_NON_84=1 で手順そのものの確認用に実行できる)。
 require "open3"
 require "stringio"
@@ -14,6 +14,8 @@ require "stringio"
 module ProjectJoinRequestMessageMysqlCheck
   # 本番に適用済みのスキーマ(schema version 20261110100000)を持つ main のコミット(PR #235 のマージ)。
   BASE_COMMIT = "2cbf46c5".freeze
+  # 対象のマイグレーションまでを含む db/schema.rb のコミット(PR #236 のマージ)。後のマイグレーションの列と比べないよう、ここで固定する。
+  REF_COMMIT = "47ee65f3".freeze
   DB = "bms_join_message_check_tmp".freeze
   REF_DB = "bms_join_message_check_ref_tmp".freeze
   MIGRATIONS = Rails.root.join("db/migrate").to_s
@@ -158,13 +160,19 @@ module ProjectJoinRequestMessageMysqlCheck
     ActiveRecord::Migration.suppress_messages { context.up(VERSION.to_i) }
   end
 
+  # 対象より後に追加されたマイグレーションは、この検証の対象外にする(後の PR で増えても判定が変わらないように)。
   def pending_versions
-    context.migrations.map { |m| m.version.to_s } - connection.select_values("SELECT version FROM schema_migrations").map(&:to_s)
+    targets = context.migrations.select { |m| m.version <= VERSION.to_i }.map { |m| m.version.to_s }
+    targets - connection.select_values("SELECT version FROM schema_migrations").map(&:to_s)
   end
 
   def base_schema
-    out, status = Open3.capture2("git", "-C", Rails.root.to_s, "show", "#{BASE_COMMIT}:db/schema.rb")
-    abort "git show #{BASE_COMMIT}:db/schema.rb に失敗しました" unless status.success?
+    schema_at(BASE_COMMIT)
+  end
+
+  def schema_at(commit)
+    out, status = Open3.capture2("git", "-C", Rails.root.to_s, "show", "#{commit}:db/schema.rb")
+    abort "git show #{commit}:db/schema.rb に失敗しました" unless status.success?
     out
   end
 
@@ -212,7 +220,7 @@ module ProjectJoinRequestMessageMysqlCheck
 
   def reference_schema
     use_database(REF_DB)
-    ActiveRecord::Migration.suppress_messages { load Rails.root.join("db/schema.rb").to_s }
+    ActiveRecord::Migration.suppress_messages { eval(schema_at(REF_COMMIT), TOPLEVEL_BINDING) }
     dump = dump_schema
     use_database(DB)
     dump

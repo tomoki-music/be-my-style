@@ -28,6 +28,19 @@ RSpec.describe "Business 招待用URL", type: :request do
     doc.at_css("[data-share-url]")
   end
 
+  def expect_single_share_section!
+    copy_buttons = doc.css("[data-share-copy]")
+    expect(copy_buttons.map { |button| button.text.strip }).to eq %w[URLをコピー]
+    expect(copy_buttons.first["data-share-copy"]).to eq share_url_field["id"]
+    expect(doc.css("[data-share-url]").size).to eq 1
+    expect(doc.css(".ba-share").size).to eq 1
+    expect(doc.css(".ba-invite, a[href^='#share-']")).to be_empty
+    expect(doc.text).not_to include("招待用URLをコピー")
+    expect(doc.text).not_to include("招待用URLを表示")
+    # URL欄は本文(#ba-main)の最後の要素。
+    expect(doc.at_css("#ba-main").element_children.last["class"]).to include("ba-share")
+  end
+
   def sign_in_via(path, customer)
     post path, params: { customer: { email: customer.email, password: "password" } }
   end
@@ -39,14 +52,12 @@ RSpec.describe "Business 招待用URL", type: :request do
       get business_community_path(community, keyword: "検索語", customer_id: member.id)
       expect(share_url_field["value"]).to eq "http://localhost:3000/business/communities/#{community.id}"
       expect(share_url_field.key?("readonly")).to be true
-      # 上部の「招待用URLをコピー」と最下部の「URLをコピー」は、どちらも同じ URL 欄をコピーする。
-      copy_buttons = doc.css("[data-share-copy]")
-      expect(copy_buttons.map { |button| button.text.strip }).to eq %w[招待用URLをコピー URLをコピー]
-      expect(copy_buttons.map { |button| button["data-share-copy"] }.uniq).to eq [share_url_field["id"]]
-      expect(doc.css(".ba-share__status").map { |status| status["role"] }.uniq).to eq ["status"]
+      # 招待用URLの表示とコピーは最下部の1か所だけ(上部・中盤の導線は置かない)。
+      expect_single_share_section!
 
       get business_project_path(project)
       expect(share_url_field["value"]).to eq "http://localhost:3000/business/projects/#{project.id}"
+      expect_single_share_section!
     end
 
     it "コピーのボタンは JavaScript が動くまで隠し、URL欄だけで手動コピーできる" do

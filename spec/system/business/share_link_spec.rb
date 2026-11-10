@@ -87,7 +87,7 @@ RSpec.describe "Business 招待用URLのコピーとテーマ表示", type: :sys
     expect(copied).to eq "http://localhost:3000/business/communities/#{community.id}"
   end
 
-  it "上部の「招待用URLをコピー」でも同じURLをコピーでき、URL欄はコンテンツの最下部にある" do
+  it "招待用URLの表示とコピーはコンテンツ最下部の1か所だけで、そこからコピーできる" do
     sign_in_as(owner)
     set_viewport(375, 812)
     grant_clipboard!
@@ -96,21 +96,16 @@ RSpec.describe "Business 招待用URLのコピーとテーマ表示", type: :sys
      [business_project_path(project), "http://localhost:3000/business/projects/#{project.id}"]].each do |path, url|
       visit path
       grant_clipboard!
-      find(".ba-invite [data-share-copy]", text: "招待用URLをコピー").click
-      expect(page).to have_css(".ba-invite .ba-share__status[role='status']", text: "URLをコピーしました")
+      expect(page).to have_css("[data-share-copy]", count: 1)
+      expect(page).to have_no_css(".ba-invite")
+      expect(page).to have_no_text("招待用URLをコピー")
+      find(".ba-share [data-share-copy]", text: "URLをコピー").click
+      expect(page).to have_css(".ba-share .ba-share__status[role='status']", text: "URLをコピーしました")
       copied = page.evaluate_async_script("var done = arguments[0]; navigator.clipboard.readText().then(done, function (e) { done('ERR ' + e); });")
       expect(copied).to eq url
 
-      # URL欄(.ba-share)は本文の最後の要素で、上部の招待ボタンより下にある。
-      layout = page.evaluate_script(<<~JS)
-        (function () {
-          var main = document.querySelector('#ba-main');
-          var share = document.querySelector('.ba-share');
-          var invite = document.querySelector('.ba-invite');
-          return [main.lastElementChild === share, invite.getBoundingClientRect().top < share.getBoundingClientRect().top];
-        })()
-      JS
-      expect(layout).to eq [true, true]
+      # URL欄(.ba-share)は本文の最後の要素。
+      expect(page.evaluate_script("document.querySelector('#ba-main').lastElementChild === document.querySelector('.ba-share')")).to be true
       expect(horizontal_overflow).to be <= 0
     end
   end
