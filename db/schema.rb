@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_11_10_200000) do
+ActiveRecord::Schema.define(version: 2026_11_10_300000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -1062,6 +1062,7 @@ ActiveRecord::Schema.define(version: 2026_11_10_200000) do
     t.string "theme", limit: 100
     t.decimal "project_image_position_x", precision: 5, scale: 2
     t.decimal "project_image_position_y", precision: 5, scale: 2
+    t.integer "visibility", default: 0, null: false
     t.index ["community_id"], name: "index_projects_on_community_id"
     t.index ["customer_id"], name: "index_projects_on_customer_id"
   end

@@ -18,6 +18,10 @@
   .ba-profile__body
     .ba-profile__badges
       %span.ba-status.ba-status--kind= business_project_status_label(@project)
+      - if @project.visibility_unlisted?
+        %span.ba-status.ba-status--unlisted
+          %i.fa-solid.fa-eye-slash{ "aria-hidden": "true" }
+          = business_project_visibility_label(@project)
     %h1.ba-profile__name= @project.title
     %ul.ba-profile__meta
       %li
@@ -40,7 +44,6 @@
 
     .ba-join#project-join
       = render "business/projects/join_status"
-    = render "business/shared/share_button", record: @project
 
 - if @can_view_internal
   %nav.ba-sectnav{ "aria-label": "このプロジェクトの内容" }
@@ -51,8 +54,12 @@
 
 %section.ba-card.ba-anchor-target#about{ "aria-labelledby": "project-about-title" }
   %h2.ba-section-title#project-about-title 概要
-  .ba-section-body
-    .markdown-body= markdown(@project.description)
+  -# 最初は3行まで。3行に収まらないときだけ business/collapsible_text.js が「もっと見る」を出す(JavaScript が無ければ全文を表示する)。
+  .ba-section-body.ba-collapsible{ data: { collapsible: true } }
+    .markdown-body.ba-collapsible__content#project-about-body= markdown(@project.description)
+    %button.ba-collapsible__toggle{ type: "button", hidden: true, "aria-expanded": "false", "aria-controls": "project-about-body",
+      data: { collapsible_toggle: true, label_more: "もっと見る", label_less: "閉じる" } }
+      もっと見る
 
 - if @can_view_internal
   %section.ba-card.ba-anchor-target#threads{ "aria-labelledby": "project-threads-title" }
@@ -99,5 +106,5 @@
       参加者限定
     %p.ba-muted スレッドとメンバーはプロジェクト参加者のみ閲覧できます
 
--# 招待用URLは補足として、コンテンツの最下部に控えめに出す(上部の「招待用URLをコピー」もこの欄をコピーする)。
+-# 招待用URLの表示とコピーは、コンテンツの最下部のこの1か所だけに置く。
 = render "business/shared/share_link", record: @project

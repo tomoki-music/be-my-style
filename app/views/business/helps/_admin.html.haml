@@ -119,13 +119,14 @@
     %span.ba-help-section__number= numbers.fetch("help-share")
     招待用URLで誘う
   %ol.ba-help-steps
-    %li コミュニティまたはプロジェクトの通常画面の上部にある「招待用URLをコピー」を押します（URLそのものは画面の最下部に表示されています）。
+    %li コミュニティまたはプロジェクトの通常画面の最下部にある「招待用URL」の「URLをコピー」を押します。
     %li 「URLをコピーしました」と表示されたら、LINEやメールに貼り付けて送ります。コピーできないときは、表示されたURLを長押し（PCは選択）してコピーします。
   %ul.ba-help-sublist
     %li 共有されるのは、そのページの通常画面のURLだけです。編集・メンバー管理の画面や、会員の情報は含まれません。
     %li URLを知っていても、参加の条件は変わりません。開いた人はログイン（未登録なら新規登録）が必要で、承認制なら承認が必要です。プロジェクトは、先にそのコミュニティへの参加が必要です。
     %li コミュニティ内の会話・スレッド・メンバー・添付は、参加した人だけが見られます。
     %li 招待用URLは管理者だけでなく、そのページを見られる参加者も表示・コピーできます。コピーしても、参加や申請は起きません。
+    %li プロジェクトの編集画面の「公開範囲」で「限定公開」にすると、ホーム・プロジェクト一覧・コミュニティの画面の一覧には表示されなくなります。招待用URLなどURLから開いた人には、通常公開と同じ閲覧・参加の条件が適用されます。限定公開のプロジェクトは、コミュニティの「プロジェクト管理」から開けます。
 
 -# 認可の根拠: Business::PostsController#ensure_post_owner!、CommunityPostsController(create のみ)、
 -# MessagesController(create のみ)、ProjectChatsController#destroy(本人のみ)、BusinessAccess#can_edit_project_thread? /

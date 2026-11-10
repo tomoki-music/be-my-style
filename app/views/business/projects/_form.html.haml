@@ -38,6 +38,11 @@
       = f.label :join_approval_mode, "参加方式", class: "ba-label"
       = f.select :join_approval_mode, business_join_approval_options(project), {}, class: "form-control"
       %small.ba-help 参加できるのは、開催コミュニティの参加者だけです。変更は、変更後の新しい参加申請から適用されます。
+    .ba-field
+      = f.label :visibility, "公開範囲", class: "ba-label"
+      = f.select :visibility, business_project_visibility_options, {}, class: "form-control", "aria-describedby": "project-visibility-help"
+      %small.ba-help#project-visibility-help
+        限定公開：一覧・検索には表示されません。URLからの閲覧には既存の閲覧条件が適用されます。
 
   %fieldset.ba-fieldset
     %legend.ba-fieldset__legend 画像

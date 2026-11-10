@@ -292,6 +292,13 @@
     color: var(--ba-peach-text);
   }
 
+  // 限定公開(一覧・検索に出ないプロジェクト)のしるし。
+  .ba-status--unlisted {
+    background: var(--ba-surface-muted);
+    color: var(--ba-text);
+    border: 1px solid var(--ba-border);
+  }
+
   // ===== アバター / 頭文字 =====
   .ba-avatar {
     display: block;

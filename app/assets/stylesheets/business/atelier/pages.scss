@@ -224,29 +224,49 @@
     overflow-wrap: anywhere;
   }
 
-  // 詳細画面の上部の「招待用URLをコピー」(business/shared/_share_button)。
-  .ba-invite {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--ba-space-1) var(--ba-space-3);
+  // 長い文章の折りたたみ(business/collapsible_text.js)。JavaScript が動いたときだけ3行に折りたたむ。
+  .ba-collapsible.is-collapsible.is-collapsed .ba-collapsible__content {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
 
-    .ba-share__status {
-      flex-basis: 100%;
+    // 折りたたみ中は、3行目の下に段落の余白がはみ出さないようにする。
+    > :last-child {
+      margin-bottom: 0;
     }
   }
 
-  .ba-invite__copy {
+  .ba-collapsible__toggle {
+    display: inline-flex;
+    align-items: center;
     min-height: var(--ba-tap);
+    margin-top: var(--ba-space-1);
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ba-accent);
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--ba-accent);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    &[hidden] {
+      display: none;
+    }
   }
 
-  .ba-invite__link {
-    font-size: 14px;
-    color: var(--ba-text-muted);
-    text-decoration: underline;
-  }
-
-  // 詳細画面の最下部に補足として出す「招待用URL」(business/shared/_share_link)。本文より控えめにする。
+  // 詳細画面の最下部の1か所にだけ出す「招待用URL」(business/shared/_share_link)。本文より控えめにする。
   .ba-share {
     max-width: var(--ba-reading-width);
     margin-top: var(--ba-space-6);

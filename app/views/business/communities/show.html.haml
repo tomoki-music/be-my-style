@@ -44,7 +44,6 @@
         無料お試し中：このコミュニティ内では有料プランの機能制限が解除されています
 
     = render "business/communities/join_panel"
-    = render "business/shared/share_button", record: @community
 
 - if @can_view_internal
   %nav.ba-sectnav{ "aria-label": "このコミュニティの内容" }
@@ -139,5 +138,5 @@
               method: :delete, data: { confirm: "退出すると、このコミュニティとプロジェクトの内容を閲覧・投稿できなくなります。よろしいですか？" },
               class: "ba-btn ba-btn--danger ba-btn--sm"
 
--# 招待用URLは補足として、コンテンツの最下部に控えめに出す(上部の「招待用URLをコピー」もこの欄をコピーする)。
+-# 招待用URLの表示とコピーは、コンテンツの最下部のこの1か所だけに置く。
 = render "business/shared/share_link", record: @community

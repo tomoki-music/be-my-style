@@ -35,7 +35,8 @@ module Homes
       domain = Domain.find_by(name: "business")
       return Project.none if domain.nil?
 
-      base = Project.in_domain(domain)
+      # 限定公開は、参加中・運営中のものでもホームの一覧には出さない(URL から開く)。
+      base = Project.in_domain(domain).listed
       member_community_ids = @customer.community_customers.select(:community_id)
 
       base.where(community_id: @customer.manageable_communities.select(:id))
