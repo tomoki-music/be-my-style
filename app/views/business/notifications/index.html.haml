@@ -55,6 +55,11 @@
           - if notification.action == "project_message" && !hidden && notification.project
             %span.ba-notification__context
               = [notification.project.community&.name, notification.project.title, post_thread&.title].compact.join(" / ")
+          - elsif notification.action == "request" && notification.community
+            %span.ba-notification__context= notification.community.name
+          - elsif notification.action == "project_request" && notification.project
+            %span.ba-notification__context
+              = [notification.project.community&.name, notification.project.title].compact.join(" / ")
           %span.ba-notification__time
             = l(notification.created_at, format: :short)
             - if unread

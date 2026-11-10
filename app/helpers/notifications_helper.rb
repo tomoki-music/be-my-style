@@ -9,7 +9,10 @@ module NotificationsHelper
     case notification.action
     when "like", "message"
       business_post_path(notification.post_id) if notification.post_id.present?
-    when "request", "accept"
+    # 参加申請は、承認できる人に届く通知なので、承認・却下できるメンバー管理の承認待ち欄へ直接案内する。
+    when "request"
+      business_permits_path(notification.community_id, anchor: "join-requests") if notification.community_id.present?
+    when "accept"
       business_community_path(notification.community_id) if notification.community_id.present?
     when "follow"
       business_customer_path(notification.visitor_id) if notification.visitor_id.present?
@@ -20,6 +23,8 @@ module NotificationsHelper
       elsif notification.project_id.present?
         business_project_path(notification.project_id)
       end
+    when "project_request"
+      members_business_project_path(notification.project_id, anchor: "join-requests") if notification.project_id.present?
     when *Notification::BUSINESS_PROJECT_ACTIONS
       business_project_path(notification.project_id) if notification.project_id.present?
     end

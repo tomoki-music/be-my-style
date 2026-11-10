@@ -826,12 +826,12 @@ class Customer < ApplicationRecord
   end
 
   def create_notification_request(current_customer, community_id)
-    notification = current_customer.active_notifications.new(
-      visited_id: id,
-      action: 'request',
-      community_id: community_id,
+    JoinRequestNotifications.notify!(
+      applicant: current_customer,
+      recipient: self,
+      action: JoinRequestNotifications::COMMUNITY_ACTION,
+      community_id: community_id
     )
-    notification.save if notification.valid?
   end
 
   def create_notification_request_cancel(current_customer, community_id)
@@ -927,15 +927,13 @@ class Customer < ApplicationRecord
 
   # ビジネス（NAKAMA）
   def business_notification_request(current_customer, community_id)
-    return if current_customer.id == id
-
-    notification = current_customer.active_notifications.new(
-      visited_id: id,
-      action: 'request',
+    JoinRequestNotifications.notify!(
+      applicant: current_customer,
+      recipient: self,
+      action: JoinRequestNotifications::COMMUNITY_ACTION,
       community_id: community_id,
       hidden_in_app: !business_in_app_notifications_enabled?
     )
-    notification.save if notification.valid?
   end
 
   def business_notification_accept(current_customer, community_id)
@@ -977,16 +975,14 @@ class Customer < ApplicationRecord
   end
 
   def business_notification_project_request(current_customer, project)
-    return if current_customer.id == id
-
-    notification = current_customer.active_notifications.new(
-      visited_id: id,
-      action: 'project_request',
+    JoinRequestNotifications.notify!(
+      applicant: current_customer,
+      recipient: self,
+      action: JoinRequestNotifications::PROJECT_ACTION,
       community_id: project.community_id,
       project_id: project.id,
       hidden_in_app: !business_in_app_notifications_enabled?
     )
-    notification.save if notification.valid?
   end
 
   def business_notification_project_accept(current_customer, project)

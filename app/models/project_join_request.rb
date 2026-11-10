@@ -5,4 +5,6 @@ class ProjectJoinRequest < ApplicationRecord
   belongs_to :customer
 
   validates :customer_id, uniqueness: { scope: :project_id }
+
+  after_destroy_commit -> { JoinRequestNotifications.resolve_project!(applicant_id: customer_id, project_id: project_id) }
 end
