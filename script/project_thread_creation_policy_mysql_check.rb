@@ -15,6 +15,9 @@ module ProjectThreadCreationPolicyMysqlCheck
   # 本番に適用済みのスキーマ(schema version 20261110300000)を持つ main のコミット(PR #237 のマージ)。
   BASE_COMMIT = "b54cbcc5".freeze
   BASE_VERSION = 20261110300000
+  # 比べる db/schema.rb。マージ前は作業ツリーのもの(nil)を使う。この後にマイグレーションを追加する PR では、
+  # このマイグレーションまでを含む main のコミット(この PR のマージ)を指定し、後の列と比べないようにする。
+  REF_COMMIT = nil
   DB = "bms_thread_creation_policy_check_tmp".freeze
   REF_DB = "bms_thread_creation_policy_check_ref_tmp".freeze
   MIGRATIONS = Rails.root.join("db/migrate").to_s
@@ -46,7 +49,7 @@ module ProjectThreadCreationPolicyMysqlCheck
     fresh_db!
     before = legacy_rows
     versions_before = row_versions
-    check.call("起点: 本番と同じスキーマに thread_creation_policy 列は無く、対象のマイグレーションだけが未適用", !connection.column_exists?(:projects, :visibility) && pending_versions == [VERSION], pending_versions.inspect)
+    check.call("起点: 本番と同じスキーマに thread_creation_policy 列は無く、対象のマイグレーションだけが未適用", !connection.column_exists?(:projects, :thread_creation_policy) && pending_versions == [VERSION], pending_versions.inspect)
 
     migrate_up
     column = policy_column
@@ -149,8 +152,12 @@ module ProjectThreadCreationPolicyMysqlCheck
   end
 
   def base_schema
-    out, status = Open3.capture2("git", "-C", Rails.root.to_s, "show", "#{BASE_COMMIT}:db/schema.rb")
-    abort "git show #{BASE_COMMIT}:db/schema.rb に失敗しました" unless status.success?
+    schema_at(BASE_COMMIT)
+  end
+
+  def schema_at(commit)
+    out, status = Open3.capture2("git", "-C", Rails.root.to_s, "show", "#{commit}:db/schema.rb")
+    abort "git show #{commit}:db/schema.rb に失敗しました" unless status.success?
     out
   end
 
@@ -197,7 +204,9 @@ module ProjectThreadCreationPolicyMysqlCheck
 
   def reference_schema
     use_database(REF_DB)
-    ActiveRecord::Migration.suppress_messages { load Rails.root.join("db/schema.rb").to_s }
+    ActiveRecord::Migration.suppress_messages do
+      REF_COMMIT ? eval(schema_at(REF_COMMIT), TOPLEVEL_BINDING) : load(Rails.root.join("db/schema.rb").to_s)
+    end
     dump = dump_schema
     use_database(DB)
     dump

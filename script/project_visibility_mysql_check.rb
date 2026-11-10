@@ -6,7 +6,7 @@
 #
 # 確認内容: 本番適用済みのスキーマ(BASE_COMMIT)+既存のプロジェクトから適用 / 列の型・NULL 不可・既定値 0 /
 # 既存のプロジェクトは全列そのまま・通常公開(0) / アプリのコードからも通常公開として読め、一覧に出る /
-# 表を作り直さない(INSTANT) / db/schema.rb とのスキーマ一致 / 再実行・戻し・途中失敗後の再適用。
+# 表を作り直さない(INSTANT) / db/schema.rb(REF_COMMIT 時点)とのスキーマ一致 / 再実行・戻し・途中失敗後の再適用。
 # MySQL 8.4 以外では止まる(ALLOW_NON_84=1 で手順そのものの確認用に実行できる)。
 require "open3"
 require "stringio"
@@ -15,6 +15,8 @@ module ProjectVisibilityMysqlCheck
   # 本番に適用済みのスキーマ(schema version 20261110200000)を持つ main のコミット(PR #236 のマージ)。
   BASE_COMMIT = "47ee65f3".freeze
   BASE_VERSION = 20261110200000
+  # 対象のマイグレーションまでを含む db/schema.rb のコミット(PR #237 のマージ)。後のマイグレーションの列と比べないよう、ここで固定する。
+  REF_COMMIT = "b54cbcc5".freeze
   DB = "bms_project_visibility_check_tmp".freeze
   REF_DB = "bms_project_visibility_check_ref_tmp".freeze
   MIGRATIONS = Rails.root.join("db/migrate").to_s
@@ -150,8 +152,12 @@ module ProjectVisibilityMysqlCheck
   end
 
   def base_schema
-    out, status = Open3.capture2("git", "-C", Rails.root.to_s, "show", "#{BASE_COMMIT}:db/schema.rb")
-    abort "git show #{BASE_COMMIT}:db/schema.rb に失敗しました" unless status.success?
+    schema_at(BASE_COMMIT)
+  end
+
+  def schema_at(commit)
+    out, status = Open3.capture2("git", "-C", Rails.root.to_s, "show", "#{commit}:db/schema.rb")
+    abort "git show #{commit}:db/schema.rb に失敗しました" unless status.success?
     out
   end
 
@@ -198,7 +204,7 @@ module ProjectVisibilityMysqlCheck
 
   def reference_schema
     use_database(REF_DB)
-    ActiveRecord::Migration.suppress_messages { load Rails.root.join("db/schema.rb").to_s }
+    ActiveRecord::Migration.suppress_messages { eval(schema_at(REF_COMMIT), TOPLEVEL_BINDING) }
     dump = dump_schema
     use_database(DB)
     dump
