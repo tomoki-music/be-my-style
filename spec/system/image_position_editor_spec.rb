@@ -256,6 +256,82 @@ RSpec.describe "画像の表示位置の調整", type: :system, js: true do
     screenshot("community_image_business_wide_listing")
   end
 
+  { mobile: "スマホ(タッチ)", desktop: "PC(マウス)" }.each do |device, device_label|
+    it "音楽 新規登録 / #{device_label}: 選んだ画像の位置を調整して登録すると、登録後のプロフィールに反映される" do
+      visit new_customer_registration_path
+      device == :mobile ? use_mobile_viewport : use_desktop_viewport
+      page.driver.browser.execute_cdp("Emulation.setTouchEmulationEnabled", enabled: device == :mobile, maxTouchPoints: 1)
+      visit new_customer_registration_path
+
+      expect(page).to have_selector("[data-image-position-editor][hidden]", visible: false)
+      fill_in "customer[email]", with: "signup-position-#{device}@example.com"
+      fill_in "customer[password]", with: "password"
+      fill_in "customer[password_confirmation]", with: "password"
+      fill_in "customer[name]", with: "位置#{device}"
+      find("[data-image-position-input]").set(FIXTURE_DIR.join("wide.png").to_s)
+      wait_for_preview_loaded
+
+      # 横長の画像は正方形・縦長の枠で横に動かせる。右へ動かす＝左側(赤)を見せる。
+      drag(device, draggable_frame_index(:x), 40, 0)
+      moved_x = hidden_value(:x)
+      expect(moved_x.to_f).to be_between(0, 49)
+      expect(hidden_value(:y)).to eq "50"
+      expect(preview_positions.uniq).to eq ["#{moved_x}% 50%"]
+      screenshot("signup_#{device}_1_preview")
+
+      submit_form("登録する")
+      expect(page).to have_current_path(verify_path, wait: 10)
+
+      created = Customer.find_by!(email: "signup-position-#{device}@example.com")
+      expect(created.profile_image.filename.to_s).to eq "wide.png"
+      expect(created.profile_image_object_position).to eq "#{moved_x}% 50%"
+
+      # 確認メールのリンクを開いた状態にしてから、登録したプロフィールを表示する。
+      created.confirm
+      created.update!(onboarding_done: true) if created.respond_to?(:onboarding_done)
+      login_as(created, scope: :customer)
+      visit public_customer_path(created)
+      expect(computed_position(".customer-show-card img.user-profile-image")).to eq "#{moved_x}% 50%"
+      screenshot("signup_#{device}_2_saved")
+    end
+
+    it "歌声 プロフィール編集 / #{device_label}: 新しい画像の位置調整と、既存画像の位置だけの変更が保存後の表示に反映される" do
+      singer = create(:customer, domain_name: "singing", onboarding_done: true)
+      login_as(singer, scope: :customer)
+      visit singing_user_path(singer)
+      device == :mobile ? use_mobile_viewport : use_desktop_viewport
+      page.driver.browser.execute_cdp("Emulation.setTouchEmulationEnabled", enabled: device == :mobile, maxTouchPoints: 1)
+
+      visit edit_singing_user_path(singer)
+      find("[data-image-position-input]").set(FIXTURE_DIR.join("tall.png").to_s)
+      wait_for_preview_loaded
+      drag(device, draggable_frame_index(:y), 0, 30)
+      new_y = hidden_value(:y)
+      expect(new_y.to_f).to be_between(0, 49)
+      screenshot("singing_#{device}_1_new_preview")
+      submit_form("保存する")
+      expect(page).to have_current_path(singing_user_path(singer), wait: 10)
+      expect(singer.reload.profile_image_object_position).to eq "50% #{new_y}%"
+      expect(computed_position("img.user-profile-image")).to eq "50% #{new_y}%"
+      screenshot("singing_#{device}_2_new_saved")
+
+      blob_id = singer.profile_image.blob.id
+      visit edit_singing_user_path(singer)
+      wait_for_preview_loaded
+      expect(find("[data-image-position-status]")).to have_text("前回保存した位置")
+      expect(preview_positions.uniq).to eq ["50% #{new_y}%"]
+      drag(device, draggable_frame_index(:y), 0, -60)
+      moved_y = hidden_value(:y)
+      expect(moved_y.to_f).to be > new_y.to_f
+      submit_form("保存する")
+      expect(page).to have_current_path(singing_user_path(singer), wait: 10)
+      expect(singer.reload.profile_image.blob.id).to eq blob_id
+      expect(computed_position("img.user-profile-image")).to eq "50% #{moved_y}%"
+      expect(computed_position(".singing-nav__avatar, .singing-nav__mobile-avatar")).to eq "50% #{moved_y}%"
+      screenshot("singing_#{device}_3_existing_saved")
+    end
+  end
+
   it "キーボードの矢印キーでも位置を動かせる" do
     community.community_image.attach(io: File.open(FIXTURE_DIR.join("tall.png")), filename: "tall.png", content_type: "image/png")
     login_as(business_owner, scope: :customer)
