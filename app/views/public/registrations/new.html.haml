@@ -50,16 +50,8 @@
 
         %label プロフィール画像
 
-        .image-upload-area
-
-          .image-preview
-            %img#preview-image{ src: asset_path("no_image"), class: "preview-avatar" }
-            %span.camera-icon 📷
-
-          = f.file_field :profile_image,
-            accept: "image/*",
-            class: "image-input",
-            id: "image-input"
+        = render "shared/image_position_field", f: f, attribute: :profile_image, preset: :music_profile,
+          input_options: { class: "image-input", id: "image-input" }
 
         %small.text-muted アイコンを設定すると見つけてもらいやすくなります
 

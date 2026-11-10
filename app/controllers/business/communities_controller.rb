@@ -147,6 +147,8 @@ class Business::CommunitiesController < ApplicationController
       :introduction,
       :prefecture_id,
       :community_image,
+      :community_image_position_x,
+      :community_image_position_y,
       :activity_stance,
       :join_approval_mode
     )

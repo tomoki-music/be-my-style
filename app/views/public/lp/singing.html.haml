@@ -158,7 +158,7 @@
                 = link_to friend.profile_path, class: "music-friends-card__item" do
                   .music-friends-card__avatar
                     - if friend.image_url.present?
-                      = image_tag friend.image_url, alt: friend.display_name
+                      = image_tag friend.image_url, alt: friend.display_name, style: ("object-position: #{friend.image_position};" if friend.image_position.present?)
                     - else
                       %span= friend.display_name.to_s.first.presence || "♪"
                   .music-friends-card__copy

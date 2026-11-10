@@ -63,7 +63,7 @@ module Business
       if community.community_image.attached?
         classes = ["ba-avatar", "ba-avatar--image"]
         classes << "ba-avatar--#{size}" if size
-        image_tag community.community_image, class: classes, alt: "", loading: "lazy"
+        positioned_image_tag community, :community_image, class: classes, alt: "", loading: "lazy"
       else
         business_monogram(community.name, id: community.id, size: size)
       end

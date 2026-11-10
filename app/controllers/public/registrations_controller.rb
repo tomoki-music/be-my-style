@@ -99,6 +99,8 @@ class Public::RegistrationsController < Devise::RegistrationsController
       :favorite_artist5,
       :introduction,
       :profile_image,
+      :profile_image_position_x,
+      :profile_image_position_y,
       :prefecture_id,
       :url,
       :domain_name,
@@ -157,6 +159,8 @@ class Public::RegistrationsController < Devise::RegistrationsController
 
   def attach_profile_image!(customer)
     return unless sign_up_params[:profile_image].present?
+    # build_resource の時点で添付済みなら付け直さない(付け直すと差し替え扱いになり、選んだ表示位置が消える)。
+    return if customer.profile_image.attached?
 
     customer.profile_image.attach(sign_up_params[:profile_image])
   end

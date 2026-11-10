@@ -60,6 +60,8 @@ class Customer < ApplicationRecord
   belongs_to :prefecture
 
   has_one_attached :profile_image
+  include ImagePositionable
+  image_position_for :profile_image
   has_many :singing_share_images, dependent: :destroy
   has_many :singing_generated_recap_movies, dependent: :destroy
   has_many :customer_domains, dependent: :destroy

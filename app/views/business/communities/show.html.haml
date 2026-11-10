@@ -9,7 +9,7 @@
 %article.ba-profile
   .ba-profile__cover{ class: ("ba-profile__cover--empty" unless @community.community_image.attached?) }
     - if @community.community_image.attached?
-      = image_tag @community.community_image, class: "ba-profile__cover-image", alt: ""
+      = positioned_image_tag @community, :community_image, class: "ba-profile__cover-image", alt: ""
   .ba-profile__head
     .ba-profile__avatar
       = business_community_avatar(@community, size: :xl)

@@ -137,6 +137,8 @@ class Business::ProjectsController < ApplicationController
       :theme,
       :description,
       :project_image,
+      :project_image_position_x,
+      :project_image_position_y,
       :status,
       :join_approval_mode
     )

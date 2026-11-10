@@ -1,0 +1,43 @@
+-# 画像の選択と表示位置の調整。f: フォームビルダー / attribute: 添付名 / preset: 表示枠の組み合わせ
+-# input_options: file_field に渡す属性(id・class など) / theme: "business" のとき Business の見た目に寄せる
+- record = f.object
+- input_options = local_assigns.fetch(:input_options, {})
+- saved_url = image_position_saved_url(record, attribute)
+- saved_position = record.public_send("#{attribute}_object_position")
+- field_id = "#{f.object_name}_#{attribute}_position".parameterize(separator: "_")
+.image-position-field{ class: ("image-position-field--#{local_assigns[:theme]}" if local_assigns[:theme]),
+  data: { image_position_field: "", saved: saved_url.present? ? "true" : "false" } }
+  = f.file_field attribute, { accept: "image/*", data: { image_position_input: "" } }.merge(input_options)
+  = f.hidden_field "#{attribute}_position_x", data: { image_position_x: "" }
+  = f.hidden_field "#{attribute}_position_y", data: { image_position_y: "" }
+  .image-position-field__editor{ hidden: saved_url.blank?, data: { image_position_editor: "" } }
+    %p.image-position-field__hint{ id: "#{field_id}_hint" }
+      画像をドラッグ（スマホは指でスライド）して、見せたい部分を枠に合わせてください。
+      %br
+      枠の形によって動かせる向き（横・縦）が変わります。キーボードでは枠を選んで矢印キーでも動かせます。
+    .image-position-field__frames
+      - image_position_frames(preset).each do |frame|
+        %figure.image-position-field__item{ class: ("image-position-field__item--mobile" if frame[:label].include?("スマホ")),
+          style: "width: #{frame[:width]};" }
+          .image-position-field__frame{ class: "image-position-field__frame--#{frame.fetch(:shape, 'rect')}",
+            style: "aspect-ratio: #{frame[:ratio]};",
+            tabindex: 0,
+            role: "group",
+            "aria-label": "#{frame[:label]}の表示位置",
+            "aria-describedby": "#{field_id}_hint",
+            data: { image_position_frame: "" } }
+            %img.image-position-field__image{ src: saved_url.presence || asset_path("no_image"),
+              alt: "",
+              draggable: "false",
+              style: "object-position: #{saved_position || '50% 50%'};",
+              data: { image_position_image: "" } }
+          %figcaption.image-position-field__label= frame[:label]
+    .image-position-field__actions
+      %button.image-position-field__reset{ type: "button", data: { image_position_reset: "" } } 中央に戻す
+      %span.image-position-field__status{ "aria-live": "polite", data: { image_position_status: "" } }
+        - if saved_url.blank?
+          画像を選ぶと、ここで表示位置を調整できます。
+        - elsif saved_position.present?
+          前回保存した位置を表示しています。
+        - else
+          今の表示（中央基準）です。位置を動かして保存すると反映されます。

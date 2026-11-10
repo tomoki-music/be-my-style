@@ -22,12 +22,9 @@
       = f.text_field :name, class: "form-control"
     .ba-field
       = f.label :profile_image, "プロフィール画像", class: "ba-label", for: "image-input"
-      .ba-image-field
-        - if @customer.profile_image.attached?
-          = image_tag @customer.profile_image, id: "preview-image", class: "ba-image-field__preview ba-image-field__preview--round", alt: "現在のプロフィール画像"
-        - else
-          = image_tag "no_image", id: "preview-image", class: "ba-image-field__preview ba-image-field__preview--round", alt: "画像は未設定です"
-        = f.file_field :profile_image, accept: "image/*", class: "form-control", id: "image-input"
+      = render "shared/image_position_field", f: f, attribute: :profile_image, preset: :business_profile, theme: "business",
+        input_options: { class: "form-control", id: "image-input" }
+      %small.ba-help 登録済みの画像も、選び直さずに位置だけ変更できます。
     .ba-field
       = f.label :introduction, "自己紹介", class: "ba-label"
       = f.text_area :introduction, class: "form-control", rows: 6, placeholder: placeholder_markdown_profile

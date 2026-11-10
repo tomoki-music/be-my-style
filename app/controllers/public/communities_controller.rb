@@ -204,6 +204,8 @@ class Public::CommunitiesController < ApplicationController
       :favorite_artist5,
       :introduction,
       :community_image,
+      :community_image_position_x,
+      :community_image_position_y,
       :prefecture_id,
       :url,
       genre_ids: [],

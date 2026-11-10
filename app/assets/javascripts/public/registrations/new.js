@@ -47,26 +47,4 @@ document.addEventListener("turbolinks:load", () => {
     toggle(); // 初期表示
   }
 
-  /* =========================
-     画像プレビュー
-  ========================= */
-
-  const input = document.getElementById("image-input");
-  const preview = document.getElementById("preview-image");
-
-  if (input && preview) {
-    input.addEventListener("change", e => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        preview.src = reader.result;
-      };
-
-      reader.readAsDataURL(file);
-    });
-  }
-
 });

@@ -12,7 +12,7 @@
 %article.ba-profile.ba-profile--project
   .ba-profile__cover.ba-profile__cover--project
     - if @project.project_image.attached?
-      = image_tag @project.project_image, class: "ba-profile__cover-image", alt: ""
+      = positioned_image_tag @project, :project_image, class: "ba-profile__cover-image", alt: ""
     - else
       = business_monogram(@project.title, id: @project.id, shape: :rect)
   .ba-profile__body
