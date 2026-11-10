@@ -18,8 +18,7 @@
           %tr
             %th{scope:"row"} 画像
             %td
-              = f.file_field :profile_image, accept: 'image/*'
-              #edit-image
+              = render "shared/image_position_field", f: f, attribute: :profile_image, preset: :music_profile
           %tr
             %th{scope:"row"} ニックネーム
             %td

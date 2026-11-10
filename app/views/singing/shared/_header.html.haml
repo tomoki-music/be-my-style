@@ -26,7 +26,7 @@
       - if current_customer
         .singing-nav__user
           - if current_customer.profile_image.attached?
-            = image_tag url_for(current_customer.profile_image), class: "singing-nav__avatar", alt: current_customer.name
+            = positioned_image_tag current_customer, :profile_image, class: "singing-nav__avatar", alt: current_customer.name
           - else
             .singing-nav__avatar-initials= singing_user_initials(current_customer)
           %span.singing-nav__username= current_customer.name
@@ -51,7 +51,7 @@
       - if current_customer
         .singing-nav__mobile-user
           - if current_customer.profile_image.attached?
-            = image_tag url_for(current_customer.profile_image), class: "singing-nav__mobile-avatar", alt: current_customer.name
+            = positioned_image_tag current_customer, :profile_image, class: "singing-nav__mobile-avatar", alt: current_customer.name
           - else
             .singing-nav__mobile-avatar-initials= singing_user_initials(current_customer)
           %span.singing-nav__mobile-username= current_customer.name

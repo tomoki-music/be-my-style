@@ -25,8 +25,7 @@
           %tr
             %th{scope:"row"} コミュニティ画像
             %td
-              = f.file_field :community_image, accept: 'image/*'
-              #edit-community-image
+              = render "shared/image_position_field", f: f, attribute: :community_image, preset: :music_community
           %tr
             %th{scope:"row"} コミュニティ名前
             %td

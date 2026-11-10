@@ -1,0 +1,136 @@
+// 画像の表示位置の調整（shared/_image_position_field）。
+// 枠の中の画像は実際の表示と同じく object-fit: cover で、位置は JS が object-position で動かす。
+.image-position-field {
+  --ipf-border: #d8dee8;
+  --ipf-surface: #f5f7fa;
+  --ipf-text: #333a45;
+  --ipf-muted: #5f6672;
+  --ipf-accent: #2563eb;
+
+  max-width: 100%;
+  color: var(--ipf-text);
+
+  &--business {
+    --ipf-border: var(--ba-border, #e2e7ef);
+    --ipf-surface: var(--ba-surface-muted, #f5f7fa);
+    --ipf-text: var(--ba-text, #1f2633);
+    --ipf-muted: var(--ba-text-muted, #545c6b);
+    --ipf-accent: var(--ba-accent, #2563eb);
+  }
+
+  &__editor {
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid var(--ipf-border);
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  &__hint {
+    margin: 0 0 12px;
+    color: var(--ipf-muted);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  &__frames {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px 12px;
+  }
+
+  &__item {
+    max-width: 100%;
+    margin: 0;
+  }
+
+  // スマホで開いたときは、スマホでの見え方を先に確認できるようにする。
+  @media (max-width: 767.98px) {
+    &__item--mobile {
+      order: -1;
+    }
+  }
+
+  &__frame {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid var(--ipf-border);
+    background: var(--ipf-surface);
+    cursor: grab;
+    // スマホでは枠の上の指の動きをスクロールではなく位置調整に使う。
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+
+    &.is-dragging {
+      cursor: grabbing;
+    }
+
+    &:focus-visible {
+      outline: 3px solid var(--ipf-accent);
+      outline-offset: 2px;
+    }
+
+    &--rect {
+      border-radius: 6px;
+    }
+
+    &--rounded {
+      border-radius: 10px;
+    }
+
+    &--circle {
+      border-radius: 50%;
+    }
+  }
+
+  &__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    pointer-events: none;
+  }
+
+  &__label {
+    margin-top: 6px;
+    color: var(--ipf-muted);
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin-top: 12px;
+  }
+
+  &__reset {
+    min-height: 36px;
+    padding: 6px 14px;
+    border: 1px solid var(--ipf-border);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--ipf-text);
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--ipf-surface);
+    }
+  }
+
+  &__status {
+    flex: 1 1 200px;
+    color: var(--ipf-muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}

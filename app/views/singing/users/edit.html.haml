@@ -19,7 +19,7 @@
             = customer_avatar_tag(@user, class_name: "singing-profile-edit__avatar", fallback: "no_image")
           .singing-profile-edit__field
             = f.label :profile_image, "プロフィール画像"
-            = f.file_field :profile_image, accept: "image/*"
+            = render "shared/image_position_field", f: f, attribute: :profile_image, preset: :music_profile
           .singing-profile-edit__field
             = f.label :name, "表示名"
             = f.text_field :name, maxlength: 20, required: true

@@ -103,6 +103,8 @@ class Singing::UsersController < Singing::BaseController
       :name,
       :introduction,
       :profile_image,
+      :profile_image_position_x,
+      :profile_image_position_y,
       :url,
       :singing_profile_comment,
       :singing_coach_personality,

@@ -190,7 +190,8 @@ class Public::ChatRoomsController < ApplicationController
     {
       id: customer.id,
       name: customer.name,
-      avatar_url: mention_candidate_avatar_url(customer)
+      avatar_url: mention_candidate_avatar_url(customer),
+      avatar_position: customer.profile_image_object_position
     }
   end
 

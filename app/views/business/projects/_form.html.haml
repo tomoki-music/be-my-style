@@ -43,13 +43,9 @@
     %legend.ba-fieldset__legend 画像
     .ba-field
       = f.label :project_image, "カバー画像", class: "ba-label", for: "image-input"
-      .ba-image-field
-        - if project.project_image.attached?
-          = image_tag project.project_image, id: "preview-image", class: "ba-image-field__preview", alt: "現在の画像"
-        - else
-          = image_tag "no_image", id: "preview-image", class: "ba-image-field__preview", alt: "画像は未設定です"
-        = f.file_field :project_image, accept: "image/*", class: "form-control", id: "image-input"
-      %small.ba-help 画像が無い場合は、プロジェクト名の頭文字で表示されます。
+      = render "shared/image_position_field", f: f, attribute: :project_image, preset: :business_project, theme: "business",
+        input_options: { class: "form-control", id: "image-input" }
+      %small.ba-help 画像が無い場合は、プロジェクト名の頭文字で表示されます。登録済みの画像も、選び直さずに位置だけ変更できます。
 
   .ba-form-actions
     = f.submit submit_label, class: "ba-btn ba-btn--primary"

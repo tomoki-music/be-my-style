@@ -46,6 +46,8 @@ class Community < ApplicationRecord
   has_many :members, through: :community_customers, source: :customer
 
   has_one_attached :community_image
+  include ImagePositionable
+  image_position_for :community_image
 
   validates :name, presence: true
   validates :name, length: { maximum: 30 }

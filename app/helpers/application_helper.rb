@@ -168,7 +168,8 @@ module ApplicationHelper
       end
 
     content_tag(:span, class: ["avatar-with-badge", wrapper_class].compact.join(" ")) do
-      concat image_tag(image_source, class: class_name)
+      image_style = image_position_style(customer, :profile_image) unless image_source == fallback
+      concat image_tag(image_source, class: class_name, style: image_style)
       concat(content_tag(:span, badge_label, class: badge_class)) if badge_label.present?
       if show_active_status
         concat(avatar_active_status_dot(customer_login_activity_level(customer), image_class_name: class_name))

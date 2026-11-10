@@ -8,7 +8,7 @@
 = link_to business_project_path(project), class: "ba-project-card" do
   %span.ba-project-card__media
     - if project.project_image.attached?
-      = image_tag project.project_image, class: "ba-project-card__image", alt: "", loading: "lazy"
+      = positioned_image_tag project, :project_image, class: "ba-project-card__image", alt: "", loading: "lazy"
     - else
       = business_monogram(project.title, id: project.id, shape: :rect)
   %span.ba-project-card__body

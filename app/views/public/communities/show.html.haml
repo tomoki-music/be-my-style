@@ -27,7 +27,7 @@
         .card
           .img-container
             - if @community.community_image.present?
-              = image_tag @community.community_image
+              = positioned_image_tag @community, :community_image
             - else
               = image_tag 'no_image'
           .card-body.text-container

@@ -336,7 +336,7 @@
                                                   = link_to public_customer_path(customer), data: { turbolinks: false } do
                                                     = image_tag(customer.profile_image.presence || 'no_image',
                                                                 class: "icon_mini",
-                                                                style: "width:24px; height:24px; border-radius:50%;")
+                                                                style: "width:24px; height:24px; border-radius:50%; object-fit:cover; #{image_position_style(customer, :profile_image)}")
                                                     = customer.name
                                                   - if @event.paid_participant_for_display?(customer)
                                                     %span.member-plan-badge.member-plan-badge--paid

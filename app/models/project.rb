@@ -13,6 +13,8 @@ class Project < ApplicationRecord
   has_many :project_access_suspensions, dependent: :destroy
 
   has_one_attached :project_image
+  include ImagePositionable
+  image_position_for :project_image
 
   # Business の画面で一覧に出すプロジェクト(所属コミュニティがそのドメインのもの)。
   scope :in_domain, ->(domain) { joins(:community).where(communities: { domain_id: domain&.id }) }
