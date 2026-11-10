@@ -5,10 +5,11 @@
   .ba-page-header__text
     %h1.ba-page-title スレッド一覧
     %p.ba-page-lead 「#{@project.title}」の話題ごとの会話です。
-  .ba-page-actions
-    = link_to new_business_project_thread_path(@project), class: "ba-btn ba-btn--primary" do
-      %i.fa-solid.fa-plus{ "aria-hidden": "true" }
-      新しいスレッド
+  - if current_customer.can_create_project_thread?(@project)
+    .ba-page-actions
+      = link_to new_business_project_thread_path(@project), class: "ba-btn ba-btn--primary" do
+        %i.fa-solid.fa-plus{ "aria-hidden": "true" }
+        新しいスレッド
 
 .ba-card
   = render "business/project_threads/list", project: @project, threads: @threads, post_counts: @thread_post_counts

@@ -65,7 +65,8 @@ RSpec.describe "Business::Helps", type: :request do
     expect(create).to include("Premiumプラン")
     expect(create).to include("コミュニティの運営者（プランに関係なく作成できます）、またはCoreプラン以上の参加者")
     expect(create).to include("無料お試し中のコミュニティでは、プランに関係なく参加者が作成できます。")
-    expect(create).to include("プロジェクトの参加者（プランの条件はありません）")
+    expect(create).to include("プロジェクトの「スレッドを作成できる人」の設定によります（初期値は管理者・オーナーのみ。プランの条件はありません）")
+    expect(doc.at_css("#help-threads").text).to include("この設定を変えられるのは、システム管理者と親コミュニティのオーナーです。")
     expect(doc.at_css("#help-edit").text).to include("編集にプランの条件はありません")
     expect(doc.at_css("#help-delete").text).to include("プロジェクトの管理者・コミュニティの運営者でも、ほかの人が書いた投稿を1件ずつ編集・削除することはできません。")
   end

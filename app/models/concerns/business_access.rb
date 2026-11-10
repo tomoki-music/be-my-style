@@ -88,6 +88,41 @@ module BusinessAccess
     projects.where(community_id: community_ids).or(projects.where(community_id: manageable_communities.select(:id)))
   end
 
+  # スレッド作成の設定(Project#thread_creation_policy)を変えられる人。削除と同じく、
+  # システム管理者と親コミュニティのオーナー本人に限る(運営者・プロジェクト作成者は編集できても変えられない)。
+  def can_change_project_thread_creation_policy?(project)
+    community = project&.community
+    return false if community.blank? || !community.business_domain?
+
+    can_destroy_community?(community)
+  end
+
+  # 新しいスレッドを作れるか。作成ボタンの表示・作成フォーム・作成処理はすべてこれを使う。
+  #   owners_only : システム管理者・親コミュニティのオーナー本人
+  #   managers    : + プロジェクトの運営者(business_project_manager?)
+  #   all_members : + 参加承認済みのプロジェクトメンバー(承認待ち・アクセス停止中は除く)
+  def can_create_project_thread?(project)
+    return false if project.blank? || is_deleted?
+    return false unless business_project_participant?(project)
+    return true if can_change_project_thread_creation_policy?(project)
+
+    if project.thread_creation_managers?
+      business_project_manager?(project)
+    elsif project.thread_creation_all_members?
+      business_project_manager?(project) || business_project_approved_member?(project)
+    else
+      false
+    end
+  end
+
+  # 参加が承認済みのプロジェクトメンバー(コミュニティ参加者でもある)。アクセス停止の記録があれば行が残っていても除く。
+  def business_project_approved_member?(project)
+    return false if project.blank?
+    return false if business_project_suspended?(project) || business_community_suspended?(project.community)
+
+    business_community_member?(project.community) && project_members.exists?(project_id: project.id)
+  end
+
   def can_edit_project_thread?(thread)
     return false unless business_project_participant?(thread.project)
 

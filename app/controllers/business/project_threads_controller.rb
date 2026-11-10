@@ -1,5 +1,5 @@
-# プロジェクト内のスレッド。閲覧・投稿・作成はプロジェクト参加者(管理者を含む)、
-# タイトル・説明の編集は作成者か管理者、削除は管理者だけ。
+# プロジェクト内のスレッド。閲覧・投稿はプロジェクト参加者(管理者を含む)、作成はプロジェクトの設定
+# (BusinessAccess#can_create_project_thread?)、タイトル・説明の編集は作成者か管理者、削除は管理者だけ。
 class Business::ProjectThreadsController < ApplicationController
   include BusinessAccessControl
 
@@ -7,6 +7,7 @@ class Business::ProjectThreadsController < ApplicationController
 
   before_action :set_project
   before_action :require_business_project_participant!
+  before_action :ensure_thread_creatable!, only: [:new, :create]
   before_action :link_legacy_chats, only: [:index, :show]
   before_action :set_thread, only: [:show, :edit, :update, :destroy]
   before_action :ensure_thread_editable!, only: [:edit, :update]
@@ -73,6 +74,12 @@ class Business::ProjectThreadsController < ApplicationController
   # 別プロジェクトのスレッド ID を指定しても見つからない(404)ようにする。
   def set_thread
     @thread = @project.project_threads.find(params[:id])
+  end
+
+  def ensure_thread_creatable!
+    return if current_customer.can_create_project_thread?(@project)
+
+    redirect_to business_project_threads_path(@project), alert: "このプロジェクトでスレッドを作成する権限がありません。"
   end
 
   def ensure_thread_editable!

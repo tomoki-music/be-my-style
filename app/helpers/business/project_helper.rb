@@ -13,6 +13,21 @@ module Business
       "unlisted" => "限定公開"
     }.freeze
 
+    # スレッドを作成できる人の表示名。編集フォームの選択肢と、権限の無い人向けの表示で同じ文言にする。
+    PROJECT_THREAD_CREATION_LABELS = {
+      "owners_only" => "管理者・オーナーのみ",
+      "managers" => "運営者まで",
+      "all_members" => "参加メンバー全員"
+    }.freeze
+
+    def business_project_thread_creation_options
+      PROJECT_THREAD_CREATION_LABELS.map { |value, label| [label, value] }
+    end
+
+    def business_project_thread_creation_label(project)
+      PROJECT_THREAD_CREATION_LABELS.fetch(project.thread_creation_policy.to_s, project.thread_creation_policy.to_s)
+    end
+
     def business_project_visibility_options
       PROJECT_VISIBILITY_LABELS.map { |value, label| [label, value] }
     end

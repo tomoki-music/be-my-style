@@ -2,7 +2,8 @@ name: Business migrations on MySQL 8.4
 
 # Business スレッド・参加承認のマイグレーション(20261027000000〜000300)・プロジェクトのテーマ追加(20261030000000)・
 # スレッド投稿通知の投稿ID(20261101000000)、イベントの開催コミュニティ(20261107000000)、
-# 参加申請のメッセージ(20261110200000)・プロジェクトの公開範囲(20261110300000)を、
+# 参加申請のメッセージ(20261110200000)・プロジェクトの公開範囲(20261110300000)・
+# スレッドを作成できる人(20261110400000)を、
 # 本番 RDS と同じ MySQL 8.4.8 で検証する。
 # ランナー上の使い捨て MySQL(service コンテナ)だけを使い、本番の認証情報・データ・Secrets は使わない。
 # 検証内容は script/business_migration_mysql_check.rb(通常移行・スキーマ一致・制約・途中失敗後の再実行・ロック待ち・
@@ -18,6 +19,7 @@ on:
       - "script/business_migration_mysql_check.rb"
       - "script/project_join_request_message_mysql_check.rb"
       - "script/project_visibility_mysql_check.rb"
+      - "script/project_thread_creation_policy_mysql_check.rb"
       - ".github/workflows/business-mysql84-check.yml"
   workflow_dispatch:
 
@@ -120,6 +122,20 @@ jobs:
           mkdir -p tmp
           bundle exec rails runner script/project_visibility_mysql_check.rb | tee tmp/visibility_mysql84_check.txt
 
+      # スレッドを作成できる人の列(20261110400000)。上の検証の結果に関係なく、同じ MySQL 8.4.8 で単独に確かめる。
+      - name: Run thread creation policy migration check
+        id: thread_creation_policy_check
+        if: always() && steps.version.outcome == 'success'
+        env:
+          CHECK_MYSQL_HOST: 127.0.0.1
+          CHECK_MYSQL_PORT: "3306"
+          CHECK_MYSQL_USER: root
+          CONFIRM_DISPOSABLE: "yes"
+        run: |
+          set -o pipefail
+          mkdir -p tmp
+          bundle exec rails runner script/project_thread_creation_policy_mysql_check.rb | tee tmp/thread_creation_policy_mysql84_check.txt
+
       - name: Write summary
         if: always()
         run: |
@@ -141,5 +157,10 @@ jobs:
             echo "### プロジェクトの公開範囲の列: ${{ steps.visibility_check.outcome }}"
             echo '```text'
             cat tmp/visibility_mysql84_check.txt 2>/dev/null || echo "(出力なし)"
+            echo '```'
+            echo ""
+            echo "### スレッドを作成できる人の列: ${{ steps.thread_creation_policy_check.outcome }}"
+            echo '```text'
+            cat tmp/thread_creation_policy_mysql84_check.txt 2>/dev/null || echo "(出力なし)"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"

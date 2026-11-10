@@ -68,9 +68,10 @@
       %h2.ba-section-title#project-threads-title
         スレッド
         %span.ba-count= "#{@thread_count}件"
-      = link_to new_business_project_thread_path(@project), class: "ba-btn ba-btn--soft ba-btn--sm" do
-        %i.fa-solid.fa-plus{ "aria-hidden": "true" }
-        新しいスレッド
+      - if current_customer.can_create_project_thread?(@project)
+        = link_to new_business_project_thread_path(@project), class: "ba-btn ba-btn--soft ba-btn--sm" do
+          %i.fa-solid.fa-plus{ "aria-hidden": "true" }
+          新しいスレッド
 
     = render "business/project_threads/list", project: @project, threads: @threads, post_counts: @thread_post_counts
 

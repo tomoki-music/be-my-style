@@ -29,6 +29,10 @@ class Project < ApplicationRecord
   # 一覧・検索に出してよいプロジェクト(通常公開)。管理画面の一覧には限定公開も出す。
   scope :listed, -> { where(visibility: visibilities[:listed]) }
 
+  # スレッドを作成できる人。判定は BusinessAccess#can_create_project_thread?。既存・新規とも既定は管理者・オーナーのみ。
+  # 既存スレッドの閲覧・返信の条件(プロジェクトの参加者)はこの設定に関係しない。
+  enum thread_creation_policy: { owners_only: 0, managers: 1, all_members: 2 }, _prefix: :thread_creation
+
   # 参加方式。既存プロジェクトは移行で自動承認、新規作成の既定は手動承認。
   enum join_approval_mode: { manual: 0, auto: 1 }, _prefix: :join
 

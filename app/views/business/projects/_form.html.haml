@@ -43,6 +43,18 @@
       = f.select :visibility, business_project_visibility_options, {}, class: "form-control", "aria-describedby": "project-visibility-help"
       %small.ba-help#project-visibility-help
         限定公開：一覧・検索には表示されません。URLからの閲覧には既存の閲覧条件が適用されます。
+    -# 変更はシステム管理者・親コミュニティのオーナー本人だけ(保存側も ProjectsController#thread_creation_policy_changeable? で同じ判定)。
+    - if project.persisted?
+      .ba-field#project-thread-creation
+        - if current_customer.can_change_project_thread_creation_policy?(project)
+          = f.label :thread_creation_policy, "スレッドを作成できる人", class: "ba-label"
+          = f.select :thread_creation_policy, business_project_thread_creation_options, {}, class: "form-control", "aria-describedby": "project-thread-creation-help"
+        - else
+          %p.ba-label スレッドを作成できる人
+          %p.ba-static= business_project_thread_creation_label(project)
+        %small.ba-help#project-thread-creation-help
+          管理者・オーナーのみ：システム管理者と親コミュニティのオーナー。運営者まで：さらにプロジェクトの管理者（コミュニティの運営者と、プロジェクトを作成した参加者）。参加メンバー全員：さらに参加が承認されたメンバー。
+          既存スレッドの閲覧・返信は、この設定に関係なくプロジェクトの参加者ができます。変更できるのはシステム管理者と親コミュニティのオーナーです。
 
   %fieldset.ba-fieldset
     %legend.ba-fieldset__legend 画像
