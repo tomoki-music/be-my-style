@@ -140,7 +140,8 @@ RSpec.describe "Business のコミュニティ・プロジェクト参加導線"
       sign_in general
 
       get business_project_path(manual_project)
-      expect(join_panel.at_css(%(a[data-method="post"][href="#{join_business_project_path(manual_project)}"])).text.strip).to eq "参加を申請する"
+      expect(join_panel.at_css("summary").text.strip).to eq "参加を申請する"
+      expect(join_panel.at_css(%(form[method="post"][action="#{join_business_project_path(manual_project)}"]))).to be_present
       expect(doc.at_css("#threads")).to be_nil
 
       ProjectJoinRequest.create!(project: manual_project, customer: general)
@@ -163,11 +164,12 @@ RSpec.describe "Business のコミュニティ・プロジェクト参加導線"
       get business_project_path(manual_project)
       expect(join_panel.at_css(".ba-status").text.strip).to eq "アクセス停止中"
       expect(join_panel.at_css("a")).to be_nil
+      expect(join_panel.at_css("form")).to be_nil
 
       manual_project.update_columns(deadline: 1.day.ago)
       ProjectAccessSuspension.delete_all
       get business_project_path(manual_project)
-      expect(join_panel.at_css("a").text.strip).to eq "参加を申請する"
+      expect(join_panel.at_css("summary").text.strip).to eq "参加を申請する"
       expect(response.body).not_to include("募集終了")
       expect(response.body).not_to include("締切")
     end

@@ -2,8 +2,23 @@
 -# 承認・停止などの管理操作はメンバー管理画面に置き、ここには出さない。
 - case @join_status
 - when :none
-  = link_to business_join_button_label(@project), join_business_project_path(@project),
-    method: :post, data: { disable_with: "送信中…" }, class: "ba-btn ba-btn--primary"
+  - if @project.join_auto?
+    = link_to business_join_button_label(@project), join_business_project_path(@project),
+      method: :post, data: { disable_with: "送信中…" }, class: "ba-btn ba-btn--primary"
+  - else
+    -# 「参加を申請する」を押すと、任意のメッセージ欄と送信ボタンが開く(JS なしで動く details)。
+    %details.ba-join-request
+      %summary.ba-btn.ba-btn--primary.ba-join-request__toggle= business_join_button_label(@project)
+      = form_with url: join_business_project_path(@project), scope: :project_join_request, method: :post,
+        local: true, class: "ba-join-request__form" do |f|
+        = f.label :message, "申請メッセージ（任意）", class: "ba-label"
+        = f.text_area :message, rows: 4, class: "form-control",
+          maxlength: ProjectJoinRequest::MESSAGE_MAX_LENGTH,
+          placeholder: "興味を持った理由や、参加してやってみたいことなど",
+          "aria-describedby": "join-request-message-hint"
+        %p.ba-join-request__hint#join-request-message-hint
+          #{ProjectJoinRequest::MESSAGE_MAX_LENGTH}文字以内。空欄のままでも申請できます。メッセージは、この申請を承認できる管理者だけが読めます。
+        = f.submit "この内容で申請する", class: "ba-btn ba-btn--primary", data: { disable_with: "送信中…" }
   %p.ba-join__note
     = business_join_approval_description(@project)
     参加すると、スレッドを閲覧・投稿できます。

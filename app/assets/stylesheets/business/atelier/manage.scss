@@ -161,4 +161,36 @@
     border-color: #8f1b2a;
     color: #fff;
   }
+
+  // ===== メンバー管理: 承認待ちの申請に添えられたメッセージ =====
+  .ba-join-message {
+    margin: var(--ba-space-2) 0 0;
+    padding: var(--ba-space-2) var(--ba-space-3);
+    border-radius: var(--ba-radius-control);
+    background: var(--ba-surface-muted);
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-join-message--empty {
+    background: none;
+    padding: 0;
+    color: var(--ba-text-muted);
+    font-size: 13px;
+  }
+
+  .ba-join-message__label {
+    margin: 0 0 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ba-text-muted);
+  }
+
+  .ba-join-message__body p {
+    margin: 0 0 4px;
+  }
+
+  .ba-join-message__body p:last-child {
+    margin-bottom: 0;
+  }
 }

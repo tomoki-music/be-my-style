@@ -21,7 +21,8 @@ module BusinessAccessControl
     suspended: [:alert, "このプロジェクトへのアクセスは停止されています"],
     community_required: [:alert, "プロジェクトに参加するには、先にコミュニティへ参加してください"],
     business_required: [:alert, "参加するには、NAKAMA（Business）の利用開始が必要です。"],
-    unavailable: [:alert, "このプロジェクトには参加できません"]
+    unavailable: [:alert, "このプロジェクトには参加できません"],
+    message_too_long: [:alert, "申請メッセージは#{ProjectJoinRequest::MESSAGE_MAX_LENGTH}文字以内で入力してください。申請はまだ送られていません。"]
   }.freeze
 
   private
