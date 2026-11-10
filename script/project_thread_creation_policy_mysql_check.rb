@@ -6,7 +6,10 @@
 #
 # 確認内容: 本番適用済みのスキーマ(BASE_COMMIT)+既存のプロジェクトから適用 / 列の型・NULL 不可・既定値 0 /
 # 既存のプロジェクトは全列そのまま・管理者・オーナーのみ(0) / アプリのコードからも管理者・オーナーのみとして読める /
-# 表を作り直さない(INSTANT) / db/schema.rb とのスキーマ一致 / 再実行・戻し・途中失敗後の再適用。
+# 表を作り直さない(INSTANT) / スキーマの変化はこの列の追加だけで、db/schema.rb の projects にも同じ定義がある /
+# 再実行・戻し・途中失敗後の再適用。
+# 後の PR で別の列やマイグレーションが増えても結果が変わらないよう、比べるのはこの列と既存のデータだけにしている
+# (db/schema.rb 全体とは比べない。後続のマイグレーションは適用しない)。
 # MySQL 8.4 以外では止まる(ALLOW_NON_84=1 で手順そのものの確認用に実行できる)。
 require "open3"
 require "stringio"
@@ -15,15 +18,12 @@ module ProjectThreadCreationPolicyMysqlCheck
   # 本番に適用済みのスキーマ(schema version 20261110300000)を持つ main のコミット(PR #237 のマージ)。
   BASE_COMMIT = "b54cbcc5".freeze
   BASE_VERSION = 20261110300000
-  # 比べる db/schema.rb。マージ前は作業ツリーのもの(nil)を使う。この後にマイグレーションを追加する PR では、
-  # このマイグレーションまでを含む main のコミット(この PR のマージ)を指定し、後の列と比べないようにする。
-  REF_COMMIT = nil
   DB = "bms_thread_creation_policy_check_tmp".freeze
-  REF_DB = "bms_thread_creation_policy_check_ref_tmp".freeze
   MIGRATIONS = Rails.root.join("db/migrate").to_s
   VERSION = "20261110400000".freeze
   LEGACY_PROJECT_IDS = [1, 2, 3].freeze
   EXPECTED_COLUMN = ["int", "NO", "0"].freeze
+  POLICY_LINE = 't.integer "thread_creation_policy", default: 0, null: false'.freeze
 
   module_function
 
@@ -43,16 +43,17 @@ module ProjectThreadCreationPolicyMysqlCheck
 
     @created = true
     server.execute("CREATE DATABASE #{DB} CHARACTER SET utf8mb4")
-    server.execute("CREATE DATABASE #{REF_DB} CHARACTER SET utf8mb4")
     puts "MySQL #{connection.select_value('SELECT VERSION()')} / 起点 #{BASE_COMMIT} / 対象 #{VERSION}"
 
     fresh_db!
     before = legacy_rows
     versions_before = row_versions
+    schema_before = dump_schema
     check.call("起点: 本番と同じスキーマに thread_creation_policy 列は無く、対象のマイグレーションだけが未適用", !connection.column_exists?(:projects, :thread_creation_policy) && pending_versions == [VERSION], pending_versions.inspect)
 
     migrate_up
     column = policy_column
+    schema_after = dump_schema
     check.call("適用: 成功し、未適用のマイグレーションが残らない", pending_versions.empty?)
     check.call("適用: thread_creation_policy は int・NULL 不可・既定値 0", column == EXPECTED_COLUMN, column.inspect)
     check.call("適用: 表を作り直していない(INSTANT で行バージョンが1つ増える)", row_versions == versions_before + 1, "TOTAL_ROW_VERSIONS #{versions_before} → #{row_versions}")
@@ -66,7 +67,8 @@ module ProjectThreadCreationPolicyMysqlCheck
 
     app_checks(check)
 
-    check.call("スキーマ: マイグレーション結果が db/schema.rb と一致", dump_schema == reference_schema)
+    check.call("スキーマ: 変化は projects への thread_creation_policy 列の追加だけ", only_policy_column_added?(schema_before, schema_after))
+    check.call("スキーマ: db/schema.rb の projects にも同じ定義がある(後から増えた列は比べない)", policy_lines(projects_block(File.read(Rails.root.join("db/schema.rb")))) == [POLICY_LINE])
 
     migrate_up
     check.call("再実行: もう一度 migrate しても何も起きない", pending_versions.empty? && policy_column == EXPECTED_COLUMN)
@@ -106,7 +108,7 @@ module ProjectThreadCreationPolicyMysqlCheck
     abort "CHECK_MYSQL_HOST を指定してください" if host.empty?
     abort "RDS のエンドポイントには実行しない" if host.include?("rds.amazonaws.com")
     abort "アプリの DB_HOST と同じホストには実行しない" if host == ENV["DB_HOST"].to_s
-    existing = server.select_values("SHOW DATABASES").map(&:to_s) & [DB, REF_DB]
+    existing = server.select_values("SHOW DATABASES").map(&:to_s) & [DB]
     abort "#{existing.join(', ')} が既にあります。前回の残りなら中身を確認してから削除してください" if existing.any?
     version = server.select_value("SELECT VERSION()").to_s
     abort "MySQL #{version} です(8.4 で検証する。手順の確認だけなら ALLOW_NON_84=1)" unless version.start_with?("8.4.") || ENV["ALLOW_NON_84"] == "1"
@@ -202,14 +204,18 @@ module ProjectThreadCreationPolicyMysqlCheck
     SQL
   end
 
-  def reference_schema
-    use_database(REF_DB)
-    ActiveRecord::Migration.suppress_messages do
-      REF_COMMIT ? eval(schema_at(REF_COMMIT), TOPLEVEL_BINDING) : load(Rails.root.join("db/schema.rb").to_s)
-    end
-    dump = dump_schema
-    use_database(DB)
-    dump
+  # 適用前と比べて、projects にこの列の1行が加わった以外は何も変わっていないこと。
+  def only_policy_column_added?(before, after)
+    policy_lines(projects_block(after)) == [POLICY_LINE] && policy_lines(after).size == 1 &&
+      after.lines.reject { |line| line.strip == POLICY_LINE }.join == before
+  end
+
+  def projects_block(schema)
+    schema[/^  create_table "projects".*?^  end$/m].to_s
+  end
+
+  def policy_lines(text)
+    text.lines.map(&:strip).select { |line| line.include?('"thread_creation_policy"') }
   end
 
   def dump_schema
@@ -223,9 +229,9 @@ module ProjectThreadCreationPolicyMysqlCheck
     return unless @created
 
     use_database(nil)
-    [DB, REF_DB].each { |name| connection.execute("DROP DATABASE IF EXISTS #{name}") }
+    connection.execute("DROP DATABASE IF EXISTS #{DB}")
   rescue StandardError => e
-    warn "後片付けに失敗しました(#{e.class})。#{DB} / #{REF_DB} を手動で削除してください"
+    warn "後片付けに失敗しました(#{e.class})。#{DB} を手動で削除してください"
   end
 end
 
