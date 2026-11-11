@@ -3,6 +3,8 @@
 
 %header.ba-thread-header
   .ba-thread-header__text
+    - if @thread.pinned?
+      = render "business/project_threads/pin_badge"
     %h1.ba-page-title= @thread.title
     - if @thread.description.present?
       .ba-thread-header__description= simple_format(@thread.description)
@@ -10,9 +12,10 @@
       作成：#{customer_display_name(@thread.customer) || ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL}
       %span{ "aria-hidden": "true" } ・
       最終更新：#{l(@thread.last_posted_at, format: :short)}
-  -# 編集・削除の可否はスレッドごとの権限(全体トークは削除不可)に従う。
-  - if current_customer.can_edit_project_thread?(@thread) || current_customer.can_destroy_project_thread?(@thread)
+  -# 固定・編集・削除の可否はスレッドごとの権限(全体トークは削除不可)に従う。
+  - if current_customer.can_pin_project_thread?(@thread) || current_customer.can_edit_project_thread?(@thread) || current_customer.can_destroy_project_thread?(@thread)
     .ba-thread-header__actions
+      = render "business/project_threads/pin_button", project: @project, thread: @thread
       - if current_customer.can_edit_project_thread?(@thread)
         = link_to edit_business_project_thread_path(@project, @thread), class: "ba-btn ba-btn--secondary ba-btn--sm" do
           %i.fa-solid.fa-pen{ "aria-hidden": "true" }

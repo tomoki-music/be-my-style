@@ -59,7 +59,7 @@ class Business::ProjectsController < ApplicationController
     return unless @can_view_internal
 
     @thread_repair_failed = !Business::ProjectThreads::LegacyChatBackfill.call_safely(project: @project)
-    @threads = @project.project_threads.includes(customer: { profile_image_attachment: :blob }).recently_active.limit(THREAD_PREVIEW_LIMIT).to_a
+    @threads = @project.project_threads.includes(customer: { profile_image_attachment: :blob }).display_order.limit(THREAD_PREVIEW_LIMIT).to_a
     @thread_count = @project.project_threads.count
     @thread_post_counts = ProjectChat.where(project_thread_id: @threads.map(&:id)).group(:project_thread_id).count
     @pending_request_count = @project.project_join_requests.count if @can_manage_project
