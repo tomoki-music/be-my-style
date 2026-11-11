@@ -295,6 +295,9 @@
   }
 
   .ba-thread-list__item {
+    display: flex;
+    align-items: center;
+    gap: var(--ba-space-2);
     margin: 0;
     border-top: 1px solid var(--ba-border);
   }
@@ -305,6 +308,8 @@
 
   .ba-thread-list__link {
     display: flex;
+    flex: 1;
+    min-width: 0;
     align-items: center;
     gap: var(--ba-space-3);
     padding: var(--ba-space-3) var(--ba-space-2);
@@ -339,9 +344,56 @@
     min-width: 0;
   }
 
+  .ba-thread-list__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px var(--ba-space-2);
+    min-width: 0;
+  }
+
   .ba-thread-list__title {
     font-weight: 700;
     overflow-wrap: anywhere;
+  }
+
+  .ba-thread-pin-badge {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 8px;
+    border-radius: var(--ba-radius-pill);
+    background: var(--ba-accent-soft);
+    color: var(--ba-accent-strong);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.6;
+  }
+
+  .ba-thread-header .ba-thread-pin-badge {
+    margin-bottom: var(--ba-space-1);
+  }
+
+  .ba-thread-pin-form {
+    flex: none;
+    margin: 0;
+  }
+
+  // スマホ幅では固定ボタンを行の下へ回し、タイトル・説明の幅を確保する(本文の開始位置にそろえる)。
+  @media (max-width: 768px) {
+    .ba-thread-list__item {
+      flex-wrap: wrap;
+      gap: 0;
+    }
+
+    .ba-thread-list__link {
+      flex-basis: 100%;
+    }
+
+    .ba-thread-list__item .ba-thread-pin-form {
+      margin: 0 0 var(--ba-space-3) calc(40px + var(--ba-space-3));
+    }
   }
 
   .ba-thread-list__description {

@@ -1,0 +1,13 @@
+-# 固定・解除ボタン。表示の可否は BusinessAccess#can_pin_project_thread?(保存側の ProjectThreadPinsController と同じ判定)。
+- project = local_assigns.fetch(:project)
+- thread = local_assigns.fetch(:thread)
+- if current_customer.can_pin_project_thread?(thread)
+  - label = thread.pinned? ? "固定を解除" : "固定する"
+  - aria_label = thread.pinned? ? "「#{thread.title}」の固定を解除" : "「#{thread.title}」を固定する"
+  = button_to business_project_thread_pin_path(project, thread),
+    method: (thread.pinned? ? :delete : :post),
+    form_class: "ba-thread-pin-form",
+    class: "ba-btn ba-btn--secondary ba-btn--sm",
+    "aria-label": aria_label do
+    %i.fa-solid.fa-thumbtack{ "aria-hidden": "true" }
+    = label

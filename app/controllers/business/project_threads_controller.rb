@@ -3,6 +3,8 @@
 class Business::ProjectThreadsController < ApplicationController
   include BusinessAccessControl
 
+  THREADS_PER_PAGE = 20
+
   layout "business"
 
   before_action :set_project
@@ -14,7 +16,8 @@ class Business::ProjectThreadsController < ApplicationController
   before_action :ensure_thread_destroyable!, only: [:destroy]
 
   def index
-    @threads = @project.project_threads.includes(customer: { profile_image_attachment: :blob }).recently_active
+    @threads = @project.project_threads.includes(customer: { profile_image_attachment: :blob })
+      .display_order.page(params[:page]).per(THREADS_PER_PAGE)
     @thread_post_counts = ProjectChat.where(project_thread_id: @threads.map(&:id)).group(:project_thread_id).count
   end
 

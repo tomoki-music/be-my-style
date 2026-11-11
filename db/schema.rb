@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_11_10_400000) do
+ActiveRecord::Schema.define(version: 2026_11_11_100000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -1043,6 +1043,7 @@ ActiveRecord::Schema.define(version: 2026_11_10_400000) do
     t.datetime "last_posted_at", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.datetime "pinned_at"
     t.index ["customer_id"], name: "index_project_threads_on_customer_id"
     t.index ["project_id", "general"], name: "index_project_threads_on_project_id_and_general", unique: true
     t.index ["project_id", "last_posted_at"], name: "index_project_threads_on_project_id_and_last_posted_at"

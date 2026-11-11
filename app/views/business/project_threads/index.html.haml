@@ -13,3 +13,4 @@
 
 .ba-card
   = render "business/project_threads/list", project: @project, threads: @threads, post_counts: @thread_post_counts
+  = paginate @threads

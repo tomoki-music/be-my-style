@@ -129,6 +129,14 @@ module BusinessAccess
     thread.customer_id == id || business_project_manager?(thread.project)
   end
 
+  # スレッドの固定・解除。プロジェクト全体の見え方を変えるため、システム管理者と親コミュニティのオーナー本人に限る。
+  def can_pin_project_thread?(thread)
+    return false if thread.blank? || is_deleted?
+    return false unless business_project_participant?(thread.project)
+
+    can_change_project_thread_creation_policy?(thread.project)
+  end
+
   # スレッドの削除は(ほかの参加者の会話も消えるため)作成者であっても管理者に限る。
   # 「全体トーク」は旧導線・移行時の投稿の送り先なので削除できない(タイトル・説明は編集できる)。
   def can_destroy_project_thread?(thread)

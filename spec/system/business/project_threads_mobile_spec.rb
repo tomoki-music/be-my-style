@@ -12,6 +12,8 @@ RSpec.describe "Business スレッド・参加管理の画面幅", type: :system
     CommunityCustomer.create!(community: community, customer: owner)
     thread = project.project_threads.create!(customer: owner, title: "デザイン相談スレッド" * 3, description: "配色・レイアウト" * 10)
     ProjectChat.create!(project: project, project_thread: thread, customer: owner, body: "長いメッセージ" * 30)
+    # 固定の表示(「固定」と解除ボタン)が付いても、長いタイトルの行がはみ出さないことも見る。
+    thread.update!(pinned_at: Time.current)
     create(:permit, community: community, customer: applicant)
   end
 

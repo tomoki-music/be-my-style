@@ -259,6 +259,7 @@ Rails.application.routes.draw do
       resources :project_chats, only: [:create, :destroy]
       resources :threads, controller: "project_threads" do
         resources :project_chats, only: [:create, :destroy]
+        resource :pin, controller: "project_thread_pins", only: [:create, :destroy]
       end
       resources :join_requests, controller: "project_join_requests", only: [] do
         member do
