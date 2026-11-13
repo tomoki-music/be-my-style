@@ -4,12 +4,32 @@ class Admin::CustomersController < ApplicationController
   before_action :set_member_profile, only: [:edit, :update]
 
   def edit
+    # 退会の手続きが済んだ会員は、置き換え済みの情報を上書きしないようフォームを出さない。
+    if @customer.withdrawn?
+      render :withdrawn
+      return
+    end
+
     @singing_diagnoses = @customer.singing_diagnoses
       .order(created_at: :desc)
       .limit(20)
   end
 
   def update
+    # 退会の手続きを済ませた会員は、名前・メールなどを置き換え・削除済み。編集で元に戻さないよう保存しない。
+    if @customer.withdrawn?
+      redirect_to edit_admin_customer_path(@customer), alert: "退会の手続きが済んだ会員のため、編集できません。"
+      return
+    end
+
+    # 有効な会員で「退会」を選んだ保存は、ほかの欄の変更を保存せずに確認画面へ進める(退会は確認画面で確定する)。
+    # 旧方式の退会(is_deleted のみ)の会員は対象外で、従来どおりの編集として保存する(退会処理は起動しない)。
+    if withdrawal_requested? && !@customer.is_deleted?
+      redirect_to new_admin_customer_withdrawal_path(@customer),
+                  notice: "会員状態に「退会」が選ばれたため、ほかの欄の変更は保存していません。内容を確認して退会を確定してください。"
+      return
+    end
+
     @customer.skip_reconfirmation!
 
     ActiveRecord::Base.transaction do
@@ -46,6 +66,10 @@ class Admin::CustomersController < ApplicationController
   end
 
   private
+
+  def withdrawal_requested?
+    ActiveModel::Type::Boolean.new.cast(params.dig(:customer, :is_deleted)) == true
+  end
 
   def set_customer
     @customer = Customer.includes(:owned_communities).find(params[:id] || params[:customer_id])
