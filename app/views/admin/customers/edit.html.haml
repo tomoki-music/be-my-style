@@ -116,9 +116,16 @@
           #customer-is-deleted-help.small.text-muted.mt-1
             - if @customer.is_deleted?
               旧方式の退会(利用停止のみ)の会員です。個人情報は削除されていません。保存しても退会の処理(個人情報の削除など)は行いません。
+              %br
+              個人情報の削除などを行う場合は、次のボタンから確認画面へ進んでください(退会扱いのまま処理し、「有効」に戻す必要はありません)。
             - else
               「退会」を選んで保存すると、確認画面に進みます。このとき、ほかの欄の変更は保存されません。
               確認画面で確定すると、本人による退会と同じく、個人情報の削除・ログインの無効化・通知の停止を行い、元に戻せません。
+          - if @customer.is_deleted?
+            = link_to "個人情報の削除を伴う退会処理へ進む",
+              new_admin_customer_withdrawal_path(@customer),
+              class: "btn btn-outline-danger btn-sm mt-2",
+              data: { turbolinks: false }
 
       %tr
         %th 管理者設定

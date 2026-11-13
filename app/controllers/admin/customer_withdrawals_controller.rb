@@ -4,13 +4,17 @@
 # - 会員編集フォームで会員状態「退会」を選んで保存すると、ほかの変更は保存せずに確認画面(new)へ進む。
 # - 確定(create)は POST のみ。対象は URL の会員 ID だけで決め、確認欄に同じ ID を入力したときだけ実行する。
 # - 止める理由は管理者でも無視しない(所有権の移譲・イベントの中止・解約を勝手に行わない)。
+# - 旧方式の退会(is_deleted のみ)の会員は、編集画面の専用ボタンからだけここへ来る(通常の再保存では来ない)。
+#   退会扱い(ログイン不可・通知停止)のまま Execute に通し、個人情報の削除などを行う。
 class Admin::CustomerWithdrawalsController < ApplicationController
   LOG_TAG = "[Admin::CustomerWithdrawalsController]".freeze
 
   before_action :authenticate_admin!
   before_action :set_customer
-  before_action :redirect_if_already_deleted
+  before_action :redirect_if_already_withdrawn
   before_action :reject_own_account
+
+  helper_method :legacy_deleted?
 
   def new
     @plan = Customers::Withdrawal::Plan.new(@customer)
@@ -23,7 +27,8 @@ class Admin::CustomerWithdrawalsController < ApplicationController
     end
 
     begin
-      result = Customers::Withdrawal::Execute.call(@customer)
+      # 旧方式の会員かどうかは DB の状態だけで決める(画面から送られた値は使わない)。
+      result = Customers::Withdrawal::Execute.call(@customer, include_legacy_deleted: legacy_deleted?)
     rescue ActiveRecord::ActiveRecordError => e
       # 退会の DB 更新は1つのトランザクションのため、ここに来たときは何も変わっていない。
       Rails.logger.error("#{LOG_TAG} withdrawal failed customer_id=#{@customer.id} #{e.class}")
@@ -54,12 +59,16 @@ class Admin::CustomerWithdrawalsController < ApplicationController
     @customer = Customer.find(params[:customer_id])
   end
 
-  # 退会済み(本人・管理画面の退会)と、旧方式の「退会」(is_deleted のみ)のどちらも、ここでは何もしない。
-  # 旧方式の会員を Execute に通すと :already_withdrawn になり、個人情報の削除は行われないため、確認画面も出さない。
-  def redirect_if_already_deleted
-    return unless @customer.is_deleted? || @customer.withdrawn?
+  # 退会の手続きが済んだ会員(withdrawn_at あり)は、ここでは何もしない。
+  def redirect_if_already_withdrawn
+    return unless @customer.withdrawn?
 
-    redirect_to edit_admin_customer_path(@customer), alert: "会員 ID #{@customer.id} はすでに退会状態のため、退会の手続きはできません。"
+    redirect_to edit_admin_customer_path(@customer), alert: "会員 ID #{@customer.id} はすでに退会の手続きが済んでいます。"
+  end
+
+  # 旧方式の退会(管理画面で is_deleted だけを立てた会員。個人情報は残っている)。
+  def legacy_deleted?
+    @customer.is_deleted? && !@customer.withdrawn?
   end
 
   # 操作している運営者自身の会員アカウント。退会するとこの管理画面にも入れなくなる。

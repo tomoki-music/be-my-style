@@ -120,7 +120,7 @@ RSpec.describe "管理画面からの会員の退会", type: :request do
     it "会員 ID を入力して確定すると、本人の退会と同じ処理で個人情報の削除・ログインの無効化を行う" do
       target.create_member_profile!(admin_memo: "メモ")
       ActionMailer::Base.deliveries.clear
-      expect(Customers::Withdrawal::Execute).to receive(:call).with(target).and_call_original
+      expect(Customers::Withdrawal::Execute).to receive(:call).with(target, include_legacy_deleted: false).and_call_original
 
       confirm_withdrawal!
 
@@ -200,7 +200,7 @@ RSpec.describe "管理画面からの会員の退会", type: :request do
       confirm_withdrawal!
 
       expect(response).to redirect_to(edit_admin_customer_path(target))
-      expect(flash[:alert]).to include("すでに退会状態")
+      expect(flash[:alert]).to include("すでに退会の手続きが済んでいます")
       expect(target.reload.email).to eq(first_email)
     end
 
@@ -320,17 +320,30 @@ RSpec.describe "管理画面からの会員の退会", type: :request do
   end
 
   describe "旧方式の退会(is_deleted のみ)の会員" do
-    let(:legacy) { create(:customer, name: "旧方式の人", email: "legacy@example.com") }
+    let(:legacy) do
+      create(:customer, name: "旧方式の人", email: "legacy@example.com", introduction: "残っている自己紹介")
+    end
 
     before do
       legacy.update_columns(is_deleted: true)
       sign_in_as_admin
     end
 
-    it "編集画面で旧方式であることを説明する" do
+    def expect_still_legacy_deleted
+      legacy.reload
+      expect(legacy.is_deleted).to be(true)
+      expect(legacy.withdrawn_at).to be_nil
+      expect(legacy.name).to eq("旧方式の人")
+      expect(legacy.email).to eq("legacy@example.com")
+      expect(legacy.introduction).to eq("残っている自己紹介")
+    end
+
+    it "編集画面で旧方式であることを説明し、退会処理へ進む専用のボタンを出す" do
       get edit_admin_customer_path(legacy)
 
       expect(response.body).to include("旧方式の退会(利用停止のみ)の会員です")
+      link = Nokogiri::HTML(response.body).at_css("a[href='#{new_admin_customer_withdrawal_path(legacy)}']")
+      expect(link.text.strip).to eq("個人情報の削除を伴う退会処理へ進む")
     end
 
     it "「退会」のまま保存しても、退会の処理(個人情報の削除)は起動せず、従来どおりの編集になる" do
@@ -342,17 +355,76 @@ RSpec.describe "管理画面からの会員の退会", type: :request do
       legacy.reload
       expect(legacy.name).to eq("旧方式の人(更新)")
       expect(legacy.email).to eq("legacy@example.com")
+      expect(legacy.is_deleted).to be(true)
       expect(legacy.withdrawn_at).to be_nil
     end
 
-    it "確認画面・確定は受け付けない" do
+    it "確認画面は開いただけでは何も変えず、旧方式の会員であること・退会扱いのまま処理することを説明する" do
       get new_admin_customer_withdrawal_path(legacy)
-      expect(response).to redirect_to(edit_admin_customer_path(legacy))
+
+      expect(response).to have_http_status(:ok)
+      expect(Nokogiri::HTML(response.body).at_css("[data-legacy-deleted]")).to be_present
+      expect(response.body).to include("「有効」には戻さない")
+      expect(response.body).to include("退会を確定する")
+      expect_still_legacy_deleted
+    end
+
+    it "会員 ID を入力して確定すると、退会扱いのまま共通の退会処理で個人情報を削除する" do
+      expect(Customers::Withdrawal::Execute).to receive(:call)
+        .with(legacy, include_legacy_deleted: true).and_call_original
 
       confirm_withdrawal!(legacy)
+
       expect(response).to redirect_to(edit_admin_customer_path(legacy))
-      expect(legacy.reload.withdrawn_at).to be_nil
-      expect(legacy.name).to eq("旧方式の人")
+      legacy.reload
+      expect(legacy.withdrawn_at).to be_present
+      expect(legacy.is_deleted).to be(true)
+      expect(legacy.name).to eq(Customer::WITHDRAWN_NAME)
+      expect(legacy.email).to end_with("@#{WithdrawnMailInterceptor::DOMAIN}")
+      expect(legacy.introduction).to be_nil
+
+      get edit_admin_customer_path(legacy)
+      expect(response.body).to include("退会の手続きが済んでいます")
+    end
+
+    it "確認欄の会員 ID が違うときは何も変えない" do
+      confirm_withdrawal!(legacy, confirmation: target.id)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect_still_legacy_deleted
+    end
+
+    it "止める理由があれば、旧方式の退会状態のまま理由を表示する" do
+      create(:community, owner_id: legacy.id, name: "旧方式の人のバンド")
+
+      confirm_withdrawal!(legacy)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("オーナーになっているコミュニティがあります")
+      expect_still_legacy_deleted
+    end
+
+    it "途中で失敗しても、旧方式の退会状態のまま案内する(「有効」に戻らない)" do
+      allow_any_instance_of(Customers::Withdrawal::Execute).to receive(:anonymize_account!)
+        .and_raise(ActiveRecord::StatementInvalid, "boom")
+
+      confirm_withdrawal!(legacy)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("会員の情報は変更していません")
+      expect_still_legacy_deleted
+    end
+
+    it "ほかの旧方式の会員には触れない(一括処理しない)" do
+      other_legacy = create(:customer, name: "別の旧方式の人", email: "other-legacy@example.com")
+      other_legacy.update_columns(is_deleted: true)
+
+      confirm_withdrawal!(legacy)
+
+      other_legacy.reload
+      expect(other_legacy.name).to eq("別の旧方式の人")
+      expect(other_legacy.email).to eq("other-legacy@example.com")
+      expect(other_legacy.withdrawn_at).to be_nil
     end
   end
 

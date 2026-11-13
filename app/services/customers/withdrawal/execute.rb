@@ -9,6 +9,10 @@ module Customers
     # - ファイル(プロフィール画像・歌声の音声など)の削除は外部ストレージへの操作のため、コミット後に
     #   PurgeFiles で行う。失敗しても退会は成立したままにし、再実行できる(rake customers:withdrawal:purge_files)。
     # - 外部への通知はこの処理からは送らない(退会完了メールも送らない)。
+    # - 旧方式の退会(管理画面で is_deleted だけを立てた会員。withdrawn_at は空で個人情報が残っている)は、
+    #   既定では処理済みとして扱う。include_legacy_deleted: true のとき(管理画面で明示的に選んだ1名)だけ処理する。
+    #   is_deleted は処理中も true のまま変えないため、ログイン・通知が再び有効になることはない。
+    #   止める理由がある・途中で失敗したときは、トランザクションにより旧方式の退会状態のまま残る。
     class Execute
       Result = Struct.new(:status, :plan, keyword_init: true) do
         def withdrawn?
@@ -35,20 +39,21 @@ module Customers
         profile_image_position_x profile_image_position_y
       ].freeze
 
-      def self.call(customer, now: Time.current)
-        new(customer, now: now).call
+      def self.call(customer, now: Time.current, include_legacy_deleted: false)
+        new(customer, now: now, include_legacy_deleted: include_legacy_deleted).call
       end
 
-      def initialize(customer, now: Time.current)
+      def initialize(customer, now: Time.current, include_legacy_deleted: false)
         @customer = customer
         @now = now
+        @include_legacy_deleted = include_legacy_deleted
       end
 
       def call
         result = ActiveRecord::Base.transaction do
           @customer.lock!
 
-          if @customer.withdrawn? || @customer.is_deleted?
+          if @customer.withdrawn? || (@customer.is_deleted? && !@include_legacy_deleted)
             Result.new(status: :already_withdrawn)
           else
             plan = Plan.new(@customer, now: @now)

@@ -292,4 +292,98 @@ RSpec.describe Customers::Withdrawal::Execute do
       expect_blocked(:system_admin)
     end
   end
+
+  describe "旧方式の退会(管理画面で is_deleted だけを立てた会員)" do
+    let(:other_legacy) { create(:customer, name: "別の旧方式の人", email: "other-legacy@example.com") }
+
+    before do
+      customer.update_columns(is_deleted: true)
+      other_legacy.update_columns(is_deleted: true)
+    end
+
+    def expect_still_legacy_deleted(name: "山田花子", email:)
+      customer.reload
+      expect(customer.is_deleted).to be(true)
+      expect(customer.withdrawn_at).to be_nil
+      expect(customer.name).to eq(name)
+      expect(customer.email).to eq(email)
+      expect(customer.active_for_authentication?).to be(false)
+      expect(Customer.notifiable.exists?(customer.id)).to be(false)
+    end
+
+    it "既定(本人の退会と同じ呼び方)では処理済みとして扱い、何も変えない" do
+      snapshot = customer.reload.attributes
+
+      result = described_class.call(customer)
+
+      expect(result).to be_already_withdrawn
+      expect(customer.reload.attributes).to eq(snapshot)
+    end
+
+    it "include_legacy_deleted: true のときは、通常の退会と同じく個人情報の削除・置き換えを行う" do
+      result = described_class.call(customer, include_legacy_deleted: true)
+
+      expect(result).to be_withdrawn
+      customer.reload
+      expect(customer.withdrawn_at).to eq(now)
+      expect(customer.is_deleted).to be(true)
+      expect(customer.name).to eq(Customer::WITHDRAWN_NAME)
+      expect(customer.email).to end_with("@#{WithdrawnMailInterceptor::DOMAIN}")
+      expect(customer.introduction).to be_nil
+      expect(customer.valid_password?("password")).to be(false)
+    end
+
+    it "処理の途中も退会扱い(ログイン不可・通知の対象外)のまま変えない" do
+      states = []
+      allow_any_instance_of(described_class).to receive(:remove_personal_data!).and_wrap_original do |original, *args|
+        states << [Customer.find(customer.id).is_deleted, Customer.notifiable.exists?(customer.id)]
+        original.call(*args)
+      end
+
+      described_class.call(customer, include_legacy_deleted: true)
+
+      expect(states).to eq([[true, false]])
+    end
+
+    it "止める理由があれば、旧方式の退会状態のまま何も変えない" do
+      original_email = customer.email
+      create(:community, owner_id: customer.id)
+
+      result = described_class.call(customer, include_legacy_deleted: true)
+
+      expect(result).to be_blocked
+      expect_still_legacy_deleted(email: original_email)
+    end
+
+    it "途中で失敗しても、旧方式の退会状態のまま何も変えない" do
+      original_email = customer.email
+      other = create(:customer)
+      Relationship.create!(follower_id: other.id, followed_id: customer.id)
+      allow_any_instance_of(described_class).to receive(:anonymize_account!).and_raise(ActiveRecord::StatementInvalid, "boom")
+
+      expect { described_class.call(customer, include_legacy_deleted: true) }.to raise_error(ActiveRecord::StatementInvalid)
+
+      expect_still_legacy_deleted(email: original_email)
+      expect(Relationship.where(followed_id: customer.id)).to exist
+    end
+
+    it "退会の手続きが済んだ会員は、include_legacy_deleted: true でも処理済みとして扱う" do
+      described_class.call(customer, include_legacy_deleted: true)
+      snapshot = customer.reload.attributes
+
+      result = described_class.call(Customer.find(customer.id), include_legacy_deleted: true)
+
+      expect(result).to be_already_withdrawn
+      expect(customer.reload.attributes).to eq(snapshot)
+    end
+
+    it "指定した会員だけを処理し、ほかの旧方式の会員には触れない" do
+      described_class.call(customer, include_legacy_deleted: true)
+
+      other_legacy.reload
+      expect(other_legacy.name).to eq("別の旧方式の人")
+      expect(other_legacy.email).to eq("other-legacy@example.com")
+      expect(other_legacy.withdrawn_at).to be_nil
+    end
+  end
 end

@@ -3,11 +3,19 @@
 .container.my-4.admin-customer-withdrawal
   .row.justify-content-center
     .col-lg-9
-      %h2.h4.mb-3 会員の退会(確認)
-      %p.text-muted
-        まだ退会していません。内容を確認し、問題がなければページ下部で退会を確定してください。
-        %br
-        編集画面で入力したほかの欄の変更は保存していません。
+      - if legacy_deleted?
+        %h2.h4.mb-3 旧方式で退会扱いの会員の退会処理(確認)
+        .alert.alert-warning{ data: { legacy_deleted: true } }
+          この会員は、以前の管理画面の「退会」で利用停止だけが行われた状態です(ログインできず、通知も届きません)。名前・メールアドレスなどの個人情報は残っています。
+          %br
+          確定すると、退会扱いのまま、下に書いた個人情報の削除などを行います。処理の途中も「有効」には戻さないため、ログイン・通知が再び有効になることはありません。
+          止める理由がある場合や処理に失敗した場合は、今の状態(旧方式の退会)のまま変わりません。
+      - else
+        %h2.h4.mb-3 会員の退会(確認)
+        %p.text-muted
+          まだ退会していません。内容を確認し、問題がなければページ下部で退会を確定してください。
+          %br
+          編集画面で入力したほかの欄の変更は保存していません。
 
       %section.card.mb-4{ "aria-labelledby": "withdrawal-target-title" }
         %h3#withdrawal-target-title.card-header.h6.mb-0 対象の会員
