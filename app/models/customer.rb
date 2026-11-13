@@ -527,7 +527,8 @@ class Customer < ApplicationRecord
     !is_deleted? && !withdrawn?
   end
 
-  # 本人が退会を確定したアカウント(Customers::Withdrawal::Execute)。管理画面の「退会」(is_deleted のみ)とは別。
+  # 退会を確定したアカウント(Customers::Withdrawal::Execute。本人の退会と管理画面の「退会」の両方)。
+  # 2026-11 より前に管理画面で「退会」にした会員は is_deleted のみで、withdrawn_at は空(個人情報は残っている)。
   def withdrawn?
     has_attribute?(:withdrawn_at) && withdrawn_at.present?
   end
@@ -654,7 +655,7 @@ class Customer < ApplicationRecord
   def withdrawn_account_cannot_be_restored
     return unless withdrawn? && !is_deleted?
 
-    errors.add(:is_deleted, "は本人が退会したアカウントのため、有効に戻せません")
+    errors.add(:is_deleted, "は退会の手続きが済んだアカウントのため、有効に戻せません")
   end
   private :withdrawn_account_cannot_be_restored
 

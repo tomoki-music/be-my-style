@@ -24,7 +24,12 @@ Rails.application.routes.draw do
     get 'analytics', to: 'analytics#show'
 
     # アーティスト編集機能
-    resources :customers, only: [:edit, :update]
+    resources :customers, only: [:edit, :update] do
+      # 会員状態「退会」の確認と確定(Customers::Withdrawal::Execute)。編集フォームで「退会」を選んで保存するとここへ進む。
+      #   GET  /admin/customers/:customer_id/withdrawal/new 確認画面(状態は変えない)
+      #   POST /admin/customers/:customer_id/withdrawal     確定
+      resource :withdrawal, only: [:new, :create], controller: "customer_withdrawals"
+    end
 
     resources :communities do
       get :destroy_blocked, on: :member

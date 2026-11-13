@@ -1,0 +1,113 @@
+= render 'layouts/admin_header_menu'
+
+.container.my-4.admin-customer-withdrawal
+  .row.justify-content-center
+    .col-lg-9
+      %h2.h4.mb-3 会員の退会(確認)
+      %p.text-muted
+        まだ退会していません。内容を確認し、問題がなければページ下部で退会を確定してください。
+        %br
+        編集画面で入力したほかの欄の変更は保存していません。
+
+      %section.card.mb-4{ "aria-labelledby": "withdrawal-target-title" }
+        %h3#withdrawal-target-title.card-header.h6.mb-0 対象の会員
+        .card-body
+          %dl.row.mb-0
+            %dt.col-sm-3 会員 ID
+            %dd.col-sm-9.fw-bold{ data: { withdrawal_target_id: @customer.id } }= @customer.id
+            %dt.col-sm-3 名前
+            %dd.col-sm-9
+              .admin-customer-name
+                = customer_avatar_tag(@customer, class_name: "admin-customer-avatar")
+                %span.admin-customer-name__label= @customer.name
+            %dt.col-sm-3 メールアドレス
+            %dd.col-sm-9= @customer.email
+            %dt.col-sm-3 登録日
+            %dd.col-sm-9= @customer.created_at&.strftime("%Y/%m/%d")
+            %dt.col-sm-3 最終ログイン
+            %dd.col-sm-9= @customer.current_sign_in_at&.strftime("%Y/%m/%d %H:%M") || "-"
+            %dt.col-sm-3 利用サービス
+            %dd.col-sm-9= domain_badges(@customer)
+            %dt.col-sm-3 管理者設定
+            %dd.col-sm-9= Customer.is_owners_i18n[@customer.is_owner || "general"]
+
+      - if @plan.blockers.any?
+        %section.card.border-danger.mb-4{ "aria-labelledby": "withdrawal-blockers-title" }
+          %h3#withdrawal-blockers-title.card-header.h6.mb-0.text-danger 退会を確定できない理由
+          .card-body
+            %p{ role: "alert" }
+              次の項目があるため、退会を確定できません。管理者でもこの条件は省略できません。解消してから、もう一度会員編集画面で「退会」を選んでください。
+            - @plan.blockers.each do |blocker|
+              - text = admin_withdrawal_blocker_text(blocker.key)
+              .mb-3{ data: { blocker: blocker.key } }
+                %h4.h6.mb-1= text[:title]
+                %p.mb-1.small= text[:resolution]
+                - case blocker.key
+                - when :owned_communities, :sole_manager_communities
+                  %ul.small.mb-0
+                    - blocker.records.each do |community|
+                      %li= link_to "#{community.name}(ID: #{community.id})", admin_community_path(community), data: { turbolinks: false }
+                - when :hosted_events
+                  %ul.small.mb-0
+                    - blocker.records.each do |event|
+                      %li
+                        = link_to "#{event.event_name}(ID: #{event.id})", admin_event_path(event), data: { turbolinks: false }
+                        %span.text-muted= "開始: #{l(event.event_start_time, format: :short)}"
+                - when :locked_entries
+                  %ul.small.mb-0
+                    - blocker.records.each do |entry|
+                      %li
+                        = link_to withdrawal_entry_label(entry), admin_event_path(entry.join_part.song.event), data: { turbolinks: false }
+                        %span.text-muted= "開始: #{l(entry.join_part.song.event.event_start_time, format: :short)}"
+                - when :learning_students
+                  %p.small.mb-0= "登録中の生徒: #{blocker.records.size}人"
+
+      %section.card.mb-4{ "aria-labelledby": "withdrawal-details-title" }
+        %h3#withdrawal-details-title.card-header.h6.mb-0 退会するとどうなるか(本人による退会と同じ処理です)
+        .card-body
+          %dl.mb-0
+            %dt ログイン
+            %dd
+              ログインできなくなります。パスワードを作り直すため、ほかの端末・ブラウザに残っているログインも解除されます。
+            %dt 個人情報の削除・置き換え
+            %dd
+              名前は「退会済みユーザー」、メールアドレスは届かない宛先に置き換えます。自己紹介・プロフィール画像・パートやジャンル・好きなアーティストなどのプロフィール情報、
+              運営・アンケート情報(管理メモを含む)、フォロー関係、受け取った通知、LINE 連携を削除します。
+              歌唱・演奏診断の音声・共有画像・振り返り動画のファイルも削除し、ランキングなどの公開表示から外します。
+            %dt 残るもの(共有履歴)
+            %dd
+              活動報告・コメント・チャット・イベントのリクエスト・NAKAMA の投稿、過去のイベントへの参加記録は、ほかの会員との共有履歴として残り、名前は「退会済みユーザー」と表示されます。
+              投稿の本文や添付ファイルは削除しません。
+            %dt 通知
+            %dd
+              メール・LINE・画面内の通知は、この会員に新しく届かなくなります。予約済み・再送待ちの通知も、送信の直前に止めます。
+              退会完了のメールは送りません(本人への連絡が必要な場合は、確定の前に行ってください)。
+              すでに送信済み・送信を始めていた通知は取り消せません。ほかの会員への通知は通常どおり届きます。
+            %dt 開催前のイベント
+            %dd
+              - cancellable_entries = @plan.cancellable_entries
+              - if cancellable_entries.any?
+                次のエントリーは、退会と同時に取り消します(通常の「取消」と同じ扱いです)。
+                %ul.mb-0
+                  - cancellable_entries.each do |entry|
+                    %li= withdrawal_entry_label(entry)
+              - else
+                取り消すエントリーはありません。
+              - pending_requests = @plan.pending_community_requests.size + @plan.pending_project_requests.size
+              - if pending_requests.positive?
+                %p.mb-0= "承認待ちの参加申請(#{pending_requests}件)は取り下げます。"
+            %dt 元に戻せません
+            %dd.mb-0
+              退会した会員は、管理画面の会員状態を「有効」に戻しても復元できません。本人が再び使う場合は、新しいアカウントとして登録してもらいます(以前のデータ・参加状況・権限は引き継がれません)。
+
+      - if @plan.withdrawable?
+        = form_with url: admin_customer_withdrawal_path(@customer), method: :post, local: true, class: "card border-danger mb-5", data: { turbolinks: false } do |f|
+          .card-body
+            = label_tag :confirmation_customer_id, "確認のため、対象の会員 ID(#{@customer.id})を入力してください", class: "form-label"
+            = text_field_tag :confirmation_customer_id, nil, class: "form-control mb-3", required: true, autocomplete: "off", inputmode: "numeric"
+            .d-flex.flex-wrap.gap-2.justify-content-between
+              = link_to "戻る(退会しない)", edit_admin_customer_path(@customer), class: "btn btn-outline-secondary", data: { turbolinks: false }
+              = f.submit "退会を確定する", class: "btn btn-danger", data: { disable_with: "処理中..." }
+      - else
+        .mb-5
+          = link_to "戻る(退会しない)", edit_admin_customer_path(@customer), class: "btn btn-outline-secondary", data: { turbolinks: false }
