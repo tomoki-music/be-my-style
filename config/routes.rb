@@ -215,6 +215,16 @@ Rails.application.routes.draw do
     delete "purge", :to => "admin/customers#purge"
   end
 
+  # BeMyStyle アカウントの退会(全サービス共通)。音楽ドメインの利用登録を求める /public 配下には置かない。
+  #   GET  /account/withdrawal/new      確認画面
+  #   POST /account/withdrawal          確定(GET では退会しない)
+  #   GET  /account/withdrawal/complete 完了画面(ログアウト後)
+  scope :account, module: :accounts, as: :account do
+    resource :withdrawal, only: [:new, :create] do
+      get :complete
+    end
+  end
+
   # =====================
   # BUSINESS（新規）
   # =====================

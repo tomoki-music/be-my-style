@@ -8,6 +8,12 @@ class SendEntryInvitationJob < ApplicationJob
     return if invitation.nil?
     return unless invitation.pending?
 
+    # 依頼後に宛先が退会した場合は送らない(メーラー側でも止まるが、「送信済み」と記録しないためにここで判定する)。
+    unless Customer.notifiable_id?(invitation.customer_id)
+      invitation.update!(status: :skipped, failure_reason: EntryInvitations::Sender::WITHDRAWN_FAILURE_REASON)
+      return
+    end
+
     EntryInvitationMailer.invite(invitation).deliver_now
     invitation.update!(status: :delivered)
   rescue => e

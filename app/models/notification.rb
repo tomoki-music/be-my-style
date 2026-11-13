@@ -24,6 +24,10 @@ class Notification < ApplicationRecord
   belongs_to :visitor, class_name: 'Customer', foreign_key: 'visitor_id', optional: true
   belongs_to :visited, class_name: 'Customer', foreign_key: 'visited_id', optional: true
 
+  # 退会済みの会員へは新しい通知を作らない。呼び出し側の多くは `notification.save if notification.valid?` のため、
+  # ここで弾けば通知ごとに判定を書かなくても止まる。宛先は DB から読み直して判定する(画面を開いた後の退会にも対応)。
+  validate :visited_customer_must_be_notifiable, on: :create
+
   BUSINESS_POST_ACTIONS = %w[like message].freeze
   BUSINESS_COMMUNITY_ACTIONS = %w[request accept].freeze
   BUSINESS_PROJECT_ACTIONS = %w[project_created project_joined project_message project_request project_accept].freeze
@@ -45,6 +49,13 @@ class Notification < ApplicationRecord
   scope :shown_in_app, -> { where(hidden_in_app: false) }
 
   private
+
+  def visited_customer_must_be_notifiable
+    return if visited_id.blank? # visited_id 自体の必須チェックは DB の NOT NULL に任せる(既存どおり)
+    return if Customer.notifiable_id?(visited_id)
+
+    errors.add(:visited, "は退会済みのため通知できません")
+  end
 
   # メールの登録に失敗しても、投稿と画面内の通知は保存済みのまま残す(投稿した人の画面をエラーにしない)。
   # 再実行しても通知は作り直さないため、このメールは送られない。調査できるよう通知 ID を記録する。

@@ -2,6 +2,7 @@ class Singing::UsersController < Singing::BaseController
   skip_before_action :authenticate_customer!, only: [:index, :show]
   skip_before_action :ensure_singing_access!, only: [:index, :show]
   before_action :set_user, only: [:show, :edit, :update]
+  before_action :reject_withdrawn_user, only: [:show, :edit, :update]
   before_action :ensure_correct_user, only: [:edit, :update]
 
   def index
@@ -92,6 +93,13 @@ class Singing::UsersController < Singing::BaseController
     @user = Customer.with_attached_profile_image.includes(:parts, :genres, :subscription).find(params[:id])
   end
 
+  # 退会済みの会員のプロフィールは表示しない(音楽・Business のプロフィール画面と同じ扱い)。
+  def reject_withdrawn_user
+    return unless @user.is_deleted?
+
+    redirect_to singing_users_path, alert: "このユーザーのプロフィールは表示できません。"
+  end
+
   def ensure_correct_user
     return if @user == current_customer
 
@@ -115,6 +123,7 @@ class Singing::UsersController < Singing::BaseController
 
   def fetch_index_users
     Customer
+      .active
       .joins(:singing_diagnoses)
       .where(singing_diagnoses: { status: :completed, ranking_opt_in: true })
       .where(singing_diagnoses: { created_at: 30.days.ago..Time.current })

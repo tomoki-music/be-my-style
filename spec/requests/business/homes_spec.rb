@@ -292,7 +292,8 @@ RSpec.describe "Business::Homes", type: :request do
       sheet = html.at_css("#baMenuSheet")
       expect(sheet.at_css(%(a.ba-sheet__profile[href="#{business_customer_path(customer)}"]))).to be_present
       labels = sheet.css(".ba-sheet__list a, .ba-sheet__list button").map { |el| el.text.strip.split.first }
-      expect(labels).to eq %w[タイムライン 使い方 プロフィール設定 通知設定 ログアウト]
+      # 最後はアカウントの退会(確認画面へのリンク)。ログアウトの下に区切って置く。
+      expect(labels).to eq %w[タイムライン 使い方 プロフィール設定 通知設定 ログアウト BeMyStyleを退会する]
       expect((bottom + labels).uniq).to eq bottom + labels
       logout = sheet.at_css(%(form[action="#{destroy_customer_session_path}"]))
       expect(logout.at_css('input[name="_method"]')["value"]).to eq "delete"

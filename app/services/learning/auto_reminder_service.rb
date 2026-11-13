@@ -80,7 +80,7 @@ module Learning
     end
 
     def runnable?
-      notification_setting.auto_reminder_enabled? && within_send_hour?
+      @customer.notifiable? && notification_setting.auto_reminder_enabled? && within_send_hour?
     end
 
     def notification_setting

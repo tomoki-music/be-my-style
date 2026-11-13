@@ -211,6 +211,21 @@
     .customer-menu-sp__logout-item {
       margin-top: 6px;
     }
+    // アカウントの退会(確認画面へ進むだけ)。ログアウトの下に区切り線と余白を挟み、控えめな赤の文字リンクにする。
+    .customer-menu-sp__withdrawal-item {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(0, 0, 0, 0.12);
+    }
+    .account-withdrawal-link {
+      font-size: 13px;
+      color: #b94a48;
+      text-decoration: none;
+    }
+    .account-withdrawal-link:hover,
+    .account-withdrawal-link:focus {
+      text-decoration: underline;
+    }
   }
   .customer-menu-sp.show {
     opacity: 1;
@@ -421,6 +436,12 @@
       background: transparent;
       border: 0;
       cursor: pointer;
+    }
+
+    .customer-profile-menu__withdrawal.dropdown-item {
+      margin-top: 4px;
+      font-size: 13px;
+      color: #b94a48;
     }
   }
 

@@ -7,6 +7,7 @@ class EventDeadlineReminderMailer < ApplicationMailer
     @delivery = params[:delivery]
     @message = params[:message]
     @recipient = @delivery.customer
+    require_notifiable_customer(@recipient)
     @event = @delivery.reminder.event
     routes = Rails.application.routes.url_helpers
     @event_url = EventDeadlineReminders::MessageBuilder::BASE_URL + routes.public_event_path(@event)

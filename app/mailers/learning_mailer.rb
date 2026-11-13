@@ -1,6 +1,8 @@
 class LearningMailer < ApplicationMailer
   def student_portal_mail
     @teacher = params[:teacher]
+    # 生徒へのメールは先生のアカウントから送るもの。先生が退会していれば送らない。
+    require_notifiable_customer(@teacher)
     @student = params[:student]
     @portal_url = @student.portal_url
     trainings = @student.learning_student_trainings.ordered.to_a

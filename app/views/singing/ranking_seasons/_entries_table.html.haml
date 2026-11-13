@@ -16,7 +16,7 @@
           .singing-season__podium-score
             %span.singing-season__podium-score-num= entry.score
             %span.singing-season__podium-score-unit 点
-          = link_to singing_user_path(entry.customer), class: "singing-season__podium-user" do
+          = customer_profile_link_unless_withdrawn(entry.customer, singing_user_path(entry.customer), class: "singing-season__podium-user") do
             = customer_avatar_tag(entry.customer, class_name: "singing-season__podium-avatar", fallback: "no_image")
             %span.singing-season__podium-name= entry.customer.name
           = render "singing/shared/season_badge", entry: entry
@@ -38,7 +38,7 @@
             %tr.singing-season__tr
               %td.singing-season__td.singing-season__td--rank #{entry.rank}位
               %td.singing-season__td
-                = link_to singing_user_path(entry.customer), class: "singing-season__user-link" do
+                = customer_profile_link_unless_withdrawn(entry.customer, singing_user_path(entry.customer), class: "singing-season__user-link") do
                   = customer_avatar_tag(entry.customer, class_name: "singing-season__user-avatar", fallback: "no_image")
                   %span.singing-season__user-name= entry.customer.name
               %td.singing-season__td.singing-season__td--score= "#{entry.score}点"

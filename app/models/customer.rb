@@ -13,6 +13,8 @@ class Customer < ApplicationRecord
   # 「プラン上限とこの回数の大きい方」を月間上限として適用する(実装は#singing_diagnosis_monthly_limit)。
   EVENT_OWNER_DIAGNOSIS_LIMIT = 5
   SIGN_UP_DOMAIN_NAMES = %w[music business learning singing].freeze
+  # 退会したアカウントの表示名(ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL と同じ)。
+  WITHDRAWN_NAME = "退会済みユーザー".freeze
   DEFAULT_SIGN_UP_DOMAIN = "music".freeze
 
   PLAN_OPTIONS = [
@@ -505,13 +507,50 @@ class Customer < ApplicationRecord
   # 過去データ参照など、is_deletedを問わず全件扱いたい箇所が別途存在するため)。
   scope :active, -> { where(is_deleted: false) }
 
+  # 通知(メール・LINE・画面内の通知)を新しく作る・届けてよい会員。退会(本人の退会・管理画面の退会)は除く。
+  # 宛先を選ぶときだけでなく、配信の直前にも Customer.notifiable_id? で DB から確かめ直す。
+  # withdrawn_at 列が無い間(デプロイでコードを置き換えてから db:migrate が終わるまで)も、cron などの
+  # 別プロセスが新しいコードで通知を送れるよう、列が無ければ従来どおり is_deleted だけで判定する。
+  scope :notifiable, lambda {
+    withdrawn_at_column? ? where(is_deleted: false, withdrawn_at: nil) : where(is_deleted: false)
+  }
+
+  def self.withdrawn_at_column?
+    column_names.include?("withdrawn_at")
+  end
+
+  def self.notifiable_id?(customer_id)
+    customer_id.present? && notifiable.exists?(id: customer_id)
+  end
+
+  def notifiable?
+    !is_deleted? && !withdrawn?
+  end
+
+  # 本人が退会を確定したアカウント(Customers::Withdrawal::Execute)。管理画面の「退会」(is_deleted のみ)とは別。
+  def withdrawn?
+    has_attribute?(:withdrawn_at) && withdrawn_at.present?
+  end
+
+  # 本人が退会したアカウントは、管理画面からも「有効」に戻させない(プロフィールは削除済みで、元の状態に戻せないため)。
+  validate :withdrawn_account_cannot_be_restored
+
   def active_for_authentication?
+    return false if withdrawn?
     return true if is_owner == 1
     super && !is_deleted
   end
 
   def inactive_message
-    !is_deleted ? super : :deleted_account
+    !is_deleted && !withdrawn? ? super : :deleted_account
+  end
+
+  # 退会済みのアカウントへは、パスワード再設定・メール確認などの Devise のメールも送らない。
+  # (退会時にメールアドレスは届かない宛先へ置き換えるが、それだけに頼らない)
+  def send_devise_notification(notification, *args)
+    return unless notifiable?
+
+    super
   end
 
   enum sex: {
@@ -611,6 +650,13 @@ class Customer < ApplicationRecord
 
     can_manage_community?(event.community)
   end
+
+  def withdrawn_account_cannot_be_restored
+    return unless withdrawn? && !is_deleted?
+
+    errors.add(:is_deleted, "は本人が退会したアカウントのため、有効に戻せません")
+  end
+  private :withdrawn_account_cannot_be_restored
 
   def update_without_password(params, *options)
     params.delete(:password)

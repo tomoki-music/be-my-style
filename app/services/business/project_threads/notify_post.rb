@@ -47,6 +47,9 @@ module Business
         true
       rescue ActiveRecord::RecordNotUnique
         false
+      rescue ActiveRecord::RecordInvalid
+        # 宛先を選んだ後に退会した人(Notification の検証で弾かれる)。ほかの宛先への通知は続ける。
+        false
       end
     end
   end
