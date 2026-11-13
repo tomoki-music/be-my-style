@@ -451,7 +451,9 @@ RSpec.describe "管理画面からの会員の退会", type: :request do
       sign_in_as_admin
       ActionController::Base.allow_forgery_protection = true
 
-      expect { confirm_withdrawal! }.to raise_error(ActionController::InvalidAuthenticityToken)
+      confirm_withdrawal!
+      expect(response).to have_http_status(:see_other)
+      expect(flash[:alert]).to eq CsrfRejectionRecovery::EXPIRED_FORM_MESSAGE
       expect(target.reload.withdrawn_at).to be_nil
     ensure
       ActionController::Base.allow_forgery_protection = false

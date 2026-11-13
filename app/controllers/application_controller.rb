@@ -72,7 +72,12 @@ class ApplicationController < ActionController::Base
     }
   }.freeze
 
+  include CsrfRejectionRecovery
+  rescue_from ActionController::InvalidAuthenticityToken, with: :recover_from_invalid_authenticity_token
+  prepend_before_action :capture_csrf_session_state
+
   before_action :set_current_domain
+  before_action :prevent_caching_of_authentication_forms
   before_action :authenticate_customer!
   before_action :ensure_music_domain_access_for_public_routes!
   after_action :track_customer_activity
