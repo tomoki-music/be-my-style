@@ -3,7 +3,7 @@ module Learning
     queue_as :default
 
     def perform
-      Customer.joins(:learning_students)
+      Customer.notifiable.joins(:learning_students)
               .merge(LearningStudent.active)
               .distinct.find_each do |teacher|
         Learning::ReminderService.for_customer(teacher).each do |reminder|

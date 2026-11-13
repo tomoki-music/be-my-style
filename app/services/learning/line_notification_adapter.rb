@@ -15,6 +15,7 @@ module Learning
     DRY_RUN_MESSAGE = "LINE adapter dry run only".freeze
     NO_RECIPIENT_MESSAGE = "LINE recipient is not connected".freeze
     HTTP_ERROR_MESSAGE = "LINE push message failed".freeze
+    WITHDRAWN_TEACHER_MESSAGE = "Teacher account is withdrawn".freeze
 
     def initialize(http_client: Net::HTTP)
       @http_client = http_client
@@ -26,6 +27,12 @@ module Learning
 
     def deliver(notification_log)
       payload = build_payload(notification_log)
+
+      # 生徒への LINE は先生のアカウントから送るもの。送信の直前に、先生が退会していないかを DB で確かめる。
+      unless Customer.notifiable_id?(notification_log.customer_id)
+        notification_log.update!(status: "skipped", error_message: WITHDRAWN_TEACHER_MESSAGE)
+        return Result.new(status: :withdrawn, message: WITHDRAWN_TEACHER_MESSAGE, payload: payload)
+      end
 
       unless enabled?
         notification_log.update!(status: "skipped", error_message: NOT_CONFIGURED_MESSAGE)

@@ -30,6 +30,9 @@ module EntryInvitations
       recently_sent: "24時間以内に送信済み(依頼済み)"
     }.freeze
 
+    # 依頼後・送信前に宛先が退会した場合に EntryInvitation へ残す理由(SendEntryInvitationJob・退会処理で使う)。
+    WITHDRAWN_FAILURE_REASON = "宛先が退会したため送信しませんでした".freeze
+
     EMAIL_FORMAT = URI::MailTo::EMAIL_REGEXP
 
     def self.call(**kwargs)

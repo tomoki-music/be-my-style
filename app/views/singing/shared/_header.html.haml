@@ -89,5 +89,6 @@
               method: :delete,
               form_class: "singing-nav__mobile-logout-form",
               class: "singing-nav__mobile-link singing-nav__mobile-logout-button"
+            = link_to "BeMyStyleを退会する", new_account_withdrawal_path(from: "singing"), class: "singing-nav__mobile-withdrawal-link", data: { turbolinks: false }
 
     .singing-nav__mobile-overlay{ data: { singing_nav_overlay: true } }

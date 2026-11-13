@@ -1,0 +1,99 @@
+- content_for :title, "BeMyStyleを退会する | BeMyStyle"
+- content_for :body_class, "account-withdrawal-body"
+
+%main.account-withdrawal
+  .account-withdrawal__card
+    %p.account-withdrawal__brand BeMyStyle
+    %h1.account-withdrawal__title BeMyStyleを退会する
+    %p.account-withdrawal__lead
+      BeMyStyle のアカウントを削除します。音楽・歌唱・演奏診断・NAKAMA(Business)・学習の、すべてのサービスが使えなくなります。
+    %p.account-withdrawal__note
+      特定のコミュニティだけを抜けたい場合は、この画面ではなく、各コミュニティの画面の「コミュニティを退会」から手続きしてください。
+
+    - if @plan.blockers.any?
+      %section.account-withdrawal__blockers{ "aria-labelledby": "withdrawal-blockers-title" }
+        %h2#withdrawal-blockers-title.account-withdrawal__section-title 退会の前に解消が必要なこと
+        %p.account-withdrawal__blockers-lead{ role: "alert" }
+          次の項目があるため、まだ退会を確定できません。解消してから、もう一度この画面を開いてください。
+        - @plan.blockers.each do |blocker|
+          - text = withdrawal_blocker_text(blocker.key)
+          .account-withdrawal__blocker{ data: { blocker: blocker.key } }
+            %h3.account-withdrawal__blocker-title= text[:title]
+            %p.account-withdrawal__blocker-resolution= text[:resolution]
+            - case blocker.key
+            - when :active_subscription
+              = button_to "プランを管理する(解約)", public_portal_path, method: :post,
+                class: "btn btn-sm btn-outline-secondary", form_class: "account-withdrawal__inline-form", data: { turbolinks: false }
+            - when :owned_communities, :sole_manager_communities
+              %ul.account-withdrawal__list
+                - blocker.records.each do |community|
+                  %li= link_to community.name, withdrawal_community_path(community), data: { turbolinks: false }
+            - when :hosted_events
+              %ul.account-withdrawal__list
+                - blocker.records.each do |event|
+                  %li
+                    = link_to event.event_name, public_event_path(event), data: { turbolinks: false }
+                    %small.text-muted= "開始: #{l(event.event_start_time, format: :short)}"
+            - when :locked_entries
+              %ul.account-withdrawal__list
+                - blocker.records.each do |entry|
+                  %li
+                    = link_to withdrawal_entry_label(entry), public_event_path(entry.join_part.song.event), data: { turbolinks: false }
+                    %small.text-muted= "開始: #{l(entry.join_part.song.event.event_start_time, format: :short)}"
+            - when :learning_students
+              %p.account-withdrawal__count= "登録中の生徒: #{blocker.records.size}人"
+              = link_to "生徒の一覧を開く", learning_students_path, class: "btn btn-sm btn-outline-secondary", data: { turbolinks: false }
+
+    %section.account-withdrawal__details{ "aria-labelledby": "withdrawal-details-title" }
+      %h2#withdrawal-details-title.account-withdrawal__section-title 退会すると、こうなります
+      %dl.account-withdrawal__facts
+        %dt ログイン
+        %dd
+          ログインできなくなります。ほかの端末・ブラウザで残っているログインも解除されます。
+        %dt プロフィール
+        %dd
+          名前は「退会済みユーザー」に置き換わります。メールアドレス・自己紹介・プロフィール画像・パートやジャンル・好きなアーティストなどのプロフィール情報と、フォロー関係、受け取った通知を削除します。
+          歌唱・演奏診断の音声・共有画像・振り返り動画のファイルも削除し、ランキングなどの公開表示から外します。
+          プロフィールのページは表示されなくなります。
+        %dt 残るもの
+        %dd
+          活動報告・コメント・チャット・イベントのリクエスト・NAKAMA の投稿、過去のイベントへの参加記録は、ほかの参加者との共有履歴として残り、名前は「退会済みユーザー」と表示されます。
+          投稿の本文や添付ファイルに書いた内容はそのまま残るため、消したいものは退会の前に削除してください。
+        %dt 通知
+        %dd
+          メール・LINE・画面内の通知は、新しく届かなくなります。退会完了のメールは送りません。
+          なお、退会の確定と同じ時刻にすでに送信を始めていた通知は、届くことがあります。
+        %dt 開催前のイベント
+        %dd
+          - cancellable_entries = @plan.cancellable_entries
+          - if cancellable_entries.any?
+            次のエントリーは、退会と同時に取り消します(通常の「取消」と同じ扱いです)。
+            %ul.account-withdrawal__list
+              - cancellable_entries.each do |entry|
+                %li= withdrawal_entry_label(entry)
+          - else
+            取り消すエントリーはありません。
+          - pending_requests = @plan.pending_community_requests.size + @plan.pending_project_requests.size
+          - if pending_requests.positive?
+            %p.account-withdrawal__sub= "承認待ちの参加申請(#{pending_requests}件)は取り下げます。"
+        %dt 元に戻せません
+        %dd
+          退会したアカウントは復元できません。同じメールアドレスで新しく登録できますが、以前のデータ・参加状況・権限は引き継がれません。
+
+    - if @plan.withdrawable?
+      = form_with url: account_withdrawal_path, method: :post, local: true, class: "account-withdrawal__form", data: { turbolinks: false } do |f|
+        = hidden_field_tag :from, @from
+        - if current_customer.encrypted_password.present?
+          = label_tag :current_password, "本人確認のため、パスワードを入力してください", class: "account-withdrawal__label"
+          = password_field_tag :current_password, nil, class: "form-control account-withdrawal__password", required: true, autocomplete: "current-password"
+          .account-withdrawal__actions
+            = link_to "戻る", @back_path, class: "btn btn-outline-secondary account-withdrawal__back", data: { turbolinks: false }
+            = f.submit "退会を確定する", class: "btn btn-danger account-withdrawal__submit"
+        - else
+          %p.account-withdrawal__sub
+            パスワードが設定されていないため、本人確認ができません。ログイン画面の「パスワードを忘れた方」からパスワードを設定してから、もう一度お試しください。
+          .account-withdrawal__actions
+            = link_to "戻る", @back_path, class: "btn btn-outline-secondary account-withdrawal__back", data: { turbolinks: false }
+    - else
+      .account-withdrawal__actions
+        = link_to "戻る", @back_path, class: "btn btn-outline-secondary account-withdrawal__back", data: { turbolinks: false }

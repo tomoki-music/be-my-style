@@ -60,3 +60,7 @@
       .singing-profile-edit__actions
         = f.submit "保存する", class: "singing-profile-edit__submit"
         = link_to "プロフィールへ戻る", singing_user_path(@user), class: "singing-profile-edit__cancel"
+
+    -# アカウントの退会(確認画面へ進むだけ)。PC の歌声ヘッダーにはアカウントメニューが無いため、ここにも置く。
+    .singing-profile-edit__withdrawal
+      = link_to "BeMyStyleを退会する", new_account_withdrawal_path(from: "singing"), class: "singing-nav__mobile-withdrawal-link", data: { turbolinks: false }

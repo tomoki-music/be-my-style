@@ -60,6 +60,9 @@
       %span.ba-sidenav__icon{ "aria-hidden": "true" }
         %i.fa-solid.fa-arrow-right-from-bracket
       %span.ba-sidenav__label ログアウト
+    -# アカウントの退会は確認画面へ進むだけ。縮約した左ナビ(アイコンのみ)では出さない。
+    .ba-sidenav__withdrawal
+      = link_to "BeMyStyleを退会する", new_account_withdrawal_path(from: "business"), class: "ba-sidenav__withdrawal-link", data: { turbolinks: false }
 
 %main#ba-main.ba-main{ tabindex: "-1" }
   = content_for(:layout)
@@ -123,3 +126,5 @@
         = button_to destroy_customer_session_path, method: :delete, form_class: "ba-sheet__logout-form", class: "ba-sheet__link ba-sheet__logout" do
           %i.fa-solid.fa-arrow-right-from-bracket{ "aria-hidden": "true" }
           %span ログアウト
+      %li.ba-sheet__withdrawal
+        = link_to "BeMyStyleを退会する", new_account_withdrawal_path(from: "business"), class: "ba-sheet__withdrawal-link", data: { turbolinks: false }

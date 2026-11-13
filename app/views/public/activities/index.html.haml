@@ -97,7 +97,7 @@
               = image_tag 'no_image'
         .card-body.text-container
           .activity-card-author-row
-            = link_to singing_user_path(activity.customer), data: { 'turbolinks': false }, class: "activity-card-author-link" do
+            = customer_profile_link_unless_withdrawn(activity.customer, singing_user_path(activity.customer), data: { 'turbolinks': false }, class: "activity-card-author-link") do
               = customer_avatar_tag(activity.customer, class_name: "activity-card-avatar")
               %span.activity-card-author-name= activity.customer.name
             - unless activity.customer.plan == "free"

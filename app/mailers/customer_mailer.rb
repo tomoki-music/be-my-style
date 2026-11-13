@@ -158,6 +158,8 @@ class CustomerMailer < ApplicationMailer
   def set_default_params
     @ac_customer = params[:ac_customer]
     @ps_customer = params[:ps_customer]
+    # 宛先(ps_customer)が送信時点で退会していれば送らない。操作した人(ac_customer)の退会では止めない。
+    require_notifiable_customer(@ps_customer)
     @url = 'https://be-my-style.com/customers/sign_in'
     @mypage = "https://be-my-style.com/public/customers/#{@ps_customer.id}"
     @business_mypage = "https://be-my-style.com/business/customers/#{@ps_customer.id}"

@@ -22,6 +22,9 @@ class JoinRequestNotifications
     notification.created_at = Time.current if notification.persisted?
     notification.save!
     notification
+  rescue ActiveRecord::RecordInvalid
+    # 宛先が直前に退会した場合(Notification の検証で弾かれる)。申請そのものは止めない。
+    nil
   end
 
   def self.resolve_community!(applicant_id:, community_id:)

@@ -7,6 +7,7 @@ class EntryInvitationMailer < ApplicationMailer
   def invite(entry_invitation)
     @invitation = entry_invitation
     @recipient = entry_invitation.customer
+    require_notifiable_customer(@recipient)
     @sender = entry_invitation.requested_by_customer
     @event = entry_invitation.event
     @song = entry_invitation.song

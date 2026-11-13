@@ -1,0 +1,13 @@
+- content_for :title, "退会が完了しました | BeMyStyle"
+- content_for :body_class, "account-withdrawal-body"
+
+%main.account-withdrawal
+  .account-withdrawal__card.account-withdrawal__card--complete
+    %p.account-withdrawal__brand BeMyStyle
+    %h1.account-withdrawal__title 退会が完了しました
+    %p.account-withdrawal__lead
+      これまで BeMyStyle をご利用いただき、ありがとうございました。この端末ではログアウトしました。
+    %p.account-withdrawal__note
+      退会完了のメールはお送りしていません。また使いたくなったときは、新しく登録してください(以前のデータは引き継がれません)。
+    .account-withdrawal__actions
+      = link_to "トップページへ", root_path, class: "btn btn-outline-secondary", data: { turbolinks: false }

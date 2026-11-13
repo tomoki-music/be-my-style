@@ -13,6 +13,8 @@ class BusinessProjectChatMailer < ApplicationMailer
     @recipient = notification&.visited
     @poster = notification&.visitor
     return if [@project_chat, @project_thread, @project, @recipient, @poster].any?(&:nil?)
+
+    require_notifiable_customer(@recipient)
     return unless @recipient.business_email_notifications_enabled? && @recipient.business_project_notification_recipient?(@project)
 
     url_options = Rails.application.config.x.business_share_url_options
