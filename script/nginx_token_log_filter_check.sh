@@ -56,6 +56,7 @@ check "確認メール・パスワード再設定・ロック解除も伏せる(
 check "Referer のトークンも伏せる" "grep -q '\"https://be-my-style.com/business/project_invitation?\[FILTERED\]\"' '$log'"
 check "トークンの無い要求はそのまま記録する" "grep -q '\"GET /business/project_invitation HTTP/1.1\"' '$log' && grep -q 'GET /business/timeline?tab=recommended&page=2 HTTP' '$log'"
 check "名前の一部に token を含むだけのクエリは伏せない" "grep -q 'GET /business/projects?mytoken=keep&tokenizer=keep HTTP' '$log'"
+check "Referer が無い要求は既定の形式と同じく \"-\" と記録する" "grep -q 'GET /business/project_invitation HTTP/1.1\" 200 [0-9]* \"-\"' '$log'"
 check "状態コード・User-Agent など既定の項目は残る" "grep -qE '\" 200 [0-9]+ \"' '$log'"
 
 if [ "$fail" -ne 0 ]; then echo "結果: NG あり"; exit 1; fi
