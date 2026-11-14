@@ -10,8 +10,8 @@ RSpec.describe Homes::MyProjects do
     Project.create!(community: community, customer: customer, title: title).tap { |p| p.update_columns(updated_at: updated_at) }
   end
 
-  def result(customer = viewer, page: nil)
-    described_class.call(customer, page: page)
+  def result(customer = viewer, page: nil, include_private: false)
+    described_class.call(customer, page: page, include_private: include_private)
   end
 
   context "コミュニティ参加者" do
@@ -91,7 +91,16 @@ RSpec.describe Homes::MyProjects do
     expect(result.projects).to be_empty
   end
 
-  describe "プライベート(参加済みの本人だけ)" do
+  it "既定(音楽側のホーム)では、参加済みでもプライベートを返さない" do
+    secret = Project.create!(community: community, customer: owner, title: "ひみつ", visibility: :private)
+    CommunityCustomer.create!(community: community, customer: viewer)
+    ProjectMember.create!(project: secret, customer: viewer)
+
+    expect(result.projects).to be_empty
+    expect(result(include_private: true).projects.map(&:title)).to eq %w[ひみつ]
+  end
+
+  describe "include_private: true(NAKAMA のホーム)では、参加済みのプライベートを本人にだけ返す" do
     def private_project!(title, updated_at: Time.current)
       Project.create!(community: community, customer: owner, title: title, visibility: :private).tap { |p| p.update_columns(updated_at: updated_at) }
     end
@@ -100,8 +109,8 @@ RSpec.describe Homes::MyProjects do
       secret = private_project!("ひみつ")
       ProjectMember.create!(project: secret, customer: viewer)
 
-      expect(result.projects.map(&:title)).to eq %w[ひみつ]
-      expect(result.statuses).to eq(secret.id => :member)
+      expect(result(include_private: true).projects.map(&:title)).to eq %w[ひみつ]
+      expect(result(include_private: true).statuses).to eq(secret.id => :member)
     end
 
     it "参加していない人には、運営者・システム管理者でも返さない" do
@@ -109,9 +118,9 @@ RSpec.describe Homes::MyProjects do
       admin = create(:customer, domain_name: "business", is_owner: :admin)
       CommunityCustomer.create!(community: community, customer: viewer)
 
-      expect(result.projects).to be_empty
-      expect(result(owner).projects).to be_empty
-      expect(result(admin).projects).to be_empty
+      expect(result(include_private: true).projects).to be_empty
+      expect(result(owner, include_private: true).projects).to be_empty
+      expect(result(admin, include_private: true).projects).to be_empty
     end
 
     it "件数とページ送りにも同じ条件を使う(参加者は 7 件で 2 ページ目に 1 件、未参加者は 6 件で 1 ページ)" do
@@ -123,26 +132,26 @@ RSpec.describe Homes::MyProjects do
       end
       ProjectMember.create!(project: private_project!("ひみつ", updated_at: 10.minutes.ago), customer: member)
 
-      expect(result(member).projects.total_count).to eq 7
-      expect(result(member, page: 2).projects.map(&:title)).to eq %w[ひみつ]
-      expect(result(viewer).projects.total_count).to eq 6
-      expect(result(viewer).projects.total_pages).to eq 1
-      expect(result(viewer, page: 2).projects).to be_empty
+      expect(result(member, include_private: true).projects.total_count).to eq 7
+      expect(result(member, page: 2, include_private: true).projects.map(&:title)).to eq %w[ひみつ]
+      expect(result(viewer, include_private: true).projects.total_count).to eq 6
+      expect(result(viewer, include_private: true).projects.total_pages).to eq 1
+      expect(result(viewer, page: 2, include_private: true).projects).to be_empty
     end
 
     it "退出・アクセス停止・親コミュニティのアクセス停止の後は返さない" do
       secret = private_project!("ひみつ")
       ProjectMember.create!(project: secret, customer: viewer)
       Business::Memberships::RevokeProjectAccess.call(project: secret, customer: viewer)
-      expect(result.projects).to be_empty
+      expect(result(include_private: true).projects).to be_empty
 
       ProjectMember.create!(project: secret, customer: viewer)
       ProjectAccessSuspension.create!(project: secret, customer: viewer, suspended_by: owner)
-      expect(result.projects).to be_empty
+      expect(result(include_private: true).projects).to be_empty
 
       ProjectAccessSuspension.delete_all
       CommunityAccessSuspension.create!(community: community, customer: viewer, suspended_by: owner)
-      expect(result.projects).to be_empty
+      expect(result(include_private: true).projects).to be_empty
     end
 
     it "限定公開は参加していても返さない(従来どおり)" do
@@ -150,7 +159,7 @@ RSpec.describe Homes::MyProjects do
       unlisted = Project.create!(community: community, customer: owner, title: "限定", visibility: :unlisted)
       ProjectMember.create!(project: unlisted, customer: viewer)
 
-      expect(result.projects).to be_empty
+      expect(result(include_private: true).projects).to be_empty
     end
   end
 end

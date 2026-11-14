@@ -11,6 +11,7 @@ class Business::HomesController < ApplicationController
     return unless customer_signed_in?
 
     @home_communities = Business::CommunityDirectory.browsable(current_customer, page: params[:community_page], per: Homes::MyCommunities::PER_PAGE)
-    @my_projects = Homes::MyProjects.call(current_customer, page: params[:project_page], with_images: true)
+    # NAKAMA のホームだけ、本人が参加済みのプライベートも出す(音楽側のホーム / は出さない)。
+    @my_projects = Homes::MyProjects.call(current_customer, page: params[:project_page], with_images: true, include_private: true)
   end
 end

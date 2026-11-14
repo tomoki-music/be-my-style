@@ -118,12 +118,6 @@
     background: #eff6ff;
     color: #1e40af;
   }
-
-  // 参加済みの本人にだけ一覧に出るプライベート(招待制)のプロジェクト。
-  &--private {
-    background: #111827;
-    color: #fff;
-  }
 }
 
 .member-home-card__status {

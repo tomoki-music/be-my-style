@@ -83,10 +83,6 @@
           %li.member-home-card{ class: "member-home-card--#{status}" }
             .member-home-card__badges
               %span.member-home-card__status{ class: "member-home-card__status--#{status}" }= member_home_project_status_label(status)
-              - if project.visibility_private?
-                %span.member-home-card__kind.member-home-card__kind--private
-                  %i.fa-solid.fa-lock{ "aria-hidden": "true" }
-                  プライベート
             %h3.member-home-card__title= project.title
             %p.member-home-card__community
               %i.fa-solid.fa-users{ "aria-hidden": "true" }

@@ -248,23 +248,21 @@ RSpec.describe "Public::Homes", type: :request do
       expect(doc.at_css("#my-communities .member-home-card__status").text).to eq "承認待ち"
     end
 
-    it "参加済みのプライベートは、親コミュニティ未所属でも「プライベート」のしるし付きで出し、未参加の人には出さないこと" do
+    it "参加済みでもプライベート(NAKAMA だけの表示)は出さず、従来どおりの一覧と件数を保つこと" do
       community = create(:community, name: "企画の会", owner: other, domain: business_domain)
+      CommunityCustomer.create!(community: community, customer: customer)
+      listed = Project.create!(community: community, customer: other, title: "通常の企画")
       secret = Project.create!(community: community, customer: other, title: "ひみつの企画", visibility: :private)
-      ProjectMember.create!(project: secret, customer: customer)
+      [listed, secret].each { |project| ProjectMember.create!(project: project, customer: customer) }
 
       get root_path
-      card = doc.at_css("#my-projects .member-home-card")
-      expect(card.at_css(".member-home-card__title").text).to eq "ひみつの企画"
-      expect(card.at_css(".member-home-card__kind--private").text.strip).to eq "プライベート"
+      expect(card_titles("my-projects")).to eq ["通常の企画"]
+      expect(response.body).not_to include("ひみつの企画")
       expect(doc.at_css("#my-projects .member-home__count").text).to eq "1件"
 
-      outsider = create(:customer).tap { |c| CustomerDomain.create!(customer: c, domain: business_domain) }
-      CommunityCustomer.create!(community: community, customer: outsider)
-      sign_in outsider
-      get root_path
-      expect(response.body).not_to include("ひみつの企画")
-      expect(doc.at_css("#my-projects .member-home__count")).to be_nil
+      # 同じ会員でも、NAKAMA のホームには出す。
+      get business_root_path
+      expect(response.body).to include("ひみつの企画")
     end
 
     it "プロジェクトは名前・コミュニティ名・状態を出し、詳細へ直接進めること" do
