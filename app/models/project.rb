@@ -26,12 +26,28 @@ class Project < ApplicationRecord
   # 公開範囲。既存のプロジェクトは通常公開。
   #   listed   通常公開 : 一覧・検索に出す。閲覧・参加申請の条件は BusinessAccess(親コミュニティの参加者が前提)
   #   unlisted 限定公開 : 一覧・検索(listed スコープを通す画面)に出さないだけで、条件は通常公開と同じ
-  #   private  プライベート : 招待制。一覧・検索・通知に出さず、詳細・スレッド・投稿・メンバー・添付は参加者と管理者だけ。
+  #   private  プライベート : 招待制。一覧には参加済みの本人にだけ出し、検索・通知には出さない。
+  #                          詳細・スレッド・投稿・メンバー・添付は参加者と管理者だけ。
   #                          参加は招待リンク(ProjectInvitationLink)からだけで、親コミュニティへの所属は求めない
   enum visibility: { listed: 0, unlisted: 1, private: 2 }, _prefix: :visibility
 
-  # 一覧・検索に出してよいプロジェクト(通常公開)。管理画面の一覧には限定公開・プライベートも出す。
+  # 誰にでも一覧・検索に出してよいプロジェクト(通常公開)。管理画面の一覧には限定公開・プライベートも出す。
   scope :listed, -> { where(visibility: visibilities[:listed]) }
+
+  # customer が参加済みのプライベートプロジェクト(BusinessAccess#business_project_approved_member? と同じ条件)。
+  # 参加の行があり、プロジェクト・親コミュニティのどちらでもアクセス停止されていないこと。
+  # システム管理者・オーナーでも、参加していなければ含めない(管理画面から開く)。
+  scope :private_joined_by, lambda { |customer|
+    next where(id: []) if customer.blank?
+
+    where(visibility: visibilities[:private])
+      .where(id: customer.project_members.select(:project_id))
+      .where.not(id: customer.project_access_suspensions.select(:project_id))
+      .where.not(community_id: customer.community_access_suspensions.select(:community_id))
+  }
+
+  # customer の一覧に出すプロジェクト: 通常公開 + 本人が参加済みのプライベート。限定公開は出さない。
+  scope :listed_for, ->(customer) { listed.or(private_joined_by(customer)) }
 
   # スレッドを作成できる人。判定は BusinessAccess#can_create_project_thread?。既存・新規とも既定は管理者・オーナーのみ。
   # 既存スレッドの閲覧・返信の条件(プロジェクトの参加者)はこの設定に関係しない。

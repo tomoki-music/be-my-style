@@ -1,7 +1,9 @@
 require "rails_helper"
 
 # プライベート(招待制)プロジェクト。
-#   - 一覧・検索・通知に出さない。詳細・スレッド・投稿・メンバー・添付は参加者と管理者だけ(それ以外は存在も分からない 404)。
+#   - 一覧(ホーム・プロジェクト一覧・コミュニティ詳細)には、参加済みの本人にだけ「プライベート」のしるし付きで出す。
+#     参加していない人(システム管理者・オーナーを含む)の一覧・通知には出さない。
+#   - 詳細・スレッド・投稿・メンバー・添付は参加者と管理者だけ(それ以外は存在も分からない 404)。
 #   - 参加は招待リンクからだけ(親コミュニティへの所属は求めない)。参加・参加申請のボタン/POST は受け付けない。
 #   - 招待リンクの発行・無効化、プライベートへの変更・プライベートからの変更は、システム管理者と親コミュニティのオーナー本人だけ。
 RSpec.describe "Business プライベートプロジェクト", type: :request do
@@ -107,20 +109,6 @@ RSpec.describe "Business プライベートプロジェクト", type: :request d
       expect(response).to have_http_status(:found)
     end
 
-    it "ホーム・プロジェクト一覧・コミュニティ詳細の一覧に出さない(参加者・オーナーにも)" do
-      ProjectMember.create!(project: secret, customer: community_member)
-      [community_member, owner].each do |customer|
-        sign_in customer
-        get business_root_path
-        expect(response.body).not_to include("ひみつの企画")
-        get business_projects_path
-        expect(response.body).not_to include("ひみつの企画")
-        get business_community_path(community)
-        expect(response.body).to include("通常公開の企画")
-        expect(response.body).not_to include("ひみつの企画")
-      end
-    end
-
     it "コミュニティの「プロジェクト管理」には、参加者・管理者に見えるときだけ「プライベート」のしるし付きで出す" do
       other_creator = create(:customer, domain_name: "business", onboarding_done: true)
       CommunityCustomer.create!(community: community, customer: other_creator)
@@ -147,6 +135,146 @@ RSpec.describe "Business プライベートプロジェクト", type: :request d
         # 詳細URLの招待用URLは出さない(このURLでは参加できない)。
         expect(doc.at_css("#share-project-#{secret.id}")).to be_nil
       end
+    end
+  end
+
+  describe "一覧への表示(参加済みの本人だけ)" do
+    # ホーム(TOP)・プロジェクト一覧・コミュニティ詳細の一覧カード。page: が無い一覧はそのままのページを読む。
+    def card_for(title)
+      doc.css(".ba-project-card").find { |node| node.at_css(".ba-project-card__title")&.text&.strip == title }
+    end
+
+    def listed_on(customer, path)
+      sign_in customer
+      get path
+      expect(response).to have_http_status(:ok)
+      card_for("ひみつの企画")
+    end
+
+    def pages
+      { home: business_root_path, projects: business_projects_path, community: business_community_path(community) }
+    end
+
+    it "コミュニティにも参加している参加者には、3つの一覧すべてに「プライベート」のしるし付きで出す" do
+      ProjectMember.create!(project: secret, customer: community_member)
+
+      pages.each do |name, path|
+        card = listed_on(community_member, path)
+        expect(card).to be_present, "#{name} に出ていない"
+        expect(card.at_css(".ba-status--private")&.text&.strip).to eq("プライベート"), "#{name} にしるしが無い"
+        expect(card_for("通常公開の企画")&.at_css(".ba-status--private")).to be_nil if name != :home
+      end
+    end
+
+    it "同じプロジェクトでも、参加していないコミュニティ参加者の一覧には出さない(件数にも数えない)" do
+      ProjectMember.create!(project: secret, customer: community_member)
+      other = create(:customer, domain_name: "business", onboarding_done: true)
+      CommunityCustomer.create!(community: community, customer: other)
+      ProjectMember.create!(project: listed, customer: other)
+
+      pages.each do |name, path|
+        expect(listed_on(other, path)).to be_nil, "#{name} に出ている"
+        expect(response.body).not_to include("ひみつの企画")
+      end
+      sign_in other
+      get business_community_path(community)
+      expect(doc.at_css("#community-projects-title .ba-count").text).to eq "1件"
+      sign_in community_member
+      get business_community_path(community)
+      expect(doc.at_css("#community-projects-title .ba-count").text).to eq "2件"
+    end
+
+    it "親コミュニティ未所属の招待メンバーには、ホームとプロジェクト一覧に出す(コミュニティ詳細の内部は見えないまま)" do
+      ProjectMember.create!(project: secret, customer: invitee)
+
+      expect(listed_on(invitee, business_root_path)&.at_css(".ba-status--private")).to be_present
+      expect(listed_on(invitee, business_projects_path)&.at_css(".ba-status--private")).to be_present
+      expect(response.body).not_to include("通常公開の企画", "限定公開の企画")
+
+      sign_in invitee
+      get business_community_path(community)
+      expect(response.body).not_to include("ひみつの企画", "通常公開の企画")
+      expect(doc.at_css("#projects")).to be_nil
+    end
+
+    it "参加していないシステム管理者・オーナー・運営者の一覧には出さず、プロジェクト管理と直接URLからは開ける" do
+      [admin, owner, co_manager].each do |customer|
+        pages.each do |name, path|
+          expect(listed_on(customer, path)).to be_nil, "#{customer.name} の #{name} に出ている"
+        end
+        sign_in customer
+        get business_community_project_management_path(community)
+        expect(response.body).to include("ひみつの企画")
+        sign_in customer
+        get business_project_path(secret)
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    it "参加している管理者(オーナー)には一覧にも出す" do
+      ProjectMember.create!(project: secret, customer: owner)
+      expect(listed_on(owner, business_root_path)).to be_present
+      expect(listed_on(owner, business_projects_path)).to be_present
+      expect(listed_on(owner, business_community_path(community))).to be_present
+    end
+
+    it "退出・プロジェクトのアクセス停止・親コミュニティのアクセス停止の後は一覧から消え、直接URLも 404 にする" do
+      leave_by = {
+        "退出" => ->(customer) { Business::Memberships::RevokeProjectAccess.call(project: secret, customer: customer) },
+        "プロジェクトのアクセス停止" => lambda { |customer|
+          Business::Memberships::RevokeProjectAccess.call(project: secret, customer: customer, suspend: true, actor: owner)
+        },
+        "親コミュニティのアクセス停止" => lambda { |customer|
+          Business::Memberships::RevokeCommunityAccess.call(community: community, customer: customer, suspend: true, actor: owner)
+        }
+      }
+
+      leave_by.each do |label, revoke|
+        customer = create(:customer, domain_name: "business", onboarding_done: true)
+        ProjectMember.create!(project: secret, customer: customer)
+        expect(listed_on(customer, business_projects_path)).to be_present, "#{label} の前に出ていない"
+
+        revoke.call(customer)
+
+        expect(listed_on(customer, business_root_path)).to be_nil, "#{label} の後もホームに出ている"
+        expect(listed_on(customer, business_projects_path)).to be_nil, "#{label} の後もプロジェクト一覧に出ている"
+        sign_in customer
+        expect { get business_project_path(secret) }.to raise_error(ActiveRecord::RecordNotFound)
+      end
+    end
+
+    it "参加の行が残っていても、アクセス停止の記録があれば出さない(古いデータ・処理の途中)" do
+      ProjectMember.create!(project: secret, customer: invitee)
+      ProjectAccessSuspension.create!(project: secret, customer: invitee, suspended_by: owner)
+      expect(listed_on(invitee, business_projects_path)).to be_nil
+
+      ProjectAccessSuspension.where(customer: invitee).delete_all
+      CommunityAccessSuspension.create!(community: community, customer: invitee, suspended_by: owner)
+      expect(listed_on(invitee, business_projects_path)).to be_nil
+      expect(listed_on(invitee, business_root_path)).to be_nil
+    end
+
+    it "承認待ちの申請(プライベートでは本来作られない行)だけの人には出さない" do
+      ProjectJoinRequest.create!(project: secret, customer: community_member)
+      pages.each { |name, path| expect(listed_on(community_member, path)).to be_nil, "#{name} に出ている" }
+    end
+
+    it "通常公開・限定公開の一覧の扱いは変えない" do
+      ProjectMember.create!(project: listed, customer: community_member)
+      ProjectMember.create!(project: unlisted, customer: community_member)
+
+      sign_in community_member
+      get business_projects_path
+      expect(card_for("通常公開の企画")).to be_present
+      expect(card_for("限定公開の企画")).to be_nil
+      get business_root_path
+      expect(card_for("通常公開の企画")).to be_present
+      expect(card_for("限定公開の企画")).to be_nil
+      get business_community_path(community)
+      expect(card_for("通常公開の企画")).to be_present
+      expect(card_for("限定公開の企画")).to be_nil
+      get business_project_path(unlisted)
+      expect(response).to have_http_status(:ok)
     end
   end
 

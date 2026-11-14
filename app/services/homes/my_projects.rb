@@ -6,8 +6,10 @@ module Homes
   #   参加中のコミュニティで、自分が作成したプロジェクト          : 主催
   #   参加中のコミュニティで、承認済みの参加者になっているもの    : 参加中
   #   参加中のコミュニティで、参加申請が承認待ちのもの            : 承認待ち(詳細では概要のみ表示される)
+  #   参加済みのプライベート(親コミュニティへの所属は問わない)   : 参加中(Project.private_joined_by)
   #
-  # 親コミュニティから退出・アクセス停止になると、運営者でない限りどの条件にも当たらなくなる。
+  # 親コミュニティから退出・アクセス停止になると、運営者でない限りどの条件にも当たらなくなる
+  # (プライベートは親コミュニティからの退出では残り、アクセス停止・プロジェクトからの退出で消える)。
   # 管理者(admin?)の全件閲覧権限はホームには持ち込まない(MyCommunities と同じ)。
   class MyProjects
     PER_PAGE = 6
@@ -36,13 +38,16 @@ module Homes
       return Project.none if domain.nil?
 
       # 限定公開は、参加中・運営中のものでもホームの一覧には出さない(URL から開く)。
-      base = Project.in_domain(domain).listed
+      # プライベートは、運営中でも参加していなければ出さない(管理メニューの「プロジェクト管理」から開く)。
+      in_domain = Project.in_domain(domain)
+      base = in_domain.listed
       member_community_ids = @customer.community_customers.select(:community_id)
 
       base.where(community_id: @customer.manageable_communities.select(:id))
         .or(base.where(community_id: member_community_ids, customer_id: @customer.id))
         .or(base.where(community_id: member_community_ids, id: @customer.project_members.select(:project_id)))
         .or(base.where(community_id: member_community_ids, id: @customer.project_join_requests.select(:project_id)))
+        .or(in_domain.private_joined_by(@customer))
     end
 
     def statuses_for(projects)

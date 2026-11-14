@@ -6,7 +6,7 @@
 #                                                          コミュニティ参加者かつプロジェクトの承認済み参加者
 #   プライベートプロジェクト(詳細を含むすべて)            : 運営者 / プロジェクト管理者 / 招待で参加したメンバー
 #                                                          (親コミュニティへの所属は求めない。親コミュニティで
-#                                                          アクセス停止中なら閲覧できない)
+#                                                          アクセス停止中なら閲覧できない。一覧には参加済みの本人にだけ出す)
 #   プロジェクト管理者 : コミュニティ運営者 + コミュニティ参加資格のあるプロジェクト作成者
 #
 # 「承認済み」は community_customers / project_members の行があること。承認待ちは permits /
@@ -113,6 +113,14 @@ module BusinessAccess
 
     community_ids = community_customers.select(:community_id)
     projects.where(community_id: community_ids).or(projects.where(community_id: manageable_communities.select(:id)))
+  end
+
+  # 一覧(プロジェクト一覧)に出すプロジェクト。内部を閲覧できるコミュニティの通常公開に加え、
+  # 本人が参加済みのプライベート(親コミュニティに所属していなくても)を出す。
+  def business_listed_projects(domain)
+    projects = Project.in_domain(domain)
+    projects.where(id: business_visible_projects(domain).listed.select(:id))
+      .or(projects.private_joined_by(self))
   end
 
   # スレッド作成の設定(Project#thread_creation_policy)を変えられる人。削除と同じく、

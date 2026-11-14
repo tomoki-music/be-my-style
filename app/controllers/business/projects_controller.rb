@@ -12,9 +12,9 @@ class Business::ProjectsController < ApplicationController
   before_action :require_business_project_manager!, only: [:edit, :update, :members]
   before_action :require_business_project_destroyer!, only: [:destroy, :destroy_confirmation]
 
-  # 一覧に出すのは、内部を閲覧できるコミュニティ(参加済み・運営中)の通常公開のプロジェクトだけ。
+  # 一覧に出すのは、内部を閲覧できるコミュニティ(参加済み・運営中)の通常公開と、本人が参加済みのプライベート。
   def index
-    @projects = current_customer.business_visible_projects(@current_domain).listed
+    @projects = current_customer.business_listed_projects(@current_domain)
 
     if params[:community_id]
       @community = find_business_community!(params[:community_id])
