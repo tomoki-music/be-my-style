@@ -16,7 +16,7 @@ module CsrfRejectionRecovery
   def recover_from_invalid_authenticity_token
     log_csrf_rejection
 
-    if request.format.html? && !request.xhr?
+    if request.format&.html? && !request.xhr?
       redirect_to csrf_rejection_return_path, alert: EXPIRED_FORM_MESSAGE, status: :see_other
     else
       render json: { error: EXPIRED_FORM_MESSAGE }, status: :unprocessable_entity
@@ -56,8 +56,7 @@ module CsrfRejectionRecovery
   def csrf_rejection_referer_summary
     return "none" if request.referer.blank?
 
-    # クエリにはパスワード再設定のトークンなどが入りうるので、ログにはパスだけを残す。
-    same_origin_referer_path&.split("?", 2)&.first || "other_origin"
+    same_origin_referer_path || "other_origin"
   end
 
   def csrf_rejection_return_path
@@ -74,7 +73,8 @@ module CsrfRejectionRecovery
     path = uri.path.presence || "/"
     return unless path.start_with?("/") && !path.start_with?("//")
 
-    uri.query.present? ? "#{path}?#{uri.query}" : path
+    # クエリは付けない。パスワード再設定のトークンなどが Location ヘッダーと「Redirected to」のログに残るため。
+    path
   rescue URI::InvalidURIError
     nil
   end

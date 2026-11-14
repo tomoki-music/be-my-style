@@ -74,7 +74,7 @@ class ApplicationController < ActionController::Base
 
   include CsrfRejectionRecovery
   rescue_from ActionController::InvalidAuthenticityToken, with: :recover_from_invalid_authenticity_token
-  prepend_before_action :capture_csrf_session_state
+  prepend_before_action :capture_csrf_session_state, unless: -> { request.get? || request.head? }
 
   before_action :set_current_domain
   before_action :prevent_caching_of_authentication_forms

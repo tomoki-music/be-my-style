@@ -149,16 +149,53 @@ RSpec.describe "CSRF 検証に失敗した送信の扱い", type: :request do
       expect(Rails.logger).to have_received(:warn).with(/\[CSRF\] rejected reason=origin_mismatch .*path=\/customers\/sign_in/)
     end
 
-    it "同じサイトの Referer はクエリ付きで戻すが、ログにはクエリを残さない" do
+    it "同じサイトの Referer へはパスだけで戻し、トークン入りのクエリを Location・ログに残さない" do
+      logged = StringIO.new
+      original_logger = ActionController::Base.logger
+      ActionController::Base.logger = ActiveSupport::Logger.new(logged)
       allow(Rails.logger).to receive(:warn).and_call_original
       get new_customer_session_path
 
       post_login(token: "forged-token", headers: { "Referer" => "http://www.example.com/customers/password/edit?reset_password_token=secret-value" })
 
-      expect(response).to redirect_to("/customers/password/edit?reset_password_token=secret-value")
+      expect(response).to redirect_to("/customers/password/edit")
+      expect(response.location).not_to include("secret-value")
+      expect(logged.string).to include("Redirected to")
+      expect(logged.string).not_to include("secret-value")
       expect(Rails.logger).to have_received(:warn).with(
         a_string_matching(%r{referer=/customers/password/edit }).and(a_string_excluding("secret-value"))
       )
+    ensure
+      ActionController::Base.logger = original_logger
+    end
+
+    it "バックスラッシュなどで外部へ抜けようとする Referer は使わない" do
+      get new_customer_session_path
+
+      post_login(token: "forged-token", headers: { "Referer" => "http://www.example.com/\\evil.example" })
+      expect(response).to redirect_to(root_path)
+
+      post_login(token: "forged-token", headers: { "Referer" => "http://www.example.com//evil.example/x" })
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "ログイン済みのままログイン画面へ戻されても、リダイレクトが続かず画面が表示される" do
+      post_login(token: login_form_token)
+      get public_notifications_path
+
+      # 古いログイン画面のタブから送られたログアウト(ログイン済みでログイン画面へ戻す)。
+      delete destroy_customer_session_path,
+             params: { authenticity_token: "forged-token" },
+             headers: { "Referer" => "http://www.example.com#{new_customer_session_path}" }
+      expect(response).to redirect_to(new_customer_session_path)
+
+      hops = 0
+      while response.redirect? && hops < 5
+        follow_redirect!
+        hops += 1
+      end
+      expect(response).to have_http_status(:ok)
+      expect(hops).to be <= 3
     end
 
     it "戻り先は同じサイトの Referer だけを使い、外部の Referer には戻さない" do
