@@ -1,0 +1,31 @@
+name: Nginx token log filter
+
+# config/nginx/bms_token_log_filter.conf(招待トークンなどをアクセスログに残さない設定案)を、
+# ランナー上の使い捨ての nginx で構文チェックし、実際のログ出力を確かめる。本番の設定・認証情報は使わない。
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "config/nginx/**"
+      - "script/nginx_token_log_filter_check.sh"
+      - ".github/workflows/nginx-token-log-filter-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Nginx token log filter
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install nginx
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y nginx
+          nginx -v
+      - name: Check log filter
+        run: script/nginx_token_log_filter_check.sh

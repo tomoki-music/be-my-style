@@ -35,7 +35,8 @@ RSpec.describe "Business プライベートプロジェクト", type: :request d
     Nokogiri::HTML(response.body)
   end
 
-  def issue_link(project = secret, by: owner, expiry_days: 7)
+  def issue_link(project_arg = nil, project: nil, by: owner, expiry_days: 7)
+    project = project_arg || project || secret
     ProjectInvitationLink.issue!(project: project, created_by: by, expiry_days: expiry_days)
   end
 
@@ -183,6 +184,99 @@ RSpec.describe "Business プライベートプロジェクト", type: :request d
       options = doc.css("select#post_project_id option").map(&:text)
       expect(options).to include("通常公開の企画")
       expect(options).not_to include("ひみつの企画")
+    end
+
+    describe "参加者への通知(本人の通知設定に従う)と、権限のない人への表示" do
+      include ActiveJob::TestHelper
+
+      let(:mail_off) { create(:customer, domain_name: "business", name: "メールオフさん", onboarding_done: true) }
+      let(:in_app_off) { create(:customer, domain_name: "business", name: "画面内オフさん", onboarding_done: true) }
+
+      before do
+        ActionMailer::Base.deliveries.clear
+        [invitee, mail_off, in_app_off].each { |customer| ProjectMember.create!(project: secret, customer: customer) }
+        BusinessNotificationSetting.create!(customer: invitee, email_enabled: true, in_app_enabled: true)
+        BusinessNotificationSetting.create!(customer: mail_off, email_enabled: false, in_app_enabled: true)
+        BusinessNotificationSetting.create!(customer: in_app_off, email_enabled: true, in_app_enabled: false)
+      end
+
+      def post_to_secret(by:, body:)
+        sign_in by
+        perform_enqueued_jobs do
+          post business_project_thread_project_chats_path(secret, general_thread), params: { project_chat: { body: body } }
+        end
+      end
+
+      def mails_to(customer)
+        ActionMailer::Base.deliveries.select { |mail| mail.to.include?(customer.email) }
+      end
+
+      it "スレッド投稿は、コミュニティ未参加の招待メンバーにも設定どおり届き、参加していない人には届かない" do
+        post_to_secret(by: creator, body: "社外秘の進捗です")
+
+        expect(Notification.find_by!(action: "project_message", visited: invitee)).to have_attributes(hidden_in_app: false)
+        expect(Notification.find_by!(action: "project_message", visited: mail_off)).to have_attributes(hidden_in_app: false)
+        expect(Notification.find_by!(action: "project_message", visited: in_app_off)).to have_attributes(hidden_in_app: true)
+        expect(Notification.where(action: "project_message", visited: [community_member, owner, co_manager])).to be_empty
+
+        expect(mails_to(invitee).size).to eq 1
+        expect(mails_to(invitee).first.body.encoded).to include("社外秘の進捗です")
+        expect(mails_to(in_app_off).size).to eq 1
+        expect(mails_to(mail_off)).to be_empty
+        expect(ActionMailer::Base.deliveries.flat_map(&:to)).not_to include(community_member.email)
+
+        sign_in invitee
+        get business_notifications_path
+        expect(response.body).to include("ひみつの企画")
+        sign_in in_app_off
+        get business_notifications_path
+        expect(response.body).not_to include("ひみつの企画")
+      end
+
+      it "招待リンクからの参加は、内部を閲覧できる人へ設定どおり通知し、コミュニティ参加者には知らせない" do
+        _link, token = issue_link
+        newcomer = create(:customer, domain_name: "business", onboarding_done: true)
+        sign_in newcomer
+        open_link(self, token)
+        perform_enqueued_jobs { post accept_business_project_invitation_path }
+
+        joined = Notification.where(action: "project_joined", visitor: newcomer)
+        expect(joined.map(&:visited)).to include(owner, co_manager, invitee, mail_off, in_app_off)
+        expect(joined.find_by!(visited: in_app_off).hidden_in_app).to be true
+        expect(joined.where(visited: community_member)).to be_empty
+        expect(mails_to(invitee).size).to eq 1
+        expect(mails_to(mail_off)).to be_empty
+        expect(mails_to(community_member)).to be_empty
+      end
+
+      it "閲覧できなくなった人には、通知一覧でプロジェクト名・本文・リンクを出さない" do
+        post_to_secret(by: creator, body: "社外秘の進捗です")
+        Business::Memberships::RevokeProjectAccess.call(project: secret, customer: invitee, suspend: true, actor: owner)
+        invitee.business_notification_project_joined(creator, secret)
+
+        sign_in invitee
+        get business_notifications_path
+        expect(response.body).not_to include("ひみつの企画", "社外秘の進捗です", "親コミュニティ / ")
+        expect(response.body).to include("閲覧できなくなったプロジェクトの通知です", "閲覧できないプロジェクトの通知です")
+        expect(doc.css("a.ba-notification")).to be_empty
+        expect(response.body).not_to include(business_project_path(secret))
+      end
+
+      it "メールは送信時に閲覧権限を確かめ直し、送信までに閲覧できなくなった人へは名前・URLを送らない" do
+        joined_mail = CustomerMailer.with(ac_customer: creator, ps_customer: invitee, project: secret).business_project_joined_mail
+        Business::Memberships::RevokeProjectAccess.call(project: secret, customer: invitee)
+        expect { joined_mail.deliver_now }.not_to change(ActionMailer::Base.deliveries, :size)
+
+        # 作成時は通常公開で、送信前にプライベートへ変わった場合(作成通知はコミュニティ参加者あて)。
+        created_mail = CustomerMailer.with(ac_customer: owner, ps_customer: community_member, project: listed).business_project_created_mail
+        Business::Projects::ChangeVisibility.call(project: listed, visibility: "private")
+        expect { created_mail.deliver_now }.not_to change(ActionMailer::Base.deliveries, :size)
+
+        # 閲覧できる参加者へは従来どおり送る。
+        member_mail = CustomerMailer.with(ac_customer: creator, ps_customer: mail_off.tap { |c| c.business_notification_setting.update!(email_enabled: true) }, project: secret)
+        expect { member_mail.business_project_joined_mail.deliver_now }.to change(ActionMailer::Base.deliveries, :size).by(1)
+        expect(ActionMailer::Base.deliveries.last.body.encoded).to include("ひみつの企画")
+      end
     end
   end
 
@@ -371,7 +465,7 @@ RSpec.describe "Business プライベートプロジェクト", type: :request d
       expect(response).to have_http_status(:gone)
       expect(response.body).to include("無効になっています")
 
-      get business_project_invitation_path(token: "not-a-real-token")
+      open_link(self, "not-a-real-token")
       expect(response).to have_http_status(:not_found)
       expect(response.body).to include("招待リンクが見つかりません")
       expect(invitee.business_project_participant?(secret)).to be false
@@ -390,9 +484,22 @@ RSpec.describe "Business プライベートプロジェクト", type: :request d
     it "プロジェクトが削除されたリンクは「見つかりません」と案内する" do
       _link, token = issue_link
       secret.destroy!
-      get business_project_invitation_path(token: token)
+      open_link(self, token)
       expect(response).to have_http_status(:not_found)
       expect(response.body).to include("プロジェクトが削除された可能性があります")
+    end
+
+    it "トークン付きの URL では画面を描かず、有効・無効にかかわらずトークンの無い URL へ移す(Referer にトークンを付けない)" do
+      _link, token = issue_link
+      expired_link, expired_token = issue_link(project: Project.create!(community: community, customer: owner, title: "別", visibility: :private), expiry_days: 1)
+      expired_link.update_columns(expires_at: 1.minute.ago)
+      [token, expired_token, "not-a-real-token", ""].each do |value|
+        get business_project_invitation_path(token: value)
+        expect(response).to have_http_status(:found)
+        expect(response.location).to eq business_project_invitation_url
+        expect(response.headers["Referrer-Policy"]).to eq "no-referrer"
+        expect(response.body).not_to include("<link", "<script")
+      end
     end
   end
 
@@ -456,18 +563,109 @@ RSpec.describe "Business プライベートプロジェクト", type: :request d
       end
     end
 
-    it "登録後にリンクが無効化されていたら、参加させずに案内を出す" do
+    # 登録を始めた後(確認メール・オンボーディングの途中)に招待の状態が変わった場合。参加を確定する時点の最新の状態で判断し、
+    # 古い招待では参加させない。期限の経過だけは、登録から最大7日(BusinessSignupInvitation::TTL)まで認める。
+    {
+      "リンクを無効化した" => ->(project) { ProjectInvitationLink.revoke_all!(project) },
+      "リンクを再発行した(新しいリンクは有効)" => ->(project) { ProjectInvitationLink.issue!(project: project, created_by: project.community.owner) },
+      "通常公開に変更した" => ->(project) { Business::Projects::ChangeVisibility.call(project: project, visibility: "listed") },
+      "限定公開に変更した" => ->(project) { Business::Projects::ChangeVisibility.call(project: project, visibility: "unlisted") },
+      "通常公開にしてからプライベートに戻した" => lambda { |project|
+        Business::Projects::ChangeVisibility.call(project: project, visibility: "listed")
+        Business::Projects::ChangeVisibility.call(project: project, visibility: "private")
+      },
+      "リンクの状態は変えずに、公開範囲の列だけ通常公開に変わった" => ->(project) { project.update_columns(visibility: Project.visibilities[:listed]) }
+    }.each do |change, apply|
+      it "登録後に#{change}場合は、オンボーディング完了時に参加させず、プロジェクト名を出さずに案内する" do
+        _link, token = issue_link
+        open_link(self, token)
+        newcomer = register("changed-#{change.hash.abs}@example.com")
+        apply.call(secret)
+
+        get customer_confirmation_path(confirmation_token: newcomer.confirmation_token)
+        go_through_onboarding(self)
+        expect(response).to redirect_to(business_root_path)
+        expect(flash[:alert]).to include("招待リンクが無効になっているため、プロジェクトに参加できませんでした")
+        expect(flash[:alert]).not_to include("ひみつの企画")
+        expect(newcomer.reload.project_members.where(project: secret)).to be_empty
+        expect(BusinessSignupInvitation.exists?(customer_id: newcomer.id)).to be false
+      end
+    end
+
+    it "登録後にプロジェクトが削除された場合は、参加させずに案内する" do
       _link, token = issue_link
       open_link(self, token)
-      newcomer = register("revoked-after-signup@example.com")
-      ProjectInvitationLink.revoke_all!(secret)
+      newcomer = register("deleted-after-signup@example.com")
+      secret.destroy!
 
       get customer_confirmation_path(confirmation_token: newcomer.confirmation_token)
       go_through_onboarding(self)
       expect(response).to redirect_to(business_root_path)
-      expect(flash[:alert]).to include("招待リンクが無効になっているため、プロジェクトに参加できませんでした")
+      expect(flash[:alert]).to be_present
       expect(flash[:alert]).not_to include("ひみつの企画")
-      expect(newcomer.reload.business_project_participant?(secret)).to be false
+      expect(ProjectMember.where(customer: newcomer)).to be_empty
+      expect(BusinessSignupInvitation.exists?(customer_id: newcomer.id)).to be false
+    end
+
+    it "登録後に親コミュニティでアクセス停止になった場合は、参加させない" do
+      _link, token = issue_link
+      open_link(self, token)
+      newcomer = register("suspended-after-signup@example.com")
+      CommunityAccessSuspension.create!(community: community, customer: newcomer, suspended_by: owner)
+
+      get customer_confirmation_path(confirmation_token: newcomer.confirmation_token)
+      go_through_onboarding(self)
+      expect(response).to redirect_to(business_root_path)
+      expect(newcomer.reload.project_members.where(project: secret)).to be_empty
+    end
+
+    it "オンボーディングを投稿で終えた場合・ログイン時に残りを処理する場合も、最新の状態で判断する" do
+      _link, token = issue_link
+      open_link(self, token)
+      newcomer = register("post-path@example.com")
+      get customer_confirmation_path(confirmation_token: newcomer.confirmation_token)
+      ProjectInvitationLink.revoke_all!(secret)
+
+      get onboarding_step3_path
+      post business_posts_path, params: { post: { title: "はじめまして", body: "よろしく", tag_list: "", category: Post.categories.keys.first } }
+      expect(flash[:alert]).to include("招待リンクが無効になっているため")
+      expect(newcomer.reload.project_members.where(project: secret)).to be_empty
+
+      # ログイン時(SignupInvitations::Resume)に残っていた招待も、同じ判定を通す。
+      other = create(:customer, domain_name: "business", onboarding_done: true)
+      link, = issue_link
+      BusinessSignupInvitation.create!(customer: other, target_type: "Project", target_id: secret.id, project_invitation_link: link, expires_at: 7.days.from_now)
+      ProjectInvitationLink.revoke_all!(secret)
+      expect(Business::SignupInvitations::Resume.call(other)).to be_nil
+      expect(other.reload.project_members.where(project: secret)).to be_empty
+      expect(BusinessSignupInvitation.exists?(customer_id: other.id)).to be false
+    end
+
+    it "参加確定の処理は、ロックの中でリンクとプロジェクトを読み直して判定する(画面を開いた後の変更も反映する)" do
+      link, = issue_link
+      stale_link = ProjectInvitationLink.find(link.id)
+      ProjectInvitationLink.revoke_all!(secret)
+      expect(stale_link.revoked_at).to be_nil # 読み込んだ時点では有効に見える
+      expect(Business::Memberships::AcceptProjectInvitation.call(link: stale_link, customer: invitee, check_expiry: false)).to eq :invalid
+
+      fresh_link, = issue_link
+      stale = ProjectInvitationLink.find(fresh_link.id)
+      Project.where(id: secret.id).update_all(visibility: Project.visibilities[:listed])
+      expect(Business::Memberships::AcceptProjectInvitation.call(link: stale, customer: invitee, check_expiry: false)).to eq :invalid
+      expect(invitee.project_members.where(project: secret)).to be_empty
+    end
+
+    it "登録から7日(招待の記録の期限)を過ぎたら、リンクが有効でも参加させない" do
+      _link, token = issue_link(expiry_days: 30)
+      open_link(self, token)
+      newcomer = register("over-ttl@example.com")
+      newcomer.business_signup_invitation.update!(expires_at: 1.minute.ago)
+      newcomer.update!(confirmed_at: Time.current)
+
+      sign_in newcomer
+      go_through_onboarding(self)
+      expect(response).to redirect_to(business_root_path)
+      expect(newcomer.reload.project_members.where(project: secret)).to be_empty
     end
 
     it "プライベートの詳細URLを未ログインで開いて登録しても招待にはならず、プロジェクト名も案内に出ない" do

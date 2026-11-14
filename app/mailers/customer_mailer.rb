@@ -118,14 +118,21 @@ class CustomerMailer < ApplicationMailer
     business_mail to: @ps_customer.email, subject: '参加申請した「コミュニティ」への参加が受理されました！'
   end
 
+  # 送信までにプライベートへ変更されたプロジェクトは、閲覧できない人へ名前・URL を送らない。
   def business_project_created_mail
     @project = params[:project]
+    return if @project.visibility_private? && !@ps_customer.business_project_participant?(@project)
+
     @project_url = "https://be-my-style.com/business/projects/#{@project.id}"
     business_mail to: @ps_customer.email, subject: '所属コミュニティで新しいプロジェクトが作成されました！'
   end
 
+  # 宛先は内部を閲覧できる人(Project#accessible_customers)。送信までに退出・アクセス停止などで閲覧できなくなった人へは送らない
+  # (プライベートのプロジェクト名・URL を権限の無い人へ出さないため)。
   def business_project_joined_mail
     @project = params[:project]
+    return unless @ps_customer.business_project_participant?(@project)
+
     @project_url = "https://be-my-style.com/business/projects/#{@project.id}"
     business_mail to: @ps_customer.email, subject: 'プロジェクトに新しい参加メンバーが加わりました！'
   end

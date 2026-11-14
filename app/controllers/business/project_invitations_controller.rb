@@ -75,11 +75,14 @@ class Business::ProjectInvitationsController < ApplicationController
 
   private
 
-  # トークンは照合にだけ使い、セッション・ログ・画面に残さない(ログでは filter_parameters の :token で伏せられる)。
+  # トークンは照合にだけ使い、セッション・ログ・画面に残さない(Rails のログでは filter_parameters の :token で伏せられる)。
+  # 見つからない場合も含めて必ずトークンの無い URL へ移してから画面を出す。トークン付きの URL で画面を描くと、
+  # 画面が読み込む CSS・JS などの要求の Referer にトークンが付き、Web サーバーのアクセスログに残るため。
   def open_with_token
     link = ProjectInvitationLink.find_by_token(params[:token])
     forget_invitation_link
-    return render_unavailable(:not_found) unless link
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return redirect_to(business_project_invitation_path) unless link
 
     session[PROJECT_INVITATION_SESSION_KEY] = link.id
     # ログイン・新規登録の後にこの画面へ戻す(Devise の戻り先。登録時は Remember がリンクを会員に記録する)。
