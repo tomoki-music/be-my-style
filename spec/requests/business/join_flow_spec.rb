@@ -259,7 +259,9 @@ RSpec.describe "Business のコミュニティ・プロジェクト参加導線"
 
     it "CSRF トークンの無い DELETE は受け付けない" do
       ActionController::Base.allow_forgery_protection = true
-      expect { delete leave_path }.to raise_error(ActionController::InvalidAuthenticityToken)
+      delete leave_path
+      expect(response).to have_http_status(:see_other)
+      expect(flash[:alert]).to eq CsrfRejectionRecovery::EXPIRED_FORM_MESSAGE
       expect(general.business_community_member?(manual_community)).to eq true
     ensure
       ActionController::Base.allow_forgery_protection = false

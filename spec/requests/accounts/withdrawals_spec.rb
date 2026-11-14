@@ -139,7 +139,9 @@ RSpec.describe "アカウントの退会", type: :request do
       sign_in customer
       ActionController::Base.allow_forgery_protection = true
 
-      expect { withdraw! }.to raise_error(ActionController::InvalidAuthenticityToken)
+      withdraw!
+      expect(response).to have_http_status(:see_other)
+      expect(flash[:alert]).to eq CsrfRejectionRecovery::EXPIRED_FORM_MESSAGE
       expect(customer.reload.withdrawn_at).to be_nil
     ensure
       ActionController::Base.allow_forgery_protection = false
