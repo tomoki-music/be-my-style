@@ -283,6 +283,15 @@ Rails.application.routes.draw do
         end
       end
       resources :access_suspensions, controller: "project_access_suspensions", only: [:create, :destroy]
+      # プライベートへの変更・プライベートからの変更の確認画面(編集フォームから進む)。
+      resource :visibility, controller: "project_visibilities", only: [:edit, :update]
+      # プライベートプロジェクトの招待リンクの発行・無効化(システム管理者・親コミュニティのオーナー)。
+      resource :invitation_link, controller: "project_invitation_links", only: [:show, :create, :destroy]
+    end
+
+    # 招待リンクの受け入れ。?token= で開くとトークンをセッションへ移さずにリンク ID だけを持ち、トークンの無い URL へ移る。
+    resource :project_invitation, only: [:show] do
+      post :accept
     end
 
     # タイムライン / プロジェクトチャットの添付ファイル配信(閲覧権限を確認して短時間有効な URL へ転送)。

@@ -8,6 +8,8 @@ class BusinessSignupInvitation < ApplicationRecord
   TARGET_TYPES = %w[Community Project].freeze
 
   belongs_to :customer
+  # プライベートプロジェクトの招待リンクから登録した人だけ持つ。オンボーディング完了時にこのリンクで参加を成立させる。
+  belongs_to :project_invitation_link, optional: true
 
   validates :customer_id, uniqueness: true
   validates :target_type, inclusion: { in: TARGET_TYPES }

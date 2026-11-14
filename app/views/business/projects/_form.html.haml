@@ -38,11 +38,22 @@
       = f.label :join_approval_mode, "参加方式", class: "ba-label"
       = f.select :join_approval_mode, business_join_approval_options(project), {}, class: "form-control"
       %small.ba-help 参加できるのは、開催コミュニティの参加者だけです。変更は、変更後の新しい参加申請から適用されます。
-    .ba-field
-      = f.label :visibility, "公開範囲", class: "ba-label"
-      = f.select :visibility, business_project_visibility_options, {}, class: "form-control", "aria-describedby": "project-visibility-help"
+    -# プライベートを選ぶ・プライベートから戻すのはシステム管理者・親コミュニティのオーナー本人だけ(保存側も同じ判定)。
+    -# 編集でプライベートに入る・出る変更は、保存後に確認画面(Business::ProjectVisibilitiesController)を通して反映する。
+    - can_choose_private = project.persisted? ? current_customer.can_manage_business_project_privacy?(project) : current_customer.can_manage_business_private_projects_in?(@community)
+    .ba-field#project-visibility
+      - if project.persisted? && project.visibility_private? && !can_choose_private
+        %p.ba-label 公開範囲
+        %p.ba-static= business_project_visibility_label(project)
+      - else
+        = f.label :visibility, "公開範囲", class: "ba-label"
+        = f.select :visibility, business_project_visibility_options(include_private: can_choose_private), {}, class: "form-control", "aria-describedby": "project-visibility-help"
       %small.ba-help#project-visibility-help
         限定公開：一覧・検索には表示されません。URLからの閲覧には既存の閲覧条件が適用されます。
+        - if can_choose_private || project.visibility_private?
+          プライベート：招待制です。一覧には参加したメンバー本人にだけ表示され、参加していない人の一覧や通知には表示されません。詳細・スレッド・メンバーはメンバーと管理者だけが見られます。参加は招待リンクからだけで、コミュニティへの参加は不要です。
+        - if can_choose_private && project.persisted?
+          プライベートへの変更・プライベートからの変更は、保存後の確認画面で内容を確かめてから反映されます。
     -# 変更はシステム管理者・親コミュニティのオーナー本人だけ(保存側も ProjectsController#thread_creation_policy_changeable? で同じ判定)。
     - if project.persisted?
       .ba-field#project-thread-creation

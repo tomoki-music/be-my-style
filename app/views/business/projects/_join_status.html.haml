@@ -2,7 +2,9 @@
 -# 承認・停止などの管理操作はメンバー管理画面に置き、ここには出さない。
 - case @join_status
 - when :none
-  - if @project.join_auto?
+  - if @project.visibility_private?
+    %p.ba-join__note このプロジェクトは招待制です。招待リンクからだけ参加できます。
+  - elsif @project.join_auto?
     = link_to business_join_button_label(@project), join_business_project_path(@project),
       method: :post, data: { disable_with: "送信中…" }, class: "ba-btn ba-btn--primary"
   - else
@@ -19,9 +21,10 @@
         %p.ba-join-request__hint#join-request-message-hint
           #{ProjectJoinRequest::MESSAGE_MAX_LENGTH}文字以内。空欄のままでも申請できます。メッセージは、この申請を承認できる管理者だけが読めます。
         = f.submit "この内容で申請する", class: "ba-btn ba-btn--primary", data: { disable_with: "送信中…" }
-  %p.ba-join__note
-    = business_join_approval_description(@project)
-    参加すると、スレッドを閲覧・投稿できます。
+  - unless @project.visibility_private?
+    %p.ba-join__note
+      = business_join_approval_description(@project)
+      参加すると、スレッドを閲覧・投稿できます。
 - when :pending
   = business_join_status_badge(:pending)
   = link_to "申請を取り消す", cancel_request_business_project_path(@project),

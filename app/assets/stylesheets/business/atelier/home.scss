@@ -184,6 +184,14 @@
     min-width: 0;
   }
 
+  // 状態と「プライベート」のしるしを横に並べる(幅が足りなければ折り返す)。
+  .ba-project-card__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-width: 100%;
+  }
+
   .ba-project-card__title {
     font-size: 16px;
     font-weight: 700;

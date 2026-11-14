@@ -1,0 +1,111 @@
+// Social Atelier: プライベートプロジェクトの招待(受け入れ画面・招待リンクの管理・公開範囲の変更の確認)。
+// 受け入れ画面はログイン前(body.ba-lp)にも出すため、両方のスコープに当てる。
+.ba-body,
+.ba-lp {
+  .ba-invite {
+    max-width: var(--ba-reading-width);
+    margin: 0 auto;
+  }
+
+  .ba-invite__card {
+    display: grid;
+    gap: var(--ba-space-3);
+  }
+
+  .ba-invite__eyebrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ba-space-2);
+    margin: 0;
+    color: var(--ba-text-muted);
+    font-size: 0.875rem;
+  }
+
+  .ba-invite__title {
+    margin: 0;
+    font-size: 1.375rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .ba-invite__meta {
+    display: grid;
+    gap: var(--ba-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--ba-text-muted);
+    overflow-wrap: anywhere;
+
+    .fa-solid {
+      width: 1.25em;
+      text-align: center;
+    }
+  }
+
+  .ba-invite__note {
+    margin: 0;
+  }
+
+  .ba-invite__hint {
+    margin: 0;
+    color: var(--ba-text-muted);
+    font-size: 0.875rem;
+  }
+}
+
+.ba-body {
+  .ba-invite-link {
+    max-width: var(--ba-reading-width);
+  }
+
+  .ba-invite-link--issued {
+    border-color: var(--ba-accent-line);
+    background: var(--ba-accent-tint);
+  }
+
+  .ba-invite-link__warning {
+    margin: 0 0 var(--ba-space-2);
+    color: var(--ba-text);
+    font-weight: 600;
+  }
+
+  .ba-invite-link__facts {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: var(--ba-space-2) var(--ba-space-4);
+    margin: 0 0 var(--ba-space-3);
+
+    dt {
+      color: var(--ba-text-muted);
+      font-weight: 400;
+    }
+
+    dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .ba-visibility-confirm--widen {
+    border-color: #efb8bf;
+  }
+
+  .ba-visibility-confirm__warning {
+    margin: 0 0 var(--ba-space-3);
+    padding: var(--ba-space-3) var(--ba-space-4);
+    border-radius: var(--ba-radius-control);
+    background: var(--ba-danger-soft);
+    color: var(--ba-danger);
+  }
+
+  .ba-visibility-confirm__list {
+    margin: 0 0 var(--ba-space-4);
+    padding-left: 1.25em;
+
+    li + li {
+      margin-top: var(--ba-space-2);
+    }
+  }
+}

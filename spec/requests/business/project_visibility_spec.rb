@@ -190,7 +190,8 @@ RSpec.describe "Business プロジェクトの公開範囲", type: :request do
       get edit_business_project_path(unlisted)
       expect(response).to have_http_status(:ok)
       expect(doc.at_css("select#project_visibility option[selected]")["value"]).to eq "unlisted"
-      expect(doc.css("select#project_visibility option").map { |o| [o.text, o["value"]] }).to eq [%w[通常公開 listed], %w[限定公開 unlisted]]
+      # 親コミュニティのオーナーには、招待制の「プライベート」も選択肢に出る(運営者・作成者には出さない: private_projects_spec)。
+      expect(doc.css("select#project_visibility option").map { |o| [o.text, o["value"]] }).to eq [%w[通常公開 listed], %w[限定公開 unlisted], %w[プライベート private]]
       expect(doc.at_css("#project-visibility-help").text).to include("一覧・検索には表示されません。URLからの閲覧には既存の閲覧条件が適用されます")
 
       patch business_project_path(unlisted), params: { project: { visibility: "listed" } }

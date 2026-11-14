@@ -11,6 +11,7 @@ class Project < ApplicationRecord
   has_many :project_threads, dependent: :destroy
   has_many :project_join_requests, dependent: :destroy
   has_many :project_access_suspensions, dependent: :destroy
+  has_many :project_invitation_links, dependent: :destroy
 
   has_one_attached :project_image
   include ImagePositionable
@@ -22,12 +23,31 @@ class Project < ApplicationRecord
   # 新しく更新されたものから。同時刻は新しく作られた順にして並びを安定させる。
   scope :recently_updated, -> { order(updated_at: :desc, id: :desc) }
 
-  # 公開範囲。限定公開は一覧・検索(listed スコープを通す画面)に出さないだけで、
-  # 詳細の閲覧・参加申請・承認の条件(BusinessAccess)は通常公開と同じ。既存のプロジェクトは通常公開。
-  enum visibility: { listed: 0, unlisted: 1 }, _prefix: :visibility
+  # 公開範囲。既存のプロジェクトは通常公開。
+  #   listed   通常公開 : 一覧・検索に出す。閲覧・参加申請の条件は BusinessAccess(親コミュニティの参加者が前提)
+  #   unlisted 限定公開 : 一覧・検索(listed スコープを通す画面)に出さないだけで、条件は通常公開と同じ
+  #   private  プライベート : 招待制。一覧には参加済みの本人にだけ出し、検索・通知には出さない。
+  #                          詳細・スレッド・投稿・メンバー・添付は参加者と管理者だけ。
+  #                          参加は招待リンク(ProjectInvitationLink)からだけで、親コミュニティへの所属は求めない
+  enum visibility: { listed: 0, unlisted: 1, private: 2 }, _prefix: :visibility
 
-  # 一覧・検索に出してよいプロジェクト(通常公開)。管理画面の一覧には限定公開も出す。
+  # 誰にでも一覧・検索に出してよいプロジェクト(通常公開)。管理画面の一覧には限定公開・プライベートも出す。
   scope :listed, -> { where(visibility: visibilities[:listed]) }
+
+  # customer が参加済みのプライベートプロジェクト(BusinessAccess#business_project_approved_member? と同じ条件)。
+  # 参加の行があり、プロジェクト・親コミュニティのどちらでもアクセス停止されていないこと。
+  # システム管理者・オーナーでも、参加していなければ含めない(管理画面から開く)。
+  scope :private_joined_by, lambda { |customer|
+    next where(id: []) if customer.blank?
+
+    where(visibility: visibilities[:private])
+      .where(id: customer.project_members.select(:project_id))
+      .where.not(id: customer.project_access_suspensions.select(:project_id))
+      .where.not(community_id: customer.community_access_suspensions.select(:community_id))
+  }
+
+  # customer の一覧に出すプロジェクト: 通常公開 + 本人が参加済みのプライベート。限定公開は出さない。
+  scope :listed_for, ->(customer) { listed.or(private_joined_by(customer)) }
 
   # スレッドを作成できる人。判定は BusinessAccess#can_create_project_thread?。既存・新規とも既定は管理者・オーナーのみ。
   # 既存スレッドの閲覧・返信の条件(プロジェクトの参加者)はこの設定に関係しない。
@@ -58,10 +78,9 @@ class Project < ApplicationRecord
     members.active
   end
 
-  # プロジェクトの内部を閲覧できる人(コミュニティ参加資格のあるメンバー + 管理者)。通知・メールの宛先に使う。
+  # プロジェクトの内部を閲覧できる人(参加資格のあるメンバー + 管理者)。通知・メールの宛先に使う。
   def accessible_customers
-    community_member_ids = community.community_customers.select(:customer_id)
-    ids = project_members.where(customer_id: community_member_ids).pluck(:customer_id)
+    ids = qualified_project_members.pluck(:customer_id)
     ids << customer_id if customer_id && community.community_customers.exists?(customer_id: customer_id)
     ids.concat(community.community_owners.pluck(:customer_id))
     ids << community.owner_id if community.owner_id.present?
@@ -79,9 +98,19 @@ class Project < ApplicationRecord
     candidates.to_a.select { |customer| customer.business_project_notification_recipient?(self) }
   end
 
-  # メンバー一覧の表示用。コミュニティ参加資格を失った人(旧データ)は表示しない。
+  # メンバー一覧の表示用。参加資格を失った人(旧データ)は表示しない。
   def participating_members
-    active_members.where(id: community.community_customers.select(:customer_id))
+    active_members.where(id: qualified_project_members.select(:customer_id))
+  end
+
+  # 参加資格のあるメンバーの行(BusinessAccess#business_project_membership_qualified? と同じ条件)。
+  # 通常・限定公開は親コミュニティの承認済み参加者、プライベートは親コミュニティでアクセス停止されていない人。
+  def qualified_project_members
+    if visibility_private?
+      project_members.where.not(customer_id: community.community_access_suspensions.select(:customer_id))
+    else
+      project_members.where(customer_id: community.community_customers.select(:customer_id))
+    end
   end
 
   private

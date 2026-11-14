@@ -22,6 +22,8 @@ module Business
 
         invitation = BusinessSignupInvitation.find_by(customer_id: @customer.id)
         return unless invitation
+        # 招待リンクからの登録は、オンボーディング完了時(Take)に参加まで済ませる。残っていればここで同じ処理をする。
+        return take_project_invitation if invitation.project_invitation_link_id.present?
 
         record = invitation.expired?(@now) ? nil : Target.find(invitation.target_type, invitation.target_id)
         unless record
@@ -33,6 +35,16 @@ module Business
 
         invitation.destroy!
         Target.path_of(record)
+      end
+
+      private
+
+      def take_project_invitation
+        result = Take.call(@customer, now: @now)
+        return unless result.status == :ok
+        return if @community && result.record.community != @community
+
+        result.path
       end
     end
   end

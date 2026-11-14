@@ -37,8 +37,8 @@ class Business::CommunitiesController < ApplicationController
     load_pending_permit_count if @can_manage
     return unless @can_view_internal
 
-    # 限定公開のプロジェクトは一覧に出さない(管理メニューの「プロジェクト管理」には出す)。
-    @projects = @community.projects.listed.with_attached_project_image.recently_updated.to_a
+    # 限定公開は一覧に出さず、プライベートは本人が参加済みのものだけ出す(どちらも管理メニューの「プロジェクト管理」には出す)。
+    @projects = @community.projects.listed_for(current_customer).with_attached_project_image.recently_updated.to_a
     @project_statuses = Business::Memberships::ProjectStatuses.call(customer: current_customer, projects: @projects)
     @timeline_posts = @community.community_posts.includes(customer: { profile_image_attachment: :blob }).with_attached_attachments.order(created_at: :desc)
   end

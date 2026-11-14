@@ -1,0 +1,12 @@
+-# 未ログインで有効な招待リンクを開いた人への案内。ログイン・新規登録の後はこの画面に戻り、参加を確定できる。
+- body = capture do
+  %section.ba-card.ba-invite__card{ "aria-labelledby": "invite-title" }
+    = render "business/project_invitations/summary", project: @project
+    %p.ba-invite__note
+      参加するには、NAKAMAへのログインが必要です。アカウントをお持ちでない方は、新規登録してください。
+    .ba-form-actions
+      = link_to "ログインして参加する", new_business_customer_session_path, class: "ba-btn ba-btn--primary"
+      = link_to "新規登録して参加する", new_business_customer_registration_path, class: "ba-btn ba-btn--secondary"
+    %p.ba-invite__hint
+      新規登録の確認メールを別のブラウザやアプリで開いた場合も、登録の手続きが終わるとこのプロジェクトに参加した状態でご案内します。
+= render "business/project_invitations/page", body: body

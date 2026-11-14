@@ -9,7 +9,10 @@ class Business::CommunityProjectManagementsController < ApplicationController
   before_action :authorize_project_creation!
 
   def show
-    @projects = @community.projects.includes(:customer).recently_updated.to_a
+    # この画面は運営者でないプロジェクト作成者も開けるため、プライベートは参加者・管理者に見えるものだけを出す。
+    @projects = @community.projects.includes(:customer).recently_updated.to_a.select do |project|
+      !project.visibility_private? || current_customer.business_project_participant?(project)
+    end
     @can_manage_community = current_customer.can_manage_community?(@community)
     @manageable_project_ids = @projects.select { |project| @can_manage_community || project.customer_id == current_customer.id }.map(&:id).to_set
     load_pending_permit_count if @can_manage_community

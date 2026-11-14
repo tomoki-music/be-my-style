@@ -1,0 +1,17 @@
+-# ログイン済みの人が有効な招待リンクを開いたときの受け入れ画面。「参加する」を押すまで参加しない。
+- body = capture do
+  %section.ba-card.ba-invite__card{ "aria-labelledby": "invite-title" }
+    = render "business/project_invitations/summary", project: @project
+    - if @suspended
+      %p.ba-invite__note{ role: "alert" } このプロジェクト（またはコミュニティ）へのアクセスが停止されているため、参加できません。
+      .ba-form-actions
+        = link_to "ホームへ戻る", business_root_path, class: "ba-btn ba-btn--secondary"
+    - else
+      %p.ba-invite__note
+        参加すると、このプロジェクトのスレッドとメンバーを見られるようになり、投稿もできます。
+        コミュニティ「#{@project.community.name}」のほかのプロジェクトや会話は、コミュニティに参加しない限り表示されません。
+      .ba-form-actions
+        = button_to "参加する", accept_business_project_invitation_path, method: :post,
+          class: "ba-btn ba-btn--primary", data: { disable_with: "参加しています…" }, form: { data: { turbolinks: false } }
+        = link_to "参加しない", business_root_path, class: "ba-btn ba-btn--secondary"
+= render "business/project_invitations/page", body: body

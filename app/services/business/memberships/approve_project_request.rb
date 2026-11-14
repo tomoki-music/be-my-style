@@ -3,7 +3,9 @@ module Business
     # プロジェクト管理者による承認待ち申請の承認。権限の確認は呼び出し側(コントローラ)で行う。
     # 承認時点で親コミュニティの参加資格を失っていれば承認せず、申請を消す。
     #
-    # 戻り値: :approved / :not_found / :withdrawn / :community_required / :suspended
+    # プライベートプロジェクトは招待制のため承認しない(申請は公開範囲の変更時に取り消すが、念のためここでも拒否して消す)。
+    #
+    # 戻り値: :approved / :not_found / :withdrawn / :community_required / :suspended / :invite_only
     class ApproveProjectRequest
       def self.call(project:, request_id:)
         new(project, request_id).call
@@ -21,6 +23,11 @@ module Business
 
           customer = request.customer
           next :withdrawn if customer.is_deleted?
+
+          if @project.visibility_private?
+            request.destroy!
+            next :invite_only
+          end
 
           unless customer.business_community_member?(@project.community)
             request.destroy!

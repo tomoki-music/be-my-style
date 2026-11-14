@@ -147,7 +147,11 @@ class Public::RegistrationsController < Devise::RegistrationsController
   # 記録に失敗しても登録は止めない(会員は作成済み)。その場合は戻り先をセッションに残し、従来どおりの案内になる。
   def remember_business_signup_invitation!(customer)
     key = stored_location_key_for(resource_name)
-    remembered = Business::SignupInvitations::Remember.call(customer: customer, path: session[key])
+    remembered = Business::SignupInvitations::Remember.call(
+      customer: customer,
+      path: session[key],
+      project_invitation_link_id: session[BusinessReturnPath::PROJECT_INVITATION_SESSION_KEY]
+    )
     session.delete(key) if remembered
   rescue ActiveRecord::ActiveRecordError => e
     Rails.logger.error("[BusinessSignupInvitation] remember failed customer_id=#{customer.id} #{e.class}: #{e.message}")

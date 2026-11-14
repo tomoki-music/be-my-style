@@ -96,7 +96,10 @@ module ProjectThreadCreationPolicyMysqlCheck
 
     created = Project.create!(community_id: 1, customer_id: 1, title: "新規")
     check.call("アプリ: 新しいプロジェクトの既定は管理者・オーナーのみ", created.reload.thread_creation_owners_only?)
-    created.destroy!
+    # 後の PR で増えた関連(この時点のスキーマにまだ無い表。例: project_invitation_links)を destroy が参照しないよう、
+    # 作った行(と作成時に自動で作られる全体トーク)だけを SQL で消す。
+    connection.execute("DELETE FROM project_threads WHERE project_id = #{created.id}")
+    connection.execute("DELETE FROM projects WHERE id = #{created.id}")
     # 保存で更新日時が変わるため、戻しの確認(既存の行がそのまま残るか)に備えて元の値に戻す。
     connection.execute("UPDATE projects SET updated_at = created_at WHERE id = 1")
   end

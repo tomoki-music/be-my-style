@@ -26,6 +26,7 @@ RSpec.describe "通知メールの From 表示名", type: :mailer do
 
   def business_mails
     allow_any_instance_of(Customer).to receive(:business_project_notification_recipient?).and_return(true)
+    allow_any_instance_of(Customer).to receive(:business_project_participant?).and_return(true)
     base = { ac_customer: sender, ps_customer: recipient }
     {
       like_post_mail: CustomerMailer.with(**base, post: post_record).like_post_mail,

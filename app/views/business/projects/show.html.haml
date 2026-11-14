@@ -18,10 +18,7 @@
   .ba-profile__body
     .ba-profile__badges
       %span.ba-status.ba-status--kind= business_project_status_label(@project)
-      - if @project.visibility_unlisted?
-        %span.ba-status.ba-status--unlisted
-          %i.fa-solid.fa-eye-slash{ "aria-hidden": "true" }
-          = business_project_visibility_label(@project)
+      = business_project_visibility_badge(@project)
     %h1.ba-profile__name= @project.title
     %ul.ba-profile__meta
       %li
@@ -108,4 +105,16 @@
     %p.ba-muted スレッドとメンバーはプロジェクト参加者のみ閲覧できます
 
 -# 招待用URLの表示とコピーは、コンテンツの最下部のこの1か所だけに置く。
-= render "business/shared/share_link", record: @project
+-# プライベートは詳細URLでは参加できない(招待リンクだけ)ため、招待用URLを出さず、発行できる人に招待リンクの画面を案内する。
+- if @project.visibility_private?
+  %section.ba-share.ba-anchor-target#share-private-project{ "aria-labelledby": "share-private-title" }
+    %h2.ba-share__title#share-private-title
+      %i.fa-solid.fa-lock{ "aria-hidden": "true" }
+      招待制のプロジェクト
+    - if current_customer.can_manage_business_project_privacy?(@project)
+      %p.ba-share__lead このプロジェクトには、招待リンクを開いた人だけが参加できます。この画面のURLを送っても参加できません。
+      = link_to "招待リンクを発行・管理する", business_project_invitation_link_path(@project), class: "ba-btn ba-btn--secondary ba-btn--sm"
+    - else
+      %p.ba-share__lead このプロジェクトは招待制です。新しいメンバーを招待したいときは、コミュニティのオーナーに招待リンクの発行を依頼してください。
+- else
+  = render "business/shared/share_link", record: @project

@@ -299,6 +299,12 @@
     border: 1px solid var(--ba-border);
   }
 
+  // プライベート(招待制のプロジェクト)のしるし。限定公開より閉じていることが分かるよう、濃い色にする。
+  .ba-status--private {
+    background: var(--ba-text);
+    color: var(--ba-surface);
+  }
+
   // ===== アバター / 頭文字 =====
   .ba-avatar {
     display: block;

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_11_13_100000) do
+ActiveRecord::Schema.define(version: 2026_11_14_100000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -136,7 +136,9 @@ ActiveRecord::Schema.define(version: 2026_11_13_100000) do
     t.datetime "expires_at", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.bigint "project_invitation_link_id"
     t.index ["customer_id"], name: "index_business_signup_invitations_on_customer_id", unique: true
+    t.index ["project_invitation_link_id"], name: "index_business_signup_invitations_on_project_invitation_link_id"
   end
 
   create_table "chat_mentions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1026,6 +1028,21 @@ ActiveRecord::Schema.define(version: 2026_11_13_100000) do
     t.index ["project_id"], name: "index_project_join_requests_on_project_id"
   end
 
+  create_table "project_invitation_links", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.string "token_digest", limit: 64, null: false
+    t.datetime "expires_at", null: false
+    t.datetime "revoked_at"
+    t.bigint "created_by_id"
+    t.integer "used_count", default: 0, null: false
+    t.datetime "last_used_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["created_by_id"], name: "index_project_invitation_links_on_created_by_id"
+    t.index ["project_id"], name: "index_project_invitation_links_on_project_id"
+    t.index ["token_digest"], name: "index_project_invitation_links_on_token_digest", unique: true
+  end
+
   create_table "project_members", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "project_id", null: false
     t.bigint "customer_id", null: false
@@ -1499,6 +1516,7 @@ ActiveRecord::Schema.define(version: 2026_11_13_100000) do
   add_foreign_key "admin_notifications", "customers"
   add_foreign_key "business_notification_settings", "customers"
   add_foreign_key "business_signup_invitations", "customers"
+  add_foreign_key "business_signup_invitations", "project_invitation_links", on_delete: :nullify
   add_foreign_key "chat_mentions", "chat_messages"
   add_foreign_key "chat_mentions", "customers", column: "mentioned_customer_id"
   add_foreign_key "chat_message_link_previews", "chat_messages"
@@ -1607,6 +1625,8 @@ ActiveRecord::Schema.define(version: 2026_11_13_100000) do
   add_foreign_key "project_chats", "customers"
   add_foreign_key "project_chats", "project_threads"
   add_foreign_key "project_chats", "projects"
+  add_foreign_key "project_invitation_links", "customers", column: "created_by_id", on_delete: :nullify
+  add_foreign_key "project_invitation_links", "projects"
   add_foreign_key "project_join_requests", "customers"
   add_foreign_key "project_join_requests", "projects"
   add_foreign_key "project_members", "customers"
