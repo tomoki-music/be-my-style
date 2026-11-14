@@ -48,6 +48,8 @@ class Business::PostsController < ApplicationController
         redirect_to invitation.path, notice: notice
       elsif invitation&.status == :awaiting
         redirect_to invitation.path, notice: "#{notice}#{business_invitation_awaiting_message(invitation.record)}"
+      elsif invitation&.status == :invalid
+        redirect_to business_post_path(@post), notice: notice, alert: business_invitation_unavailable_message(invitation)
       elsif current_customer.onboarding_done?
         redirect_to business_post_path(@post), notice: notice
       else

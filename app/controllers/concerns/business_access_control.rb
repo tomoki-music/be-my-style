@@ -22,6 +22,7 @@ module BusinessAccessControl
     community_required: [:alert, "プロジェクトに参加するには、先にコミュニティへ参加してください"],
     business_required: [:alert, "参加するには、NAKAMA（Business）の利用開始が必要です。"],
     unavailable: [:alert, "このプロジェクトには参加できません"],
+    invite_only: [:alert, "このプロジェクトは招待制です。招待リンクから参加してください。"],
     message_too_long: [:alert, "申請メッセージは#{ProjectJoinRequest::MESSAGE_MAX_LENGTH}文字以内で入力してください。申請はまだ送られていません。"]
   }.freeze
 
@@ -42,8 +43,13 @@ module BusinessAccessControl
     Community.find_by!(id: id, domain_id: @current_domain.id)
   end
 
+  # プライベートのプロジェクトは、参加者・管理者以外には存在も分からないよう、存在しない場合と同じ 404 にする
+  # (詳細・スレッド・投稿・メンバー・参加などプロジェクト配下の画面はすべてここを通る)。
   def find_business_project!(id)
-    Project.in_domain(@current_domain).find(id)
+    project = Project.in_domain(@current_domain).find(id)
+    raise ActiveRecord::RecordNotFound if project.visibility_private? && !current_customer.business_project_participant?(project)
+
+    project
   end
 
   # プロジェクト内部(スレッド・投稿・メンバー)の閲覧・投稿。コミュニティ未参加者はコミュニティの申請画面へ戻す。

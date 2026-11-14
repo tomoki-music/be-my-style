@@ -5,8 +5,10 @@ module Business
     #
     # message は手動承認の申請に添える任意の文(自動承認では使わない)。
     #
+    # プライベートプロジェクトは招待制のため、参加も申請も受け付けない(:invite_only。参加は AcceptProjectInvitation)。
+    #
     # 戻り値: :joined / :requested / :already_member / :already_requested / :suspended /
-    #         :community_required / :business_required / :unavailable / :message_too_long
+    #         :community_required / :business_required / :unavailable / :message_too_long / :invite_only
     class JoinProject
       def self.call(project:, customer:, message: nil)
         new(project, customer, message).call
@@ -22,10 +24,13 @@ module Business
         return :unavailable if @customer.is_deleted?
         return :business_required unless @customer.business_eligible?
         return :already_member if @customer.business_project_participant?(@project)
+        return :invite_only if @project.visibility_private?
         return :community_required unless @customer.business_community_member?(@project.community)
         return :message_too_long if message_too_long?
 
         @project.with_lock do
+          # 画面を開いた後にプライベートへ変更された場合も、ロック後の値で拒否する。
+          next :invite_only if @project.visibility_private?
           next :suspended if @customer.business_project_suspended?(@project)
           next :already_member if @customer.business_project_participant?(@project)
           next :already_requested if @customer.business_project_pending?(@project)

@@ -22,8 +22,14 @@ class Business::NotificationsController < ApplicationController
   private
 
   # スレッド投稿の通知は、いまプロジェクト内部を閲覧できる場合だけ名前・リンクを出す(退出・停止後に内部情報を見せない)。
+  # プライベートのプロジェクトの通知は、種類を問わず同じ条件にする(後からプライベートにした場合の過去の通知を含む)。
   def viewable_project_ids(notifications)
-    projects = notifications.select { |notification| notification.action == "project_message" }.filter_map(&:project).uniq
+    projects = notifications.select { |notification| project_name_restricted?(notification) }.filter_map(&:project).uniq
     projects.select { |project| current_customer.business_project_participant?(project) }.map(&:id).to_set
   end
+
+  def project_name_restricted?(notification)
+    notification.action == "project_message" || notification.project&.visibility_private?
+  end
+  helper_method :project_name_restricted?
 end

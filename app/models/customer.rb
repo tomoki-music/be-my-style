@@ -197,6 +197,7 @@ class Customer < ApplicationRecord
   has_many :project_access_suspensions, dependent: :destroy
   has_many :issued_community_access_suspensions, class_name: "CommunityAccessSuspension", foreign_key: :suspended_by_id, dependent: :nullify
   has_many :issued_project_access_suspensions, class_name: "ProjectAccessSuspension", foreign_key: :suspended_by_id, dependent: :nullify
+  has_many :issued_project_invitation_links, class_name: "ProjectInvitationLink", foreign_key: :created_by_id, dependent: :nullify
   has_many :learning_students, dependent: :destroy
   has_many :learning_school_groups, dependent: :destroy
   has_many :learning_training_masters, dependent: :destroy

@@ -17,10 +17,11 @@ module Business
       end
 
       # いまも存在する Business のコミュニティ・プロジェクト。削除済み・Business 以外は nil。
+      # プライベートのプロジェクトは詳細URLでは招待先にしない(招待リンクだけが招待になる。名前を案内に出さないため)。
       def find(type, id)
         case type
         when "Community" then business_communities.find_by(id: id)
-        when "Project" then Project.where(community_id: business_communities.select(:id)).find_by(id: id)
+        when "Project" then Project.where(community_id: business_communities.select(:id)).where.not(visibility: Project.visibilities[:private]).find_by(id: id)
         end
       end
 

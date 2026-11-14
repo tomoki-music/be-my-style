@@ -4,6 +4,9 @@
 #   コミュニティ内部(プロジェクト・タイムライン・メンバー) : 承認済みの参加者 or 運営者(can_manage_community?)
 #   プロジェクト内部(スレッド・投稿・添付・メンバー)       : 運営者 / プロジェクト管理者 /
 #                                                          コミュニティ参加者かつプロジェクトの承認済み参加者
+#   プライベートプロジェクト(詳細を含むすべて)            : 運営者 / プロジェクト管理者 / 招待で参加したメンバー
+#                                                          (親コミュニティへの所属は求めない。親コミュニティで
+#                                                          アクセス停止中なら閲覧できない)
 #   プロジェクト管理者 : コミュニティ運営者 + コミュニティ参加資格のあるプロジェクト作成者
 #
 # 「承認済み」は community_customers / project_members の行があること。承認待ちは permits /
@@ -57,7 +60,31 @@ module BusinessAccess
     return false if project.blank?
     return true if business_project_manager?(project)
 
-    business_community_member?(project.community) && project_members.exists?(project_id: project.id)
+    business_project_membership_qualified?(project) && project_members.exists?(project_id: project.id)
+  end
+
+  # プロジェクトメンバーの行が有効になる条件(Project#qualified_project_members と同じ)。
+  # 通常・限定公開は親コミュニティの承認済み参加者であること。プライベートは招待で参加するため親コミュニティへの
+  # 所属を求めず(コミュニティの会話・ほかのプロジェクトは見えないまま)、親コミュニティでアクセス停止中でないことだけを求める。
+  def business_project_membership_qualified?(project)
+    community = project&.community
+    return false if community.blank?
+    return community.business_domain? && !business_community_suspended?(community) if project.visibility_private?
+
+    business_community_member?(community)
+  end
+
+  # プライベートへの変更・プライベートからの変更と、招待リンクの発行・無効化をできる人。
+  # 閲覧できる範囲を決める操作なので、システム管理者と親コミュニティのオーナー本人に限る(運営者・作成者は不可)。
+  def can_manage_business_project_privacy?(project)
+    can_manage_business_private_projects_in?(project&.community)
+  end
+
+  # 新規作成で「プライベート」を選べるか(作成前なので親コミュニティで判定する)。
+  def can_manage_business_private_projects_in?(community)
+    return false if community.blank? || !community.business_domain?
+
+    can_destroy_community?(community)
   end
 
   def business_project_pending?(project)
@@ -120,7 +147,7 @@ module BusinessAccess
     return false if project.blank?
     return false if business_project_suspended?(project) || business_community_suspended?(project.community)
 
-    business_community_member?(project.community) && project_members.exists?(project_id: project.id)
+    business_project_membership_qualified?(project) && project_members.exists?(project_id: project.id)
   end
 
   def can_edit_project_thread?(thread)

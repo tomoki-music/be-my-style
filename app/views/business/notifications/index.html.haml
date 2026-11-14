@@ -15,7 +15,7 @@
 - else
   %ul.ba-notifications
     - @notifications.each do |notification|
-      - hidden = notification.action == "project_message" && !@viewable_project_ids.include?(notification.project_id)
+      - hidden = project_name_restricted?(notification) && !@viewable_project_ids.include?(notification.project_id)
       - link_path = hidden ? nil : business_notification_path(notification)
       - unread = @unread_ids.include?(notification.id)
       - content = capture do
@@ -23,41 +23,44 @@
           %i.fa-solid{ class: icons.fetch(notification.action, "fa-bell") }
         %span.ba-notification__text
           %p
-            - case notification.action
-            - when "like"
-              #{customer_display_name(notification.visitor)}があなたの投稿にいいねしました
-            - when "message"
-              #{customer_display_name(notification.visitor)}があなたの投稿にコメントしました
-            - when "follow"
-              #{customer_display_name(notification.visitor)}がフォローしました
-            - when "request"
-              #{customer_display_name(notification.visitor)}があなたのコミュニティへ参加申請しました
-            - when "accept"
-              #{customer_display_name(notification.visitor)}があなたのコミュニティ参加申請を受理しました
-            - when "project_created"
-              #{customer_display_name(notification.visitor)}が所属コミュニティで新しいプロジェクトを作成しました
-            - when "project_joined"
-              #{customer_display_name(notification.visitor)}がプロジェクトに参加しました
-            - when "project_message"
-              - post_thread = notification.project_chat&.project_thread
-              - if hidden
-                閲覧できなくなったプロジェクトの通知です
-              - elsif post_thread
-                #{customer_display_name(notification.visitor)}がスレッドに投稿しました
-              - else
-                #{customer_display_name(notification.visitor)}がプロジェクトにコメントしました
-            - when "project_request"
-              #{customer_display_name(notification.visitor)}があなたの管理するプロジェクトへ参加申請しました
-            - when "project_accept"
-              #{customer_display_name(notification.visitor)}がプロジェクトへの参加申請を承認しました
+            - if hidden && notification.action != "project_message"
+              閲覧できないプロジェクトの通知です
             - else
-              新しい通知があります
+              - case notification.action
+              - when "like"
+                #{customer_display_name(notification.visitor)}があなたの投稿にいいねしました
+              - when "message"
+                #{customer_display_name(notification.visitor)}があなたの投稿にコメントしました
+              - when "follow"
+                #{customer_display_name(notification.visitor)}がフォローしました
+              - when "request"
+                #{customer_display_name(notification.visitor)}があなたのコミュニティへ参加申請しました
+              - when "accept"
+                #{customer_display_name(notification.visitor)}があなたのコミュニティ参加申請を受理しました
+              - when "project_created"
+                #{customer_display_name(notification.visitor)}が所属コミュニティで新しいプロジェクトを作成しました
+              - when "project_joined"
+                #{customer_display_name(notification.visitor)}がプロジェクトに参加しました
+              - when "project_message"
+                - post_thread = notification.project_chat&.project_thread
+                - if hidden
+                  閲覧できなくなったプロジェクトの通知です
+                - elsif post_thread
+                  #{customer_display_name(notification.visitor)}がスレッドに投稿しました
+                - else
+                  #{customer_display_name(notification.visitor)}がプロジェクトにコメントしました
+              - when "project_request"
+                #{customer_display_name(notification.visitor)}があなたの管理するプロジェクトへ参加申請しました
+              - when "project_accept"
+                #{customer_display_name(notification.visitor)}がプロジェクトへの参加申請を承認しました
+              - else
+                新しい通知があります
           - if notification.action == "project_message" && !hidden && notification.project
             %span.ba-notification__context
               = [notification.project.community&.name, notification.project.title, post_thread&.title].compact.join(" / ")
           - elsif notification.action == "request" && notification.community
             %span.ba-notification__context= notification.community.name
-          - elsif notification.action == "project_request" && notification.project
+          - elsif notification.action == "project_request" && notification.project && !hidden
             %span.ba-notification__context
               = [notification.project.community&.name, notification.project.title].compact.join(" / ")
           %span.ba-notification__time

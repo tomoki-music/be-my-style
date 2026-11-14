@@ -27,10 +27,7 @@
         %li.ba-row
           .ba-row__main
             = link_to project.title, business_project_path(project), class: "ba-row__title"
-            - if project.visibility_unlisted?
-              %span.ba-status.ba-status--unlisted
-                %i.fa-solid.fa-eye-slash{ "aria-hidden": "true" }
-                = business_project_visibility_label(project)
+            = business_project_visibility_badge(project)
             %span.ba-person__meta.d-block
               作成：#{customer_display_name(project.customer) || ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL}
               ／ 更新：#{l(project.updated_at, format: :short)}
