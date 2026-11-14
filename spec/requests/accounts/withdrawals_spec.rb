@@ -52,7 +52,7 @@ RSpec.describe "アカウントの退会", type: :request do
       expect(body).to include("コミュニティを退会")
       expect(body).to include("退会を確定する")
       expect(body).to include("戻る")
-      expect(body).not_to include("NAKAMA だけを退会することはできません")
+      expect(body).not_to include("NAKAMAとBeMyStyleの両方が利用できなくなります")
     end
 
     it "NAKAMA の入口から開いても、アカウント全体の退会であることを説明する" do
@@ -64,8 +64,7 @@ RSpec.describe "アカウントの退会", type: :request do
       expect(document.at_css("h1").text.strip).to eq("BeMyStyleを退会する")
       expect(document.at_css(".account-withdrawal__lead").text).to include("すべてのサービスが使えなくなります")
       note = document.at_css(".account-withdrawal__note--business")
-      expect(note.text).to include("NAKAMA だけを退会することはできません")
-      expect(note.text).to include("音楽を含むすべてのサービスが使えなくなります")
+      expect(note.text.strip).to eq("退会すると、NAKAMAとBeMyStyleの両方が利用できなくなります。")
       expect(document.at_css("a[href='#{business_root_path}']")).to be_present
     end
 
