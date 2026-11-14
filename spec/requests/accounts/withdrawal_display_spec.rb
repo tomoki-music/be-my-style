@@ -71,7 +71,10 @@ RSpec.describe "退会後の表示", type: :request do
       pc_link = document.at_css(".customer-profile-menu .customer-profile-menu__withdrawal")
       expect(pc_link.text.strip).to eq("BeMyStyleを退会する")
       expect(pc_link["href"]).to eq(new_account_withdrawal_path(from: "music"))
-      expect(document.at_css(".customer-menu-sp__withdrawal-item a")["href"]).to eq(new_account_withdrawal_path(from: "music"))
+      sp_link = document.at_css(".customer-menu-sp__withdrawal-item a")
+      expect(sp_link["href"]).to eq(new_account_withdrawal_path(from: "music"))
+      expect(sp_link.text.strip).to eq("BeMyStyleを退会する")
+      expect(response.body).not_to include("NAKAMAを退会する")
       # 入口は確認画面へのリンク(GET)で、押しただけでは退会しない。
       expect(pc_link.name).to eq("a")
     end
@@ -83,8 +86,13 @@ RSpec.describe "退会後の表示", type: :request do
       get business_root_path
 
       document = Nokogiri::HTML(response.body)
-      expect(document.at_css(".ba-sidenav__withdrawal-link")["href"]).to eq(new_account_withdrawal_path(from: "business"))
-      expect(document.at_css(".ba-sheet__withdrawal-link")["href"]).to eq(new_account_withdrawal_path(from: "business"))
+      # PC の左ナビ・スマートフォンのメニューとも、NAKAMA の名前で表示する(退会の対象はアカウント全体のまま)。
+      [".ba-sidenav__withdrawal-link", ".ba-sheet__withdrawal-link"].each do |selector|
+        link = document.at_css(selector)
+        expect(link["href"]).to eq(new_account_withdrawal_path(from: "business"))
+        expect(link.text.strip).to eq("NAKAMAを退会する")
+      end
+      expect(response.body).not_to include("BeMyStyleを退会する")
     end
   end
 end

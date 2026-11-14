@@ -52,6 +52,21 @@ RSpec.describe "アカウントの退会", type: :request do
       expect(body).to include("コミュニティを退会")
       expect(body).to include("退会を確定する")
       expect(body).to include("戻る")
+      expect(body).not_to include("NAKAMA だけを退会することはできません")
+    end
+
+    it "NAKAMA の入口から開いても、アカウント全体の退会であることを説明する" do
+      get new_account_withdrawal_path(from: "business")
+
+      expect(response).to have_http_status(:ok)
+      expect(customer.reload.withdrawn_at).to be_nil
+      document = Nokogiri::HTML(response.body)
+      expect(document.at_css("h1").text.strip).to eq("BeMyStyleを退会する")
+      expect(document.at_css(".account-withdrawal__lead").text).to include("すべてのサービスが使えなくなります")
+      note = document.at_css(".account-withdrawal__note--business")
+      expect(note.text).to include("NAKAMA だけを退会することはできません")
+      expect(note.text).to include("音楽を含むすべてのサービスが使えなくなります")
+      expect(document.at_css("a[href='#{business_root_path}']")).to be_present
     end
 
     it "取消期限前の開催前イベントのエントリーを、退会で取り消すものとして表示する" do
