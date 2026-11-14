@@ -7,6 +7,10 @@
     %h1.account-withdrawal__title BeMyStyleを退会する
     %p.account-withdrawal__lead
       BeMyStyle のアカウントを削除します。音楽・歌唱・演奏診断・NAKAMA(Business)・学習の、すべてのサービスが使えなくなります。
+    -# NAKAMA の「NAKAMAを退会する」から来た人が、NAKAMA だけの退会だと誤解しないようにする。
+    - if @from == "business"
+      %p.account-withdrawal__note.account-withdrawal__note--business
+        退会すると、NAKAMAとBeMyStyleの両方が利用できなくなります。
     %p.account-withdrawal__note
       特定のコミュニティだけを抜けたい場合は、この画面ではなく、各コミュニティの画面の「コミュニティを退会」から手続きしてください。
 

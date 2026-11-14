@@ -225,7 +225,7 @@ RSpec.describe "Business のログイン後のナビゲーション", type: :sys
       open_sheet
       page.send_keys(%i[shift tab])
       # シートの最後の項目は、ログアウトの下に置いたアカウントの退会(確認画面へのリンク)。
-      expect(active_element_text).to eq "BeMyStyleを退会する"
+      expect(active_element_text).to eq "NAKAMAを退会する"
       page.send_keys(:tab)
       expect(active_element_text).to eq "閉じる"
 
