@@ -134,6 +134,9 @@ module Public::EventsHelper
 
     @entry_invitation_has_selectable_candidate =
       @event.songs.any? do |song|
+        # バンド出演曲はエントリー依頼の対象外(楽曲表にも候補を描画しない)。
+        next false if song.band_performance?
+
         JoinPart::NAME_OPTIONS.any? do |column_name|
           normalized_join_parts_for_column(song, column_name).any? do |join_part|
             member_ids = join_part.customers.map(&:id)

@@ -1,0 +1,7 @@
+= render 'layouts/header_menu'
+
+.event-bands
+  .event-bands__header
+    %h2.event-bands__title バンド出演枠の編集
+    %p.event-bands__event-name= @event.event_name
+  = render 'public/event_bands/form', band: @band, url: public_event_band_path(@event, @band), method: :patch

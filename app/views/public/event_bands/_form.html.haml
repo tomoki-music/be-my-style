@@ -1,0 +1,67 @@
+- if band.errors.any?
+  .alert.alert-danger.event-band-form__errors{ role: "alert" }
+    %ul.mb-0
+      - band.errors.full_messages.uniq.each do |message|
+        %li= message
+
+= form_with model: band, scope: :event_band, url: url, method: method, local: true, class: "event-band-form" do |f|
+  .form-group
+    = f.label :name, "バンド名", class: "event-band-form__label"
+    %span.text-red (必須)
+    = f.text_field :name, class: "form-control", maxlength: EventBand::NAME_MAX_LENGTH, required: true
+
+  %fieldset.event-band-form__section
+    %legend.event-band-form__legend パートごとの担当者
+    %p.event-band-form__hint
+      会員から選ぶか、未登録の出演者は表示名を入力してください。使わないパートは空欄のままで構いません。
+    - selected_customer_ids = band.members.map(&:customer_id).compact
+    - extra_customers = Customer.where(id: selected_customer_ids - @member_candidates.map(&:id)).to_a
+    - JoinPart::NAME_OPTIONS.each do |part_name|
+      - member = band.member_for(part_name)
+      - member = nil if member&.marked_for_destruction?
+      - field_id = "event_band_members_#{part_name.downcase}"
+      .event-band-form__part
+        %span.event-band-form__part-name= part_name
+        .event-band-form__part-inputs
+          - options = extra_customers.map { |customer| ["#{customer.is_deleted? ? '退会済みの会員' : customer.name}（現在の設定）", customer.id] }
+          - options += @member_candidates.map { |customer| [customer.name, customer.id] }
+          = label_tag "#{field_id}_customer_id", "#{part_name}の会員", class: "sr-only"
+          = select_tag "event_band[members][#{part_name}][customer_id]",
+            options_for_select(options, member&.customer_id),
+            include_blank: "会員から選ぶ（任意）",
+            id: "#{field_id}_customer_id",
+            class: "form-control"
+          = label_tag "#{field_id}_display_name", "#{part_name}の表示名", class: "sr-only"
+          = text_field_tag "event_band[members][#{part_name}][display_name]",
+            member&.display_name,
+            id: "#{field_id}_display_name",
+            maxlength: EventBandMember::DISPLAY_NAME_MAX_LENGTH,
+            placeholder: "未登録の出演者の表示名",
+            class: "form-control"
+
+  %fieldset.event-band-form__section
+    %legend.event-band-form__legend 出演曲
+    %p.event-band-form__hint
+      同じメンバーで演奏する曲を選んでください。演奏エントリーがある曲は、申込みを消さないよう切り替えできません。
+    = hidden_field_tag "event_band[song_ids][]", "", id: nil
+    - if @songs.empty?
+      %p.text-muted このイベントには曲がありません。
+    - @songs.each do |song|
+      - other_band = song.event_band_id.present? && song.event_band_id != band.id
+      - has_entries = song.join_parts.any? { |join_part| join_part.join_part_customers.any? }
+      - selected = band.selected_song_ids.include?(song.id)
+      - locked = !selected && (other_band || has_entries)
+      .form-check.event-band-form__song
+        = check_box_tag "event_band[song_ids][]", song.id, selected,
+          id: "event_band_song_ids_#{song.id}",
+          disabled: locked,
+          class: "form-check-input"
+        = label_tag "event_band_song_ids_#{song.id}", song.song_name, class: "form-check-label"
+        - if !selected && other_band
+          %span.event-band-form__song-note 別のバンドの出演曲です
+        - elsif !selected && has_entries
+          %span.event-band-form__song-note 演奏エントリーがあるため切り替えできません
+
+  .event-band-form__actions
+    = f.submit "保存する", class: "btn btn-primary", data: { disable_with: "保存中..." }
+    = link_to "一覧に戻る", public_event_bands_path(@event), class: "btn btn-outline-secondary"

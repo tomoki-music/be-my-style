@@ -1,0 +1,229 @@
+// バンド出演枠の管理画面と、楽曲表・曲詳細の「応援する📣」/バンド固定メンバー表示。
+
+.event-bands {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+
+  &__event-name {
+    color: #555;
+    font-weight: bold;
+  }
+
+  &__lead {
+    color: #555;
+    font-size: 0.95rem;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 24px;
+  }
+
+  &__empty {
+    color: #777;
+  }
+
+  &__list {
+    display: grid;
+    gap: 16px;
+  }
+}
+
+.event-band-card {
+  border: 1px solid #dde3ea;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fff;
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  &__buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__members {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 4px 16px;
+    margin: 12px 0;
+
+    dt {
+      font-weight: bold;
+    }
+
+    dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__songs-label {
+    font-weight: bold;
+    margin-right: 8px;
+  }
+
+  &__song-list {
+    margin: 4px 0 0;
+    padding-left: 20px;
+  }
+}
+
+.event-band-form {
+  &__label,
+  &__legend {
+    font-weight: bold;
+  }
+
+  &__legend {
+    font-size: 1.05rem;
+  }
+
+  &__section {
+    margin: 24px 0;
+  }
+
+  &__hint {
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  &__part {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  &__part-name {
+    width: 80px;
+    font-weight: bold;
+  }
+
+  &__part-inputs {
+    display: flex;
+    flex: 1 1 240px;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .form-control {
+      flex: 1 1 200px;
+      min-width: 0;
+    }
+  }
+
+  &__song {
+    margin-bottom: 6px;
+  }
+
+  &__song-note {
+    margin-left: 8px;
+    color: #b45309;
+    font-size: 0.85rem;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+.song-cheer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+
+  &__count {
+    font-size: 0.95rem;
+  }
+
+  &__names {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+  }
+
+  &__button {
+    width: 100%;
+    white-space: normal;
+  }
+}
+
+.song-band-name {
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
+.song-band-note {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.song-band-member {
+  overflow-wrap: anywhere;
+}
+
+.song-band-lineup {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid #dde3ea;
+  border-radius: 8px;
+
+  &__name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    overflow-wrap: anywhere;
+  }
+
+  &__members {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 4px 16px;
+
+    dt {
+      font-weight: bold;
+    }
+
+    dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__note {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 8px 0 0;
+  }
+}
+
+.song-participation__cheer {
+  margin: 12px 0;
+  max-width: 240px;
+}

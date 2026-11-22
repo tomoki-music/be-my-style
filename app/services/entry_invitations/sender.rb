@@ -89,6 +89,7 @@ module EntryInvitations
       return "このイベントで送信する権限がありません。" unless @sender&.can_request_entry_invitation?(@event)
       return "曲またはパートの指定が正しくありません。" unless @song && @join_part
       return "曲またはパートの指定が正しくありません。" unless @song.event_id == @event.id && @join_part.song_id == @song.id
+      return "バンド出演曲にはエントリーをお願いできません。" if @song.band_performance?
       return "終了したイベントには送信できません。" if @event.ended?(now: @now)
 
       nil

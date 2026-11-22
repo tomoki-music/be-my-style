@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_11_14_100000) do
+ActiveRecord::Schema.define(version: 2026_11_22_100000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -452,6 +452,25 @@ ActiveRecord::Schema.define(version: 2026_11_14_100000) do
     t.index ["join_part_id"], name: "index_entry_invitations_on_join_part_id"
     t.index ["requested_by_customer_id"], name: "index_entry_invitations_on_requested_by_customer_id"
     t.index ["song_id"], name: "index_entry_invitations_on_song_id"
+  end
+
+  create_table "event_band_members", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "event_band_id", null: false
+    t.string "part_name", limit: 20, null: false
+    t.bigint "customer_id"
+    t.string "display_name", limit: 50
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_event_band_members_on_customer_id"
+    t.index ["event_band_id", "part_name"], name: "index_event_band_members_on_event_band_id_and_part_name", unique: true
+  end
+
+  create_table "event_bands", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.string "name", limit: 100, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["event_id"], name: "index_event_bands_on_event_id"
   end
 
   create_table "event_communities", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1392,6 +1411,15 @@ ActiveRecord::Schema.define(version: 2026_11_14_100000) do
     t.index ["status"], name: "index_singing_share_images_on_status"
   end
 
+  create_table "song_cheers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "song_id", null: false
+    t.bigint "customer_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_song_cheers_on_customer_id"
+    t.index ["song_id", "customer_id"], name: "index_song_cheers_on_song_id_and_customer_id", unique: true
+  end
+
   create_table "song_customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "customer_id", null: false
     t.bigint "song_id", null: false
@@ -1459,6 +1487,8 @@ ActiveRecord::Schema.define(version: 2026_11_14_100000) do
     t.string "tab_sheet_url", limit: 2048
     t.bigint "requested_by_customer_id"
     t.bigint "song_master_id"
+    t.bigint "event_band_id"
+    t.index ["event_band_id"], name: "index_songs_on_event_band_id"
     t.index ["event_id"], name: "index_songs_on_event_id"
     t.index ["requested_by_customer_id"], name: "index_songs_on_requested_by_customer_id"
     t.index ["song_master_id"], name: "index_songs_on_song_master_id"
@@ -1563,6 +1593,9 @@ ActiveRecord::Schema.define(version: 2026_11_14_100000) do
   add_foreign_key "entry_invitations", "events"
   add_foreign_key "entry_invitations", "join_parts"
   add_foreign_key "entry_invitations", "songs"
+  add_foreign_key "event_band_members", "customers", on_delete: :nullify
+  add_foreign_key "event_band_members", "event_bands", on_delete: :cascade
+  add_foreign_key "event_bands", "events", on_delete: :cascade
   add_foreign_key "event_communities", "communities", on_delete: :cascade
   add_foreign_key "event_communities", "events", on_delete: :cascade
   add_foreign_key "event_deadline_reminder_deliveries", "customers", on_delete: :cascade
@@ -1663,6 +1696,8 @@ ActiveRecord::Schema.define(version: 2026_11_14_100000) do
   add_foreign_key "singing_season_ranking_entries", "singing_diagnoses"
   add_foreign_key "singing_season_ranking_entries", "singing_ranking_seasons"
   add_foreign_key "singing_share_images", "customers"
+  add_foreign_key "song_cheers", "customers"
+  add_foreign_key "song_cheers", "songs", on_delete: :cascade
   add_foreign_key "song_customers", "customers"
   add_foreign_key "song_customers", "songs"
   add_foreign_key "song_master_aliases", "song_masters"
@@ -1670,6 +1705,7 @@ ActiveRecord::Schema.define(version: 2026_11_14_100000) do
   add_foreign_key "song_templates", "customers"
   add_foreign_key "song_templates", "songs", column: "source_song_id"
   add_foreign_key "songs", "customers", column: "requested_by_customer_id"
+  add_foreign_key "songs", "event_bands", on_delete: :nullify
   add_foreign_key "songs", "events"
   add_foreign_key "songs", "song_masters"
   add_foreign_key "subscriptions", "customers"

@@ -1,0 +1,39 @@
+= render 'layouts/header_menu'
+
+.event-bands
+  .event-bands__header
+    %h2.event-bands__title バンド出演枠
+    %p.event-bands__event-name= @event.event_name
+    %p.event-bands__lead
+      バンド名とパートごとの担当者を登録し、出演曲を選びます。出演曲は一般の演奏エントリーと「エントリーお願い」の対象から外れ、「応援する📣」だけを受け付けます。
+    .event-bands__actions
+      = link_to "バンド出演枠を追加", new_public_event_band_path(@event), class: "btn btn-info"
+      = link_to "イベント詳細に戻る", public_event_path(@event, anchor: "event-songs"), class: "btn btn-outline-secondary", data: { turbolinks: false }
+
+  - if @bands.empty?
+    %p.event-bands__empty まだバンド出演枠はありません。
+  - else
+    .event-bands__list
+      - @bands.each do |band|
+        .event-band-card
+          .event-band-card__header
+            %h3.event-band-card__name= band.name
+            .event-band-card__buttons
+              = link_to "編集", edit_public_event_band_path(@event, band), class: "btn btn-sm btn-outline-info"
+              = link_to "削除", public_event_band_path(@event, band),
+                method: :delete,
+                data: { confirm: "バンド出演枠「#{band.name}」を削除しますか？出演曲は削除されず、通常のセッション曲に戻ります。" },
+                class: "btn btn-sm btn-outline-danger"
+          %dl.event-band-card__members
+            - JoinPart::NAME_OPTIONS.each do |part_name|
+              - member = band.member_for(part_name)
+              %dt= part_name
+              %dd= member ? member.label : "ー"
+          .event-band-card__songs
+            %span.event-band-card__songs-label 出演曲
+            - if band.songs.any?
+              %ul.event-band-card__song-list
+                - band.songs.each do |song|
+                  %li= song.song_name
+            - else
+              %span.text-muted 未選択

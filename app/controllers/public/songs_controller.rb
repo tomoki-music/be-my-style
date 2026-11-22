@@ -5,7 +5,8 @@ class Public::SongsController < ApplicationController
     @event = Event.find(params[:event_id])
     # join_parts: :customersをpreloadし、参加状況表示(パートごとのエントリー済みメンバー)で
     # Public::EventsController#showと同じくN+1を発生させない。
-    @song = @event.songs.includes(join_parts: :customers).find(params[:id])
+    @song = @event.songs.includes({ join_parts: :customers }, { song_cheers: :customer }, { event_band: { members: :customer } })
+                  .find(params[:id])
     @can_save_as_template = current_customer.can_edit_event?(@event) && @song.song_name.present?
 
     # 「演奏経験のある人」表示は、楽曲一覧(Public::EventsController#show)と同じ

@@ -73,6 +73,11 @@ ja:
         request_deadline: リクエスト締切日
       event/songs:
         song_name: 曲名
+      event_band:
+        name: バンド名
+      event_band_member:
+        part_name: パート
+        display_name: 表示名
       event/deadline_reminders:
         kind: 自動リマインドの締め切り種別
         channel: 自動リマインドの配信方法

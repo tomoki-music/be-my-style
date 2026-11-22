@@ -46,6 +46,7 @@
               - if current_customer.can_edit_event?(@event)
                 .mt-2
                   = link_to 'イベントの編集', edit_public_event_path(@event), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
+                  = link_to 'バンド出演枠', public_event_bands_path(@event), class: "btn btn-sm btn-info event-show-btn"
                   - if current_customer.can_destroy_event?(@event)
                     = link_to "コピーして新規作成", copy_public_event_path(@event), class: "btn btn-sm btn-info event-show-btn"
 
@@ -267,7 +268,7 @@
                             -# テーブルが画面幅いっぱいに広がるほど各列も比例して広がるようにする。
                             -# min-widthはこれまでどおり候補カードが読める幅(160px)換算の合計(160 * 列数)を保ち、
                             -# 親幅がそれより狭いスマホでは従来どおり.responsive-boxの横スクロールで見る。
-                            - column_count = part_names.size + 2
+                            - column_count = part_names.size + 3
                             - column_width_percent = (100.0 / column_count).round(4)
                             %table.table.table-bordered.event-songs-table{ style: "min-width: #{160 * column_count}px; table-layout: fixed;" }
                               %thead
@@ -276,13 +277,18 @@
                                   %th{ style: "width: #{column_width_percent}%;" } 参加フォーム
                                   - part_names.each do |part|
                                     %th{ style: "width: #{column_width_percent}%;" }= part
+                                  %th{ style: "width: #{column_width_percent}%;" } 応援する📣
                               %tbody
                                 - @event.songs.each do |song|
                                   - recruiting_parts = song.recruiting_join_parts
                                   - vacant = recruiting_parts.any?
                                   %tr{ class: (vacant ? 'vacant' : 'complete') }
                                     %td{ style: "max-width: 120px; overflow-wrap: break-word; word-break: break-word; white-space: normal;" }
-                                      - if vacant
+                                      - if song.band_performance?
+                                        %span.badge.badge-info バンド出演🎸
+                                        %div.song-band-name
+                                          = song.event_band.name
+                                      - elsif vacant
                                         %span.badge.badge-warning 募集中!!
                                       - else
                                         %span.badge.badge-success 楽曲成立🎵
@@ -316,7 +322,9 @@
 
                                     %td
                                       .check-part-list
-                                        - if @event.event_end_time > Time.now
+                                        - if song.band_performance?
+                                          %span.song-band-note バンド出演曲のため一般エントリーはありません
+                                        - elsif @event.event_end_time > Time.now
                                           - song.join_parts.each do |part|
                                             .check-part-item(style="margin-bottom: 4px;")
                                               = label_tag "event_join_part_ids_#{part.id}" do
@@ -331,7 +339,19 @@
                                       -# 対応する固定列へ寄せる。同じ正規化パートに複数JoinPartがあり得るため各件を描画する。
                                       - column_join_parts = normalized_join_parts_for_column(song, part_name)
                                       %td
-                                        - if column_join_parts.present?
+                                        - if song.band_performance?
+                                          -# バンド出演曲は固定メンバーだけを表示し、募集・経験者・エントリー依頼は出さない。
+                                          - band_member = song.event_band.member_for(part_name)
+                                          - if band_member&.customer_member?
+                                            .member-display.song-band-member
+                                              = link_to public_customer_path(band_member.customer), data: { turbolinks: false } do
+                                                = customer_avatar_tag(band_member.customer, class_name: "icon_mini")
+                                                = band_member.customer.name
+                                          - elsif band_member
+                                            .member-display.song-band-member= band_member.label
+                                          - else
+                                            ー
+                                        - elsif column_join_parts.present?
                                           - column_join_parts.each do |join_part|
                                             -# active_customers(customers.active)はloadedな関連でも再クエリするため、
                                             -# preload済みのjoin_part.customersからis_deletedを除外してN+1を避ける。
@@ -374,6 +394,8 @@
                                               = render "public/events/experienced_customers", customers: candidates
                                         - else
                                           ー
+                                    %td.song-cheer-cell
+                                      = render "public/events/song_cheer", song: song, event: @event, can_cheer: @can_cheer
                 - if @entry_invitation_ui_enabled
                   -# 見出し・説明・送信ボタン・確認画面へのGETフォームだけを、楽曲表の横スクロール
                   -# 領域外(この%td)へ置く。対象者のチェックボックスは楽曲表の各パート欄にあり、
