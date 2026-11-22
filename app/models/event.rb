@@ -318,6 +318,15 @@ class Event < ApplicationRecord
     status_key(now: now) == :ended
   end
 
+  # 「応援する📣」(曲・バンド)を受け付けない理由。受け付けるなら nil。
+  # 演奏エントリーと同じく開催コミュニティの所属者だけが、イベント終了前まで応援できる。
+  def cheer_unavailable_reason(customer, now: Time.current)
+    return "応援するには、開催コミュニティへの参加が必要です。" unless community_member?(customer)
+    return "終了したイベントは応援できません。" if ended?(now: now)
+
+    nil
+  end
+
   def join_cancellable?(now: Time.current)
     event_start_time > now + JOIN_CANCELLATION_DEADLINE
   end

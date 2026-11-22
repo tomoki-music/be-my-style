@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_11_22_100000) do
+ActiveRecord::Schema.define(version: 2026_11_23_100000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -452,6 +452,15 @@ ActiveRecord::Schema.define(version: 2026_11_22_100000) do
     t.index ["join_part_id"], name: "index_entry_invitations_on_join_part_id"
     t.index ["requested_by_customer_id"], name: "index_entry_invitations_on_requested_by_customer_id"
     t.index ["song_id"], name: "index_entry_invitations_on_song_id"
+  end
+
+  create_table "event_band_cheers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "event_band_id", null: false
+    t.bigint "customer_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_event_band_cheers_on_customer_id"
+    t.index ["event_band_id", "customer_id"], name: "index_event_band_cheers_on_event_band_id_and_customer_id", unique: true
   end
 
   create_table "event_band_members", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1593,6 +1602,8 @@ ActiveRecord::Schema.define(version: 2026_11_22_100000) do
   add_foreign_key "entry_invitations", "events"
   add_foreign_key "entry_invitations", "join_parts"
   add_foreign_key "entry_invitations", "songs"
+  add_foreign_key "event_band_cheers", "customers"
+  add_foreign_key "event_band_cheers", "event_bands", on_delete: :cascade
   add_foreign_key "event_band_members", "customers", on_delete: :nullify
   add_foreign_key "event_band_members", "event_bands", on_delete: :cascade
   add_foreign_key "event_bands", "events", on_delete: :cascade

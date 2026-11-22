@@ -104,6 +104,7 @@ class Customer < ApplicationRecord
   has_many :join_part_customers, dependent: :destroy
   has_many :join_parts, through: :join_part_customers, dependent: :destroy
   has_many :song_cheers, dependent: :destroy
+  has_many :event_band_cheers, dependent: :destroy
   has_many :event_band_members, dependent: :nullify
   has_many :requests, dependent: :destroy
   has_many :customer_song_parts, dependent: :destroy

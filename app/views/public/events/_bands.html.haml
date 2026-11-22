@@ -1,0 +1,39 @@
+-# イベント詳細「楽曲」欄の上部に出す登録済みバンドの一覧。出演曲が未登録のバンドも表示する。
+-# バンドが無いイベントでは呼び出し側で描画しない。
+%section.event-bands-section#event-bands{ "aria-labelledby": "event-bands-heading" }
+  %h3.event-bands-section__title#event-bands-heading バンド出演🎸
+  .event-bands-section__list
+    - bands.each do |band|
+      %article.event-band-panel{ id: "event-band-#{band.id}" }
+        %h4.event-band-panel__name= band.name
+        - members = band.ordered_members
+        - if members.any?
+          %dl.event-band-panel__members
+            - members.each do |member|
+              %dt= member.part_name
+              %dd
+                - if member.customer_member?
+                  = link_to public_customer_path(member.customer), data: { turbolinks: false } do
+                    = customer_avatar_tag(member.customer, class_name: "icon_mini")
+                    = member.customer.name
+                - else
+                  = member.label
+        - else
+          %p.event-band-panel__empty メンバーは未登録です
+        .event-band-panel__songs
+          %span.event-band-panel__songs-label 出演曲
+          - if band.songs.any?
+            %ul.event-band-panel__song-list
+              - band.songs.each do |song|
+                %li= link_to song.song_name, public_event_song_path(event, song), data: { turbolinks: false }
+          - else
+            %span.event-band-panel__empty 出演曲は未登録です
+        .event-band-panel__cheer
+          = render "public/events/cheer_box",
+            customers: band.active_cheer_customers,
+            cheered: band.cheered_by?(current_customer),
+            path: public_event_band_cheer_path(event, band),
+            button_label: "このバンドを応援する📣",
+            subject_name: band.name,
+            can_cheer: can_cheer,
+            event: event
