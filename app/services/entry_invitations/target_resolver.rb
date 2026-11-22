@@ -8,6 +8,7 @@ module EntryInvitations
   #   2. JoinPart が対象 Song に所属している
   #   3. Customer が存在する(退会者は ExperiencedCustomersQuery が除外済み)
   #   4. Customer がその曲・パートの演奏経験者(別の終了済みイベントに実績あり)
+  #   5. Song がバンド出演曲ではない
   #
   # パートの募集状態(recruiting_join_parts)は検証しない。募集終了パートでも経験者へは
   # 依頼でき、受信者は通常のエントリー導線からそのパートへ参加できる。
@@ -48,6 +49,8 @@ module EntryInvitations
       grouped.filter_map do |(song_id, join_part_id), triples|
         song = songs_by_id[song_id]
         next unless song
+        # バンド出演曲は固定メンバーが演奏するため、エントリー依頼の対象にしない。
+        next if song.band_performance?
 
         join_part = song.join_parts.detect { |part| part.id == join_part_id }
         next unless join_part

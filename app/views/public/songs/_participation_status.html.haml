@@ -4,7 +4,9 @@
 - event_open = @event.event_end_time > Time.now
 .song-participation
   .song-participation__header
-    - if @song.recruiting?
+    - if @song.band_performance?
+      %span.badge.badge-info バンド出演🎸
+    - elsif @song.recruiting?
       %span.badge.badge-warning 募集中!!
     - else
       %span.badge.badge-success 楽曲成立🎵
@@ -18,7 +20,25 @@
       = l @event.event_entry_deadline, format: :short
       まで
 
-  - if @song.join_parts.blank?
+  .song-participation__cheer
+    = render "public/events/song_cheer", song: @song, event: @event, can_cheer: @can_join_event
+
+  - if @song.band_performance?
+    -# バンド出演曲は固定メンバーだけを表示し、一般エントリー・経験者表示は出さない。
+    .song-band-lineup
+      %h3.song-band-lineup__name= @song.event_band.name
+      %dl.song-band-lineup__members
+        - @song.event_band.ordered_members.each do |member|
+          %dt= member.part_name
+          %dd
+            - if member.customer_member?
+              = link_to public_customer_path(member.customer), data: { turbolinks: false } do
+                = customer_avatar_tag(member.customer, class_name: "icon_mini")
+                = member.customer.name
+            - else
+              = member.label
+      %p.song-band-lineup__note バンド出演曲のため一般エントリーはありません。
+  - elsif @song.join_parts.blank?
     %p.song-participation__empty このイベントには参加パートが設定されていません。
   - else
     = form_tag(public_event_join_confirm_path(@event), method: :get, id: "join_btn", onSubmit: "return CheckJoin()") do

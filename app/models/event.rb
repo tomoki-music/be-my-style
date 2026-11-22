@@ -27,6 +27,8 @@ class Event < ApplicationRecord
   belongs_to :community
   has_many :event_communities, -> { order(:id) }, dependent: :destroy, inverse_of: :event
   has_many :deadline_reminders, class_name: "EventDeadlineReminder", dependent: :destroy, inverse_of: :event
+  # バンド出演枠。songs より後に宣言し、イベント削除時は曲を消してからバンドを消す。
+  has_many :event_bands, -> { order(:id) }, dependent: :destroy, inverse_of: :event
 
   accepts_nested_attributes_for :songs, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :deadline_reminders

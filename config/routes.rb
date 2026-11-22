@@ -140,7 +140,12 @@ Rails.application.routes.draw do
       get "join_confirm" => "events#join_confirm"
       # 演奏経験者へのエントリー依頼メール送信(new=確認画面, create=送信)。
       resources :entry_invitations, only: [:new, :create]
-      resources :songs, only: [:create, :destroy, :show]
+      resources :songs, only: [:create, :destroy, :show] do
+        # 楽曲の「応援する📣」(登録・取消)。
+        resource :cheer, only: [:create, :destroy], controller: "song_cheers"
+      end
+      # バンド出演枠(バンド名・パートごとの固定担当者・出演曲)。
+      resources :bands, only: [:index, :new, :create, :edit, :update, :destroy], controller: "event_bands"
       resources :requests, only: [:create, :destroy] do
         post "preview" => "requests#preview", on: :collection
       end

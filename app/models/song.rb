@@ -7,6 +7,9 @@ class Song < ApplicationRecord
   belongs_to :event, inverse_of: :songs
   belongs_to :requested_by_customer, class_name: "Customer", optional: true
   belongs_to :song_master, optional: true
+  # バンド出演曲。担当者はバンドの固定メンバーで、一般の演奏エントリー・エントリー依頼の対象にしない。
+  # 曲の割り当てはバンド出演枠の画面(EventBand#selected_song_ids=)だけで変える。
+  belongs_to :event_band, optional: true, inverse_of: :songs
   has_many :song_customers, dependent: :destroy
   has_many :customers, through: :song_customers, dependent: :destroy
   has_many :join_parts, dependent: :destroy
@@ -18,6 +21,8 @@ class Song < ApplicationRecord
   # イベント演奏実績はJoinPartCustomerを正データとする動的集計のため、専用テーブルは持たない
   # (PerformanceHistory::ExperiencedCustomersQuery/ProfileQuery参照)。
   has_many :customer_song_parts, dependent: :nullify
+  # 「応援する📣」。join_partsとは別に持つので、成立判定・演奏実績・参加人数には数えない。
+  has_many :song_cheers, dependent: :destroy
 
   accepts_nested_attributes_for :join_parts, allow_destroy: true, reject_if: :all_blank
 
@@ -73,8 +78,26 @@ class Song < ApplicationRecord
   # 同じ基準に統一する(曲カード側で独自の募集判定基準を新設しない)。
   # 退会ユーザーだけが登録されているパートも、一般・公開画面上は「現役参加者なし」として扱う。
   # customers(preload済みならメモリ上)を見てactive_customersの新規クエリを避ける。
+  # バンド出演曲は固定メンバーが演奏するため、一般募集のパートを持たない扱いにする。
   def recruiting_join_parts
+    return [] if band_performance?
+
     join_parts.select { |join_part| join_part.customers.all?(&:is_deleted) }
+  end
+
+  def band_performance?
+    event_band_id.present?
+  end
+
+  # 応援している現役会員。song_cheers: :customer をpreload済みなら追加クエリを発生させない。
+  def active_cheer_customers
+    song_cheers.map(&:customer).compact.reject(&:is_deleted)
+  end
+
+  def cheered_by?(customer)
+    return false if customer.blank?
+
+    song_cheers.any? { |cheer| cheer.customer_id == customer.id }
   end
 
   # 「必要パートがすべて埋まった」= 現役参加者が0人のパートが1つも無い状態。
@@ -83,6 +106,8 @@ class Song < ApplicationRecord
   # #recruiting_join_parts と同じく customers(preload済みならメモリ上)を見るため追加クエリを発生させない。
   # 注記: パートが0件の Song も従来どおり established? = true とする(既存の
   # `join_parts.map { active_customers.length }.include?(0)` 判定と挙動を一致させるため)。
+  # バンド出演曲は固定メンバーで演奏が決まっているので established? = true。ただし成立楽曲ランキングの
+  # SQL は join_part_customers だけを見るため、バンド出演曲はランキングには数えない。
   def established?
     recruiting_join_parts.empty?
   end

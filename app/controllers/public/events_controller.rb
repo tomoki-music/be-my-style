@@ -35,7 +35,9 @@ class Public::EventsController < ApplicationController
     events =
       case params[:status]
       when "recruiting"
+        # バンド出演曲は固定メンバーで演奏するため、募集中の判定に含めない。
         events.where("events.event_end_time > ?", Time.current)
+              .where(songs: { event_band_id: nil })
               .group("events.id")
               .having("COUNT(DISTINCT join_parts.id) > COUNT(DISTINCT join_part_customers.join_part_id)")
       when "ended"
@@ -94,6 +96,9 @@ class Public::EventsController < ApplicationController
     #楽曲パート募集欄の「演奏経験のある人」(曲数xパート数分のN+1を避けるため、イベント単位で1回だけ取得)
     #終了済みイベントのJoinPartCustomerを正データとする動的判定のため、確定操作は不要
     @experienced_customers_by_song_part = PerformanceHistory::ExperiencedCustomersQuery.call(@event)
+
+    #「応援する📣」は演奏エントリーと同じく開催コミュニティの所属者だけが使える(登録可否は SongCheersController が再検証する)
+    @can_cheer = @event.community_member?(current_customer)
 
     #楽曲表に統合したエントリー依頼UI(チェックボックス・状態バッジ・一括送信フォーム)を
     #出すかどうか。送信権限があり・未終了で・経験者が1人でもいる場合のみ。
@@ -225,6 +230,8 @@ class Public::EventsController < ApplicationController
       new_song = old_song.dup
       new_song.event = @event
       new_song.requested_by_customer_id = nil unless requested_by_customer_copyable?(old_song)
+      # バンド出演枠はコピー元イベントのものなので引き継がない(コピー先では通常のセッション曲になる)。
+      new_song.event_band_id = nil
 
       # 各曲にデフォルトパートを作成
       JoinPart::NAME_OPTIONS.each do |part_name|
@@ -431,7 +438,14 @@ class Public::EventsController < ApplicationController
     # join_parts: :customersをpreloadしておくことで、showビューで使う
     # Song#recruiting_join_parts(customers(preload済みならメモリ上)を見る設計)が
     # 楽曲数・パート数に応じた追加クエリを発生させないようにする。
-    @event = Event.includes(songs: [:requested_by_customer, { join_parts: :customers }]).find(params[:id])
+    @event = Event.includes(
+      songs: [
+        :requested_by_customer,
+        { join_parts: :customers },
+        { song_cheers: :customer },
+        { event_band: { members: :customer } }
+      ]
+    ).find(params[:id])
   end
 
   # 送信されたjoin_part_idsが、URL上のeventに属するJoinPartの集合と完全に一致するかを検証する。
@@ -444,7 +458,8 @@ class Public::EventsController < ApplicationController
     normalized_ids = normalize_join_part_ids(raw_ids)
     return nil if normalized_ids.empty?
 
-    scoped_ids = event.join_parts.where(id: normalized_ids).pluck(:id)
+    # バンド出演曲のパートは一般エントリーの対象外なので、含まれていれば不正なリクエストとして扱う。
+    scoped_ids = event.join_parts.where(id: normalized_ids, songs: { event_band_id: nil }).pluck(:id)
     return nil unless scoped_ids.sort == normalized_ids.sort
 
     normalized_ids
