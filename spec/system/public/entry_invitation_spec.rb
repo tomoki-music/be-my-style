@@ -50,6 +50,18 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
     expect(page).to have_content("ログインしました", wait: 10)
   end
 
+  # 過去に演奏した人(依頼候補・依頼フォーム)は初期状態で折りたたまれているため、
+  # 依頼UIそのものを検証する例では、開いてから操作する。
+  def visit_event_with_past_performers_shown
+    visit public_event_path(current_event)
+    toggle_past_performers_via_js
+    expect(page).to have_selector(".js-past-performers-toggle[aria-expanded='true']")
+  end
+
+  def toggle_past_performers_via_js
+    page.execute_script("document.querySelector('.js-past-performers-toggle').click()")
+  end
+
   def set_mobile_viewport(width, height = 812)
     page.driver.browser.execute_cdp(
       "Emulation.setDeviceMetricsOverride",
@@ -135,7 +147,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
     it "#{width}px幅で送信フォーム(送信ボタン)が画面外にはみ出さず、スマホ向け操作案内が表示される" do
       sign_in_via_form(owner)
       set_mobile_viewport(width)
-      visit public_event_path(current_event)
+      visit_event_with_past_performers_shown
 
       expect(page).to have_selector("#entry-invitation-form")
       expect_submit_area_within_viewport
@@ -146,13 +158,13 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
 
   it "ページ内の送信ボタンは 1 つだけ" do
     sign_in_via_form(owner)
-    visit public_event_path(current_event)
+    visit_event_with_past_performers_shown
     expect(page).to have_selector(".js-entry-invitation-submit", count: 1)
   end
 
   it "form.elements に form= 属性で紐付いた外部checkboxが含まれる" do
     sign_in_via_form(owner)
-    visit public_event_path(current_event)
+    visit_event_with_past_performers_shown
     expect(page).to have_selector("#entry-invitation-form")
 
     included = page.evaluate_script(<<~JS)
@@ -168,7 +180,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
 
   it "checkbox の id と target token はページ内で一意" do
     sign_in_via_form(owner)
-    visit public_event_path(current_event)
+    visit_event_with_past_performers_shown
 
     dup = page.evaluate_script(<<~JS)
       (function () {
@@ -186,7 +198,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
 
   it "複数の曲・パートから選んだ人だけが 1 回の操作で確認画面に出る" do
     sign_in_via_form(owner)
-    visit public_event_path(current_event)
+    visit_event_with_past_performers_shown
     expect(page).to have_selector("#entry-invitation-form")
 
     check_via_js(checkbox_id(current_song, current_vocal, experienced_a))
@@ -203,7 +215,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
 
   it "選択できる候補がいても、未選択の初期状態では送信ボタンは disabled" do
     sign_in_via_form(owner)
-    visit public_event_path(current_event)
+    visit_event_with_past_performers_shown
 
     expect(page).to have_selector("#entry-invitation-form .js-entry-invitation-submit[disabled]")
     expect(page).not_to have_content("現在、依頼できる演奏経験者はいません")
@@ -211,7 +223,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
 
   it "有効な依頼候補を1件チェックすると送信ボタンが有効になる" do
     sign_in_via_form(owner)
-    visit public_event_path(current_event)
+    visit_event_with_past_performers_shown
 
     expect(invitation_submit_disabled?).to be(true)
     check_via_js(checkbox_id(current_song, current_vocal, experienced_a))
@@ -227,7 +239,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
                               customer: experienced_b, requested_by_customer: owner, sent_at: 1.hour.ago)
 
     sign_in_via_form(owner)
-    visit public_event_path(current_event)
+    visit_event_with_past_performers_shown
 
     expect(page).to have_selector("#entry-invitation-form .js-entry-invitation-submit[disabled]")
     expect(page).to have_content("現在、依頼できる演奏経験者はいません")
@@ -241,7 +253,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
       "Emulation.setDeviceMetricsOverride",
       width: 1280, height: 900, deviceScaleFactor: 1, mobile: false
     )
-    visit public_event_path(current_event)
+    visit_event_with_past_performers_shown
     expect(page).to have_selector("#entry-invitation-form")
 
     display = page.evaluate_script(<<~JS)
@@ -255,7 +267,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
 
   it "未選択のまま送信イベントが起きても警告が出て遷移しない(サーバー到達前の防御)" do
     sign_in_via_form(owner)
-    visit public_event_path(current_event)
+    visit_event_with_past_performers_shown
     expect(page).to have_selector("#entry-invitation-form")
 
     # 通常は disabled でクリックできないが、DOM 改変等で submit された場合の JS 側防御を検証する。
@@ -276,7 +288,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
 
   it "二重送信(連続クリック)を防ぐ" do
     sign_in_via_form(owner)
-    visit public_event_path(current_event)
+    visit_event_with_past_performers_shown
     check_via_js(checkbox_id(current_song, current_vocal, experienced_a))
 
     submitting = page.evaluate_script(<<~JS)
@@ -297,7 +309,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
   describe "参加ボタンと依頼ボタンの分離(状態表)" do
     before do
       sign_in_via_form(owner)
-      visit public_event_path(current_event)
+      visit_event_with_past_performers_shown
       expect(page).to have_selector("#entry-invitation-form")
       expect(page).to have_selector("#submit_join_form")
     end
@@ -382,7 +394,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
                                     customer: c, requested_by_customer: owner, sent_at: 1.hour.ago)
         end
       end
-      visit public_event_path(current_event)
+      visit_event_with_past_performers_shown
 
       expect(page).to have_no_selector(".js-entry-invitation-checkbox")
       expect(invitation_submit_disabled?).to be(true)
@@ -446,7 +458,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
       page.driver.browser.execute_cdp(
         "Emulation.setDeviceMetricsOverride", width: 1280, height: 900, deviceScaleFactor: 1, mobile: false
       )
-      visit public_event_path(current_event)
+      visit_event_with_past_performers_shown
       expect(page).to have_selector(".entry-invitation-candidate--disabled", text: long_name)
 
       data = rects_for(<<~JS)
@@ -496,7 +508,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
 
     it "disabled チェックボックスはクリックしても選択されない" do
       sign_in_via_form(owner)
-      visit public_event_path(current_event)
+      visit_event_with_past_performers_shown
       expect(page).to have_selector(".entry-invitation-candidate__checkbox--disabled")
 
       checked = page.evaluate_script(<<~JS)
@@ -514,7 +526,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
       page.driver.browser.execute_cdp(
         "Emulation.setDeviceMetricsOverride", width: 1280, height: 900, deviceScaleFactor: 1, mobile: false
       )
-      visit public_event_path(current_event)
+      visit_event_with_past_performers_shown
       expect(page).to have_selector(".event-songs-table .event-song-youtube-card")
 
       data = rects_for(<<~JS)
@@ -548,7 +560,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
       it "#{width}px幅: 楽曲表は .responsive-box 内だけで横スクロールし、ページ横スクロールを増やさない" do
         sign_in_via_form(owner)
         set_mobile_viewport(width)
-        visit public_event_path(current_event)
+        visit_event_with_past_performers_shown
         expect(page).to have_selector(".responsive-box")
 
         data = page.evaluate_script(<<~JS)
@@ -613,7 +625,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
     it "375px: ボタン幅が親フォームの内側幅とほぼ一致し、文言が細切れに折り返されない" do
       sign_in_via_form(owner)
       set_mobile_viewport(375)
-      visit public_event_path(current_event)
+      visit_event_with_past_performers_shown
       expect(page).to have_selector("#entry-invitation-form .entry-invitation-form__submit")
 
       m = submit_metrics
@@ -631,7 +643,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
     it "320px: ボタンがフォームからはみ出さず、ページ横スクロールを増やさない" do
       sign_in_via_form(owner)
       set_mobile_viewport(320)
-      visit public_event_path(current_event)
+      visit_event_with_past_performers_shown
       expect(page).to have_selector("#entry-invitation-form .entry-invitation-form__submit")
 
       m = submit_metrics
@@ -647,7 +659,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
     it "disabled と enabled で幅・display が変わらない(JS 有効化前後で不変)" do
       sign_in_via_form(owner)
       set_mobile_viewport(375)
-      visit public_event_path(current_event)
+      visit_event_with_past_performers_shown
       expect(page).to have_selector("#entry-invitation-form .js-entry-invitation-submit[disabled]")
 
       before_enable = submit_metrics
@@ -667,7 +679,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
       page.driver.browser.execute_cdp(
         "Emulation.setDeviceMetricsOverride", width: 1280, height: 900, deviceScaleFactor: 1, mobile: false
       )
-      visit public_event_path(current_event)
+      visit_event_with_past_performers_shown
       expect(page).to have_selector("#entry-invitation-form .entry-invitation-form__submit")
 
       m = submit_metrics

@@ -213,5 +213,25 @@ RSpec.describe EntryInvitations::Sender do
       expect(result.success?).to be false
       expect(EntryInvitation.count).to eq 0
     end
+
+    it '担当コミュニティの正式なマネージャーは送信できる' do
+      manager = FactoryBot.create(:customer, is_owner: :manager)
+      CommunityEventEditor.create!(customer: manager, community: community)
+
+      result = call(customer_ids: [experienced_customer.id], sender: manager)
+
+      expect(result.success?).to be true
+      expect(EntryInvitation.where(requested_by_customer: manager).count).to eq 1
+    end
+
+    it '担当外のマネージャーはerrorを返し、何も送らない' do
+      manager = FactoryBot.create(:customer, is_owner: :manager)
+      CommunityEventEditor.create!(customer: manager, community: FactoryBot.create(:community))
+
+      result = call(customer_ids: [experienced_customer.id], sender: manager)
+
+      expect(result.success?).to be false
+      expect(EntryInvitation.count).to eq 0
+    end
   end
 end

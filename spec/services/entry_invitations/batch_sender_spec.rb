@@ -157,6 +157,27 @@ RSpec.describe EntryInvitations::BatchSender do
       expect(EntryInvitation.count).to eq 0
     end
 
+    it "担当コミュニティの正式なマネージャーは送信できる" do
+      manager = FactoryBot.create(:customer, is_owner: :manager)
+      CommunityEventEditor.create!(customer: manager, community: community)
+
+      result = call([target(current_song_a, current_vocal, vocalist)], sender: manager)
+
+      expect(result).to be_success
+      expect(EntryInvitation.where(requested_by_customer: manager).count).to eq 1
+    end
+
+    it "担当外のマネージャーは error を返し、何も送らない" do
+      manager = FactoryBot.create(:customer, is_owner: :manager)
+      CommunityEventEditor.create!(customer: manager, community: FactoryBot.create(:community))
+
+      result = call([target(current_song_a, current_vocal, vocalist)], sender: manager)
+
+      expect(result).not_to be_success
+      expect(result.error).to include "権限"
+      expect(EntryInvitation.count).to eq 0
+    end
+
     it "終了済みイベントは error を返す" do
       result = call([target(current_song_a, current_vocal, vocalist)], now: 5.days.from_now)
 

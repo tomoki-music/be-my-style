@@ -1866,3 +1866,21 @@ input[type="text"] {
   gap: 8px;
   margin-top: 8px;
 }
+
+// 権限者向け「過去に演奏した人」欄の折りたたみ(初期OFF)。
+// 対象は依頼候補一覧・スマホ用の経験者氏名・依頼フォーム行。一般ユーザーにはこの修飾子が付かないため
+// 従来どおり経験者氏名を表示する。既存の .event-show-container .event-show-table .experienced-customers
+// (display:flex)より詳細度を上げて確実に隠す。
+.event-show-container .event-show-table.event-show-table--past-performers-collapsed {
+  .experienced-customers,
+  .entry-invitation-candidates-wrap,
+  .entry-invitation-row {
+    display: none;
+  }
+}
+
+// 長い文言でもスマホ幅(375px)で横にはみ出さないよう折り返しを許可する。
+.past-performers-toggle {
+  max-width: 100%;
+  white-space: normal;
+}

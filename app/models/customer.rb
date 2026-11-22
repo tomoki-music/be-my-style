@@ -653,6 +653,17 @@ class Customer < ApplicationRecord
     can_manage_community?(event.community)
   end
 
+  # 演奏経験者へのエントリー依頼(楽曲表の依頼UI・確認画面・送信)を行えるか。
+  # 削除権限(can_destroy_event?)の対象に、主催コミュニティを担当する正式なマネージャーを加える。
+  # 担当範囲は can_edit_event? と同じく主催(event.community)だけで判定し、共催先の担当者には与えない。
+  # 削除や主催者の付け替えの権限は広げないため、can_destroy_event? 自体は変更しない。
+  def can_request_entry_invitation?(event)
+    return false if event.blank?
+    return true if can_destroy_event?(event)
+
+    event_editor_of?(event.community)
+  end
+
   def withdrawn_account_cannot_be_restored
     return unless withdrawn? && !is_deleted?
 

@@ -47,7 +47,7 @@ class Public::EntryInvitationsController < ApplicationController
   end
 
   def authorize_sender!
-    return if current_customer.can_destroy_event?(@event)
+    return if current_customer.can_request_entry_invitation?(@event)
 
     redirect_to public_event_path(@event), alert: "この操作を行う権限がありません。"
   end
