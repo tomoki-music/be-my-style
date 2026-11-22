@@ -17,3 +17,11 @@
   submit_label: "保存する",
   cancel_label: "キャンセル",
   cancel_path: business_project_path(@project)
+
+-# 削除は取り消せないため、編集フォームとは別の枠に置く。表示条件は削除処理(require_business_project_destroyer!)と同じ。
+- if current_customer.can_destroy_business_project?(@project)
+  %section.ba-fieldset.ba-form.ba-danger-zone#project-delete{ "aria-labelledby": "project-delete-title" }
+    %h2.ba-fieldset__legend#project-delete-title プロジェクトの削除
+    %p.ba-note プロジェクトと、その中のスレッド・投稿をまとめて削除します。削除すると元に戻せません。コミュニティとほかのプロジェクトは残ります。次の画面で削除される内容を確認できます。
+    .ba-form-actions
+      = link_to "プロジェクトを削除", destroy_confirmation_business_project_path(@project), class: "ba-btn ba-btn--danger"

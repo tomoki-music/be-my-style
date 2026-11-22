@@ -61,7 +61,7 @@
       = link_to public_community_path(community), data: { 'turbolinks': false } do
         .img-container
           - if community.community_image.attached?
-            = image_tag url_for(community.community_image)
+            = positioned_image_tag community, :community_image
           - else
             = image_tag 'no_image'
       .card-body.text-container

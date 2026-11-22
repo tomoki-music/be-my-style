@@ -1,0 +1,10 @@
+-# 招待リンクが見つからない・無効化済み・期限切れ・プライベートでなくなったときの案内(プロジェクト名は出さない)。
+- body = capture do
+  %section.ba-card.ba-invite__card{ "aria-labelledby": "invite-unavailable-title" }
+    %h1.ba-invite__title#invite-unavailable-title
+      %i.fa-solid.fa-link-slash{ "aria-hidden": "true" }
+      招待リンクを使えません
+    %p.ba-invite__note{ role: "alert" }= @unavailable_message
+    .ba-form-actions
+      = link_to "NAKAMAのホームへ", business_root_path, class: "ba-btn ba-btn--secondary"
+= render "business/project_invitations/page", body: body

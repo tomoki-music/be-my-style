@@ -12,19 +12,24 @@ class Public::EventsController < ApplicationController
   before_action :set_requested_by_customer_candidates, only: [:new, :create, :edit, :update]
 
   def index
-    events = Event.left_joins(:community, songs: { join_parts: :join_part_customers }).distinct
+    events = Event.left_joins(:community, songs: { join_parts: :join_part_customers })
+                  .preload(:community, event_communities: :community)
+                  .distinct
 
     if params[:keyword].present?
       keyword = "%#{params[:keyword].strip}%"
       events = events.where(
         "events.event_name LIKE :keyword OR events.place LIKE :keyword OR "\
-        "events.address LIKE :keyword OR communities.name LIKE :keyword OR songs.song_name LIKE :keyword",
+        "events.address LIKE :keyword OR communities.name LIKE :keyword OR songs.song_name LIKE :keyword OR "\
+        "events.id IN (SELECT event_communities.event_id FROM event_communities "\
+        "INNER JOIN communities hosting_communities ON hosting_communities.id = event_communities.community_id "\
+        "WHERE hosting_communities.name LIKE :keyword)",
         keyword: keyword
       )
     end
 
     if params[:community_id].present?
-      events = events.where(community_id: params[:community_id])
+      events = events.hosted_by(params[:community_id])
     end
 
     events =
@@ -58,7 +63,7 @@ class Public::EventsController < ApplicationController
 
   def show
     @owner = Customer.find(@event.customer.id)
-    @community = Community.find(@event.community_id)
+    @hosting_communities = @event.all_hosting_communities
     @request = Request.new
 
     #参加人数(退会ユーザーは一般・公開画面上は現役参加者として数えない)
@@ -93,15 +98,17 @@ class Public::EventsController < ApplicationController
     #楽曲表に統合したエントリー依頼UI(チェックボックス・状態バッジ・一括送信フォーム)を
     #出すかどうか。送信権限があり・未終了で・経験者が1人でもいる場合のみ。
     #一般ユーザー/終了イベントでは「演奏したことのある人」の氏名表示のみに留める。
+    #権限判定は確認画面・送信(EntryInvitationsController / BatchSender / Sender)と同じものを使う。
+    can_request_entry_invitation = current_customer.can_request_entry_invitation?(@event)
     @entry_invitation_ui_enabled =
-      current_customer.can_destroy_event?(@event) &&
+      can_request_entry_invitation &&
       !@event.ended? &&
       @experienced_customers_by_song_part.values.any?(&:present?)
 
     #エントリー依頼の送信履歴(曲数×パート数×経験者数分のN+1を避けるため、イベント単位で1回だけ取得)
-    #状態バッジを描画する権限者(can_destroy_event?)の場合だけ取得する
+    #状態バッジを描画する権限者の場合だけ取得する
     @entry_invitations_by_key =
-      if current_customer.can_destroy_event?(@event)
+      if can_request_entry_invitation
         EntryInvitation.where(event_id: @event.id).index_by { |i| [i.song_id, i.join_part_id, i.customer_id] }
       else
         {}
@@ -147,7 +154,8 @@ class Public::EventsController < ApplicationController
   def create
     @event = Event.new(event_params)
     @event.customer_id = current_customer.id
-    @event.community_id = params[:event][:community_id].to_i
+    # authorize_event_creation! で権限を確認したコミュニティだけを主催にする。
+    @event.community = @creation_community
     if @event.save
       if current_customer.communities.present?
         community_ids = current_customer.communities.pluck(:id)
@@ -172,13 +180,12 @@ class Public::EventsController < ApplicationController
       end
       redirect_to public_event_path(@event), notice: "イベントを投稿しました！"
     else
-      @community_id = params[:event][:community_id].to_i
+      @community_id = @creation_community&.id
       render :new, alert: "登録できませんでした。お手数ですが、入力内容をご確認のうえ再度お試しください"
     end
   end
 
   def edit
-    @community_id = params[:community_id]
     @latitude = @event.latitude
     @longitude = @event.longitude
     @address = @event.address
@@ -199,7 +206,7 @@ class Public::EventsController < ApplicationController
 
   # 締め切り自動リマインドの保存前プレビュー(作成中のイベント)。保存・送信はしない。
   def new_deadline_reminder_preview
-    render_deadline_reminder_preview(Event.new(community_id: params.dig(:event, :community_id)))
+    render_deadline_reminder_preview(Event.new(community: @creation_community))
   end
 
   def copy
@@ -388,10 +395,13 @@ class Public::EventsController < ApplicationController
       :url,
       :url_comment,
     ]
-    attributes += [:customer_id, :community_id] if can_reassign_event_ownership?
+    attributes << :customer_id if can_reassign_event_ownership?
+    attributes << :community_id if @event.blank?
+    hosting_attributes = can_edit_hosting_communities? ? { selected_cohost_community_ids: [] } : {}
 
     params.require(:event).permit(
       *attributes,
+      **hosting_attributes,
       join_part_ids:[],
       part_ids:[],
       songs_attributes: [:id, :event_id, :song_name, :artist_name, :performance_time, :performance_start_time, :youtube_url,
@@ -403,12 +413,18 @@ class Public::EventsController < ApplicationController
     )
   end
 
-  # community_id/customer_idは「イベント編集者には変更させない」項目。
+  # customer_idは「イベント編集者には変更させない」項目。
   # createでは@event未設定の時点でこのメソッドが呼ばれ(その後createアクション内で
-  # customer_id/community_idを明示的に上書きするため無害)、update/copyでは@event.communityを
+  # customer_idを明示的に上書きするため無害)、updateでは@event.communityを
   # 基準に、削除権限と同じ範囲(管理者/投稿者本人/コミュニティ管理者)のみ許可する。
   def can_reassign_event_ownership?
     @event.blank? || current_customer.can_destroy_event?(@event)
+  end
+
+  # 共催先を変えられるのはサイト管理者だけ。主催(community_id)はこの画面の更新では受け付けず
+  # (新規作成時のみ)、変更は管理画面の主催セレクトに限る。
+  def can_edit_hosting_communities?
+    @event&.persisted? && current_customer.can_manage_event_hosting_communities?
   end
 
   def set_event
@@ -460,6 +476,7 @@ class Public::EventsController < ApplicationController
       id: customer.id,
       name: customer.name,
       avatar_url: mention_candidate_avatar_url(customer),
+      avatar_position: customer.profile_image_object_position,
       type: "customer"
     }
   end
@@ -490,8 +507,7 @@ class Public::EventsController < ApplicationController
       if @event&.persisted?
         @event.community
       else
-        community_id = params[:community_id] || params.dig(:event, :community_id)
-        Community.find_by(id: community_id, domain_id: @current_domain.id) if community_id.present?
+        @creation_community
       end
 
     @song_templates = @template_community ? @template_community.song_templates.order(:song_name) : SongTemplate.none
@@ -504,7 +520,9 @@ class Public::EventsController < ApplicationController
   # 「リクエストした人」欄はView側で選択不可にする。
   def set_requested_by_customer_candidates
     @requested_by_customer_candidates =
-      if @template_community
+      if @event&.persisted?
+        @event.hosting_community_members.order(:name)
+      elsif @template_community
         @template_community.active_customers.distinct.order(:name)
       else
         Customer.none
@@ -512,21 +530,30 @@ class Public::EventsController < ApplicationController
   end
 
   def authorize_event_creation!
-    community_param_present = params[:community_id].present? || params.dig(:event, :community_id).present?
-    community =
-      if params[:community_id].present?
-        Community.find_by(id: params[:community_id], domain_id: @current_domain.id)
-      elsif params.dig(:event, :community_id).present?
-        Community.find_by(id: params[:event][:community_id], domain_id: @current_domain.id)
-      end
+    community_param = event_creation_community_param
+    community = find_event_creation_community(community_param)
+    @creation_community = community
 
-    if community_param_present && community.blank?
+    if community_param.present? && community.blank?
       deny_event_access(public_events_path, "イベントを作成するコミュニティを確認してください。")
     elsif community&.premium_event_creation_required? && !current_customer.premium? && !current_customer.admin? && !current_customer.can_manage_community?(community)
       deny_event_access(public_community_path(community), premium_event_creation_required_message)
     elsif !current_customer.can_create_event?(community)
       deny_event_access(public_events_path, "イベントを作成する権限がありません。")
     end
+  end
+
+  # 保存・プレビューの対象は常にフォームの event[community_id] で、クエリの community_id は見ない
+  # (認可と保存で別の値を見ると、権限の無いコミュニティを主催にできてしまうため)。
+  # クエリを使うのは、コミュニティを選んで新規作成画面を開く new だけ。
+  def event_creation_community_param
+    action_name == "new" ? params[:community_id] : params.dig(:event, :community_id)
+  end
+
+  def find_event_creation_community(community_param)
+    return unless community_param.is_a?(String) && community_param.match?(/\A[1-9]\d*\z/)
+
+    Community.find_by(id: community_param, domain_id: @current_domain.id)
   end
 
   def premium_event_creation_required_message

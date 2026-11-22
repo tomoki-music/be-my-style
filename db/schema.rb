@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_10_30_000000) do
+ActiveRecord::Schema.define(version: 2026_11_14_100000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -120,6 +120,27 @@ ActiveRecord::Schema.define(version: 2026_10_30_000000) do
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
   end
 
+  create_table "business_notification_settings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.boolean "email_enabled", default: true, null: false
+    t.boolean "in_app_enabled", default: true, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["customer_id"], name: "index_business_notification_settings_on_customer_id", unique: true
+  end
+
+  create_table "business_signup_invitations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "customer_id", null: false
+    t.string "target_type", limit: 20, null: false
+    t.bigint "target_id", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.bigint "project_invitation_link_id"
+    t.index ["customer_id"], name: "index_business_signup_invitations_on_customer_id", unique: true
+    t.index ["project_invitation_link_id"], name: "index_business_signup_invitations_on_project_invitation_link_id"
+  end
+
   create_table "chat_mentions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "chat_message_id", null: false
     t.bigint "mentioned_customer_id", null: false
@@ -224,6 +245,8 @@ ActiveRecord::Schema.define(version: 2026_10_30_000000) do
     t.string "required_plan_for_event_creation", default: "core", null: false
     t.boolean "plan_restrictions_waived", default: false, null: false
     t.integer "join_approval_mode", default: 0, null: false
+    t.decimal "community_image_position_x", precision: 5, scale: 2
+    t.decimal "community_image_position_y", precision: 5, scale: 2
     t.index ["domain_id"], name: "index_communities_on_domain_id"
   end
 
@@ -398,6 +421,9 @@ ActiveRecord::Schema.define(version: 2026_10_30_000000) do
     t.integer "singing_coach_personality", default: 0, null: false
     t.date "joined_on", null: false
     t.datetime "last_active_at"
+    t.decimal "profile_image_position_x", precision: 5, scale: 2
+    t.decimal "profile_image_position_y", precision: 5, scale: 2
+    t.datetime "withdrawn_at"
     t.index ["email"], name: "index_customers_on_email", unique: true
     t.index ["reset_password_token"], name: "index_customers_on_reset_password_token", unique: true
   end
@@ -426,6 +452,15 @@ ActiveRecord::Schema.define(version: 2026_10_30_000000) do
     t.index ["join_part_id"], name: "index_entry_invitations_on_join_part_id"
     t.index ["requested_by_customer_id"], name: "index_entry_invitations_on_requested_by_customer_id"
     t.index ["song_id"], name: "index_entry_invitations_on_song_id"
+  end
+
+  create_table "event_communities", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.bigint "community_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["community_id"], name: "index_event_communities_on_community_id"
+    t.index ["event_id", "community_id"], name: "index_event_communities_on_event_id_and_community_id", unique: true
   end
 
   create_table "event_deadline_reminder_deliveries", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -902,10 +937,13 @@ ActiveRecord::Schema.define(version: 2026_10_30_000000) do
     t.integer "post_id"
     t.integer "project_id"
     t.bigint "chat_message_id"
+    t.bigint "project_chat_id"
+    t.boolean "hidden_in_app", default: false, null: false
     t.index ["chat_message_id"], name: "index_notifications_on_chat_message_id"
     t.index ["comment_id"], name: "index_notifications_on_comment_id"
     t.index ["event_id"], name: "index_notifications_on_event_id"
     t.index ["post_id"], name: "index_notifications_on_post_id"
+    t.index ["project_chat_id", "visited_id"], name: "index_notifications_on_project_chat_id_and_visited_id", unique: true
     t.index ["project_id"], name: "index_notifications_on_project_id"
     t.index ["visited_id"], name: "index_notifications_on_visited_id"
     t.index ["visitor_id"], name: "index_notifications_on_visitor_id"
@@ -984,9 +1022,25 @@ ActiveRecord::Schema.define(version: 2026_10_30_000000) do
     t.bigint "customer_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.text "message"
     t.index ["customer_id"], name: "index_project_join_requests_on_customer_id"
     t.index ["project_id", "customer_id"], name: "index_project_join_requests_on_project_id_and_customer_id", unique: true
     t.index ["project_id"], name: "index_project_join_requests_on_project_id"
+  end
+
+  create_table "project_invitation_links", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "project_id", null: false
+    t.string "token_digest", limit: 64, null: false
+    t.datetime "expires_at", null: false
+    t.datetime "revoked_at"
+    t.bigint "created_by_id"
+    t.integer "used_count", default: 0, null: false
+    t.datetime "last_used_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["created_by_id"], name: "index_project_invitation_links_on_created_by_id"
+    t.index ["project_id"], name: "index_project_invitation_links_on_project_id"
+    t.index ["token_digest"], name: "index_project_invitation_links_on_token_digest", unique: true
   end
 
   create_table "project_members", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1007,6 +1061,7 @@ ActiveRecord::Schema.define(version: 2026_10_30_000000) do
     t.datetime "last_posted_at", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.datetime "pinned_at"
     t.index ["customer_id"], name: "index_project_threads_on_customer_id"
     t.index ["project_id", "general"], name: "index_project_threads_on_project_id_and_general", unique: true
     t.index ["project_id", "last_posted_at"], name: "index_project_threads_on_project_id_and_last_posted_at"
@@ -1024,6 +1079,10 @@ ActiveRecord::Schema.define(version: 2026_10_30_000000) do
     t.string "goal"
     t.integer "join_approval_mode", default: 0, null: false
     t.string "theme", limit: 100
+    t.decimal "project_image_position_x", precision: 5, scale: 2
+    t.decimal "project_image_position_y", precision: 5, scale: 2
+    t.integer "visibility", default: 0, null: false
+    t.integer "thread_creation_policy", default: 0, null: false
     t.index ["community_id"], name: "index_projects_on_community_id"
     t.index ["customer_id"], name: "index_projects_on_customer_id"
   end
@@ -1455,6 +1514,9 @@ ActiveRecord::Schema.define(version: 2026_10_30_000000) do
   add_foreign_key "activity_reactions", "customers"
   add_foreign_key "admin_notifications", "admins"
   add_foreign_key "admin_notifications", "customers"
+  add_foreign_key "business_notification_settings", "customers"
+  add_foreign_key "business_signup_invitations", "customers"
+  add_foreign_key "business_signup_invitations", "project_invitation_links", on_delete: :nullify
   add_foreign_key "chat_mentions", "chat_messages"
   add_foreign_key "chat_mentions", "customers", column: "mentioned_customer_id"
   add_foreign_key "chat_message_link_previews", "chat_messages"
@@ -1501,6 +1563,8 @@ ActiveRecord::Schema.define(version: 2026_10_30_000000) do
   add_foreign_key "entry_invitations", "events"
   add_foreign_key "entry_invitations", "join_parts"
   add_foreign_key "entry_invitations", "songs"
+  add_foreign_key "event_communities", "communities", on_delete: :cascade
+  add_foreign_key "event_communities", "events", on_delete: :cascade
   add_foreign_key "event_deadline_reminder_deliveries", "customers", on_delete: :cascade
   add_foreign_key "event_deadline_reminder_deliveries", "event_deadline_reminders"
   add_foreign_key "event_deadline_reminders", "chat_messages", on_delete: :nullify
@@ -1561,6 +1625,8 @@ ActiveRecord::Schema.define(version: 2026_10_30_000000) do
   add_foreign_key "project_chats", "customers"
   add_foreign_key "project_chats", "project_threads"
   add_foreign_key "project_chats", "projects"
+  add_foreign_key "project_invitation_links", "customers", column: "created_by_id", on_delete: :nullify
+  add_foreign_key "project_invitation_links", "projects"
   add_foreign_key "project_join_requests", "customers"
   add_foreign_key "project_join_requests", "projects"
   add_foreign_key "project_members", "customers"

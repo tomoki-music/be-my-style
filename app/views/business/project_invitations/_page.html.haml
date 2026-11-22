@@ -1,0 +1,13 @@
+-# 招待の受け入れ画面の枠。ログイン後は Business の枠(layouts/business)、ログイン前は紹介ページと同じヘッダー・フッター(body.ba-lp)。
+- body = local_assigns.fetch(:body)
+- content_for :title, "プロジェクトへの招待｜NAKAMA"
+- if customer_signed_in?
+  .ba-invite= body
+- else
+  - content_for :body_class, "ba-lp"
+  - content_for :head_icons, render("layouts/business_icons")
+  = render "business/homes/lp_header"
+  %main#ba-lp-main.ba-lp-main.ba-help-lp{ tabindex: "-1" }
+    .ba-lp-container
+      .ba-invite= body
+  = render "business/homes/lp_footer"

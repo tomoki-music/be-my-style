@@ -8,7 +8,7 @@ class Business::CommentsController < ApplicationController
 
     post.create_notification_message!(current_customer)
 
-    if post.customer.confirm_mail
+    if post.customer.business_email_notifications_enabled?
       CustomerMailer.with(
         ac_customer: current_customer,
         ps_customer: post.customer,

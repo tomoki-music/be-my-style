@@ -1,6 +1,6 @@
 class Admin::CommunitiesController < ApplicationController
   before_action :authenticate_admin!
-  before_action :set_community, only: [:show, :edit, :update, :destroy]
+  before_action :set_community, only: [:show, :edit, :update, :destroy, :destroy_blocked]
 
   def index
     @communities = Community.includes(:owner, :genres, :domain).order(created_at: :desc)
@@ -37,8 +37,19 @@ class Admin::CommunitiesController < ApplicationController
   end
 
   def destroy
-    @community.destroy
-    redirect_to admin_communities_path, alert: "コミュニティを削除しました。"
+    if @community.destroy
+      redirect_to admin_communities_path, alert: "コミュニティを削除しました。"
+    else
+      redirect_to destroy_blocked_admin_community_path(@community)
+    end
+  end
+
+  # 削除を止めた理由と対象イベント。トーストでは読み切れないため、消えないページで案内する。
+  def destroy_blocked
+    @blocked_events = @community.primary_cohosted_events.order(:id).page(params[:page]).per(Community::BLOCKED_EVENTS_PER_PAGE)
+    return if @blocked_events.total_count.positive?
+
+    redirect_to admin_community_path(@community), notice: "削除を止めている共催イベントはありません。"
   end
 
   private

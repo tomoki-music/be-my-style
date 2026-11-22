@@ -20,13 +20,9 @@
     %legend.ba-fieldset__legend 画像
     .ba-field
       = f.label :community_image, "カバー画像", class: "ba-label", for: "image-input"
-      .ba-image-field
-        - if community.community_image.attached?
-          = image_tag community.community_image, id: "preview-image", class: "ba-image-field__preview", alt: "現在のカバー画像"
-        - else
-          = image_tag "no_image", id: "preview-image", class: "ba-image-field__preview", alt: "画像は未設定です"
-        = f.file_field :community_image, accept: "image/*", class: "form-control", id: "image-input"
-      %small.ba-help 一覧やホームでは丸く切り抜いて表示されます。
+      = render "shared/image_position_field", f: f, attribute: :community_image, preset: :business_community, theme: "business",
+        input_options: { class: "form-control", id: "image-input" }
+      %small.ba-help 詳細画面では横長のカバー、一覧やホームでは丸く切り抜いて表示されます。登録済みの画像も、選び直さずに位置だけ変更できます。
 
   %fieldset.ba-fieldset
     %legend.ba-fieldset__legend 参加方式

@@ -13,6 +13,8 @@ class Customer < ApplicationRecord
   # 「プラン上限とこの回数の大きい方」を月間上限として適用する(実装は#singing_diagnosis_monthly_limit)。
   EVENT_OWNER_DIAGNOSIS_LIMIT = 5
   SIGN_UP_DOMAIN_NAMES = %w[music business learning singing].freeze
+  # 退会したアカウントの表示名(ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL と同じ)。
+  WITHDRAWN_NAME = "退会済みユーザー".freeze
   DEFAULT_SIGN_UP_DOMAIN = "music".freeze
 
   PLAN_OPTIONS = [
@@ -60,6 +62,8 @@ class Customer < ApplicationRecord
   belongs_to :prefecture
 
   has_one_attached :profile_image
+  include ImagePositionable
+  image_position_for :profile_image
   has_many :singing_share_images, dependent: :destroy
   has_many :singing_generated_recap_movies, dependent: :destroy
   has_many :customer_domains, dependent: :destroy
@@ -79,6 +83,8 @@ class Customer < ApplicationRecord
   has_many :followers, through: :reverse_of_relationships, source: :follower, dependent: :destroy
   has_many :active_notifications, class_name: 'Notification', foreign_key: 'visitor_id', dependent: :destroy
   has_many :passive_notifications, class_name: 'Notification', foreign_key: 'visited_id', dependent: :destroy
+  has_one :business_notification_setting, dependent: :destroy
+  has_one :business_signup_invitation, dependent: :delete
   has_many :chat_room_customers, dependent: :destroy
   has_many :chat_rooms, through: :chat_room_customers, dependent: :destroy
   has_many :communities, through: :chat_room_customers, dependent: :destroy
@@ -191,6 +197,7 @@ class Customer < ApplicationRecord
   has_many :project_access_suspensions, dependent: :destroy
   has_many :issued_community_access_suspensions, class_name: "CommunityAccessSuspension", foreign_key: :suspended_by_id, dependent: :nullify
   has_many :issued_project_access_suspensions, class_name: "ProjectAccessSuspension", foreign_key: :suspended_by_id, dependent: :nullify
+  has_many :issued_project_invitation_links, class_name: "ProjectInvitationLink", foreign_key: :created_by_id, dependent: :nullify
   has_many :learning_students, dependent: :destroy
   has_many :learning_school_groups, dependent: :destroy
   has_many :learning_training_masters, dependent: :destroy
@@ -465,6 +472,13 @@ class Customer < ApplicationRecord
     owned_communities.exists?(id: community.id)
   end
 
+  # 削除は取り消せないため、管理権限(CommunityOwner)の付与だけでは許可せずオーナー本人と管理者に限る。
+  def can_destroy_community?(community)
+    return false if community.blank?
+
+    admin? || community.owner_id == id
+  end
+
   # 公開画面の自己申告制イベント編集者(一般メンバーへの個別付与)は廃止したため、
   # CommunityEventEditorレコードは「管理画面がis_owner: managerへ設定した正式な
   # マネージャー役職」の担当コミュニティ判定にのみ使用する。manager?でない場合は
@@ -485,7 +499,7 @@ class Customer < ApplicationRecord
   # 「曲が所属するイベント・コミュニティとの関係」をサーバー側で検証するため、
   # 自分が所属するコミュニティのイベントに紐づくSongのみに絞る。
   def eligible_songs_for_song_part
-    Song.where(event_id: Event.where(community_id: communities.select(:id)).select(:id))
+    Song.where(event_id: Event.hosted_by(communities.select(:id)).select(:id))
   end
 
   # 退会機能
@@ -494,13 +508,51 @@ class Customer < ApplicationRecord
   # 過去データ参照など、is_deletedを問わず全件扱いたい箇所が別途存在するため)。
   scope :active, -> { where(is_deleted: false) }
 
+  # 通知(メール・LINE・画面内の通知)を新しく作る・届けてよい会員。退会(本人の退会・管理画面の退会)は除く。
+  # 宛先を選ぶときだけでなく、配信の直前にも Customer.notifiable_id? で DB から確かめ直す。
+  # withdrawn_at 列が無い間(デプロイでコードを置き換えてから db:migrate が終わるまで)も、cron などの
+  # 別プロセスが新しいコードで通知を送れるよう、列が無ければ従来どおり is_deleted だけで判定する。
+  scope :notifiable, lambda {
+    withdrawn_at_column? ? where(is_deleted: false, withdrawn_at: nil) : where(is_deleted: false)
+  }
+
+  def self.withdrawn_at_column?
+    column_names.include?("withdrawn_at")
+  end
+
+  def self.notifiable_id?(customer_id)
+    customer_id.present? && notifiable.exists?(id: customer_id)
+  end
+
+  def notifiable?
+    !is_deleted? && !withdrawn?
+  end
+
+  # 退会を確定したアカウント(Customers::Withdrawal::Execute。本人の退会と管理画面の「退会」の両方)。
+  # 2026-11 より前に管理画面で「退会」にした会員は is_deleted のみで、withdrawn_at は空(個人情報は残っている)。
+  def withdrawn?
+    has_attribute?(:withdrawn_at) && withdrawn_at.present?
+  end
+
+  # 本人が退会したアカウントは、管理画面からも「有効」に戻させない(プロフィールは削除済みで、元の状態に戻せないため)。
+  validate :withdrawn_account_cannot_be_restored
+
   def active_for_authentication?
+    return false if withdrawn?
     return true if is_owner == 1
     super && !is_deleted
   end
 
   def inactive_message
-    !is_deleted ? super : :deleted_account
+    !is_deleted && !withdrawn? ? super : :deleted_account
+  end
+
+  # 退会済みのアカウントへは、パスワード再設定・メール確認などの Devise のメールも送らない。
+  # (退会時にメールアドレスは届かない宛先へ置き換えるが、それだけに頼らない)
+  def send_devise_notification(notification, *args)
+    return unless notifiable?
+
+    super
   end
 
   enum sex: {
@@ -579,6 +631,11 @@ class Customer < ApplicationRecord
     community.present? && communities.exists?(id: community.id)
   end
 
+  # サイト管理者だけ。イベント作成者・コミュニティ運営者・イベント編集者には許可しない。
+  def can_manage_event_hosting_communities?
+    admin?
+  end
+
   def can_edit_event?(event)
     return true if admin?
     return true if event.customer_id == id
@@ -595,6 +652,24 @@ class Customer < ApplicationRecord
 
     can_manage_community?(event.community)
   end
+
+  # 演奏経験者へのエントリー依頼(楽曲表の依頼UI・確認画面・送信)を行えるか。
+  # 削除権限(can_destroy_event?)の対象に、主催コミュニティを担当する正式なマネージャーを加える。
+  # 担当範囲は can_edit_event? と同じく主催(event.community)だけで判定し、共催先の担当者には与えない。
+  # 削除や主催者の付け替えの権限は広げないため、can_destroy_event? 自体は変更しない。
+  def can_request_entry_invitation?(event)
+    return false if event.blank?
+    return true if can_destroy_event?(event)
+
+    event_editor_of?(event.community)
+  end
+
+  def withdrawn_account_cannot_be_restored
+    return unless withdrawn? && !is_deleted?
+
+    errors.add(:is_deleted, "は退会の手続きが済んだアカウントのため、有効に戻せません")
+  end
+  private :withdrawn_account_cannot_be_restored
 
   def update_without_password(params, *options)
     params.delete(:password)
@@ -646,6 +721,7 @@ class Customer < ApplicationRecord
       notification = current_customer.active_notifications.new(
         visited_id: id,
         action: 'follow',
+        hidden_in_app: !business_in_app_notifications_enabled?
       )
       notification.save if notification.valid?
     end
@@ -818,12 +894,12 @@ class Customer < ApplicationRecord
   end
 
   def create_notification_request(current_customer, community_id)
-    notification = current_customer.active_notifications.new(
-      visited_id: id,
-      action: 'request',
-      community_id: community_id,
+    JoinRequestNotifications.notify!(
+      applicant: current_customer,
+      recipient: self,
+      action: JoinRequestNotifications::COMMUNITY_ACTION,
+      community_id: community_id
     )
-    notification.save if notification.valid?
   end
 
   def create_notification_request_cancel(current_customer, community_id)
@@ -901,16 +977,31 @@ class Customer < ApplicationRecord
     end
   end
 
+  # ビジネス（NAKAMA）の通知設定。設定を保存していない会員は、従来どおり共通のメール受信設定(confirm_mail)と
+  # 画面内の通知オンで扱う(既存会員の受信挙動を変えない)。保存後は Business 側の設定だけに従い、音楽側の
+  # confirm_mail の変更は影響しない(逆に Business 側の保存も confirm_mail を変えない)。
+  def business_notification_setting_or_default
+    business_notification_setting ||
+      BusinessNotificationSetting.new(customer: self, email_enabled: confirm_mail == true, in_app_enabled: true)
+  end
+
+  def business_email_notifications_enabled?
+    business_notification_setting_or_default.email_enabled?
+  end
+
+  def business_in_app_notifications_enabled?
+    business_notification_setting_or_default.in_app_enabled?
+  end
+
   # ビジネス（NAKAMA）
   def business_notification_request(current_customer, community_id)
-    return if current_customer.id == id
-
-    notification = current_customer.active_notifications.new(
-      visited_id: id,
-      action: 'request',
+    JoinRequestNotifications.notify!(
+      applicant: current_customer,
+      recipient: self,
+      action: JoinRequestNotifications::COMMUNITY_ACTION,
       community_id: community_id,
+      hidden_in_app: !business_in_app_notifications_enabled?
     )
-    notification.save if notification.valid?
   end
 
   def business_notification_accept(current_customer, community_id)
@@ -920,6 +1011,7 @@ class Customer < ApplicationRecord
       visited_id: id,
       action: 'accept',
       community_id: community_id,
+      hidden_in_app: !business_in_app_notifications_enabled?
     )
     notification.save if notification.valid?
   end
@@ -931,7 +1023,8 @@ class Customer < ApplicationRecord
       visited_id: id,
       action: 'project_created',
       community_id: project.community_id,
-      project_id: project.id
+      project_id: project.id,
+      hidden_in_app: !business_in_app_notifications_enabled?
     )
     notification.save if notification.valid?
   end
@@ -943,33 +1036,21 @@ class Customer < ApplicationRecord
       visited_id: id,
       action: 'project_joined',
       community_id: project.community_id,
-      project_id: project.id
-    )
-    notification.save if notification.valid?
-  end
-
-  def business_notification_project_message(current_customer, project)
-    return if current_customer.id == id
-
-    notification = current_customer.active_notifications.new(
-      visited_id: id,
-      action: 'project_message',
-      community_id: project.community_id,
-      project_id: project.id
+      project_id: project.id,
+      hidden_in_app: !business_in_app_notifications_enabled?
     )
     notification.save if notification.valid?
   end
 
   def business_notification_project_request(current_customer, project)
-    return if current_customer.id == id
-
-    notification = current_customer.active_notifications.new(
-      visited_id: id,
-      action: 'project_request',
+    JoinRequestNotifications.notify!(
+      applicant: current_customer,
+      recipient: self,
+      action: JoinRequestNotifications::PROJECT_ACTION,
       community_id: project.community_id,
-      project_id: project.id
+      project_id: project.id,
+      hidden_in_app: !business_in_app_notifications_enabled?
     )
-    notification.save if notification.valid?
   end
 
   def business_notification_project_accept(current_customer, project)
@@ -979,7 +1060,8 @@ class Customer < ApplicationRecord
       visited_id: id,
       action: 'project_accept',
       community_id: project.community_id,
-      project_id: project.id
+      project_id: project.id,
+      hidden_in_app: !business_in_app_notifications_enabled?
     )
     notification.save if notification.valid?
   end

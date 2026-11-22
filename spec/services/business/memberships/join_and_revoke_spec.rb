@@ -80,6 +80,24 @@ RSpec.describe "Business::Memberships" do
       expect(described_class.call(project: auto, customer: customer)).to eq :joined
     end
 
+    it "手動承認の申請にはメッセージを保存し、空白だけなら保存しない" do
+      expect(described_class.call(project: project, customer: customer, message: "  よろしくお願いします  ")).to eq :requested
+      expect(ProjectJoinRequest.find_by(project: project, customer: customer).message).to eq "よろしくお願いします"
+
+      other = create(:customer, domain_name: "business")
+      CommunityCustomer.create!(community: community, customer: other)
+      expect(described_class.call(project: project, customer: other, message: " \n ")).to eq :requested
+      expect(ProjectJoinRequest.find_by(project: project, customer: other).message).to be_nil
+    end
+
+    it "501文字のメッセージは申請を作らず :message_too_long、自動承認では文字数に関係なく参加できる" do
+      expect(described_class.call(project: project, customer: customer, message: "a" * 501)).to eq :message_too_long
+      expect(ProjectJoinRequest.where(customer: customer)).to be_empty
+
+      auto = Project.create!(community: community, customer: owner, title: "自動", join_approval_mode: :auto)
+      expect(described_class.call(project: auto, customer: customer, message: "a" * 501)).to eq :joined
+    end
+
     it "同時に挿入されても DB の一意制約で重複しない" do
       ProjectJoinRequest.create!(project: project, customer: customer)
       duplicate = ProjectJoinRequest.new(project: project, customer: customer)

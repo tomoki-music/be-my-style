@@ -20,7 +20,7 @@ module Chat
 
         {
           title: event.event_name,
-          author_name: event.community.name,
+          author_name: event.hosting_community_names,
           thumbnail_url: thumbnail_url_for(event)
         }
       end

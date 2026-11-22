@@ -1,4 +1,29 @@
 module Public::EventsHelper
+  # 「リクエストした人」の選択肢。候補(今の開催コミュニティのメンバー)に、登録済みの人と入力中の人も加える。
+  # 候補から外れた人が選択肢に無いと、そのまま保存しただけで記録が消えてしまうため。
+  def requested_by_customer_options(song, candidates)
+    options = candidates.map { |customer| [customer.name, customer.id] }
+    stored_id = song.requested_by_customer_id_in_database
+    extra_ids = [stored_id, song.requested_by_customer_id].compact.uniq - candidates.map(&:id)
+    return options if extra_ids.empty?
+
+    extras = Customer.where(id: extra_ids).map do |customer|
+      [customer.id == stored_id ? "#{customer.name}（現在の設定）" : customer.name, customer.id]
+    end
+    extras + options
+  end
+
+  # 削除を止めたイベントごとの、閲覧者が実際に開けるリンク。
+  def community_destroy_blocked_event_links(event)
+    links = []
+    links << ["管理画面で主催を変更", edit_admin_event_path(event)] if admin_signed_in?
+    if current_customer&.admin? || current_customer&.music_user?
+      links << ["イベント詳細", public_event_path(event)]
+      links << ["イベントを編集", edit_public_event_path(event)] if current_customer.can_edit_event?(event)
+    end
+    links
+  end
+
   # カード描画に必要な値だけをViewへ渡す。YouTube URLが無い/解析できない場合はnilを返し、
   # 呼び出し側(View)はカードを描画しないだけで済む(fallbackロジックをHamlに書かせない)。
   YoutubeCardData = Struct.new(:thumbnail_url, :video_url, :title, :author_name, keyword_init: true)

@@ -12,12 +12,13 @@
 %article.ba-profile.ba-profile--project
   .ba-profile__cover.ba-profile__cover--project
     - if @project.project_image.attached?
-      = image_tag @project.project_image, class: "ba-profile__cover-image", alt: ""
+      = positioned_image_tag @project, :project_image, class: "ba-profile__cover-image", alt: ""
     - else
       = business_monogram(@project.title, id: @project.id, shape: :rect)
   .ba-profile__body
     .ba-profile__badges
       %span.ba-status.ba-status--kind= business_project_status_label(@project)
+      = business_project_visibility_badge(@project)
     %h1.ba-profile__name= @project.title
     %ul.ba-profile__meta
       %li
@@ -40,7 +41,6 @@
 
     .ba-join#project-join
       = render "business/projects/join_status"
-    = render "business/shared/share_link", record: @project
 
 - if @can_view_internal
   %nav.ba-sectnav{ "aria-label": "このプロジェクトの内容" }
@@ -51,8 +51,12 @@
 
 %section.ba-card.ba-anchor-target#about{ "aria-labelledby": "project-about-title" }
   %h2.ba-section-title#project-about-title 概要
-  .ba-section-body
-    .markdown-body= markdown(@project.description)
+  -# 最初は3行まで。3行に収まらないときだけ business/collapsible_text.js が「もっと見る」を出す(JavaScript が無ければ全文を表示する)。
+  .ba-section-body.ba-collapsible{ data: { collapsible: true } }
+    .markdown-body.ba-collapsible__content#project-about-body= markdown(@project.description)
+    %button.ba-collapsible__toggle{ type: "button", hidden: true, "aria-expanded": "false", "aria-controls": "project-about-body",
+      data: { collapsible_toggle: true, label_more: "もっと見る", label_less: "閉じる" } }
+      もっと見る
 
 - if @can_view_internal
   %section.ba-card.ba-anchor-target#threads{ "aria-labelledby": "project-threads-title" }
@@ -61,9 +65,10 @@
       %h2.ba-section-title#project-threads-title
         スレッド
         %span.ba-count= "#{@thread_count}件"
-      = link_to new_business_project_thread_path(@project), class: "ba-btn ba-btn--soft ba-btn--sm" do
-        %i.fa-solid.fa-plus{ "aria-hidden": "true" }
-        新しいスレッド
+      - if current_customer.can_create_project_thread?(@project)
+        = link_to new_business_project_thread_path(@project), class: "ba-btn ba-btn--soft ba-btn--sm" do
+          %i.fa-solid.fa-plus{ "aria-hidden": "true" }
+          新しいスレッド
 
     = render "business/project_threads/list", project: @project, threads: @threads, post_counts: @thread_post_counts
 
@@ -98,3 +103,18 @@
       %i.fa-solid.fa-lock{ "aria-hidden": "true" }
       参加者限定
     %p.ba-muted スレッドとメンバーはプロジェクト参加者のみ閲覧できます
+
+-# 招待用URLの表示とコピーは、コンテンツの最下部のこの1か所だけに置く。
+-# プライベートは詳細URLでは参加できない(招待リンクだけ)ため、招待用URLを出さず、発行できる人に招待リンクの画面を案内する。
+- if @project.visibility_private?
+  %section.ba-share.ba-anchor-target#share-private-project{ "aria-labelledby": "share-private-title" }
+    %h2.ba-share__title#share-private-title
+      %i.fa-solid.fa-lock{ "aria-hidden": "true" }
+      招待制のプロジェクト
+    - if current_customer.can_manage_business_project_privacy?(@project)
+      %p.ba-share__lead このプロジェクトには、招待リンクを開いた人だけが参加できます。この画面のURLを送っても参加できません。
+      = link_to "招待リンクを発行・管理する", business_project_invitation_link_path(@project), class: "ba-btn ba-btn--secondary ba-btn--sm"
+    - else
+      %p.ba-share__lead このプロジェクトは招待制です。新しいメンバーを招待したいときは、コミュニティのオーナーに招待リンクの発行を依頼してください。
+- else
+  = render "business/shared/share_link", record: @project

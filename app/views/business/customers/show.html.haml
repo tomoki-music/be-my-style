@@ -17,6 +17,9 @@
       = link_to edit_business_customer_path(@customer), class: "ba-btn ba-btn--secondary" do
         %i.fa-solid.fa-gear{ "aria-hidden": "true" }
         プロフィール設定
+      = link_to business_notification_setting_path, class: "ba-btn ba-btn--secondary" do
+        %i.fa-solid.fa-bell{ "aria-hidden": "true" }
+        通知設定
     - else
       %div{ id: "follow_button_#{@customer.id}" }
         = render "business/relationships/follow_button", customer: @customer

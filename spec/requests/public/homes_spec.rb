@@ -225,9 +225,10 @@ RSpec.describe "Public::Homes", type: :request do
 
       get root_path
       expect(doc.at_css(%(#my-communities a[href="#{public_communities_path}"]))).to be_present
-      expect(doc.at_css(%(#my-communities a[href="#{business_communities_path}"]))).to be_present
+      # Business のコミュニティ一覧は参加済みだけなので、未参加も並ぶ Business ホームへ案内する。
+      expect(doc.at_css(%(#my-communities a[href="#{business_root_path(anchor: "my-communities")}"]))).to be_present
       expect(doc.at_css(%(#my-projects a[href="#{business_projects_path}"]))).to be_present
-      expect(doc.at_css(%(#my-projects a[href="#{business_communities_path}"]))).to be_present
+      expect(doc.at_css(%(#my-projects a[href="#{business_root_path(anchor: "my-communities")}"]))).to be_present
 
       get public_community_path(music)
       expect(response).to have_http_status(:ok)
@@ -245,6 +246,23 @@ RSpec.describe "Public::Homes", type: :request do
       expect(Permit.where(community: business, customer: customer)).to exist
       get root_path
       expect(doc.at_css("#my-communities .member-home-card__status").text).to eq "承認待ち"
+    end
+
+    it "参加済みでもプライベート(NAKAMA だけの表示)は出さず、従来どおりの一覧と件数を保つこと" do
+      community = create(:community, name: "企画の会", owner: other, domain: business_domain)
+      CommunityCustomer.create!(community: community, customer: customer)
+      listed = Project.create!(community: community, customer: other, title: "通常の企画")
+      secret = Project.create!(community: community, customer: other, title: "ひみつの企画", visibility: :private)
+      [listed, secret].each { |project| ProjectMember.create!(project: project, customer: customer) }
+
+      get root_path
+      expect(card_titles("my-projects")).to eq ["通常の企画"]
+      expect(response.body).not_to include("ひみつの企画")
+      expect(doc.at_css("#my-projects .member-home__count").text).to eq "1件"
+
+      # 同じ会員でも、NAKAMA のホームには出す。
+      get business_root_path
+      expect(response.body).to include("ひみつの企画")
     end
 
     it "プロジェクトは名前・コミュニティ名・状態を出し、詳細へ直接進めること" do

@@ -1,0 +1,17 @@
+= render 'layouts/admin_header_menu'
+
+.container.my-4
+  .row.justify-content-center
+    .col-lg-8
+      %h2.h4.mb-3 会員編集画面：退会済みの会員
+      .alert.alert-secondary{ role: "status" }
+        この会員は退会の手続きが済んでいます。名前・メールアドレスなどの個人情報は削除・置き換え済みのため、編集できません。
+        会員状態を「有効」に戻すこともできません(本人が再び使う場合は、新しいアカウントとして登録してもらいます)。
+      %dl.row
+        %dt.col-sm-3 会員 ID
+        %dd.col-sm-9= @customer.id
+        %dt.col-sm-3 表示名
+        %dd.col-sm-9= @customer.name
+        %dt.col-sm-3 退会日時
+        %dd.col-sm-9= l(@customer.withdrawn_at, format: :long)
+      = link_to "会員一覧へ戻る", admin_homes_top_path, class: "btn btn-outline-secondary"

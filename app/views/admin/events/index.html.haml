@@ -21,7 +21,7 @@
           %tr
             %th= event.id
             %td= event.event_name
-            %td= event.community&.name
+            %td= event.hosting_community_names
             %td= l(event.event_start_time, format: :short, default: '-')
             %td= l(event.event_end_time, format: :short, default: '-')
             %td

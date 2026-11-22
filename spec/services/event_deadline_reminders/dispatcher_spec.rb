@@ -98,6 +98,36 @@ RSpec.describe EventDeadlineReminders::Dispatcher do
       expect(EventDeadlineReminderDelivery.count).to eq 3
     end
 
+    # デプロイではコードの置き換え後、precompile を経て db:migrate する。その間に cron が新しいコードで動いても、
+    # まだ無い customers.withdrawn_at 列を参照せず(参照すると「未送信確定」になり再送されない)、通常どおり送ること。
+    it "withdrawn_at 列がまだ無い移行途中でも、列を参照せずに全員へ送り、再実行で二重送信しないこと" do
+      allow(Customer).to receive(:column_names).and_return(Customer.column_names - ["withdrawn_at"])
+      reminder = enable!
+      queries = []
+      subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") { |*, payload| queries << payload[:sql] }
+      begin
+        dispatch_at(jst.parse("2026-10-17 12:00"))
+        dispatch_at(jst.parse("2026-10-17 12:05"))
+      ensure
+        ActiveSupport::Notifications.unsubscribe(subscriber)
+      end
+
+      expect(queries.grep(/withdrawn_at/)).to be_empty
+      expect(ActionMailer::Base.deliveries.map(&:to)).to contain_exactly([owner.email], [member_a.email], [member_b.email])
+      expect(reminder.reload).to be_sent
+      expect(reminder.deliveries.delivered.count).to eq 3
+    end
+
+    it "マイグレーション後は、退会した会員へ送らないこと" do
+      reminder = enable!
+      Customers::Withdrawal::Execute.call(member_a)
+
+      dispatch_at(jst.parse("2026-10-17 12:00"))
+
+      expect(ActionMailer::Base.deliveries.map(&:to)).to contain_exactly([owner.email], [member_b.email])
+      expect(reminder.reload).to be_sent
+    end
+
     it "別プロセスが処理中(sending)のリマインドは確保できず送らないこと" do
       reminder = enable!
       travel_to(jst.parse("2026-10-17 12:00"))

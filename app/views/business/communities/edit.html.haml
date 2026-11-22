@@ -22,3 +22,11 @@
 
 -# お試し設定は通常の更新とは別の窓口(システム管理者のみ変更可)なので、フォームを分けて置く。
 = render "plan_trial", community: @community
+
+-# 削除は取り消せないため、編集フォームとは別の枠に置く。表示条件は削除処理(ensure_community_owner!)と同じ。
+- if current_customer.can_destroy_community?(@community)
+  %section.ba-fieldset.ba-form.ba-danger-zone#community-delete{ "aria-labelledby": "community-delete-title" }
+    %h2.ba-fieldset__legend#community-delete-title コミュニティの削除
+    %p.ba-note コミュニティと、その中のプロジェクト・投稿をまとめて削除します。削除すると元に戻せません。次の画面で削除される内容を確認できます。
+    .ba-form-actions
+      = link_to "コミュニティを削除", destroy_confirmation_business_community_path(@community), class: "ba-btn ba-btn--danger"

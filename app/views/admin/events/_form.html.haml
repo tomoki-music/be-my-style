@@ -15,8 +15,40 @@
           = f.label :customer_id, "主催者"
           = f.collection_select :customer_id, Customer.order(:name), :id, :name, {}, class: "form-control"
         .form-group.col-md-3
-          = f.label :community_id, "コミュニティ"
+          = f.label :community_id, @event.persisted? ? "主催コミュニティ" : "コミュニティ"
           = f.collection_select :community_id, Community.order(:name), :id, :name, {}, class: "form-control"
+
+      - if @event.persisted?
+        .form-group
+          %label 開催コミュニティ
+          = render "shared/event_hosting_communities_fields", f: f, event: @event, primary_change_available: true
+        - current_primary = @event.primary_community_in_database
+        .form-group.event-primary-change{ data: { current_primary_id: current_primary&.id, current_primary_name: current_primary&.name } }
+          .form-check
+            = f.check_box :keep_previous_primary_as_cohost, { class: "form-check-input" }, "1", "0"
+            = f.label :keep_previous_primary_as_cohost, "主催を変更するとき、現在の主催「#{current_primary&.name}」を共催先として残す", class: "form-check-label"
+          .alert.alert-warning.mt-2.mb-0.event-primary-change__preview{ hidden: true, role: "status" }
+
+        :javascript
+          (function () {
+            var form = document.currentScript.closest("form");
+            var section = form.querySelector(".event-primary-change");
+            var select = form.querySelector("select[name='event[community_id]']");
+            var keep = form.querySelector("input[type=checkbox][name='event[keep_previous_primary_as_cohost]']");
+            var preview = section.querySelector(".event-primary-change__preview");
+            function render() {
+              var changed = select.value !== section.dataset.currentPrimaryId;
+              preview.hidden = !changed;
+              if (!changed) { return; }
+              var nextName = select.options[select.selectedIndex].text;
+              var currentName = section.dataset.currentPrimaryName;
+              preview.textContent = "保存すると主催が「" + nextName + "」に変わり、「" + currentName + "」は" +
+                (keep.checked ? "共催先に残ります。" : "共催先から外れます。") + "編集権限と自動リマインドの送信先は新しい主催が基準になります。";
+            }
+            select.addEventListener("change", render);
+            keep.addEventListener("change", render);
+            render();
+          })();
 
       .form-row
         .form-group.col-md-4

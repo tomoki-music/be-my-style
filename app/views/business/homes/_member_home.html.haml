@@ -1,9 +1,10 @@
--# Business のログイン後ホーム本文。表示対象・状態・ページ分割は shared/_member_home(/ と共通)と同じで、
--# Homes::MyCommunities / Homes::MyProjects が認可条件で絞った対象だけを出す。承認待ちは名前と状態以外を出さない。
--# 本文は「コミュニティ」「プロジェクト」の2一覧が主役。紹介ヒーロー・キャッチコピー・料金表は置かず、
--# 末尾に小さな利用ガイド(使い方への導線)だけを置く。所属0件では空状態の案内がその役目を兼ねる。
--# 音楽コミュニティは(両方の利用者でも)出さず、探す導線も Business のコミュニティ一覧だけにする。
-- communities = @my_communities.communities
+-# Business のログイン後ホーム本文。本文は「コミュニティ」「プロジェクト」の2一覧が主役。
+-# コミュニティは Business::CommunityDirectory.browsable(参加済み・未参加を問わず Business コミュニティ全件)で、
+-# 未参加のものは詳細(参加案内)から参加・参加申請へ進む。参加済みだけの一覧はメニューの「コミュニティ」。
+-# プロジェクトは Homes::MyProjects(本人の参加先)。承認待ちは名前と状態以外を出さない。
+-# 紹介ヒーロー・キャッチコピー・料金表は置かず、末尾に小さな利用ガイド(使い方への導線)だけを置く。
+-# 音楽コミュニティは(両方の利用者でも)出さない。
+- communities = @home_communities.communities
 - projects = @my_projects.projects
 - project_search_available = member_home_project_search_available?
 
@@ -16,25 +17,18 @@
         コミュニティ
         - if communities.total_count.positive?
           %span.ba-count= "#{communities.total_count}件"
-      - if communities.total_count.positive?
-        = link_to business_communities_path, class: "ba-btn ba-btn--secondary ba-btn--sm" do
-          %i.fa-solid.fa-magnifying-glass{ "aria-hidden": "true" }
-          コミュニティを探す
+      = link_to business_communities_path, class: "ba-btn ba-btn--secondary ba-btn--sm" do
+        %i.fa-solid.fa-user-group{ "aria-hidden": "true" }
+        参加中のコミュニティ
 
     - if communities.total_count.zero?
-      -# 所属0件では、最初にすること(コミュニティへの参加)とその先の流れを番号付きで示す。
       .ba-empty.ba-empty--guide
         .ba-empty-guide__media
           = business_illustration(:ribbon_small, loading: "eager")
         .ba-empty-guide__body
-          %p.ba-empty__title まずはコミュニティに参加しましょう
-          %p 参加しているコミュニティはまだありません。コミュニティを探して、参加を申請しましょう。
-          %ol.ba-guide-steps
-            %li 「コミュニティを探す」から、気になるコミュニティを選びます。
-            %li 「参加する」または「参加を申請する」を押します。
-            %li 参加したら、プロジェクトに参加してスレッドで話せます。
+          %p.ba-empty__title コミュニティはまだありません
+          %p コミュニティができると、ここから選んで参加・参加申請できます。
           .ba-empty__actions
-            = link_to "コミュニティを探す", business_communities_path, class: "ba-btn ba-btn--primary"
             = link_to "使い方を見る", business_help_path, class: "ba-btn ba-btn--secondary"
     - elsif communities.empty?
       .ba-empty
@@ -43,21 +37,17 @@
     - else
       %ul.ba-circle-grid
         - communities.each do |community|
-          - status = @my_communities.statuses.fetch(community.id)
+          - status = @home_communities.statuses.fetch(community.id)
           %li.ba-circle-item{ class: "ba-circle-item--#{status}" }
             = link_to business_community_path(community), class: "ba-circle-item__link" do
               %span.ba-circle-item__media{ class: ("is-pending" if status == :pending) }
                 = business_community_avatar(community, size: :lg)
               %span.ba-circle-item__name= community.name
             .ba-circle-item__badges
-              %span.ba-status{ class: "ba-status--#{status == :manager ? 'manager' : status}" }
-                - if status == :pending
-                  %i.fa-regular.fa-clock{ "aria-hidden": "true" }
-                - elsif status == :manager
-                  %i.fa-solid.fa-star{ "aria-hidden": "true" }
-                - else
-                  %i.fa-solid.fa-check{ "aria-hidden": "true" }
-                = member_home_community_status_label(status)
+              - if status == :none
+                %span.ba-status.ba-status--kind= business_join_approval_label(community)
+              - else
+                = business_join_status_badge(status)
       = paginate communities, param_name: :community_page, params: { anchor: "my-communities" }
 
   %section.ba-home__section.ba-anchor-target#my-projects{ "aria-labelledby": "my-projects-title" }
@@ -76,7 +66,7 @@
           %p 参加しているプロジェクトはまだありません。Business コミュニティに参加すると、そのコミュニティのプロジェクトへ参加を申請できます。
           .ba-empty__actions
             = link_to "プロジェクトを探す", business_projects_path, class: "ba-btn ba-btn--secondary"
-            = link_to "コミュニティを探す", business_communities_path, class: "ba-btn ba-btn--primary"
+            = link_to "コミュニティを探す", business_root_path(anchor: "my-communities"), class: "ba-btn ba-btn--primary"
         - else
           %p プロジェクトは Business（NAKAMA）のコミュニティで利用できる機能です。
           .ba-empty__actions

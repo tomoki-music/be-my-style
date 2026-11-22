@@ -24,9 +24,15 @@ Rails.application.routes.draw do
     get 'analytics', to: 'analytics#show'
 
     # アーティスト編集機能
-    resources :customers, only: [:edit, :update]
+    resources :customers, only: [:edit, :update] do
+      # 会員状態「退会」の確認と確定(Customers::Withdrawal::Execute)。編集フォームで「退会」を選んで保存するとここへ進む。
+      #   GET  /admin/customers/:customer_id/withdrawal/new 確認画面(状態は変えない)
+      #   POST /admin/customers/:customer_id/withdrawal     確定
+      resource :withdrawal, only: [:new, :create], controller: "customer_withdrawals"
+    end
 
     resources :communities do
+      get :destroy_blocked, on: :member
       # 「有料機能を無料でお試し」。Businessコミュニティ専用で、コミュニティ詳細画面から操作する。
       resource :plan_trial, only: [:update], controller: "community_plan_trials"
     end
@@ -171,6 +177,7 @@ Rails.application.routes.draw do
 
     # コミュニティ機能
     resources :communities do
+      get :destroy_blocked, on: :member
       delete "leave" => "communities#leave"
       get "new/mail" => "communities#new_mail"
       get "send/mail" => "communities#send_mail"
@@ -213,6 +220,16 @@ Rails.application.routes.draw do
     delete "purge", :to => "admin/customers#purge"
   end
 
+  # BeMyStyle アカウントの退会(全サービス共通)。音楽ドメインの利用登録を求める /public 配下には置かない。
+  #   GET  /account/withdrawal/new      確認画面
+  #   POST /account/withdrawal          確定(GET では退会しない)
+  #   GET  /account/withdrawal/complete 完了画面(ログアウト後)
+  scope :account, module: :accounts, as: :account do
+    resource :withdrawal, only: [:new, :create] do
+      get :complete
+    end
+  end
+
   # =====================
   # BUSINESS（新規）
   # =====================
@@ -241,9 +258,12 @@ Rails.application.routes.draw do
     get "help", to: "helps#show", as: :help
 
     resources :notifications, only: [:index]
+    # 本人の通知設定(メール・画面内)。URL に会員 ID を含めず、常にログイン中の本人の設定を読み書きする。
+    resource :notification_setting, only: [:show, :update]
 
     resources :projects do
       member do
+        get :destroy_confirmation
         post :join
         delete :leave
         delete :cancel_request
@@ -254,6 +274,7 @@ Rails.application.routes.draw do
       resources :project_chats, only: [:create, :destroy]
       resources :threads, controller: "project_threads" do
         resources :project_chats, only: [:create, :destroy]
+        resource :pin, controller: "project_thread_pins", only: [:create, :destroy]
       end
       resources :join_requests, controller: "project_join_requests", only: [] do
         member do
@@ -262,12 +283,23 @@ Rails.application.routes.draw do
         end
       end
       resources :access_suspensions, controller: "project_access_suspensions", only: [:create, :destroy]
+      # プライベートへの変更・プライベートからの変更の確認画面(編集フォームから進む)。
+      resource :visibility, controller: "project_visibilities", only: [:edit, :update]
+      # プライベートプロジェクトの招待リンクの発行・無効化(システム管理者・親コミュニティのオーナー)。
+      resource :invitation_link, controller: "project_invitation_links", only: [:show, :create, :destroy]
+    end
+
+    # 招待リンクの受け入れ。?token= で開くとトークンをセッションへ移さずにリンク ID だけを持ち、トークンの無い URL へ移る。
+    resource :project_invitation, only: [:show] do
+      post :accept
     end
 
     # タイムライン / プロジェクトチャットの添付ファイル配信(閲覧権限を確認して短時間有効な URL へ転送)。
     resources :chat_attachments, only: [:show]
 
     resources :communities do
+      get :destroy_confirmation, on: :member
+      get :destroy_blocked, on: :member
       delete "leave" => "communities#leave"
 
       get "new/mail" => "communities#new_mail"

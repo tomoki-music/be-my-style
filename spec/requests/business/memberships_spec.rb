@@ -430,7 +430,7 @@ RSpec.describe "Business の参加申請とアクセス管理", type: :request d
       sign_in participant
       expect {
         post business_project_project_chats_path(project), params: { project_chat: { body: "共有です" } }
-      }.to have_enqueued_mail(CustomerMailer, :business_project_chat_mail).at_least(:once)
+      }.to have_enqueued_mail(BusinessProjectChatMailer, :thread_post_mail).at_least(:once)
 
       notified = Notification.where(action: "project_message", project_id: project.id).pluck(:visited_id)
       expect(notified).to include(owner.id)

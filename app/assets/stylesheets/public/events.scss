@@ -1800,3 +1800,87 @@ input[type="text"] {
     margin-top: 12px;
   }
 }
+
+// 開催コミュニティの選択欄(公開画面・管理画面のイベント編集で共用)
+.event-hosting-communities__primary,
+.event-hosting-communities__label {
+  margin-bottom: 8px;
+}
+
+.event-hosting-communities__label {
+  font-weight: bold;
+}
+
+.event-hosting-communities__options {
+  max-height: 240px;
+  padding: 8px 12px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+// コミュニティの削除を止めたときの案内(公開・管理・Business で共用)
+.community-destroy-blocked {
+  max-width: 800px;
+  margin: 24px auto;
+  padding: 0 16px;
+  overflow-wrap: anywhere;
+}
+
+.community-destroy-blocked__reason {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  color: #721c24;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+}
+
+.community-destroy-blocked__steps {
+  margin-bottom: 20px;
+  padding-left: 20px;
+}
+
+.community-destroy-blocked__list {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.community-destroy-blocked__item {
+  margin-bottom: 8px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+.community-destroy-blocked__event-name {
+  font-weight: bold;
+}
+
+.community-destroy-blocked__event-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+// 権限者向け「過去に演奏した人」欄の折りたたみ(初期OFF)。
+// 対象は依頼候補一覧・スマホ用の経験者氏名・依頼フォーム行。一般ユーザーにはこの修飾子が付かないため
+// 従来どおり経験者氏名を表示する。既存の .event-show-container .event-show-table .experienced-customers
+// (display:flex)より詳細度を上げて確実に隠す。
+.event-show-container .event-show-table.event-show-table--past-performers-collapsed {
+  .experienced-customers,
+  .entry-invitation-candidates-wrap,
+  .entry-invitation-row {
+    display: none;
+  }
+}
+
+// 長い文言でもスマホ幅(375px)で横にはみ出さないよう折り返しを許可する。
+.past-performers-toggle {
+  max-width: 100%;
+  white-space: normal;
+}

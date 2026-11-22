@@ -157,6 +157,53 @@
     color: var(--ba-text-muted);
   }
 
+  .ba-join-request {
+    flex-basis: 100%;
+  }
+
+  .ba-join-request__toggle {
+    list-style: none;
+    cursor: pointer;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+
+  // 開いた後は送信ボタンと並ぶ主ボタンが2つにならないよう、閉じるための控えめな見た目にする。
+  .ba-join-request[open] .ba-join-request__toggle {
+    margin-bottom: var(--ba-space-3);
+    border-color: var(--ba-border);
+    background: var(--ba-surface);
+    color: var(--ba-text);
+  }
+
+  .ba-join-request__form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--ba-space-2);
+    max-width: 640px;
+    padding: var(--ba-space-4);
+    border: 1px solid var(--ba-border);
+    border-radius: var(--ba-radius-control);
+    background: var(--ba-surface-muted);
+
+    .form-control {
+      width: 100%;
+    }
+
+    .ba-label {
+      margin-bottom: 0;
+    }
+  }
+
+  .ba-join-request__hint {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ba-text-muted);
+  }
+
   .ba-theme {
     padding: var(--ba-space-3) var(--ba-space-4);
     border-radius: var(--ba-radius-control);
@@ -177,10 +224,55 @@
     overflow-wrap: anywhere;
   }
 
-  // 通常画面の「招待用URL」(business/shared/_share_link)。
+  // 長い文章の折りたたみ(business/collapsible_text.js)。JavaScript が動いたときだけ3行に折りたたむ。
+  .ba-collapsible.is-collapsible.is-collapsed .ba-collapsible__content {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+
+    // 折りたたみ中は、3行目の下に段落の余白がはみ出さないようにする。
+    > :last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .ba-collapsible__toggle {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--ba-tap);
+    margin-top: var(--ba-space-1);
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ba-accent);
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--ba-accent);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  // 詳細画面の最下部の1か所にだけ出す「招待用URL」(business/shared/_share_link)。本文より控えめにする。
   .ba-share {
+    max-width: var(--ba-reading-width);
+    margin-top: var(--ba-space-6);
     padding-top: var(--ba-space-3);
-    border-top: 1px solid var(--ba-border);
+    border-top: 1px dashed var(--ba-border);
+    color: var(--ba-text-muted);
   }
 
   .ba-share__title {
@@ -188,8 +280,8 @@
     align-items: center;
     gap: 6px;
     margin: 0;
-    font-size: 15px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
   }
 
   .ba-share__lead,
@@ -383,6 +475,12 @@
     }
   }
 
+  .ba-notification__context {
+    font-size: 13px;
+    color: var(--ba-text-muted);
+    overflow-wrap: anywhere;
+  }
+
   .ba-notification__time {
     font-size: 13px;
     color: var(--ba-text-muted);
@@ -446,7 +544,10 @@
   }
 
   .ba-user__action {
+    display: flex;
     flex: none;
+    flex-wrap: wrap;
+    gap: var(--ba-space-2);
   }
 
   .ba-chip-list {
@@ -811,5 +912,27 @@
   .ba-break {
     overflow-wrap: anywhere;
     word-break: break-all;
+  }
+
+  .notification-settings__status {
+    margin: 0 0 var(--ba-space-2);
+    font-size: 14px;
+  }
+
+  .notification-settings__scope {
+    margin-bottom: var(--ba-space-4);
+    padding: var(--ba-space-3) var(--ba-space-4);
+    border: 1px solid var(--ba-accent-line);
+    border-radius: var(--ba-radius-control);
+    background: var(--ba-accent-soft);
+    font-size: 14px;
+
+    p {
+      margin: 0;
+    }
+
+    p + p {
+      margin-top: var(--ba-space-1);
+    }
   }
 }

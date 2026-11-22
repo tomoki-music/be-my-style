@@ -19,7 +19,7 @@ RSpec.describe "chat_rooms#mention_candidates / community_mention_candidates", t
         expect(response).to have_http_status(200)
         body = JSON.parse(response.body)
         expect(body.map { |c| c["id"] }).to eq [other_customer.id]
-        expect(body.first.keys).to contain_exactly("id", "name", "avatar_url")
+        expect(body.first.keys).to contain_exactly("id", "name", "avatar_url", "avatar_position")
       end
 
       it "レスポンスに自分自身の情報を含まないこと" do

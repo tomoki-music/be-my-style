@@ -75,6 +75,8 @@
       - when 'request' then
         = link_to community.name, public_community_path(community_id), data: { 'turbolinks': false }
         = "へ参加申請しました"
+        - if community.owner_id == visited.id && !community.business_domain?
+          = link_to "承認待ち一覧で確認する", public_permits_path(community_id), data: { 'turbolinks': false }, class: "notification-permits-link"
       - when 'request_cancel' then
         = link_to community.name, public_community_path(community_id), data: { 'turbolinks': false }
         = "への参加申請を取消しました"

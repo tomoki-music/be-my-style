@@ -168,7 +168,8 @@ module ApplicationHelper
       end
 
     content_tag(:span, class: ["avatar-with-badge", wrapper_class].compact.join(" ")) do
-      concat image_tag(image_source, class: class_name)
+      image_style = image_position_style(customer, :profile_image) unless image_source == fallback
+      concat image_tag(image_source, class: class_name, style: image_style)
       concat(content_tag(:span, badge_label, class: badge_class)) if badge_label.present?
       if show_active_status
         concat(avatar_active_status_dot(customer_login_activity_level(customer), image_class_name: class_name))
@@ -255,6 +256,14 @@ module ApplicationHelper
     return avatar if customer_withdrawn?(customer)
 
     link_to avatar, profile_path || public_customer_path(customer), data: { 'turbolinks': false }
+  end
+
+  # プロフィールへのリンク(中身はブロック)。退会済みならリンクにせず、同じ class の span で中身だけ表示する。
+  # 共有履歴(活動報告・シーズン順位など)で、退会者のプロフィールへ遷移させないために使う。
+  def customer_profile_link_unless_withdrawn(customer, path, html_options = {}, &block)
+    return content_tag(:span, capture(&block), class: html_options[:class]) if customer_withdrawn?(customer)
+
+    link_to(path, html_options, &block)
   end
 
   def subscription_checkout_path_for(plan)

@@ -19,6 +19,13 @@ class ProjectThread < ApplicationRecord
   before_validation :set_last_posted_at, on: :create
 
   scope :recently_active, -> { order(last_posted_at: :desc, id: :desc) }
+  # 一覧の並び順。固定したスレッドを先頭に新しく固定した順で並べ、残りは recently_active の順。
+  # ページ送り(limit/offset)にもこの順序がそのまま効く。
+  scope :display_order, lambda {
+    order(Arel.sql("CASE WHEN project_threads.pinned_at IS NULL THEN 1 ELSE 0 END"))
+      .order(pinned_at: :desc)
+      .recently_active
+  }
 
   # 「全体トーク」(general = true)。旧画面からの投稿(スレッド指定なし)・旧コードが書き込んだ投稿の送り先。
   # ほかのスレッドへは決して振り分けない(全体トークが無いときに別の話題の会話へ混ぜないため)。
@@ -31,6 +38,10 @@ class ProjectThread < ApplicationRecord
     default_for(project) || project.project_threads.create!(general: true, title: DEFAULT_TITLE, customer: project.customer)
   rescue ActiveRecord::RecordNotUnique
     project.project_threads.find_by!(general: true)
+  end
+
+  def pinned?
+    pinned_at.present?
   end
 
   private

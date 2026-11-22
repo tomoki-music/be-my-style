@@ -3,22 +3,21 @@ class Business::CommunitiesController < ApplicationController
 
   layout "business"
 
-  before_action :set_community, only: [:show, :edit, :update, :destroy, :permits]
+  before_action :set_community, only: [:show, :edit, :update, :destroy, :destroy_confirmation, :destroy_blocked, :permits]
   before_action -> { require_business_eligibility!(business_community_path(@community), manager: current_customer.can_manage_community?(@community)) }, only: [:show]
   before_action :ensure_community_manager!, only: [:edit, :update, :permits]
-  before_action :ensure_community_owner!, only: [:destroy]
+  before_action :ensure_community_owner!, only: [:destroy, :destroy_confirmation, :destroy_blocked]
   before_action :load_pending_permit_count, only: [:edit, :update]
   before_action only: [:new, :create] do
     require_feature!(:business_community_create, redirect_to_path: business_communities_path)
   end
 
+  # メニューの「コミュニティ」。ログイン中の本人が参加済みのコミュニティだけを出す(未参加はホームで探す)。
   # 各カードに参加状況と人数を出す。どちらも表示中のページ分だけをまとめて求める。
   def index
-    @communities = Community
-      .where(domain_id: @current_domain.id)
-      .with_attached_community_image
-      .page(params[:page]).per(5)
-    @join_statuses = Business::Memberships::CommunityStatuses.call(customer: current_customer, communities: @communities)
+    directory = Business::CommunityDirectory.joined(current_customer, page: params[:page], per: 5)
+    @communities = directory.communities
+    @join_statuses = directory.statuses
     @member_counts = CommunityCustomer.where(community_id: @communities.map(&:id))
       .joins(:customer).merge(Customer.active).group(:community_id).count
   end
@@ -26,6 +25,10 @@ class Business::CommunitiesController < ApplicationController
   # 未参加者には参加申請に必要な名称・紹介だけを見せ、プロジェクト・タイムライン・メンバーは参加者(運営者を含む)に限る。
   # 運営者にも参加者と同じ画面を出し、承認・停止・設定変更はメンバー管理 / 編集画面へ分ける。
   def show
+    # 招待先のプロジェクトの親コミュニティへの参加を待っていた人が、承認後にこの画面を開いたら(承認メールのリンクなど)、プロジェクトへ進める。
+    invitation_path = Business::SignupInvitations::Resume.call(current_customer, community: @community)
+    return redirect_to(invitation_path, notice: "コミュニティに参加できたため、招待されたプロジェクトへご案内しました。") if invitation_path
+
     @can_view_internal = current_customer.business_community_participant?(@community)
     @join_status = Business::Memberships::CommunityStatuses.for(customer: current_customer, community: @community)
 
@@ -34,7 +37,8 @@ class Business::CommunitiesController < ApplicationController
     load_pending_permit_count if @can_manage
     return unless @can_view_internal
 
-    @projects = @community.projects.with_attached_project_image.recently_updated.to_a
+    # 限定公開は一覧に出さず、プライベートは本人が参加済みのものだけ出す(どちらも管理メニューの「プロジェクト管理」には出す)。
+    @projects = @community.projects.listed_for(current_customer).with_attached_project_image.recently_updated.to_a
     @project_statuses = Business::Memberships::ProjectStatuses.call(customer: current_customer, projects: @projects)
     @timeline_posts = @community.community_posts.includes(customer: { profile_image_attachment: :blob }).with_attached_attachments.order(created_at: :desc)
   end
@@ -85,9 +89,27 @@ class Business::CommunitiesController < ApplicationController
     end
   end
 
+  # 削除前の確認画面。削除の可否(共催イベントの主催)は destroy と同じモデルの判定に任せ、ここでは止まると分かれば先に案内する。
+  def destroy_confirmation
+    return redirect_to(destroy_blocked_business_community_path(@community)) if @community.primary_cohosted_events.exists?
+
+    @deletion_impact = Business::CommunityDeletionImpact.call(@community)
+  end
+
   def destroy
-    @community.destroy
-    redirect_to business_communities_path
+    if @community.destroy
+      redirect_to business_communities_path, notice: "コミュニティ「#{@community.name}」を削除しました。"
+    else
+      redirect_to destroy_blocked_business_community_path(@community)
+    end
+  end
+
+  # 削除を止めた理由と対象イベント。トーストでは読み切れないため、消えないページで案内する。
+  def destroy_blocked
+    @blocked_events = @community.primary_cohosted_events.order(:id).page(params[:page]).per(Community::BLOCKED_EVENTS_PER_PAGE)
+    return if @blocked_events.total_count.positive?
+
+    redirect_to business_community_path(@community), notice: "削除を止めている共催イベントはありません。"
   end
 
   # メンバー管理: 参加申請の承認・却下、参加者のアクセス停止・解除。
@@ -120,9 +142,9 @@ class Business::CommunitiesController < ApplicationController
     redirect_to business_community_path(@community), alert: "このコミュニティを編集する権限がありません。"
   end
 
-  # 削除は取り消せないため、管理権限の付与だけでは許可せずオーナー本人と管理者に限定する。
+  # 編集画面の削除ボタンの表示と同じ判定(Customer#can_destroy_community?)。
   def ensure_community_owner!
-    return if current_customer.admin? || @community.owner_id == current_customer.id
+    return if current_customer.can_destroy_community?(@community)
 
     redirect_to business_community_path(@community), alert: "このコミュニティを削除する権限がありません。"
   end
@@ -133,6 +155,8 @@ class Business::CommunitiesController < ApplicationController
       :introduction,
       :prefecture_id,
       :community_image,
+      :community_image_position_x,
+      :community_image_position_y,
       :activity_stance,
       :join_approval_mode
     )

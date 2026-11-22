@@ -66,8 +66,14 @@
           }
         - else
           .song-participation__join-community
-            %p 参加するには、開催コミュニティへの参加が必要です。
-            = link_to "まずこちらのコミュニティに参加してください", public_community_path(@event.community), data: { turbolinks: false }, class: "btn btn-outline-info"
+            - hosting_communities = @event.all_hosting_communities
+            - if hosting_communities.one?
+              %p 参加するには、開催コミュニティへの参加が必要です。
+              = link_to "まずこちらのコミュニティに参加してください", public_community_path(hosting_communities.first), data: { turbolinks: false }, class: "btn btn-outline-info"
+            - else
+              %p 参加するには、次の開催コミュニティのいずれかへの参加が必要です。
+              - hosting_communities.each do |hosting_community|
+                = link_to "#{hosting_community.name}に参加する", public_community_path(hosting_community), data: { turbolinks: false }, class: "btn btn-outline-info"
       - else
         %p.song-participation__closed 終了イベントのためチェック不可
 

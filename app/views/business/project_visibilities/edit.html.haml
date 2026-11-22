@@ -1,0 +1,54 @@
+-# プライベートへの変更・プライベートからの変更の確認画面。閲覧できる範囲がどう変わるかを示してから反映する。
+- to_label = Business::ProjectHelper::PROJECT_VISIBILITY_LABELS.fetch(@target_visibility)
+- from_label = business_project_visibility_label(@project)
+- widening = @project.visibility_private?
+= render "shared/manage_bar", items: business_project_manage_items(@project, current: :edit, pending_count: @pending_request_count)
+
+%nav.ba-breadcrumb{ "aria-label": "現在地" }
+  %ol
+    %li= link_to @community.name, business_community_path(@community)
+    %li= link_to @project.title, business_project_path(@project)
+    %li= link_to "編集", edit_business_project_path(@project)
+    %li
+      %span{ "aria-current": "page" } 公開範囲の変更
+
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title 公開範囲の変更の確認
+
+%section.ba-fieldset.ba-form.ba-visibility-confirm{ class: ("ba-visibility-confirm--widen" if widening), "aria-labelledby": "visibility-confirm-title" }
+  %h2.ba-fieldset__legend#visibility-confirm-title
+    「#{from_label}」から「#{to_label}」に変更しますか？
+  - if widening
+    %p.ba-visibility-confirm__warning{ role: "alert" }
+      %strong 閲覧できる範囲が広がります。
+      いまはメンバーと管理者だけが見られるプロジェクトが、コミュニティ「#{@community.name}」の参加者にも見えるようになります。
+    %ul.ba-visibility-confirm__list
+      - if @target_visibility == "listed"
+        %li プロジェクト名・テーマ・説明が、コミュニティの参加者に表示されます（ホーム・プロジェクト一覧・コミュニティの画面の一覧に出ます）。
+      - else
+        %li 一覧には表示されませんが、URLを知っているコミュニティの参加者は、プロジェクト名・テーマ・説明を見られます。
+      %li コミュニティの参加者は、参加方式（#{business_join_approval_label(@project)}）に従って参加・参加申請できるようになります。
+      %li 招待リンクはすべて無効になります#{"（いま有効なリンクがあります）" if @active_link}。
+      %li
+        いまのメンバー#{@member_count}人の参加はそのままです。
+        - if @members_outside_community_count.positive?
+          %strong ただし、コミュニティに参加していないメンバー#{@members_outside_community_count}人は、このプロジェクトを見られなくなります
+          （コミュニティに参加すると、また見られるようになります）。
+  - else
+    %ul.ba-visibility-confirm__list
+      %li プロジェクトは一覧・検索・通知に表示されなくなり、メンバーと管理者（システム管理者・コミュニティの運営者・プロジェクトの作成者）だけが見られるようになります。
+      %li いまのメンバー#{@member_count}人の参加はそのままです。
+      %li
+        - if @pending_request_count.positive?
+          %strong 承認待ちの参加申請#{@pending_request_count}件は取り消されます。
+        - else
+          承認待ちの参加申請はありません。
+        プライベートのプロジェクトには、招待リンクからだけ参加できます。
+      %li 変更後に「招待リンク」の画面でリンクを発行してください。これまでの招待用URL（詳細画面のURL）では参加できなくなります。
+  = form_with url: business_project_visibility_path(@project), method: :patch, local: true, data: { turbolinks: false } do |f|
+    = hidden_field_tag :to, @target_visibility
+    = hidden_field_tag :confirmed, "1"
+    .ba-form-actions
+      = f.submit "「#{to_label}」に変更する", class: (widening ? "ba-btn ba-btn--danger-solid" : "ba-btn ba-btn--primary"), data: { disable_with: "変更しています…" }
+      = link_to "キャンセル", edit_business_project_path(@project), class: "ba-btn ba-btn--secondary"

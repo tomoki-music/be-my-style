@@ -45,7 +45,7 @@
               %p.card-text
               - if current_customer.can_edit_event?(@event)
                 .mt-2
-                  = link_to 'イベントの編集', edit_public_event_path(@event, community_id: @event.community_id), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
+                  = link_to 'イベントの編集', edit_public_event_path(@event), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
                   - if current_customer.can_destroy_event?(@event)
                     = link_to "コピーして新規作成", copy_public_event_path(@event), class: "btn btn-sm btn-info event-show-btn"
 
@@ -63,16 +63,23 @@
 
       .col-md-9
         .table-responsive(style="width: 100%;")
-          %table.table.table-striped.event-show-table{:border=>"1", style: "width: 100%;"}
+          -# 依頼UIを出せる権限者だけ、過去の演奏者欄を初期状態で折りたたむ(ページを開くたびにOFF)。
+          %table.table.table-striped.event-show-table{ :border => "1", style: "width: 100%;", class: ("event-show-table--past-performers-collapsed js-past-performers-scope" if @entry_invitation_ui_enabled) }
             %colgroup
               %col{width: "19%"}
               %col{width: "81%"}
                 %tr
                   %th{scope:"row"} 開催コミュニティ
                   %td
-                    = @community.name
+                    - @hosting_communities.each_with_index do |hosting_community, index|
+                      - if index.positive?
+                        \/
+                      = link_to hosting_community.name, public_community_path(hosting_community), data: { turbolinks: false }
                     .text-red
-                      ※このイベントは【#{@community.name}】に参加している必要があります。
+                      - if @hosting_communities.one?
+                        ※このイベントは【#{@hosting_communities.first.name}】に参加している必要があります。
+                      - else
+                        ※このイベントは【#{@hosting_communities.map(&:name).join("】【")}】のいずれかに参加している必要があります。
                 %tr
                   %th{scope:"row"} イベント名
                   %td
@@ -244,6 +251,12 @@
                           %button.btn.btn-outline-primary#filter-all(type="button") すべて表示
                           %button.btn.btn-outline-success#filter-complete(type="button") 楽曲成立
                           %button.btn.btn-outline-warning#filter-vacant(type="button") 募集中
+                          - if @entry_invitation_ui_enabled
+                            %button.btn.btn-outline-secondary.past-performers-toggle.js-past-performers-toggle{ type: "button",
+                              "aria-expanded": "false",
+                              "aria-controls": "event-songs entry-invitation-request-row",
+                              data: { label_show: "過去に演奏した人を表示する", label_hide: "過去に演奏した人を非表示にする" } }
+                              過去に演奏した人を表示する
 
                         %div.responsive-wrapper{ style: "position: relative;" }
                           %div.scroll-indicator{id: "scroll-indicator"} →
@@ -330,7 +343,7 @@
                                                   = link_to public_customer_path(customer), data: { turbolinks: false } do
                                                     = image_tag(customer.profile_image.presence || 'no_image',
                                                                 class: "icon_mini",
-                                                                style: "width:24px; height:24px; border-radius:50%;")
+                                                                style: "width:24px; height:24px; border-radius:50%; object-fit:cover; #{image_position_style(customer, :profile_image)}")
                                                     = customer.name
                                                   - if @event.paid_participant_for_display?(customer)
                                                     %span.member-plan-badge.member-plan-badge--paid
@@ -366,7 +379,7 @@
                   -# 領域外(この%td)へ置く。対象者のチェックボックスは楽曲表の各パート欄にあり、
                   -# HTML5の form= 属性でこのフォームへ紐付く(フォームの入れ子は作らない)。
                   - entry_invitation_selectable = entry_invitation_has_selectable_candidate?
-                  %tr.entry-invitation-row
+                  %tr.entry-invitation-row#entry-invitation-request-row
                     %td{ colspan: "100" }
                       = form_tag new_public_event_entry_invitation_path(@event), method: :get, id: "entry-invitation-form", class: "entry-invitation-form" do
                         %h3.entry-invitation-form__title 演奏経験者へエントリーをお願いする

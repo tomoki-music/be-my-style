@@ -368,4 +368,70 @@ RSpec.describe "Public::EntryInvitations", type: :request do
       expect(invitation.sent_at).to be_present
     end
   end
+
+  describe "正式なマネージャー(is_owner: manager + 担当コミュニティ)" do
+    let(:assigned_manager) do
+      FactoryBot.create(:customer, :customer_with_parts, name: "担当マネージャー", is_owner: :manager).tap do |m|
+        CommunityEventEditor.create!(customer: m, community: community)
+        CommunityCustomer.find_or_create_by!(customer: m, community: community)
+      end
+    end
+    let(:unassigned_manager) do
+      FactoryBot.create(:customer, :customer_with_parts, name: "担当外マネージャー", is_owner: :manager).tap do |m|
+        CommunityEventEditor.create!(customer: m, community: FactoryBot.create(:community))
+        CommunityCustomer.find_or_create_by!(customer: m, community: community)
+      end
+    end
+    let(:valid_target) { target(current_song_a, current_vocal, experienced_customer) }
+
+    it "担当コミュニティのイベントでは確認画面を表示し、送信できる(送信者として記録される)" do
+      sign_in assigned_manager
+
+      get new_path([valid_target])
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include "経験太郎"
+
+      expect {
+        post create_path, params: { targets: [valid_target] }
+      }.to change(EntryInvitation, :count).by(1)
+      expect(response).to redirect_to(public_event_path(current_event))
+      expect(EntryInvitation.last.requested_by_customer).to eq assigned_manager
+    end
+
+    it "担当コミュニティでも終了済みイベントには送信できない" do
+      sign_in assigned_manager
+
+      travel_to(5.days.from_now) do
+        expect {
+          post create_path, params: { targets: [valid_target] }
+        }.not_to change(EntryInvitation, :count)
+      end
+    end
+
+    it "担当外のマネージャーは確認画面も送信も拒否される" do
+      sign_in unassigned_manager
+
+      get new_path([valid_target])
+      expect(response).to redirect_to(public_event_path(current_event))
+      expect(flash[:alert]).to eq "この操作を行う権限がありません。"
+
+      expect {
+        post create_path, params: { targets: [valid_target] }
+      }.not_to change(EntryInvitation, :count)
+      expect(response).to redirect_to(public_event_path(current_event))
+    end
+
+    it "共催先だけを担当するマネージャーは、編集権限と同じく依頼も拒否される" do
+      cohost = FactoryBot.create(:community)
+      current_event.update!(selected_cohost_community_ids: [cohost.id.to_s])
+      cohost_manager = FactoryBot.create(:customer, :customer_with_parts, is_owner: :manager)
+      CommunityEventEditor.create!(customer: cohost_manager, community: cohost)
+      sign_in cohost_manager
+
+      expect {
+        post create_path, params: { targets: [valid_target] }
+      }.not_to change(EntryInvitation, :count)
+      expect(response).to redirect_to(public_event_path(current_event))
+    end
+  end
 end

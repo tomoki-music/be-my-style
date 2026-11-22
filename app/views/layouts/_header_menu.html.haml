@@ -86,6 +86,9 @@
               method: :delete,
               form_class: "d-inline",
               class: "btn btn-secondary menu-sp-btn"
+          -# アカウントの退会は確認画面へ進むだけ(この場では退会しない)。コミュニティの「退会」と混同しないよう名称を分ける。
+          %li.customer-menu-sp__withdrawal-item
+            = link_to "BeMyStyleを退会する", new_account_withdrawal_path(from: "music"), class: "account-withdrawal-link", data: { 'turbolinks': false }
     - else
       %ul.list-style-none
         %li
@@ -149,6 +152,8 @@
               form_class: "customer-profile-menu__logout-form",
               class: "dropdown-item customer-profile-menu__logout" do
               ログアウト
+            .dropdown-divider
+            = link_to "BeMyStyleを退会する", new_account_withdrawal_path(from: "music"), class: "dropdown-item customer-profile-menu__withdrawal", data: { 'turbolinks': false }
     - else
       %ul.list-style-none.list.customer-menu-pc__main
         %li

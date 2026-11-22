@@ -126,8 +126,10 @@
             承認済み
 
         %td
-          = link_to "完全退会",
+          -# 「退会」(編集画面の会員状態)とは別物。会員の行ごと消すため、ほかの会員との共有履歴も消えうる。
+          = link_to "物理削除",
             purge_path(customer_id: customer.id),
             method: :delete,
-            data: { confirm: "【確認】アカウントを完全に削除してもよろしいですか？", 'turbolinks': false },
-            class: "btn btn-danger btn-sm"
+            title: "通常の退会は「編集」→会員状態「退会」から行ってください",
+            data: { confirm: "【物理削除・元に戻せません】会員 ID #{customer.id} のデータをデータベースから完全に削除します。投稿・チャット・イベント参加など、ほかの会員との共有履歴も消える場合があります。\n\n通常の退会は「編集」→会員状態「退会」から行ってください(共有履歴を残して個人情報だけを削除します)。\n\n本当に物理削除しますか？", 'turbolinks': false },
+            class: "btn btn-outline-danger btn-sm"

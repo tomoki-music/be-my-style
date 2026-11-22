@@ -32,6 +32,8 @@ class Public::RegistrationsController < Devise::RegistrationsController
         return render :new
       end
 
+      remember_business_signup_invitation!(resource)
+
       if resource.active_for_authentication?
         set_flash_message! :notice, :signed_up if is_flashing_format?
         sign_up(resource_name, resource)
@@ -97,6 +99,8 @@ class Public::RegistrationsController < Devise::RegistrationsController
       :favorite_artist5,
       :introduction,
       :profile_image,
+      :profile_image_position_x,
+      :profile_image_position_y,
       :prefecture_id,
       :url,
       :domain_name,
@@ -136,12 +140,31 @@ class Public::RegistrationsController < Devise::RegistrationsController
 
   private
 
+  # 未ログインで開いた招待用URL(Devise が保存した戻り先)を、セッションから会員の招待先へ移す。
+  # 確認メールを別のブラウザで開いても、オンボーディング完了後に招待先へ案内できるようにするため。
+  # 移した戻り先はセッションから消す(招待先へ案内した後、このブラウザでの次のログインで再び転送しないため)。
+  # 招待用URL以外の戻り先は従来どおりセッションに残す。
+  # 記録に失敗しても登録は止めない(会員は作成済み)。その場合は戻り先をセッションに残し、従来どおりの案内になる。
+  def remember_business_signup_invitation!(customer)
+    key = stored_location_key_for(resource_name)
+    remembered = Business::SignupInvitations::Remember.call(
+      customer: customer,
+      path: session[key],
+      project_invitation_link_id: session[BusinessReturnPath::PROJECT_INVITATION_SESSION_KEY]
+    )
+    session.delete(key) if remembered
+  rescue ActiveRecord::ActiveRecordError => e
+    Rails.logger.error("[BusinessSignupInvitation] remember failed customer_id=#{customer.id} #{e.class}: #{e.message}")
+  end
+
   def normalized_requested_domain_name
     Customer::DEFAULT_SIGN_UP_DOMAIN
   end
 
   def attach_profile_image!(customer)
     return unless sign_up_params[:profile_image].present?
+    # build_resource の時点で添付済みなら付け直さない(付け直すと差し替え扱いになり、選んだ表示位置が消える)。
+    return if customer.profile_image.attached?
 
     customer.profile_image.attach(sign_up_params[:profile_image])
   end

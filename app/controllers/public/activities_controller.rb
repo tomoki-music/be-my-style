@@ -88,7 +88,7 @@ class Public::ActivitiesController < ApplicationController
         end
 
       elsif current_customer.followers.present?
-        current_customer.followers.each do |customer|
+        current_customer.followers.active.each do |customer|
           customer.create_notification_activity_for_follow(current_customer, @activity.id)
         end
       end

@@ -1,0 +1,25 @@
+%nav.ba-breadcrumb{ "aria-label": "現在地" }
+  %ol
+    %li= link_to @community.name, business_community_path(@community)
+    %li= link_to "編集", edit_business_community_path(@community)
+    %li
+      %span{ "aria-current": "page" } 削除の確認
+
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title コミュニティの削除
+
+%section.ba-fieldset.ba-form.ba-danger-zone{ "aria-labelledby": "community-delete-confirm-title" }
+  %h2.ba-fieldset__legend#community-delete-confirm-title
+    「#{@community.name}」を削除しますか？
+  %p.ba-danger-zone__warning{ role: "alert" } この操作は取り消せません。削除したデータは元に戻せません。
+  %p.ba-label 一緒に削除されるもの
+  %ul.ba-danger-zone__list
+    - @deletion_impact.each do |item|
+      %li
+        %span= item.label
+        %strong #{item.count}件
+  %p.ba-note 参加メンバーの会員アカウントは削除されません。スレッド投稿の通知は投稿と一緒に削除されます。それ以外の過去の通知(参加・参加申請など)は通知一覧に残りますが、開いても表示できなくなります。
+  .ba-form-actions
+    = button_to "削除する", business_community_path(@community), method: :delete, class: "ba-btn ba-btn--danger-solid", form: { data: { turbolinks: false } }
+    = link_to "キャンセル", edit_business_community_path(@community), class: "ba-btn ba-btn--secondary"

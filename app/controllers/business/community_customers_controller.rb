@@ -45,7 +45,7 @@ class Business::CommunityCustomersController < ApplicationController
   def notify_accepted!(customer)
     owner = @community.owner || current_customer
     customer.business_notification_accept(owner, @community.id)
-    return unless customer.confirm_mail
+    return unless customer.business_email_notifications_enabled?
 
     CustomerMailer.with(ac_customer: owner, ps_customer: customer, community: @community).business_accept_mail.deliver_later
   end

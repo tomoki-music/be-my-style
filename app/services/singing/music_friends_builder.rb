@@ -13,6 +13,7 @@ module Singing
       :customer_id,
       :display_name,
       :image_url,
+      :image_position,
       :message,
       :profile_path,
       keyword_init: true
@@ -97,6 +98,7 @@ module Singing
         customer_id: customer.id,
         display_name: display_name(customer),
         image_url: image_url_for(customer),
+        image_position: customer.profile_image_object_position,
         message: message_for(interaction),
         profile_path: "/singing/users/#{customer.id}"
       )

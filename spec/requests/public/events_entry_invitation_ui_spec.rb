@@ -11,7 +11,21 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
   let(:community) { FactoryBot.create(:community) }
   let(:owner) { FactoryBot.create(:customer, :customer_with_parts, name: "オーナー") }
   let(:admin) { FactoryBot.create(:customer, is_owner: :admin) }
-  let(:manager) { FactoryBot.create(:customer, :customer_with_parts, name: "共同オーナー") }
+  # 共同オーナー = CommunityOwner(コミュニティ管理権限)。正式なマネージャー役職とは別物。
+  let(:co_owner) { FactoryBot.create(:customer, :customer_with_parts, name: "共同オーナー") }
+  # 正式なマネージャー = is_owner: manager + 担当コミュニティ(CommunityEventEditor)。
+  let(:assigned_manager) do
+    FactoryBot.create(:customer, :customer_with_parts, name: "担当マネージャー", is_owner: :manager).tap do |m|
+      CommunityEventEditor.create!(customer: m, community: community)
+      CommunityCustomer.find_or_create_by!(customer: m, community: community)
+    end
+  end
+  let(:unassigned_manager) do
+    FactoryBot.create(:customer, :customer_with_parts, name: "担当外マネージャー", is_owner: :manager).tap do |m|
+      CommunityEventEditor.create!(customer: m, community: FactoryBot.create(:community))
+      CommunityCustomer.find_or_create_by!(customer: m, community: community)
+    end
+  end
   let(:general_member) { FactoryBot.create(:customer, name: "一般ユーザー") }
   let(:experienced_customer) { FactoryBot.create(:customer, name: "経験太郎") }
 
@@ -35,8 +49,8 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
   before do
     community.update!(owner_id: owner.id)
     CommunityOwner.find_or_create_by!(customer: owner, community: community)
-    CommunityOwner.find_or_create_by!(customer: manager, community: community)
-    [owner, manager, general_member, experienced_customer].each do |c|
+    CommunityOwner.find_or_create_by!(customer: co_owner, community: community)
+    [owner, co_owner, general_member, experienced_customer].each do |c|
       CommunityCustomer.find_or_create_by!(customer: c, community: community)
     end
     current_part
@@ -427,7 +441,7 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
   end
 
   it "管理者・コミュニティ管理権限者には送信フォームが表示される" do
-    [admin, manager].each do |privileged|
+    [admin, co_owner].each do |privileged|
       sign_in privileged
       show_event
       expect(doc.css("#entry-invitation-form").size).to eq 1
@@ -534,5 +548,77 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
     end
 
     expect(as_query_count.call).to eq baseline
+  end
+
+  describe "過去に演奏した人の表示切り替えボタン" do
+    def toggle
+      doc.at_css(".js-past-performers-toggle")
+    end
+
+    it "権限者(オーナー・管理者・共同オーナー)には type=button・初期OFFのボタンを1つ出し、欄を折りたたんだ状態で返す" do
+      [owner, admin, co_owner].each do |privileged|
+        sign_in privileged
+        show_event
+
+        expect(doc.css(".js-past-performers-toggle").size).to eq 1
+        expect(toggle["type"]).to eq "button"
+        expect(toggle["aria-expanded"]).to eq "false"
+        expect(toggle.text.strip).to eq "過去に演奏した人を表示する"
+        expect(toggle["data-label-hide"]).to eq "過去に演奏した人を非表示にする"
+        expect(doc.at_css("table.event-show-table.event-show-table--past-performers-collapsed.js-past-performers-scope")).to be_present
+        # ボタンは楽曲フィルターと同じ並びに置き、参加フォームの送信ボタンにはしない
+        expect(doc.at_css("#join_btn .filter-buttons .js-past-performers-toggle")).to be_present
+        sign_out privileged
+      end
+    end
+
+    it "担当コミュニティの正式なマネージャーにも、初期OFFのボタンと依頼フォームを出す(削除導線は出さない)" do
+      sign_in assigned_manager
+      show_event
+
+      expect(doc.css(".js-past-performers-toggle").size).to eq 1
+      expect(toggle["aria-expanded"]).to eq "false"
+      expect(doc.at_css("table.event-show-table.event-show-table--past-performers-collapsed")).to be_present
+      expect(doc.css("#entry-invitation-form").size).to eq 1
+      expect(doc.css(".js-entry-invitation-checkbox").size).to be >= 1
+      expect(response.body).not_to include "イベント削除"
+    end
+
+    it "担当外の正式なマネージャーには依頼UIを出さず、一般ユーザーと同じく経験者氏名だけを表示する" do
+      sign_in unassigned_manager
+      show_event
+
+      expect(toggle).to be_nil
+      expect(doc.css("#entry-invitation-form")).to be_empty
+      expect(doc.css(".js-entry-invitation-checkbox")).to be_empty
+      expect(response.body).not_to include "event-show-table--past-performers-collapsed"
+      expect(response.body).to include "演奏経験のある人"
+      expect(response.body).to include "経験太郎"
+    end
+
+    it "一般ユーザーにはボタンも折りたたみ指定も出さず、経験者氏名は従来どおり表示する" do
+      sign_in general_member
+      show_event
+
+      expect(toggle).to be_nil
+      expect(response.body).not_to include "event-show-table--past-performers-collapsed"
+      expect(response.body).to include "演奏経験のある人"
+    end
+
+    it "終了済みイベントでは権限者にもボタンを出さない(依頼UIが無いため)" do
+      sign_in owner
+      travel_to(5.days.from_now) do
+        show_event
+        expect(toggle).to be_nil
+        expect(response.body).not_to include "event-show-table--past-performers-collapsed"
+      end
+    end
+
+    it "演奏経験者がいなければ権限者にもボタンを出さない" do
+      JoinPartCustomer.delete_all
+      sign_in owner
+      show_event
+      expect(toggle).to be_nil
+    end
   end
 end

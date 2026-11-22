@@ -18,6 +18,9 @@
     - else
       = favicon_link_tag'favicon.ico'
     = csrf_meta_tags
+    -# ログイン・登録画面は戻る操作で古いトークンの画面を再表示しない(CsrfRejectionRecovery)。
+    - if devise_controller?
+      %meta{ name: "turbolinks-cache-control", content: "no-cache" }/
     = csp_meta_tag
     = include_gon
     = stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload'

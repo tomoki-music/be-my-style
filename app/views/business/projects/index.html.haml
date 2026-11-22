@@ -17,7 +17,7 @@
       - if @community.present?
         「#{@community.name}」のプロジェクトです。
       - else
-        参加しているコミュニティのプロジェクトです。参加中でないものは、開いて参加を申請できます。
+        参加しているコミュニティのプロジェクトと、招待されて参加中のプライベートのプロジェクトです。参加中でないものは、開いて参加を申請できます。
 
 - if @community.present? && !current_customer.can_create_project_for?(@community) && @community.customers.include?(current_customer)
   = render "shared/feature_gate",
@@ -29,7 +29,7 @@
   .ba-empty
     %p プロジェクトはまだありません。
     .ba-empty__actions
-      = link_to "コミュニティを探す", business_communities_path, class: "ba-btn ba-btn--secondary"
+      = link_to "コミュニティを探す", business_root_path(anchor: "my-communities"), class: "ba-btn ba-btn--secondary"
 - else
   %ul.ba-project-grid
     - @projects.each do |project|

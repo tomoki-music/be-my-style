@@ -451,6 +451,7 @@
           var avatar = document.createElement("img");
           avatar.className = "mention-autocomplete-avatar";
           avatar.src = item.avatar_url;
+          if (item.avatar_position) avatar.style.objectPosition = item.avatar_position;
           avatar.alt = "";
 
           var names = document.createElement("div");

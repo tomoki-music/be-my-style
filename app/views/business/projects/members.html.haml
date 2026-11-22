@@ -37,6 +37,12 @@
               .ba-person__text
                 %span.ba-person__name= request.customer.name
                 %span.ba-person__meta 申請：#{l(request.created_at, format: :short)}
+            - if request.message.present?
+              .ba-join-message
+                %p.ba-join-message__label 申請メッセージ
+                .ba-join-message__body= simple_format(h(request.message), {}, sanitize: false)
+            - else
+              %p.ba-join-message.ba-join-message--empty 申請メッセージはありません
           .ba-row__actions
             = link_to "承認", approve_business_project_join_request_path(@project, request),
               method: :post, class: "ba-btn ba-btn--success ba-btn--sm"

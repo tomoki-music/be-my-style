@@ -68,6 +68,8 @@ class Public::CustomersController < ApplicationController
       :favorite_artist5,
       :introduction,
       :profile_image,
+      :profile_image_position_x,
+      :profile_image_position_y,
       :prefecture_id,
       :url,
       :confirm_mail,

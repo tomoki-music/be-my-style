@@ -32,8 +32,9 @@
       = f.label :project_id, class: "ba-label" do
         プロジェクト
         %span.ba-optional 任意
+      -# 投稿はログイン中の全員が見られるため、プライベートのプロジェクトは選択肢に出さない。
       = f.collection_select :project_id,
-        (current_customer.projects + current_customer.joined_projects).uniq,
+        (current_customer.projects + current_customer.joined_projects).uniq.reject(&:visibility_private?),
         :id, :title, { include_blank: "選択なし" }, class: "form-control"
     .ba-field
       = f.label :category, "カテゴリ", class: "ba-label"

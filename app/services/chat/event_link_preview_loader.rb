@@ -14,7 +14,7 @@ module Chat
     end
 
     def call
-      Event.includes(:community, songs: { join_parts: :customers })
+      Event.includes(:community, event_communities: :community, songs: { join_parts: :customers })
            .with_attached_event_image
            .where(id: event_ids)
            .index_by { |event| event.id.to_s }

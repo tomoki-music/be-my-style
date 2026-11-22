@@ -38,7 +38,8 @@ class Post < ApplicationRecord
       notification = current_customer.active_notifications.new(
         visited_id: customer_id,
         action: "like",
-        post_id: id
+        post_id: id,
+        hidden_in_app: !customer.business_in_app_notifications_enabled?
       )
 
       notification.save if notification.valid?
@@ -60,7 +61,8 @@ class Post < ApplicationRecord
       notification = current_customer.active_notifications.new(
         visited_id: customer_id,
         action: "message",
-        post_id: id
+        post_id: id,
+        hidden_in_app: !customer.business_in_app_notifications_enabled?
       )
 
       notification.save if notification.valid?

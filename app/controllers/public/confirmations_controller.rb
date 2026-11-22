@@ -36,6 +36,11 @@ class Public::ConfirmationsController < Devise::ConfirmationsController
       customer.has_domain?(domain_name)
     end&.last
 
+    # 招待用URLから登録した人は、どのブラウザで確認しても先にオンボーディングへ進める(招待先へは完了後に案内する)。
+    if path_helper == :business_root_path && !customer.onboarding_done? && customer.business_signup_invitation.present?
+      return onboarding_step1_path
+    end
+
     # 登録前に開こうとした Business の画面(共有URLなど)は、同じブラウザで確認したときだけセッションに残っている。
     if path_helper == :business_root_path
       return_path = take_business_return_path(customer)

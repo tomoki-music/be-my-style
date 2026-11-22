@@ -88,15 +88,43 @@ RSpec.describe "Business 使い方の削除・編集権限とサーバー側の�
     end
   end
 
-  it "プロジェクト・コミュニティを削除する操作は Business の画面に無い" do
-    expect(Business::ProjectsController.action_methods).not_to include("destroy")
+  describe "プロジェクト・コミュニティそのものの削除(システム管理者とコミュニティのオーナー本人だけ)" do
+    let(:granted_operator) { create(:customer, domain_name: "business", name: "管理権限を付けた運営者") }
+    let(:project_creator) { create(:customer, domain_name: "business", name: "プロジェクトを作った人") }
+    let!(:created_project) { Project.create!(community: community, customer: project_creator, title: "作った人のプロジェクト") }
 
-    sign_in operator
-    get edit_business_community_path(community)
-    expect(response).to have_http_status(:ok)
-    html = Nokogiri::HTML(response.body)
-    delete_links = html.css(%(a[data-method="delete"][href="#{business_community_path(community)}"], form[action="#{business_community_path(community)}"] input[name="_method"][value="delete"]))
-    expect(delete_links).to be_empty
+    before do
+      [granted_operator, project_creator].each { |customer| CommunityCustomer.create!(community: community, customer: customer) }
+      CommunityOwner.create!(community: community, customer: granted_operator)
+    end
+
+    it "管理権限を付けた運営者・プロジェクトを作った人は削除できない" do
+      [granted_operator, project_creator].each do |customer|
+        sign_in customer
+        expect { delete business_project_path(created_project) }.not_to change(Project, :count)
+        expect { delete business_community_path(community) }.not_to change(Community, :count)
+      end
+    end
+
+    it "コミュニティのオーナー本人はプロジェクトもコミュニティも削除できる" do
+      sign_in operator
+      expect { delete business_project_path(created_project) }.to change(Project, :count).by(-1)
+      expect { delete business_community_path(community) }.to change(Community, :count).by(-1)
+    end
+
+    it "システム管理者は削除できる" do
+      sign_in system_admin
+      expect { delete business_project_path(created_project) }.to change(Project, :count).by(-1)
+    end
+
+    it "使い方ページの説明が上の認可と同じ内容になっている" do
+      get business_help_path(audience: "admin")
+
+      table = Nokogiri::HTML(response.body).css("#help-delete table").find { |node| node.at_css("caption").text.include?("コミュニティの編集・削除") }
+      rows = table.css("tbody tr").to_h { |tr| [tr.at_css("th").text.strip, tr.css("td").map { |td| td.text.strip }] }
+      expect(rows["プロジェクト"].last).to eq "システム管理者と、そのコミュニティのオーナー本人だけ（編集画面の最下部から）。作った人・運営者・プロジェクトの管理者はできません"
+      expect(rows["コミュニティ"].last).to eq "システム管理者と、コミュニティのオーナー本人だけ（編集画面の最下部から）。管理権限を付けた運営者はできません"
+    end
   end
 
   it "使い方ページの説明が上の認可と同じ内容になっている" do

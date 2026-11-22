@@ -10,7 +10,8 @@ class Business::ProjectJoinRequestsController < ApplicationController
     not_found: [:alert, "参加申請が見つかりません。"],
     withdrawn: [:alert, "退会済みのユーザーです。参加を承認できません。"],
     community_required: [:alert, "申請者がコミュニティに参加していないため承認できません。申請は取り消しました。"],
-    suspended: [:alert, "アクセス停止中のユーザーです。申請は取り消しました。"]
+    suspended: [:alert, "アクセス停止中のユーザーです。申請は取り消しました。"],
+    invite_only: [:alert, "プライベートのプロジェクトは招待リンクからだけ参加できるため、申請を取り消しました。"]
   }.freeze
 
   def approve

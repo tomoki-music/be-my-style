@@ -101,12 +101,12 @@ RSpec.describe "Business の使い方・利用ガイド・タイムライン", t
       set_viewport(width)
 
       visit business_root_path
-      expect(page).to have_css(".ba-empty--guide", text: "まずはコミュニティに参加しましょう")
+      expect(page).to have_css(".ba-empty--guide", text: "コミュニティはまだありません")
       expect(horizontal_overflow).to be <= 0
       expect_illustrations_loaded
-      # 絵は小さく添えるだけで、「コミュニティを探す」は最初の画面に収まる。
+      # 絵は小さく添えるだけで、「使い方を見る」は最初の画面に収まる。
       expect(page.evaluate_script("document.querySelector('.ba-empty--guide img').getBoundingClientRect().width")).to be <= 200
-      expect(page.evaluate_script("document.querySelector('.ba-empty--guide .ba-btn--primary').getBoundingClientRect().bottom")).to be <= 900
+      expect(page.evaluate_script("document.querySelector('.ba-empty--guide .ba-btn').getBoundingClientRect().bottom")).to be <= 900
       shot("home_empty_#{width}")
 
       community = create(:community, name: "地域企画ラボ", domain: business_domain)

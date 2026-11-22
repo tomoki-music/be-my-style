@@ -334,6 +334,24 @@
     }
   }
 
+  // アカウントの退会(確認画面へ進むだけ)。ログアウトと区切り、控えめな文字リンクにする。
+  .ba-sheet__withdrawal {
+    margin-top: var(--ba-space-2);
+    padding: var(--ba-space-3) var(--ba-space-3) var(--ba-space-1);
+    border-top: 1px solid var(--ba-border);
+  }
+
+  .ba-sheet__withdrawal-link {
+    font-size: 13px;
+    color: var(--ba-danger);
+    text-decoration: none;
+  }
+
+  .ba-sheet__withdrawal-link:hover,
+  .ba-sheet__withdrawal-link:focus {
+    text-decoration: underline;
+  }
+
   &.ba-sheet-open {
     overflow: hidden;
   }
@@ -500,6 +518,11 @@
       color: var(--ba-danger);
       background: var(--ba-danger-soft);
     }
+
+    // アイコンだけの縮約ナビでは文字リンクを出せないため隠す(1200px 以上で表示)。
+    .ba-sidenav__withdrawal {
+      display: none;
+    }
   }
 
   @media (min-width: 1200px) {
@@ -562,6 +585,24 @@
 
     .ba-sidenav__profile {
       min-height: 56px;
+    }
+
+    .ba-sidenav__withdrawal {
+      display: block;
+      margin-top: var(--ba-space-2);
+      padding: var(--ba-space-3) var(--ba-space-3) 0;
+      border-top: 1px solid var(--ba-border);
+    }
+
+    .ba-sidenav__withdrawal-link {
+      font-size: 13px;
+      color: var(--ba-danger);
+      text-decoration: none;
+    }
+
+    .ba-sidenav__withdrawal-link:hover,
+    .ba-sidenav__withdrawal-link:focus {
+      text-decoration: underline;
     }
 
     .ba-sidenav__name {

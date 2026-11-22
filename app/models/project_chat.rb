@@ -5,6 +5,8 @@ class ProjectChat < ApplicationRecord
   belongs_to :customer
   # 移行前の旧コードが書き込んだ行だけ NULL になり得る(rails business_project_threads:backfill で紐づける)。
   belongs_to :project_thread, optional: true
+  # notifications に外部キーは無いため、投稿の削除(スレッド・プロジェクトの削除を含む)と一緒に消す。
+  has_many :notifications, dependent: :delete_all
 
   # スレッド指定の無い作成(旧導線)は「全体トーク」へ入れる。
   before_validation :assign_default_thread, on: :create

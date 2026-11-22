@@ -1,4 +1,4 @@
--# スレッド一覧(新しく投稿があった順)。post_counts: { thread_id => 投稿数 }
+-# スレッド一覧(固定したスレッドが先頭、残りは新しく投稿があった順。並びは ProjectThread.display_order)。post_counts: { thread_id => 投稿数 }
 - project = local_assigns.fetch(:project)
 - threads = local_assigns.fetch(:threads)
 - post_counts = local_assigns.fetch(:post_counts)
@@ -9,12 +9,15 @@
 - else
   %ul.ba-thread-list
     - threads.each do |thread|
-      %li.ba-thread-list__item
+      %li.ba-thread-list__item{ class: ("ba-thread-list__item--pinned" if thread.pinned?) }
         = link_to business_project_thread_path(project, thread), class: "ba-thread-list__link" do
           %span.ba-thread-list__icon{ "aria-hidden": "true" }
             %i.fa-regular.fa-comments
           %span.ba-thread-list__main
-            %span.ba-thread-list__title= thread.title
+            %span.ba-thread-list__heading
+              - if thread.pinned?
+                = render "business/project_threads/pin_badge"
+              %span.ba-thread-list__title= thread.title
             - if thread.description.present?
               %span.ba-thread-list__description= truncate(thread.description, length: 80)
             %span.ba-thread-list__meta
@@ -26,3 +29,4 @@
                 %time{ datetime: thread.last_posted_at.iso8601 }= l(thread.last_posted_at, format: :short)
               %span 作成：#{customer_display_name(thread.customer) || ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL}
           %i.fa-solid.fa-chevron-right.ba-thread-list__chevron{ "aria-hidden": "true" }
+        = render "business/project_threads/pin_button", project: project, thread: thread

@@ -10,6 +10,10 @@ class Business::PermitsController < ApplicationController
     notify_owner_of_request! if result == :requested
 
     flash_membership_result(COMMUNITY_JOIN_MESSAGES, result)
+    # 招待用URLから登録した人が、招待先プロジェクトの親コミュニティに参加できたら、そのプロジェクトへ進める。
+    invitation_path = Business::SignupInvitations::Resume.call(current_customer, community: @community) if result == :joined
+    return redirect_to(invitation_path) if invitation_path
+
     redirect_after_action
   end
 
@@ -54,12 +58,16 @@ class Business::PermitsController < ApplicationController
     @community = find_business_community!(params[:community_id])
   end
 
+  # 画面内の通知は承認できる人(オーナーと運営者 = Customer#can_manage_community?)全員へ。メールは従来どおりオーナーだけ。
   def notify_owner_of_request!
+    approvers = ([@community.owner] + @community.owners.includes(:business_notification_setting).to_a).compact.uniq
+    approvers.reject(&:is_deleted?).each do |approver|
+      approver.business_notification_request(current_customer, @community.id)
+    end
+
     owner = @community.owner
     return if owner.blank? || owner.is_deleted?
-
-    owner.business_notification_request(current_customer, @community.id)
-    return unless owner.confirm_mail
+    return unless owner.business_email_notifications_enabled?
 
     CustomerMailer.with(ac_customer: current_customer, ps_customer: owner, community: @community).business_request_mail.deliver_later
   end

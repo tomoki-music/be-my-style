@@ -1,10 +1,13 @@
 class EntryInvitationMailer < ApplicationMailer
+  default from: MailFrom.music
+
   # イベント楽曲の演奏経験者へ送るエントリー依頼メール。
   # 1通=1受信者(To に複数人を入れない・CC/BCC を使わない)。
   # メールから直接エントリーは確定させず、イベント詳細ページへ誘導する。
   def invite(entry_invitation)
     @invitation = entry_invitation
     @recipient = entry_invitation.customer
+    require_notifiable_customer(@recipient)
     @sender = entry_invitation.requested_by_customer
     @event = entry_invitation.event
     @song = entry_invitation.song

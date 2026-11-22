@@ -7,7 +7,10 @@ class Business::NotificationsController < ApplicationController
       current_customer
       .passive_notifications
       .for_business
+      .shown_in_app
+      .includes(:visitor, :community, project: :community, project_chat: :project_thread)
       .order(created_at: :desc)
+    @viewable_project_ids = viewable_project_ids(@notifications)
 
     # 一覧に出していない music 側の通知まで既読にしないよう、表示対象だけ既読にする。
     # 既読にする前の未読分は、この表示の間だけ「未読」として目印を付ける(既読化の対象・タイミングは従来どおり)。
@@ -15,4 +18,18 @@ class Business::NotificationsController < ApplicationController
     @notifications.where(checked: false).update_all(checked: true)
 
   end
+
+  private
+
+  # スレッド投稿の通知は、いまプロジェクト内部を閲覧できる場合だけ名前・リンクを出す(退出・停止後に内部情報を見せない)。
+  # プライベートのプロジェクトの通知は、種類を問わず同じ条件にする(後からプライベートにした場合の過去の通知を含む)。
+  def viewable_project_ids(notifications)
+    projects = notifications.select { |notification| project_name_restricted?(notification) }.filter_map(&:project).uniq
+    projects.select { |project| current_customer.business_project_participant?(project) }.map(&:id).to_set
+  end
+
+  def project_name_restricted?(notification)
+    notification.action == "project_message" || notification.project&.visibility_private?
+  end
+  helper_method :project_name_restricted?
 end

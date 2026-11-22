@@ -47,6 +47,8 @@ class Business::CustomersController < ApplicationController
       :name,
       :introduction,
       :profile_image,
+      :profile_image_position_x,
+      :profile_image_position_y,
       :job,
       :skills,
       :achievements,

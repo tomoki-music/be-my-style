@@ -44,6 +44,10 @@ class Public::SessionsController < Devise::SessionsController
       return onboarding_step1_path
     end
 
+    # 招待先のプロジェクトの親コミュニティへの参加(承認)を待っていた人は、開けるようになっていればそのプロジェクトへ進める。
+    invitation_path = Business::SignupInvitations::Resume.call(resource)
+    return invitation_path if invitation_path
+
     restorable_business_path?(stored_path) ? stored_path : business_root_path
   end
 

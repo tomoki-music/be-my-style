@@ -43,20 +43,19 @@ RSpec.describe "Business のコミュニティ・プロジェクト参加導線"
   end
 
   describe "コミュニティ一覧" do
-    it "各カードが詳細へのリンクで、参加状況(未参加は参加方式)と「詳細」の導線を出す" do
+    it "参加済みのカードだけを詳細へのリンクで出し、参加状況・人数・「詳細」の導線を出す(承認待ちは出さない)" do
       Permit.create!(community: manual_community, customer: general)
+      CommunityCustomer.create!(community: auto_community, customer: general)
       sign_in general
 
       get business_communities_path
 
-      manual = tile_for("デザイン勉強会")
       auto = tile_for("スタートアップ交流会")
-      expect(manual["href"]).to eq business_community_path(manual_community)
-      expect(manual.at_css(".ba-status").text.strip).to eq "承認待ち"
-      expect(manual.at_css(".ba-community-tile__cta").text.strip).to eq "詳細を見る"
-      expect(auto.at_css(".ba-status").text.strip).to eq "自動承認"
-      expect(auto.at_css(".ba-community-tile__cta").text.strip).to eq "詳細・参加方法を見る"
-      expect(auto.at_css(".ba-community-tile__meta").text).to include("1人")
+      expect(auto["href"]).to eq business_community_path(auto_community)
+      expect(auto.at_css(".ba-status").text.strip).to eq "参加中"
+      expect(auto.at_css(".ba-community-tile__cta").text.strip).to eq "詳細を見る"
+      expect(auto.at_css(".ba-community-tile__meta").text).to include("2人")
+      expect(tile_for("デザイン勉強会")).to be_nil
     end
   end
 
@@ -141,7 +140,8 @@ RSpec.describe "Business のコミュニティ・プロジェクト参加導線"
       sign_in general
 
       get business_project_path(manual_project)
-      expect(join_panel.at_css(%(a[data-method="post"][href="#{join_business_project_path(manual_project)}"])).text.strip).to eq "参加を申請する"
+      expect(join_panel.at_css("summary").text.strip).to eq "参加を申請する"
+      expect(join_panel.at_css(%(form[method="post"][action="#{join_business_project_path(manual_project)}"]))).to be_present
       expect(doc.at_css("#threads")).to be_nil
 
       ProjectJoinRequest.create!(project: manual_project, customer: general)
@@ -164,11 +164,12 @@ RSpec.describe "Business のコミュニティ・プロジェクト参加導線"
       get business_project_path(manual_project)
       expect(join_panel.at_css(".ba-status").text.strip).to eq "アクセス停止中"
       expect(join_panel.at_css("a")).to be_nil
+      expect(join_panel.at_css("form")).to be_nil
 
       manual_project.update_columns(deadline: 1.day.ago)
       ProjectAccessSuspension.delete_all
       get business_project_path(manual_project)
-      expect(join_panel.at_css("a").text.strip).to eq "参加を申請する"
+      expect(join_panel.at_css("summary").text.strip).to eq "参加を申請する"
       expect(response.body).not_to include("募集終了")
       expect(response.body).not_to include("締切")
     end
@@ -258,7 +259,9 @@ RSpec.describe "Business のコミュニティ・プロジェクト参加導線"
 
     it "CSRF トークンの無い DELETE は受け付けない" do
       ActionController::Base.allow_forgery_protection = true
-      expect { delete leave_path }.to raise_error(ActionController::InvalidAuthenticityToken)
+      delete leave_path
+      expect(response).to have_http_status(:see_other)
+      expect(flash[:alert]).to eq CsrfRejectionRecovery::EXPIRED_FORM_MESSAGE
       expect(general.business_community_member?(manual_community)).to eq true
     ensure
       ActionController::Base.allow_forgery_protection = false

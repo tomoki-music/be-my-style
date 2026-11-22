@@ -24,12 +24,17 @@ module ManageBarHelper
     ]
   end
 
+  # 「招待リンク」はプライベートのプロジェクトで、発行できる人(システム管理者・親コミュニティのオーナー)にだけ出す。
   def business_project_manage_items(project, current:, pending_count: nil)
-    [
+    items = [
       manage_bar_item("通常画面", business_project_path(project), current == :show),
       manage_bar_item("編集", edit_business_project_path(project), current == :edit),
       manage_bar_item("メンバー管理", members_business_project_path(project), current == :members, badge: pending_count)
     ]
+    if project.visibility_private? && current_customer&.can_manage_business_project_privacy?(project)
+      items << manage_bar_item("招待リンク", business_project_invitation_link_path(project), current == :invitation_link)
+    end
+    items
   end
 
   private

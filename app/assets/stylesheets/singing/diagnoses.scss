@@ -5945,6 +5945,23 @@ $ranking-accent: #7c4dff;
   width: 100%;
 }
 
+// アカウントの退会(確認画面へ進むだけ)。ログアウトの下に区切り線と余白を挟んだ控えめな文字リンク。
+.singing-nav__mobile-withdrawal-link {
+  border-top: 1px solid rgba(226, 232, 240, 0.12);
+  color: #f2a7a7;
+  display: block;
+  font-size: 13px;
+  margin-top: 16px;
+  padding-top: 12px;
+  text-decoration: none;
+}
+
+.singing-nav__mobile-withdrawal-link:hover,
+.singing-nav__mobile-withdrawal-link:focus {
+  color: #f2a7a7;
+  text-decoration: underline;
+}
+
 .singing-nav__mobile-overlay {
   background: rgba(0, 0, 0, 0.55);
   inset: 0;
@@ -11737,4 +11754,9 @@ $ranking-accent: #7c4dff;
   .next-mission-card__title {
     font-size: 15px;
   }
+}
+
+.singing-profile-edit__withdrawal {
+  margin-top: 32px;
+  text-align: right;
 }

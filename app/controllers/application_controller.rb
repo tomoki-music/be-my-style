@@ -72,7 +72,12 @@ class ApplicationController < ActionController::Base
     }
   }.freeze
 
+  include CsrfRejectionRecovery
+  rescue_from ActionController::InvalidAuthenticityToken, with: :recover_from_invalid_authenticity_token
+  prepend_before_action :capture_csrf_session_state, unless: -> { request.get? || request.head? }
+
   before_action :set_current_domain
+  before_action :prevent_caching_of_authentication_forms
   before_action :authenticate_customer!
   before_action :ensure_music_domain_access_for_public_routes!
   after_action :track_customer_activity
@@ -245,15 +250,17 @@ class ApplicationController < ActionController::Base
     current_customer.has_domain?(domain_name.to_s)
   end
 
-  # オンボーディング導線からの投稿成功時にオンボーディングを完了扱いにする。
+  # オンボーディング導線からの投稿成功時にオンボーディングを完了扱いにする。完了させたら true。
   def complete_onboarding_if_pending!
-    return if current_customer.onboarding_done?
-    return unless session[:onboarding_activity_pending]
+    return false if current_customer.onboarding_done?
+    return false unless session[:onboarding_activity_pending]
 
     session.delete(:onboarding_activity_pending)
     # 投稿で完了した場合は投稿画面へ進むため、オンボーディング後の戻り先(BusinessReturnPath)は使わずに捨てる。
+    # 招待用URLから登録した人の招待先は、呼び出し側(Business::PostsController#create)で案内する。
     session.delete(BusinessReturnPath::ONBOARDING_RETURN_KEY)
     current_customer.update!(onboarding_done: true)
+    true
   end
 
 end

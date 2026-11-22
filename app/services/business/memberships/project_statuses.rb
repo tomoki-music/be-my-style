@@ -31,17 +31,20 @@ module Business
         community_ids = @projects.map(&:community_id).uniq
         operated = @customer.manageable_communities.where(id: community_ids).pluck(:id).to_set
         community_member = @customer.community_customers.where(community_id: community_ids).pluck(:community_id).to_set
+        community_suspended = @customer.community_access_suspensions.where(community_id: community_ids).pluck(:community_id).to_set
         joined = @customer.project_members.where(project_id: project_ids).pluck(:project_id).to_set
         suspended = @customer.project_access_suspensions.where(project_id: project_ids).pluck(:project_id).to_set
         pending = @customer.project_join_requests.where(project_id: project_ids).pluck(:project_id).to_set
 
         @projects.to_h do |project|
           in_community = community_member.include?(project.community_id)
+          # メンバーの行が有効か(BusinessAccess#business_project_membership_qualified? と同じ)。プライベートは親コミュニティへの所属を求めない。
+          qualified = project.visibility_private? ? !community_suspended.include?(project.community_id) : in_community
           status =
             if operated.include?(project.community_id) then :operator
             elsif project.customer_id == @customer.id && in_community then :owner
             elsif @customer.admin? then :admin
-            elsif in_community && joined.include?(project.id) then :member
+            elsif qualified && joined.include?(project.id) then :member
             elsif suspended.include?(project.id) then :suspended
             elsif pending.include?(project.id) then :pending
             else :none

@@ -1,0 +1,70 @@
+-# プライベートプロジェクトの招待リンクの発行・無効化(システム管理者・親コミュニティのオーナー)。
+-# リンクは発行した直後の応答(@issued_url)にだけ表示する。保存していないため、見失ったら再発行する。
+= render "shared/manage_bar", items: business_project_manage_items(@project, current: :invitation_link, pending_count: @pending_request_count)
+
+%nav.ba-breadcrumb{ "aria-label": "現在地" }
+  %ol
+    %li= link_to @community.name, business_community_path(@community)
+    %li= link_to @project.title, business_project_path(@project)
+    %li
+      %span{ "aria-current": "page" } 招待リンク
+
+.ba-page-header
+  .ba-page-header__text
+    %h1.ba-page-title 招待リンク
+    %p.ba-page-lead このプロジェクトは招待制（プライベート）です。招待リンクを開いた人だけが参加できます。
+
+- if @issued_url
+  %section.ba-card.ba-invite-link.ba-invite-link--issued{ "aria-labelledby": "issued-link-title" }
+    %h2.ba-section-title#issued-link-title 発行した招待リンク
+    %p.ba-invite-link__warning{ role: "alert" }
+      このリンクは今だけ表示されます。画面を離れると再表示できないため、コピーして招待したい人に送ってください。見失ったときは再発行してください（古いリンクは使えなくなります）。
+    .ba-share__row
+      %label.sr-only{ for: "invitation-link-url" } 招待リンク
+      %input.form-control.ba-share__url#invitation-link-url{ type: "text", value: @issued_url, readonly: true,
+        autocomplete: "off", spellcheck: "false", data: { share_url: true } }
+      %button.ba-btn.ba-btn--secondary.ba-btn--sm.ba-share__copy{ type: "button", hidden: true,
+        data: { share_copy: "invitation-link-url", share_status: "invitation-link-status" } }
+        %i.fa-regular.fa-copy{ "aria-hidden": "true" }
+        リンクをコピー
+    %p.ba-share__status#invitation-link-status{ role: "status", "aria-live": "polite" }
+
+%section.ba-card.ba-invite-link{ "aria-labelledby": "current-link-title" }
+  %h2.ba-section-title#current-link-title 現在の招待リンク
+  - case @link_status
+  - when :active
+    %dl.ba-invite-link__facts
+      %dt 状態
+      %dd
+        %span.ba-status.ba-status--member 有効
+      %dt 有効期限
+      %dd= l(@link.expires_at, format: :long)
+      %dt このリンクで参加した人
+      %dd #{@link.used_count}人
+      %dt 発行
+      %dd #{l(@link.created_at, format: :short)}（#{customer_display_name(@link.created_by) || ApplicationHelper::WITHDRAWN_CUSTOMER_LABEL}）
+    %p.ba-note 有効期限までは何人でも参加できます。参加をやめたいときは無効にしてください。
+    .ba-form-actions
+      = button_to "このリンクを無効にする", business_project_invitation_link_path(@project), method: :delete,
+        class: "ba-btn ba-btn--danger", data: { confirm: "招待リンクを無効にしますか？このリンクではもう参加できなくなります（参加済みのメンバーはそのままです）。" },
+        form: { data: { turbolinks: false } }
+  - when :expired
+    %p.ba-muted 招待リンクは有効期限（#{l(@link.expires_at, format: :long)}）が切れています。新しいリンクを発行してください。
+  - when :revoked
+    %p.ba-muted 招待リンクは無効になっています。新しいリンクを発行してください。
+  - else
+    %p.ba-muted 招待リンクはまだ発行されていません。
+
+%section.ba-card.ba-invite-link{ "aria-labelledby": "issue-link-title" }
+  %h2.ba-section-title#issue-link-title= @link_status == :active ? "招待リンクを再発行する" : "招待リンクを発行する"
+  = form_with url: business_project_invitation_link_path(@project), method: :post, local: true, class: "ba-form", data: { turbolinks: false } do |f|
+    .ba-field
+      = f.label :expiry_days, "有効期限", class: "ba-label"
+      = f.select :expiry_days, ProjectInvitationLink::EXPIRY_DAYS.map { |days| ["#{days}日間", days] },
+        { selected: ProjectInvitationLink::DEFAULT_EXPIRY_DAYS }, class: "form-control", "aria-describedby": "expiry-days-help"
+      %small.ba-help#expiry-days-help
+        期限内に開いて登録を始めた人は、確認メール・登録の手続きが期限後になっても参加できます（無効にしたリンクでは参加できません）。
+    - if @link_status == :active
+      %p.ba-note 再発行すると、いまのリンクは使えなくなります。
+    .ba-form-actions
+      = f.submit (@link_status == :active ? "再発行する" : "発行する"), class: "ba-btn ba-btn--primary", data: { disable_with: "発行しています…" }

@@ -1,0 +1,3 @@
+= render 'layouts/admin_header_menu'
+
+= render "shared/community_destroy_blocked", community: @community, events: @blocked_events, back_path: admin_community_path(@community)

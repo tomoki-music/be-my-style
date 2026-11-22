@@ -49,6 +49,8 @@ class Singing::ShareImagesController < Singing::BaseController
 
   def public_show
     @share_image = SingingShareImage.find_signed!(params[:token], purpose: :public_share_image)
+    # 退会した会員の共有画像は、ファイルの削除が済む前・削除に失敗した場合も公開しない。
+    return head :not_found if @share_image.customer.nil? || @share_image.customer.is_deleted?
     return render_expired_public_share_image if @share_image.expired_for_public?
     return head :not_found unless @share_image.completed? && @share_image.image.attached?
 

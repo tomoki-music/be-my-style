@@ -30,10 +30,11 @@ module MemberHomeHelper
   end
 
   # 「参加先を探す」導線。各ドメインの一覧画面に入れる人にだけ出す。
+  # Business のコミュニティ一覧(/business/communities)は参加済みだけなので、未参加も並ぶ Business ホームへ案内する。
   def member_home_community_search_links
     links = []
     links << ["音楽コミュニティを探す", public_communities_path] if current_customer.admin? || current_customer.music_user?
-    links << ["Businessコミュニティを探す", business_communities_path] if current_customer.admin? || current_customer.business_user?
+    links << ["Businessコミュニティを探す", business_root_path(anchor: "my-communities")] if current_customer.admin? || current_customer.business_user?
     links
   end
 

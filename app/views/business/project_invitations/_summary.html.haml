@@ -1,0 +1,16 @@
+-# 招待されたプロジェクトの名前と所属コミュニティ。有効な招待リンクを開いた人にだけ出す(説明・スレッド・メンバーは参加後)。
+- project = local_assigns.fetch(:project)
+%p.ba-invite__eyebrow
+  %span.ba-status.ba-status--private
+    %i.fa-solid.fa-lock{ "aria-hidden": "true" }
+    プライベート
+  招待制のプロジェクト
+%h1.ba-invite__title#invite-title= project.title
+%ul.ba-invite__meta
+  %li
+    %i.fa-solid.fa-users{ "aria-hidden": "true" }
+    コミュニティ：#{project.community.name}
+  - if project.theme.present?
+    %li
+      %i.fa-solid.fa-tag{ "aria-hidden": "true" }
+      テーマ：#{project.theme}
