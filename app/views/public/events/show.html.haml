@@ -225,6 +225,8 @@
                 %tr
                   %th{scope:"row"} 楽曲
                   %td{colspan: "100"}
+                    - if @event.event_bands.any?
+                      = render "public/events/bands", bands: @event.event_bands, event: @event, can_cheer: @can_cheer
                     = form_tag(public_event_join_confirm_path(@event), method: :get, id: 'join_btn', onSubmit: "return CheckJoin()") do
                       #event-songs.event-songs-join-form
                         %div{ style: "display: flex; justify-content: flex-start; align-items: center; margin-bottom: 12px;" }
@@ -282,12 +284,16 @@
                                 - @event.songs.each do |song|
                                   - recruiting_parts = song.recruiting_join_parts
                                   - vacant = recruiting_parts.any?
-                                  %tr{ class: (vacant ? 'vacant' : 'complete') }
+                                  %tr{ class: [(vacant ? 'vacant' : 'complete'), ('band' if song.band_performance?)] }
                                     %td{ style: "max-width: 120px; overflow-wrap: break-word; word-break: break-word; white-space: normal;" }
                                       - if song.band_performance?
                                         %span.badge.badge-info バンド出演🎸
                                         %div.song-band-name
-                                          = song.event_band.name
+                                          = link_to song.event_band.name, "#event-band-#{song.event_band_id}", data: { turbolinks: false }
+                                        -# スマホでは横スクロールの奥のパート列が見えにくいため、固定メンバーをここにも出す。
+                                        .song-band-members.d-md-none
+                                          - song.event_band.ordered_members.each do |member|
+                                            %span.song-band-members__item #{member.part_name}: #{member.label}
                                       - elsif vacant
                                         %span.badge.badge-warning 募集中!!
                                       - else

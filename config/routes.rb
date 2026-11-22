@@ -145,7 +145,10 @@ Rails.application.routes.draw do
         resource :cheer, only: [:create, :destroy], controller: "song_cheers"
       end
       # バンド出演枠(バンド名・パートごとの固定担当者・出演曲)。
-      resources :bands, only: [:index, :new, :create, :edit, :update, :destroy], controller: "event_bands"
+      resources :bands, only: [:index, :new, :create, :edit, :update, :destroy], controller: "event_bands" do
+        # バンド単位の「このバンドを応援する📣」(登録・取消)。編集権限は不要で、曲への応援と同じ条件で受け付ける。
+        resource :cheer, only: [:create, :destroy], controller: "event_band_cheers"
+      end
       resources :requests, only: [:create, :destroy] do
         post "preview" => "requests#preview", on: :collection
       end

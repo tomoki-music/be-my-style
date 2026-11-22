@@ -1,0 +1,22 @@
+-# 「応援する📣」欄(曲・バンド共通)。演奏エントリーとは別の登録で、参加人数・料金・成立判定には数えない。
+-# ボタンは参加フォームの内側に置かれることがあるため、フォームを作らない link_to(method:)にする。
+-# locals: customers, cheered, path, button_label, subject_name, can_cheer, event
+.song-cheer
+  %span.song-cheer__count{ "aria-label": "応援 #{customers.size}人" }
+    📣
+    %strong= customers.size
+    人
+  - if customers.any?
+    %ul.song-cheer__names
+      - customers.each do |customer|
+        %li= customer_profile_name_link(customer)
+  - if cheered
+    = link_to "応援を取り消す", path,
+      method: :delete,
+      data: { confirm: "「#{subject_name}」の応援を取り消しますか？（演奏エントリーはそのまま残ります）" },
+      class: "btn btn-sm btn-outline-secondary song-cheer__button"
+  - elsif can_cheer && !event.ended?
+    = link_to button_label, path,
+      method: :post,
+      class: "btn btn-sm btn-warning song-cheer__button",
+      "aria-label": "#{subject_name}を応援する"

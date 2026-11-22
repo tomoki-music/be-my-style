@@ -444,7 +444,8 @@ class Public::EventsController < ApplicationController
         { join_parts: :customers },
         { song_cheers: :customer },
         { event_band: { members: :customer } }
-      ]
+      ],
+      event_bands: [{ members: :customer }, :songs, { cheers: :customer }]
     ).find(params[:id])
   end
 

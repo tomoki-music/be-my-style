@@ -227,3 +227,87 @@
   margin: 12px 0;
   max-width: 240px;
 }
+
+// イベント詳細「楽曲」欄の上部の「バンド出演🎸」枠。楽曲フィルターの対象外なので、常に全バンドを表示する。
+.event-bands-section {
+  margin-bottom: 20px;
+
+  &__title {
+    font-size: 1.15rem;
+    font-weight: bold;
+    margin-bottom: 12px;
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+  }
+}
+
+.event-band-panel {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #dde3ea;
+  border-radius: 8px;
+  background: #fff;
+
+  &__name {
+    font-size: 1.05rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+    overflow-wrap: anywhere;
+  }
+
+  &__members {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 4px 12px;
+    margin-bottom: 8px;
+
+    dt {
+      font-weight: bold;
+    }
+
+    dd {
+      margin: 0;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__songs {
+    margin-bottom: 8px;
+  }
+
+  &__songs-label {
+    font-weight: bold;
+    margin-right: 8px;
+  }
+
+  &__song-list {
+    margin: 4px 0 0;
+    padding-left: 20px;
+    overflow-wrap: anywhere;
+  }
+
+  &__empty {
+    color: #777;
+    font-size: 0.9rem;
+  }
+
+  &__cheer {
+    max-width: 260px;
+  }
+}
+
+.song-band-members {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+  color: #555;
+
+  &__item {
+    overflow-wrap: anywhere;
+  }
+}

@@ -5,13 +5,9 @@ class Public::SongCheersController < ApplicationController
   before_action :set_event_and_song
 
   def create
-    # 応援できるのは、演奏エントリーと同じく開催コミュニティの所属者だけ(Public::EventsController#join と同じ基準)。
-    unless @event.community_member?(current_customer)
-      redirect_back_to_song alert: "応援するには、開催コミュニティへの参加が必要です。"
-      return
-    end
-    if @event.ended?
-      redirect_back_to_song alert: "終了したイベントの曲は応援できません。"
+    # 参加資格・受付条件はバンドへの応援と共通(Event#cheer_unavailable_reason)。
+    if (reason = @event.cheer_unavailable_reason(current_customer))
+      redirect_back_to_song alert: reason
       return
     end
 

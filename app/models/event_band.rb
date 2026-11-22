@@ -10,6 +10,7 @@ class EventBand < ApplicationRecord
   has_many :members, -> { order(:id) }, class_name: "EventBandMember", inverse_of: :event_band,
                                          dependent: :destroy, autosave: true, validate: false
   has_many :songs, -> { order(position: :asc) }, inverse_of: :event_band, dependent: :nullify
+  has_many :cheers, class_name: "EventBandCheer", inverse_of: :event_band, dependent: :destroy
 
   validates :name, presence: true, length: { maximum: NAME_MAX_LENGTH }
   validate :members_must_be_valid
@@ -21,6 +22,17 @@ class EventBand < ApplicationRecord
   def ordered_members
     by_part = members.reject(&:marked_for_destruction?).index_by(&:part_name)
     JoinPart::NAME_OPTIONS.filter_map { |part_name| by_part[part_name] }
+  end
+
+  # 応援している現役会員。cheers: :customer をpreload済みなら追加クエリを発生させない。
+  def active_cheer_customers
+    cheers.map(&:customer).compact.reject(&:is_deleted)
+  end
+
+  def cheered_by?(customer)
+    return false if customer.blank?
+
+    cheers.any? { |cheer| cheer.customer_id == customer.id }
   end
 
   def member_for(part_name)
