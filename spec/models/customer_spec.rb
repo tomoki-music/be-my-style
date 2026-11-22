@@ -585,6 +585,71 @@ RSpec.describe 'Customerモデルのテスト', type: :model do
       end
     end
 
+    context 'エントリー依頼の権限(can_request_entry_invitation?)' do
+      let(:community) { FactoryBot.create(:community, owner_id: other_customer.id) }
+      let(:event) { FactoryBot.create(:event, :event_with_songs, customer: other_customer, community: community) }
+
+      it '従来の対象(管理者・投稿者本人・オーナー・共同オーナー)は引き続き依頼できること' do
+        admin = FactoryBot.create(:customer, is_owner: :admin)
+        co_owner = FactoryBot.create(:customer)
+        CommunityOwner.create!(customer: co_owner, community: community)
+
+        [admin, other_customer, co_owner].each do |privileged|
+          expect(privileged.can_request_entry_invitation?(event)).to eq true
+          expect(privileged.can_destroy_event?(event)).to eq true
+        end
+      end
+
+      it '主催コミュニティ担当の正式なマネージャーは依頼できるが、削除権限は広がらないこと' do
+        customer.update!(is_owner: :manager)
+        CommunityEventEditor.create!(customer: customer, community: community)
+
+        expect(customer.can_request_entry_invitation?(event)).to eq true
+        expect(customer.can_destroy_event?(event)).to eq false
+      end
+
+      it '別コミュニティ担当のマネージャーは依頼できないこと' do
+        customer.update!(is_owner: :manager)
+        CommunityEventEditor.create!(customer: customer, community: FactoryBot.create(:community))
+
+        expect(customer.can_request_entry_invitation?(event)).to eq false
+      end
+
+      it 'マネージャー役職でない人はCommunityEventEditorレコードがあっても依頼できないこと' do
+        CommunityEventEditor.create!(customer: customer, community: community)
+
+        expect(customer.can_request_entry_invitation?(event)).to eq false
+      end
+
+      it 'マネージャー役職でも担当未登録なら依頼できないこと' do
+        customer.update!(is_owner: :manager)
+
+        expect(customer.can_request_entry_invitation?(event)).to eq false
+      end
+
+      it '一般メンバーは依頼できないこと' do
+        CommunityCustomer.find_or_create_by!(customer: customer, community: community)
+
+        expect(customer.can_request_entry_invitation?(event)).to eq false
+      end
+
+      it '共催先だけを担当するマネージャーには、編集権限と同じく依頼権限も与えないこと' do
+        cohost = FactoryBot.create(:community)
+        event.update!(selected_cohost_community_ids: [cohost.id.to_s])
+        expect(event.reload.all_hosting_community_ids).to include(cohost.id)
+
+        customer.update!(is_owner: :manager)
+        CommunityEventEditor.create!(customer: customer, community: cohost)
+
+        expect(customer.can_edit_event?(event)).to eq false
+        expect(customer.can_request_entry_invitation?(event)).to eq false
+      end
+
+      it 'イベントが無い場合はfalseを返すこと' do
+        expect(customer.can_request_entry_invitation?(nil)).to eq false
+      end
+    end
+
     context 'is_owner: manager(表示ラベルのみ、実権限はCommunityEventEditorで判定)' do
       let(:community) { FactoryBot.create(:community, owner_id: other_customer.id) }
 

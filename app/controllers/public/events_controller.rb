@@ -98,15 +98,17 @@ class Public::EventsController < ApplicationController
     #楽曲表に統合したエントリー依頼UI(チェックボックス・状態バッジ・一括送信フォーム)を
     #出すかどうか。送信権限があり・未終了で・経験者が1人でもいる場合のみ。
     #一般ユーザー/終了イベントでは「演奏したことのある人」の氏名表示のみに留める。
+    #権限判定は確認画面・送信(EntryInvitationsController / BatchSender / Sender)と同じものを使う。
+    can_request_entry_invitation = current_customer.can_request_entry_invitation?(@event)
     @entry_invitation_ui_enabled =
-      current_customer.can_destroy_event?(@event) &&
+      can_request_entry_invitation &&
       !@event.ended? &&
       @experienced_customers_by_song_part.values.any?(&:present?)
 
     #エントリー依頼の送信履歴(曲数×パート数×経験者数分のN+1を避けるため、イベント単位で1回だけ取得)
-    #状態バッジを描画する権限者(can_destroy_event?)の場合だけ取得する
+    #状態バッジを描画する権限者の場合だけ取得する
     @entry_invitations_by_key =
-      if current_customer.can_destroy_event?(@event)
+      if can_request_entry_invitation
         EntryInvitation.where(event_id: @event.id).index_by { |i| [i.song_id, i.join_part_id, i.customer_id] }
       else
         {}

@@ -2,7 +2,7 @@ module EntryInvitations
   # イベント楽曲の演奏経験者へ「エントリー依頼メール」を送る中心ロジック。
   #
   # Controller から渡された customer_id 群は一切信用せず、ここで
-  #   - 送信者の権限(can_destroy_event?)
+  #   - 送信者の権限(can_request_entry_invitation?)
   #   - イベント/曲/パートが送信可能な状態か(未終了・所属整合。パートの募集状態は問わない)
   #   - 各 customer_id が「別の終了済みイベントに同一SongMaster・同一正規化パートの実績を持つ経験者」か
   #     (= PerformanceHistory::ExperiencedCustomersQuery の結果に含まれるか)
@@ -86,7 +86,7 @@ module EntryInvitations
 
     # 全件送信不可となる前提条件。問題なければ nil。
     def validate_context
-      return "このイベントで送信する権限がありません。" unless @sender&.can_destroy_event?(@event)
+      return "このイベントで送信する権限がありません。" unless @sender&.can_request_entry_invitation?(@event)
       return "曲またはパートの指定が正しくありません。" unless @song && @join_part
       return "曲またはパートの指定が正しくありません。" unless @song.event_id == @event.id && @join_part.song_id == @song.id
       return "終了したイベントには送信できません。" if @event.ended?(now: @now)

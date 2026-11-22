@@ -35,7 +35,7 @@ jobs:
   # 将来Branch protectionで必須指定するチェック名は "Required checks" 固定にする。
   required-checks:
     name: Required checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -170,7 +170,7 @@ jobs:
   # 失敗の事実自体は隠さず、このジョブの結果・Summary・ログ・artifactで可視化する。
   full-suite-observation:
     name: Full RSpec suite (informational)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     continue-on-error: true
     steps:

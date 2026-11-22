@@ -81,7 +81,7 @@ module EntryInvitations
     private
 
     def validate_global
-      return "このイベントで送信する権限がありません。" unless @sender&.can_destroy_event?(@event)
+      return "このイベントで送信する権限がありません。" unless @sender&.can_request_entry_invitation?(@event)
       return "終了したイベントには送信できません。" if @event.ended?(now: @now)
 
       parsed = TargetParser.parse(@raw_targets)
