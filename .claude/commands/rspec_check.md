@@ -2,7 +2,17 @@
 
 ---
 
-## 全テスト実行
+## 基本方針
+
+- 変更箇所に直接関係する spec だけを実行する（下の「単一ファイル・行指定」「ドメイン別テスト」を参照）。
+- PR では必須 CI チェック（Required checks）が通っていることを確認する。参考扱いの CI は原則として完了を待たない。
+- 追加確認は、変更に起因する失敗や未確認の挙動がある場合に、その箇所に絞って行う。
+
+---
+
+## 全テスト実行（限定的に使う）
+
+明示的に依頼された場合か、変更が広範囲で関連テストだけでは確認しきれない場合に限る。
 
 ```bash
 bundle exec rspec
@@ -47,7 +57,7 @@ bundle exec rspec spec/services/singing_diagnoses/open_ai_responses_client_spec.
 
 ## 確認ポイント
 
-- 全テスト通過していること（`0 failures`）
+- 実行した関連 spec が通過していること（`0 failures`）
 - `pending` が増えていないこと
 - カバレッジが大きく下がっていないこと（SimpleCov 使用時）
 - 変更したファイルに対応する spec ファイルが存在すること
@@ -74,7 +84,7 @@ bundle exec rspec spec/services/singing_diagnoses/open_ai_responses_client_spec.
 
 ```yaml
 # .github/workflows/ 配下を確認
-# PR マージ前に CI が通っていることを必ず確認する
+# PR マージ前に必須 CI チェック（Required checks）が通っていることを必ず確認する
 ```
 
-CI が落ちている状態で main にマージしない。
+必須 CI チェックが落ちている状態で main にマージしない。参考扱いの CI は原則として完了を待たない。

@@ -48,9 +48,15 @@ DISABLE_SPRING=1 bundle exec rails runner 'puts "boot ok"'
 # アセットプリコンパイル確認（staging / 本番前）
 RAILS_ENV=production bundle exec rails assets:precompile
 
-# テスト
-bundle exec rspec
+# テスト（変更箇所に関係する spec のみ）
+bundle exec rspec spec/path/to/related_spec.rb
 ```
+
+### テスト・リリース確認の範囲
+
+- テストは変更箇所に直接関係するものに絞り、既存の必須 CI チェック（Required checks）を確認する。
+- 全件 RSpec の手動実行や、参考扱いの CI の完了待ちは原則省く。追加確認は、変更に起因する失敗や未確認の挙動がある場合に、その箇所に絞って行う。
+- 本番反映後は、デプロイ成功と変更した画面の主要な挙動だけ確認する。ログインが必要で確認できない場合は、確認項目を短く伝えて「未確認」と記録する。
 
 ---
 

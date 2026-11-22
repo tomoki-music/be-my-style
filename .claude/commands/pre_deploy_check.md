@@ -64,17 +64,16 @@ RAILS_ENV=production bundle exec rails assets:precompile
 ## 4. テスト実行
 
 ```bash
-# 全テスト
-bundle exec rspec
-
-# 変更に関連するテストのみ（高速確認）
-bundle exec rspec spec/services/singing_diagnoses/
-bundle exec rspec spec/jobs/singing_diagnoses/
-bundle exec rspec spec/helpers/singing/
+# 変更箇所に関係する spec を指定して実行する（例）
+bundle exec rspec spec/path/to/related_spec.rb
+bundle exec rspec spec/services/singing_diagnoses/ai_comment_generator_spec.rb:42
 ```
 
+全件 RSpec（`bundle exec rspec`）は、明示的に依頼された場合か、変更が広範囲で関連テストだけでは確認しきれない場合に限る。参考扱いの CI は原則として完了を待たない。
+
 **確認ポイント:**
-- 全テストが通過すること
+- 実行した関連 spec が通過すること
+- PR の必須 CI チェック（Required checks）が通っていること
 - 変更ファイルに対応する spec が存在すること
 
 **危険ポイント:**
@@ -106,5 +105,6 @@ bundle exec rails db:migrate:status
 - [ ] `credentials` / `master.key` / `.env` がコミットに含まれていない
 - [ ] `rails runner 'puts "boot ok"'` 成功
 - [ ] `assets:precompile` エラーなし（CSS/JS変更時）
-- [ ] `bundle exec rspec` 全通過
+- [ ] 実行した関連 spec が通過
+- [ ] PR の必須 CI チェック（Required checks）通過
 - [ ] migration 状態確認済み（migration変更時）

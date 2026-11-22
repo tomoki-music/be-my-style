@@ -19,11 +19,19 @@ DISABLE_SPRING=1 bundle exec rails runner 'puts "boot ok"'
 # 3. アセットプリコンパイル（CSS / JS 変更時は必須）
 RAILS_ENV=production bundle exec rails assets:precompile
 
-# 4. テスト
-bundle exec rspec
+# 4. テスト（変更箇所に関係する spec のみ）
+bundle exec rspec spec/path/to/related_spec.rb
 ```
 
 CSS / JS / 画像に変更がない場合でも 1 と 2 は**常に必須**。
+
+### テスト・CI 確認の範囲
+
+- テストは変更箇所に直接関係する spec に絞り、PR の必須 CI チェック（Required checks）が通っていることを確認する。
+- 参考扱いの CI は、原則として完了を待たない。
+- 全件 RSpec（`bundle exec rspec`）は、明示的に依頼された場合か、変更が広範囲で関連テストだけでは確認しきれない場合に限って実行する。
+- 追加確認は、変更に起因する失敗や未確認の挙動がある場合に、その箇所に絞って行う。
+- 本番反映後は、デプロイ成功と変更した画面の主要な挙動だけ確認する。ログインが必要で確認できない場合は、確認項目を短く伝えて「未確認」と記録する。
 
 ---
 
