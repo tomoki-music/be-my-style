@@ -9,6 +9,7 @@
     %table.table.table-striped.table-bordered
       %thead
         %tr
+          %th いいね追加
           %th ID
           %th タイトル
           %th 投稿者
@@ -18,11 +19,23 @@
           %th
       %tbody
         - @activities.each do |activity|
-          %tr
+          - remaining = @favorite_candidate_ids.fetch(activity.id, []).size
+          %tr{ id: "admin-activity-#{activity.id}" }
+            %td.text-nowrap
+              - if remaining.zero?
+                %span.text-muted.small 追加可能なアカウントなし
+              - else
+                = form_with url: admin_activity_favorite_additions_path(activity), method: :post, local: true,
+                  class: "d-flex align-items-center admin-favorite-addition",
+                  data: { "admin-favorite-addition" => "true", "activity-id" => activity.id, "activity-title" => activity.title } do
+                  = label_tag "count_#{activity.id}", "追加件数", class: "sr-only"
+                  = select_tag :count, options_for_select((1..remaining).to_a),
+                    id: "count_#{activity.id}", class: "form-control form-control-sm mr-1", style: "width: auto;"
+                  = submit_tag "いいねを追加", class: "btn btn-sm btn-outline-danger", data: { disable_with: "追加中…" }
             %td= activity.id
             %td= activity.title
             %td= activity.customer&.name
-            %td= activity.favorites.count
+            %td= @favorite_counts.fetch(activity.id, 0)
             %td= activity.comments.count
             %td= l activity.created_at, format: :short
             %td.text-nowrap

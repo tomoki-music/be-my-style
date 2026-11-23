@@ -88,3 +88,21 @@ RSpec.describe "Public::Favorites", type: :request do
   end
 
 end
+
+# 画面と同じ Ajax(remote: true)での「いいね」。Favorite.add_unique で記事をロックしてから登録する。
+RSpec.describe "Public::Favorites(Ajax)", type: :request do
+  let(:author) { create(:customer, :customer_with_parts) }
+  let(:fan) { create(:customer, :customer_with_parts) }
+  let(:activity) { create(:activity, customer: author) }
+
+  before { sign_in fan }
+
+  it "続けて送っても1件だけ登録し、通知も1件だけ作る" do
+    expect do
+      2.times { post public_activity_favorites_path(activity), xhr: true }
+    end.to change { Favorite.where(activity: activity, customer: fan).count }.by(1)
+      .and change { Notification.where(action: "favorite", activity_id: activity.id).count }.by(1)
+
+    expect(response).to have_http_status(:ok)
+  end
+end

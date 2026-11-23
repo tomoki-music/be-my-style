@@ -36,7 +36,10 @@ Rails.application.routes.draw do
       # 「有料機能を無料でお試し」。Businessコミュニティ専用で、コミュニティ詳細画面から操作する。
       resource :plan_trial, only: [:update], controller: "community_plan_trials"
     end
-    resources :activities
+    resources :activities do
+      # 運営所有アカウント(会員 ID 2〜10)のいいねを追加する。件数だけを受け取る。
+      resources :favorite_additions, only: [:create], controller: "activity_favorite_additions"
+    end
     resources :activity_comments
     resources :event_comments
 
