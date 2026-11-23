@@ -4,6 +4,9 @@ class Admin::ActivitiesController < ApplicationController
 
   def index
     @activities = Activity.includes(:customer).order(created_at: :desc)
+    activity_ids = @activities.map(&:id)
+    @favorite_counts = Favorite.where(activity_id: activity_ids).group(:activity_id).count
+    @favorite_candidate_ids = Activities::AdminFavoriteAdder.candidate_ids_by_activity(@activities)
   end
 
   def show
