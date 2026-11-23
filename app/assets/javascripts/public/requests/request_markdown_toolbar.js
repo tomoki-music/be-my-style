@@ -9,6 +9,11 @@
 // data-markdown-toolbar-root を持つ要素を対象にquerySelectorAllで探索するため、
 // #input_request というID文字列には依存しない(将来チャット以外の欄へ同じ構造で
 // 展開しても、IDの重複を気にせず動く)。
+//
+// 活動報告フォーム(public/activities/_format_toolbar)でも同じ仕組みを使う。そちらは
+// プレビュー欄を持たず、「文字色」ボタン(data-md-action="color-menu")で色の選択肢を開き、
+// 選んだ色(data-md-action="color" + data-md-color)で {color:red}文字{/color} を挿入する。
+// 入力欄は textarea に限らず1行の input でもよい(selectionStart/End は共通)。
 (function () {
   'use strict';
 
@@ -31,11 +36,24 @@
     var previewPane = root.querySelector('.request-markdown-toolbar__pane--preview');
     var previewBody = root.querySelector('.request-markdown-toolbar__preview-body');
     var previewBtn = root.querySelector('[data-md-action="preview"]');
-    if (!textarea || !editPane || !previewPane || !previewBody || !previewBtn) return;
+    var colorMenuBtn = root.querySelector('[data-md-action="color-menu"]');
+    var palette = root.querySelector('[data-md-color-palette]');
+    if (!textarea) return;
+    // プレビューボタンがある場合だけ、プレビューに必要な要素を揃えて要求する。
+    if (previewBtn && (!editPane || !previewPane || !previewBody)) return;
 
     root.dataset.markdownToolbarInitialized = 'true';
 
-    root.querySelectorAll('.request-markdown-toolbar__btn').forEach(function (button) {
+    if (colorMenuBtn && palette) {
+      root.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !palette.hidden) {
+          setPaletteOpen(colorMenuBtn, palette, false);
+          colorMenuBtn.focus();
+        }
+      });
+    }
+
+    root.querySelectorAll('[data-md-action]').forEach(function (button) {
       button.addEventListener('click', function (event) {
         // type="button"のため通常はフォーム送信を引き起こさないが、
         // 誤送信防止の保険として明示的にも止めておく。
@@ -46,11 +64,33 @@
           togglePreview(root, textarea, editPane, previewPane, previewBody, previewBtn);
           return;
         }
+        if (action === 'color-menu') {
+          if (palette) setPaletteOpen(button, palette, palette.hidden);
+          return;
+        }
+        if (action === 'color') {
+          if (colorMenuBtn && palette) setPaletteOpen(colorMenuBtn, palette, false);
+          applyTextColor(textarea, button.dataset.mdColor);
+          textarea.dispatchEvent(new Event('input', { bubbles: true }));
+          return;
+        }
 
         applyMarkdownAction(textarea, action);
         textarea.dispatchEvent(new Event('input', { bubbles: true }));
       });
     });
+  }
+
+  function setPaletteOpen(toggle, palette, open) {
+    palette.hidden = !open;
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  // 文字色: 色名は英小文字だけを受け付ける(描画側 MarkdownTextColors の許可リストに無い色は
+  // そのまま文字として表示されるだけだが、記法の形を崩さないよう入口でも絞る)。
+  function applyTextColor(textarea, color) {
+    if (!/^[a-z]+$/.test(color || '')) return;
+    wrapSelection(textarea, '{color:' + color + '}', '{/color}', '色を付ける文字');
   }
 
   function applyMarkdownAction(textarea, action) {

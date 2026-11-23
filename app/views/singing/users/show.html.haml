@@ -322,7 +322,7 @@
                     %span ♪
                 .singing-profile__activity-body
                   %strong= truncate(activity.title, length: 34)
-                  %p= truncate(activity.introduction.presence || activity.keep, length: 70)
+                  %p= truncate(activity_plain_text(activity.introduction.presence || activity.keep), length: 70)
                   %small= "#{time_ago_in_words(activity.created_at)}前"
         - else
           .singing-profile__empty

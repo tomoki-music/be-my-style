@@ -113,22 +113,25 @@
               %th{scope:"row"} やって良かった事
               %td
                 %span.kpt-keep Keep
-                = @activity.keep
+                .markdown-body.activity-show-kpt-body
+                  = activity_markdown(@activity.keep)
             %tr
               %th{scope:"row"} 失敗した事
               %td
                 %span.kpt-problem Problem
-                = @activity.problem
+                .markdown-body.activity-show-kpt-body
+                  = activity_markdown(@activity.problem)
             %tr
               %th{scope:"row"} 次挑戦したい事
               %td
                 %span.kpt-try Try
-                = @activity.try
+                .markdown-body.activity-show-kpt-body
+                  = activity_markdown(@activity.try)
             %tr
               %th{scope:"row"} 活動報告詳細紹介
               %td
                 %div.markdown-body
-                  = markdown(@activity.introduction)
+                  = activity_markdown(@activity.introduction)
             %tr
               %th{scope:"row"} 所属コミュニティ
               %td
