@@ -136,6 +136,30 @@ RSpec.describe "Public::Activities", type: :request do
     end
   end
 
+  describe "プレビュー(preview)" do
+    let(:content) { "**太字** と {color:red}赤{/color}\n\n- [ ] やること\n\n<script>alert(1)</script>" }
+
+    it "ログイン済みなら詳細画面と同じ描画のHTMLを返す" do
+      sign_in customer
+      post preview_public_activities_path, params: { content: content }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      html = response.parsed_body["html"]
+      expect(html).to eq(ApplicationController.helpers.activity_markdown(content))
+      expect(html).to include("<strong>太字</strong>")
+      expect(html).to include('<span class="md-text-color md-text-color--red">赤</span>')
+      expect(html).to include("☐ やること")
+      expect(html).not_to include("<script")
+    end
+
+    it "非ログインでは描画せずログイン画面へ移動させる" do
+      post preview_public_activities_path, params: { content: content }, as: :json
+
+      expect(response.status).to eq(401).or eq(302)
+      expect(response.body).not_to include("md-text-color")
+    end
+  end
+
   describe '非ログイン' do
     context "activities一覧ページ(index)へ遷移されない" do
       before do

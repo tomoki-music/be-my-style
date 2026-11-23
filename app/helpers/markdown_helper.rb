@@ -1,6 +1,10 @@
 module MarkdownHelper
+  # Redcarpet はチェックリスト記法を解釈せず「[ ] 項目」の文字のまま出すため、task_lists: true の
+  # ときだけ記号に置き換える(入力欄 <input> は Sanitize で消えるので使わない)。
+  TASK_LIST_ITEM_REGEX = %r{<li>(<p>)?\[([ xX])\] }.freeze
+
   # text_colors: true で `{color:red}文字{/color}` の文字色記法(MarkdownTextColors)を描画する。
-  def markdown(text, text_colors: false)
+  def markdown(text, text_colors: false, task_lists: false)
     return "" if text.blank?
 
     # 改行統一
@@ -21,8 +25,16 @@ module MarkdownHelper
 
     html = markdown.render(normalized)
     html = MarkdownTextColors.restore(html) if text_colors
+    html = render_task_list_items(html) if task_lists
 
     Sanitize.fragment(html, Sanitize::Config::RELAXED).html_safe
+  end
+
+  def render_task_list_items(html)
+    html.gsub(TASK_LIST_ITEM_REGEX) do
+      mark = Regexp.last_match(2) == " " ? "☐" : "☑"
+      %(<li class="md-task-item">#{Regexp.last_match(1)}#{mark} )
+    end
   end
 
   def placeholder_markdown_profile

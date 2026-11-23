@@ -1,6 +1,7 @@
 require "rails_helper"
 
-# 活動報告フォームの「太字」「文字色」ツールバー(request_markdown_toolbar.js を共用)を実ブラウザで検証する。
+# 活動報告フォームの文字装飾ツールバー(チャット欄と同じボタン+文字色+プレビュー。
+# request_markdown_toolbar.js を共用)を実ブラウザで検証する。
 #
 # 注記: event_request_markdown_toolbar_spec.rb と同じ理由(この headless Chrome 環境では
 # Selenium の実クリックが DOM フォーカスを移動させない既知の環境制約)により、
@@ -66,6 +67,109 @@ RSpec.describe "活動報告の文字装飾ツールバー", type: :system do
       "Array.from(document.querySelectorAll('[data-markdown-toolbar-root^=\"activity-\"] button')).map(function (b) { return b.type; })"
     )
     expect(types).to all(eq("button"))
+  end
+
+  FIELDS = %w[keep problem try introduction].freeze
+  EXPECTED_ACTIONS = %w[
+    bold italic heading strikethrough quote unordered-list ordered-list checklist
+    code codeblock link image hr color-menu preview
+  ].freeze
+
+  def toolbar_actions(field)
+    page.evaluate_script(<<~JS)
+      Array.from(document.querySelectorAll('[data-markdown-toolbar-root="activity-#{field}"] .activity-format-toolbar__btn'))
+        .map(function (b) { return b.dataset.mdAction; })
+    JS
+  end
+
+  it "4欄それぞれにチャット欄と同じボタン・文字色・プレビューが並ぶ" do
+    sign_in_via_form(customer)
+    visit new_public_activity_path
+
+    FIELDS.each do |field|
+      expect(toolbar_actions(field)).to eq(EXPECTED_ACTIONS)
+      expect(page).to have_selector("textarea#activity_#{field}")
+    end
+  end
+
+  it "追加したボタンは選択範囲・複数行に適用され、押した欄だけが変わる" do
+    sign_in_via_form(customer)
+    visit new_public_activity_path
+
+    set_field("activity_keep", "良かった", selection_start: 0, selection_end: 4)
+    click_format_button(:keep, "italic")
+    expect(field_value("activity_keep")).to eq("*良かった*")
+
+    set_field("activity_problem", "音が小さい", selection_start: 0, selection_end: 1)
+    click_format_button(:problem, "strikethrough")
+    expect(field_value("activity_problem")).to eq("~~音~~が小さい")
+
+    set_field("activity_try", "練習", selection_start: 0, selection_end: 2)
+    click_format_button(:try, "code")
+    expect(field_value("activity_try")).to eq("`練習`")
+
+    lines = "行1\n行2\n行3"
+    {
+      "quote" => "> 行1\n> 行2\n> 行3",
+      "unordered-list" => "- 行1\n- 行2\n- 行3",
+      "ordered-list" => "1. 行1\n2. 行2\n3. 行3",
+      "checklist" => "- [ ] 行1\n- [ ] 行2\n- [ ] 行3"
+    }.each do |action, expected|
+      set_field("activity_introduction", lines, selection_start: 0, selection_end: lines.length)
+      click_format_button(:introduction, action)
+      expect(field_value("activity_introduction")).to eq(expected)
+    end
+
+    set_field("activity_introduction", "前x後", selection_start: 1, selection_end: 2)
+    click_format_button(:introduction, "codeblock")
+    expect(field_value("activity_introduction")).to eq("前\n```\nx\n```\n後")
+
+    set_field("activity_introduction", "", selection_start: 0, selection_end: 0)
+    click_format_button(:introduction, "image")
+    expect(field_value("activity_introduction")).to eq("![画像の説明](https://)")
+    expect(field_selection("activity_introduction")).to eq([9, 17])
+
+    set_field("activity_introduction", "公式サイト", selection_start: 2, selection_end: 5)
+    click_format_button(:introduction, "link")
+    expect(field_value("activity_introduction")).to eq("公式[サイト](https://)")
+    expect(field_selection("activity_introduction")).to eq([8, 16])
+
+    set_field("activity_introduction", "本文", selection_start: 2, selection_end: 2)
+    click_format_button(:introduction, "hr")
+    expect(field_value("activity_introduction")).to eq("本文\n\n---\n")
+
+    # 他の欄の操作で、先に装飾した欄は変わらない
+    expect(field_value("activity_keep")).to eq("*良かった*")
+    expect(field_value("activity_problem")).to eq("~~音~~が小さい")
+    expect(field_value("activity_try")).to eq("`練習`")
+
+    expect(page).to have_current_path(new_public_activity_path)
+    expect(Activity.count).to eq(0)
+  end
+
+  it "プレビューは詳細画面と同じ描画で文字色も確認でき、押した欄だけが切り替わる" do
+    sign_in_via_form(customer)
+    visit new_public_activity_path
+
+    set_field("activity_introduction", "**太字** {color:red}赤い文字{/color}\n\n- [ ] やること", selection_start: 0, selection_end: 0)
+    click_format_button(:introduction, "preview")
+
+    root = '[data-markdown-toolbar-root="activity-introduction"]'
+    within(root) do
+      expect(page).to have_selector(".request-markdown-toolbar__preview-body strong", text: "太字", wait: 10)
+      expect(page).to have_selector(".request-markdown-toolbar__preview-body span.md-text-color--red", text: "赤い文字")
+      expect(page).to have_selector(".request-markdown-toolbar__preview-body li.md-task-item", text: "☐ やること")
+      expect(page).to have_selector("#activity_introduction", visible: :hidden)
+      expect(page).to have_selector('[data-md-action="preview"][aria-pressed="true"]', text: "編集に戻る")
+    end
+    red = page.evaluate_script("getComputedStyle(document.querySelector('#{root} .md-text-color--red')).color")
+    expect(red).to eq("rgb(211, 47, 47)")
+    expect(page).to have_selector("#activity_keep", visible: true)
+
+    click_format_button(:introduction, "preview")
+    expect(page).to have_selector("#activity_introduction", visible: true)
+    expect(page).to have_selector("#{root} .activity-format-preview", visible: :hidden)
+    expect(Activity.count).to eq(0)
   end
 
   it "選択した部分だけを装飾し、未選択ならひな形を選択状態で入れる(フォームは送信されない)" do
@@ -158,6 +262,25 @@ RSpec.describe "活動報告の文字装飾ツールバー", type: :system do
       })()
     JS
     expect(overflow).to eq([])
+
+    # 4欄の全ボタンが画面内に表示され、押せる大きさがある
+    hidden_or_small = page.evaluate_script(<<~JS)
+      (function () {
+        var width = document.documentElement.clientWidth;
+        return Array.from(document.querySelectorAll('.activity-format-toolbar__btn'))
+          .filter(function (el) {
+            var r = el.getBoundingClientRect();
+            return el.offsetParent === null || r.left < 0 || r.right > width + 1 || r.height < 36;
+          })
+          .map(function (el) { return el.dataset.mdAction; });
+      })()
+    JS
+    expect(hidden_or_small).to eq([])
+    expect(page.all(".activity-format-toolbar__btn").size).to eq(EXPECTED_ACTIONS.size * FIELDS.size)
+
+    set_field("activity_problem", "a\nb", selection_start: 0, selection_end: 3)
+    click_format_button(:problem, "checklist")
+    expect(field_value("activity_problem")).to eq("- [ ] a\n- [ ] b")
 
     set_field("activity_keep", "楽しかった", selection_start: 0, selection_end: 5)
     click_format_button(:keep, "color", color: "orange")

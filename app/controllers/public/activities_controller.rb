@@ -130,6 +130,11 @@ class Public::ActivitiesController < ApplicationController
     redirect_to public_activities_path, alert: "活動報告を削除しました!"
   end
 
+  # フォームの「プレビュー」用。保存後の詳細画面と同じ描画(activity_markdown)で返す。
+  def preview
+    render json: { html: helpers.activity_markdown(params[:content].to_s) }
+  end
+
   private
 
   def activity_params
