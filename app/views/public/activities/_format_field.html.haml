@@ -1,0 +1,17 @@
+-# 活動報告の Markdown 本文欄に「太字」「文字色」ボタンを付ける。
+-# 動作は public/requests/request_markdown_toolbar.js(data-markdown-toolbar-root)が担う。
+- palette_id = "activity-format-palette-#{field}"
+.activity-format-field{ data: { "markdown-toolbar-root" => "activity-#{field}" } }
+  .activity-format-toolbar{ role: "toolbar", "aria-label" => "文字の装飾" }
+    %button.activity-format-toolbar__btn{ type: "button", data: { "md-action" => "bold" }, title: "選んだ文字を太字にする", "aria-label" => "太字にする" }
+      %strong B
+      %span 太字
+    %button.activity-format-toolbar__btn{ type: "button", data: { "md-action" => "color-menu" }, title: "選んだ文字に色を付ける", "aria-label" => "文字色を選ぶ", "aria-expanded" => "false", "aria-controls" => palette_id }
+      %span.activity-format-toolbar__color-icon{ "aria-hidden" => "true" } A
+      %span 文字色
+    .activity-format-toolbar__palette{ id: palette_id, hidden: true, data: { "md-color-palette" => "true" } }
+      - activity_text_color_options.each do |color, label|
+        %button.activity-format-toolbar__swatch{ type: "button", data: { "md-action" => "color", "md-color" => color }, "aria-label" => "文字色を#{label}にする" }
+          %span.activity-format-toolbar__dot{ class: "activity-format-toolbar__dot--#{color}", "aria-hidden" => "true" }
+          %span{ class: "md-text-color md-text-color--#{color}" }= label
+  = yield

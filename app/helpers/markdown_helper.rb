@@ -1,9 +1,11 @@
 module MarkdownHelper
-  def markdown(text)
+  # text_colors: true で `{color:red}文字{/color}` の文字色記法(MarkdownTextColors)を描画する。
+  def markdown(text, text_colors: false)
     return "" if text.blank?
 
     # 改行統一
     normalized = text.to_s.gsub(/\r\n?/, "\n")
+    normalized = MarkdownTextColors.substitute(normalized) if text_colors
 
     renderer = Redcarpet::Render::HTML.new(
       filter_html: true,
@@ -18,6 +20,7 @@ module MarkdownHelper
     )
 
     html = markdown.render(normalized)
+    html = MarkdownTextColors.restore(html) if text_colors
 
     Sanitize.fragment(html, Sanitize::Config::RELAXED).html_safe
   end

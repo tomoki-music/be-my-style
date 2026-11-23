@@ -37,27 +37,33 @@
               %i.text-red
                 (必須)
             %td
-              = f.text_field :keep, class: 'form-control'
+              %p.activity-format-hint 文字を選んで「太字」「文字色」を押すと、その部分だけ装飾できます。Markdown記法もそのまま使えます。
+              = render layout: 'public/activities/format_field', locals: { field: :keep } do
+                = f.text_field :keep, class: 'form-control', data: { "markdown-toolbar-textarea" => "true" }
           %tr
             %th{scope:"row"}
               失敗した事
               %i.text-red
                 (必須)
             %td
-              = f.text_field :problem, class: 'form-control'
+              = render layout: 'public/activities/format_field', locals: { field: :problem } do
+                = f.text_field :problem, class: 'form-control', data: { "markdown-toolbar-textarea" => "true" }
           %tr
             %th{scope:"row"}
               次回挑戦したい事
               %i.text-red
                 (必須)
             %td
-              = f.text_field :try, class: 'form-control'
+              = render layout: 'public/activities/format_field', locals: { field: :try } do
+                = f.text_field :try, class: 'form-control', data: { "markdown-toolbar-textarea" => "true" }
           %tr
             %th{scope:"row"} 活動報告「詳細」
             %td
-              = f.text_area :introduction,
-                rows: "10",
-                style: "width:90%",
-                class: "form-control",
-                placeholder: "# 🎤 活動報告\n\n## 本日のセッション概要\n本日は〇〇スタジオにてセッション会を開催しました！\n\n参加人数は**15名**で、初参加の方も多くとても盛り上がりました🙌\n\n\n---\n\n## 🎵 セットリスト\n- 曲①（邦楽）\n- 曲②（洋楽）\n- 曲③（アニソン）\n\n\n---\n\n## 🌟 印象的だったポイント\n\n### ▶ 初参加の方が大活躍！\n最初は緊張していた様子でしたが、\n演奏が始まると一気に場に溶け込んでいました👏\n\n\n### ▶ 即興バンドが大成功🔥\nその場で組んだバンドでも、\n驚くほどまとまった演奏に！\n\n\n---\n\n## ❗ やって良かったこと\n- 事前にパート募集を明確にした\n- 初心者にも声かけをした\n\n\n## ⚠️ 反省点\n- 進行が少し押してしまった\n- 機材トラブルが一部あり\n\n\n## 🚀 次回やりたいこと\n- 進行表を事前に共有\n- 機材チェックを強化\n\n\n---\n\n## 💬 参加者の声\n> 「初めてでもすごく楽しめました！」\n\n> 「また絶対参加したいです！」\n\n\n---\n\n## 📸 写真・動画\n[イベントの様子はこちら](https://example.com)\n\n\n---\n\n## 🎯 まとめ\n今回も最高のセッションでした！\n\n音楽を通じて人がつながる瞬間は、やっぱり最高ですね🎶\n\n\n---\n\n※改行を使うと読みやすさがグッと上がります！\n※Markdown記法もぜひ使ってみてください！"
+              = render layout: 'public/activities/format_field', locals: { field: :introduction } do
+                = f.text_area :introduction,
+                  rows: "10",
+                  style: "width:90%",
+                  class: "form-control",
+                  data: { "markdown-toolbar-textarea" => "true" },
+                  placeholder: "# 🎤 活動報告\n\n## 本日のセッション概要\n本日は〇〇スタジオにてセッション会を開催しました！\n\n参加人数は**15名**で、初参加の方も多くとても盛り上がりました🙌\n\n\n---\n\n## 🎵 セットリスト\n- 曲①（邦楽）\n- 曲②（洋楽）\n- 曲③（アニソン）\n\n\n---\n\n## 🌟 印象的だったポイント\n\n### ▶ 初参加の方が大活躍！\n最初は緊張していた様子でしたが、\n演奏が始まると一気に場に溶け込んでいました👏\n\n\n### ▶ 即興バンドが大成功🔥\nその場で組んだバンドでも、\n驚くほどまとまった演奏に！\n\n\n---\n\n## ❗ やって良かったこと\n- 事前にパート募集を明確にした\n- 初心者にも声かけをした\n\n\n## ⚠️ 反省点\n- 進行が少し押してしまった\n- 機材トラブルが一部あり\n\n\n## 🚀 次回やりたいこと\n- 進行表を事前に共有\n- 機材チェックを強化\n\n\n---\n\n## 💬 参加者の声\n> 「初めてでもすごく楽しめました！」\n\n> 「また絶対参加したいです！」\n\n\n---\n\n## 📸 写真・動画\n[イベントの様子はこちら](https://example.com)\n\n\n---\n\n## 🎯 まとめ\n今回も最高のセッションでした！\n\n音楽を通じて人がつながる瞬間は、やっぱり最高ですね🎶\n\n\n---\n\n※改行を使うと読みやすさがグッと上がります！\n※Markdown記法もぜひ使ってみてください！"
           = f.submit "活動報告を登録", class: "btn btn-info activity-new-edit-btn", data: { confirm: 'こちらの内容で登録します。よろしいですか？' }
