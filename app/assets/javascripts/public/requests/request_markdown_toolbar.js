@@ -10,10 +10,11 @@
 // #input_request というID文字列には依存しない(将来チャット以外の欄へ同じ構造で
 // 展開しても、IDの重複を気にせず動く)。
 //
-// 活動報告フォーム(public/activities/_format_toolbar)でも同じ仕組みを使う。そちらは
-// プレビュー欄を持たず、「文字色」ボタン(data-md-action="color-menu")で色の選択肢を開き、
+// 活動報告フォーム(public/activities/_format_field)でも同じ仕組みを使う。そちらはチャット欄
+// (chat_markdown_composer.js)と同じボタン構成で、斜体・取り消し線・チェックリスト・コード・
+// 画像・区切り線も持つ。加えて「文字色」ボタン(data-md-action="color-menu")で色の選択肢を開き、
 // 選んだ色(data-md-action="color" + data-md-color)で {color:red}文字{/color} を挿入する。
-// 入力欄は textarea に限らず1行の input でもよい(selectionStart/End は共通)。
+// チャット側の処理は複数行選択に対応していないため、こちらの実装を共通の挿入処理として使う。
 (function () {
   'use strict';
 
@@ -100,6 +101,27 @@
         break;
       case 'bold':
         wrapSelection(textarea, '**', '**', '太字にする文字');
+        break;
+      case 'italic':
+        wrapSelection(textarea, '*', '*', '斜体にする文字');
+        break;
+      case 'strikethrough':
+        wrapSelection(textarea, '~~', '~~', '取り消す文字');
+        break;
+      case 'code':
+        wrapSelection(textarea, '`', '`', 'コード');
+        break;
+      case 'codeblock':
+        applyCodeBlock(textarea);
+        break;
+      case 'checklist':
+        applyLinePrefixBlock(textarea, '- [ ] ', 'やること');
+        break;
+      case 'image':
+        applyLink(textarea, '![', '画像の説明');
+        break;
+      case 'hr':
+        applyHorizontalRule(textarea);
         break;
       case 'unordered-list':
         applyLinePrefixBlock(textarea, '- ', '項目');
@@ -267,30 +289,60 @@
     textarea.setSelectionRange(lineStart, lineStart + (lineEnd - lineStart) + totalInserted);
   }
 
+  // コードブロック: 選択範囲を ``` の行で囲む。記号が独立した行になるよう、
+  // 行の途中から始まる/終わる場合だけ改行を補う。
+  function applyCodeBlock(textarea) {
+    var value = textarea.value;
+    var start = textarea.selectionStart;
+    var end = textarea.selectionEnd;
+    var before = (start > 0 && value.charAt(start - 1) !== '\n' ? '\n' : '') + '```\n';
+    var after = '\n```' + (end < value.length && value.charAt(end) !== '\n' ? '\n' : '');
+    wrapSelection(textarea, before, after, 'コード');
+  }
+
+  // 区切り線: カーソル位置(選択時は末尾)に --- を挿入する。直前の行に続けて書くと
+  // 「見出し」と解釈されるため、前後に空行を補う。
+  function applyHorizontalRule(textarea) {
+    var value = textarea.value;
+    var pos = textarea.selectionEnd;
+    var head = value.slice(0, pos);
+    var rest = value.slice(pos);
+    var lead = (head === '' || /\n\n$/.test(head)) ? '' : (/\n$/.test(head) ? '\n' : '\n\n');
+    var trail = rest === '' ? '\n' : (/^\n\n/.test(rest) ? '' : (/^\n/.test(rest) ? '\n' : '\n\n'));
+    var text = lead + '---' + trail;
+
+    insertAt(textarea, pos, text);
+    fireInput(textarea);
+    textarea.focus();
+    textarea.setSelectionRange(pos + text.length, pos + text.length);
+  }
+
   // リンク: 選択文字列をリンク名として使い、[名前](https://)を挿入する。
+  // 画像は opener に '![' を渡し、チャット欄と同じ ![画像の説明](https://) の形にする。
   // 続けてURLを入力しやすいよう、挿入後は"https://"部分を選択状態にする
   // (prompt()はアクセシビリティ・操作性の理由で使わない)。
   //
   // 選択あり時は、選択文字列(リンク名として使う。@メンション本体を含みうる)自体を
   // 書き換えず、wrapSelectionと同じ「末尾へ挿入→先頭へ挿入」の2段階に分ける。
-  function applyLink(textarea) {
+  function applyLink(textarea, opener, defaultLabel) {
+    opener = opener || '[';
     var start = textarea.selectionStart;
     var end = textarea.selectionEnd;
     var url = 'https://';
 
     if (start === end) {
       var value = textarea.value;
-      var label = 'リンク名';
-      textarea.value = value.slice(0, start) + '[' + label + '](' + url + ')' + value.slice(end);
+      var label = defaultLabel || 'リンク名';
+      textarea.value = value.slice(0, start) + opener + label + '](' + url + ')' + value.slice(end);
       fireInput(textarea);
       textarea.focus();
-      var placeholderUrlStart = start + 1 + label.length + 2; // '[' + label + '('
+      var placeholderUrlStart = start + opener.length + label.length + 2; // opener + label + ']('
       textarea.setSelectionRange(placeholderUrlStart, placeholderUrlStart + url.length);
       return;
     }
 
     var afterText = '](' + url + ')';
-    var beforeText = '[';
+    var beforeText = opener;
 
     insertAt(textarea, end, afterText);
     fireInput(textarea);
@@ -298,7 +350,7 @@
     fireInput(textarea);
 
     textarea.focus();
-    var urlStart = end + beforeText.length + 2; // '[' + 選択文字列 + '(' の後
+    var urlStart = end + beforeText.length + 2; // opener + 選択文字列 + '](' の後
     textarea.setSelectionRange(urlStart, urlStart + url.length);
   }
 

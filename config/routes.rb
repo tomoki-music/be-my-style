@@ -125,6 +125,7 @@ Rails.application.routes.draw do
 
     # 活動報告機能
     resources :activities do
+      post "preview", on: :collection
       resource :favorites, only: [:create, :destroy]
       resources :comments, only: [:create, :destroy]
       resources :reactions, only: [:create], controller: "activity_reactions"

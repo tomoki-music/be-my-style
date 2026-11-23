@@ -2,6 +2,47 @@ require "rails_helper"
 
 RSpec.describe ActivitiesHelper, type: :helper do
   describe "#activity_markdown" do
+    it "ツールバーで入れる斜体・取り消し線・コード・引用・リスト・リンク・画像・区切り線を描画する" do
+      text = <<~MD
+        *斜体* ~~取り消し~~ `コード`
+
+        > 引用1
+        > 引用2
+
+        1. 一つ目
+        2. 二つ目
+
+        [リンク名](https://example.com) ![画像の説明](https://example.com/a.png)
+
+        ---
+
+        ```
+        <b>コードブロック</b>
+        ```
+      MD
+      html = helper.activity_markdown(text)
+
+      expect(html).to include("<em>斜体</em>", "<del>取り消し</del>", "<code>コード</code>")
+      expect(html).to match(%r{<blockquote>\s*<p>引用1<br>\s*引用2</p>\s*</blockquote>})
+      expect(html).to include("<li>一つ目</li>", "<li>二つ目</li>")
+      expect(html).to include('<a href="https://example.com">リンク名</a>')
+      expect(html).to include('<img src="https://example.com/a.png" alt="画像の説明">')
+      expect(html).to include("<hr>")
+      expect(html).to include("&lt;b&gt;コードブロック&lt;/b&gt;")
+    end
+
+    it "チェックリストは記号付きの項目にし、文字色とも併用できる" do
+      html = helper.activity_markdown("- [ ] {color:red}未完了{/color}\n- [x] 完了")
+
+      expect(html).to include('<li class="md-task-item">☐ <span class="md-text-color md-text-color--red">未完了</span></li>')
+      expect(html).to include('<li class="md-task-item">☑ 完了</li>')
+      expect(html).not_to include("<input")
+    end
+
+    it "チェックリスト記号への置き換えは活動報告だけで、共通の markdown は従来どおり" do
+      expect(helper.markdown("- [ ] やること")).to include("<li>[ ] やること</li>")
+    end
+
     it "太字と許可した文字色を描画する" do
       html = helper.activity_markdown("**太字** と {color:red}赤い文字{/color}")
 

@@ -1495,6 +1495,36 @@ $md-text-colors: (
     }
   }
 
+  &__btn--preview {
+    margin-left: auto;
+    border-color: #2347c9;
+    color: #2347c9;
+    font-weight: 700;
+
+    &[aria-pressed="true"] {
+      background: #2347c9;
+      color: #fff;
+    }
+  }
+
+  &__icon {
+    min-width: 1em;
+    font-weight: 700;
+    text-align: center;
+  }
+  &__icon--italic {
+    font-style: italic;
+    font-family: Georgia, serif;
+  }
+  &__icon--strikethrough {
+    text-decoration: line-through;
+  }
+  &__icon--code,
+  &__icon--codeblock {
+    font-family: SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+  }
+
   &__color-icon {
     font-weight: 700;
     text-decoration: underline;
@@ -1547,6 +1577,25 @@ $md-text-colors: (
   }
 }
 
+.activity-format-preview {
+  width: 90%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border: 1px dashed #b8c2d1;
+  border-radius: 6px;
+  background: #fff;
+
+  .markdown-body > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+// チェックリスト(activity_markdown の task_lists)。記号を行頭に置くため黒丸は消す。
+.markdown-body .md-task-item {
+  list-style: none;
+  margin-left: -1.2em;
+}
+
 .activity-show-kpt-body {
   margin-top: 4px;
 
@@ -1585,12 +1634,35 @@ $md-text-colors: (
   }
 
   .activity-format-hint,
-  .activity-format-toolbar {
+  .activity-format-toolbar,
+  .activity-format-preview {
     width: 100%;
   }
 
+  // ボタンが多いので、スマホ幅は3列のグリッドにして全ボタンを画面内に並べる。
+  .activity-format-toolbar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+
   .activity-format-toolbar__btn {
-    flex: 1 1 40%;
     justify-content: center;
+    min-width: 0;
+    min-height: 40px;
+    padding: 4px;
+    font-size: 12px;
+    white-space: normal;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .activity-format-toolbar__btn--preview {
+    grid-column: 1 / -1;
+    margin-left: 0;
+  }
+
+  .activity-format-toolbar__palette {
+    grid-column: 1 / -1;
   }
 }
