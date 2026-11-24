@@ -66,6 +66,8 @@ gem 'bootstrap', '~> 4.5'
 gem 'jquery-rails'
 gem 'uglifier'
 gem 'kaminari'
+# イベントの演奏リスト(.xlsx)出力用
+gem 'caxlsx', '~> 4.1'
 gem 'bootstrap4-kaminari-views'
 gem 'mysql2'
 gem 'dotenv-rails'
