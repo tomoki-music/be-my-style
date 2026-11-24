@@ -281,6 +281,9 @@
                                   - part_names.each do |part|
                                     %th{ style: "width: #{column_width_percent}%;" }= part
                                   %th{ style: "width: #{column_width_percent}%;" } 応援する📣
+                              -# 一覧の「募集中」から直接申し込めるのは、参加チェック欄を出す条件(未終了)と
+                              -# サーバー側の受付条件(開催コミュニティの所属者 = @can_cheer と同じ判定)を満たす場合だけ。
+                              - quick_entry_enabled = @can_cheer && @event.event_end_time > Time.now
                               %tbody
                                 - @event.songs.each do |song|
                                   - recruiting_parts = song.recruiting_join_parts
@@ -319,11 +322,16 @@
                                         -# スマホの1曲1行表示用。PC表と同じ判定で各パートの状況を文字でも示す。
                                         %ul.song-part-summary.d-md-none{ "aria-label": "#{song.song_name}のパート別状況" }
                                           - song_part_summaries(song, recruiting_parts).each do |summary|
-                                            %li.song-part-summary__item{ class: "song-part-summary__item--#{summary.state}" }
-                                              %span.song-part-summary__label= summary.label
-                                              %span.song-part-summary__status= summary.status_text
-                                              - if summary.state == :partial
-                                                %span.song-part-summary__extra= "空き#{summary.open_count}"
+                                            - quick_entry = quick_entry_enabled && summary.entry_join_part_id
+                                            %li.song-part-summary__item{ class: ["song-part-summary__item--#{summary.state}", ("song-part-summary__item--actionable" if quick_entry)] }
+                                              - if quick_entry
+                                                -# 同じ参加フォームのチェック欄を選んで送信するだけ(確定は確認画面の後)。
+                                                %button.song-part-summary__entry{ type: "button",
+                                                  data: { join_part_id: summary.entry_join_part_id },
+                                                  "aria-label": "#{song.song_name}の#{summary.label}で参加確認へ進む" }
+                                                  = render "public/events/song_part_summary_text", summary: summary
+                                              - else
+                                                = render "public/events/song_part_summary_text", summary: summary
                                       .song-row-details
                                         - if song.requested_by_customer.present?
                                           %div.song-requester.text-muted{ style: "font-size: 0.85em;" }

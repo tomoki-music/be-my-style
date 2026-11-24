@@ -27,6 +27,10 @@ RSpec.describe "イベント詳細の楽曲欄(スマホ1曲1行)", type: :syste
   let!(:complete_song) { create(:song, event: event, song_name: "成立した曲", position: 2) }
   let!(:complete_drums) { create(:join_part, song: complete_song, join_part_name: "Drums") }
   let!(:band_song) { create(:song, event: event, song_name: "バンドの曲", position: 3) }
+  let!(:second_song) { create(:song, event: event, song_name: "二曲目", position: 4) }
+  let!(:second_bass) { create(:join_part, song: second_song, join_part_name: "Bass") }
+  let(:outsider) { create(:customer, name: "コミュニティ外") }
+  let(:band) { event.event_bands.find_by!(name: "固定バンド") }
 
   before do
     community.update!(owner_id: owner.id)
@@ -155,6 +159,57 @@ RSpec.describe "イベント詳細の楽曲欄(スマホ1曲1行)", type: :syste
       screenshot("04_join_confirm", scroll_to: "body")
     end
 
+    it "詳細を開かずに「Vo 募集中」から参加確認へ進め、他の曲で選んだパートも引き継ぐ" do
+      toggle_row(second_song)
+      check_part(second_bass)
+      toggle_row(second_song)
+      expect(page).to have_selector("#{row(second_song)} .song-row-toggle__selected", visible: true)
+      expect(page).to have_no_selector("#{row(open_song)} .js-join-part-checkbox", visible: true)
+      screenshot("06_mobile_quick_entry", scroll_to: row(open_song))
+
+      accept_confirm("参加申請しますか？") do
+        page.execute_script("document.querySelector('#{row(open_song)} .song-part-summary__item--open .song-part-summary__entry').click()")
+      end
+      expect(page).to have_content("【#{open_song.song_name}】の曲に【Vocal】で参加！", wait: 10)
+      expect(page).to have_content("【#{second_song.song_name}】の曲に【Bass】で参加！")
+      expect(JoinPartCustomer.where(customer: member)).to be_empty
+      screenshot("07_join_confirm_two_parts", scroll_to: "body")
+    end
+
+    it "申し込めない枠(担当あり・対象外・バンド出演曲)には操作ボタンを出さず、空きのある枠は押せる" do
+      within(row(open_song)) do
+        expect(page).to have_selector(".song-part-summary__item--open .song-part-summary__entry", count: 2)
+        expect(page).to have_selector(".song-part-summary__item--partial .song-part-summary__entry[data-join-part-id='#{open_guitar2.id}']")
+        expect(page).to have_no_selector(".song-part-summary__item--none .song-part-summary__entry")
+      end
+      expect(page).to have_no_selector("#{row(complete_song)} .song-part-summary__entry")
+      expect(page).to have_no_selector("#{row(band_song)} .song-part-summary__entry")
+    end
+
+    it "バンド出演枠は初期折りたたみで、バンドごとに開閉・応援できる" do
+      panel = "#event-band-#{band.id}"
+      expect(page).to have_selector("#{panel} .event-band-panel__name", text: "固定バンド", visible: true)
+      expect(page).to have_selector("#{panel} .event-band-panel__toggle[aria-expanded='false']", text: "詳細", visible: true)
+      expect(page).to have_no_selector("#{panel} .event-band-panel__members", visible: true)
+      screenshot("08_band_collapsed", scroll_to: "#event-bands")
+
+      page.execute_script("document.querySelector('#{panel} .event-band-panel__toggle').click()")
+      expect(page).to have_selector("#{panel} .event-band-panel__members", text: "ドラム会員", visible: true)
+      expect(page).to have_selector("#{panel} .event-band-panel__song-list", text: "バンドの曲", visible: true)
+      expect(page).to have_selector("#{panel} .song-cheer__count", text: "0", visible: true)
+      screenshot("09_band_opened", scroll_to: "#event-bands")
+
+      page.execute_script("document.querySelector('#{panel} .event-band-panel__toggle').click()")
+      expect(page).to have_no_selector("#{panel} .event-band-panel__members", visible: true)
+
+      page.execute_script("document.querySelector('#{panel} .event-band-panel__toggle').click()")
+      page.execute_script("document.querySelector('#{panel} .song-cheer__button').click()")
+      expect(page).to have_content("「固定バンド」を応援しました📣", wait: 10)
+      expect(EventBandCheer.where(event_band: band, customer: member).count).to eq 1
+      page.execute_script("document.querySelector('#{panel} .event-band-panel__toggle').click()")
+      expect(page).to have_selector("#{panel} .song-cheer__count", text: "1", visible: true)
+    end
+
     it "バンド出演曲は開いても一般エントリーのチェック欄を出さない" do
       toggle_row(band_song)
       within(row(band_song)) do
@@ -174,6 +229,17 @@ RSpec.describe "イベント詳細の楽曲欄(スマホ1曲1行)", type: :syste
     expect(page).to have_selector("#event_join_part_ids_#{open_vocal.id}", visible: true)
     expect(page).to have_no_selector(".song-row-toggle", visible: true)
     expect(page).to have_no_selector(".song-part-summary", visible: true)
+    expect(page).to have_selector("#event-band-#{band.id} .event-band-panel__members", text: "ドラム会員", visible: true)
+    expect(page).to have_no_selector(".event-band-panel__toggle", visible: true)
     screenshot("05_pc_table")
+  end
+
+  it "開催コミュニティに所属していない人には、一覧からの申込ボタンを出さない" do
+    sign_in_via_form(outsider)
+    use_mobile_viewport(width: 375, height: 812)
+    visit public_event_path(event)
+
+    expect(page).to have_selector("#{row(open_song)} .song-part-summary__item--open", visible: true, wait: 10)
+    expect(page).to have_no_selector(".song-part-summary__entry")
   end
 end

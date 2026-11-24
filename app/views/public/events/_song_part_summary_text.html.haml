@@ -1,0 +1,4 @@
+%span.song-part-summary__label= summary.label
+%span.song-part-summary__status= summary.status_text
+- if summary.state == :partial
+  %span.song-part-summary__extra= "空き#{summary.open_count}"

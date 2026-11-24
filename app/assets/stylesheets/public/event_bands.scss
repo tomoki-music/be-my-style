@@ -311,3 +311,46 @@
     overflow-wrap: anywhere;
   }
 }
+
+// スマホではバンド名と「詳細」だけを出し、バンドごとに開閉する。PC(768px以上)は常に全体を表示する。
+.event-band-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.event-band-panel__toggle {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 2px 12px;
+  border: 1px solid #5c87a6;
+  border-radius: 999px;
+  background: #fff;
+  color: #2f5d80;
+  font-size: 0.8rem;
+  font-weight: 700;
+
+  &:focus-visible {
+    outline: 2px solid #2f5d80;
+    outline-offset: 2px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .event-band-panel {
+    padding: 8px 10px;
+
+    &__name {
+      margin-bottom: 0;
+      align-self: center;
+    }
+    &__body {
+      display: none;
+      margin-top: 8px;
+    }
+    &.is-open &__body {
+      display: block;
+    }
+  }
+}

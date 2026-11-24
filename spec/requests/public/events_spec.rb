@@ -139,6 +139,29 @@ RSpec.describe "Public::Events", type: :request do
         expect(response.body).not_to include(join_confirm_link_for(event, vocal_part))
       end
 
+      it '一覧から申し込めるボタンは募集中・空きありの枠だけに出し、押した枠のパートIDを持つこと' do
+        FactoryBot.create(:join_part_customer, join_part: guitar_part, customer: other_customer)
+        guitar2 = FactoryBot.create(:join_part, song: song, join_part_name: "Guitar2")
+
+        get public_event_path(event)
+
+        ids = Nokogiri::HTML(response.body).css(".song-part-summary__entry").map { |b| b["data-join-part-id"].to_i }
+        expect(ids).to contain_exactly(vocal_part.id, guitar2.id)
+      end
+
+      it '終了したイベントでは一覧から申し込めるボタンを出さないこと' do
+        ended_event = FactoryBot.create(
+          :event, :event_with_songs, customer: customer, community: community,
+          event_start_time: 3.days.ago - 2.hours, event_end_time: 3.days.ago
+        )
+        FactoryBot.create(:join_part, song: ended_event.songs.first, join_part_name: "Drums")
+
+        get public_event_path(ended_event)
+
+        expect(response.body).to include("song-part-summary")
+        expect(response.body).not_to include("song-part-summary__entry")
+      end
+
       it '退会済み参加者だけのパートは募集中として扱われること' do
         withdrawn = FactoryBot.create(:customer, is_deleted: true)
         FactoryBot.create(:join_part_customer, join_part: vocal_part, customer: withdrawn)

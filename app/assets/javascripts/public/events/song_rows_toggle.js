@@ -34,6 +34,25 @@
     setOpen(row, !row.classList.contains(OPEN_CLASS));
   });
 
+  // 一覧の「募集中」を押したら、その枠の参加チェック欄(PC表と共通の1つ)を選んで既存の参加フォームを送る。
+  // 他の曲で選んだチェックもそのまま送られる。確定は従来どおり確認画面の「参加する」で行う。
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest && event.target.closest('.song-part-summary__entry');
+    if (!button) return;
+    event.preventDefault();
+    var checkbox = document.getElementById('event_join_part_ids_' + button.dataset.joinPartId);
+    if (!checkbox || checkbox.disabled || !checkbox.form) return;
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+    var form = checkbox.form;
+    // requestSubmit は onsubmit(参加申請の確認ダイアログ)も通す。
+    if (typeof form.requestSubmit === 'function') {
+      form.requestSubmit();
+    } else if (form.onsubmit === null || form.onsubmit() !== false) {
+      form.submit();
+    }
+  });
+
   document.addEventListener('change', function (event) {
     var target = event.target;
     if (!target.classList || !target.classList.contains('js-join-part-checkbox')) return;
@@ -43,4 +62,19 @@
 
   document.addEventListener('turbolinks:load', syncAll);
   window.addEventListener('pageshow', syncAll);
+})();
+
+// バンド出演枠(スマホ)の開閉。PCではボタンを出さず、CSSで常に全体を表示する。
+(function () {
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest && event.target.closest('.event-band-panel__toggle');
+    if (!button) return;
+    var panel = button.closest('.event-band-panel');
+    if (!panel) return;
+    event.preventDefault();
+    var open = !panel.classList.contains('is-open');
+    panel.classList.toggle('is-open', open);
+    button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    button.textContent = open ? button.dataset.labelClose : button.dataset.labelOpen;
+  });
 })();

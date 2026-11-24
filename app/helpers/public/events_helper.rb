@@ -75,7 +75,8 @@ module Public::EventsHelper
   }.freeze
   SONG_PART_SUMMARY_ALWAYS = %w[Vocal Guitar Bass Drums Keyboard].freeze
 
-  SongPartSummary = Struct.new(:label, :state, :status_text, :open_count, keyword_init: true)
+  # entry_join_part_id: 一覧から直接申し込むときに選ぶ空き枠(募集中・空きありのときだけ)。
+  SongPartSummary = Struct.new(:label, :state, :status_text, :open_count, :entry_join_part_id, keyword_init: true)
 
   # スマホの1曲1行表示で使う、パートごとの状況。判定はPC表と同じく
   # normalized_join_parts_for_column と Song#recruiting_join_parts だけを使う。
@@ -99,11 +100,12 @@ module Public::EventsHelper
   def build_song_part_summary(label, join_parts, recruiting_ids)
     return SongPartSummary.new(label: label, state: :none, status_text: "対象外", open_count: 0) if join_parts.empty?
 
-    open_count = join_parts.count { |join_part| recruiting_ids.include?(join_part.id) }
+    open_parts = join_parts.select { |join_part| recruiting_ids.include?(join_part.id) }
+    open_count = open_parts.size
     if open_count == join_parts.size
-      SongPartSummary.new(label: label, state: :open, status_text: "募集中", open_count: open_count)
+      SongPartSummary.new(label: label, state: :open, status_text: "募集中", open_count: open_count, entry_join_part_id: open_parts.first.id)
     elsif open_count.positive?
-      SongPartSummary.new(label: label, state: :partial, status_text: "担当あり", open_count: open_count)
+      SongPartSummary.new(label: label, state: :partial, status_text: "担当あり", open_count: open_count, entry_join_part_id: open_parts.first.id)
     else
       SongPartSummary.new(label: label, state: :filled, status_text: "担当あり", open_count: 0)
     end
