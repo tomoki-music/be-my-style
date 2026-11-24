@@ -136,6 +136,7 @@ Rails.application.routes.draw do
       member do
         get "copy" => "events#copy"
         get "mention_candidates" => "events#mention_candidates"
+        get "performance_list" => "events#performance_list"
         post "deadline_reminder_preview"
       end
       post "deadline_reminder_preview" => "events#new_deadline_reminder_preview", on: :collection

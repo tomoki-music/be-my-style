@@ -3,7 +3,8 @@ class Public::EventsController < ApplicationController
 
   include CsvModule
   before_action :authenticate_customer!
-  before_action :set_event, only: [:show, :edit, :update, :destroy, :copy, :deadline_reminder_preview]
+  before_action :set_event, only: [:show, :edit, :update, :destroy, :copy, :deadline_reminder_preview, :performance_list]
+  before_action :authorize_event_list_download!, only: [:performance_list]
   before_action :authorize_event_creation!, only: [:new, :create, :new_deadline_reminder_preview]
   before_action :authorize_event_edit!, only: [:edit, :update, :deadline_reminder_preview]
   before_action :authorize_event_destroy!, only: [:destroy]
@@ -126,6 +127,7 @@ class Public::EventsController < ApplicationController
 
     #CSVダウロード
     @songs = @event.songs
+    @can_download_performance_list = current_customer.can_destroy_event?(@event)
     @current_customer_event_credit_applied = @event.session_credit_applied_for?(current_customer)
     if @current_customer_event_credit_applied
       # このイベント自身にすでに特典が適用済みのため、月次の残枠有無に関わらずDB実績を優先する
@@ -143,6 +145,16 @@ class Public::EventsController < ApplicationController
         generate_csv(@event)
       end
     end
+  end
+
+  # 演奏リスト(.xlsx)。取得できるのはイベント作成者・システム管理者・主催コミュニティのオーナー/管理権限者
+  # (Customer#can_destroy_event?)。主催(event.community)との関係はこの判定の中で検証する。
+  def performance_list
+    exporter = Events::PerformanceListXlsx.new(@event)
+    send_data exporter.to_stream,
+              type: Events::PerformanceListXlsx::MIME_TYPE,
+              filename: exporter.filename,
+              disposition: "attachment"
   end
 
   def new
@@ -589,6 +601,12 @@ class Public::EventsController < ApplicationController
     else
       redirect_to path, alert: message
     end
+  end
+
+  def authorize_event_list_download!
+    return if current_customer.can_destroy_event?(@event)
+
+    redirect_to public_event_path(@event), alert: "このイベントの演奏リストはダウンロードできません。"
   end
 
   def authorize_event_destroy!

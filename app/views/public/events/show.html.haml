@@ -430,15 +430,22 @@
                     %div.markdown-body
                       = markdown(@event.introduction)
 
-                - if @owner == current_customer
+                - if @owner == current_customer || @can_download_performance_list
                   %tr
-                    %th{scope:"row"} CSVダウンロード
+                    %th{scope:"row"} ダウンロード
                     %td
-                      = link_to "参加一覧ダウンロード", public_event_path(@event, format: :csv), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
-                      %p.mt-2.mb-0.text-muted
-                        CSVには有料プラン参加者と、今月特典適用済みユーザーがわかる表記を含めています。
-                      %p.mb-0.text-muted
-                        参加費が1,500円を超えるイベントでも、現地集金が必要な参加者を見分けやすくしています。
+                      - if @owner == current_customer
+                        = link_to "参加一覧ダウンロード", public_event_path(@event, format: :csv), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
+                      - if @can_download_performance_list
+                        = link_to "演奏リスト（Excel）", performance_list_public_event_path(@event), data: { 'turbolinks': false }, class: "btn btn-sm btn-info event-show-btn"
+                      - if @owner == current_customer
+                        %p.mt-2.mb-0.text-muted
+                          CSVには有料プラン参加者と、今月特典適用済みユーザーがわかる表記を含めています。
+                        %p.mb-0.text-muted
+                          参加費が1,500円を超えるイベントでも、現地集金が必要な参加者を見分けやすくしています。
+                      - if @can_download_performance_list
+                        %p.mt-2.mb-0.text-muted
+                          演奏リストは曲順・パートごとの出演者(表示名)を載せた共有用の表です。共有フォルダURLと演奏動画URLは空欄なので、必要に応じて追記してください。
         #event-request.event-request{ data: { "mention-candidates-url" => mention_candidates_public_event_path(@event), "current-customer-id" => current_customer.id } }
           - if @event.request_deadline.present?
             .event-request-deadline
