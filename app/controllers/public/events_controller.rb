@@ -141,8 +141,14 @@ class Public::EventsController < ApplicationController
     end
     respond_to do |format|
       format.html
+      # 参加一覧CSVには有料プラン・特典適用の表記が入るため、ボタンの表示条件(@owner == current_customer)と
+      # 同じくイベント作成者本人だけに返す。
       format.csv do
-        generate_csv(@event)
+        if @event.customer_id == current_customer.id
+          generate_csv(@event)
+        else
+          redirect_to public_event_path(@event), alert: "このイベントの参加一覧はダウンロードできません。"
+        end
       end
     end
   end
