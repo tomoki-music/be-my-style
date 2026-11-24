@@ -222,9 +222,10 @@
                       %h5.font-weight-bold
                         = l @event.event_entry_deadline, format: :short
                         まで
-                %tr
+                %tr.event-songs-section-row
                   %th{scope:"row"} 楽曲
                   %td{colspan: "100"}
+                    %h5.event-songs-mobile-heading.d-md-none 楽曲
                     - if @event.event_bands.any?
                       = render "public/events/bands", bands: @event.event_bands, event: @event, can_cheer: @can_cheer
                     = form_tag(public_event_join_confirm_path(@event), method: :get, id: 'join_btn', onSubmit: "return CheckJoin()") do
@@ -269,10 +270,10 @@
                             -# 列数(2 + パート数)で等分した%指定にし、PC(768px以上、.event-songs-tableのwidth:100%)で
                             -# テーブルが画面幅いっぱいに広がるほど各列も比例して広がるようにする。
                             -# min-widthはこれまでどおり候補カードが読める幅(160px)換算の合計(160 * 列数)を保ち、
-                            -# 親幅がそれより狭いスマホでは従来どおり.responsive-boxの横スクロールで見る。
+                            -# スマホ(768px未満)はCSSで1曲1行の表示に組み替えるため、min-widthはCSS変数で渡す。
                             - column_count = part_names.size + 3
                             - column_width_percent = (100.0 / column_count).round(4)
-                            %table.table.table-bordered.event-songs-table{ style: "min-width: #{160 * column_count}px; table-layout: fixed;" }
+                            %table.table.table-bordered.event-songs-table{ style: "--event-songs-min-width: #{160 * column_count}px; table-layout: fixed;" }
                               %thead
                                 %tr
                                   %th{ style: "width: #{column_width_percent}%;" } 曲名 / ステータス
@@ -284,49 +285,55 @@
                                 - @event.songs.each do |song|
                                   - recruiting_parts = song.recruiting_join_parts
                                   - vacant = recruiting_parts.any?
-                                  %tr{ class: [(vacant ? 'vacant' : 'complete'), ('band' if song.band_performance?)] }
-                                    %td{ style: "max-width: 120px; overflow-wrap: break-word; word-break: break-word; white-space: normal;" }
-                                      - if song.band_performance?
-                                        %span.badge.badge-info バンド出演🎸
-                                        %div.song-band-name
-                                          = link_to song.event_band.name, "#event-band-#{song.event_band_id}", data: { turbolinks: false }
-                                        -# スマホでは横スクロールの奥のパート列が見えにくいため、固定メンバーをここにも出す。
-                                        .song-band-members.d-md-none
-                                          - song.event_band.ordered_members.each do |member|
-                                            %span.song-band-members__item #{member.part_name}: #{member.label}
-                                      - elsif vacant
-                                        %span.badge.badge-warning 募集中!!
-                                      - else
-                                        %span.badge.badge-success 楽曲成立🎵
-                                      %br
-                                      - if song.performance_start_time.present?
-                                        %span.song-start-time
-                                          = "開始 #{song.performance_start_time}"
-                                        %br
+                                  - song_details_id = "event-song-details-#{song.id}"
+                                  %tr.event-song-row{ id: song_details_id, class: [(vacant ? 'vacant' : 'complete'), ('band' if song.band_performance?)] }
+                                    %td.event-song-row__main
+                                      .event-song-row__head
+                                        .event-song-row__badges
+                                          - if song.band_performance?
+                                            %span.badge.badge-info バンド出演🎸
+                                            %div.song-band-name
+                                              = link_to song.event_band.name, "#event-band-#{song.event_band_id}", data: { turbolinks: false }
+                                            -# スマホの1曲1行表示では、パート列の代わりに固定メンバーをここに出す。
+                                            .song-band-members.d-md-none
+                                              - song.event_band.ordered_members.each do |member|
+                                                %span.song-band-members__item #{member.part_name}: #{member.label}
+                                          - elsif vacant
+                                            %span.badge.badge-warning 募集中!!
+                                          - else
+                                            %span.badge.badge-success 楽曲成立🎵
+                                          %br
+                                          - if song.performance_start_time.present?
+                                            %span.song-start-time
+                                              = "開始 #{song.performance_start_time}"
+                                            %br
+                                        %button.song-row-toggle.d-md-none{ type: "button",
+                                          "aria-expanded": "false",
+                                          "aria-controls": song_details_id,
+                                          data: { label_open: "詳細・エントリー ▼", label_close: "閉じる ▲" } }
+                                          %span.song-row-toggle__label 詳細・エントリー ▼
+                                          %span.song-row-toggle__selected{ hidden: true } 選択中
                                       %div{ style: "white-space: normal; word-break: break-word;" }
                                         = link_to song.song_name, public_event_song_path(@event, song), class: "song-detail-link", data: { turbolinks: false }
-                                      - if song.requested_by_customer.present?
-                                        %div.song-requester.text-muted{ style: "font-size: 0.85em;" }
-                                          %i.fa-solid.fa-user
-                                          リクエスト：
-                                          = customer_profile_name_link(song.requested_by_customer)
-                                          さん
-                                      = render "public/events/youtube_card", card: youtube_card_for(song)
-                                      - if recruiting_parts.any? && @event.event_end_time > Time.now
-                                        .recruiting-parts.d-md-none
-                                          %span.recruiting-parts__label 募集中
-                                          - recruiting_parts.each do |part|
-                                            = link_to part.join_part_name,
-                                              public_event_join_confirm_path(@event, event: { join_part_ids: [part.id] }),
-                                              class: "recruiting-parts__part",
-                                              data: { turbolinks: false },
-                                              "aria-label": "#{song.song_name}の#{part.join_part_name}パートにエントリーする"
-                                          -# スマホ用ショートカットは氏名表示のみ。操作可能なチェックボックスは
-                                          -# PC用パート表の正規セル1か所だけに描画する(同一targetの二重描画を防ぐ)。
-                                          - recruiting_parts.each do |part|
-                                            = render "public/events/experienced_customers", customers: experienced_customers_for_display(song, part.join_part_name, exclude_customer_ids: part.customers.map(&:id))
+                                      - unless song.band_performance?
+                                        -# スマホの1曲1行表示用。PC表と同じ判定で各パートの状況を文字でも示す。
+                                        %ul.song-part-summary.d-md-none{ "aria-label": "#{song.song_name}のパート別状況" }
+                                          - song_part_summaries(song, recruiting_parts).each do |summary|
+                                            %li.song-part-summary__item{ class: "song-part-summary__item--#{summary.state}" }
+                                              %span.song-part-summary__label= summary.label
+                                              %span.song-part-summary__status= summary.status_text
+                                              - if summary.state == :partial
+                                                %span.song-part-summary__extra= "空き#{summary.open_count}"
+                                      .song-row-details
+                                        - if song.requested_by_customer.present?
+                                          %div.song-requester.text-muted{ style: "font-size: 0.85em;" }
+                                            %i.fa-solid.fa-user
+                                            リクエスト：
+                                            = customer_profile_name_link(song.requested_by_customer)
+                                            さん
+                                        = render "public/events/youtube_card", card: youtube_card_for(song)
 
-                                    %td
+                                    %td.event-song-row__detail{ data: { mobile_label: "参加フォーム" } }
                                       .check-part-list
                                         - if song.band_performance?
                                           %span.song-band-note バンド出演曲のため一般エントリーはありません
@@ -344,7 +351,8 @@
                                       -# 生の完全一致ではなくPartNameNormalizer経由で正規化し、旧表記のJoinPartも
                                       -# 対応する固定列へ寄せる。同じ正規化パートに複数JoinPartがあり得るため各件を描画する。
                                       - column_join_parts = normalized_join_parts_for_column(song, part_name)
-                                      %td
+                                      - empty_cell = song.band_performance? ? song.event_band.member_for(part_name).nil? : column_join_parts.empty?
+                                      %td.event-song-row__detail{ class: ("event-song-row__detail--empty" if empty_cell), data: { mobile_label: part_name } }
                                         - if song.band_performance?
                                           -# バンド出演曲は固定メンバーだけを表示し、募集・経験者・エントリー依頼は出さない。
                                           - band_member = song.event_band.member_for(part_name)
@@ -400,7 +408,7 @@
                                               = render "public/events/experienced_customers", customers: candidates
                                         - else
                                           ー
-                                    %td.song-cheer-cell
+                                    %td.song-cheer-cell.event-song-row__detail{ data: { mobile_label: "応援する📣" } }
                                       = render "public/events/song_cheer", song: song, event: @event, can_cheer: @can_cheer
                 - if @entry_invitation_ui_enabled
                   -# 見出し・説明・送信ボタン・確認画面へのGETフォームだけを、楽曲表の横スクロール
@@ -414,7 +422,7 @@
                         %p.entry-invitation-form__desc
                           楽曲表の各パート欄で対象者にチェックを入れ、確認画面へ進んでください。メールと通知は曲・パートごとに届きます。
                         %p.entry-invitation-form__mobile-hint.d-md-none
-                          楽曲表を横にスクロールして、依頼したいメンバーを選択してください。
+                          曲の「詳細・エントリー」を開いて、依頼したいメンバーを選択してください。
                         - unless entry_invitation_selectable
                           %p.entry-invitation-form__empty{ role: "status" } 現在、依頼できる演奏経験者はいません。
                         -# 初期状態は常に disabled。JS が有効な .js-entry-invitation-checkbox の

@@ -70,6 +70,45 @@ module Public::EventsHelper
     end
   end
 
+  SONG_PART_SUMMARY_LABELS = {
+    "Vocal" => "Vo", "Guitar" => "Gt", "Bass" => "Ba", "Drums" => "Dr", "Keyboard" => "Key", "Other" => "Other"
+  }.freeze
+  SONG_PART_SUMMARY_ALWAYS = %w[Vocal Guitar Bass Drums Keyboard].freeze
+
+  SongPartSummary = Struct.new(:label, :state, :status_text, :open_count, keyword_init: true)
+
+  # スマホの1曲1行表示で使う、パートごとの状況。判定はPC表と同じく
+  # normalized_join_parts_for_column と Song#recruiting_join_parts だけを使う。
+  # Vo/Gt/Ba/Dr/Key は常に出し、Other と固定列に寄せられない旧表記パートは該当曲だけに出す。
+  # 一般募集のないバンド出演曲は対象外(呼び出し側で固定メンバー表示にする)。
+  def song_part_summaries(song, recruiting_parts = song.recruiting_join_parts)
+    recruiting_ids = recruiting_parts.map(&:id).to_set
+    summaries = JoinPart::NAME_OPTIONS.filter_map do |column_name|
+      join_parts = normalized_join_parts_for_column(song, column_name)
+      next if join_parts.empty? && !SONG_PART_SUMMARY_ALWAYS.include?(column_name)
+
+      build_song_part_summary(SONG_PART_SUMMARY_LABELS.fetch(column_name), join_parts, recruiting_ids)
+    end
+    unmapped = song.join_parts.select { |join_part| PerformanceHistory::PartNameNormalizer.normalize(join_part.join_part_name).nil? }
+    unmapped.group_by(&:join_part_name).each do |name, join_parts|
+      summaries << build_song_part_summary(name, join_parts, recruiting_ids)
+    end
+    summaries
+  end
+
+  def build_song_part_summary(label, join_parts, recruiting_ids)
+    return SongPartSummary.new(label: label, state: :none, status_text: "対象外", open_count: 0) if join_parts.empty?
+
+    open_count = join_parts.count { |join_part| recruiting_ids.include?(join_part.id) }
+    if open_count == join_parts.size
+      SongPartSummary.new(label: label, state: :open, status_text: "募集中", open_count: open_count)
+    elsif open_count.positive?
+      SongPartSummary.new(label: label, state: :partial, status_text: "担当あり", open_count: open_count)
+    else
+      SongPartSummary.new(label: label, state: :filled, status_text: "担当あり", open_count: 0)
+    end
+  end
+
   # セル内「演奏経験のある人」表示用の集合。基礎集合(ExperiencedCustomersQuery)から、
   # そのセルの現在の参加者をCustomer IDで差し引く(同じセルで参加者表示と経験者表示を
   # 二重に出さない)。exclude_customer_idsは呼び出し側がpreload済みの

@@ -565,7 +565,7 @@
       }
     }
     .event-songs-table {
-      min-width: 280px;
+      min-width: var(--event-songs-min-width, 280px);
       // .responsive-boxがPC(768px以上)で親幅いっぱいに広がるようになったのに合わせ、
       // テーブル自身も100%まで広がれるようにする。table-layout:fixedのため、
       // 実際に使われる幅は max(この100%, HTML側のinline min-width) になり、
@@ -626,6 +626,12 @@
         border-radius: 5px;
         font-size: 0.8rem;
       }
+    }
+    .event-song-row__main {
+      max-width: 120px;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      white-space: normal;
     }
     // スマホでは表を右スクロールしないと募集中パートが分からないため、
     // 「曲名/ステータス」セル内に募集中パートのショートカットを表示する。
@@ -1883,4 +1889,201 @@ input[type="text"] {
 .past-performers-toggle {
   max-width: 100%;
   white-space: normal;
+}
+
+// スマホ(768px未満)の楽曲表は、横スクロールせずに複数曲の空きを見比べられるよう
+// 同じ表(同じ参加チェック欄)をCSSで1曲1行に組み替える。「詳細・エントリー」で行を開くと
+// 参加フォーム・パート別の担当者・応援を表示する。閉じても要素は残るので選択は保持される。
+@media (max-width: 767.98px) {
+  .event-show-container .event-show-table {
+    .event-songs-section-row > th {
+      display: none;
+    }
+    .event-songs-mobile-heading {
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .event-songs-join-form {
+      padding: 10px;
+      max-height: none;
+    }
+    .responsive-box {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      max-height: 70vh;
+    }
+    .scroll-indicator {
+      display: none;
+    }
+    .event-songs-table {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      margin-bottom: 0;
+      border: 0;
+
+      thead {
+        display: none;
+      }
+      tbody,
+      tr,
+      td {
+        display: block;
+        width: 100%;
+      }
+      td {
+        max-width: none;
+        padding: 0;
+        border: 0;
+      }
+      .event-song-row {
+        padding: 8px 10px;
+        border-bottom: 1px solid #d5dde5;
+
+        &.is-open {
+          background: #f7fbff;
+        }
+      }
+      .event-song-row__head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .event-song-row__badges {
+        flex: 1 1 auto;
+        min-width: 0;
+
+        > br {
+          display: none;
+        }
+      }
+      .event-song-row__main .song-start-time {
+        margin: 0 0 0 4px;
+      }
+      .song-row-toggle {
+        flex: 0 0 auto;
+        margin-top: 0;
+      }
+      .song-detail-link {
+        margin-top: 4px;
+        font-weight: 700;
+      }
+      .event-song-row__detail,
+      .song-row-details {
+        display: none;
+      }
+      .event-song-row.is-open {
+        .song-row-details {
+          display: block;
+          margin-top: 8px;
+        }
+        .event-song-row__detail {
+          display: block;
+          padding: 8px 0;
+          border-top: 1px dashed #d5dde5;
+        }
+        .event-song-row__detail--empty {
+          display: none;
+        }
+      }
+      .event-song-row__detail::before {
+        content: attr(data-mobile-label);
+        display: block;
+        margin-bottom: 4px;
+        color: #4a5a68;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .check-part-item label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 36px;
+        margin: 0;
+      }
+    }
+  }
+}
+
+.song-part-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 4px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+    padding: 3px 2px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: #f1f3f5;
+    color: #6c757d;
+    font-size: 0.7rem;
+    line-height: 1.25;
+    text-align: center;
+
+    &--open {
+      border-color: #e0a800;
+      background: #fff3cd;
+      color: #6b4f00;
+    }
+    &--partial {
+      border-color: #e0a800;
+      border-style: dashed;
+      background: #f2fbf4;
+      color: #1e6b35;
+    }
+    &--filled {
+      border-color: #8fd19e;
+      background: #e9f7ee;
+      color: #1e6b35;
+    }
+  }
+  &__label {
+    max-width: 100%;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+  &__status {
+    white-space: nowrap;
+  }
+  &__item--open &__status,
+  &__extra {
+    font-weight: 700;
+    color: #6b4f00;
+  }
+}
+
+.song-row-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  margin-top: 6px;
+  padding: 2px 10px;
+  border: 1px solid #5c87a6;
+  border-radius: 999px;
+  background: #fff;
+  color: #2f5d80;
+  font-size: 0.8rem;
+  font-weight: 700;
+
+  &:focus-visible {
+    outline: 2px solid #2f5d80;
+    outline-offset: 2px;
+  }
+  &__selected {
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: #007bff;
+    color: #fff;
+    font-size: 0.7rem;
+  }
 }
