@@ -132,7 +132,7 @@ RSpec.describe "Public::Events", type: :request do
 
         get public_event_path(event)
 
-        expect(summary_for(song)).to include("Vo" => "募集中", "Gt" => "担当あり", "Ba" => "対象外", "Dr" => "対象外", "Key" => "対象外")
+        expect(summary_for(song)).to include("Vo" => "募集中", "Gt" => "1人参加 追加可", "Ba" => "対象外", "Dr" => "対象外", "Key" => "対象外")
         doc = Nokogiri::HTML(response.body)
         expect(doc.css("input#event_join_part_ids_#{vocal_part.id}").size).to eq 1
         expect(doc.css(".song-row-toggle[aria-expanded='false']")).to be_present
@@ -147,6 +147,17 @@ RSpec.describe "Public::Events", type: :request do
 
         ids = Nokogiri::HTML(response.body).css(".song-part-summary__entry").map { |b| b["data-join-part-id"].to_i }
         expect(ids).to contain_exactly(vocal_part.id, guitar2.id)
+      end
+
+      it '担当者のいる枠も「追加可」として押せ、閲覧者が参加済みの枠だけはボタンを出さないこと' do
+        FactoryBot.create(:join_part_customer, join_part: guitar_part, customer: other_customer)
+        FactoryBot.create(:join_part_customer, join_part: vocal_part, customer: customer)
+
+        get public_event_path(event)
+
+        expect(summary_for(song)).to include("Gt" => "1人参加 追加可", "Vo" => "1人参加")
+        ids = Nokogiri::HTML(response.body).css(".song-part-summary__entry").map { |b| b["data-join-part-id"].to_i }
+        expect(ids).to contain_exactly(guitar_part.id)
       end
 
       it '終了したイベントでは一覧から申し込めるボタンを出さないこと' do
@@ -255,6 +266,18 @@ RSpec.describe "Public::Events", type: :request do
 
           expect(response.status).to eq 200
           expect(response.body).to include("参加確認画面")
+        end
+
+        it "担当者のいるパートにも別の会員を追加で登録し、既存の担当者は残ること" do
+          FactoryBot.create(:join_part_customer, join_part: guitar_part, customer: other_customer)
+
+          get public_event_join_confirm_path(event, event: { join_part_ids: [guitar_part.id.to_s] })
+          expect(response.body).to include("【#{song.song_name}】の曲に【ギター】で参加！")
+
+          expect do
+            post public_event_join_path(event), params: { join_part_ids: { "0" => guitar_part.id.to_s } }
+          end.to change(JoinPartCustomer, :count).by(1)
+          expect(guitar_part.reload.customers).to contain_exactly(other_customer, customer)
         end
 
         it "対象イベントに属するパートはjoinで登録できること" do

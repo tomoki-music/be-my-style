@@ -85,6 +85,19 @@ RSpec.describe "イベント詳細の楽曲欄(スマホ1曲1行)", type: :syste
     JS
   end
 
+  # 楽曲欄(バンド出演枠・絞り込み・参加フォームを含む行)が、地図の行の直後にあること。
+  def songs_section_follows_map?
+    page.evaluate_script(<<~JS)
+      (function () {
+        var section = document.querySelector('.event-songs-section-row');
+        var prev = section && section.previousElementSibling;
+        return !!(prev && prev.querySelector('#map') && section.querySelector('#event-bands') &&
+                  section.querySelector('#filter-vacant') && section.querySelector('#join_btn') &&
+                  document.querySelectorAll('#join_btn').length === 1);
+      })()
+    JS
+  end
+
   # 確認用。EVENT_SONGS_SCREENSHOT_DIR を指定したときだけ、対象位置までスクロールして撮る。
   def screenshot(name, scroll_to: ".event-songs-join-form")
     dir = ENV["EVENT_SONGS_SCREENSHOT_DIR"]
@@ -114,7 +127,7 @@ RSpec.describe "イベント詳細の楽曲欄(スマホ1曲1行)", type: :syste
         expect(page).to have_no_selector(".js-join-part-checkbox", visible: true)
       end
       within(row(complete_song)) do
-        expect(page).to have_selector(".song-part-summary__item--filled", text: /\ADr\s+担当あり\z/)
+        expect(page).to have_selector(".song-part-summary__item--filled", text: /\ADr\s+1人参加\s+追加可\z/)
         expect(page).to have_no_selector(".song-part-summary__item", text: "Other")
       end
       within(row(band_song)) do
@@ -176,14 +189,65 @@ RSpec.describe "イベント詳細の楽曲欄(スマホ1曲1行)", type: :syste
       screenshot("07_join_confirm_two_parts", scroll_to: "body")
     end
 
-    it "申し込めない枠(担当あり・対象外・バンド出演曲)には操作ボタンを出さず、空きのある枠は押せる" do
+    it "対象外・バンド出演曲には操作ボタンを出さず、空きのある枠と担当者のいる枠は押せる" do
       within(row(open_song)) do
         expect(page).to have_selector(".song-part-summary__item--open .song-part-summary__entry", count: 2)
         expect(page).to have_selector(".song-part-summary__item--partial .song-part-summary__entry[data-join-part-id='#{open_guitar2.id}']")
         expect(page).to have_no_selector(".song-part-summary__item--none .song-part-summary__entry")
       end
-      expect(page).to have_no_selector("#{row(complete_song)} .song-part-summary__entry")
+      expect(page).to have_selector("#{row(complete_song)} .song-part-summary__item--filled .song-part-summary__entry[data-join-part-id='#{complete_drums.id}']")
       expect(page).to have_no_selector("#{row(band_song)} .song-part-summary__entry")
+    end
+
+    it "楽曲欄は地図のすぐ下にあり、右下の「参加する」が固定表示される" do
+      expect(songs_section_follows_map?).to be true
+      fab = page.evaluate_script(<<~JS)
+        (function () {
+          var rect = document.querySelector('.event-join-fab__button').getBoundingClientRect();
+          return { position: getComputedStyle(document.querySelector('.event-join-fab')).position,
+                   right: window.innerWidth - rect.right, bottom: window.innerHeight - rect.bottom, height: rect.height };
+        })()
+      JS
+      expect(fab["position"]).to eq "fixed"
+      expect(fab["right"]).to be_between(8, 40)
+      expect(fab["bottom"]).to be_between(8, 40)
+      expect(fab["height"]).to be >= 44
+      screenshot("10_mobile_fab", scroll_to: "#map")
+    end
+
+    it "右下の「参加する」は未選択なら案内だけ出し、複数選んだら同じフォームで全件を確認画面へ送る" do
+      page.execute_script("document.querySelector('.event-join-fab__button').click()")
+      expect(page).to have_selector(".event-join-fab__hint", text: "参加する曲・パートを選んでください", visible: true)
+      expect(page).to have_current_path(public_event_path(event))
+
+      toggle_row(open_song)
+      check_part(open_vocal)
+      toggle_row(second_song)
+      check_part(second_bass)
+      expect(page).to have_selector(".event-join-fab__count", text: "2", visible: true)
+      expect(page).to have_no_selector(".event-join-fab__hint", visible: true)
+      screenshot("11_mobile_fab_selected", scroll_to: row(second_song))
+
+      accept_confirm("参加申請しますか？") do
+        page.execute_script("document.querySelector('.event-join-fab__button').click()")
+      end
+      expect(page).to have_content("【#{open_song.song_name}】の曲に【Vocal】で参加！", wait: 10)
+      expect(page).to have_content("【#{second_song.song_name}】の曲に【Bass】で参加！")
+      expect(JoinPartCustomer.where(customer: member)).to be_empty
+    end
+
+    it "担当者のいる「Dr 1人参加 追加可」から確認画面を経て登録すると、既存の担当者も残る" do
+      accept_confirm("参加申請しますか？") do
+        page.execute_script("document.querySelector('#{row(complete_song)} .song-part-summary__item--filled .song-part-summary__entry').click()")
+      end
+      expect(page).to have_content("【#{complete_song.song_name}】の曲に【Drums】で参加！", wait: 10)
+      expect(JoinPartCustomer.where(customer: member)).to be_empty
+
+      accept_confirm("参加申請しますか？") { click_button "参加する" }
+      expect(page).to have_content("イベントへの参加が完了しました", wait: 10)
+      expect(complete_drums.reload.customers).to contain_exactly(drummer, member)
+      expect(page).to have_selector("#{row(complete_song)} .song-part-summary__item--filled", text: /\ADr\s+2人参加\z/)
+      expect(page).to have_no_selector("#{row(complete_song)} .song-part-summary__entry")
     end
 
     it "バンド出演枠は初期折りたたみで、バンドごとに開閉・応援できる" do
@@ -231,7 +295,10 @@ RSpec.describe "イベント詳細の楽曲欄(スマホ1曲1行)", type: :syste
     expect(page).to have_no_selector(".song-part-summary", visible: true)
     expect(page).to have_selector("#event-band-#{band.id} .event-band-panel__members", text: "ドラム会員", visible: true)
     expect(page).to have_no_selector(".event-band-panel__toggle", visible: true)
-    screenshot("05_pc_table")
+    expect(page).to have_no_selector(".event-join-fab", visible: true)
+    expect(page).to have_button("参加確認画面へ", disabled: true)
+    expect(songs_section_follows_map?).to be true
+    screenshot("05_pc_table", scroll_to: "#map")
   end
 
   it "開催コミュニティに所属していない人には、一覧からの申込ボタンを出さない" do
@@ -241,5 +308,6 @@ RSpec.describe "イベント詳細の楽曲欄(スマホ1曲1行)", type: :syste
 
     expect(page).to have_selector("#{row(open_song)} .song-part-summary__item--open", visible: true, wait: 10)
     expect(page).to have_no_selector(".song-part-summary__entry")
+    expect(page).to have_no_selector(".event-join-fab")
   end
 end

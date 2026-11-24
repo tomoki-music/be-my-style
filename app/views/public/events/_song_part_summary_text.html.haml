@@ -2,3 +2,5 @@
 %span.song-part-summary__status= summary.status_text
 - if summary.state == :partial
   %span.song-part-summary__extra= "空き#{summary.open_count}"
+- elsif summary.state == :filled && local_assigns[:actionable]
+  %span.song-part-summary__extra 追加可

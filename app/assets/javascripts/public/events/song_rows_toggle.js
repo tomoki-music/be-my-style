@@ -78,3 +78,52 @@
     button.textContent = open ? button.dataset.labelClose : button.dataset.labelOpen;
   });
 })();
+
+// スマホ右下の「参加する」。参加フォーム(#join_btn)の送信ボタンなので、選んだ全曲・全パートを
+// そのまま確認画面へ送る(onsubmit の確認ダイアログも通る)。未選択のときだけ送信を止めて案内する。
+(function () {
+  var HINT_TEXT = '参加する曲・パートを選んでください';
+  var hintTimer = null;
+
+  function selectedCount(form) {
+    return form.querySelectorAll('input.js-join-part-checkbox[name="event[join_part_ids][]"]:checked').length;
+  }
+
+  function syncFab() {
+    var button = document.querySelector('.event-join-fab__button');
+    if (!button || !button.form) return;
+    var count = selectedCount(button.form);
+    var badge = button.querySelector('.event-join-fab__count');
+    if (badge) {
+      badge.hidden = count === 0;
+      badge.textContent = String(count);
+    }
+    var hint = button.closest('.event-join-fab').querySelector('.event-join-fab__hint');
+    if (hint && count > 0) hint.hidden = true;
+  }
+
+  function showHint(button) {
+    var hint = button.closest('.event-join-fab').querySelector('.event-join-fab__hint');
+    if (!hint) return;
+    hint.textContent = HINT_TEXT;
+    hint.hidden = false;
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(function () { hint.hidden = true; }, 4000);
+  }
+
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest && event.target.closest('.event-join-fab__button');
+    if (!button || !button.form) return;
+    if (selectedCount(button.form) > 0) return;
+    event.preventDefault();
+    showHint(button);
+  });
+
+  document.addEventListener('change', function (event) {
+    var target = event.target;
+    if (target.classList && target.classList.contains('js-join-part-checkbox')) syncFab();
+  });
+
+  document.addEventListener('turbolinks:load', syncFab);
+  window.addEventListener('pageshow', syncFab);
+})();

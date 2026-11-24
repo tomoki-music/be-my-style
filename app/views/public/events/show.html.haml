@@ -1,5 +1,8 @@
 = render 'layouts/header_menu'
-.event-show
+-# スマホの一覧チップ・右下の「参加する」から申し込めるのは、参加チェック欄を出す条件(未終了)と
+-# サーバー側の受付条件(開催コミュニティの所属者 = @can_cheer と同じ判定)を満たす場合だけ。
+- quick_entry_enabled = @can_cheer && @event.event_end_time > Time.now
+.event-show{ class: ("event-show--has-join-fab" if quick_entry_enabled) }
   .event-show-title
     %h2 イベント詳細
     .event-show-follow
@@ -179,49 +182,6 @@
                   %td
                     .map-wrapper
                       #map
-                %tr
-                  %th{scope:"row"} 参加人数
-                  %td
-                    .font-weight-bold
-                      <i class="fa-solid fa-people-group"></i>
-                      #{@joined_member_counts}人
-                - if @join_members.present?
-                  %tr 
-                    %th{scope:"row"} 参加メンバー
-                    %td
-                      .join-member-list
-                        - @join_members.each do |customer|
-                          = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
-                            = customer_avatar_tag(customer, class_name: "icon_mini")
-                            = customer.name
-                          - if @event.paid_participant_for_display?(customer)
-                            %span.member-plan-badge.member-plan-badge--paid
-                              %i.fa-solid.fa-star
-                              有料プラン
-                          - if @event.session_credit_applied_for?(customer)
-                            - if @event.participant_remaining_fee_for(customer).zero?
-                              %span.member-plan-badge.member-plan-badge--credit
-                                %i.fa-solid.fa-sparkles
-                                集金不要
-                            - else
-                              %span.member-plan-badge.member-plan-badge--credit-partial
-                                %i.fa-solid.fa-sparkles
-                                当日集金 #{@event.participant_remaining_fee_for(customer).to_s(:delimited)}円
-                          %br
-                          %hr
-                %tr
-                  %th{scope:"row"} 成立楽曲数
-                  %td
-                    %h4.text-red
-                      #{@complete_count}曲 成立!!
-                    (全#{@event.songs.length}曲)
-                - if @event.event_entry_deadline.present?
-                  %tr
-                    %th{scope:"row"} 参加締切日
-                    %td
-                      %h5.font-weight-bold
-                        = l @event.event_entry_deadline, format: :short
-                        まで
                 %tr.event-songs-section-row
                   %th{scope:"row"} 楽曲
                   %td{colspan: "100"}
@@ -281,9 +241,6 @@
                                   - part_names.each do |part|
                                     %th{ style: "width: #{column_width_percent}%;" }= part
                                   %th{ style: "width: #{column_width_percent}%;" } 応援する📣
-                              -# 一覧の「募集中」から直接申し込めるのは、参加チェック欄を出す条件(未終了)と
-                              -# サーバー側の受付条件(開催コミュニティの所属者 = @can_cheer と同じ判定)を満たす場合だけ。
-                              - quick_entry_enabled = @can_cheer && @event.event_end_time > Time.now
                               %tbody
                                 - @event.songs.each do |song|
                                   - recruiting_parts = song.recruiting_join_parts
@@ -321,7 +278,7 @@
                                       - unless song.band_performance?
                                         -# スマホの1曲1行表示用。PC表と同じ判定で各パートの状況を文字でも示す。
                                         %ul.song-part-summary.d-md-none{ "aria-label": "#{song.song_name}のパート別状況" }
-                                          - song_part_summaries(song, recruiting_parts).each do |summary|
+                                          - song_part_summaries(song, recruiting_parts, viewer: current_customer).each do |summary|
                                             - quick_entry = quick_entry_enabled && summary.entry_join_part_id
                                             %li.song-part-summary__item{ class: ["song-part-summary__item--#{summary.state}", ("song-part-summary__item--actionable" if quick_entry)] }
                                               - if quick_entry
@@ -329,7 +286,7 @@
                                                 %button.song-part-summary__entry{ type: "button",
                                                   data: { join_part_id: summary.entry_join_part_id },
                                                   "aria-label": "#{song.song_name}の#{summary.label}で参加確認へ進む" }
-                                                  = render "public/events/song_part_summary_text", summary: summary
+                                                  = render "public/events/song_part_summary_text", summary: summary, actionable: true
                                               - else
                                                 = render "public/events/song_part_summary_text", summary: summary
                                       .song-row-details
@@ -418,6 +375,14 @@
                                           ー
                                     %td.song-cheer-cell.event-song-row__detail{ data: { mobile_label: "応援する📣" } }
                                       = render "public/events/song_cheer", song: song, event: @event, can_cheer: @can_cheer
+                      - if quick_entry_enabled
+                        -# スマホ(768px未満)だけ右下に固定表示する。同じ参加フォームを送るので、
+                        -# 選んだ全曲・全パートが確認画面へ引き継がれ、確定は従来どおり確認画面で行う。
+                        .event-join-fab.d-md-none
+                          %p.event-join-fab__hint{ role: "status", "aria-live": "polite", hidden: true }
+                          %button.event-join-fab__button{ type: "submit" }
+                            参加する
+                            %span.event-join-fab__count{ hidden: true }
                 - if @entry_invitation_ui_enabled
                   -# 見出し・説明・送信ボタン・確認画面へのGETフォームだけを、楽曲表の横スクロール
                   -# 領域外(この%td)へ置く。対象者のチェックボックスは楽曲表の各パート欄にあり、
@@ -440,6 +405,49 @@
                           class: "btn btn-info js-entry-invitation-submit entry-invitation-form__submit",
                           disabled: true,
                           data: { disable_with: "確認画面へ移動中..." }
+                %tr
+                  %th{scope:"row"} 参加人数
+                  %td
+                    .font-weight-bold
+                      <i class="fa-solid fa-people-group"></i>
+                      #{@joined_member_counts}人
+                - if @join_members.present?
+                  %tr
+                    %th{scope:"row"} 参加メンバー
+                    %td
+                      .join-member-list
+                        - @join_members.each do |customer|
+                          = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
+                            = customer_avatar_tag(customer, class_name: "icon_mini")
+                            = customer.name
+                          - if @event.paid_participant_for_display?(customer)
+                            %span.member-plan-badge.member-plan-badge--paid
+                              %i.fa-solid.fa-star
+                              有料プラン
+                          - if @event.session_credit_applied_for?(customer)
+                            - if @event.participant_remaining_fee_for(customer).zero?
+                              %span.member-plan-badge.member-plan-badge--credit
+                                %i.fa-solid.fa-sparkles
+                                集金不要
+                            - else
+                              %span.member-plan-badge.member-plan-badge--credit-partial
+                                %i.fa-solid.fa-sparkles
+                                当日集金 #{@event.participant_remaining_fee_for(customer).to_s(:delimited)}円
+                          %br
+                          %hr
+                %tr
+                  %th{scope:"row"} 成立楽曲数
+                  %td
+                    %h4.text-red
+                      #{@complete_count}曲 成立!!
+                    (全#{@event.songs.length}曲)
+                - if @event.event_entry_deadline.present?
+                  %tr
+                    %th{scope:"row"} 参加締切日
+                    %td
+                      %h5.font-weight-bold
+                        = l @event.event_entry_deadline, format: :short
+                        まで
                 %tr
                   %th{scope:"row"} イベント補足
                   %td
