@@ -234,9 +234,9 @@ RSpec.describe "過去に演奏した人の表示切り替え", type: :system do
       page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
     end
 
-    it "スマホ用の経験者氏名も含めて初期OFF、ONで表示。ボタンは画面幅からはみ出さない" do
+    it "スマホでも初期OFF、ONにすると開いた曲のパート欄に経験者を表示。ボタンは画面幅からはみ出さない" do
       expect_collapsed
-      expect(page).to have_selector(".recruiting-parts", visible: true)
+      expect(page).to have_selector(".song-part-summary", visible: true)
 
       overflow = page.evaluate_script(<<~JS)
         (function () {
@@ -247,7 +247,10 @@ RSpec.describe "過去に演奏した人の表示切り替え", type: :system do
       expect(overflow).to be <= 1
 
       click_toggle_via_js
-      expect(page).to have_selector(".recruiting-parts .experienced-customers", text: "経験Ａ", visible: true)
+      # スマホでは曲の詳細を開くと、パート欄の経験者(依頼候補)が見える。
+      expect(page).to have_no_selector(".entry-invitation-candidates-wrap", text: "経験Ａ", visible: true)
+      page.execute_script("document.querySelector('#event-song-details-#{current_song.id} .song-row-toggle').click()")
+      expect(page).to have_selector("#event-song-details-#{current_song.id} .entry-invitation-candidates-wrap", text: "経験Ａ", visible: true)
       expect(page).to have_selector(".entry-invitation-form__mobile-hint", visible: true)
     end
   end

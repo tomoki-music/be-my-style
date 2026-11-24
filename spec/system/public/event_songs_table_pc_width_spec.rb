@@ -8,8 +8,8 @@ require "rails_helper"
 # .event-songs-table側もwidth:100%にしてtable-layout:fixedの各列(%指定)が
 # 比例して広がるようにした(単一のPC幅決め打ちにしないため、複数の幅で検証する)。
 #
-# スマホ(768px未満)は従来どおり.responsive-box width:280pxのまま(横スクロール前提)で
-# 変更していないことも合わせて確認する。
+# スマホ(768px未満)は1曲1行の表示に組み替えるため、横スクロールが無いことを合わせて確認する
+# (詳細は event_songs_mobile_list_spec.rb)。
 RSpec.describe "イベント楽曲一覧のPC横幅追従", type: :system do
   before { driven_by :selenium_chrome_headless }
 
@@ -87,19 +87,19 @@ RSpec.describe "イベント楽曲一覧のPC横幅追従", type: :system do
   end
 
   context "モバイル幅(375x812)" do
-    it ".responsive-boxが横スクロール前提の狭い幅のまま維持されること(PC対応で崩れていないこと)" do
+    it ".responsive-boxが画面内に収まり、横スクロールしないこと(PC対応で崩れていないこと)" do
       sign_in_via_form(customer)
       # CDP override はページ描画済みの状態でしか効かないため sign_in 後・本画面 visit 前に適用する
       use_mobile_viewport(width: 375, height: 812)
       visit public_event_path(event)
 
       expect(page).to have_selector(".responsive-box", wait: 10)
-      expect(responsive_box_width).to be <= 300
+      expect(responsive_box_width).to be <= 375
 
       scrollable = page.evaluate_script(
         "(function(){var b=document.querySelector('.responsive-box');return b.scrollWidth > b.clientWidth;})()"
       )
-      expect(scrollable).to eq true
+      expect(scrollable).to eq false
     end
   end
 end

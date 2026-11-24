@@ -161,7 +161,7 @@ RSpec.describe "楽曲のリクエストした人", type: :system do
   end
 
   context "モバイル幅(375x812)での表示" do
-    it "リクエスト表示によって横スクロールが増えず崩れないこと" do
+    it "曲を開くとリクエストした人が表示され、横スクロールが増えず崩れないこと" do
       song.update!(requested_by_customer_id: member.id)
 
       sign_in_via_form(customer)
@@ -169,6 +169,9 @@ RSpec.describe "楽曲のリクエストした人", type: :system do
       use_mobile_viewport(width: 375, height: 812)
       visit public_event_path(event)
 
+      # スマホの1曲1行表示では、リクエストした人は曲の詳細に入っている。
+      expect(page).to have_selector("#event-song-details-#{song.id} .song-row-toggle", wait: 10)
+      page.execute_script("document.querySelector('#event-song-details-#{song.id} .song-row-toggle').click()")
       expect(page).to have_selector(".song-requester", text: "参加太郎", wait: 10)
 
       requester_node = find(".song-requester")

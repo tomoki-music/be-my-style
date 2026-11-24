@@ -565,7 +565,7 @@
       }
     }
     .event-songs-table {
-      min-width: 280px;
+      min-width: var(--event-songs-min-width, 280px);
       // .responsive-boxがPC(768px以上)で親幅いっぱいに広がるようになったのに合わせ、
       // テーブル自身も100%まで広がれるようにする。table-layout:fixedのため、
       // 実際に使われる幅は max(この100%, HTML側のinline min-width) になり、
@@ -626,6 +626,12 @@
         border-radius: 5px;
         font-size: 0.8rem;
       }
+    }
+    .event-song-row__main {
+      max-width: 120px;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      white-space: normal;
     }
     // スマホでは表を右スクロールしないと募集中パートが分からないため、
     // 「曲名/ステータス」セル内に募集中パートのショートカットを表示する。
@@ -1883,4 +1889,345 @@ input[type="text"] {
 .past-performers-toggle {
   max-width: 100%;
   white-space: normal;
+}
+
+// スマホ(768px未満)の楽曲表は、横スクロールせずに複数曲の空きを見比べられるよう
+// 同じ表(同じ参加チェック欄)をCSSで1曲1行に組み替える。「詳細・エントリー」で行を開くと
+// 参加フォーム・パート別の担当者・応援を表示する。閉じても要素は残るので選択は保持される。
+@media (max-width: 767.98px) {
+  .event-show-container .event-show-table {
+    .event-songs-section-row > th {
+      display: none;
+    }
+    .event-songs-mobile-heading {
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .event-songs-join-form {
+      padding: 10px;
+      max-height: none;
+    }
+    .responsive-box {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      max-height: 70vh;
+    }
+    .scroll-indicator {
+      display: none;
+    }
+    .event-songs-table {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      margin-bottom: 0;
+      border: 0;
+
+      thead {
+        display: none;
+      }
+      tbody,
+      tr,
+      td {
+        display: block;
+        width: 100%;
+      }
+      td {
+        max-width: none;
+        padding: 0;
+        border: 0;
+      }
+      .event-song-row {
+        padding: 8px 10px;
+        border-bottom: 1px solid #d5dde5;
+
+        &.is-open {
+          background: #f7fbff;
+        }
+      }
+      .event-song-row__head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .event-song-row__badges {
+        flex: 1 1 auto;
+        min-width: 0;
+
+        > br {
+          display: none;
+        }
+      }
+      .event-song-row__main .song-start-time {
+        margin: 0 0 0 4px;
+      }
+      .song-row-toggle {
+        flex: 0 0 auto;
+        margin-top: 0;
+      }
+      .song-detail-link {
+        margin-top: 4px;
+        font-weight: 700;
+      }
+      .event-song-row__detail,
+      .song-row-details {
+        display: none;
+      }
+      .event-song-row.is-open {
+        .song-row-details {
+          display: block;
+          margin-top: 8px;
+        }
+        .event-song-row__detail {
+          display: block;
+          padding: 8px 0;
+          border-top: 1px dashed #d5dde5;
+        }
+        .event-song-row__detail--empty {
+          display: none;
+        }
+      }
+      .event-song-row__detail::before {
+        content: attr(data-mobile-label);
+        display: block;
+        margin-bottom: 4px;
+        color: #4a5a68;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .check-part-item label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 36px;
+        margin: 0;
+      }
+    }
+  }
+}
+
+.song-part-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 4px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+    padding: 3px 2px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: #f1f3f5;
+    color: #6c757d;
+    font-size: 0.7rem;
+    line-height: 1.25;
+    text-align: center;
+
+    &--open {
+      border-color: #e0a800;
+      background: #fff3cd;
+      color: #6b4f00;
+    }
+    &--partial {
+      border-color: #e0a800;
+      border-style: dashed;
+      background: #f2fbf4;
+      color: #1e6b35;
+    }
+    &--filled {
+      border-color: #8fd19e;
+      background: #e9f7ee;
+      color: #1e6b35;
+    }
+  }
+  &__label {
+    max-width: 100%;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+  &__status {
+    white-space: nowrap;
+  }
+  &__item--open &__status,
+  &__extra {
+    font-weight: 700;
+    color: #6b4f00;
+  }
+}
+
+.song-row-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  margin-top: 6px;
+  padding: 2px 10px;
+  border: 1px solid #5c87a6;
+  border-radius: 999px;
+  background: #fff;
+  color: #2f5d80;
+  font-size: 0.8rem;
+  font-weight: 700;
+
+  &:focus-visible {
+    outline: 2px solid #2f5d80;
+    outline-offset: 2px;
+  }
+  &__selected {
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: #007bff;
+    color: #fff;
+    font-size: 0.7rem;
+  }
+}
+
+// 一覧から直接申し込める枠(募集中・空きあり)。チップ全体を押せるボタンにする。
+.song-part-summary__item--actionable {
+  padding: 0;
+  border-width: 2px;
+  border-style: solid;
+}
+.song-part-summary__entry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 40px;
+  padding: 3px 2px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  cursor: pointer;
+
+  .song-part-summary__status,
+  .song-part-summary__extra {
+    text-decoration: underline;
+  }
+  &:focus-visible {
+    outline: 2px solid #6b4f00;
+    outline-offset: 1px;
+  }
+}
+
+// スマホ右下の「参加する」(768px以上は .d-md-none で出さない)。
+// ページ末尾の操作(リクエスト投稿など)が隠れないよう、ボタンの高さ分だけ下に余白を足す。
+@media (max-width: 767.98px) {
+  .event-show--has-join-fab {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  }
+  .event-join-fab {
+    position: fixed;
+    right: calc(16px + env(safe-area-inset-right, 0px));
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    z-index: 1020;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .event-join-fab__button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 52px;
+    padding: 0 24px;
+    border: 0;
+    border-radius: 999px;
+    background: #1f6fd1;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(16, 58, 110, 0.3);
+    pointer-events: auto;
+
+    &:active {
+      background: #185cad;
+      box-shadow: 0 2px 6px rgba(16, 58, 110, 0.3);
+    }
+    &:focus-visible {
+      outline: 3px solid #9cc4f5;
+      outline-offset: 2px;
+    }
+  }
+  .event-join-fab__count {
+    display: inline-block;
+    min-width: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #fff;
+    color: #1f6fd1;
+    font-size: 0.8rem;
+    line-height: 22px;
+    text-align: center;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+  .event-join-fab__hint {
+    max-width: 260px;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #22313f;
+    color: #fff;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    pointer-events: auto;
+  }
+}
+
+// スマホでパートを選んだチップ。色だけに頼らず ✓ と枠線でも区別する。
+.song-part-summary__check {
+  display: none;
+}
+.song-part-summary__item--actionable.is-selected {
+  border-color: #1f6fd1;
+  background: #1f6fd1;
+  color: #fff;
+
+  .song-part-summary__status,
+  .song-part-summary__extra {
+    color: #fff;
+    text-decoration: none;
+  }
+  .song-part-summary__check {
+    display: block;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .song-part-summary__entry:focus-visible {
+    outline-color: #0b3d78;
+  }
+}
+
+// 申込可能な人のスマホ表示では、チップと右下の「参加する」で申し込む。詳細内のチェック欄と
+// 「参加確認画面へ」は隠すだけで、送信には同じチェック欄(フォーム)を使う。
+// バンド出演曲の「一般エントリーはありません」の案内は残す。
+.event-songs-join-actions {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 12px;
+}
+@media (max-width: 767.98px) {
+  .event-show-container .event-show-table .event-songs-join-form--chip-entry {
+    .event-songs-join-actions {
+      display: none;
+    }
+    .event-songs-table .event-song-row:not(.band) .event-song-row__detail--join-form {
+      display: none;
+    }
+  }
 }

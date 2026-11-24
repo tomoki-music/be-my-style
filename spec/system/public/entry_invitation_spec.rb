@@ -152,7 +152,7 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
       expect(page).to have_selector("#entry-invitation-form")
       expect_submit_area_within_viewport
       expect(page).to have_selector(".entry-invitation-form__mobile-hint", visible: true)
-      expect(page).to have_content("楽曲表を横にスクロールして")
+      expect(page).to have_content("曲の「詳細・エントリー」を開いて")
     end
   end
 
@@ -309,6 +309,8 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
   describe "参加ボタンと依頼ボタンの分離(状態表)" do
     before do
       sign_in_via_form(owner)
+      # スマホ幅では申込可能な人の「参加確認画面へ」を隠す(チップ+右下の「参加する」で申し込む)ため、PC幅で確認する。
+      use_desktop_viewport
       visit_event_with_past_performers_shown
       expect(page).to have_selector("#entry-invitation-form")
       expect(page).to have_selector("#submit_join_form")
@@ -552,32 +554,39 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
     end
 
     # イベント詳細ページには本変更以前から Bootstrap の .row / .col 由来で
-    # 約15〜16px のページ横あふれがある(fbd1da3 で計測)。楽曲表の拡幅は
-    # overflow-x:auto の .responsive-box 内で完結するため、この値を悪化させない。
+    # 約15〜16px のページ横あふれがある(fbd1da3 で計測)。スマホの楽曲表は1曲1行に組み替えて
+    # 横スクロール自体を無くしたので、曲を開いた状態でもこの値を悪化させない。
     BASELINE_PAGE_OVERFLOW_PX = 16
 
     [320, 375, 414].each do |width|
-      it "#{width}px幅: 楽曲表は .responsive-box 内だけで横スクロールし、ページ横スクロールを増やさない" do
+      it "#{width}px幅: 楽曲表は曲を開いても横スクロールせず、ページ横スクロールを増やさない" do
         sign_in_via_form(owner)
         set_mobile_viewport(width)
         visit_event_with_past_performers_shown
         expect(page).to have_selector(".responsive-box")
+        page.execute_script("document.querySelector('#event-song-details-#{current_song.id} .song-row-toggle').click()")
+        expect(page).to have_selector(".entry-invitation-candidate--disabled", text: long_name, visible: true)
 
         data = page.evaluate_script(<<~JS)
           (function () {
             var de = document.documentElement;
             var box = document.querySelector('.responsive-box');
+            var boxRight = box.getBoundingClientRect().right;
+            var cardRight = 0;
+            box.querySelectorAll('.entry-invitation-candidate').forEach(function (c) {
+              var right = c.getBoundingClientRect().right;
+              if (right > cardRight) cardRight = right;
+            });
             return {
               pageOverflow: de.scrollWidth - de.clientWidth,
               boxScrollable: box.scrollWidth - box.clientWidth,
-              boxOverflowX: window.getComputedStyle(box).overflowX
+              cardOverflow: cardRight - boxRight
             };
           })()
         JS
 
-        # 楽曲表(min-width 1280px)は box 内で横スクロールできる
-        expect(data["boxScrollable"]).to be > 0, "楽曲表が .responsive-box 内で横スクロールできない"
-        expect(data["boxOverflowX"]).to eq("auto")
+        expect(data["boxScrollable"]).to be <= 0, "楽曲表が .responsive-box 内で横スクロールしている"
+        expect(data["cardOverflow"]).to be <= 1, "依頼候補カードが楽曲欄の右へはみ出している"
         # ページ全体の横スクロールは既存分(約16px)から悪化していない
         expect(data["pageOverflow"]).to be <= BASELINE_PAGE_OVERFLOW_PX + 2,
           "ページ横スクロールが既存分を超えて増えている(#{data['pageOverflow']}px / 既存 #{BASELINE_PAGE_OVERFLOW_PX}px)"

@@ -70,6 +70,54 @@ module Public::EventsHelper
     end
   end
 
+  SONG_PART_SUMMARY_LABELS = {
+    "Vocal" => "Vo", "Guitar" => "Gt", "Bass" => "Ba", "Drums" => "Dr", "Keyboard" => "Key", "Other" => "Other"
+  }.freeze
+  SONG_PART_SUMMARY_ALWAYS = %w[Vocal Guitar Bass Drums Keyboard].freeze
+
+  # entry_join_part_id: 一覧から直接申し込むときに選ぶ枠。空き枠を優先し、空きが無ければ担当者のいる枠に
+  # 追加で入る(通常のセッションパートは定員が無く、参加フォーム・サーバー側も担当者の有無で受付を止めない)。
+  # 閲覧者がその列のすべての枠に参加済みのときだけ nil。
+  SongPartSummary = Struct.new(:label, :state, :status_text, :open_count, :entry_join_part_id, keyword_init: true)
+
+  # スマホの1曲1行表示で使う、パートごとの状況。判定はPC表と同じく
+  # normalized_join_parts_for_column と Song#recruiting_join_parts だけを使う。
+  # Vo/Gt/Ba/Dr/Key は常に出し、Other と固定列に寄せられない旧表記パートは該当曲だけに出す。
+  # 一般募集のないバンド出演曲は対象外(呼び出し側で固定メンバー表示にする)。
+  def song_part_summaries(song, recruiting_parts = song.recruiting_join_parts, viewer: nil)
+    recruiting_ids = recruiting_parts.map(&:id).to_set
+    summaries = JoinPart::NAME_OPTIONS.filter_map do |column_name|
+      join_parts = normalized_join_parts_for_column(song, column_name)
+      next if join_parts.empty? && !SONG_PART_SUMMARY_ALWAYS.include?(column_name)
+
+      build_song_part_summary(SONG_PART_SUMMARY_LABELS.fetch(column_name), join_parts, recruiting_ids, viewer)
+    end
+    unmapped = song.join_parts.select { |join_part| PerformanceHistory::PartNameNormalizer.normalize(join_part.join_part_name).nil? }
+    unmapped.group_by(&:join_part_name).each do |name, join_parts|
+      summaries << build_song_part_summary(name, join_parts, recruiting_ids, viewer)
+    end
+    summaries
+  end
+
+  def build_song_part_summary(label, join_parts, recruiting_ids, viewer = nil)
+    return SongPartSummary.new(label: label, state: :none, status_text: "対象外", open_count: 0) if join_parts.empty?
+
+    open_parts = join_parts.select { |join_part| recruiting_ids.include?(join_part.id) }
+    open_count = open_parts.size
+    # preload済みの customers だけを見る(追加SQLなし)。
+    enterable = join_parts.reject { |join_part| viewer && join_part.customers.any? { |customer| customer.id == viewer.id } }
+    entry_part = (open_parts & enterable).first || enterable.first
+    attrs = { label: label, open_count: open_count, entry_join_part_id: entry_part&.id }
+    if open_count == join_parts.size
+      SongPartSummary.new(state: :open, status_text: "募集中", **attrs)
+    elsif open_count.positive?
+      SongPartSummary.new(state: :partial, status_text: "担当あり", **attrs)
+    else
+      member_count = join_parts.sum { |join_part| join_part.customers.reject(&:is_deleted).size }
+      SongPartSummary.new(state: :filled, status_text: "#{member_count}人参加", **attrs)
+    end
+  end
+
   # セル内「演奏経験のある人」表示用の集合。基礎集合(ExperiencedCustomersQuery)から、
   # そのセルの現在の参加者をCustomer IDで差し引く(同じセルで参加者表示と経験者表示を
   # 二重に出さない)。exclude_customer_idsは呼び出し側がpreload済みの

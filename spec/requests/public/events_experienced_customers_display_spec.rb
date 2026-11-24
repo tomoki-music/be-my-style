@@ -171,7 +171,7 @@ RSpec.describe "Public::Events#show 楽曲パート募集欄の経験者表示",
     # 実運用データで頻出: 過去イベントは song_name="マリーゴールド（あいみょん）" / artist_name 空、
     # 現在イベントは song_name="マリーゴールド" / artist_name="あいみょん" のように登録形式がずれる。
     # 同じ曲なので、経験者(見出し・氏名・公開プロフィールリンク)が表示されなければならない。
-    it '過去=「曲名（アーティスト名）」・現在=「曲名」+アーティスト欄 でも同一曲として経験者に表示されること(PC/スマホ両方)' do
+    it '過去=「曲名（アーティスト名）」・現在=「曲名」+アーティスト欄 でも同一曲として経験者に表示されること' do
       # 括弧内をアーティスト名として切り出すには「曲名」+「アーティスト欄」入力済みという裏付けが必要。
       # 現在イベント側のsplit形式が裏付けになるため、そちらを先に登録する。
       split_current_song = FactoryBot.create(:song, event: current_event, song_name: "マリーゴールド", artist_name: "あいみょん")
@@ -191,12 +191,9 @@ RSpec.describe "Public::Events#show 楽曲パート募集欄の経験者表示",
       # 公開プロフィールへのリンクとして描画されること
       profile_links = doc.css(".experienced-customers__name[href='#{public_customer_path(experienced_customer)}']")
       expect(profile_links).to be_present
-      # スマホ用募集ショートカット(.recruiting-parts 内)に描画されること
-      mobile_names = doc.css(".recruiting-parts .experienced-customers__name")
-      expect(mobile_names.text).to include("経験太郎")
-      # PC用パート列(.recruiting-parts の外側)にも描画されること
-      pc_names = doc.css(".experienced-customers__name").reject { |node| node.ancestors(".recruiting-parts").any? }
-      expect(pc_names.map(&:text).join).to include("経験太郎")
+      # パート列(スマホでは曲の詳細を開いたときに表示)に1か所だけ描画されること
+      names = doc.css(".event-song-row__detail .experienced-customers__name")
+      expect(names.map(&:text)).to eq ["経験太郎"]
     end
 
     it '過去=「曲名」+アーティスト欄・現在=「曲名（アーティスト名）」の逆パターンでも経験者に表示されること' do

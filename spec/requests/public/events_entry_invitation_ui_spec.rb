@@ -428,7 +428,7 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
       hint = doc.at_css(".entry-invitation-form__mobile-hint")
       expect(hint).to be_present
       expect(hint["class"]).to include "d-md-none"
-      expect(hint.text).to include "楽曲表を横にスクロール"
+      expect(hint.text).to include "曲の「詳細・エントリー」を開いて"
     end
 
     it "一般ユーザーには案内文を表示しない" do
@@ -436,7 +436,7 @@ RSpec.describe "Public::Events#show エントリー依頼UI(楽曲表統合)", t
       show_event
 
       expect(response.body).not_to include "entry-invitation-form__mobile-hint"
-      expect(response.body).not_to include "楽曲表を横にスクロールして、依頼したいメンバーを選択してください"
+      expect(response.body).not_to include "依頼したいメンバーを選択してください"
     end
   end
 
