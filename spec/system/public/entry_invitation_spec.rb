@@ -309,6 +309,8 @@ RSpec.describe "エントリー依頼UI（PC/スマホ）", type: :system do
   describe "参加ボタンと依頼ボタンの分離(状態表)" do
     before do
       sign_in_via_form(owner)
+      # スマホ幅では申込可能な人の「参加確認画面へ」を隠す(チップ+右下の「参加する」で申し込む)ため、PC幅で確認する。
+      use_desktop_viewport
       visit_event_with_past_performers_shown
       expect(page).to have_selector("#entry-invitation-form")
       expect(page).to have_selector("#submit_join_form")

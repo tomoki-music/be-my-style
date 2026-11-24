@@ -23,6 +23,7 @@
 
   function syncAll() {
     Array.prototype.forEach.call(document.querySelectorAll(ROW_SELECTOR), syncSelected);
+    Array.prototype.forEach.call(document.querySelectorAll('.song-part-summary__entry'), syncChip);
   }
 
   document.addEventListener('click', function (event) {
@@ -34,23 +35,36 @@
     setOpen(row, !row.classList.contains(OPEN_CLASS));
   });
 
-  // 一覧の「募集中」を押したら、その枠の参加チェック欄(PC表と共通の1つ)を選んで既存の参加フォームを送る。
-  // 他の曲で選んだチェックもそのまま送られる。確定は従来どおり確認画面の「参加する」で行う。
+  var CHIP_SELECTOR = '.song-part-summary__entry';
+
+  function checkboxFor(chip) {
+    return document.getElementById('event_join_part_ids_' + chip.dataset.joinPartId);
+  }
+
+  // チップの選択表示を、送信に使う参加チェック欄(PC表と共通の1つ)の状態に合わせる。
+  function syncChip(chip) {
+    var checkbox = checkboxFor(chip);
+    var selected = !!(checkbox && checkbox.checked);
+    chip.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    var item = chip.closest('.song-part-summary__item');
+    if (item) item.classList.toggle('is-selected', selected);
+  }
+
+  function syncChipsFor(checkbox) {
+    var id = checkbox.id.replace('event_join_part_ids_', '');
+    Array.prototype.forEach.call(document.querySelectorAll(CHIP_SELECTOR + '[data-join-part-id="' + id + '"]'), syncChip);
+  }
+
+  // 一覧のチップは押すたびに参加チェック欄を選択/解除するだけ。送信は右下の「参加する」で行い、
+  // 確定は従来どおり確認画面の「参加する」で行う。
   document.addEventListener('click', function (event) {
-    var button = event.target.closest && event.target.closest('.song-part-summary__entry');
-    if (!button) return;
+    var chip = event.target.closest && event.target.closest(CHIP_SELECTOR);
+    if (!chip) return;
     event.preventDefault();
-    var checkbox = document.getElementById('event_join_part_ids_' + button.dataset.joinPartId);
-    if (!checkbox || checkbox.disabled || !checkbox.form) return;
-    checkbox.checked = true;
+    var checkbox = checkboxFor(chip);
+    if (!checkbox || checkbox.disabled) return;
+    checkbox.checked = !checkbox.checked;
     checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-    var form = checkbox.form;
-    // requestSubmit は onsubmit(参加申請の確認ダイアログ)も通す。
-    if (typeof form.requestSubmit === 'function') {
-      form.requestSubmit();
-    } else if (form.onsubmit === null || form.onsubmit() !== false) {
-      form.submit();
-    }
   });
 
   document.addEventListener('change', function (event) {
@@ -58,6 +72,7 @@
     if (!target.classList || !target.classList.contains('js-join-part-checkbox')) return;
     var row = target.closest(ROW_SELECTOR);
     if (row) syncSelected(row);
+    syncChipsFor(target);
   });
 
   document.addEventListener('turbolinks:load', syncAll);

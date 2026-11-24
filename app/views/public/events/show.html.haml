@@ -189,8 +189,10 @@
                     - if @event.event_bands.any?
                       = render "public/events/bands", bands: @event.event_bands, event: @event, can_cheer: @can_cheer
                     = form_tag(public_event_join_confirm_path(@event), method: :get, id: 'join_btn', onSubmit: "return CheckJoin()") do
-                      #event-songs.event-songs-join-form
-                        %div{ style: "display: flex; justify-content: flex-start; align-items: center; margin-bottom: 12px;" }
+                      -# 申込可能な人のスマホ表示では、パートのチップで選び右下の「参加する」で送る。
+                      -# 詳細内のチェック欄・「参加確認画面へ」はCSSで隠すだけで、送信には同じチェック欄を使う。
+                      #event-songs.event-songs-join-form{ class: ("event-songs-join-form--chip-entry" if quick_entry_enabled) }
+                        .event-songs-join-actions
                           %div{ style: "display: flex; align-items: center; gap: 12px;" }
                             %button.btn.btn-sm.btn-outline-info#help-popover{
                               type: "button",
@@ -282,10 +284,12 @@
                                             - quick_entry = quick_entry_enabled && summary.entry_join_part_id
                                             %li.song-part-summary__item{ class: ["song-part-summary__item--#{summary.state}", ("song-part-summary__item--actionable" if quick_entry)] }
                                               - if quick_entry
-                                                -# 同じ参加フォームのチェック欄を選んで送信するだけ(確定は確認画面の後)。
+                                                -# 押すたびに同じ参加フォームのチェック欄を選択/解除する(送信は右下の「参加する」)。
                                                 %button.song-part-summary__entry{ type: "button",
+                                                  "aria-pressed": "false",
                                                   data: { join_part_id: summary.entry_join_part_id },
-                                                  "aria-label": "#{song.song_name}の#{summary.label}で参加確認へ進む" }
+                                                  "aria-label": "#{song.song_name}の#{summary.label}を参加パートに選ぶ" }
+                                                  %span.song-part-summary__check{ "aria-hidden": "true" } ✓
                                                   = render "public/events/song_part_summary_text", summary: summary, actionable: true
                                               - else
                                                 = render "public/events/song_part_summary_text", summary: summary
@@ -298,7 +302,7 @@
                                             さん
                                         = render "public/events/youtube_card", card: youtube_card_for(song)
 
-                                    %td.event-song-row__detail{ data: { mobile_label: "参加フォーム" } }
+                                    %td.event-song-row__detail.event-song-row__detail--join-form{ data: { mobile_label: "参加フォーム" } }
                                       .check-part-list
                                         - if song.band_performance?
                                           %span.song-band-note バンド出演曲のため一般エントリーはありません

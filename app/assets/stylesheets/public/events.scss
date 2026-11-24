@@ -2187,3 +2187,47 @@ input[type="text"] {
     pointer-events: auto;
   }
 }
+
+// スマホでパートを選んだチップ。色だけに頼らず ✓ と枠線でも区別する。
+.song-part-summary__check {
+  display: none;
+}
+.song-part-summary__item--actionable.is-selected {
+  border-color: #1f6fd1;
+  background: #1f6fd1;
+  color: #fff;
+
+  .song-part-summary__status,
+  .song-part-summary__extra {
+    color: #fff;
+    text-decoration: none;
+  }
+  .song-part-summary__check {
+    display: block;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .song-part-summary__entry:focus-visible {
+    outline-color: #0b3d78;
+  }
+}
+
+// 申込可能な人のスマホ表示では、チップと右下の「参加する」で申し込む。詳細内のチェック欄と
+// 「参加確認画面へ」は隠すだけで、送信には同じチェック欄(フォーム)を使う。
+// バンド出演曲の「一般エントリーはありません」の案内は残す。
+.event-songs-join-actions {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 12px;
+}
+@media (max-width: 767.98px) {
+  .event-show-container .event-show-table .event-songs-join-form--chip-entry {
+    .event-songs-join-actions {
+      display: none;
+    }
+    .event-songs-table .event-song-row:not(.band) .event-song-row__detail--join-form {
+      display: none;
+    }
+  }
+}
