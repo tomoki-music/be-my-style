@@ -6,6 +6,7 @@ module SongRankings
   #   開催予定・開催済みを問わない。退会 customer(customers.is_deleted = TRUE)は現役参加者に数えない。
   #   Song#established? は「パート0件」を true とする既存挙動を保持しているため、ランキングでは
   #   「必要パートが埋まった」の趣旨に沿って別途 HAVING で「パート1件以上」を必須にする。
+  #   エントリー期限後に Key/Other だけが空いた通常曲を成立とする例外も、同じ基準で SQL に含める。
   #
   # ■ 集計単位
   #   (イベント × SongMaster) ごとに最大1回。COUNT(DISTINCT events.id) で二重計上を防ぐ。
@@ -262,13 +263,35 @@ module SongRankings
           WHERE #{conditions.join(' AND ')}
           GROUP BY songs.id, songs.event_id, songs.song_master_id
           HAVING COUNT(DISTINCT join_parts.id) > 0
-             AND COUNT(DISTINCT CASE WHEN customers.id IS NOT NULL THEN join_parts.id END)
-               = COUNT(DISTINCT join_parts.id)
+             AND (
+               COUNT(DISTINCT CASE WHEN customers.id IS NOT NULL THEN join_parts.id END)
+                 = COUNT(DISTINCT join_parts.id)
+               OR (#{established_after_deadline_sql})
+             )
         ) AS established
         GROUP BY established.song_master_id
       SQL
 
+      binds[:now] = Time.current
       ActiveRecord::Base.sanitize_sql_array([sql, binds])
+    end
+
+    # Song#established? の期限後の例外と同じ基準。期限到達済みの通常曲で、Vo/Gt/Ba/Dr それぞれに
+    # 現役担当者のいる枠があり、担当者のいない枠が Key/Other だけなら成立とする。
+    def established_after_deadline_sql
+      connection = ActiveRecord::Base.connection
+      part = "COALESCE(#{PerformanceHistory::PartNameNormalizer.sql_normalized_name('join_parts.join_part_name')}, '')"
+      optional = Song::OPTIONAL_PARTS_AFTER_DEADLINE.map { |name| connection.quote(name) }.join(", ")
+      core = Song::CORE_PARTS.map { |name| connection.quote(name) }.join(", ")
+
+      <<~SQL.squish
+        MAX(events.event_entry_deadline) <= :now
+        AND MAX(songs.event_band_id) IS NULL
+        AND COUNT(DISTINCT CASE WHEN #{part} NOT IN (#{optional}) THEN join_parts.id END)
+          = COUNT(DISTINCT CASE WHEN #{part} NOT IN (#{optional}) AND customers.id IS NOT NULL THEN join_parts.id END)
+        AND COUNT(DISTINCT CASE WHEN customers.id IS NOT NULL AND #{part} IN (#{core}) THEN #{part} END)
+          = #{Song::CORE_PARTS.size}
+      SQL
     end
 
     # 期間(イベント開催日基準・Asia/Tokyo)。全期間は nil。

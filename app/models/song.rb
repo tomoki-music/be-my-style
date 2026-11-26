@@ -108,12 +108,24 @@ class Song < ApplicationRecord
   # `join_parts.map { active_customers.length }.include?(0)` 判定と挙動を一致させるため)。
   # バンド出演曲は固定メンバーで演奏が決まっているので established? = true。ただし成立楽曲ランキングの
   # SQL は join_part_customers だけを見るため、バンド出演曲はランキングには数えない。
-  def established?
-    recruiting_join_parts.empty?
+  #
+  # 例外: エントリー期限(Event#status_key の :entry_closed と同じ event_entry_deadline <= now)を
+  # 過ぎた通常曲は、Vo/Gt/Ba/Dr に現役担当者がいて、空いている枠が Key/Other だけなら成立とする。
+  # パート単位の空き表示(recruiting_join_parts)と期限後の追加エントリー可否は変えない。
+  # 保存値を持たない動的判定のため、期限を迎えた時点で曲を編集しなくても反映される。
+  # SongRankings::RankingQuery の SQL も同じ基準(OPTIONAL_PARTS_AFTER_DEADLINE / CORE_PARTS)を使う。
+  CORE_PARTS = %w[Vocal Guitar Bass Drums].freeze
+  OPTIONAL_PARTS_AFTER_DEADLINE = %w[Keyboard Other].freeze
+
+  def established?(now: Time.current)
+    recruiting_parts = recruiting_join_parts
+    return true if recruiting_parts.empty?
+
+    established_after_deadline?(recruiting_parts, now)
   end
 
-  def recruiting?
-    !established?
+  def recruiting?(now: Time.current)
+    !established?(now: now)
   end
 
   def capo_label
@@ -124,6 +136,19 @@ class Song < ApplicationRecord
   end
 
   private
+
+  def established_after_deadline?(recruiting_parts, now)
+    return false if band_performance?
+
+    deadline = event&.event_entry_deadline
+    return false if deadline.blank? || deadline > now
+
+    normalize = ->(join_part) { PerformanceHistory::PartNameNormalizer.normalize(join_part.join_part_name) }
+    return false unless recruiting_parts.all? { |join_part| OPTIONAL_PARTS_AFTER_DEADLINE.include?(normalize.call(join_part)) }
+
+    filled_parts = (join_parts - recruiting_parts).map(&normalize)
+    CORE_PARTS.all? { |part| filled_parts.include?(part) }
+  end
 
   def should_assign_song_master?
     song_name.present? && (song_master_id.blank? || song_name_changed? || artist_name_changed?)

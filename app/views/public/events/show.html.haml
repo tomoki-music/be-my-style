@@ -246,7 +246,7 @@
                               %tbody
                                 - @event.songs.each do |song|
                                   - recruiting_parts = song.recruiting_join_parts
-                                  - vacant = recruiting_parts.any?
+                                  - vacant = !@complete_song_ids.include?(song.id)
                                   - song_details_id = "event-song-details-#{song.id}"
                                   %tr.event-song-row{ id: song_details_id, class: [(vacant ? 'vacant' : 'complete'), ('band' if song.band_performance?)] }
                                     %td.event-song-row__main

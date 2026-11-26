@@ -86,11 +86,12 @@ class Public::EventsController < ApplicationController
 
     #成立楽曲 / 募集中楽曲(退会ユーザーだけのパートは現役参加者0人=募集中として扱う)。
     #判定は Song#established? / Song#recruiting? に一本化する(画面ごとに基準が食い違わないようにする)。
-    @complete_songs = @event.songs.select(&:established?)
+    #期限ちょうどの前後で成立数・バッジ・フィルターがずれないよう、同じ時刻で判定する。
+    judged_at = Time.current
+    @complete_songs, @recruiting_songs = @event.songs.partition { |song| song.established?(now: judged_at) }
     @complete_song_ids = @complete_songs.map(&:id)
     @complete_count = @complete_songs.length
 
-    @recruiting_songs = @event.songs.select(&:recruiting?)
     @recruiting_song_ids = @recruiting_songs.map(&:id)
     @recruiting_count = @recruiting_songs.length
 
