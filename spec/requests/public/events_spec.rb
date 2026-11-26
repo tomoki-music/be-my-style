@@ -64,6 +64,56 @@ RSpec.describe "Public::Events", type: :request do
       end
     end
 
+    context "event詳細ページ(show)のエントリー期限後の Key/Other 例外" do
+      let(:deadline) { Time.zone.local(2026, 12, 1, 23, 59, 0) }
+      let(:event) do
+        FactoryBot.create(:event, :event_with_songs, customer: customer, community: community,
+                                                     event_entry_deadline: deadline,
+                                                     event_start_time: deadline + 7.days,
+                                                     event_end_time: deadline + 7.days + 3.hours)
+      end
+      let!(:key_open_song) { FactoryBot.create(:song, event: event, song_name: "Key空き曲") }
+
+      before do
+        %w[Vocal Guitar Bass Drums].each do |name|
+          part = FactoryBot.create(:join_part, song: key_open_song, join_part_name: name)
+          JoinPartCustomer.create!(join_part: part, customer: FactoryBot.create(:customer))
+        end
+        FactoryBot.create(:join_part, song: key_open_song, join_part_name: "Keyboard")
+      end
+
+      def song_row_and_counts
+        doc = Nokogiri::HTML(response.body)
+        row = doc.at_css("#event-song-details-#{key_open_song.id}")
+        complete_rows = doc.css("tr.event-song-row.complete").size
+        [row, complete_rows, response.body[/(\d+)曲 成立!!/, 1].to_i]
+      end
+
+      it "期限直前は募集中で、成立曲数・フィルター用クラスにも含めないこと" do
+        travel_to(deadline - 1.minute) { get public_event_path(event) }
+
+        row, complete_rows, complete_count = song_row_and_counts
+        expect(row["class"]).to include("vacant")
+        expect(row.text).to include("募集中!!")
+        expect(complete_count).to eq complete_rows
+      end
+
+      it "期限到達後は成立バッジ・成立フィルター用クラス・成立曲数がそろい、Key の空き表示は残ること" do
+        travel_to(deadline - 1.minute) { get public_event_path(event) }
+        _, _, count_before = song_row_and_counts
+
+        travel_to(deadline) { get public_event_path(event) }
+        row, complete_rows, complete_count = song_row_and_counts
+        expect(row["class"]).to include("complete")
+        expect(row.text).to include("楽曲成立🎵")
+        expect(complete_count).to eq complete_rows
+        expect(complete_count).to eq count_before + 1
+        open_items = row.css(".song-part-summary__item--open").map { |item| item.text.squish }
+        expect(open_items.size).to eq 1
+        expect(open_items.first).to include("Key")
+      end
+    end
+
     context "event詳細ページ(show)の退会済み参加者表示" do
       let(:active_member) { FactoryBot.create(:customer, name: "現役参加太郎") }
       let(:withdrawn_member) { FactoryBot.create(:customer, name: "退会済み参加花子", is_deleted: true) }

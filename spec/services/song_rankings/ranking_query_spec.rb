@@ -233,6 +233,54 @@ RSpec.describe SongRankings::RankingQuery do
     end
   end
 
+  describe "#rows エントリー期限後の Key/Other 例外(Song#established? と一致)" do
+    include ActiveSupport::Testing::TimeHelpers
+
+    let(:deadline) { Time.zone.local(2026, 12, 1, 23, 59, 0) }
+    let(:event) do
+      create(:event, :event_with_songs, community: community,
+                                        event_start_time: deadline + 7.days,
+                                        event_end_time: deadline + 7.days + 3.hours,
+                                        event_entry_deadline: deadline)
+    end
+
+    def song_with(filled:, empty:, song_name: "期限後曲")
+      song = establish(event, song_name: song_name, artist_name: "X", parts: filled)
+      empty.each { |part_name| create(:join_part, song: song, join_part_name: part_name) }
+      song
+    end
+
+    def counted_and_established(song, at)
+      travel_to(at) do
+        loaded = Song.includes(:event, join_parts: :customers).find(song.id)
+        [described_class.new.rows.sum(&:established_count), loaded.established?]
+      end
+    end
+
+    it "期限直前は数えず、期限到達時に数えること(Key だけ空き)" do
+      song = song_with(filled: %w[Vocal Guitar Bass Drums], empty: %w[Keyboard])
+
+      expect(counted_and_established(song, deadline - 1.second)).to eq [0, false]
+      expect(counted_and_established(song, deadline)).to eq [1, true]
+    end
+
+    it "期限後は Other だけ、Key と Other の両方が空いていても数えること" do
+      other_only = song_with(filled: %w[Vocal Guitar Bass Drums], empty: %w[Other], song_name: "Other空き曲")
+      both = song_with(filled: %w[ボーカル Gt ベース ドラム], empty: %w[Keyboard Other], song_name: "両方空き曲")
+
+      expect(counted_and_established(other_only, deadline + 1.hour)).to eq [2, true]
+      expect(counted_and_established(both, deadline + 1.hour)).to eq [2, true]
+    end
+
+    it "基本4パートが欠ける・基本パートの枠が空いている曲は期限後も数えないこと" do
+      missing = song_with(filled: %w[Vocal Guitar Bass], empty: %w[Keyboard], song_name: "Dr欠け曲")
+      core_open = song_with(filled: %w[Vocal Guitar Bass Drums], empty: %w[Guitar], song_name: "Gt空き曲")
+
+      expect(counted_and_established(missing, deadline + 1.hour)).to eq [0, false]
+      expect(counted_and_established(core_open, deadline + 1.hour)).to eq [0, false]
+    end
+  end
+
   describe "#rows 公開範囲" do
     it "musicドメイン以外のコミュニティのイベントは集計しないこと" do
       biz_community = create(:community, domain: other_domain, name: "ビジネス")

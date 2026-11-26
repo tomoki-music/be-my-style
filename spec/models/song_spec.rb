@@ -247,6 +247,125 @@ RSpec.describe Song, type: :model do
     end
   end
 
+  describe '#established? エントリー期限後の Key/Other 例外' do
+    let(:deadline) { Time.zone.local(2026, 12, 1, 23, 59, 0) }
+    let(:deadline_event) do
+      FactoryBot.create(:event, :event_with_songs, customer: customer, community: community,
+                                                   event_entry_deadline: deadline,
+                                                   event_start_time: deadline + 7.days,
+                                                   event_end_time: deadline + 7.days + 3.hours)
+    end
+    let(:target) { FactoryBot.create(:song, event: deadline_event) }
+
+    def add_part(name, filled:)
+      part = FactoryBot.create(:join_part, song: target, join_part_name: name)
+      FactoryBot.create(:join_part_customer, join_part: part, customer: FactoryBot.create(:customer)) if filled
+      part
+    end
+
+    def fill_core_parts(names = %w[Vocal Guitar Bass Drums])
+      names.each { |name| add_part(name, filled: true) }
+    end
+
+    def reloaded
+      Song.includes(:event, join_parts: :customers).find(target.id)
+    end
+
+    it '期限直前は Key だけが空いていても募集中のままであること' do
+      fill_core_parts
+      add_part('Keyboard', filled: false)
+
+      expect(reloaded.established?(now: deadline - 1.second)).to eq false
+      expect(reloaded.recruiting?(now: deadline - 1.second)).to eq true
+    end
+
+    it '期限到達時に Key だけが空いていれば成立になること(曲の編集なし)' do
+      fill_core_parts
+      add_part('Keyboard', filled: false)
+
+      expect(reloaded.established?(now: deadline)).to eq true
+      expect(reloaded.recruiting?(now: deadline)).to eq false
+    end
+
+    it '期限後に Other だけが空いていれば成立になること' do
+      fill_core_parts
+      add_part('Other', filled: false)
+
+      expect(reloaded.established?(now: deadline + 1.hour)).to eq true
+    end
+
+    it '期限後に Key と Other の両方が空いていても成立になること' do
+      fill_core_parts
+      add_part('Keyboard', filled: false)
+      add_part('Other', filled: false)
+
+      expect(reloaded.established?(now: deadline + 1.hour)).to eq true
+    end
+
+    it '空き枠のパート別表示(recruiting_join_parts)は変えないこと' do
+      fill_core_parts
+      key = add_part('Keyboard', filled: false)
+      other = add_part('Other', filled: false)
+
+      expect(reloaded.recruiting_join_parts).to contain_exactly(key, other)
+    end
+
+    it '表記ゆれ(ボーカル/Gt/ベース/ドラム/キーボード)も既存の正規化で判定すること' do
+      fill_core_parts(%w[ボーカル Gt ベース ドラム])
+      add_part('キーボード', filled: false)
+
+      expect(reloaded.established?(now: deadline + 1.hour)).to eq true
+    end
+
+    it '基本4パートのどれかに担当者の枠が無ければ期限後も募集中のままであること' do
+      fill_core_parts(%w[Vocal Guitar Bass])
+      add_part('Keyboard', filled: false)
+
+      expect(reloaded.established?(now: deadline + 1.hour)).to eq false
+    end
+
+    it '基本4パートに空き枠があれば、同じパートの別枠が埋まっていても募集中のままであること' do
+      fill_core_parts
+      add_part('Guitar', filled: false)
+      add_part('Keyboard', filled: false)
+
+      expect(reloaded.established?(now: deadline + 1.hour)).to eq false
+    end
+
+    it '基本4パートの担当者が退会ユーザーだけなら期限後も募集中のままであること' do
+      fill_core_parts(%w[Vocal Guitar Bass])
+      drums = add_part('Drums', filled: false)
+      FactoryBot.create(:join_part_customer, join_part: drums, customer: FactoryBot.create(:customer, is_deleted: true))
+      add_part('Keyboard', filled: false)
+
+      expect(reloaded.established?(now: deadline + 1.hour)).to eq false
+    end
+
+    it '正規化できない旧表記の枠が空いていれば期限後も募集中のままであること' do
+      fill_core_parts
+      add_part('コーラス', filled: false)
+
+      expect(reloaded.established?(now: deadline + 1.hour)).to eq false
+    end
+
+    it '期限が未設定なら既存判定のままであること' do
+      fill_core_parts
+      add_part('Keyboard', filled: false)
+      song = reloaded
+      song.event.event_entry_deadline = nil
+
+      expect(song.established?(now: deadline + 1.hour)).to eq false
+    end
+
+    it 'バンド出演曲は既存判定のまま(一般募集なしで成立)であること' do
+      band = deadline_event.event_bands.create!(name: 'バンド')
+      target.update!(event_band: band)
+      add_part('Keyboard', filled: false)
+
+      expect(reloaded.established?(now: deadline - 1.day)).to eq true
+    end
+  end
+
   describe '#requested_by_customer' do
     let(:member) { FactoryBot.create(:customer, name: "参加太郎") }
     let(:other_member) { FactoryBot.create(:customer, name: "参加次郎") }
