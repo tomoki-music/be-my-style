@@ -4,22 +4,20 @@ module AdminBulkMails
   # 選択された会員 ID から、一括メールの送信対象と除外を決める。
   # メールアドレスはフォームから受け取らず、ここで会員の DB の値から読む。
   # 確認画面・確定・ジョブの送信直前で同じ判定を使う。
+  # メール承認が済んでいない(Devise の confirmed? が偽の)アドレスには送らない。
   class RecipientResolver
     EXCLUSION_REASONS = {
       not_found: "会員が見つからない",
       withdrawn: "退会済み",
       no_email: "メールアドレスがない",
       invalid_email: "メールアドレスが無効",
-      mail_opt_out: "メール通知を受け取らない設定"
+      mail_opt_out: "メール通知を受け取らない設定",
+      unconfirmed: "メール未承認のため除外"
     }.freeze
 
     EMAIL_FORMAT = URI::MailTo::EMAIL_REGEXP
 
     Result = Struct.new(:recipients, :exclusions, keyword_init: true) do
-      def unconfirmed_recipients
-        recipients.select { |customer| customer.confirmed_at.nil? }
-      end
-
       def exclusion_counts
         exclusions.group_by { |exclusion| exclusion[:reason] }.transform_values(&:size)
       end
@@ -44,6 +42,7 @@ module AdminBulkMails
       return :no_email if customer.email.blank?
       return :invalid_email unless customer.email.match?(EMAIL_FORMAT)
       return :mail_opt_out unless customer.confirm_mail
+      return :unconfirmed unless customer.confirmed?
 
       nil
     end

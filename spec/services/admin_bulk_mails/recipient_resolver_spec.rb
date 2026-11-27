@@ -24,14 +24,15 @@ RSpec.describe AdminBulkMails::RecipientResolver do
     expect(described_class.call(["#{b.id},#{a.id}", a.id.to_s, "x", "1 OR 1=1"]).recipients).to eq([a, b])
   end
 
-  it "未承認のアドレスは送信対象に残し、件数を数えられる" do
+  it "承認済みと未承認が混在したら、未承認を「メール未承認のため除外」として送信対象から外す" do
     unconfirmed = FactoryBot.create(:customer).tap { |customer| customer.update_column(:confirmed_at, nil) }
     confirmed = FactoryBot.create(:customer)
 
     result = described_class.call([unconfirmed.id, confirmed.id])
 
-    expect(result.recipients).to contain_exactly(unconfirmed, confirmed)
-    expect(result.unconfirmed_recipients).to eq([unconfirmed])
+    expect(result.recipients).to eq([confirmed])
+    expect(result.exclusions.map { |exclusion| [exclusion[:customer_id], exclusion[:reason]] }).to eq([[unconfirmed.id, :unconfirmed]])
+    expect(described_class::EXCLUSION_REASONS[:unconfirmed]).to eq("メール未承認のため除外")
   end
 
   it "アドレス・メール承認・送信可否が変わると fingerprint が変わる" do

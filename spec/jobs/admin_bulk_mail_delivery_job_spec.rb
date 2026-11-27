@@ -48,6 +48,17 @@ RSpec.describe AdminBulkMailDeliveryJob, type: :job do
     expect(recipient.failure_reason).to eq("メール通知を受け取らない設定")
   end
 
+  it "確定後にメール未承認になった宛先には送らず、理由を送信履歴に残す" do
+    recipient
+    customer.update_columns(confirmed_at: nil)
+
+    described_class.perform_now(recipient.id)
+
+    expect(ActionMailer::Base.deliveries).to be_empty
+    expect(recipient.reload).to be_skipped
+    expect(recipient.failure_reason).to eq("メール未承認のため除外")
+  end
+
   it "確定後にアドレスが変わったら、確認画面に出ていない新しいアドレスへは送らない" do
     recipient
     customer.update_column(:email, "changed-after-confirm@example.com")

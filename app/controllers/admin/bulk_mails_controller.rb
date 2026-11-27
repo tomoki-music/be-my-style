@@ -2,6 +2,8 @@
 # 作成(compose) → 確認(preview) → 送信(create) の順で進み、確定は確認画面のボタンだけから行う。
 # 宛先のメールアドレスはフォームから受け取らず、会員 ID から毎回 DB で読む。
 class Admin::BulkMailsController < ApplicationController
+  NO_RECIPIENTS_MESSAGE = "送信できるメンバーがいないため、送信できません。除外の理由を確認してください。".freeze
+
   before_action :authenticate_admin!
 
   def index
@@ -33,10 +35,15 @@ class Admin::BulkMailsController < ApplicationController
     @resolution = AdminBulkMails::RecipientResolver.call(@customer_ids)
 
     errors = AdminBulkMail.new(subject: @subject, body: @body, request_token: "-").tap(&:valid?).errors.full_messages
-    errors << "送信できるメンバーがいません。" if @resolution.recipients.empty?
     if errors.any?
       flash.now[:alert] = errors.join(" / ")
       render :compose, status: :unprocessable_entity
+      return
+    end
+
+    if @resolution.recipients.empty?
+      flash.now[:alert] = NO_RECIPIENTS_MESSAGE
+      render_preview(status: :unprocessable_entity)
       return
     end
 
@@ -64,7 +71,10 @@ class Admin::BulkMailsController < ApplicationController
       @subject = subject_param
       @body = body_param
       @resolution = result.resolution
-      if result.status == :changed
+      if result.status == :no_recipients
+        flash.now[:alert] = NO_RECIPIENTS_MESSAGE
+        render_preview(status: :unprocessable_entity)
+      elsif result.status == :changed
         flash.now[:alert] = "確認後に送信対象(メールアドレス・メール承認・送信可否)が変わりました。まだ送信していません。内容を見直してから、もう一度「送信する」を押してください。"
         render_preview(status: :conflict)
       else

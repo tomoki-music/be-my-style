@@ -65,15 +65,16 @@ RSpec.describe "Admin::BulkMails", type: :request do
       expect(response).to redirect_to(admin_homes_top_path)
     end
 
-    it "確認画面に送信対象・除外理由・未承認の件数・名前を置き換えたプレビューを出す" do
+    it "承認済み・未承認が混在したら、未承認を除外して件数を示し、名前を置き換えたプレビューを出す" do
       post_preview
 
       expect(response).to have_http_status(:ok)
       body = response.body
-      expect(body).to include("送信対象", "3件")
-      expect(body).to include("退会済み：1件")
       doc = Nokogiri::HTML(body)
-      expect(doc.at_css(".alert-warning").text.squish).to include("送信対象のうち 1件 はメールアドレスが未承認です")
+      expect(doc.at_css("[data-bulk-mail-recipients-count]").text).to eq("2件")
+      expect(body).to include("退会済み：1件", "メール未承認のため除外：1件")
+      expect(doc.at_css(".admin-bulk-mail__recipient-list").text).not_to include(unconfirmed.email)
+      expect(doc.at_css("input[type=submit][value='2件に送信する']")).to be_present
       expect(doc.at_css(".admin-bulk-mail__preview").text).to include("アリスさんへのお知らせ", "アリスさん\nこんにちは")
       expect(body).not_to include("{{name}}さんへのお知らせ</")
     end
@@ -84,6 +85,39 @@ RSpec.describe "Admin::BulkMails", type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to include("メンバーへのメール作成")
       expect(Nokogiri::HTML(response.body).at_css("textarea#bulk_mail_body").text.delete_prefix("\n")).to eq("本文")
+    end
+
+    it "全員が未承認なら、除外の件数を示して確定ボタンを出さず、直接送っても受け付けない" do
+      other_unconfirmed = FactoryBot.create(:customer).tap { |customer| customer.update_column(:confirmed_at, nil) }
+      ids = [unconfirmed.id, other_unconfirmed.id].join(",")
+
+      post preview_admin_bulk_mails_path, params: { customer_ids: ids, bulk_mail: { subject: "件名", body: "本文" } }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      doc = Nokogiri::HTML(response.body)
+      expect(doc.at_css("[data-bulk-mail-recipients-count]").text).to eq("0件")
+      expect(response.body).to include("メール未承認のため除外：2件")
+      expect(doc.css("form").map { |f| f["action"] }).not_to include(admin_bulk_mails_path)
+      expect(doc.at_css("[data-bulk-mail-submit-disabled]")[:disabled]).to be_present
+
+      fingerprint = AdminBulkMails::RecipientResolver.call(ids).fingerprint("件名", "本文")
+      expect {
+        post admin_bulk_mails_path, params: { customer_ids: ids, bulk_mail: { subject: "件名", body: "本文" }, request_token: "direct", fingerprint: fingerprint }
+      }.not_to change(AdminBulkMail, :count)
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(enqueued_jobs).to be_empty
+    end
+
+    it "確認後・確定前に未承認になった人がいたら、送らずに確認画面を出し直す" do
+      post_preview
+      form = preview_form(response.body)
+      bob.update_column(:confirmed_at, nil)
+
+      expect { post admin_bulk_mails_path, params: form }.not_to change(AdminBulkMail, :count)
+
+      expect(response).to have_http_status(:conflict)
+      expect(response.body).to include("メール未承認のため除外：2件")
+      expect(enqueued_jobs).to be_empty
     end
 
     it "選択した会員だけに、1人1通(To 1件)で名前入りのメールを送る" do
@@ -97,15 +131,15 @@ RSpec.describe "Admin::BulkMails", type: :request do
 
       bulk_mail = AdminBulkMail.last
       expect(response).to redirect_to(admin_bulk_mail_path(bulk_mail))
-      mails = ActionMailer::Base.deliveries.last(3)
-      expect(mails.map(&:to)).to contain_exactly([alice.email], [bob.email], [unconfirmed.email])
-      expect(mails.map(&:subject)).to contain_exactly("アリスさんへのお知らせ", "ボブさんへのお知らせ", "未承認さんさんへのお知らせ")
-      expect(ActionMailer::Base.deliveries.flat_map(&:to)).not_to include("attacker@example.com", unselected.email, withdrawn.email)
-      expect(bulk_mail.status_counts).to include("sent" => 3, "failed" => 0)
+      mails = ActionMailer::Base.deliveries
+      expect(mails.map(&:to)).to contain_exactly([alice.email], [bob.email])
+      expect(mails.map(&:subject)).to contain_exactly("アリスさんへのお知らせ", "ボブさんへのお知らせ")
+      expect(mails.flat_map(&:to)).not_to include("attacker@example.com", unselected.email, withdrawn.email, unconfirmed.email)
+      expect(bulk_mail.status_counts).to include("sent" => 2, "failed" => 0)
 
       get admin_bulk_mail_path(bulk_mail)
       counts = Nokogiri::HTML(response.body).at_css("[data-bulk-mail-counts]").text.gsub(/\s+/, "")
-      expect(counts).to include("受付3件", "送信成功3件", "失敗0件")
+      expect(counts).to include("受付2件", "送信成功2件", "失敗0件")
     end
 
     it "確定ボタンを二重に押しても(同じ token)、受け付けは1回で重複送信しない" do
@@ -118,8 +152,8 @@ RSpec.describe "Admin::BulkMails", type: :request do
       end
 
       expect(AdminBulkMail.count).to eq(1)
-      expect(AdminBulkMailRecipient.count).to eq(3)
-      expect(ActionMailer::Base.deliveries.size).to eq(3)
+      expect(AdminBulkMailRecipient.count).to eq(2)
+      expect(ActionMailer::Base.deliveries.size).to eq(2)
       expect(response).to redirect_to(admin_bulk_mail_path(AdminBulkMail.last))
       follow_redirect!
       expect(response.body).to include("すでに受け付け済み")
@@ -142,7 +176,7 @@ RSpec.describe "Admin::BulkMails", type: :request do
 
       # 出し直した確認画面から確定すれば送れる
       perform_enqueued_jobs { post admin_bulk_mails_path, params: preview_form(response.body) }
-      expect(ActionMailer::Base.deliveries.flat_map(&:to)).to contain_exactly("bob-new@example.com", unconfirmed.email)
+      expect(ActionMailer::Base.deliveries.flat_map(&:to)).to contain_exactly("bob-new@example.com")
     end
 
     it "確認画面の件名・本文を書き換えて確定しても送らない" do
@@ -171,7 +205,7 @@ RSpec.describe "Admin::BulkMails", type: :request do
         Rails.logger = original_rails_logger
       end
 
-      expect(ActionMailer::Base.deliveries.size).to eq(3)
+      expect(ActionMailer::Base.deliveries.size).to eq(2)
       log = output.string
       expect(log).to include("Admin::BulkMailsController#create", "AdminBulkMailDeliveryJob")
       [alice.email, bob.email, unconfirmed.email, "お知らせ", "こんにちは"].each do |secret|

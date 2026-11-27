@@ -14,12 +14,7 @@
           %li
             除外
             %strong= "#{@resolution.exclusions.size}件"
-        - unconfirmed = @resolution.unconfirmed_recipients
-        - if unconfirmed.any?
-          .alert.alert-warning.mb-2
-            送信対象のうち
-            %strong= "#{unconfirmed.size}件"
-            はメールアドレスが未承認です（届かない・本人のアドレスでない可能性があります）。
+        %p.text-muted.small.mb-2 メール承認が済んだアドレスにだけ送ります。未承認の人は送信対象から外しています。
         - if @resolution.exclusions.any?
           %p.mb-1.font-weight-bold 除外の内訳
           %ul.mb-0
@@ -76,14 +71,17 @@
                   %td= AdminBulkMails::RecipientResolver::EXCLUSION_REASONS[exclusion[:reason]]
 
     .d-flex.flex-wrap
-      = form_with url: admin_bulk_mails_path, method: :post, local: true, class: "mr-2 mb-2", data: { turbolinks: false } do
-        = render "hidden_ids", customer_ids: @customer_ids
-        = hidden_field_tag "bulk_mail[subject]", @subject, id: nil
-        = hidden_field_tag "bulk_mail[body]", @body, id: nil
-        = hidden_field_tag :request_token, @request_token
-        = hidden_field_tag :fingerprint, @fingerprint
-        = submit_tag "#{@resolution.recipients.size}件に送信する", class: "btn btn-danger",
-          data: { disable_with: "送信を受け付けています…", confirm: "#{@resolution.recipients.size}件のメンバーにメールを送信します。よろしいですか？" }
+      - if @resolution.recipients.empty?
+        %button.btn.btn-danger.mr-2.mb-2{ type: "button", disabled: true, data: { bulk_mail_submit_disabled: true } } 送信対象が0件のため送信できません
+      - else
+        = form_with url: admin_bulk_mails_path, method: :post, local: true, class: "mr-2 mb-2", data: { turbolinks: false } do
+          = render "hidden_ids", customer_ids: @customer_ids
+          = hidden_field_tag "bulk_mail[subject]", @subject, id: nil
+          = hidden_field_tag "bulk_mail[body]", @body, id: nil
+          = hidden_field_tag :request_token, @request_token
+          = hidden_field_tag :fingerprint, @fingerprint
+          = submit_tag "#{@resolution.recipients.size}件に送信する", class: "btn btn-danger",
+            data: { disable_with: "送信を受け付けています…", confirm: "#{@resolution.recipients.size}件のメンバーにメールを送信します。よろしいですか？" }
       = form_with url: compose_admin_bulk_mails_path, method: :post, local: true, class: "mb-2", data: { turbolinks: false } do
         = render "hidden_ids", customer_ids: @customer_ids
         = hidden_field_tag "bulk_mail[subject]", @subject, id: nil
