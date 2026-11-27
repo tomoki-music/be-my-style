@@ -14,7 +14,8 @@ RSpec.describe "Admin::Homes", type: :request do
     row = Nokogiri::HTML(body).css("table tbody tr").find do |tr|
       tr.at_css("th")&.text&.strip == customer.id.to_s
     end
-    row.css("td")[1].css(".badge").map { |badge| badge.text.strip }
+    # 左端の td は一括メール用の選択欄。
+    row.css("td")[2].css(".badge").map { |badge| badge.text.strip }
   end
 
   describe "GET /admin/homes/top" do
@@ -248,7 +249,8 @@ RSpec.describe "Admin::Homes", type: :request do
         row = Nokogiri::HTML(body).css("table tbody tr").find do |tr|
           tr.at_css("th")&.text&.strip == customer.id.to_s
         end
-        row.css("td")[0]
+        # 左端の td は一括メール用の選択欄。
+        row.css("td")[1]
       end
 
       it "名前セルにプロフィールアイコン(img)が表示されること" do

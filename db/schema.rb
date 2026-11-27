@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_11_23_100000) do
+ActiveRecord::Schema.define(version: 2026_11_27_100000) do
 
   create_table "active_admin_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "namespace"
@@ -78,6 +78,31 @@ ActiveRecord::Schema.define(version: 2026_11_23_100000) do
     t.index ["activity_id"], name: "index_activity_reactions_on_activity_id"
     t.index ["customer_id", "activity_id", "reaction_type"], name: "index_activity_reactions_unique", unique: true
     t.index ["customer_id"], name: "index_activity_reactions_on_customer_id"
+  end
+
+  create_table "admin_bulk_mail_recipients", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "admin_bulk_mail_id", null: false
+    t.bigint "customer_id"
+    t.integer "status", default: 0, null: false
+    t.string "email_digest", null: false
+    t.string "failure_reason"
+    t.datetime "sent_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["admin_bulk_mail_id", "customer_id"], name: "index_admin_bulk_mail_recipients_on_mail_and_customer", unique: true
+    t.index ["customer_id"], name: "index_admin_bulk_mail_recipients_on_customer_id"
+  end
+
+  create_table "admin_bulk_mails", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "admin_id"
+    t.string "subject", null: false
+    t.text "body", null: false
+    t.string "request_token", null: false
+    t.integer "recipients_count", default: 0, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["admin_id"], name: "index_admin_bulk_mails_on_admin_id"
+    t.index ["request_token"], name: "index_admin_bulk_mails_on_request_token", unique: true
   end
 
   create_table "admin_notifications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1551,6 +1576,9 @@ ActiveRecord::Schema.define(version: 2026_11_23_100000) do
   add_foreign_key "activities", "customers"
   add_foreign_key "activity_reactions", "activities"
   add_foreign_key "activity_reactions", "customers"
+  add_foreign_key "admin_bulk_mail_recipients", "admin_bulk_mails", on_delete: :cascade
+  add_foreign_key "admin_bulk_mail_recipients", "customers", on_delete: :nullify
+  add_foreign_key "admin_bulk_mails", "admins", on_delete: :nullify
   add_foreign_key "admin_notifications", "admins"
   add_foreign_key "admin_notifications", "customers"
   add_foreign_key "business_notification_settings", "customers"

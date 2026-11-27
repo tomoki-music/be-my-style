@@ -43,6 +43,15 @@ Rails.application.routes.draw do
     resources :activity_comments
     resources :event_comments
 
+    # メンバー一覧から選んだ会員への名前入り一括メール。作成(compose)→確認(preview)→送信(create)。
+    # 会員 ID は POST で受け取る(件数が多いと URL に収まらないため)。
+    resources :bulk_mails, only: [:index, :show, :create] do
+      collection do
+        post :compose
+        post :preview
+      end
+    end
+
     # ご意見・ご相談BOX（運営による投稿確認・対応状況/メモ更新）
     resources :customer_feedbacks, only: [:index, :show, :update]
 

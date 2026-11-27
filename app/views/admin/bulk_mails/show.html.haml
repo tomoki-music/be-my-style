@@ -1,0 +1,63 @@
+.container-fluid.px-3
+  = render 'layouts/admin_header_menu'
+  .container.py-3{ data: { bulk_select_reset: true } }
+    %h2.h4.mb-3 一括メールの送信状況
+    - if flash[:notice].present?
+      .alert.alert-success= flash[:notice]
+
+    .card.shadow-sm.mb-3
+      .card-body
+        %p.mb-1
+          %strong 件名：
+          = @bulk_mail.subject
+        %p.text-muted.small.mb-3
+          = "受付日時 #{l(@bulk_mail.created_at, format: :short)}"
+          - if @bulk_mail.admin
+            = "／送信した管理者 #{@bulk_mail.admin.name.presence || "ID #{@bulk_mail.admin_id}"}"
+        %ul.admin-bulk-mail__counts{ data: { bulk_mail_counts: true } }
+          %li
+            受付
+            %strong= "#{@bulk_mail.recipients_count}件"
+          %li
+            送信成功
+            %strong= "#{@status_counts["sent"]}件"
+          %li
+            失敗
+            %strong= "#{@status_counts["failed"]}件"
+          %li
+            送信待ち・送信中
+            %strong= "#{@status_counts["pending"] + @status_counts["sending"]}件"
+          %li
+            送信しなかった
+            %strong= "#{@status_counts["skipped"]}件"
+          %li
+            結果不明
+            %strong= "#{@status_counts["unknown"]}件"
+        %p.text-muted.small.mb-0 送信は順番に行います。画面を再読み込みすると最新の件数になります。
+        - if @status_counts["unknown"].positive?
+          .alert.alert-warning.mt-2.mb-0{ data: { bulk_mail_unknown: true } }
+            送信中のまま止まった宛先が
+            %strong= "#{@status_counts["unknown"]}件"
+            あります。届いたかどうか分からないため、自動では再送しません。必要なら本人に確認してから個別に連絡してください。
+
+    .card.shadow-sm.mb-3
+      .card-body
+        %h3.h6.mb-2 宛先ごとの状況
+        .admin-bulk-mail__recipient-list
+          %table.table.table-sm.mb-0
+            %thead
+              %tr
+                %th 会員 ID
+                %th 名前
+                %th 状況
+                %th 備考
+            %tbody
+              - @recipients.each do |recipient|
+                %tr
+                  %td= recipient.customer_id || "-"
+                  %td= recipient.customer&.name || "-"
+                  %td= recipient.status_label
+                  %td= recipient.failure_reason
+
+    = link_to "送信履歴", admin_bulk_mails_path, class: "btn btn-outline-secondary mr-2"
+    = link_to "メンバー一覧に戻る", admin_homes_top_path, class: "btn btn-outline-secondary"
