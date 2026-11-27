@@ -1,0 +1,91 @@
+.container-fluid.px-3
+  = render 'layouts/admin_header_menu'
+  .container.py-3
+    %h2.h4.mb-3 送信内容の確認
+    - if flash.now[:alert].present?
+      .alert.alert-warning= flash.now[:alert]
+
+    .card.shadow-sm.mb-3
+      .card-body
+        %ul.admin-bulk-mail__counts
+          %li
+            送信対象
+            %strong{ data: { bulk_mail_recipients_count: true } }= "#{@resolution.recipients.size}件"
+          %li
+            除外
+            %strong= "#{@resolution.exclusions.size}件"
+        - unconfirmed = @resolution.unconfirmed_recipients
+        - if unconfirmed.any?
+          .alert.alert-warning.mb-2
+            送信対象のうち
+            %strong= "#{unconfirmed.size}件"
+            はメールアドレスが未承認です（届かない・本人のアドレスでない可能性があります）。
+        - if @resolution.exclusions.any?
+          %p.mb-1.font-weight-bold 除外の内訳
+          %ul.mb-0
+            - @resolution.exclusion_counts.each do |reason, count|
+              %li= "#{AdminBulkMails::RecipientResolver::EXCLUSION_REASONS[reason]}：#{count}件"
+
+    .card.shadow-sm.mb-3
+      .card-body
+        %h3.h6.mb-2
+          プレビュー
+          - if @preview_customer
+            %small.text-muted= "（会員 ID #{@preview_customer.id} に届く内容）"
+        .admin-bulk-mail__preview
+          %p.mb-2
+            %strong 件名：
+            = AdminBulkMail.personalize(@subject, @preview_customer)
+          %pre.admin-bulk-mail__preview-body= AdminBulkMail.personalize(@body, @preview_customer)
+
+    .card.shadow-sm.mb-3
+      .card-body
+        %h3.h6.mb-2 送信対象の一覧
+        .admin-bulk-mail__recipient-list
+          %table.table.table-sm.mb-0
+            %thead
+              %tr
+                %th ID
+                %th 名前（置き換え後）
+                %th メールアドレス
+                %th メール承認
+            %tbody
+              - @resolution.recipients.each do |customer|
+                %tr
+                  %td= customer.id
+                  %td= customer.name.to_s.strip.presence || AdminBulkMail::DEFAULT_NAME
+                  %td= customer.email
+                  %td
+                    - if customer.confirmed_at.present?
+                      承認済み
+                    - else
+                      %span.badge.badge-warning 未承認
+        - if @resolution.exclusions.any?
+          %h3.h6.mt-3.mb-2 除外したメンバー
+          %table.table.table-sm.mb-0
+            %thead
+              %tr
+                %th ID
+                %th 名前
+                %th 理由
+            %tbody
+              - @resolution.exclusions.each do |exclusion|
+                %tr
+                  %td= exclusion[:customer_id]
+                  %td= exclusion[:customer]&.name || "-"
+                  %td= AdminBulkMails::RecipientResolver::EXCLUSION_REASONS[exclusion[:reason]]
+
+    .d-flex.flex-wrap
+      = form_with url: admin_bulk_mails_path, method: :post, local: true, class: "mr-2 mb-2", data: { turbolinks: false } do
+        = render "hidden_ids", customer_ids: @customer_ids
+        = hidden_field_tag "bulk_mail[subject]", @subject, id: nil
+        = hidden_field_tag "bulk_mail[body]", @body, id: nil
+        = hidden_field_tag :request_token, @request_token
+        = hidden_field_tag :fingerprint, @fingerprint
+        = submit_tag "#{@resolution.recipients.size}件に送信する", class: "btn btn-danger",
+          data: { disable_with: "送信を受け付けています…", confirm: "#{@resolution.recipients.size}件のメンバーにメールを送信します。よろしいですか？" }
+      = form_with url: compose_admin_bulk_mails_path, method: :post, local: true, class: "mb-2", data: { turbolinks: false } do
+        = render "hidden_ids", customer_ids: @customer_ids
+        = hidden_field_tag "bulk_mail[subject]", @subject, id: nil
+        = hidden_field_tag "bulk_mail[body]", @body, id: nil
+        = submit_tag "内容を修正する", class: "btn btn-outline-secondary"

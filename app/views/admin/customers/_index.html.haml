@@ -35,15 +35,47 @@
             options_for_select(enum_filter_options(MemberProfile.contact_preferences, "enums.member_profile.contact_preference"), params[:contact_preference]),
             class: "form-select filter-select"
 
+        .col-md-2
+          %label.form-label.fw-semibold{ for: "last_login" }
+            %i.bi.bi-clock-history.me-1
+            最終ログイン
+          = select_tag :last_login,
+            options_for_select([["すべて", ""]] + AdminCustomers::ListFilter::LAST_LOGIN_OPTIONS.map { |key, option| [option[:label], key] }, params[:last_login]),
+            class: "form-select filter-select"
+
+        .col-md-2
+          %label.form-label.fw-semibold{ for: "email_confirmation" }
+            %i.bi.bi-envelope-check.me-1
+            メール承認
+          = select_tag :email_confirmation,
+            options_for_select([["すべて", ""]] + AdminCustomers::ListFilter::EMAIL_CONFIRMATION_OPTIONS.map { |key, label| [label, key] }, params[:email_confirmation]),
+            class: "form-select filter-select"
+
         .col-md-4
           .d-inline-flex.gap-2
             = submit_tag "絞り込み", class: "btn btn-primary px-4"
             = link_to "リセット", admin_homes_top_path, class: "btn btn-outline-secondary px-4"
 
+-# 選択は sessionStorage に持つため、絞り込みを変えても選んだ会員は残る(admin_bulk_mail_selection.js)。
+.card.mb-3.shadow-sm.admin-bulk-select{ data: { admin_bulk_select: true, matching_ids: matching_customer_ids.to_json } }
+  .card-body.admin-bulk-select__body
+    .admin-bulk-select__status
+      選択中
+      %strong{ data: { bulk_select_count: true } } 0
+      件
+    %button.btn.btn-outline-secondary.btn-sm{ type: "button", data: { bulk_select_clear: true } } 選択を解除
+    %button.btn.btn-outline-primary.btn-sm{ type: "button", data: { bulk_select_all_matching: true } }
+      条件に一致した人をすべて選択（#{matching_customer_ids.size}件）
+    = form_with url: compose_admin_bulk_mails_path, method: :post, local: true, class: "admin-bulk-select__form", data: { bulk_select_form: true, turbolinks: false } do
+      = hidden_field_tag :customer_ids, "", data: { bulk_select_ids: true }
+      = submit_tag "選択したメンバーにメールを作成", class: "btn btn-primary btn-sm", disabled: true, data: { bulk_select_submit: true }
+
 
 %table.table.table-striped.w-100.admin-table-sticky
   %thead
     %tr
+      %th.admin-bulk-select__cell
+        %span.sr-only 選択
       %th ID
       %th 名前
       %th ロール
@@ -76,6 +108,12 @@
         - row_style = "background-color: #fff1f2;"
 
       %tr{ class: [row_class, ("table-secondary text-muted" if customer.is_deleted)].compact.join(" "), style: row_style }
+        %td.admin-bulk-select__cell
+          = check_box_tag "bulk_select_customer_ids[]", customer.id, false,
+            id: "bulk-select-customer-#{customer.id}",
+            class: "admin-bulk-select__checkbox",
+            "aria-label": "会員 ID #{customer.id} を選択",
+            data: { bulk_select_item: true }
         %th= customer.id
         %td
           .admin-customer-name

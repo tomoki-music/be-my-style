@@ -1,0 +1,29 @@
+.container-fluid.px-3
+  = render 'layouts/admin_header_menu'
+  .container.py-3
+    %h2.h4.mb-3 一括メールの送信履歴
+    %p.text-muted.small メールはメンバー一覧（Topページ）で送る相手を選んで作成します。
+    - if @bulk_mails.any?
+      %table.table.table-sm
+        %thead
+          %tr
+            %th 受付日時
+            %th 件名
+            %th 受付
+            %th 送信成功
+            %th 失敗
+            %th 結果不明
+            %th
+        %tbody
+          - @bulk_mails.each do |bulk_mail|
+            - counts = bulk_mail.status_counts
+            %tr
+              %td= l(bulk_mail.created_at, format: :short)
+              %td= bulk_mail.subject
+              %td= "#{bulk_mail.recipients_count}件"
+              %td= "#{counts["sent"]}件"
+              %td= "#{counts["failed"]}件"
+              %td= "#{counts["unknown"]}件"
+              %td= link_to "詳細", admin_bulk_mail_path(bulk_mail), class: "btn btn-outline-primary btn-sm"
+    - else
+      %p.text-muted まだ送信履歴はありません。

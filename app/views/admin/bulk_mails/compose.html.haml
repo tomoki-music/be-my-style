@@ -1,0 +1,34 @@
+.container-fluid.px-3
+  = render 'layouts/admin_header_menu'
+  .container.py-3
+    %h2.h4.mb-3 メンバーへのメール作成
+    - if flash.now[:alert].present? || flash[:alert].present?
+      .alert.alert-danger= flash.now[:alert] || flash[:alert]
+
+    .card.shadow-sm.mb-3
+      .card-body
+        %p.mb-1
+          選択したメンバー
+          %strong= "#{@customer_ids.size}件"
+          （送信できる人
+          %strong= "#{@resolution.recipients.size}件"
+          ／除外
+          %strong= "#{@resolution.exclusions.size}件"
+          ）
+        %p.text-muted.small.mb-0 除外の理由と送信先の一覧は、次の確認画面で表示します。
+
+    = form_with url: preview_admin_bulk_mails_path, method: :post, local: true, data: { turbolinks: false } do
+      = render "hidden_ids", customer_ids: @customer_ids
+      .form-group.mb-3
+        = label_tag "bulk_mail_subject", "件名", class: "font-weight-bold"
+        = text_field_tag "bulk_mail[subject]", @subject, id: "bulk_mail_subject", class: "form-control", maxlength: AdminBulkMail::SUBJECT_MAX_LENGTH, required: true, data: { bulk_mail_field: true }
+      .form-group.mb-2
+        = label_tag "bulk_mail_body", "本文（プレーンテキスト）", class: "font-weight-bold"
+        = text_area_tag "bulk_mail[body]", @body, id: "bulk_mail_body", class: "form-control admin-bulk-mail__body-input", maxlength: AdminBulkMail::BODY_MAX_LENGTH, required: true, data: { bulk_mail_body: true, bulk_mail_field: true }
+      .mb-3
+        %button.btn.btn-outline-secondary.btn-sm{ type: "button", data: { bulk_mail_insert_name: AdminBulkMail::NAME_PLACEHOLDER } } 名前を挿入
+        %small.text-muted.ml-2
+          #{AdminBulkMail::NAME_PLACEHOLDER} は受信者ごとの表示名に置き換わります（表示名が空の人は「#{AdminBulkMail::DEFAULT_NAME}」）。最後に入力した欄（件名か本文）に入ります。
+      .d-flex.gap-2
+        = submit_tag "確認画面へ", class: "btn btn-primary mr-2"
+        = link_to "メンバー一覧に戻る", admin_homes_top_path, class: "btn btn-outline-secondary"
