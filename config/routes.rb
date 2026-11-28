@@ -154,6 +154,8 @@ Rails.application.routes.draw do
       get "join_confirm" => "events#join_confirm"
       # 演奏経験者へのエントリー依頼メール送信(new=確認画面, create=送信)。
       resources :entry_invitations, only: [:new, :create]
+      # 当日受付の集金チェック票(一覧と、会員1人分の集金済み/未集金の切り替え)。
+      resources :payment_checks, only: [:index, :update], param: :customer_id, controller: "event_payment_checks"
       resources :songs, only: [:create, :destroy, :show] do
         # 楽曲の「応援する📣」(登録・取消)。
         resource :cheer, only: [:create, :destroy], controller: "song_cheers"

@@ -29,6 +29,8 @@ class Event < ApplicationRecord
   has_many :deadline_reminders, class_name: "EventDeadlineReminder", dependent: :destroy, inverse_of: :event
   # バンド出演枠。songs より後に宣言し、イベント削除時は曲を消してからバンドを消す。
   has_many :event_bands, -> { order(:id) }, dependent: :destroy, inverse_of: :event
+  # 当日受付の集金チェック票(集金状況の記録のみ。参加人数・参加費の計算には使わない)。
+  has_many :payment_checks, class_name: "EventPaymentCheck", dependent: :destroy, inverse_of: :event
 
   accepts_nested_attributes_for :songs, allow_destroy: true, reject_if: :all_blank
   accepts_nested_attributes_for :deadline_reminders
@@ -244,6 +246,16 @@ class Event < ApplicationRecord
     elsif changed.call(self, deadline_attribute) then :deadline
     elsif changed.call(reminder, :lead_hours) then :lead_time
     end
+  end
+
+  # イベント詳細の「参加メンバー」欄と集金チェック票の対象者。楽曲順に初めて出てきた順で、
+  # 複数曲・複数パートに出る人も1人1回にする。退会(論理削除)した会員は含めない。
+  def join_members
+    member_ids = songs.flat_map do |song|
+      song.join_parts.flat_map { |join_part| join_part.active_customers.pluck(:id) }
+    end.uniq
+    customers_by_id = Customer.where(id: member_ids).index_by(&:id)
+    member_ids.filter_map { |id| customers_by_id[id] }
   end
 
   def participation_records_for(customer)

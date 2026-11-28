@@ -667,6 +667,17 @@ class Customer < ApplicationRecord
     event_editor_of?(event.community)
   end
 
+  # 集金チェック票の閲覧・更新。システム管理者と、主催コミュニティ(event.community)のオーナー
+  # (owner_id / CommunityOwner)だけに許可する。イベント作成者やマネージャー(CommunityEventEditor)は、
+  # その立場だけでは許可しない。共催先のオーナーにも与えない。
+  def can_manage_event_payment_checks?(event)
+    return false if event.blank?
+    return true if admin?
+    return false if event.community.blank?
+
+    can_manage_community?(event.community)
+  end
+
   def withdrawn_account_cannot_be_restored
     return unless withdrawn? && !is_deleted?
 

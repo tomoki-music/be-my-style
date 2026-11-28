@@ -1,0 +1,172 @@
+// 当日受付の集金チェック票(app/views/public/event_payment_checks)と、イベント詳細の入口ボタン。
+// スマホを片手で持ったまま親指で押せるよう、切り替えボタンは各行の右端に大きく置く。
+
+.payment-checklist-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.payment-checklist {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px 12px 48px;
+
+  &__title {
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+
+  &__event-name {
+    color: #555;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+
+  &__summary {
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+  }
+
+  &__count {
+    color: #1e7e34;
+    font-size: 1.6rem;
+  }
+
+  &__totals {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin: 8px 0 6px;
+  }
+
+  &__total {
+    padding: 6px 4px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-align: center;
+
+    dt {
+      color: #555;
+      font-size: 0.75rem;
+      font-weight: normal;
+    }
+
+    dd {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    &--collected dd {
+      color: #1e7e34;
+    }
+
+    &--uncollected dd {
+      color: #c0392b;
+    }
+  }
+
+  &__last-update,
+  &__note {
+    color: #666;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+  }
+
+  &__header {
+    margin-bottom: 16px;
+  }
+
+  &__empty {
+    color: #777;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 8px;
+    border-bottom: 1px solid #ddd;
+
+    &--collected {
+      background: #eef8f0;
+    }
+  }
+
+  &__member {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  &__member-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__name {
+    font-weight: bold;
+    overflow-wrap: anywhere;
+  }
+
+  &__fee {
+    color: #333;
+    font-size: 0.95rem;
+    font-weight: bold;
+
+    &--free {
+      color: #1e7e34;
+    }
+  }
+
+  &__updated {
+    color: #666;
+    font-size: 0.8rem;
+  }
+
+  &__form {
+    flex-shrink: 0;
+    margin: 0;
+  }
+
+  &__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 112px;
+    min-height: 48px;
+    padding: 0 14px;
+    border: 2px solid transparent;
+    border-radius: 24px;
+    font-size: 1rem;
+    font-weight: bold;
+
+    &--pending {
+      background: #fff;
+      border-color: #999;
+      color: #555;
+    }
+
+    &--collected {
+      background: #28a745;
+      border-color: #28a745;
+      color: #fff;
+    }
+  }
+}

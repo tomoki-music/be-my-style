@@ -1,0 +1,64 @@
+= render 'layouts/header_menu'
+
+.payment-checklist
+  .payment-checklist__header
+    %h2.payment-checklist__title 集金チェック票
+    %p.payment-checklist__event-name= @event.event_name
+    %p.payment-checklist__summary
+      集金済み
+      %strong.payment-checklist__count= @collected_count
+      \/
+      %strong= @members.size
+      人
+    %dl.payment-checklist__totals
+      .payment-checklist__total
+        %dt 集金予定合計
+        %dd.payment-checklist__total-expected #{@expected_total.to_s(:delimited)}円
+      .payment-checklist__total.payment-checklist__total--collected
+        %dt 集金済み分
+        %dd.payment-checklist__total-collected #{@collected_total.to_s(:delimited)}円
+      .payment-checklist__total.payment-checklist__total--uncollected
+        %dt 未集金分
+        %dd.payment-checklist__total-uncollected #{@uncollected_total.to_s(:delimited)}円
+    %p.payment-checklist__note
+      金額は、現在の参加費設定（有料プラン特典の適用を含む）から計算した目安です。実際に受け取った金額の記録ではなく、参加費が変わると表示額も変わります。
+    - if @last_check
+      %p.payment-checklist__last-update
+        最終更新: #{@last_check.updated_by&.name || "不明"}（#{l(@last_check.updated_at, format: "%-m/%-d %H:%M")}）
+    %p.payment-checklist__note
+      集金状況を記録するだけの表です。エントリー・参加人数・参加費には影響しません。
+    = link_to "イベント詳細に戻る", public_event_path(@event), class: "btn btn-outline-secondary btn-sm", data: { turbolinks: false }
+
+  - if @members.empty?
+    %p.payment-checklist__empty まだ参加メンバーはいません。
+  - else
+    %ul.payment-checklist__list
+      - @members.each do |member|
+        - check = @checks_by_customer_id[member.id]
+        - collected = check&.collected?
+        %li.payment-checklist__row{ id: "payment-check-#{member.id}", class: ("payment-checklist__row--collected" if collected) }
+          .payment-checklist__member
+            = customer_avatar_tag(member, class_name: "icon_mini", show_active_status: false)
+            .payment-checklist__member-body
+              %span.payment-checklist__name= member.name
+              - fee = @fees_by_customer_id[member.id]
+              - if fee.zero?
+                %span.payment-checklist__fee.payment-checklist__fee--free 集金不要
+              - else
+                %span.payment-checklist__fee 参加費 #{fee.to_s(:delimited)}円
+              - if check&.updated_by_customer_id
+                %span.payment-checklist__updated
+                  更新: #{check.updated_by&.name || "不明"} #{l(check.updated_at, format: "%-m/%-d %H:%M")}
+          = button_to public_event_payment_check_path(@event, member.id),
+            method: :patch,
+            params: { collected: collected ? "0" : "1" },
+            class: "payment-checklist__toggle #{collected ? 'payment-checklist__toggle--collected' : 'payment-checklist__toggle--pending'}",
+            form_class: "payment-checklist__form",
+            data: { disable_with: "保存中..." },
+            "aria-label": "#{member.name}さんを#{collected ? '未集金に戻す' : '集金済みにする'}" do
+            - if collected
+              %i.fa-solid.fa-circle-check
+              集金済み
+            - else
+              %i.fa-regular.fa-circle
+              未集金
