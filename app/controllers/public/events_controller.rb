@@ -69,20 +69,11 @@ class Public::EventsController < ApplicationController
     @hosting_communities = @event.all_hosting_communities
     @request = Request.new
 
-    #参加人数(退会ユーザーは一般・公開画面上は現役参加者として数えない)
-    joined_member_ids = []
-    @event.songs.each do |song|
-      song.join_parts.each do |join_part|
-        joined_member_ids += join_part.active_customers.pluck(:id)
-      end
-    end
-    @joined_member_counts = joined_member_ids.uniq.length
-
-    #参加メンバー名
-    @join_members = []
-    joined_member_ids.uniq.each do |member_id|
-      @join_members << Customer.find(member_id)
-    end
+    #参加メンバー・参加人数(退会ユーザーは一般・公開画面上は現役参加者として数えない)。
+    #集金チェック票の対象者と同じ Event#join_members を使う。
+    @join_members = @event.join_members
+    @joined_member_counts = @join_members.length
+    @can_manage_payment_checks = current_customer.can_manage_event_payment_checks?(@event)
 
     #成立楽曲 / 募集中楽曲(退会ユーザーだけのパートは現役参加者0人=募集中として扱う)。
     #判定は Song#established? / Song#recruiting? に一本化する(画面ごとに基準が食い違わないようにする)。

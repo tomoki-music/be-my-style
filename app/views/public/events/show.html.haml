@@ -419,6 +419,12 @@
                   %tr
                     %th{scope:"row"} 参加メンバー
                     %td
+                      - if @can_manage_payment_checks
+                        = link_to public_event_payment_checks_path(@event),
+                          class: "btn btn-outline-success payment-checklist-link",
+                          data: { turbolinks: false } do
+                          %i.fa-solid.fa-clipboard-check
+                          集金チェック票
                       .join-member-list
                         - @join_members.each do |customer|
                           = link_to public_customer_path(customer), class: 'image-style', data: { 'turbolinks': false } do
